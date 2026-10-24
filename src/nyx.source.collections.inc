@@ -79,8 +79,172 @@ var
   LValue: TNyxStateValue;
   LDomain: TNyxValueDomain;
   LMode: TNyxCollectionCellMode;
+  LFeatures: TNyxColumnLayoutFeatures;
+  LFeature: TValue;
+  LInteger: Integer;
 begin
   Result := Default(TValue);
+
+  if SameText(AName, 'NyxColumnLayout') or SameText(AName, 'NyxTableLayout') then
+  begin
+    { The source reader reconstructs the public typed policy. It never executes
+      saved Pascal or decodes an enum/set from an arbitrary text expression. }
+
+    if At('(') then
+    begin
+      LArgs := Arguments;
+
+      if Length(LArgs) <> 0 then
+      begin
+        Fail('Column/table layout factories take no arguments');
+      end;
+    end;
+    Result.Kind := vkColumnLayoutPolicy;
+    Result.ColumnLayoutPolicy := NyxColumnLayout;
+
+    if SameText(AName, 'NyxTableLayout') then
+    begin
+      Result.Kind := vkTableLayoutPolicy;
+      Result.TableLayoutPolicy := NyxTableLayout;
+    end;
+    while At('.') do
+    begin
+      Expect('.');
+
+      if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) then
+      begin
+        Fail('Expected a typed column layout method');
+      end;
+      LMethod := FTokens[FCursor].Text;
+      Inc(FCursor);
+
+      if SameText(LMethod, 'AllowOnly') then
+      begin
+        Expect('(');
+        Expect('[');
+        LFeatures := [];
+        while not At(']') do
+        begin
+          LFeature := Expression;
+
+          if (LFeature.Kind <> vkColumnLayoutFeature) or
+            (LFeature.Ordinal < Ord(Low(TNyxColumnLayoutFeature))) or
+            (LFeature.Ordinal > Ord(High(TNyxColumnLayoutFeature))) then
+          begin
+            Fail('AllowOnly requires typed column-layout feature symbols');
+          end;
+
+          if TNyxColumnLayoutFeature(LFeature.Ordinal) in LFeatures then
+          begin
+            Fail('Duplicate column-layout feature');
+          end;
+          Include(LFeatures, TNyxColumnLayoutFeature(LFeature.Ordinal));
+
+          if not At(']') then
+          begin
+            Expect(',');
+
+            if At(']') then
+            begin
+              Fail('A column-layout feature must follow the comma');
+            end;
+          end;
+        end;
+        Expect(']');
+        Expect(')');
+
+        if Result.Kind = vkColumnLayoutPolicy then
+        begin
+          Result.ColumnLayoutPolicy := Result.ColumnLayoutPolicy.AllowOnly(LFeatures);
+        end
+        else
+        begin
+          Result.TableLayoutPolicy := Result.TableLayoutPolicy.AllowOnly(LFeatures);
+        end;
+        Continue;
+      end;
+
+      if (SameText(LMethod, 'PinStart') or SameText(LMethod, 'PinEnd') or
+        SameText(LMethod, 'Unpinned') or SameText(LMethod, 'Copy')) and not At('(') then
+      begin
+        LArgs := nil;
+      end
+      else
+      begin
+        LArgs := Arguments;
+      end;
+
+      if SameText(LMethod, 'Copy') and (Length(LArgs) = 0) then
+      begin
+        Continue;
+      end;
+
+      if Result.Kind = vkColumnLayoutPolicy then
+      begin
+
+        if SameText(LMethod, 'Visible') and (Length(LArgs) = 1) and
+          (LArgs[0].Kind = vkBoolean) then
+        begin
+          Result.ColumnLayoutPolicy := Result.ColumnLayoutPolicy.Visible(LArgs[0].Ordinal <> 0);
+          Continue;
+        end;
+
+        if SameText(LMethod, 'Pinned') and (Length(LArgs) = 1) and
+          (LArgs[0].Kind = vkColumnPin) then
+        begin
+          Result.ColumnLayoutPolicy := Result.ColumnLayoutPolicy.Pinned(TNyxColumnPin(LArgs[0].Ordinal));
+          Continue;
+        end;
+
+        if (Length(LArgs) = 0) and SameText(LMethod, 'PinStart') then
+        begin
+          Result.ColumnLayoutPolicy := Result.ColumnLayoutPolicy.PinStart;
+          Continue;
+        end;
+
+        if (Length(LArgs) = 0) and SameText(LMethod, 'PinEnd') then
+        begin
+          Result.ColumnLayoutPolicy := Result.ColumnLayoutPolicy.PinEnd;
+          Continue;
+        end;
+
+        if (Length(LArgs) = 0) and SameText(LMethod, 'Unpinned') then
+        begin
+          Result.ColumnLayoutPolicy := Result.ColumnLayoutPolicy.Unpinned;
+          Continue;
+        end;
+      end
+      else
+      begin
+
+        if SameText(LMethod, 'Enabled') and (Length(LArgs) = 1) and
+          (LArgs[0].Kind = vkBoolean) then
+        begin
+          Result.TableLayoutPolicy := Result.TableLayoutPolicy.Enabled(LArgs[0].Ordinal <> 0);
+          Continue;
+        end;
+
+        if (Length(LArgs) = 1) and (LArgs[0].Kind = vkInteger) and
+          TryNyxStateInteger(LArgs[0].Text, LInteger) then
+        begin
+
+          if SameText(LMethod, 'MinimumCenter') then
+          begin
+            Result.TableLayoutPolicy := Result.TableLayoutPolicy.MinimumCenter(LInteger);
+            Continue;
+          end;
+
+          if SameText(LMethod, 'AutoSizeSample') then
+          begin
+            Result.TableLayoutPolicy := Result.TableLayoutPolicy.AutoSizeSample(LInteger);
+            Continue;
+          end;
+        end;
+      end;
+      Fail('Invalid typed column/table layout method ' + LMethod);
+    end;
+    Exit;
+  end;
 
   if SameText(AName, 'NyxCollectionView') then
   begin
@@ -109,6 +273,8 @@ begin
         SameText(LMethod, 'UseDefaultColumnSizing') or
         SameText(LMethod, 'UseDefaultColumnQuery') or
         SameText(LMethod, 'UseDefaultTableQuery') or
+        SameText(LMethod, 'UseDefaultColumnLayout') or
+        SameText(LMethod, 'UseDefaultTableLayout') or
         SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
       begin
         LArgs := nil;
@@ -170,6 +336,47 @@ begin
           Fail('ColumnQuery requires a typed NyxColumnQuery policy');
         end;
         Result.CollectionView := Result.CollectionView.ColumnQuery(LArgs[0].ColumnQueryPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'ColumnLayout') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnLayoutPolicy) then
+        begin
+          Fail('ColumnLayout requires a typed NyxColumnLayout policy');
+        end;
+        Result.CollectionView := Result.CollectionView.ColumnLayout(LArgs[0].ColumnLayoutPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'TableLayout') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkTableLayoutPolicy) then
+        begin
+          Fail('TableLayout requires a typed NyxTableLayout policy');
+        end;
+        Result.CollectionView := Result.CollectionView.TableLayout(LArgs[0].TableLayoutPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultColumnLayout') or SameText(LMethod, 'UseDefaultTableLayout') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('Restoring column layout choices takes no arguments');
+        end;
+
+        if SameText(LMethod, 'UseDefaultColumnLayout') then
+        begin
+          Result.CollectionView := Result.CollectionView.UseDefaultColumnLayout;
+        end
+        else
+        begin
+          Result.CollectionView := Result.CollectionView.UseDefaultTableLayout;
+        end;
         Continue;
       end;
 

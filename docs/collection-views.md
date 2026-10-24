@@ -244,6 +244,480 @@ resize and selective visual evidence are in
 Complete visual parity, native DPI/widgetset coverage, accessibility, production
 performance and browser column-resize handles retain their original task owners.
 
+## Authored table arrangement defaults
+
+Import `nyx.collections.arrangement` with the existing view and typed-field units
+to author a table's initial visibility, logical pins and user command policy:
+
+```pascal
+LSpec := NyxCollectionView(NyxCollection('services'))
+  .Column(NyxTextField('name'), 'Service', cmEditable)
+    .ColumnLayout(NyxColumnLayout.PinStart)
+  .Column(NyxIntegerField('priority'), 'Priority')
+    .ColumnLayout(NyxColumnLayout.Visible(False).PinEnd)
+  .TableLayout(NyxTableLayout.Enabled(True)
+    .AllowOnly([nclfResize, nclfAutoSize, nclfVisibility, nclfPinning])
+    .MinimumCenter(96).AutoSizeSample(64));
+```
+
+`LSpec` is a `TNyxCollectionViewSpec`. `ColumnLayout` applies to the column just
+declared. `TNyxColumnPin` uses `ncpNone`, `ncpStart` and `ncpEnd`; start/end follow
+the target's reading direction. The five command features are Resize, AutoSize,
+Reorder, Visibility and Pinning. Table and column features jointly restrict user
+commands. `Enabled(False)` disables table commands while retaining authored
+visibility and pins. Minimum center width is a positive logical pixel value;
+Fit samples at most `AutoSizeRows` current-page rows, bounded to 1..1024.
+
+An absent policy differs from an explicitly applied default object. Either a
+table or column declaration opts into the arrangement contract. A complete
+default policy remains a declaration; an explicit empty feature set remains
+empty. `.UseDefaultTableLayout` and `.UseDefaultColumnLayout` withdraw only the
+corresponding raw policy. They retain the local binding and other column choices.
+Use whole-binding **Inherit** to restore a reusable definition's binding;
+**Clear** instead records a deliberate unbound mask. A policy reset cannot
+silently remove that mask or rebind the table.
+
+The selected bound table's Inspector includes an independent **Column arrangement
+defaults** card. Its table form exposes Enabled, all five features, minimum center
+width and Fit sample size. Each column disclosure exposes initial visibility,
+logical pin and its five features. **Apply layout defaults** submits one complete
+typed policy through Studio's existing paired design/Pascal command and Undo.
+**Use Nyx defaults** clears only that form's declaration. Unfinished numbers such
+as `-` remain raw input through inspector replacement; they are parsed only on
+Apply. Pending source or structural edits lock the exact owner, and changed
+schema/binding context retires an older form draft.
+
+These saved defaults are separate from an application's runtime **Columns**
+preferences. Runtime resize, order, hidden fields and pins do not rewrite the
+document or generated Pascal. Saved layout declarations use strict view descriptor
+version eight, preserving nullable complete table/column policies and the existing
+64-field budget. Removing every layout declaration returns to the applicable
+earlier descriptor version. [Collection agent commands](studio-agents.md#structured-collection-context-and-authoring)
+use the same typed admission and distinguish local, inherited and cleared owners.
+The authored-layout inspector and MCP additions are current-source work; their
+native/browser compilation and executed Studio qualification remain pending.
+
+## Browser column resizing — source preview
+
+The current W1 browser source adds resize separators only for tables using the
+typed column-arrangement contract. It compiles in the maintained browser
+consumer; real resize/Fit gestures still need their dedicated input checks.
+The maintained query/arrangement journey passes 748 browser checks at both
+1280 and 390 px. That journey does not qualify every new interaction path.
+
+Drag a permitted header edge to preview a bounded logical width. The guide moves
+without resizing the table or replacing cell editors during the drag. Release
+submits one width request on the existing animation frame, through the original
+typed columns capture and prepared-publication group. Logical direction follows
+RTL; font, scale, available width and accepted layout changes cancel an obsolete
+draft. Authored pointer capture and consumed events retain precedence.
+
+Each separator also supports Left/Right by one logical pixel, Shift by ten,
+Home/End for the authored bounds, Enter to submit and Escape to cancel. Tab or
+focus departure cancels an unfinished keyboard draft; navigation after Enter
+keeps the already submitted request. Cancellation restores the accepted accessible
+value immediately. Composition, suspension, disable/re-enable, replacement and
+retirement invalidate older input epochs before a request can publish.
+
+Pointer capture is reconciled after acquisition and on failure. Cleanup revokes
+the old proposal before platform callbacks and preserves a newer owner of the
+same handle/pointer. The final publication fence reads retained canonical input
+and cached layout facts after outward validation. Actual platform input,
+accessibility and both-host W1 parity still require their original tests.
+
+## Column management
+
+The current W1 implementation includes `NewNyxColumnArrangementEditor` in
+`nyx.collections.arrangement.controls`. It is an ordinary Nyx compound built from
+specialized cards, rows, labels, inputs, selects and buttons. Bound tables with
+authored layout controls receive a persistent **Columns** button. It opens the
+shared manager through an ordinary Nyx popover on either target. Current target
+qualification and remaining W1 input/accessibility work are recorded in WORK.md;
+these APIs alone do not establish complete parity.
+
+`INyxCollectionColumnArrangementMount` is an optional mount facet. Its
+`ColumnArrangement` property exposes `INyxColumnArrangementManager`, with typed
+Open, ReloadDraft, SetEnabled, Observation and Presenter operations. The
+renderer supplies the target factory and its original readonly input lifetime;
+the manager uses the existing view-owned preferences and prepared publications.
+No additional preferences, collection or query store is created.
+
+Retain the view's exact launch capture separately from the detached form:
+
+```pascal
+LColumns := NyxCollectionColumns(LView);
+LCapture := LColumns.CaptureColumns;
+LObservation := TNyxColumnLayoutObservation.Read(LCapture);
+LEditor := NewNyxColumnArrangementEditor('service-columns', LObservation);
+```
+
+Every field appears in the complete preference order, including hidden fields.
+Show/Hide and pin choices respect the effective table/field policy. Move earlier
+and later do not cross fixed reorder barriers, including hidden barriers. Pin
+groups use the same relative order; changing the complete order does not move a
+field into a different pin group. The launcher remains outside the visible-field
+map so an all-hidden table can still open it. Authored policy can
+intentionally prevent every visibility change; the editor explains that case
+instead of inventing permission to show a column.
+
+Set width accepts a positive whole number within the authored bounds. Restore
+default width removes the runtime override and returns to authored Fixed, Flex
+or Content sizing. Fit current page is a separate typed measurement request,
+respecting AutoSize even when manual Resize is disabled. Restore default order
+preserves per-field choices; Reset width, visibility and pinning preserves order;
+Restore all column defaults removes both. Removing overrides remains available
+when new user changes have been disabled by authored policy.
+
+`CaptureNyxColumnArrangementEditor` reads the synchronized mounted form and
+returns a detached `TNyxColumnArrangementChange`. An unrelated control returns
+False; stale baselines, wrong typed fields, malformed choices and disabled
+actions refuse without changing the form or view. Capture reads only the input
+needed by the chosen action, preserving unrelated incomplete width drafts. The
+host must preserve those drafts across subsequent accepted refreshes as well.
+
+Actions carry complete typed field identities. Bounded opaque IDs are checked
+against those identities and the retained launch observation; displayed indexes
+and captions never select a target. Long and supplementary Unicode field names
+remain intact in metadata. Supply an explicit valid editor ID of at most96
+Unicode scalars, leaving room within Nyx's128-scalar node-ID bound for children.
+Use the typed action/input ID helpers when locating a part. They return source
+IDs; a presenter resolves them inside the exact realized editor instance, where
+runtime IDs may be escaped and qualified.
+
+The host still needs the original capture's private identity proof, current
+input/event/form lifetime guards and the existing prepared-publication group.
+Preferences publish through `INyxCollectionColumns.PrepareColumns`; a fit request
+needs bounded host measurement and `PrepareAutoSize`. The compound creates no
+second preference/query owner and changes no source data or authored defaults.
+
+The shared `nyx.collections.arrangement.manager` controller captures the actual
+realized editor before ordinary callbacks run. Both main and form generations
+keep their original input epoch; form generations also keep the actual popup's
+successful-open lifetime. Silent Close, disablement or retirement cannot grant
+old queued work a fresh form. Closing and reopening preserves the mounted form
+and unfinished inputs. The visible Close button is safe initial focus. An
+external layout change keeps the old baseline, explains the stale draft on
+reopen and refuses stale actions; **Discard draft and reload current columns**
+deliberately captures the new accepted state. The explanation samples after
+presentation/focus callbacks without granting existing actions fresh authority.
+
+Hiding a column withdraws active editing and focus authority while preserving
+compatible unfinished cell text as a dormant draft. Revealing it neither commits
+that text nor steals focus; an explicit later editing entry can resume it.
+Draft handoffs carry hidden values without an editing/focus claim. Changes to
+the row, typed field/schema or accepted scalar invalidate incompatible text.
+
+Native editor reveal can itself change table geometry. That reflow waits until
+the original edit and its draft restoration finish, then uses the existing idle
+queue after native input, validation, composition and active sizing have ended.
+Geometry alone does not block editing or mark the data/column map stale. This
+keeps unfinished text intact when a compact table reuses an editor across fields.
+
+Escape cancels the current native column drag before its original mouse release
+can accept a width or produce a table Click. The canonical key callback runs
+first and may consume Escape. Cancellation retains the original input epoch and
+request, so a callback cannot redirect it to a replacement table or newer drag.
+The existing idle path restores accepted geometry while preserving cell drafts;
+a fresh drag can then start normally.
+
+Browser resize notifications can arrive after the next keyboard adjustment has
+already captured current geometry. These notifications preserve that adjustment
+when its original geometry still matches; actual geometry or input changes
+still revoke it. Rapid consecutive minimum/maximum adjustments need no extra
+settling delay in application code.
+
+`CaptureNyxColumnArrangementDraft` additionally captures raw width/pin inputs from
+the exact synchronized realized editor and mounted root. It records only values
+that differ from the launch display as unfinished drafts. An incomplete width
+such as `-` remains text; hiding/reordering another field must not parse or erase
+it. Hidden fields keep their drafts, too. The detached record copies its
+specification/observation and retains no renderer, widget or publication owner.
+
+After the host knows an action committed, use the draft's `AfterAccepted` with a
+fresh accepted observation. Use `AfterMeasuredFit` for a fit action, supplying
+the actual bounded width installed by `PrepareAutoSize`. Both require the exact
+expected preferences, unchanged specification and single expected serial change;
+a reentrant layout change refuses rebasing even when it restores equal values.
+A committed notification error can still require this accepted-state handling;
+a refused publication must keep the original draft unchanged.
+
+Width application/default/fit clears only that field's width draft. Pin application
+clears its pin draft. A field reset clears both; restoring all defaults clears all
+drafts. Visibility/order changes retain unrelated unfinished inputs. Reconstruct
+with the three-argument `NewNyxColumnArrangementEditor` overload at the draft's
+exact rebased baseline. The actual management host and its successful-publication,
+input/event/form guards remain integration work; these helpers do not prove that
+any action committed or make the form safe to apply after it closes.
+
+## Fit current page sample — source preview
+
+The optional runtime facet `INyxCollectionColumnSampling` separates a bounded
+page sample from host font measurement. `CaptureColumnSample` admits the exact
+launch columns capture and typed field, then copies the title/descriptor and at
+most `AutoSizeRows` current-page cell texts into `INyxCollectionColumnSample`.
+An empty page has no sampled cells; its title can still be measured. Hidden
+fields can be sampled without changing visibility. AutoSize permission is
+independent of manual Resize permission. All four scalar families use the same
+canonical display formatter as ordinary `CellText`.
+
+The sample retains immutable data and a canonical inert copy of the admitted
+layout proof. It retains no live view, store, renderer or widget and does not
+retain an arbitrary caller capture wrapper. The host measures these copied
+texts in its actual font/DPI context, clamps the result to the authored bounds,
+then calls `PrepareSampleAutoSize`. This joins the existing column preparation
+and publication coordinator; it creates no second query/data/preference owner.
+
+The measured path checks exact source, page/unpaged snapshots, layout identity
+and serial, query intent and an internal view-notification stamp. These checks
+run after outward capture/data getters and again during final prepared readiness.
+Every accepted view notification invalidates an older sample, including a
+selection-only notification. Paging away and back cannot silently bless an old
+measurement. Stamp saturation refuses samples without blocking ordinary view
+notifications. Obtain a fresh sample when a measured request is refused as stale.
+
+The older `PrepareAutoSize` remains the caller-supplied-width contract. Its
+original ABI and semantics do not acquire the new sample guarantees. Target font,
+DPI, input/IME and actual form-open lifetime checks remain host obligations.
+This model sample/preparation slice compiles for both targets; actual target
+measurement, form integration and both-host W1 input tests remain ahead.
+
+## Native fit metrics — source preview
+
+`MeasureNyxLCLColumnFit` in `nyx.collections.arrangement.lcl` measures accepted
+sample text on a private bitmap canvas. Supply the actual header and body fonts
+separately: standard native headers use TitleFont. Supply the actual drawing
+styles, the resolved target PPI and already-scaled total horizontal chrome insets.
+The header text includes the current query/header adornments. The adapter copies
+these facts before any sample getter and borrows no active grid or cell editor.
+
+Measurement follows native single-line, prefix, tab and bidi flags, using the
+same NUL-to-quoted-JSON conversion as native cell display. Natural width removes
+soft wrapping and ellipsis before authored clamping. Physical metrics are
+converted to logical pixels once; already-scaled padding is not scaled again.
+Rotated fonts and `SystemFont` callbacks are explicitly refused; they and
+arbitrary custom painting require their own resolved metric contract.
+
+The returned `INyxLCLColumnFitMeasurement` owns copied fonts and exposes a detached
+`INyxColumnFitMeasurement`. That immutable, reference-counted value reports natural width, ceiled/bounded
+Width, Clamped, the exact immutable Sample and SampleRows. SampleRows is the
+measured count, not the total current-page row count. No viewport clamp is applied;
+horizontal overflow and narrow pin suspension stay with normal presentation.
+
+`Copy` retains the immutable measurement. `WithNaturalWidth` creates a distinct
+measurement using its copied bounds and sample facts without rereading sample
+getters. Nil means no measurement. Both FPC and pas2js retain the exact sample
+through ordinary interface assignment and release it after the final measurement
+reference is cleared; no raw holder or record finalization workaround is needed.
+
+`Matches` is an explicit UI-thread font/style/header/chrome comparison. A host
+must retain/recheck its actual mount before reading those current facts. This
+method is not the final callback-free publication fence and grants no input,
+event, IME or form-open authority. Actual host command/fence integration and
+both-target physical validation remain open; compiled metric support does not
+establish a completed Fit UI.
+Actual main/form cancellation, popup lifetime integration, host launchers and
+both-target wide/compact journeys remain required before this is ready to use.
+
+## Browser fit metrics — source preview
+
+`MeasureNyxBrowserColumnFit` in `nyx.collections.arrangement.browser` copies a
+bounded sample before observing the mounted table's styles. Supply its exact
+header cell, label, sort/filter buttons and same-column body cell/navigation
+label through `TNyxBrowserColumnFitSurface`. An empty sample needs only the
+header. If the body cell also owns a standard editor, supply `BodyEditor` so the
+metric can recognize that child by identity. It never reads the editor value.
+The host remains responsible for exact column identity, a current mounted target
+and uniform library body typography across the sampled rows.
+
+The header is measured as one ordinary offscreen composition, in actual child
+order, with copied table-cell whitespace/direction/language and each visible
+part's own typography, display, padding, borders, margins and minimum width.
+That preserves spaces between the title and filter button, hard line breaks
+and inline box rules. Accepted body strings use the body label's separate
+typography. Actual horizontal cell chrome is added once; reserved resize-grip
+space is not counted twice. CSS pixels already are logical pixels, so no DPR
+or ancestor transform multiplier is applied.
+
+Text-aware `FontFaceSet.check(font, renderedText)` runs before and after measuring
+the attached probes. A pending font refuses synchronously; the metric does not
+load a font, register a listener or queue a later publication. All temporary
+ordinary elements are removed in `finally`, have no IDs/classes/events and
+cannot participate in a form or normal keyboard navigation. Only detached
+styles, strings and the immutable sample survive in the returned interface.
+
+Canonical hidden columns remain measurable from their copied styles without
+being shown. This default-library metric refuses generated/custom child content,
+other non-table cell layouts, vertical text, transforms on the measured parts,
+negative margins,
+nonzero relative text offsets and unsupported header/body layouts. Custom
+renderers need their own resolved metric. `Matches` recaptures the styles and
+remeasures the copied strings, which also catches a changed font face under an
+unchanged CSS font string. It is a UI validation step, not the final callback-free
+model/input/IME/generation/form fence. The shared `WithNaturalWidth` value update
+uses only previously copied bounds and performs no model/interface getter.
+
+This source is not wired into a mounted Fit command and has not been compiled
+or browser-tested. Host acquisition/publication, focused drafts, actual form
+lifetime integration and the complete native/browser wide/compact W1 journey
+remain required.
+
+## Mounted Fit preparation — source preview
+
+The target mounts now provide an internal protected `PrepareColumnFit` seam.
+It accepts the original launch capture and full typed field, measures accepted
+current-page sample text, and returns an owned preparation with the model plan
+and final input fence. The seam itself exposes no public Pascal Fit command or Studio UI.
+The managed output parameter uses `var` so a former metric is released only
+after the mount owns its entered call frame. A returned metric is a proposal,
+not evidence that its width was installed.
+
+Browser acquisition uses existing canonical header parts and an already-resident
+cell of that same field; it does not realize/scroll a row or read an editor.
+Native acquisition uses the actual visible/pinned pane fonts and default text
+styles. Hidden fields use the logical table's uniform outer defaults without
+being shown. Pinned panes inherit title/body drawing defaults together. Native
+headers and their Fit metrics share the NUL-safe display conversion.
+
+Both paths prepare through the current-page sampling facet and independently
+check original input epoch, exact mount/map and model mutation facts. Native
+input activity includes complete grid/editor/OS call tails through the existing
+renderer frame. Final readiness reads retained flags, without dereferencing a
+native component or calling a browser/style/router getter. Read-only data can
+still permit column fitting; AutoSize permission is independent of manual Resize.
+
+The shared manager validates its original event/form generation guard before
+the nested Fit group, making metric validation the last known outward check.
+The resulting width does not promise atomic typography against unrelated later
+direct style changes. Ordinary model notifications own refresh and compatible
+draft restoration. A committed notification exception must not cause a retry or
+rollback. Actual management/form lifetime wiring and complete native/browser
+wide/compact input qualification remain ahead; these paths now compile on both targets.
+
+## Native column resizing — source preview
+
+The current native source retains each drag's original input epoch,
+typed column identity, model capture and physical table mapping. A later callback
+cannot supply a fresh capture to revive a disabled, suspended or superseded drag.
+The authored Resize feature and width bounds still govern the model proposal.
+
+Lazarus delivers the final header width after its mouse-release callback. Nyx's
+nested release stamps distinguish that tail from a newer drag started inside the
+callback, even on the same column. Queued publication waits for the complete
+native input tail, then checks the original input and model again. Cleanup clears
+only its own request; a newer drag keeps its width and ownership.
+
+Cancellation also uses the existing coalesced idle handler when a callback pumps
+messages during refresh or editing is suspended programmatically. It preserves
+pending cell refreshes and dormant edits. Physical reconciliation follows ordinary
+refresh, END and Resume behavior; it does not manufacture a native mouse release.
+A committed notification error reports the installed change without retrying it.
+
+The separate native Fit source below now uses the same pending command owner.
+Optional Lazarus auto-size is not admitted as a Nyx manual resize result.
+The management launcher, actual form lifetime integration and complete native/
+browser wide/compact qualification remain ahead.
+
+## Native header and keyboard Fit — source preview
+
+The current native source offers **Ctrl+Shift+F** for the focused
+column and **double-click on a header edge**. Both measure accepted current-page
+text through the bounded Fit preparation above. AutoSize permission is separate
+from Resize: denying a drag does not deny Fit. The grid hint describes the actions.
+
+The keyboard action honours an application's consumed key and does not commit,
+hide or focus the active editor. Header Fit waits for actual mouse release;
+measurement runs after the complete native input tail. One typed pending command
+arbitrates Fit and Resize, retaining the original column, input epoch and capture.
+Nested newer gestures supersede older ones; failed canonical callbacks retire
+their own intention. A stale double-click cannot reset the newer grid state or
+fall through to unbounded native auto-size.
+
+Accepted layout notification uses the existing compatible draft restoration.
+Composition, disabled/suspended input, stale maps and superseded commands refuse
+the original request. Real native input/draft tests are still required. Browser
+Fit input below, manager/form integration and complete both-host qualification remain
+open; this preview is source behavior, not a validated shipped control.
+
+## Browser Fit and canonical input — source preview
+
+The browser source offers **Ctrl+Shift+F** on the exact focused
+column grip, resident cell or cell editor, and **double-click on the owned header
+grip**. Fit-only grips also accept Enter/Space, separately from manual Resize.
+Their initial pointer down preserves editor focus and drafts. Only accepted
+current-page text enters the bounded sample and metric; editor draft text does
+not become measurement input.
+
+The renderer captures one managed command before the first real event-router
+query. It brackets the existing keyboard phases or double-click callbacks, then
+either transfers that same intention to the existing frame or retires it. A
+consumed key preserves an earlier manual resize draft. A later nested resize
+action wins even when it returns to the same width. Replaced/retired controls
+cannot regain authority through bubbling.
+
+Canonical callback delivery and default Fit eligibility have different guards.
+An ordinary callback can update data and the remaining keyboard phases still
+receive fresh accepted payloads. That change may invalidate the earlier Fit
+request; it does not silently delete the application's keyboard cycle. Original
+model/input/map/activity fences still govern publication. General Click, pointer
+dispatch and Emit paths retain their existing behavior.
+
+This partial source compiles, and the maintained query/arrangement browser
+journey executes at both widths. Complete physical Fit-input qualification is
+still separate from that journey.
+Fit-only buttons now use canonical Click actions, state admission and callbacks
+before their original Fit default. Browser Enter follows key phases; Space
+activates on release and cancels on blur, disable or suspension. Repeats do not
+activate it, and a trailing double-click does not add a third Fit. Native buttons
+use the existing Nyx/LCL button and physical input frame, preserving original
+release provenance across Win32's CN_KEYUP delivery. Explicit suspension/resume
+and disable/re-enable cannot revive an old held press.
+
+Focused browser cases pass at desktop and compact widths; focused native cases
+include both pinned edges, draft preservation, command rejection, notification
+failure and callback retirement, with clean heaps. These are actual DOM/LCL
+control checks, not hardware or assistive-technology certification. Complete
+management/form integration and the full physical input/accessibility journey
+remain required; WORK.md records the exact qualified source cohorts.
+
+Arrangement-enabled query mounts configure the existing target factory through
+`INyxCollectionQueryInputFactory`, retaining only readonly input facts. Both the
+main router and the actual form router keep their existing subscriptions and
+scheduler. A form additionally captures the actual popover's successful-open
+token. A custom factory must support this optional input contract before its
+first form; missing or late configuration refuses explicitly. Ordinary factories
+on tables without arrangement retain their existing behavior.
+
+The optional `INyxCancellationReadiness` contract supplies callback-free final
+cancellation admission after model validators. Owned scheduler/event scopes and
+arranged query generations expose it. Captured query readiness checks the original
+scope, input epoch and actual form-open token; it cannot capture a replacement
+generation or invoke an arbitrary Cancelled getter during publication install.
+
+Safe single-click wiring also requires immediate retirement of the binding's
+state subscription while an already-entered authored action keeps its data alive
+until return. A retained root alone cannot prevent an obsolete subscriber from
+affecting a replacement view. This shared ownership prerequisite is currently a
+separate renderer-lifetime integration requirement. The shared
+`TNyxLiveBindings.Retire` operation is now implemented and tested natively and in
+the browser. It immediately disconnects the exact subscription, revokes pending
+resource receivers and clears both synchronization callbacks. Retirement is
+terminal: Activate and nonnil callback reassignment refuse afterward. An entered
+command can finish with its accepted result or committed notification failure;
+Retire does not undo accepted state.
+
+Retire does not own or free the coordinator, root or store. The caller must keep
+them alive until every entered call returns. Generation-owned renderer teardown,
+including state transfer to a successor and physical native Sync frames, remains
+required before callback-driven renderer disposal is supported by this path.
+
+`nyx.binding.lifetime` supplies the minimal `INyxBindingOwnedState` holder for
+that ownership transfer. `OwnNyxBindingState` adopts one raw state exactly once;
+entered and successor generations must share the same returned interface.
+External borrowed stores use no holder. Eleven counted checks pass on both
+targets, including successor retirement while an entered lease survives. This
+primitive is tested separately; consuming it in renderer generations remains
+part of the pending integration.
+
 ## Selection, edits and failures
 
 `Select` accepts a collection-scoped `TNyxItemRef`. Single selection remains the
@@ -299,6 +773,69 @@ uses the modifier-assisted selection model. Full pattern qualification remains
 open, including cell/column selection, assistive technology checks and
 physical-device testing. This delivery does not establish blanket accessibility
 conformance.
+
+## Copying accepted collection data
+
+`nyx.collections.clipboard` captures an exact accepted cell or an explicitly
+chosen selection into `INyxCollectionClipboardText`. The payload owns its text,
+typed scalar values, row/field identities and source revision. It retains no
+view, store, editor or target widget, so a later refresh or retirement cannot
+redirect a pending copy to a different service/process.
+
+Use the complete store snapshot for source membership. The view's snapshot is
+its current filtered, sorted and possibly paged result; pass that separately
+when choosing `nccmSelectedPage`. A selection snapshot and source must have the
+same collection key/data revision. A stale or empty selection refuses before
+any clipboard write.
+
+```pascal
+LSource := LTable.Store.Snapshot;
+LSelection := LTable.Selection.Snapshot;
+LPayload := NewNyxCollectionClipboardRows(
+  LSource,
+  LSelection,
+  [NyxColumnIdentity(NyxTextField('Service')),
+    NyxColumnIdentity(NyxTextField('Status'))],
+  nccmAllSelectedSource,
+  nil,
+  True,
+  nccleLF,
+  TNyxCollectionClipboardLimits.Defaults);
+
+LRequest := WriteNyxCollectionClipboard(
+  LPayload, LClipboardHost, LScheduler, LCancellation, LReply);
+```
+
+Here the caller supplies an `INyxClipboardWriteHost`, UI scheduler, optional
+cancellation scope and completion method. The host may complete inline. Keep
+the borrowed completion receiver alive until completion or explicitly cancel
+its request before destroying that receiver. Cancellation detaches delivery;
+it cannot reverse a clipboard write that already happened. Configure platform
+authority at the adapter boundary rather than storing it in a design document.
+
+`nccmAllSelectedSource` includes selected rows hidden by filtering/paging, in
+source order. `nccmSelectedPage` intersects that same immutable selection with
+the explicit page, in page order. Neither means all matching unselected rows.
+Explicit typed fields choose order and hidden-column inclusion. Alternatively,
+`NyxCollectionClipboardFields` resolves visible presentation order or complete
+arrangement order from an already captured `TNyxColumnLayoutObservation`.
+
+Row output uses TSV, optional exact field-name headers and explicit LF/CRLF row
+separators, without a trailing row terminator. Cells containing tabs, newlines,
+quotes or NUL are quoted, with doubled quotes. A single-cell capture instead
+returns the whole unescaped raw value. Boolean/numeric text is invariant; text
+preserves Unicode, embedded NUL and original cell line endings. Neither path
+copies a formatted display or unfinished edit draft. Fluent limits bound rows,
+fields, output cells, inspected rows and UTF-8 bytes before external effects.
+
+The typed clipboard receipt distinguishes written, unavailable, denied,
+activation-required, cancelled and failed outcomes, and identifies the actual
+representation. Exact mode refuses a host that cannot preserve the requested
+text. Platform-text mode explicitly allows platform line-ending conventions;
+embedded NUL cannot be advertised as interoperable plain text. The browser and
+LCL adapters expose injectable authority for testing. Real OS clipboard and
+complete mounted keyboard/menu workflows have their own qualification; the
+pure capture helpers do not establish those interactions.
 
 ## Viewport-sized table paging
 

@@ -254,6 +254,7 @@ var
   LNextPages: INyxCollectionPages;
   LItems: array of TNyxItemRef;
   LQueryTransfer: INyxPreparedPublication;
+  LColumnTransfer: INyxPreparedPublication;
 begin
   LCandidate := TBindings.Create(ARoot, FContext);
   Result := LCandidate;
@@ -276,8 +277,23 @@ begin
     end;
 
     if (LMatch < 0) or (FViews[LMatch].Store <> LCandidate.FViews[LIndex].Store) or
-      (FViews[LMatch].Projection <> LCandidate.FViews[LIndex].Projection) or
-      (FViews[LMatch].Spec.ToData.ToJSON <> LCandidate.FViews[LIndex].Spec.ToData.ToJSON) then
+      (FViews[LMatch].Projection <> LCandidate.FViews[LIndex].Projection) then
+    begin
+      Continue;
+    end;
+    { Presentation choices have their own compatible typed-field transfer.
+      A title/default/schema edit must not discard every unrelated width or pin.
+      This does not broaden the exact-Spec query/page/selection rule below. }
+    LColumnTransfer := PrepareNyxCollectionColumnTransfer(FViews[LMatch],
+      LCandidate.FViews[LIndex]);
+
+    if LColumnTransfer <> nil then
+    begin
+      PublishNyxGroup([LColumnTransfer]);
+    end;
+
+    if FViews[LMatch].Spec.ToData.ToJSON <>
+      LCandidate.FViews[LIndex].Spec.ToData.ToJSON then
     begin
       Continue;
     end;

@@ -30,13 +30,22 @@ uses
   nyx.collections.view.types, nyx.collections.bindings, nyx.collections.selection,
   nyx.collections.query, nyx.composition, nyx.codec, nyx.events, nyx.behavior,
   nyx.scheduler, nyx.publication
-  {$ifdef PAS2JS}, Web{$endif};
+  {$ifdef PAS2JS}, JS, Web{$endif};
 
 const
   CIntent = 'example.selection-summary';
   CSecondIntent = 'example.second-summary';
 
 type
+  { Controlled failures occur only after the creator revokes and disconnects its
+    actual subscriptions. Platform values exercise the browser bridge boundary;
+    every fixture destructor itself remains nonthrowing. }
+  TCleanupFault = (cfNone, cfEmptyPascal{$ifdef PAS2JS}, cfPlatform{$endif});
+  {$ifdef PAS2JS}
+  { Browser bridges can reject without an Error object. These distinct payload
+    domains must survive all-attempt retirement without truthiness conversion. }
+  TPlatformFailureKind = (pfUndefined, pfNull, pfObject);
+  {$endif}
   { A creator-owned specialized binding remains discoverable through the generic
     driver's Binding/Find contract. Count means retained selection membership. }
   ISummaryBinding = interface(INyxCoordinatorBinding)
@@ -98,6 +107,10 @@ type
     FailValidate: Boolean;
     FailNotify: Boolean;
     FailDisconnect: Boolean;
+    CleanupFault: TCleanupFault;
+    {$ifdef PAS2JS}
+    PlatformFailure: JSValue;
+    {$endif}
     ReleaseOnNotify: Boolean;
     constructor Create(const AProjection: INyxCoordinatorProjection;
       const AViews: INyxCollectionBindings; const AView: INyxPreparedEventView;
@@ -126,6 +139,11 @@ type
     FailValidate: Boolean;
     FailNotify: Boolean;
     FailDisconnect: Boolean;
+    CleanupFault: TCleanupFault;
+    FirstCleanupFault: TCleanupFault;
+    {$ifdef PAS2JS}
+    PlatformFailure: JSValue;
+    {$endif}
     ReleaseOnNotify: Boolean;
     RegisterDuringPrepare: INyxCoordinatorRegistry;
     Last: ISummaryBinding;
@@ -315,7 +333,6 @@ begin
   FViewToken := FView.Subscribe(FReceiver.Changed);
   FClickToken := FEventView.PrepareObservation(NyxControlEvents(FClear.ID, niRuntime),
     ntClick, FReceiver, nopBeforeCallbacks, NyxEvent(''));
-  Update(False);
 end;
 
 destructor TSummary.Destroy;
@@ -424,6 +441,10 @@ begin
 end;
 
 procedure TSummary.Cleanup;
+{$ifdef PAS2JS}
+var
+  LPlatformFailure: JSValue;
+{$endif}
 begin
   Revoke;
 
@@ -453,6 +474,24 @@ begin
   FPort := nil;
   FReceiver := nil;
 
+  if CleanupFault = cfEmptyPascal then
+  begin
+    raise ENyxCoordinator.Create('');
+  end;
+  {$ifdef PAS2JS}
+
+  if CleanupFault = cfPlatform then
+  begin
+    { A Pascal class cast emits rtl.getObject and converts undefined to null.
+      This minimal platform boundary must produce the actual arbitrary throw,
+      so the test can detect that same lossy cast in a retirement implementation. }
+    LPlatformFailure := PlatformFailure;
+    asm
+      throw LPlatformFailure;
+    end;
+  end;
+  {$endif}
+
   if FailDisconnect then
   begin
     raise ENyxCoordinator.Create('Injected creator cleanup failure after retirement');
@@ -472,6 +511,15 @@ begin
 
   if FValidated or FRetired or FRevoked or FGeneration.Cancelled then
   begin
+    {$ifdef PAS2JS}
+    { Copied diagnostics only at the existing refusal. Do not query a second
+      generation getter or alter the original condition, exception or checks. }
+    document.body.setAttribute('data-coordinators-refusal',
+      'role=' + FStatus.ID + ';validated=' + BoolToStr(FValidated, True) +
+      ';retired=' + BoolToStr(FRetired, True) +
+      ';revoked=' + BoolToStr(FRevoked, True) +
+      ';generation-present=' + BoolToStr(FGeneration <> nil, True));
+    {$endif}
     raise ENyxCoordinatorCancelled.Create('Summary preparation is not current');
   end;
 
@@ -562,7 +610,21 @@ begin
   LOwner.FailValidate := FailValidate;
   LOwner.FailNotify := FailNotify;
   LOwner.FailDisconnect := FailDisconnect;
+  LOwner.CleanupFault := CleanupFault;
+
+  if (Calls = 1) and (FirstCleanupFault <> cfNone) then
+  begin
+    LOwner.CleanupFault := FirstCleanupFault;
+  end;
+  {$ifdef PAS2JS}
+  LOwner.PlatformFailure := PlatformFailure;
+  {$endif}
   LOwner.ReleaseOnNotify := ReleaseOnNotify;
+  { Initial projection takes a temporary self-interface lease. The factory must
+    own LPlan first: pas2js does not supply FPC's constructor reference guard.
+    Keep the first projection before publication and before the observation
+    lease, so a refused initialization releases the unadmitted child normally. }
+  LOwner.Update(False);
   Last := LOwner;
   Result := LPlan;
 end;
@@ -1600,6 +1662,119 @@ begin
   end;
 end;
 
+{ The first failure owns the diagnostic even when it has no text or no object.
+  The same two installed reusable instances retain independent real scopes;
+  subsequent failures cannot skip their disconnects or redirect the error. }
+procedure EmptyDiagnosticCleanupCases;
+const
+  CExpectedDiagnostic: TNyxText = 'Coordinator vector retired; cleanup failed: ' +
+    'Coordinator disconnected; cleanup failed: ';
+var
+  LFixture: TFixture;
+  LFirst: ISummaryBinding;
+  LSecond: ISummaryBinding;
+  LRejected: Boolean;
+begin
+  LFixture := TFixture.Create;
+  try
+    LFixture.Factory.FirstCleanupFault := cfEmptyPascal;
+    LFixture.Factory.FailDisconnect := True;
+    LFixture.Accept;
+    LFirst := LFixture.Summary;
+    LSecond := LFixture.Summary(True);
+    LRejected := False;
+    try
+      DisconnectNyxCoordinatorMounts(LFixture.Mounts);
+    except
+      on LException: ENyxCoordinator do
+      begin
+        { The mount and vector keep their established typed context prefixes.
+          The first creator's empty text remains empty beneath BOTH layers;
+          the second creator's nonempty diagnostic must not replace it. }
+        LRejected := TNyxText(LException.Message) = CExpectedDiagnostic;
+      end;
+    end;
+    Check(LRejected and (Length(LFixture.Mounts) = 0) and
+      (LFirst.Disconnections = 1) and (LSecond.Disconnections = 1),
+      'empty first Pascal diagnostic is reported after both installed owners disconnect');
+    Check((LFixture.Root.Part(NyxPart('clear-selection')).EnabledPolicyCount = 0) and
+      (LFixture.Root(True).Part(NyxPart('clear-selection')).EnabledPolicyCount = 0) and
+      (TNyxCodec.Encode(LFixture.Document) = LFixture.Baseline),
+      'later cleanup failure cannot replace an empty first diagnostic or retain sibling policies');
+  finally
+    LFirst := nil;
+    LSecond := nil;
+    LFixture.Free;
+  end;
+end;
+
+{$ifdef PAS2JS}
+procedure PlatformCleanupCases;
+var
+  LKind: TPlatformFailureKind;
+  LFixture: TFixture;
+  LFirst: ISummaryBinding;
+  LSecond: ISummaryBinding;
+  LPayload: JSValue;
+  LObserved: JSValue;
+  LObject: TJSObject;
+  LCaught: Boolean;
+begin
+  for LKind := Low(TPlatformFailureKind) to High(TPlatformFailureKind) do
+  begin
+    LObject := nil;
+    case LKind of
+      pfUndefined: LPayload := Undefined;
+      pfNull: LPayload := Null;
+      pfObject:
+      begin
+        LObject := TJSObject.new;
+        LObject['message'] := 'Original platform cleanup failure / 🌙';
+        LPayload := LObject;
+      end;
+    end;
+    LFixture := TFixture.Create;
+    try
+      LFixture.Factory.FirstCleanupFault := cfPlatform;
+      LFixture.Factory.CleanupFault := cfEmptyPascal;
+      LFixture.Factory.PlatformFailure := LPayload;
+      LFixture.Accept;
+      LFirst := LFixture.Summary;
+      LSecond := LFixture.Summary(True);
+      LCaught := False;
+      LObserved := Undefined;
+      try
+        DisconnectNyxCoordinatorMounts(LFixture.Mounts);
+      except
+        LCaught := True;
+        LObserved := JSExceptValue;
+      end;
+      case LKind of
+        pfUndefined: Check(LCaught and isUndefined(LObserved),
+          'undefined first platform throw survives subsequent Pascal cleanup failure');
+        pfNull: Check(LCaught and isNull(LObserved),
+          'null first platform throw remains distinct from no failure');
+        pfObject: Check(LCaught and isObject(LObserved) and
+          (TJSObject(LObserved) = LObject),
+          'object platform throw retains exact identity after all cleanup');
+      end;
+      Check((Length(LFixture.Mounts) = 0) and not LFirst.Connected and
+        not LSecond.Connected and (LFirst.Disconnections = 1) and
+        (LSecond.Disconnections = 1),
+        'raw platform failure still disconnects both independent installed owners exactly once');
+      Check((LFixture.Root.Part(NyxPart('clear-selection')).EnabledPolicyCount = 0) and
+        (LFixture.Root(True).Part(NyxPart('clear-selection')).EnabledPolicyCount = 0) and
+        (TNyxCodec.Encode(LFixture.Document) = LFixture.Baseline),
+        'platform cleanup failure retires both policy scopes and preserves authored defaults');
+    finally
+      LFirst := nil;
+      LSecond := nil;
+      LFixture.Free;
+    end;
+  end;
+end;
+{$endif}
+
 begin
   try
     RegistryCases;
@@ -1610,6 +1785,8 @@ begin
     ReplacementCases;
     BusyAndAbandonCases;
     CommittedAndLifetimeCases;
+    EmptyDiagnosticCleanupCases;
+    {$ifdef PAS2JS}PlatformCleanupCases;{$endif}
     {$ifdef PAS2JS}
     document.body.setAttribute('data-coordinators', 'passed');
     document.body.setAttribute('data-coordinators-checks', IntToStr(GChecks));

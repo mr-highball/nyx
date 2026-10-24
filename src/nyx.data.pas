@@ -103,6 +103,9 @@ type
     Value: TNyxDataValue;
   end;
 
+  { Admitted open extension identity. Construction validates exact Unicode and
+    the quoted JSON byte budget without creating a temporary data tree. Copies
+    retain only immutable name/initialization strings, never a store or owner. }
   TNyxExtensionRef = record
   private
     FName: TNyxText;
@@ -686,13 +689,12 @@ begin
 end;
 
 function NyxExtension(const AName: TNyxText): TNyxExtensionRef;
-var
-  LChecked: TNyxDataValue;
 begin
-  { Validate keys with the same Unicode/byte contract as a JSON string. No
-    lossy name=value storage is involved, so '=', NUL and empty keys survive. }
-  LChecked := NyxData(AName);
-  Result.FName := LChecked.AsText;
+  { Use the same quoted UTF-8 budget/escape policy as NyxData(text), without
+    formatting, parsing and retiring a JSON tree for every typed name lookup.
+    Keep exact source bytes/units, including '=', NUL and empty names. }
+  NyxJSONStringByteLength(AName, TJSONString.StrictEscaping);
+  Result.FName := AName;
   Result.FInitialized := CExtensionReferenceMarker;
 end;
 

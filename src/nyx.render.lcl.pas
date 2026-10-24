@@ -104,6 +104,7 @@ uses
   nyx.resources,
   nyx.resource.context,
   nyx.binding,
+  nyx.binding.lifetime,
   nyx.binding.types,
   nyx.collections.view,
   nyx.collections.selection,
@@ -122,6 +123,13 @@ uses
 
 type
   TNyxLCLRenderer = class;
+  { Private canonical generation lease. Current is a flags-only weak-receiver
+    check; it never queries a router, widget, store or replacement renderer. }
+  INyxLCLBindingGeneration = interface(IInterface)
+    function Current: Boolean;
+    function Coordinator: TNyxLiveBindings;
+    function PhysicalFrame: INyxNativeGestureFrame;
+  end;
   { Saved widget slots preserve a custom factory's handlers. Two snapshots are
     needed for the outer face and a separate framed input; neither owns controls. }
   TNyxLCLPointerHooks = record
@@ -162,6 +170,7 @@ type
   TNyxLCLBinding = class
   private
     FRenderer: TNyxLCLRenderer;
+    FGeneration: TObject; { weak canonical owner; entered methods lease it }
     FNode: TNyxNode;
     FControl: TControl;
     FInput: TControl;
@@ -212,6 +221,9 @@ type
     FPreviousKeyDown: TKeyEvent;
     FPreviousKeyUp: TKeyEvent;
     FCollectionMount: INyxCollectionMount;
+    { Readonly facts avoid retaining a mount through native capture hooks.
+      Embedded local acceptance still observes its enclosing pending gate. }
+    FCollectionInputLifetime: INyxCollectionInputLifetime;
     FCanvasView: INyxCanvasWorkspaceView;
     FToolCanvasView: INyxToolCanvasView;
     FCollectionPager: INyxCollectionPager;
@@ -226,6 +238,7 @@ type
       atlas during unrelated input, layout settling or selection refresh. }
     FLastButtonFace: TNyxText;
     FLastButtonGlyphSource: TNyxText;
+    function GenerationLease: INyxLCLBindingGeneration;
     procedure SyncLiteralItems;
     procedure SetupCanvas(ARenderer: TNyxLCLRenderer);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -268,6 +281,9 @@ type
     procedure TabsChanged(const AChange: TNyxTabTransition);
     function AdmitTabs(const AChange: TNyxTabTransition): Boolean;
     procedure Click(ASender: TObject);
+    { Same real command, with an explicit outcome for a nested column button.
+      Notification failure stays committed but denies that later Fit default. }
+    function PerformClick(ASender: TObject): Boolean;
     procedure Change(ASender: TObject);
     procedure CommitValue(ASender: TObject);
     procedure Focus(ASender: TObject);
@@ -281,6 +297,10 @@ type
     procedure Keyboard(ASender: TObject; var AKey: Word; AShift: TShiftState;
       ATrigger: TNyxTrigger);
   end;
+
+  { Copied vector of borrowed binding handles. The exact generation assumes
+    final wrapper ownership at retirement; its entered leases retain the vector. }
+  TNyxLCLBindings = array of TNyxLCLBinding;
 
   { Adapter-private intrinsic result for one synchronous layout pass. Font owns
     a complete typography copy; text and size are values. No live label, parent,
@@ -322,6 +342,13 @@ type
     end;
   private
     FFocusReplay: IFocusReplay;
+    FRenderAttempt: IInterface; { exact structural attempt, never revived }
+    FGeneration: INyxLCLBindingGeneration;
+    FGenerationObject: TObject; { exact private implementation, borrowed }
+    FOwnedState: INyxBindingOwnedState;
+    FThemeOwner, FBaseThemeOwner, FGlyphCacheOwner: IInterface;
+    FRetirementShell, FDestroying: Boolean;
+    FDeferredNativeControls: Boolean;
     FTheme: TNyxTheme;
     FOwnTheme: Boolean;
     { Startup palette owns independent values; per-document overrides can be
@@ -411,7 +438,7 @@ type
     FLabelMeasurementsReused: QWord;
     {$endif}
     FProjecting: Boolean;
-    FBindings: array of TNyxLCLBinding;
+    FBindings: TNyxLCLBindings;
     FFactoryKinds: array of TNyxText;
     FDrawingNames: array of TNyxText;
     FDrawingProviders: array of INyxDrawingProvider;
@@ -442,6 +469,11 @@ type
     FOwnState: Boolean;
     FLiveBindings: TNyxLiveBindings;
     FCollectionBindings: INyxCollectionBindings;
+    { The accepted own gate and immutable inherited gate have distinct owners.
+      Embedded local admission never releases an enclosing staged generation. }
+    FCollectionInputGate: INyxCollectionInputGate;
+    FInheritedCollectionInputGate: INyxCollectionInputGate;
+    FCollectionInputPhase: TNyxCollectionInputPhase;
     { Caller-owned executable registrations affect future candidates only.
       Built-ins compose through that same immutable membership and lifetime;
       accepted ports revoke before widgets, with cleanup deferred past adoption. }
@@ -506,6 +538,8 @@ type
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
       AFailure: TNyxBindingFailure = nbfRejected; ARestoreInput: Boolean = True);
+    procedure ClearRetired(AKeepPresentation: Boolean;
+      const AEventView: INyxPreparedEventView);
     procedure Clear(AKeepPresentation: Boolean = False;
       const AEventView: INyxPreparedEventView = nil);
     function FactoryIndex(ANode: TNyxNode): Integer;
@@ -580,7 +614,15 @@ type
     { Reparent admitted ordinary hosts without replacing controls/bindings.
       Preserve every supported editing range and suppress incidental events. }
     procedure ArrangeControls(AFormer: TNyxNode);
+    { One native presentation boundary shared by visibility and focus recovery.
+      Exact entered controls stay leased by their original physical frame. }
+    procedure ChangePresentationPlane(APlane: TWinControl; AVisible: Boolean;
+      AFocus: TWinControl; const ASelection: TNyxTextSelection;
+      ASynchronize: Boolean);
   public
+    { Internal cleanup shell, never a mounted renderer. Public visibility keeps
+      FPC constructor semantics explicit; callers use Create for usable views. }
+    constructor CreateRetirementShell;
     constructor Create(ATheme: TNyxTheme = nil);
     destructor Destroy; override;
     { UI-thread registration before mounting. Named implementations are managed,
@@ -642,6 +684,17 @@ type
       host refuses before changing parenting. A same-host request is a no-op.
       No document/history command occurs. }
     procedure MoveHost(AHost: TWinControl);
+    { Visibility-only adapter transaction over this exact borrowed presentation
+      plane. Its parent never changes and its caller owns its lifetime. Native
+      focus/validation/layout callbacks are muted; all grid editors retain their
+      drafts and handles. A later ordinary Sync owns final visible allocation. }
+    procedure SetPresentationPlaneVisible(APlane: TWinControl; AVisible: Boolean);
+    { Rollback to this exact borrowed plane, run ordinary updater/layout Sync,
+      then recover its borrowed focused descendant and scalar selection. The
+      entered frame and grid validation guards span the entire operation;
+      authored focus callbacks stay muted during native visibility/focus writes. }
+    procedure RestorePresentationPlane(APlane: TWinControl; AFocus: TWinControl;
+      const ASelection: TNyxTextSelection);
     { Highlight the outermost realized face of this authored design identity.
       Empty/absent identities clear the outline without taking keyboard focus.
       Selection is editor presentation and never mutates the owned document. }
@@ -877,10 +930,79 @@ implementation
 uses
   InterfaceBase,
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
-  nyx.collections.query.lcl,
+  nyx.collections, nyx.collections.query.lcl,
+  nyx.collections.arrangement.lcl,
+  nyx.collections.clipboard.actions,
   nyx.application.resources;
 
 type
+
+  { Internal control-flow unwind after the exact native receiver retires.
+    Event boundaries consume it; it is never a successor binding diagnostic. }
+  ENyxNativeGenerationRetired = class(ENyxModel);
+
+  { One ordinary raw-object owner for exact built-in theme/cache arguments.
+    Entered generations retain these leases through native helper callouts. }
+  TNativeRenderObject = class(TInterfacedObject)
+  private
+    FValue: TObject;
+  public
+    constructor Create(AValue: TObject);
+    destructor Destroy; override;
+  end;
+
+  { An accepted generation is never retargeted. The fresh detached candidate
+    adopts its one final receiver at commit. Revoke detaches authority at once;
+    raw coordinator/bindings/root/state remain leased through entered calls.
+    No native panel is owned here: the SAME existing physical frame owns its
+    deferred widget retirement independently of these portable model leases. }
+  TNativeBindingGeneration = class(TInterfacedObject, INyxLCLBindingGeneration)
+  public
+    Owner: TNyxLCLRenderer;
+    Live: TNyxLiveBindings;
+    Root: TNyxNode;
+    OwnedState: INyxBindingOwnedState;
+    Source: INyxViewPublicationSource;
+    ThemeOwner: IInterface;
+    BaseThemeOwner: IInterface;
+    GlyphCacheOwner: IInterface;
+    Frame: INyxNativeGestureFrame;
+    RetiredBindings: TNyxLCLBindings;
+    constructor Create(AOwner: TNyxLCLRenderer);
+    destructor Destroy; override;
+    procedure Revoke;
+    function Current: Boolean;
+    function Coordinator: TNyxLiveBindings;
+    function PhysicalFrame: INyxNativeGestureFrame;
+  end;
+
+  { The FIRST component owned by a physical panel is destroyed after its later
+    controls. It keeps the exact retired generation/tree/assets alive through
+    their destructors, including the existing deferred native frame release.
+    It owns no panel or renderer; the frame detaches its queued panel batch
+    before freeing it, so asynchronous retirement breaks the temporary lease. }
+  TNativePanelGenerationLease = class(TComponent)
+  private
+    FGeneration: INyxLCLBindingGeneration;
+  public
+    constructor CreateFor(AOwner: TComponent;
+      const AGeneration: INyxLCLBindingGeneration);
+  end;
+
+  { Semantic phase readers retain the entered coordinator and reject a retired
+    generation after each real router read. The dispatcher never borrows a
+    method pointer from a coordinator that cleanup can free synchronously. }
+  TNativeSignalSnapshot = class(TInterfacedObject)
+  private
+    FGeneration: INyxLCLBindingGeneration;
+    FEvents: INyxEvents;
+    FRevision: Integer;
+  public
+    constructor Create(const AGeneration: INyxLCLBindingGeneration;
+      const AEvents: INyxEvents; ARevision: Integer);
+    function Read(ANode: TNyxNode; ATrigger: TNyxTrigger): TNyxEventInfo;
+  end;
+
   { Final presentation receiver is weak. A scope retains this managed port,
     never a renderer/controller; Sync is the last outward action in Request. }
   TNyxLCLCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget)
@@ -1135,11 +1257,188 @@ begin
   end;
 end;
 
+function NativeGenerationCurrent(const AGeneration: INyxLCLBindingGeneration): Boolean;
+begin
+  Result := (AGeneration = nil) or AGeneration.Current;
+end;
+
+procedure RequireNativeGeneration(const AGeneration: INyxLCLBindingGeneration);
+begin
+
+  if not NativeGenerationCurrent(AGeneration) then
+  begin
+    raise ENyxNativeGenerationRetired.Create('Native binding generation retired during callback');
+  end;
+end;
+
+constructor TNativePanelGenerationLease.CreateFor(AOwner: TComponent;
+  const AGeneration: INyxLCLBindingGeneration);
+begin
+  inherited Create(AOwner);
+  FGeneration := AGeneration;
+end;
+
+constructor TNativeSignalSnapshot.Create(
+  const AGeneration: INyxLCLBindingGeneration; const AEvents: INyxEvents;
+  ARevision: Integer);
+begin
+  inherited Create;
+  FGeneration := AGeneration;
+  FEvents := AEvents;
+  FRevision := ARevision;
+end;
+
+function TNativeSignalSnapshot.Read(ANode: TNyxNode;
+  ATrigger: TNyxTrigger): TNyxEventInfo;
+var
+  LRevision: Integer;
+begin
+  LRevision := FEvents.ViewRevision;
+  RequireNativeGeneration(FGeneration);
+
+  if LRevision <> FRevision then
+  begin
+    raise ENyxNativeGenerationRetired.Create('Native event view replaced during callback');
+  end;
+  Result := FGeneration.Coordinator.SignalSnapshot(ANode, ATrigger);
+  RequireNativeGeneration(FGeneration);
+end;
+
+constructor TNativeRenderObject.Create(AValue: TObject);
+begin
+  inherited Create;
+  FValue := AValue;
+end;
+
+destructor TNativeRenderObject.Destroy;
+var
+  LValue: TObject;
+begin
+  LValue := FValue;
+  FValue := nil;
+  try
+    LValue.Free;
+  finally
+    inherited Destroy;
+  end;
+end;
+
+constructor TNativeBindingGeneration.Create(AOwner: TNyxLCLRenderer);
+var
+  LRoot: TNyxNode;
+begin
+  inherited Create;
+  { Acquire the extra tree reference before adopting any raw cleanup duty. A
+    failed acquisition leaves the candidate's original ownership untouched. }
+  LRoot := AOwner.FRoot;
+  LRoot.AcquireReference;
+  Root := LRoot;
+  OwnedState := AOwner.FOwnedState;
+  Source := AOwner.FViewPublicationSource;
+  ThemeOwner := AOwner.FThemeOwner;
+  BaseThemeOwner := AOwner.FBaseThemeOwner;
+  GlyphCacheOwner := AOwner.FGlyphCacheOwner;
+  Frame := AOwner.FPhysicalFrame;
+  Live := AOwner.FLiveBindings;
+  Owner := AOwner;
+end;
+
+procedure TNativeBindingGeneration.Revoke;
+begin
+  Owner := nil;
+
+  if Live <> nil then
+  begin
+    Live.Retire;
+  end;
+end;
+
+destructor TNativeBindingGeneration.Destroy;
+var
+  I: Integer;
+  LLive: TNyxLiveBindings;
+  LRoot: TNyxNode;
+  LBindings: TNyxLCLBindings;
+begin
+  { Final cleanup detaches its exact raw duties before releasing anything.
+    Subscription authority was normally retired at Clear entry; this also
+    covers a candidate abandoned before activation. }
+  Owner := nil;
+  LLive := Live;
+  Live := nil;
+  LRoot := Root;
+  Root := nil;
+  LBindings := RetiredBindings;
+  RetiredBindings := nil;
+  try
+    try
+
+      if LLive <> nil then
+      begin
+        try
+          LLive.Retire;
+        finally
+          LLive.Free;
+        end;
+      end;
+    finally
+      for I := 0 to High(LBindings) do
+      begin
+        LBindings[I].Free;
+      end;
+    end;
+  finally
+    try
+
+      if LRoot <> nil then
+      begin
+        LRoot.ReleaseReference;
+      end;
+    finally
+      Source := nil;
+      OwnedState := nil;
+      inherited Destroy;
+    end;
+  end;
+end;
+
+function TNativeBindingGeneration.Current: Boolean;
+begin
+  Result := Owner <> nil;
+end;
+
+function TNativeBindingGeneration.Coordinator: TNyxLiveBindings;
+begin
+  Result := Live;
+end;
+
+function TNativeBindingGeneration.PhysicalFrame: INyxNativeGestureFrame;
+begin
+  Result := Frame;
+end;
+
+function TNyxLCLBinding.GenerationLease: INyxLCLBindingGeneration;
+begin
+  Result := nil;
+
+  if FGeneration <> nil then
+  begin
+    Result := TNativeBindingGeneration(FGeneration);
+  end;
+end;
+
+constructor TNyxLCLRenderer.CreateRetirementShell;
+begin
+  inherited Create;
+  FRetirementShell := True;
+end;
+
 constructor TNyxLCLRenderer.Create(ATheme: TNyxTheme);
 begin
   inherited Create;
   FFocusReplay := TNyxLCLFocusReplay.Create;
   FButtonGlyphCache := TNyxLCLButtonGlyphCache.Create;
+  FGlyphCacheOwner := TNativeRenderObject.Create(FButtonGlyphCache);
   FTheme := ATheme;
   FBorrowedTheme := ATheme;
   FOwnTheme := ATheme = nil;
@@ -1147,9 +1446,11 @@ begin
   if FOwnTheme then
   begin
     FTheme := TNyxTheme.Create;
+    FThemeOwner := TNativeRenderObject.Create(FTheme);
   end;
   FTheme.Validate;
   FBaseTheme := NewNyxDocumentTheme(nil, FTheme);
+  FBaseThemeOwner := TNativeRenderObject.Create(FBaseTheme);
   FEvents := NewNyxEvents;
   FCollectionQueryEvents := FEvents;
   FCoordinatorRefreshObject := TNyxLCLCoordinatorRefresh.Create(Self);
@@ -1162,7 +1463,30 @@ end;
 destructor TNyxLCLRenderer.Destroy;
 var
   LRetiringCoordinators: TNyxCoordinatorMounts;
+  LEvents: INyxEvents;
+  LThemeOwner: IInterface;
+  LBaseOwner: IInterface;
+  LCacheOwner: IInterface;
 begin
+
+  if FRetirementShell then
+  begin
+    inherited Destroy;
+    Exit;
+  end;
+  FDestroying := True;
+  LEvents := FEvents;
+  LThemeOwner := FThemeOwner;
+  FThemeOwner := nil;
+  LBaseOwner := FBaseThemeOwner;
+  FBaseThemeOwner := nil;
+  LCacheOwner := FGlyphCacheOwner;
+  FGlyphCacheOwner := nil;
+
+  if FGenerationObject <> nil then
+  begin
+    TNativeBindingGeneration(FGenerationObject).Owner := nil;
+  end;
   { Flag-only weak receiver revocation precedes event/canvas/control cleanup. }
 
   if FCoordinatorRefreshObject <> nil then
@@ -1179,28 +1503,272 @@ begin
     FContentGuard.Retire;
   end;
 
-  if FEvents <> nil then
-  begin
-    FEvents.Close;
-  end;
-  Clear;
-  FButtonGlyphCache.Free;
-  FBaseTheme.Free;
-
-  if FOwnTheme then
-  begin
-    FTheme.Free;
-  end;
+  { Clear detaches original fields before callbacks; keep the exact router and
+    assets locally until all old receiver cleanup has returned. }
+  { All final instance writes precede Clear's first outward cleanup. }
+  FTheme := nil;
+  FBaseTheme := nil;
+  FButtonGlyphCache := nil;
   try
-    DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
-  except
-    { Disposal has already retired every renderer field. Explicit Unmount and
-      postcommit retirement still report cleanup failures to their caller. }
+    try
+      Clear;
+    except
+      { Explicit Unmount reports fallible disconnects. Destruction must finish
+        its FPC FreeInstance epilogue, so final release only attempts cleanup. }
+    end;
+    try
+
+      if LEvents <> nil then
+      begin
+        LEvents.Close;
+      end;
+    except
+      { A router cleanup failure cannot skip independent coordinator release. }
+    end;
+    try
+      DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
+    except
+      { Disposal has already retired every renderer field. Explicit Unmount and
+        postcommit retirement still report cleanup failures to their caller. }
+    end;
+  finally
+    inherited Destroy;
   end;
-  inherited Destroy;
 end;
 
 procedure TNyxLCLRenderer.Clear(AKeepPresentation: Boolean;
+  const AEventView: INyxPreparedEventView);
+var
+  LOld: TNyxLCLRenderer;
+  LIndex: Integer;
+  LAxis: TNyxResizeAxis;
+  LGeneration: INyxLCLBindingGeneration;
+  LFailure: Exception;
+
+  procedure RememberFailure;
+  begin
+
+    if LFailure = nil then
+    begin
+      LFailure := Exception(AcquireExceptionObject);
+    end;
+  end;
+
+begin
+  LFailure := nil;
+  { An isolated retirement receiver owns ORIGINAL fields only. Nested cleanup
+    may mount a successor or destroy this renderer; no later tail reads Self. }
+  LOld := TNyxLCLRenderer.CreateRetirementShell;
+  try
+    LOld.FEvents := FEvents;
+    LOld.FPhysicalFrame := FPhysicalFrame;
+    LGeneration := FGeneration;
+
+    if FGenerationObject <> nil then
+    begin
+      TNativeBindingGeneration(FGenerationObject).Owner := nil;
+      TNativeBindingGeneration(FGenerationObject).RetiredBindings := FBindings;
+    end;
+    LOld.FCollectionInputGate := FCollectionInputGate;
+    FCollectionInputGate := nil;
+    LOld.FViewPublicationSource := FViewPublicationSource;
+    FViewPublicationSource := nil;
+    LOld.FCallerCoordinatorSnapshot := FCallerCoordinatorSnapshot;
+    FCallerCoordinatorSnapshot := nil;
+    LOld.FCoordinatorMounts := FCoordinatorMounts;
+    FCoordinatorMounts := nil;
+    LOld.FCoordinatorIDs := FCoordinatorIDs;
+    FCoordinatorIDs := nil;
+    LOld.FContentBlueprint := FContentBlueprint;
+    FContentBlueprint := nil;
+    LOld.FCanvasResizeGrips := FCanvasResizeGrips;
+    FCanvasResizeGrips := nil;
+    LOld.FCanvasMoveGrip := FCanvasMoveGrip;
+    FCanvasMoveGrip := nil;
+    LOld.FCanvasMoveView := FCanvasMoveView;
+    FCanvasMoveView := nil;
+    LOld.FCanvasMoveHost := FCanvasMoveHost;
+    FCanvasMoveHost := nil;
+    LOld.FMeasurementLabel := FMeasurementLabel;
+    FMeasurementLabel := nil;
+    LOld.FPanel := FPanel;
+    FPanel := nil;
+    LOld.FProjectionBaseline := FProjectionBaseline;
+    FProjectionBaseline := nil;
+    LOld.FBindings := FBindings;
+    FBindings := nil;
+    LOld.FCollectionBindings := FCollectionBindings;
+    FCollectionBindings := nil;
+    LOld.FCaptureObserver := FCaptureObserver;
+    FCaptureObserver := nil;
+    LOld.FEditingObserver := FEditingObserver;
+    FEditingObserver := nil;
+    LOld.FViewportObserver := FViewportObserver;
+    FViewportObserver := nil;
+    LOld.FEmitterScope := FEmitterScope;
+    FEmitterScope := nil;
+    LOld.FLiveBindings := FLiveBindings;
+    FLiveBindings := nil;
+    LOld.FRoot := FRoot;
+    FRoot := nil;
+    LOld.FState := FState;
+    FState := nil;
+    LOld.FOwnedState := FOwnedState;
+    FOwnedState := nil;
+    LOld.FGeneration := FGeneration;
+    FGeneration := nil;
+    LOld.FGenerationObject := FGenerationObject;
+    FGenerationObject := nil;
+    LOld.FOwnState := FOwnState;
+    FOwnState := False;
+    LOld.FMeasurementContext := FMeasurementContext;
+    FMeasurementContext := 0;
+    LOld.FLabelMeasurements := FLabelMeasurements;
+    FLabelMeasurements := nil;
+    for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+    begin
+      LOld.FResizeEdges[LIndex] := FResizeEdges[LIndex];
+      FResizeEdges[LIndex] := nil;
+    end;
+    for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
+    begin
+      LOld.FSelectionEdges[LIndex] := FSelectionEdges[LIndex];
+      FSelectionEdges[LIndex] := nil;
+    end;
+    for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+    begin
+      LOld.FCanvasGripViews[LAxis] := FCanvasGripViews[LAxis];
+      FCanvasGripViews[LAxis] := nil;
+      LOld.FCanvasGripHosts[LAxis] := FCanvasGripHosts[LAxis];
+      FCanvasGripHosts[LAxis] := nil;
+    end;
+
+    if not AKeepPresentation then
+    begin
+      LOld.FPresentationView := FPresentationView;
+      FPresentationView := nil;
+      LOld.FContentWork := FContentWork;
+      FContentWork := nil;
+      LOld.FContentExecution := FContentExecution;
+      FContentExecution := nil;
+      FContentRequestedSelection := TNyxPresentationSelection.None;
+      FLastContentError := '';
+    end;
+    FImageViewPublished := False;
+    FContentFrameKnown := False;
+    FContentMeasurementKey := '';
+    FVirtualLayout := False;
+    FDesignMode := False;
+    FProjectionContext := '';
+    FProjectionSchemaRevision := 0;
+    FSelectedDesignID := '';
+    FResizePreview := Default(TNyxResizePreview);
+    FDropPreview := Default(TNyxDropPreview);
+    FPresentationSelection := TNyxPresentationSelection.None;
+    FUpdating := False;
+    FForceValues := False;
+    FForceValueNode := nil;
+    FLayouting := False;
+    FProjecting := False;
+    { Everything above is detached before these native/event cleanup callouts. }
+
+    LOld.FDeferredNativeControls :=
+      ((LOld.FEditingObserver <> nil) and LOld.FEditingObserver.Dispatching) or
+      ((LOld.FPhysicalFrame <> nil) and LOld.FPhysicalFrame.Dispatching);
+    { Revoke every original global observer before a cancellation/extension
+      callback can mount a same-ID successor on the original renderer. These
+      disconnections begin with terminal local flags; each gets an attempt. }
+    try
+
+      if LOld.FCaptureObserver <> nil then
+      begin
+        LOld.FCaptureObserver.Disconnect;
+      end;
+    except
+      on Exception do RememberFailure;
+    end;
+    try
+
+      if LOld.FEditingObserver <> nil then
+      begin
+        LOld.FEditingObserver.Disconnect;
+      end;
+    except
+      on Exception do RememberFailure;
+    end;
+    try
+
+      if LOld.FViewportObserver <> nil then
+      begin
+        LOld.FViewportObserver.Disconnect;
+      end;
+    except
+      on Exception do RememberFailure;
+    end;
+    try
+
+      if LOld.FEmitterScope <> nil then
+      begin
+        LOld.FEmitterScope.Disconnect;
+      end;
+    except
+      on Exception do RememberFailure;
+    end;
+    try
+
+      if LOld.FLiveBindings <> nil then
+      begin
+        LOld.FLiveBindings.Retire;
+      end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    if LOld.FPanel <> nil then
+    begin
+      LOld.FPanel.OnResize := nil;
+      LOld.FPanel.Detach;
+    end;
+
+    if LOld.FCollectionInputGate <> nil then
+    begin
+      LOld.FCollectionInputGate.Retire;
+    end;
+    RevokeNyxCoordinatorMounts(LOld.FCoordinatorMounts);
+
+    if LOld.FContentWork <> nil then
+    begin
+      LOld.FContentWork.Retire;
+    end;
+    try
+
+      if AEventView <> nil then
+      begin
+        AEventView.Install;
+      end
+      else if LOld.FEvents <> nil then
+      begin
+        LOld.FEvents.CancelPending;
+      end;
+    except
+      on Exception do RememberFailure;
+    end;
+    try
+      LOld.ClearRetired(AKeepPresentation, AEventView);
+    except
+      on Exception do RememberFailure;
+    end;
+
+    if LFailure <> nil then
+    begin
+      raise LFailure;
+    end;
+  finally
+    LOld.Free;
+  end;
+end;
+
+procedure TNyxLCLRenderer.ClearRetired(AKeepPresentation: Boolean;
   const AEventView: INyxPreparedEventView);
 var
   LIndex: Integer;
@@ -1208,253 +1776,609 @@ var
   LRetiringCoordinators: TNyxCoordinatorMounts;
   LRetiringSource: INyxViewPublicationSource;
   LRetiringCallerSnapshot: INyxCoordinatorRegistrySnapshot;
+  LFailure: Exception;
+
+  procedure RememberFailure;
+  begin
+
+    if LFailure = nil then
+    begin
+      LFailure := Exception(AcquireExceptionObject);
+    end;
+  end;
+
 begin
-  LRetiringSource := FViewPublicationSource;
-  LRetiringCallerSnapshot := FCallerCoordinatorSnapshot;
-  FCallerCoordinatorSnapshot := nil;
-  FUpdating := True;
-  RevokeNyxCoordinatorMounts(FCoordinatorMounts);
-  LRetiringCoordinators := nil;
+  LFailure := nil;
+  LDeferControls := True;
 
-  if AEventView <> nil then
-  begin
-    { The caller retains old owners until every accepted field is published.
-      Generation installation is preallocated and invokes no cancellation code. }
-    AEventView.Install;
-  end
-  else
-  begin
-    LRetiringCoordinators := FCoordinatorMounts;
-  end;
-  FCoordinatorMounts := nil;
-  FCoordinatorIDs := nil;
-  FImageViewPublished := False;
-  if not AKeepPresentation and (FPresentationView <> nil) then
-  begin
-    FPresentationView.Retire;
-    FPresentationView := nil;
-  end;
 
-  if not AKeepPresentation then
-  begin
-
-    if FContentWork <> nil then
-    begin
-      FContentWork.Retire;
-      FContentWork := nil;
-    end;
-
-    if FContentExecution <> nil then
-    begin
-      FContentExecution.Cancel;
-      FContentExecution := nil;
-    end;
-    FContentRequestedSelection := TNyxPresentationSelection.None;
-    FLastContentError := '';
-  end;
-  FreeAndNil(FContentBlueprint);
-  FContentFrameKnown := False;
-  FContentMeasurementKey := '';
-  ClearCanvasResizeGrips;
-  { Revoke borrowed sinks before destroying any part of the mounted view. }
-  ClearCanvasMoveGrip;
-  FUpdating := True;
-  FVirtualLayout := False;
-  ClearLabelMeasurements;
-  FreeAndNil(FMeasurementLabel);
-
-  if FMeasurementContext <> 0 then
-  begin
-    LCLIntf.ReleaseDC(0, FMeasurementContext);
-    FMeasurementContext := 0;
-  end;
-
-  if FPanel <> nil then
-  begin
-    { Retirement must not enter layout through native resize messages while
-      bindings and controls are being disconnected or destroyed. }
-    FPanel.OnResize := nil;
-    FPanel.Detach;
-  end;
-  FDesignMode := False;
-  FProjectionContext := '';
-  FProjectionSchemaRevision := 0;
-  ReleaseNyxNode(FProjectionBaseline);
-  FSelectedDesignID := '';
-  FResizePreview := Default(TNyxResizePreview);
-  FDropPreview := Default(TNyxDropPreview);
-  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
-  begin
-    FreeAndNil(FResizeEdges[LIndex]);
-  end;
-  for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
-  begin
-    { The scroll host owns the strips and releases them with its controls. }
-    FSelectionEdges[LIndex] := nil;
-  end;
-  LDeferControls := ((FEditingObserver <> nil) and FEditingObserver.Dispatching) or
-    ((FPhysicalFrame <> nil) and FPhysicalFrame.Dispatching);
-
-  if FCaptureObserver <> nil then
-  begin
-    FCaptureObserver.Disconnect;
-    FCaptureObserver := nil;
-  end;
-
-  if FEditingObserver <> nil then
-  begin
-    FEditingObserver.Disconnect;
-    FEditingObserver := nil;
-  end;
-
-  if FViewportObserver <> nil then
-  begin
-    FViewportObserver.Disconnect;
-    FViewportObserver := nil;
-  end;
-
-  if FEmitterScope <> nil then
-  begin
-    FEmitterScope.Disconnect;
-    FEmitterScope := nil;
-  end;
-
-  if (FEvents <> nil) and (AEventView = nil) then
-  begin
-    FEvents.CancelPending;
-  end;
-  FreeAndNil(FLiveBindings);
-  for LIndex := 0 to Length(FBindings) - 1 do
-  begin
-
-    if FBindings[LIndex].FControl is TNyxLogicalScrollBox then
-    begin
-      TNyxLogicalScrollBox(FBindings[LIndex].FControl).Detach;
-    end;
-    FBindings[LIndex].FActiveDrag := nil;
-    FBindings[LIndex].FDrawingSource := nil;
-
-    if FBindings[LIndex].FDateField <> nil then
-    begin
-      FBindings[LIndex].FDateField.Disconnect;
-    end;
-
-    if FBindings[LIndex].FTimeField <> nil then
-    begin
-      FBindings[LIndex].FTimeField.Disconnect;
-    end;
-
-    if FBindings[LIndex].FColorField <> nil then
-    begin
-      FBindings[LIndex].FColorField.Disconnect;
-    end;
-    FBindings[LIndex].DisconnectControl(FBindings[LIndex].FControl);
-
-    if FBindings[LIndex].FImageLifecycle <> nil then
-    begin
-      FBindings[LIndex].FImageLifecycle.Close;
-      FBindings[LIndex].FImageLifecycle := nil;
-    end;
-
-    if FBindings[LIndex].FInput <> FBindings[LIndex].FControl then
-    begin
-      FBindings[LIndex].DisconnectControl(FBindings[LIndex].FInput);
-    end;
-
-    if FBindings[LIndex].FControl is TNyxLCLSplitView then
-    begin
-      FBindings[LIndex].DisconnectControl(
-        TNyxLCLSplitView(FBindings[LIndex].FControl).Grip);
-    end;
-
-    if FBindings[LIndex].FCollectionMount <> nil then
-    begin
-      FBindings[LIndex].FCollectionMount.Disconnect;
-      FBindings[LIndex].FCollectionMount := nil;
-    end;
-
-    if FBindings[LIndex].FToolCanvasView <> nil then
-    begin
-      FBindings[LIndex].FToolCanvasView.Disconnect;
-      FBindings[LIndex].FToolCanvasView := nil;
-    end;
-
-    if FBindings[LIndex].FCanvasView <> nil then
-    begin
-      FBindings[LIndex].FCanvasView.Disconnect;
-      FBindings[LIndex].FCanvasView := nil;
-    end;
-
-    if FBindings[LIndex].FCollectionPager <> nil then
-    begin
-      FBindings[LIndex].FCollectionPager.Disconnect;
-      FBindings[LIndex].FCollectionPager := nil;
-    end;
-  end;
-  { Free target controls before their borrowed nodes. Events cannot refer to a
-    destroyed realized tree during native control destruction. }
-
-  if LDeferControls and (FPanel <> nil) then
-  begin
-    { Native widget code and drag construction must finish before destruction.
-      The physical frame owns the revoked panel through the next safe idle. }
-    FPanel.OnResize := nil;
-    FPanel.Visible := False;
-    FPanel.Enabled := False;
-    FPhysicalFrame.Retire(FPanel);
-    FPanel := nil;
-  end
-  else
-  begin
-    for LIndex := 0 to High(FBindings) do
-    begin
-
-      if FBindings[LIndex].FControl.Dragging then
-      begin
-        FBindings[LIndex].FControl.EndDrag(False);
-      end;
-
-      if (FBindings[LIndex].FInput <> nil) and
-        (FBindings[LIndex].FInput <> FBindings[LIndex].FControl) and
-        FBindings[LIndex].FInput.Dragging then
-      begin
-        FBindings[LIndex].FInput.EndDrag(False);
-      end;
-      ReleaseNyxLCLPointer(FBindings[LIndex].FControl);
-      ReleaseNyxLCLPointer(FBindings[LIndex].FInput);
-    end;
-    FreeAndNil(FPanel);
-  end;
-  for LIndex := 0 to Length(FBindings) - 1 do
-  begin
-    FBindings[LIndex].Free;
-  end;
-  SetLength(FBindings, 0);
-  FCollectionBindings := nil;
-  ReleaseNyxNode(FRoot);
-  FPresentationSelection := TNyxPresentationSelection.None;
-
-  if FOwnState then
-  begin
-    FState.Free;
-  end;
-  FState := nil;
-  FOwnState := False;
-  FUpdating := False;
-  { Runtime owners outlive every borrowed widget/store link above. RenderFrame
-    retains the displaced source locally until successor adoption is complete. }
-  FViewPublicationSource := nil;
-  { All borrowed renderer state is retired before subscription cleanup can
-    enter an alternate receiver or report a failure. Keep only local leases. }
   try
-    DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
-  finally
-    try
-      { Keep factories leased until every old child/control link is retired. }
-      LRetiringCallerSnapshot := nil;
-    finally
-      LRetiringSource := nil;
+
+    if FCollectionInputGate <> nil then
+    begin
+      FCollectionInputGate.Retire;
     end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    LRetiringSource := FViewPublicationSource;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    LRetiringCallerSnapshot := FCallerCoordinatorSnapshot;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FCallerCoordinatorSnapshot := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FUpdating := True;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    RevokeNyxCoordinatorMounts(FCoordinatorMounts);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    LRetiringCoordinators := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if AEventView = nil then
+    begin
+      LRetiringCoordinators := FCoordinatorMounts;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FCoordinatorMounts := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FCoordinatorIDs := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FImageViewPublished := False;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if not AKeepPresentation and (FPresentationView <> nil) then
+    begin
+      FPresentationView.Retire;
+      FPresentationView := nil;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if not AKeepPresentation then
+    begin
+
+      if FContentWork <> nil then
+      begin
+        FContentWork.Retire;
+        FContentWork := nil;
+      end;
+
+      if FContentExecution <> nil then
+      begin
+        FContentExecution.Cancel;
+        FContentExecution := nil;
+      end;
+      FContentRequestedSelection := TNyxPresentationSelection.None;
+      FLastContentError := '';
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FreeAndNil(FContentBlueprint);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FContentFrameKnown := False;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FContentMeasurementKey := '';
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    ClearCanvasResizeGrips;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    { Revoke borrowed sinks before destroying any part of the mounted view. }
+    ClearCanvasMoveGrip;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FUpdating := True;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FVirtualLayout := False;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    ClearLabelMeasurements;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FreeAndNil(FMeasurementLabel);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FMeasurementContext <> 0 then
+    begin
+      LCLIntf.ReleaseDC(0, FMeasurementContext);
+      FMeasurementContext := 0;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FPanel <> nil then
+    begin
+      { Retirement must not enter layout through native resize messages while
+        bindings and controls are being disconnected or destroyed. }
+      FPanel.OnResize := nil;
+      FPanel.Detach;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FDesignMode := False;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FProjectionContext := '';
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FProjectionSchemaRevision := 0;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    ReleaseNyxNode(FProjectionBaseline);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FSelectedDesignID := '';
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FResizePreview := Default(TNyxResizePreview);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FDropPreview := Default(TNyxDropPreview);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+    begin
+      FreeAndNil(FResizeEdges[LIndex]);
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
+    begin
+      { The scroll host owns the strips and releases them with its controls. }
+      FSelectionEdges[LIndex] := nil;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    LDeferControls := FDeferredNativeControls or
+      ((FEditingObserver <> nil) and FEditingObserver.Dispatching) or
+      ((FPhysicalFrame <> nil) and FPhysicalFrame.Dispatching);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FCaptureObserver <> nil then
+    begin
+      FCaptureObserver.Disconnect;
+      FCaptureObserver := nil;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FEditingObserver <> nil then
+    begin
+      FEditingObserver.Disconnect;
+      FEditingObserver := nil;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FViewportObserver <> nil then
+    begin
+      FViewportObserver.Disconnect;
+      FViewportObserver := nil;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FEmitterScope <> nil then
+    begin
+      FEmitterScope.Disconnect;
+      FEmitterScope := nil;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FGeneration = nil then
+    begin
+      FreeAndNil(FLiveBindings);
+    end
+    else
+    begin
+      FLiveBindings := nil;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    for LIndex := 0 to Length(FBindings) - 1 do
+    begin
+
+    try
+
+        if FBindings[LIndex].FControl is TNyxLogicalScrollBox then
+        begin
+          TNyxLogicalScrollBox(FBindings[LIndex].FControl).Detach;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+        FBindings[LIndex].FActiveDrag := nil;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+        FBindings[LIndex].FDrawingSource := nil;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FDateField <> nil then
+        begin
+          FBindings[LIndex].FDateField.Disconnect;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FTimeField <> nil then
+        begin
+          FBindings[LIndex].FTimeField.Disconnect;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FColorField <> nil then
+        begin
+          FBindings[LIndex].FColorField.Disconnect;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+        FBindings[LIndex].DisconnectControl(FBindings[LIndex].FControl);
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FImageLifecycle <> nil then
+        begin
+          FBindings[LIndex].FImageLifecycle.Close;
+          FBindings[LIndex].FImageLifecycle := nil;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FInput <> FBindings[LIndex].FControl then
+        begin
+          FBindings[LIndex].DisconnectControl(FBindings[LIndex].FInput);
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FControl is TNyxLCLSplitView then
+        begin
+          FBindings[LIndex].DisconnectControl(
+            TNyxLCLSplitView(FBindings[LIndex].FControl).Grip);
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FCollectionMount <> nil then
+        begin
+          FBindings[LIndex].FCollectionMount.Disconnect;
+          FBindings[LIndex].FCollectionMount := nil;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FToolCanvasView <> nil then
+        begin
+          FBindings[LIndex].FToolCanvasView.Disconnect;
+          FBindings[LIndex].FToolCanvasView := nil;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FCanvasView <> nil then
+        begin
+          FBindings[LIndex].FCanvasView.Disconnect;
+          FBindings[LIndex].FCanvasView := nil;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    try
+
+        if FBindings[LIndex].FCollectionPager <> nil then
+        begin
+          FBindings[LIndex].FCollectionPager.Disconnect;
+          FBindings[LIndex].FCollectionPager := nil;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
+
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    { Free target controls before their borrowed nodes. Events cannot refer to a
+      destroyed realized tree during native control destruction. }
+
+    if LDeferControls and (FPanel <> nil) then
+    begin
+      { Native widget code and drag construction must finish before destruction.
+        The physical frame owns the revoked panel through the next safe idle. }
+      FPanel.OnResize := nil;
+      FPanel.Visible := False;
+      FPanel.Enabled := False;
+      FPhysicalFrame.Retire(FPanel);
+      FPanel := nil;
+    end
+    else
+    begin
+      for LIndex := 0 to High(FBindings) do
+      begin
+
+        if FBindings[LIndex].FControl.Dragging then
+        begin
+          FBindings[LIndex].FControl.EndDrag(False);
+        end;
+
+        if (FBindings[LIndex].FInput <> nil) and
+          (FBindings[LIndex].FInput <> FBindings[LIndex].FControl) and
+          FBindings[LIndex].FInput.Dragging then
+        begin
+          FBindings[LIndex].FInput.EndDrag(False);
+        end;
+        ReleaseNyxLCLPointer(FBindings[LIndex].FControl);
+        ReleaseNyxLCLPointer(FBindings[LIndex].FInput);
+      end;
+      FreeAndNil(FPanel);
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+
+    if FGeneration = nil then
+    begin
+      for LIndex := 0 to Length(FBindings) - 1 do
+      begin
+        FBindings[LIndex].Free;
+      end;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    SetLength(FBindings, 0);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FCollectionBindings := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    ReleaseNyxNode(FRoot);
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FPresentationSelection := TNyxPresentationSelection.None;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    { The explicit holder may also belong to an old entered generation. }
+    FOwnedState := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FState := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FOwnState := False;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    FUpdating := False;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    { Runtime owners outlive every borrowed widget/store link above. RenderFrame
+      retains the displaced source locally until successor adoption is complete. }
+    FViewPublicationSource := nil;
+  except
+    on Exception do RememberFailure;
+  end;
+
+  try
+    { All borrowed renderer state is retired before subscription cleanup can
+      enter an alternate receiver or report a failure. Keep only local leases. }
+    try
+      DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
+    finally
+      try
+        { Keep factories leased until every old child/control link is retired. }
+        LRetiringCallerSnapshot := nil;
+      finally
+        LRetiringSource := nil;
+      end;
+    end;
+  except
+    on Exception do RememberFailure;
+  end;
+
+
+  if LFailure <> nil then
+  begin
+    raise LFailure;
   end;
 end;
 
@@ -2090,6 +3014,7 @@ begin
   end;
   LBinding := TNyxLCLBinding.Create;
   LBinding.FRenderer := Self;
+  LBinding.FGeneration := FGenerationObject;
   LBinding.FNode := ANode;
   LBinding.FControl := Result;
   LBinding.FInput := LInput;
@@ -2316,11 +3241,14 @@ function TNyxLCLRenderer.VisibleChildren(ANode: TNyxNode): Integer;
 var
   LIndex: Integer;
 begin
+  { Geometry follows the current visible/disclosure path only. Enabled and
+    read-only command constraints remain owned by Sync and actual input; do
+    not re-evaluate them for every descendant intrinsic-size traversal. }
   Result := 0;
   for LIndex := 0 to ANode.Count - 1 do
   begin
 
-    if NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
+    if NyxInteractionVisible(ANode.Children[LIndex]) then
     begin
       Inc(Result);
     end;
@@ -2328,10 +3256,17 @@ begin
 end;
 
 function TNyxLCLRenderer.NaturalWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
+var
+  LGeneration: INyxLCLBindingGeneration;
 begin
-  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FNaturalCalls);{$endif}
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FNaturalCalls);
+                                 {$endif}
   Result := NyxNodeSizeConstraints(ANode).WidthRange.Clamp(
     NaturalContentWidth(ANode, AAvailable));
+    RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLRenderer.ClearLabelMeasurements;
@@ -2348,13 +3283,19 @@ end;
 procedure TNyxLCLRenderer.LabelSize(ALabel: TLabel; AWidth: Integer;
   AWrap: Boolean; out ATextWidth, ATextHeight: Integer);
 var
+  LGeneration: INyxLCLBindingGeneration;
   LIndex: Integer;
   LCount: Integer;
   LText: TNyxText;
   LFont: TFont;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+
   AWidth := Max(1, AWidth);
+  RequireNativeGeneration(LGeneration);
   LText := TNyxText(ALabel.Caption);
+  RequireNativeGeneration(LGeneration);
 
   if FLayouting then
   begin
@@ -2369,79 +3310,112 @@ begin
         (FLabelMeasurements[LIndex].Font.PixelsPerInch = ALabel.Font.PixelsPerInch) and
         FLabelMeasurements[LIndex].Font.IsEqual(ALabel.Font) then
       begin
+        RequireNativeGeneration(LGeneration);
         ATextWidth := FLabelMeasurements[LIndex].Width;
+        RequireNativeGeneration(LGeneration);
         ATextHeight := FLabelMeasurements[LIndex].Height;
-        {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FLabelMeasurementsReused);{$endif}
+        RequireNativeGeneration(LGeneration);
+        {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FLabelMeasurementsReused);
+                                       {$endif}
         Exit;
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end;
 
   if FMeasurementLabel = nil then
   begin
     FMeasurementLabel := TNyxIntrinsicLabel.Create(nil);
+    RequireNativeGeneration(LGeneration);
     FMeasurementLabel.Visible := False;
     FMeasurementLabel.AutoSize := False;
   end;
   { LCL Assign preserves its destination DPI and otherwise converts through
     integer point size. Set DPI first so explicit pixel height remains exact. }
   FMeasurementLabel.Font.PixelsPerInch := ALabel.Font.PixelsPerInch;
+  RequireNativeGeneration(LGeneration);
   FMeasurementLabel.Font.Assign(ALabel.Font);
+  RequireNativeGeneration(LGeneration);
   FMeasurementLabel.Caption := ALabel.Caption;
+  RequireNativeGeneration(LGeneration);
   FMeasurementLabel.ShowAccelChar := ALabel.ShowAccelChar;
+  RequireNativeGeneration(LGeneration);
   FMeasurementLabel.BiDiMode := ALabel.BiDiMode;
+  RequireNativeGeneration(LGeneration);
   FMeasurementLabel.WordWrap := AWrap;
 
   if FLayouting and (FMeasurementContext = 0) then
   begin
     FMeasurementContext := LCLIntf.GetDC(0);
+    RequireNativeGeneration(LGeneration);
 
     if FMeasurementContext = 0 then
     begin
       raise ENyxModel.Create('The native label measurement context is unavailable');
     end;
   end;
+  RequireNativeGeneration(LGeneration);
   TNyxIntrinsicLabel(FMeasurementLabel).TextSize(Max(1, AWidth),
     ATextWidth, ATextHeight, FMeasurementContext);
-  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FLabelMeasurementsTaken);{$endif}
+    RequireNativeGeneration(LGeneration);
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FLabelMeasurementsTaken);
+                                 {$endif}
 
   if FLayouting and (Length(FLabelMeasurements) < 1024) then
   begin
     { Never evict/reuse an owned font while another measurement is in progress.
       At capacity, ordinary measurement continues with identical semantics. }
     LFont := TFont.Create;
+    RequireNativeGeneration(LGeneration);
     try
       LFont.PixelsPerInch := ALabel.Font.PixelsPerInch;
+      RequireNativeGeneration(LGeneration);
       LFont.Assign(ALabel.Font);
+      RequireNativeGeneration(LGeneration);
       LCount := Length(FLabelMeasurements);
+      RequireNativeGeneration(LGeneration);
       SetLength(FLabelMeasurements, LCount + 1);
+      RequireNativeGeneration(LGeneration);
       FLabelMeasurements[LCount].Text := LText;
       FLabelMeasurements[LCount].AvailableWidth := AWidth;
       FLabelMeasurements[LCount].Wrap := AWrap;
       FLabelMeasurements[LCount].ShowAccelChar := ALabel.ShowAccelChar;
+      RequireNativeGeneration(LGeneration);
       FLabelMeasurements[LCount].BiDiMode := ALabel.BiDiMode;
+      RequireNativeGeneration(LGeneration);
       FLabelMeasurements[LCount].Width := ATextWidth;
       FLabelMeasurements[LCount].Height := ATextHeight;
       FLabelMeasurements[LCount].Font := LFont;
       LFont := nil;
+      RequireNativeGeneration(LGeneration);
     finally
       LFont.Free;
     end;
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
 end;
 
 function TNyxLCLRenderer.ContentInsets(ANode: TNyxNode): TRect;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LControl: TControl;
   LGroup: TWinControl;
   LWindow: TRect;
   LClient: TRect;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+
   Result := Rect(0, 0, 0, 0);
+  RequireNativeGeneration(LGeneration);
 
   if (ANode.ProjectionKind = 'scroll') and not FVirtualLayout then
   begin
+    RequireNativeGeneration(LGeneration);
     LControl := Binding(ANode).FControl;
+    RequireNativeGeneration(LGeneration);
 
     if LControl is TScrollBox then
     begin
@@ -2449,24 +3423,33 @@ begin
         Keep the authored outer box, but allocate descendants inside that
         viewport. No platform-specific scrollbar metric is guessed here. }
       Result.Right := Max(0, LControl.Width - LControl.ClientWidth);
+      RequireNativeGeneration(LGeneration);
       Result.Bottom := Max(0, LControl.Height - LControl.ClientHeight);
+      RequireNativeGeneration(LGeneration);
     end;
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
 
   if (ANode.ProjectionKind <> 'group') and (FactoryIndex(ANode) < 0) then
   begin
+    RequireNativeGeneration(LGeneration);
     { The common undecorated built-ins need no binding lookup/native query. }
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LControl := Binding(ANode).FControl;
+  RequireNativeGeneration(LGeneration);
 
   if not (LControl is TCustomGroupBox) then
   begin
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LGroup := TWinControl(LControl);
+  RequireNativeGeneration(LGeneration);
   LGroup.HandleNeeded;
+  RequireNativeGeneration(LGeneration);
   { The widgetset's unclamped client bounds include its caption/frame offsets.
     TWinControl.ClientWidth/Height clamp a parked face to zero and would erase
     that information. Query the actual owned handle, with no temporary window,
@@ -2475,16 +3458,23 @@ begin
   if (LCLIntf.GetWindowRect(LGroup.Handle, LWindow) = 0) or
     not WidgetSet.GetClientBounds(LGroup.Handle, LClient) then
   begin
+    RequireNativeGeneration(LGeneration);
     raise ENyxModel.Create('Unable to measure native group content: ' + ANode.ID);
   end;
+  RequireNativeGeneration(LGeneration);
   Result.Left := Max(0, LClient.Left);
+  RequireNativeGeneration(LGeneration);
   Result.Top := Max(0, LClient.Top);
+  RequireNativeGeneration(LGeneration);
   Result.Right := Max(0, LWindow.Right - LWindow.Left - LClient.Right);
+  RequireNativeGeneration(LGeneration);
   Result.Bottom := Max(0, LWindow.Bottom - LWindow.Top - LClient.Bottom);
+  RequireNativeGeneration(LGeneration);
 end;
 
 function TNyxLCLRenderer.NaturalContentWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LControl: TControl;
   LLabel: TLabel;
   LIndex: Integer;
@@ -2495,96 +3485,134 @@ var
   LFrame: TRect;
   LContentAvailable: Integer;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+
   AAvailable := Max(0, AAvailable);
+  RequireNativeGeneration(LGeneration);
 
   if ANode.Prop('width-sizing') = 'fill' then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit(AAvailable);
   end;
+  RequireNativeGeneration(LGeneration);
 
   if ((ANode.Prop('width-sizing') = '') or (ANode.Prop('width-sizing') = 'auto')) and
     (ANode.Prop('width') <> '') then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit(Min(AAvailable, Metric(ANode, 'width', AAvailable)));
   end;
+  RequireNativeGeneration(LGeneration);
 
   if ANode.QueryContainer.Defined then
   begin
+    RequireNativeGeneration(LGeneration);
     { Intrinsic width containment is an empty content contribution, rather
       than a guessed fixed width. Fill/flex allocation, explicit width and
       typed bounds remain owned by the ordinary external allocator. }
     Exit(Min(AAvailable, 2 * Metric(ANode, 'padding', 0)));
   end;
+  RequireNativeGeneration(LGeneration);
   Result := 0;
 
   if (ANode.Count > 0) and (ANode.ProjectionKind <> 'split-view') then
   begin
+    RequireNativeGeneration(LGeneration);
     LFrame := ContentInsets(ANode);
+    RequireNativeGeneration(LGeneration);
     LContentAvailable := Max(0, AAvailable - LFrame.Left - LFrame.Right);
+    RequireNativeGeneration(LGeneration);
     LSum := 0;
     LVisible := 0;
+    RequireNativeGeneration(LGeneration);
     for LIndex := 0 to ANode.Count - 1 do
     begin
+      RequireNativeGeneration(LGeneration);
 
-      if not NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
+      if not NyxInteractionVisible(ANode.Children[LIndex]) then
       begin
+        RequireNativeGeneration(LGeneration);
         Continue;
       end;
+      RequireNativeGeneration(LGeneration);
       Inc(LVisible);
       LWidth := NaturalWidth(ANode.Children[LIndex], LContentAvailable);
+      RequireNativeGeneration(LGeneration);
       Result := Max(Result, LWidth);
+      RequireNativeGeneration(LGeneration);
       LSum := LSum + LWidth;
     end;
+    RequireNativeGeneration(LGeneration);
 
     if NyxLayout(ANode) = 'row' then
     begin
       Result := Trunc(Min(Double(AAvailable), LSum +
         Double(Max(0, LVisible - 1)) * Metric(ANode, 'gap', 12)));
+        RequireNativeGeneration(LGeneration);
     end
     else if NyxLayout(ANode) = 'grid' then
     begin
+      RequireNativeGeneration(LGeneration);
       { Large admitted column counts must be capped before Integer conversion. }
       Result := Trunc(Min(Double(AAvailable), Double(Result) *
         Metric(ANode, 'columns', 2)));
+        RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     Exit(Min(AAvailable, Result + 2 * Metric(ANode, 'padding', 0) +
       LFrame.Left + LFrame.Right));
   end;
+  RequireNativeGeneration(LGeneration);
   LControl := Binding(ANode).FControl;
+  RequireNativeGeneration(LGeneration);
 
   LWidth := 0;
+  RequireNativeGeneration(LGeneration);
   LHeight := 0;
+  RequireNativeGeneration(LGeneration);
 
   if LControl is TLabel then
   begin
     LLabel := TLabel(LControl);
+    RequireNativeGeneration(LGeneration);
     { Changing a visible label's WordWrap invalidates all ancestor preferred
       sizes. LCL may be querying those very sizes through a split resize, making
       that mutation recursive and raising ELayoutException. Detached measurement
       has the same widgetset/font/text semantics and no ancestor invalidation. }
 
     LabelSize(LLabel, 10000, False, LWidth, LHeight);
+    RequireNativeGeneration(LGeneration);
   end
   else
   begin
 
     if LControl.Parent <> nil then
     begin
+      RequireNativeGeneration(LGeneration);
       LControl.Parent.HandleNeeded;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     LControl.GetPreferredSize(LWidth, LHeight, True, False);
+    RequireNativeGeneration(LGeneration);
   end;
 
   if (Binding(ANode).FInput <> nil) and (Binding(ANode).FInput <> LControl) then
   begin
     LWidth := Max(LWidth, 200);
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
 
   if ANode.ProjectionKind = 'spacer' then
   begin
     LWidth := 0;
+    RequireNativeGeneration(LGeneration);
   end;
   Result := Min(AAvailable, Max(0, LWidth));
+  RequireNativeGeneration(LGeneration);
 end;
 
 function TNyxLCLRenderer.EffectiveWidth(ANode: TNyxNode; AAvailable: Integer;
@@ -2663,7 +3691,7 @@ begin
   SetLength(AHeights, ANode.Count);
   for LIndex := 0 to ANode.Count - 1 do
   begin
-    LItems[LIndex].Visible := NyxInteractionPolicy(ANode.Children[LIndex]).Visible;
+    LItems[LIndex].Visible := NyxInteractionVisible(ANode.Children[LIndex]);
     LItems[LIndex].Weight := NyxFlexWeight(ANode.Children[LIndex]);
     LItems[LIndex].NaturalSize := 0;
     LRanges[LIndex] := NyxNodeSizeConstraints(ANode.Children[LIndex]).WidthRange;
@@ -2745,20 +3773,30 @@ end;
 
 function TNyxLCLRenderer.Measure(ANode: TNyxNode; AWidth: Integer;
   AAllocatedWidth: Boolean): Integer;
+var
+  LGeneration: INyxLCLBindingGeneration;
 begin
-  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FMeasureCalls);{$endif}
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
 
-  if not NyxInteractionPolicy(ANode).Visible then
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FMeasureCalls);
+                                 {$endif}
+
+  if not NyxInteractionVisible(ANode) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit(0);
   end;
+  RequireNativeGeneration(LGeneration);
   Result := NyxNodeSizeConstraints(ANode).HeightRange.Clamp(
     MeasureContent(ANode, AWidth, AAllocatedWidth));
+    RequireNativeGeneration(LGeneration);
 end;
 
 function TNyxLCLRenderer.MeasureContent(ANode: TNyxNode; AWidth: Integer;
   AAllocatedWidth: Boolean): Integer;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LControl: TControl;
   LIndex: Integer;
   LHeight: Integer;
@@ -2780,52 +3818,71 @@ var
   LContentWidth: Integer;
   LButtonFace: TNyxButtonPresentation;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
 
-  if not NyxInteractionPolicy(ANode).Visible then
+  if not NyxInteractionVisible(ANode) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit(0);
   end;
+  RequireNativeGeneration(LGeneration);
 
   AWidth := EffectiveWidth(ANode, AWidth, AAllocatedWidth);
+  RequireNativeGeneration(LGeneration);
 
   if (ANode.Prop('height') <> '') and
     ((ANode.Prop('height-sizing') = '') or (ANode.Prop('height-sizing') = 'auto')) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit(Metric(ANode, 'height', 32));
   end;
+  RequireNativeGeneration(LGeneration);
 
   LFrame := ContentInsets(ANode);
+  RequireNativeGeneration(LGeneration);
   LContentWidth := Max(0, AWidth - LFrame.Left - LFrame.Right);
+  RequireNativeGeneration(LGeneration);
 
   if ANode.QueryContainer.Defined and (ANode.ContainerContainment = nccSize) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit(2 * Metric(ANode, 'padding', 0) + LFrame.Top + LFrame.Bottom);
   end;
+  RequireNativeGeneration(LGeneration);
   Result := 28;
 
   if (ANode.ProjectionKind = 'input') or (ANode.ProjectionKind = 'select') or
     (ANode.ProjectionKind = 'spin') or (ANode.ProjectionKind = 'date') or
     (ANode.ProjectionKind = 'time') or (ANode.ProjectionKind = 'color') then
   begin
+    RequireNativeGeneration(LGeneration);
     { Match the shared 1.5 line height plus frame padding and caption space.
       Explicit heights still win; auto sizes must remain usable with large fonts. }
     Result := 24 + (FTheme.FontSize * 3 div 2) + 22;
+    RequireNativeGeneration(LGeneration);
   end
   else if ANode.ProjectionKind = 'memo' then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := 120;
 
     if 24 + (FTheme.FontSize * 3 div 2) + 22 > Result then
     begin
+      RequireNativeGeneration(LGeneration);
       Result := 24 + (FTheme.FontSize * 3 div 2) + 22;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end
   else if ANode.ProjectionKind = 'code-editor' then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := 240;
   end
   else if ANode.ProjectionKind = 'split-view' then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := 320;
     Exit;
   end
@@ -2833,43 +3890,57 @@ begin
     (ANode.ProjectionKind = 'list') or (ANode.ProjectionKind = 'code') or
     (ANode.ProjectionKind = 'image') then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := 160;
   end
   else if ANode.ProjectionKind = 'heading' then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := 38;
   end
   else if ANode.ProjectionKind = 'button' then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := (FTheme.FontSize * 3 div 2) + 22;
+    RequireNativeGeneration(LGeneration);
     LButtonFace := NyxButtonPresentationOf(ANode);
+    RequireNativeGeneration(LGeneration);
     case LButtonFace.ControlDensity of
-      nbdNormal: ; { Retain ordinary metrics. }
+      nbdNormal: ;
+       { Retain ordinary metrics. }
       nbdCompact: Result := Max(32, FTheme.FontSize + 16);
       nbdTouch: Result := Max(44, FTheme.FontSize + 24);
     end;
 
     if LButtonFace.HasGlyph and (LButtonFace.ContentMode <> nbcCaption) then
     begin
+      RequireNativeGeneration(LGeneration);
       Result := Max(Result, LButtonFace.GlyphBoxSize + 8);
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end
   else if ANode.ProjectionKind = 'separator' then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := 2;
   end
   else if ANode.ProjectionKind = 'spacer' then
   begin
+    RequireNativeGeneration(LGeneration);
     Result := 16;
   end;
+  RequireNativeGeneration(LGeneration);
 
   if ANode.Count = 0 then
   begin
+    RequireNativeGeneration(LGeneration);
     { A leaf has one owned target face throughout this synchronous measurement.
       Resolve its binding once; repeated scans do not add admission or identity
       checks and become quadratic across a large column of captions. No binding
       or measured size is retained beyond this invocation. }
     LControl := Binding(ANode).FControl;
+    RequireNativeGeneration(LGeneration);
 
     if LControl is TCustomGroupBox then
     begin
@@ -2881,14 +3952,19 @@ begin
     if LControl is TLabel then
     begin
       LLabel := TLabel(LControl);
+      RequireNativeGeneration(LGeneration);
       LTextWidth := AWidth;
+      RequireNativeGeneration(LGeneration);
 
       if LTextWidth < 1 then
       begin
         LTextWidth := 1;
+        RequireNativeGeneration(LGeneration);
       end;
       LTextHeight := 0;
+      RequireNativeGeneration(LGeneration);
       LabelSize(LLabel, LTextWidth, LLabel.WordWrap, LTextWidth, LTextHeight);
+      RequireNativeGeneration(LGeneration);
 
       if LTextHeight + 4 > Result then
       begin
@@ -2897,69 +3973,95 @@ begin
     end;
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LPadding := Metric(ANode, 'padding', 0);
+  RequireNativeGeneration(LGeneration);
   LGap := Metric(ANode, 'gap', 12);
+  RequireNativeGeneration(LGeneration);
   LVisible := VisibleChildren(ANode);
+  RequireNativeGeneration(LGeneration);
   Result := 0;
 
   if NyxLayout(ANode) = 'row' then
   begin
     Result := RowPlan(ANode, AWidth, LWidths, LLefts, LTops, LHeights);
+    RequireNativeGeneration(LGeneration);
   end
   else if NyxLayout(ANode) = 'grid' then
   begin
+    RequireNativeGeneration(LGeneration);
     LColumns := LayoutColumns(ANode, AWidth);
+    RequireNativeGeneration(LGeneration);
     LCellWidth := Max(0, LContentWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
+    RequireNativeGeneration(LGeneration);
     LRowHeight := 0;
+    RequireNativeGeneration(LGeneration);
     LPosition := 0;
+    RequireNativeGeneration(LGeneration);
     for LIndex := 0 to ANode.Count - 1 do
     begin
+      RequireNativeGeneration(LGeneration);
 
-      if not NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
+      if not NyxInteractionVisible(ANode.Children[LIndex]) then
       begin
+        RequireNativeGeneration(LGeneration);
         Continue;
       end;
+      RequireNativeGeneration(LGeneration);
 
       LHeight := Measure(ANode.Children[LIndex], LCellWidth);
+      RequireNativeGeneration(LGeneration);
       Inc(LPosition);
 
       if LHeight > LRowHeight then
       begin
         LRowHeight := LHeight;
+        RequireNativeGeneration(LGeneration);
       end;
 
       if (LPosition mod LColumns = 0) or (LPosition = LVisible) then
       begin
         Inc(Result, LRowHeight);
         LRowHeight := 0;
+        RequireNativeGeneration(LGeneration);
 
         if LPosition < LVisible then
         begin
           Inc(Result, LGap);
         end;
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end
   else
   begin
+    RequireNativeGeneration(LGeneration);
     for LIndex := 0 to ANode.Count - 1 do
     begin
+      RequireNativeGeneration(LGeneration);
 
-      if NyxInteractionPolicy(ANode.Children[LIndex]).Visible then
+      if NyxInteractionVisible(ANode.Children[LIndex]) then
       begin
+        RequireNativeGeneration(LGeneration);
         Inc(Result, Measure(ANode.Children[LIndex],
           ColumnChildWidth(ANode, ANode.Children[LIndex],
             Max(0, LContentWidth - 2 * LPadding)), True));
+            RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     Inc(Result, LGap * Max(0, LVisible - 1));
   end;
+  RequireNativeGeneration(LGeneration);
   Inc(Result, 2 * LPadding + LFrame.Top + LFrame.Bottom);
 end;
 
 procedure TNyxLCLRenderer.Layout(ANode: TNyxNode; AX, AY, AWidth: Integer;
   AHeight: Integer; AAllocatedWidth: Boolean);
 var
+  LGeneration: INyxLCLBindingGeneration;
   LBinding: TNyxLCLBinding;
   LIndex: Integer;
   LPadding: Integer;
@@ -2989,10 +4091,15 @@ var
   LChildX: Integer;
   LFrame: TRect;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+
   LBinding := Binding(ANode);
+  RequireNativeGeneration(LGeneration);
   { The browser theme caps every node at its containing block's available
     width. Apply that same cap before measuring native wrapping/descendants. }
   LWidth := EffectiveWidth(ANode, AWidth, AAllocatedWidth);
+  RequireNativeGeneration(LGeneration);
 
   if AHeight >= 0 then
   begin
@@ -3002,19 +4109,25 @@ begin
       descendant work. Intrinsic allocations still use Measure below; final
       constraints and every descendant's own layout remain applied as usual. }
     LHeight := AHeight;
+    RequireNativeGeneration(LGeneration);
   end
   else
   begin
     LHeight := Measure(ANode, LWidth, True);
+    RequireNativeGeneration(LGeneration);
   end;
   LHeight := NyxNodeSizeConstraints(ANode).HeightRange.Clamp(LHeight);
+  RequireNativeGeneration(LGeneration);
   LBinding.FLogicalBox := NyxViewportBox(AX, AY, LWidth, LHeight);
+  RequireNativeGeneration(LGeneration);
   LBinding.FContainerAllocated := True;
 
   if not FVirtualLayout then
   begin
     LBinding.FControl.SetBounds(AX, AY, LWidth, LHeight);
+    RequireNativeGeneration(LGeneration);
     ArrangeInput(LBinding, LWidth, LHeight);
+    RequireNativeGeneration(LGeneration);
   end;
 
   if LBinding.FControl is TNyxLCLSplitView then
@@ -3032,47 +4145,66 @@ begin
       begin
         raise ENyxModel.Create('An oversized native split requires logical pane projection');
       end;
+      RequireNativeGeneration(LGeneration);
       LBinding.FControl.SetBounds(0, 0, LWidth, LHeight);
+      RequireNativeGeneration(LGeneration);
     end;
     TNyxLCLSplitView(LBinding.FControl).Arrange;
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
 
   if LBinding.FControl is TNyxLCLTabHost then
   begin
     TNyxLCLTabHost(LBinding.FControl).Arrange;
+    RequireNativeGeneration(LGeneration);
     for LIndex := 0 to ANode.Count - 1 do
     begin
+      RequireNativeGeneration(LGeneration);
       Layout(ANode.Children[LIndex], 0, 0,
         TNyxLCLTabHost(LBinding.FControl).PageHost(LIndex).ClientWidth,
         TNyxLCLTabHost(LBinding.FControl).PageHost(LIndex).ClientHeight);
+        RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
 
   LPadding := Metric(ANode, 'padding', 0);
+  RequireNativeGeneration(LGeneration);
   { Logical outer boxes remain the authored faces. Their children are allocated
     within native usable content, independently of the current physical clip. }
   LFrame := ContentInsets(ANode);
+  RequireNativeGeneration(LGeneration);
   LWidth := Max(0, LWidth - LFrame.Left - LFrame.Right);
+  RequireNativeGeneration(LGeneration);
   LHeight := Max(0, LHeight - LFrame.Top - LFrame.Bottom);
+  RequireNativeGeneration(LGeneration);
   LGap := Metric(ANode, 'gap', 12);
+  RequireNativeGeneration(LGeneration);
   LAlignment := ANode.Prop('cross-alignment', 'auto');
+  RequireNativeGeneration(LGeneration);
   { Rows use one measured line plan for both wrapping and arrangement. Retain
     every control; changing a policy only changes geometry, never input state. }
 
   if NyxLayout(ANode) = 'row' then
   begin
     RowPlan(ANode, LBinding.FLogicalBox.Width, LSizes, LLefts, LTops, LHeights);
+    RequireNativeGeneration(LGeneration);
     for LIndex := 0 to ANode.Count - 1 do
     begin
+      RequireNativeGeneration(LGeneration);
       LChild := ANode.Children[LIndex];
+      RequireNativeGeneration(LGeneration);
 
-      if not NyxInteractionPolicy(LChild).Visible then
+      if not NyxInteractionVisible(LChild) then
       begin
+        RequireNativeGeneration(LGeneration);
         Continue;
       end;
+      RequireNativeGeneration(LGeneration);
       LCellHeight := LHeights[LIndex];
+      RequireNativeGeneration(LGeneration);
       { A single flex line fills a definite cross axis. Its natural height can
         greatly exceed the allocated workspace when a child is a scroll view.
         Stretch/center/end must use the admitted host extent, as browser flex
@@ -3082,29 +4214,42 @@ begin
         (((ANode.Prop('flow-wrap') = '') or (ANode.Prop('flow-wrap') = 'auto')) and
         (FPanel.ClientWidth > 600)) then
       begin
+        RequireNativeGeneration(LGeneration);
 
         if (AHeight >= 0) or ((ANode.Prop('height') <> '') and
           ((ANode.Prop('height-sizing') = '') or (ANode.Prop('height-sizing') = 'auto'))) then
         begin
+          RequireNativeGeneration(LGeneration);
           LCellHeight := Max(0, LHeight - 2 * LPadding);
+          RequireNativeGeneration(LGeneration);
         end
         else
         begin
+          RequireNativeGeneration(LGeneration);
           LCellHeight := Max(LCellHeight, LHeight - 2 * LPadding);
+          RequireNativeGeneration(LGeneration);
         end;
+        RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
       LFitHeight := Measure(LChild, LSizes[LIndex], True);
+      RequireNativeGeneration(LGeneration);
 
       if (LChild.Prop('height-sizing') = 'fill') or ((LAlignment = 'stretch') and
         ((LChild.Prop('height-sizing') = '') or (LChild.Prop('height-sizing') = 'auto')) and
         (LChild.Prop('height') = '')) then
       begin
+        RequireNativeGeneration(LGeneration);
         LFitHeight := LCellHeight;
+        RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
       { Clamp before alignment, so a capped stretched control is positioned
         against its actual height rather than its discarded line allocation. }
       LFitHeight := NyxNodeSizeConstraints(LChild).HeightRange.Clamp(LFitHeight);
+      RequireNativeGeneration(LGeneration);
       LChildY := LPadding + LTops[LIndex];
+      RequireNativeGeneration(LGeneration);
 
       if (LAlignment = '') or (LAlignment = 'auto') or (LAlignment = 'center') then
       begin
@@ -3112,86 +4257,128 @@ begin
       end
       else if LAlignment = 'end' then
       begin
+        RequireNativeGeneration(LGeneration);
         Inc(LChildY, Max(0, LCellHeight - LFitHeight));
       end;
+      RequireNativeGeneration(LGeneration);
       Layout(LChild, LPadding + LLefts[LIndex], LChildY, LSizes[LIndex], LFitHeight, True);
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   AY := LPadding;
   AX := LPadding;
   LColumns := LayoutColumns(ANode, LWidth);
+  RequireNativeGeneration(LGeneration);
   LVisible := VisibleChildren(ANode);
+  RequireNativeGeneration(LGeneration);
   LPosition := 0;
+  RequireNativeGeneration(LGeneration);
   LDefiniteColumn := (NyxLayout(ANode) = 'column') and
     ((AHeight >= 0) or ((ANode.Prop('height') <> '') and
     ((ANode.Prop('height-sizing') = '') or (ANode.Prop('height-sizing') = 'auto'))));
+    RequireNativeGeneration(LGeneration);
 
   if NyxLayout(ANode) = 'column' then
   begin
     SetLength(LItems, ANode.Count);
+    RequireNativeGeneration(LGeneration);
     SetLength(LRanges, ANode.Count);
+    RequireNativeGeneration(LGeneration);
     for LIndex := 0 to ANode.Count - 1 do
     begin
-      LItems[LIndex].Visible := NyxInteractionPolicy(ANode.Children[LIndex]).Visible;
+      RequireNativeGeneration(LGeneration);
+      LItems[LIndex].Visible := NyxInteractionVisible(ANode.Children[LIndex]);
+      RequireNativeGeneration(LGeneration);
       LRanges[LIndex] := NyxNodeSizeConstraints(ANode.Children[LIndex]).HeightRange;
+      RequireNativeGeneration(LGeneration);
       LItems[LIndex].Weight := 0;
 
       if LDefiniteColumn then
       begin
         LItems[LIndex].Weight := NyxFlexWeight(ANode.Children[LIndex]);
+        RequireNativeGeneration(LGeneration);
       end;
       LItems[LIndex].NaturalSize := Measure(ANode.Children[LIndex],
         ColumnChildWidth(ANode, ANode.Children[LIndex], Max(0, LWidth - 2 * LPadding)), True);
+        RequireNativeGeneration(LGeneration);
 
       if LDefiniteColumn and (ANode.Children[LIndex].Prop('height-sizing') = 'fill') then
       begin
+        RequireNativeGeneration(LGeneration);
         LItems[LIndex].NaturalSize := Max(0, LHeight - 2 * LPadding);
+        RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     LSizes := NyxFlowSizes(Max(0, LHeight - 2 * LPadding), LGap, LItems, LRanges);
+    RequireNativeGeneration(LGeneration);
     LJustification := njStart;
     for LJustification := Low(TNyxJustification) to High(TNyxJustification) do
     begin
 
       if NyxJustificationName(LJustification) = ANode.Prop('justification', 'start') then
       begin
+        RequireNativeGeneration(LGeneration);
         Break;
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     LPositions := NyxFlowPositions(Max(0, LHeight - 2 * LPadding), LGap,
       LItems, LSizes, LJustification);
+      RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
   LCellWidth := Max(0, LWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
+  RequireNativeGeneration(LGeneration);
   LCellHeight := 0;
+  RequireNativeGeneration(LGeneration);
   for LIndex := 0 to ANode.Count - 1 do
   begin
+    RequireNativeGeneration(LGeneration);
     LChild := ANode.Children[LIndex];
+    RequireNativeGeneration(LGeneration);
 
-    if not NyxInteractionPolicy(LChild).Visible then
+    if not NyxInteractionVisible(LChild) then
     begin
+      RequireNativeGeneration(LGeneration);
       { Keep the mounted control and draft, but never reserve a flow slot/gap.
         Its next visible layout recomputes descendants at the current size. }
       Continue;
     end;
+    RequireNativeGeneration(LGeneration);
     Inc(LPosition);
 
     if ANode.Prop('layout') = 'absolute' then
     begin
+      RequireNativeGeneration(LGeneration);
       Layout(LChild, Metric(LChild, 'left', 0), Metric(LChild, 'top', 0), LCellWidth);
+      RequireNativeGeneration(LGeneration);
     end
     else
     begin
+      RequireNativeGeneration(LGeneration);
       LFitHeight := -1;
+      RequireNativeGeneration(LGeneration);
       LFitWidth := LCellWidth;
+      RequireNativeGeneration(LGeneration);
       LChildY := AY;
+      RequireNativeGeneration(LGeneration);
 
       if NyxLayout(ANode) = 'column' then
       begin
         LFitHeight := LSizes[LIndex];
+        RequireNativeGeneration(LGeneration);
         LFitWidth := ColumnChildWidth(ANode, LChild, Max(0, LWidth - 2 * LPadding));
+        RequireNativeGeneration(LGeneration);
         LChildY := LPadding + LPositions[LIndex];
+        RequireNativeGeneration(LGeneration);
         LChildX := LPadding;
+        RequireNativeGeneration(LGeneration);
 
         if LAlignment = 'center' then
         begin
@@ -3202,20 +4389,26 @@ begin
           Inc(LChildX, Max(0, LWidth - 2 * LPadding - LFitWidth));
         end;
         Layout(LChild, LChildX, LChildY, LFitWidth, LFitHeight, True);
+        RequireNativeGeneration(LGeneration);
         Continue;
       end;
+      RequireNativeGeneration(LGeneration);
 
       Layout(LChild, AX, LChildY, LFitWidth, LFitHeight);
+      RequireNativeGeneration(LGeneration);
       LInputHeight := Measure(LChild, LFitWidth);
+      RequireNativeGeneration(LGeneration);
 
       if LFitHeight >= 0 then
       begin
         LInputHeight := LFitHeight;
+        RequireNativeGeneration(LGeneration);
       end;
 
       if LInputHeight > LCellHeight then
       begin
         LCellHeight := LInputHeight;
+        RequireNativeGeneration(LGeneration);
       end;
       { Grid tracks keep their cell extent even when a child has a smaller
         authored width. Row/column flows returned through their own plans above. }
@@ -3226,9 +4419,13 @@ begin
         AX := LPadding;
         Inc(AY, LCellHeight + LGap);
         LCellHeight := 0;
+        RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLRenderer.Select(const ADesignID: TNyxText);
@@ -3760,19 +4957,28 @@ end;
 
 procedure TNyxLCLRenderer.UpdateSelection;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LControl: TControl;
   LIndex: Integer;
   LHost: TWinControl;
   LBounds: TRect;
   LSelected: TNyxLCLBinding;
 begin
+  LGeneration := FGeneration;
+
+  if not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
 
   if FPanel = nil then
   begin
     Exit;
   end;
   LControl := nil;
+  RequireNativeGeneration(LGeneration);
   LSelected := nil;
+  RequireNativeGeneration(LGeneration);
 
   if FDesignMode and (FSelectedDesignID <> '') then
   begin
@@ -3781,8 +4987,9 @@ begin
 
       if (FBindings[LIndex].FNode.DesignID = FSelectedDesignID) and
         FBindings[LIndex].FControl.Visible and
-        NyxInteractionPolicy(FBindings[LIndex].FNode).Visible then
+        NyxInteractionVisible(FBindings[LIndex].FNode) then
       begin
+        RequireNativeGeneration(LGeneration);
         { Realization visits parents first. A reusable instance's descendants
           share its authored identity; outline that instance's outer face once. }
         LSelected := FBindings[LIndex];
@@ -3790,23 +4997,31 @@ begin
         if not FVirtualLayout or LSelected.FPlacement.HasArea then
         begin
           LControl := LSelected.FControl;
+          RequireNativeGeneration(LGeneration);
         end;
         Break;
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
   LHost := FPanel;
   LBounds := Rect(0, 0, 0, 0);
+  RequireNativeGeneration(LGeneration);
 
   if LControl <> nil then
   begin
 
     if (LControl.Parent = FPanel) and (LControl is TWinControl) then
     begin
+      RequireNativeGeneration(LGeneration);
       { Root edges stay inside its client rectangle. They neither extend the
         scroll range nor sit behind the full-page child window. }
       LHost := TWinControl(LControl);
+      RequireNativeGeneration(LGeneration);
       LBounds := LHost.ClientRect;
+      RequireNativeGeneration(LGeneration);
 
       if FVirtualLayout then
       begin
@@ -3814,22 +5029,31 @@ begin
           -LSelected.FPlacement.ContentOffsetY,
           LSelected.FLogicalBox.Width - LSelected.FPlacement.ContentOffsetX,
           LSelected.FLogicalBox.Height - LSelected.FPlacement.ContentOffsetY);
+          RequireNativeGeneration(LGeneration);
       end;
     end
     else
     begin
+      RequireNativeGeneration(LGeneration);
       LHost := LControl.Parent;
+      RequireNativeGeneration(LGeneration);
       LBounds := LControl.BoundsRect;
+      RequireNativeGeneration(LGeneration);
 
       if FVirtualLayout then
       begin
         OffsetRect(LBounds, -LSelected.FPlacement.ContentOffsetX,
           -LSelected.FPlacement.ContentOffsetY);
+          RequireNativeGeneration(LGeneration);
         LBounds.Right := LBounds.Left + LSelected.FLogicalBox.Width;
+        RequireNativeGeneration(LGeneration);
         LBounds.Bottom := LBounds.Top + LSelected.FLogicalBox.Height;
+        RequireNativeGeneration(LGeneration);
       end;
       InflateRect(LBounds, 2, 2);
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end;
   for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
   begin
@@ -3837,9 +5061,11 @@ begin
     if (LControl <> nil) and (FSelectionEdges[LIndex] = nil) then
     begin
       FSelectionEdges[LIndex] := TShape.Create(FPanel);
+      RequireNativeGeneration(LGeneration);
       FSelectionEdges[LIndex].Shape := stRectangle;
       FSelectionEdges[LIndex].Pen.Style := psSolid;
     end;
+    RequireNativeGeneration(LGeneration);
 
     if FSelectionEdges[LIndex] <> nil then
     begin
@@ -3847,32 +5073,208 @@ begin
       { TShape's rectangle excludes its final fill row/column. A matching solid
         pen covers that perimeter too, preserving the complete two-pixel strip. }
       FSelectionEdges[LIndex].Pen.Color := ThemeColor(FTheme.Accent);
+      RequireNativeGeneration(LGeneration);
       FSelectionEdges[LIndex].Brush.Color := ThemeColor(FTheme.Accent);
+      RequireNativeGeneration(LGeneration);
       FSelectionEdges[LIndex].Visible := LControl <> nil;
     end;
   end;
+  RequireNativeGeneration(LGeneration);
 
   if LControl = nil then
   begin
     UpdateResizePreview;
+    RequireNativeGeneration(LGeneration);
     UpdateCanvasResizeGrips;
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
   { The scroll panel owns all four graphics even when their paint parent is a
     nested container. Outside edges leave inputs unobstructed; root edges use
     the page's padded inner perimeter. Neither kind creates a focus entry. }
   FSelectionEdges[0].SetBounds(LBounds.Left, LBounds.Top, LBounds.Right - LBounds.Left, 2);
+  RequireNativeGeneration(LGeneration);
   FSelectionEdges[1].SetBounds(LBounds.Left, LBounds.Bottom - 2, LBounds.Right - LBounds.Left, 2);
+  RequireNativeGeneration(LGeneration);
   FSelectionEdges[2].SetBounds(LBounds.Left, LBounds.Top + 2, 2,
     Max(0, LBounds.Bottom - LBounds.Top - 4));
+    RequireNativeGeneration(LGeneration);
   FSelectionEdges[3].SetBounds(LBounds.Right - 2, LBounds.Top + 2, 2,
     Max(0, LBounds.Bottom - LBounds.Top - 4));
+    RequireNativeGeneration(LGeneration);
   for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
   begin
     FSelectionEdges[LIndex].BringToFront;
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
   UpdateResizePreview;
+  RequireNativeGeneration(LGeneration);
   UpdateCanvasResizeGrips;
+  RequireNativeGeneration(LGeneration);
+end;
+
+
+procedure TNyxLCLRenderer.SetPresentationPlaneVisible(APlane: TWinControl;
+  AVisible: Boolean);
+begin
+  ChangePresentationPlane(APlane, AVisible, nil,
+    Default(TNyxTextSelection), False);
+end;
+
+procedure TNyxLCLRenderer.RestorePresentationPlane(APlane: TWinControl;
+  AFocus: TWinControl;
+  const ASelection: TNyxTextSelection);
+begin
+  ChangePresentationPlane(APlane, True, AFocus, ASelection, True);
+end;
+
+procedure TNyxLCLRenderer.ChangePresentationPlane(APlane: TWinControl;
+  AVisible: Boolean; AFocus: TWinControl;
+  const ASelection: TNyxTextSelection; ASynchronize: Boolean);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LFrame: INyxNativeGestureFrame;
+  LGrids: array of TNyxCollectionStringGrid;
+  LGrid: TNyxCollectionStringGrid;
+  LIndex: Integer;
+  LChild: Integer;
+  LEntered: Integer;
+  LUpdating: Boolean;
+  LLayouting: Boolean;
+  LParent: TWinControl;
+  LCanFocus: Boolean;
+
+  procedure IncludeGrid(AGrid: TNyxCollectionStringGrid);
+  var
+    LPrevious: Integer;
+  begin
+    for LPrevious := 0 to High(LGrids) do
+    begin
+
+      if LGrids[LPrevious] = AGrid then
+      begin
+        Exit;
+      end;
+    end;
+    SetLength(LGrids, Length(LGrids) + 1);
+    LGrids[High(LGrids)] := AGrid;
+  end;
+begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+  FEvents.Scheduler.RequireUI;
+  RequireNativeGeneration(LGeneration);
+
+  if (FPanel = nil) or (FRoot = nil) or
+    (APlane = nil) or (FPanel.Parent <> APlane) then
+  begin
+    raise ENyxModel.Create('Native visibility requires this view''s exact presentation plane');
+  end;
+  LParent := AFocus;
+  while (LParent <> nil) and (LParent <> FPanel) do
+  begin
+    LParent := LParent.Parent;
+  end;
+
+  if (AFocus <> nil) and (LParent <> FPanel) then
+  begin
+    raise ENyxModel.Create('Native presentation focus must belong to this exact view');
+  end;
+  LFrame := FPhysicalFrame;
+  LFrame.Enter;
+  try
+    RequireNativeGeneration(LGeneration);
+    LGrids := nil;
+    for LIndex := 0 to High(FBindings) do
+    begin
+
+      if FBindings[LIndex].FControl is TNyxCollectionStringGrid then
+      begin
+        LGrid := TNyxCollectionStringGrid(FBindings[LIndex].FControl);
+        IncludeGrid(LGrid);
+        for LChild := 0 to LGrid.ControlCount - 1 do
+        begin
+
+          if LGrid.Controls[LChild] is TNyxCollectionStringGrid then
+          begin
+            IncludeGrid(TNyxCollectionStringGrid(LGrid.Controls[LChild]));
+          end;
+        end;
+      end
+      else if (FBindings[LIndex].FCollectionMount <> nil) and
+        (FBindings[LIndex].FControl is TStringGrid) then
+      begin
+        raise ENyxModel.Create('Native presentation requires a guarded collection grid');
+      end;
+    end;
+    LUpdating := FUpdating;
+    LLayouting := FLayouting;
+    LEntered := 0;
+    FUpdating := True;
+    FLayouting := True;
+    try
+      for LIndex := 0 to High(LGrids) do
+      begin
+        LGrids[LIndex].BeginPresentationChange;
+        Inc(LEntered);
+      end;
+      APlane.Visible := AVisible;
+      RequireNativeGeneration(LGeneration);
+
+      if ASynchronize then
+      begin
+        { Sync must perform its ordinary updater and allocation checks rather
+          than exit through an already-updating shield. Its own renderer guard
+          applies during every callout; the captured grid guards/frame remain
+          entered throughout. No native call occurs between the flag changes. }
+        FUpdating := LUpdating;
+        FLayouting := LLayouting;
+        Sync;
+        RequireNativeGeneration(LGeneration);
+        FUpdating := True;
+        FLayouting := True;
+      end;
+
+      LCanFocus := False;
+
+      if AFocus <> nil then
+      begin
+        LCanFocus := AFocus.CanFocus;
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if LCanFocus then
+      begin
+        AFocus.SetFocus;
+        RequireNativeGeneration(LGeneration);
+
+        if ASelection.Defined then
+        begin
+          SelectNyxLCLText(AFocus, ASelection);
+          RequireNativeGeneration(LGeneration);
+        end;
+      end;
+      RequireNativeGeneration(LGeneration);
+    finally
+      { The entered original frame retains its native controls through callback
+        retirement. Restore only current receiver flags; unwind borrowed grids
+        from the captured vector, then leave that frame LAST without Self reads. }
+      while LEntered <> 0 do
+      begin
+        Dec(LEntered);
+        LGrids[LEntered].EndPresentationChange;
+      end;
+
+      if NativeGenerationCurrent(LGeneration) then
+      begin
+        FUpdating := LUpdating;
+        FLayouting := LLayouting;
+      end;
+    end;
+  finally
+    LFrame.Leave;
+  end;
 end;
 
 procedure TNyxLCLRenderer.MoveHost(AHost: TWinControl);
@@ -3991,27 +5393,38 @@ end;
 
 function TNyxLCLRenderer.MeasureContainers: INyxContainerSnapshot;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LMeasurements: TNyxContainerMeasurements;
   LIndex, LCount, LPadding: Integer;
   LAncestor: TNyxNode;
   LVisible: Boolean;
   LBinding: TNyxLCLBinding;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+
   LMeasurements := nil;
+  RequireNativeGeneration(LGeneration);
   for LIndex := 0 to High(FBindings) do
   begin
     LBinding := FBindings[LIndex];
+    RequireNativeGeneration(LGeneration);
 
     if not LBinding.FNode.QueryContainer.Defined or not LBinding.FContainerAllocated then
     begin
+      RequireNativeGeneration(LGeneration);
       Continue;
     end;
+    RequireNativeGeneration(LGeneration);
     LAncestor := LBinding.FNode;
     LVisible := True;
+    RequireNativeGeneration(LGeneration);
     while LAncestor <> nil do
     begin
       LVisible := LVisible and (LAncestor.Prop('visible', 'true') <> 'false');
+      RequireNativeGeneration(LGeneration);
       LAncestor := LAncestor.Parent;
+      RequireNativeGeneration(LGeneration);
     end;
 
     if not LVisible then
@@ -4019,42 +5432,62 @@ begin
       Continue;
     end;
     LCount := Length(LMeasurements);
+    RequireNativeGeneration(LGeneration);
     SetLength(LMeasurements, LCount + 1);
+    RequireNativeGeneration(LGeneration);
     LPadding := 2 * Metric(LBinding.FNode, 'padding', 0);
+    RequireNativeGeneration(LGeneration);
     LMeasurements[LCount].RuntimeID := LBinding.FNode.ID;
+    RequireNativeGeneration(LGeneration);
     { Logical allocation survives native virtualization. Only non-client
       thickness comes from the control; never publish its clipped screen size. }
     LMeasurements[LCount].Width := Max(0, LBinding.FLogicalBox.Width - LPadding -
       (LBinding.FControl.Width - LBinding.FControl.ClientWidth));
+      RequireNativeGeneration(LGeneration);
     LMeasurements[LCount].Height := Max(0, LBinding.FLogicalBox.Height - LPadding -
       (LBinding.FControl.Height - LBinding.FControl.ClientHeight));
+      RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
   Result := NewNyxContainerSnapshot(LMeasurements);
+  RequireNativeGeneration(LGeneration);
 end;
 
 function TNyxLCLRenderer.UpdateViewport: Boolean;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LMeasurements: INyxContainerSnapshot;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+
   Result := False;
 
   if (FRoot = nil) or (FPanel = nil) or (FPanel.Parent = nil) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LMeasurements := FStagingMeasurements;
+  RequireNativeGeneration(LGeneration);
 
   if not FStagingContent then
   begin
     LMeasurements := MeasureContainers;
+    RequireNativeGeneration(LGeneration);
   end;
   Result := FRoot.ApplyViewport(Max(0, FPanel.Parent.ClientWidth),
     Max(0, FPanel.Parent.ClientHeight), npfNativeLCL, FPresentationSelection, LMeasurements);
+    RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LPhysicalFrame: INyxNativeGestureFrame;
   LHeight: Integer;
+  LPanel: TNyxLogicalScrollBox;
   LIndex: Integer;
   LPass: Integer;
   LWidth: Integer;
@@ -4063,158 +5496,226 @@ var
   LContentHeight: Double;
   {$ifdef NYX_LCL_LAYOUT_PROFILE}LMeasureStarted: QWord;{$endif}
 begin
+  LGeneration := FGeneration;
 
-  if FLayouting or FProjecting then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-
-  if (FRoot <> nil) and (FPanel <> nil) then
-  begin
-
-    if UpdateViewport and not FUpdating then
-    begin
-      { Sync applies visibility/interaction as well as geometry, under its
-        existing event guard. Its nested Resize sees the already copied overlay. }
-      Sync;
-      Exit;
-    end;
-    { LCL's automatic anchor/layout pass must see the complete new geometry.
-      Otherwise showing a previously unplaced label can reapply its stale base
-      position in the middle of SetBounds. Keep widgetset layout atomic while
-      retaining the same controls and their focus/editing state. }
-    ClearLabelMeasurements;
-    FPanel.DisableAutoSizing;
-    FLayouting := True;
-    {$ifdef NYX_LCL_LAYOUT_PROFILE}
-    FMeasureCalls := 0;
-    FNaturalCalls := 0;
-    FRowPlanCalls := 0;
-    FLabelMeasurementsTaken := 0;
-    FLabelMeasurementsReused := 0;
-    LMeasureStarted := GetTickCount64;
-    {$endif}
+  LPhysicalFrame := FPhysicalFrame;
+  LPhysicalFrame.Enter;
+  try
     try
-      { Design canvases always retain their logical frame. Runtime views switch
-        when any face/position could exceed the native message coordinate domain,
-        including a large child inside an explicitly bounded scroll container. }
-      FVirtualLayout := FDesignMode;
-      for LIndex := 0 to High(FBindings) do
+
+      if FLayouting or FProjecting then
       begin
-        FBindings[LIndex].FLogicalBox := Default(TNyxViewportBox);
+        Exit;
+      end;
 
-        if not FVirtualLayout then
+      if (FRoot <> nil) and (FPanel <> nil) then
+      begin
+
+        if UpdateViewport and not FUpdating then
         begin
-          FVirtualLayout := (Measure(FBindings[LIndex].FNode, FPanel.ClientWidth, True) >
-            High(SmallInt)) or
-            (Abs(Double(Metric(FBindings[LIndex].FNode, 'top', 0))) > High(SmallInt)) or
-            (Abs(Double(Metric(FBindings[LIndex].FNode, 'left', 0))) > High(SmallInt));
-
-          if not FVirtualLayout and (NyxLayout(FBindings[LIndex].FNode) = 'column') and
-            (FBindings[LIndex].FNode.Prop('height') <> '') then
+          { Sync applies visibility/interaction as well as geometry, under its
+            existing event guard. Its nested Resize sees the already copied overlay. }
+          Sync;
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        { LCL's automatic anchor/layout pass must see the complete new geometry.
+          Otherwise showing a previously unplaced label can reapply its stale base
+          position in the middle of SetBounds. Keep widgetset layout atomic while
+          retaining the same controls and their focus/editing state. }
+        ClearLabelMeasurements;
+        RequireNativeGeneration(LGeneration);
+        LPanel := FPanel;
+        LPanel.DisableAutoSizing;
+        RequireNativeGeneration(LGeneration);
+        FLayouting := True;
+        {$ifdef NYX_LCL_LAYOUT_PROFILE}
+        FMeasureCalls := 0;
+        FNaturalCalls := 0;
+        FRowPlanCalls := 0;
+        FLabelMeasurementsTaken := 0;
+        FLabelMeasurementsReused := 0;
+        LMeasureStarted := GetTickCount64;
+        {$endif}
+        try
+          { Design canvases always retain their logical frame. Runtime views switch
+            when any face/position could exceed the native message coordinate domain,
+            including a large child inside an explicitly bounded scroll container. }
+          FVirtualLayout := FDesignMode;
+          for LIndex := 0 to High(FBindings) do
           begin
-            { An explicit bounded scroll/column height describes its viewport,
-              not its overflowing child extent. Detect that content before any
-              native window receives a distant child position. Small ordinary
-              scroll views keep their existing automatic LCL implementation.
-              Automatic columns were already measured completely above; do not
-              traverse those descendants a second time for each binding. }
-            LContentHeight := 2.0 * Metric(FBindings[LIndex].FNode, 'padding', 0);
-            for LChild := 0 to FBindings[LIndex].FNode.Count - 1 do
+            FBindings[LIndex].FLogicalBox := Default(TNyxViewportBox);
+            RequireNativeGeneration(LGeneration);
+
+            if not FVirtualLayout then
             begin
+              FVirtualLayout := (Measure(FBindings[LIndex].FNode, FPanel.ClientWidth, True) >
+                High(SmallInt)) or
+                (Abs(Double(Metric(FBindings[LIndex].FNode, 'top', 0))) > High(SmallInt)) or
+                (Abs(Double(Metric(FBindings[LIndex].FNode, 'left', 0))) > High(SmallInt));
+                RequireNativeGeneration(LGeneration);
 
-              if NyxInteractionPolicy(FBindings[LIndex].FNode.Children[LChild]).Visible then
+              if not FVirtualLayout and (NyxLayout(FBindings[LIndex].FNode) = 'column') and
+                (FBindings[LIndex].FNode.Prop('height') <> '') then
               begin
-                LContentHeight := LContentHeight + Measure(
-                  FBindings[LIndex].FNode.Children[LChild], FPanel.ClientWidth, True) +
-                  Metric(FBindings[LIndex].FNode, 'gap', 12);
-
-                if LContentHeight > High(SmallInt) then
+                RequireNativeGeneration(LGeneration);
+                { An explicit bounded scroll/column height describes its viewport,
+                  not its overflowing child extent. Detect that content before any
+                  native window receives a distant child position. Small ordinary
+                  scroll views keep their existing automatic LCL implementation.
+                  Automatic columns were already measured completely above; do not
+                  traverse those descendants a second time for each binding. }
+                LContentHeight := 2.0 * Metric(FBindings[LIndex].FNode, 'padding', 0);
+                RequireNativeGeneration(LGeneration);
+                for LChild := 0 to FBindings[LIndex].FNode.Count - 1 do
                 begin
-                  FVirtualLayout := True;
-                  Break;
+                  RequireNativeGeneration(LGeneration);
+
+                  if NyxInteractionVisible(FBindings[LIndex].FNode.Children[LChild]) then
+                  begin
+                    RequireNativeGeneration(LGeneration);
+                    LContentHeight := LContentHeight + Measure(
+                      FBindings[LIndex].FNode.Children[LChild], FPanel.ClientWidth, True) +
+                      Metric(FBindings[LIndex].FNode, 'gap', 12);
+                      RequireNativeGeneration(LGeneration);
+
+                    if LContentHeight > High(SmallInt) then
+                    begin
+                      FVirtualLayout := True;
+                      Break;
+                    end;
+                  end;
+                  RequireNativeGeneration(LGeneration);
                 end;
+                RequireNativeGeneration(LGeneration);
               end;
+              RequireNativeGeneration(LGeneration);
             end;
           end;
+          RequireNativeGeneration(LGeneration);
+
+          if FVirtualLayout then
+          begin
+            { Showing either native scrollbar changes the available client area.
+              Settle both axes before publishing physical boxes, without recursive
+              layout or sizing the root from the previous viewport width. }
+            for LPass := 0 to 2 do
+            begin
+              LWidth := FPanel.ViewportWidth;
+              RequireNativeGeneration(LGeneration);
+              LClientHeight := FPanel.ViewportHeight;
+              RequireNativeGeneration(LGeneration);
+              LHeight := -1;
+              RequireNativeGeneration(LGeneration);
+
+              if FRoot.Prop('height-sizing') = 'fill' then
+              begin
+                RequireNativeGeneration(LGeneration);
+                LHeight := LClientHeight;
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+              Layout(FRoot, 0, 0, LWidth, LHeight);
+              RequireNativeGeneration(LGeneration);
+              FPanel.SetLogicalExtent(Binding(FRoot).FLogicalBox.Width,
+                Binding(FRoot).FLogicalBox.Height, ProjectViewport);
+                RequireNativeGeneration(LGeneration);
+
+              if (LWidth = FPanel.ViewportWidth) and
+                (LClientHeight = FPanel.ViewportHeight) then
+              begin
+                RequireNativeGeneration(LGeneration);
+                Break;
+              end;
+              RequireNativeGeneration(LGeneration);
+            end;
+            ProjectViewport(FPanel);
+            RequireNativeGeneration(LGeneration);
+          end
+          else
+          begin
+            FPanel.UseNativeScrolling;
+            RequireNativeGeneration(LGeneration);
+            LHeight := -1;
+            RequireNativeGeneration(LGeneration);
+
+            if FRoot.Prop('height-sizing') = 'fill' then
+            begin
+              RequireNativeGeneration(LGeneration);
+              LHeight := Max(0, FPanel.ClientHeight);
+              RequireNativeGeneration(LGeneration);
+            end;
+            RequireNativeGeneration(LGeneration);
+            Layout(FRoot, 0, 0, Max(0, FPanel.ClientWidth), LHeight);
+            RequireNativeGeneration(LGeneration);
+            for LIndex := 0 to High(FBindings) do
+            begin
+
+              if FBindings[LIndex].FControl is TNyxLCLSurface then
+              begin
+                TNyxLCLSurface(FBindings[LIndex].FControl).ProjectFace(Default(TNyxViewportBox));
+                RequireNativeGeneration(LGeneration);
+              end;
+            end;
+            RequireNativeGeneration(LGeneration);
+          end;
+        finally
+          { Retirement also runs after a label, custom measurement or allocation
+            refusal. Release before permitting another native auto-sizing pass. }
+
+          if NativeGenerationCurrent(LGeneration) and (FMeasurementContext <> 0) then
+          begin
+            LCLIntf.ReleaseDC(0, FMeasurementContext);
+            FMeasurementContext := 0;
+          end;
+
+          if NativeGenerationCurrent(LGeneration) then
+          begin
+            ClearLabelMeasurements;
+            FLayouting := False;
+          end;
+          {$ifdef NYX_LCL_LAYOUT_PROFILE}
+
+          if NativeGenerationCurrent(LGeneration) then
+          begin
+            WriteLn('PROFILE native layout: nodes=', Length(FBindings),
+            ' height=', FMeasureCalls, ' width=', FNaturalCalls,
+            ' rows=', FRowPlanCalls, ' label-measurements=', FLabelMeasurementsTaken,
+            ' label-reuse=', FLabelMeasurementsReused,
+            ' milliseconds=', GetTickCount64 - LMeasureStarted);
+          end;
+          {$endif}
+          LPanel.EnableAutoSizing;
+        end;
+        RequireNativeGeneration(LGeneration);
+        UpdateSelection;
+        RequireNativeGeneration(LGeneration);
+
+        if not FUpdating and UpdateViewport then
+        begin
+          Sync;
+          RequireNativeGeneration(LGeneration);
         end;
       end;
-
-      if FVirtualLayout then
+      RequireNativeGeneration(LGeneration);
+      InitializeCanvases;
+      RequireNativeGeneration(LGeneration);
+      QueueContent;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
       begin
-        { Showing either native scrollbar changes the available client area.
-          Settle both axes before publishing physical boxes, without recursive
-          layout or sizing the root from the previous viewport width. }
-        for LPass := 0 to 2 do
-        begin
-          LWidth := FPanel.ViewportWidth;
-          LClientHeight := FPanel.ViewportHeight;
-          LHeight := -1;
-
-          if FRoot.Prop('height-sizing') = 'fill' then
-          begin
-            LHeight := LClientHeight;
-          end;
-          Layout(FRoot, 0, 0, LWidth, LHeight);
-          FPanel.SetLogicalExtent(Binding(FRoot).FLogicalBox.Width,
-            Binding(FRoot).FLogicalBox.Height, ProjectViewport);
-
-          if (LWidth = FPanel.ViewportWidth) and
-            (LClientHeight = FPanel.ViewportHeight) then
-          begin
-            Break;
-          end;
-        end;
-        ProjectViewport(FPanel);
-      end
-      else
-      begin
-        FPanel.UseNativeScrolling;
-        LHeight := -1;
-
-        if FRoot.Prop('height-sizing') = 'fill' then
-        begin
-          LHeight := Max(0, FPanel.ClientHeight);
-        end;
-        Layout(FRoot, 0, 0, Max(0, FPanel.ClientWidth), LHeight);
-        for LIndex := 0 to High(FBindings) do
-        begin
-
-          if FBindings[LIndex].FControl is TNyxLCLSurface then
-          begin
-            TNyxLCLSurface(FBindings[LIndex].FControl).ProjectFace(Default(TNyxViewportBox));
-          end;
-        end;
+        { Obsolete receiver: committed data stays intact; no successor tail runs. }
       end;
-    finally
-      { Retirement also runs after a label, custom measurement or allocation
-        refusal. Release before permitting another native auto-sizing pass. }
-
-      if FMeasurementContext <> 0 then
-      begin
-        LCLIntf.ReleaseDC(0, FMeasurementContext);
-        FMeasurementContext := 0;
-      end;
-      ClearLabelMeasurements;
-      FLayouting := False;
-      {$ifdef NYX_LCL_LAYOUT_PROFILE}
-      WriteLn('PROFILE native layout: nodes=', Length(FBindings),
-        ' height=', FMeasureCalls, ' width=', FNaturalCalls,
-        ' rows=', FRowPlanCalls, ' label-measurements=', FLabelMeasurementsTaken,
-        ' label-reuse=', FLabelMeasurementsReused,
-        ' milliseconds=', GetTickCount64 - LMeasureStarted);
-      {$endif}
-      FPanel.EnableAutoSizing;
     end;
-    UpdateSelection;
-
-    if not FUpdating and UpdateViewport then
-    begin
-      Sync;
-    end;
+  finally
+    { LAST: retain the exact original native frame across every callback tail. }
+    LPhysicalFrame.Leave;
   end;
-  InitializeCanvases;
-  QueueContent;
 end;
 
 procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -4259,19 +5760,29 @@ end;
 procedure TNyxLCLRenderer.RestoreContentFaces(
   const AStates: TNyxContentFaceStates; AFocus: Boolean);
 var
+  LGeneration: INyxLCLBindingGeneration;
   LIndex: Integer;
   LSaved: Integer;
   LBinding: TNyxLCLBinding;
   LFocus: TWinControl;
   LUpdating: Boolean;
 begin
+  LGeneration := FGeneration;
+
+  if not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+
   LUpdating := FUpdating;
   FUpdating := True;
   try
     for LIndex := 0 to High(FBindings) do
     begin
       LBinding := FBindings[LIndex];
+      RequireNativeGeneration(LGeneration);
       LSaved := NyxContentFaceIndex(LBinding.FNode, AStates);
+      RequireNativeGeneration(LGeneration);
 
       if LSaved < 0 then
       begin
@@ -4281,19 +5792,26 @@ begin
       if AStates[LSaved].HasText and (LBinding.FInput is TCustomEdit) and
         (LBinding.FNode.Prop('value') = AStates[LSaved].Accepted) then
       begin
+        RequireNativeGeneration(LGeneration);
         TCustomEdit(LBinding.FInput).Text := AStates[LSaved].Text;
+        RequireNativeGeneration(LGeneration);
         LBinding.FLastValue := AStates[LSaved].Accepted;
+        RequireNativeGeneration(LGeneration);
         LBinding.FHasValueBaseline := True;
       end;
+      RequireNativeGeneration(LGeneration);
       LFocus := nil;
+      RequireNativeGeneration(LGeneration);
 
       if LBinding.FInput is TWinControl then
       begin
         LFocus := TWinControl(LBinding.FInput);
+        RequireNativeGeneration(LGeneration);
       end
       else if LBinding.FControl is TWinControl then
       begin
         LFocus := TWinControl(LBinding.FControl);
+        RequireNativeGeneration(LGeneration);
       end;
 
       if LFocus <> nil then
@@ -4301,27 +5819,39 @@ begin
 
         if AFocus and AStates[LSaved].Focused and LFocus.CanFocus then
         begin
+          RequireNativeGeneration(LGeneration);
           LFocus.SetFocus;
+          RequireNativeGeneration(LGeneration);
         end;
+        RequireNativeGeneration(LGeneration);
 
         if AStates[LSaved].Selection.Defined and (LFocus is TCustomEdit) and
           (TNyxText(TCustomEdit(LFocus).Text) = AStates[LSaved].Text) then
         begin
+          RequireNativeGeneration(LGeneration);
           LFocus.HandleNeeded;
+          RequireNativeGeneration(LGeneration);
           SelectNyxLCLText(LFocus, AStates[LSaved].Selection);
+          RequireNativeGeneration(LGeneration);
         end;
+        RequireNativeGeneration(LGeneration);
       end;
 
       if LBinding.FControl is TScrollBox then
       begin
         TScrollBox(LBinding.FControl).HorzScrollBar.Position := Round(AStates[LSaved].ScrollLeft);
+        RequireNativeGeneration(LGeneration);
         TScrollBox(LBinding.FControl).VertScrollBar.Position := Round(AStates[LSaved].ScrollTop);
+        RequireNativeGeneration(LGeneration);
       end;
     end;
+    RequireNativeGeneration(LGeneration);
   finally
     FUpdating := LUpdating;
   end;
+  RequireNativeGeneration(LGeneration);
 end;
+
 
 function TNyxLCLRenderer.CaptureInteraction(
   out AStates: TNyxContentFaceStates): Boolean;
@@ -4355,8 +5885,26 @@ begin
 end;
 
 procedure TNyxLCLRenderer.QueueContent;
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEvents: INyxEvents;
+  LScheduler: INyxScheduler;
+  LExecution: INyxExecution;
+  LWork: INyxContentWork;
+  LStatus: TNyxExecutionStatus;
 begin
+  LGeneration := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
   WakeResources;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
 
   if (FContentBlueprint = nil) or FPublishingContent then
   begin
@@ -4369,26 +5917,51 @@ begin
     FContentFrame.Selection.Same(FContentRequestedSelection) and
     (FContentMeasurementKey = NyxContentMeasurements(FRoot, MeasureContainers)) then
   begin
-    { Fully settled publication leaves no gratuitous queued courier at teardown.
-      New host boxes, source admission or explicit choices remain observable. }
     Exit;
   end;
 
-  if (FContentExecution <> nil) and
-    (FContentExecution.Status in [nesPending, nesRunning]) then
+  if not LGeneration.Current then
   begin
     Exit;
+  end;
+  LExecution := FContentExecution;
+
+  if LExecution <> nil then
+  begin
+    LStatus := LExecution.Status;
+
+    if not LGeneration.Current or (LStatus in [nesPending, nesRunning]) then
+    begin
+      Exit;
+    end;
   end;
 
   if FContentWork = nil then
   begin
     FContentWork := NewNyxContentWork(RefreshContent);
   end;
-  FContentExecution := FEvents.Scheduler.Submit(FContentWork, neUIQueue);
+  LWork := FContentWork;
+  LEvents := FEvents;
+  LScheduler := LEvents.Scheduler;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
+  LExecution := LScheduler.Submit(LWork, neUIQueue);
+
+  if not LGeneration.Current then
+  begin
+    LExecution.Cancel;
+    Exit;
+  end;
+  FContentExecution := LExecution;
 end;
 
 procedure TNyxLCLRenderer.RefreshContent;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LFrame: TNyxViewFrame;
   LMeasurements: INyxContainerSnapshot;
   LKey: TNyxText;
@@ -4398,149 +5971,213 @@ var
   LPreviousSelection: TNyxPresentationSelection;
   LLifetime: INyxContentLifetime;
 begin
-  LLifetime := FContentLifetime;
-  FEvents.Scheduler.RequireUI;
+  LGeneration := FGeneration;
 
-  if FPublishingContent or FContentGuard.Busy then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-
-  if (FContentBlueprint = nil) or (FPanel = nil) or (FPanel.Parent = nil) or
-    (FRoot = nil) then
-  begin
-    Exit;
-  end;
-
-  if FUpdating or FLayouting or FProjecting or
-    ((FEditingObserver <> nil) and FEditingObserver.Dispatching) or
-    ((FPhysicalFrame <> nil) and FPhysicalFrame.Dispatching) or
-    ((FLiveBindings <> nil) and not FDesignMode and not FLiveBindings.RefreshReady) or
-    ((FState <> nil) and FState.Busy) then
-  begin
-    FLastContentError := 'Structural publication requires an idle view and runtime store';
-    Exit;
-  end;
-  { Host input owns its composing/captured face until its producer ends it.
-    Completion queues a fresh observation rather than replacing that widget. }
-  for LIndex := 0 to High(FBindings) do
-  begin
-
-    if FBindings[LIndex].FComposing or
-      NyxLCLHasPointerCapture(FBindings[LIndex].FControl) or
-      NyxLCLHasPointerCapture(FBindings[LIndex].FInput) then
-    begin
-      Exit;
-    end;
-  end;
-  LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
-    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
-
-  if FContentRequestedSelection.Reference.Defined then
-  begin
-    LFrame := LFrame.Selecting(FContentRequestedSelection.Reference);
-  end;
-  LMeasurements := MeasureContainers;
-  LKey := NyxContentMeasurements(FRoot, LMeasurements);
-
-  if FContentFrameKnown and (FContentFrame.Width = LFrame.Width) and
-    (FContentFrame.Height = LFrame.Height) and
-    FContentFrame.Selection.Same(LFrame.Selection) and (FContentMeasurementKey = LKey) then
-  begin
-    Exit;
-  end;
-  LCandidate := nil;
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
   try
     try
-      LCandidate := FContentBlueprint.Realize(LFrame, LMeasurements);
 
-      if FResourceContext <> nil then
+      LLifetime := FContentLifetime;
+      RequireNativeGeneration(LGeneration);
+      FEvents.Scheduler.RequireUI;
+      RequireNativeGeneration(LGeneration);
+
+      if FPublishingContent or FContentGuard.Busy then
       begin
-        LCandidate.BindResources(FResourceContext.Snapshot,
-          FResourceContext.Locale, FResourceContext.Fallback);
-      end;
-
-      if not SameNyxContentStructure(FRoot, LCandidate) then
-      begin
-        LStates := CaptureContentFaces;
-        FPublishingContent := True;
-        try
-          RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FPanel.Parent,
-            FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates,
-            nrmConfigured, False, nil, nil, FViewPublicationSource);
-
-          if not LLifetime.Active then
-          begin
-            Exit;
-          end;
-          LKey := FContentMeasurementKey;
-        finally
-
-          if LLifetime.Active then
-          begin
-            FPublishingContent := False;
-            WakeResources;
-          end;
-        end;
-      end
-      else
-      begin
-        LPreviousSelection := FPresentationSelection;
-        FPresentationSelection := LFrame.Selection;
-        FPublishingContent := True;
-        try
-          try
-            Sync;
-          except
-
-            if LLifetime.Active then
-            begin
-              FPresentationSelection := LPreviousSelection;
-              Sync;
-            end;
-            raise;
-          end;
-        finally
-
-          if LLifetime.Active then
-          begin
-            FPublishingContent := False;
-            WakeResources;
-          end;
-        end;
-      end;
-
-      if not LLifetime.Active then
-      begin
+        RequireNativeGeneration(LGeneration);
         Exit;
       end;
-      FContentFrame := LFrame;
-      FContentFrameKnown := True;
-      FContentMeasurementKey := LKey;
-      FLastContentError := '';
-    except
-      on LException: Exception do
+      RequireNativeGeneration(LGeneration);
+
+      if (FContentBlueprint = nil) or (FPanel = nil) or (FPanel.Parent = nil) or
+        (FRoot = nil) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if FUpdating or FLayouting or FProjecting or
+        ((FEditingObserver <> nil) and FEditingObserver.Dispatching) or
+        ((FPhysicalFrame <> nil) and FPhysicalFrame.Dispatching) or
+        ((FLiveBindings <> nil) and not FDesignMode and not FLiveBindings.RefreshReady) or
+        ((FState <> nil) and FState.Busy) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FLastContentError := 'Structural publication requires an idle view and runtime store';
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      { Host input owns its composing/captured face until its producer ends it.
+        Completion queues a fresh observation rather than replacing that widget. }
+      for LIndex := 0 to High(FBindings) do
       begin
 
-        if LLifetime.Active then
+        if FBindings[LIndex].FComposing or
+          NyxLCLHasPointerCapture(FBindings[LIndex].FControl) or
+          NyxLCLHasPointerCapture(FBindings[LIndex].FInput) then
         begin
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+      LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
+        Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+        RequireNativeGeneration(LGeneration);
+
+      if FContentRequestedSelection.Reference.Defined then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LFrame := LFrame.Selecting(FContentRequestedSelection.Reference);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+      LMeasurements := MeasureContainers;
+      RequireNativeGeneration(LGeneration);
+      LKey := NyxContentMeasurements(FRoot, LMeasurements);
+      RequireNativeGeneration(LGeneration);
+
+      if FContentFrameKnown and (FContentFrame.Width = LFrame.Width) and
+        (FContentFrame.Height = LFrame.Height) and
+        FContentFrame.Selection.Same(LFrame.Selection) and (FContentMeasurementKey = LKey) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LCandidate := nil;
+      RequireNativeGeneration(LGeneration);
+      try
+        try
+          LCandidate := FContentBlueprint.Realize(LFrame, LMeasurements);
+          RequireNativeGeneration(LGeneration);
+
+          if FResourceContext <> nil then
+          begin
+            LCandidate.BindResources(FResourceContext.Snapshot,
+              FResourceContext.Locale, FResourceContext.Fallback);
+              RequireNativeGeneration(LGeneration);
+          end;
+
+          if not SameNyxContentStructure(FRoot, LCandidate) then
+          begin
+            LStates := CaptureContentFaces;
+            FPublishingContent := True;
+            try
+              RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FPanel.Parent,
+                FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates,
+                nrmConfigured, False, nil, nil, FViewPublicationSource);
+                RequireNativeGeneration(LGeneration);
+
+              if not LLifetime.Active or not NativeGenerationCurrent(LGeneration) then
+              begin
+                RequireNativeGeneration(LGeneration);
+                Exit;
+              end;
+              RequireNativeGeneration(LGeneration);
+              LKey := FContentMeasurementKey;
+            finally
+
+              if LLifetime.Active and NativeGenerationCurrent(LGeneration) then
+              begin
+                FPublishingContent := False;
+                WakeResources;
+              end;
+            end;
+            RequireNativeGeneration(LGeneration);
+          end
+          else
+          begin
+            RequireNativeGeneration(LGeneration);
+            LPreviousSelection := FPresentationSelection;
+            FPresentationSelection := LFrame.Selection;
+            RequireNativeGeneration(LGeneration);
+            FPublishingContent := True;
+            try
+              try
+                Sync;
+                RequireNativeGeneration(LGeneration);
+              except
+
+                if LLifetime.Active and NativeGenerationCurrent(LGeneration) then
+                begin
+                  RequireNativeGeneration(LGeneration);
+                  FPresentationSelection := LPreviousSelection;
+                  Sync;
+                  RequireNativeGeneration(LGeneration);
+                end;
+                RequireNativeGeneration(LGeneration);
+                raise;
+              end;
+            finally
+
+              if LLifetime.Active and NativeGenerationCurrent(LGeneration) then
+              begin
+                FPublishingContent := False;
+                WakeResources;
+              end;
+            end;
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+
+          if not LLifetime.Active or not NativeGenerationCurrent(LGeneration) then
+          begin
+            RequireNativeGeneration(LGeneration);
+            Exit;
+          end;
+          RequireNativeGeneration(LGeneration);
           FContentFrame := LFrame;
           FContentFrameKnown := True;
           FContentMeasurementKey := LKey;
-          FLastContentError := TNyxText(LException.Message);
+          FLastContentError := '';
+        except
+          on ENyxNativeGenerationRetired do raise;
+          on LException: Exception do
+          begin
+
+            if LLifetime.Active and NativeGenerationCurrent(LGeneration) then
+            begin
+              RequireNativeGeneration(LGeneration);
+              FContentFrame := LFrame;
+              FContentFrameKnown := True;
+              FContentMeasurementKey := LKey;
+              FLastContentError := TNyxText(LException.Message);
+              RequireNativeGeneration(LGeneration);
+            end;
+            RequireNativeGeneration(LGeneration);
+            raise;
+          end;
         end;
-        raise;
+      finally
+        LCandidate.Free;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LLifetime.Active and NativeGenerationCurrent(LGeneration) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FlushImages;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
       end;
     end;
   finally
-    LCandidate.Free;
-  end;
-
-  if LLifetime.Active then
-  begin
-    FlushImages;
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
@@ -4653,12 +6290,25 @@ procedure TNyxLCLRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AResolver: INyxLogicResolver;
   const APublicationSource: INyxViewPublicationSource);
 var
+  LAttempt: IInterface;
+  LAttemptLifetime: INyxContentLifetime;
   LCandidate: TNyxLCLRenderer;
+  LRenderEvents: INyxEvents;
+  LAcceptedRevision: Integer;
   LIndex: Integer;
   LTransferState: Boolean;
   LRuntimeState: TNyxState;
+  LRuntimeOwner: INyxBindingOwnedState;
+  LCandidateGeneration: TNativeBindingGeneration;
   LOwnRuntimeState: Boolean;
   LCollections: INyxCollectionBindings;
+  LCollectionInputGate: INyxCollectionInputGate;
+  LCollectionAdmissions: array of INyxCollectionInputAdmission;
+  LCollectionAdmission: INyxCollectionInputAdmission;
+  LCollectionObservations: array of INyxObservationPublication;
+  LCollectionObservation: INyxLCLCollectionObservation;
+  LCollectionEditingPublication: INyxObservationPublication;
+  LCollectionMount: INyxCollectionMount;
   LMeasurements: INyxContainerSnapshot;
   { Incoming managed const arguments can alias caller slots. Retain their
     intended values before asking an alternate registry for its snapshot. }
@@ -4675,6 +6325,23 @@ var
   LUpdating: Boolean;
   LFormerFocus: TWinControl;
   LFormerSelection: TNyxTextSelection;
+  { Local leases retain suspended adapters through preview and all-attempt
+    rollback. The payload is copied content identity plus value-only cell data;
+    no editor pointer crosses into the replacement renderer. }
+  LCellEdits: array of record
+    Identity: TNyxContentIdentity;
+    Source: INyxCollectionEditMount;
+    Snapshot: INyxCollectionEditsSnapshot;
+    Store: INyxCollection;
+    Focused: TNyxCollectionCellEdit;
+  end;
+  LFormerCellFocus, LCellFocusAllowed: Boolean;
+  LCellFocusAnchor: TWinControl;
+  LReplacementCellFocus: TWinControl;
+  LReplacementCellSource: INyxCollectionEditMount;
+  LReplacementCellStore: INyxCollection;
+  LReplacementCellDraft: TNyxCollectionCellEdit;
+  LCellResumeError: TNyxText;
   LViewportPublication: INyxObservationPublication;
   LEditingPublication: INyxObservationPublication;
   LCapturePublication: INyxObservationPublication;
@@ -4714,6 +6381,211 @@ var
     LPhaseStarted := LNow;
   end;
   {$endif}
+
+  function AttemptCurrent: Boolean;
+  begin
+    Result := False;
+
+    if not LAttemptLifetime.Active then
+    begin
+      Exit;
+    end;
+    Result := FRenderAttempt = LAttempt;
+  end;
+
+  procedure RequireAttempt;
+  begin
+
+    if not AttemptCurrent then
+    begin
+      raise ENyxNativeGenerationRetired.Create('Native structural attempt retired during callback');
+    end;
+  end;
+
+  procedure SuspendCellDrafts;
+  var
+    LBindingIndex, LPrevious, LSlot, LCell: Integer;
+    LMount: INyxCollectionMount;
+    LEdits: INyxCollectionEditMount;
+    LIdentity: TNyxContentIdentity;
+  begin
+    for LBindingIndex := 0 to High(FBindings) do
+    begin
+      LMount := FBindings[LBindingIndex].FCollectionMount;
+
+      if (LMount = nil) or not LMount.Connected or
+        not LMount.View.Spec.HasLayoutControls then
+      begin
+        Continue;
+      end;
+      LEdits := nil;
+
+      if not Supports(LMount, INyxCollectionEditMount, LEdits) then
+      begin
+        raise ENyxModel.Create('Native table has no cell edit handoff');
+      end;
+      LIdentity := NyxContentIdentity(FBindings[LBindingIndex].FNode);
+      { Identify a borrowed old cell editor before Suspend can hide/reacquire
+        it or fail. Even an internally unwound capture must not make rollback
+        dereference that former raw editor pointer. }
+
+      if (LFormerFocus is TCustomEdit) and
+        (FBindings[LBindingIndex].FControl is TNyxCollectionStringGrid) and
+        TNyxCollectionStringGrid(FBindings[LBindingIndex].FControl)
+          .OwnsColumnInput(LFormerFocus) then
+      begin
+        LFormerCellFocus := True;
+      end;
+      for LPrevious := 0 to High(LCellEdits) do
+      begin
+
+        if LCellEdits[LPrevious].Identity.Same(LIdentity) then
+        begin
+          raise ENyxModel.Create('Native cell edit handoff has an ambiguous content identity');
+        end;
+      end;
+      LSlot := Length(LCellEdits);
+      SetLength(LCellEdits, LSlot + 1);
+      LCellEdits[LSlot].Identity := LIdentity;
+      LCellEdits[LSlot].Source := LEdits;
+      LCellEdits[LSlot].Snapshot := LEdits.SuspendCellEdits;
+      RequireAttempt;
+      LCellEdits[LSlot].Store := LCellEdits[LSlot].Snapshot.Store;
+      for LCell := 0 to LCellEdits[LSlot].Snapshot.Count - 1 do
+      begin
+        LFormerCellFocus := LFormerCellFocus or
+          LCellEdits[LSlot].Snapshot.CellAt(LCell).Focused;
+
+        if LCellEdits[LSlot].Snapshot.CellAt(LCell).Focused then
+        begin
+          LCellEdits[LSlot].Focused := LCellEdits[LSlot].Snapshot.CellAt(LCell);
+        end;
+      end;
+    end;
+    RequireAttempt;
+    LCellFocusAnchor := Screen.ActiveControl;
+  end;
+
+  procedure RestoreCandidateCellDrafts;
+  var
+    LSlot, LBindingIndex, LFound: Integer;
+    LMount: INyxCollectionMount;
+    LEdits: INyxCollectionEditMount;
+  begin
+    for LSlot := 0 to High(LCellEdits) do
+    begin
+      LFound := -1;
+      for LBindingIndex := 0 to High(LCandidate.FBindings) do
+      begin
+
+        if not NyxContentIdentity(LCandidate.FBindings[LBindingIndex].FNode)
+          .Same(LCellEdits[LSlot].Identity) then
+        begin
+          Continue;
+        end;
+
+        if LFound >= 0 then
+        begin
+          raise ENyxModel.Create('Native replacement repeats a cell edit identity');
+        end;
+        LFound := LBindingIndex;
+      end;
+
+      if LFound < 0 then
+      begin
+        Continue;
+      end;
+      LMount := LCandidate.FBindings[LFound].FCollectionMount;
+      LEdits := nil;
+
+      if (LMount <> nil) and LMount.Connected and
+        LMount.View.Spec.HasLayoutControls and
+        Supports(LMount, INyxCollectionEditMount, LEdits) then
+      begin
+
+        if LEdits.RestoreCellEdits(LCellEdits[LSlot].Snapshot, LCellFocusAllowed) then
+        begin
+          LReplacementCellFocus := Screen.ActiveControl;
+          LReplacementCellSource := LEdits;
+          LReplacementCellStore := LCellEdits[LSlot].Store;
+          LReplacementCellDraft := LCellEdits[LSlot].Focused;
+        end;
+      end;
+    end;
+  end;
+
+  function CellRollbackFocusAllowed: Boolean;
+  var
+    LFocus: TWinControl;
+    LSlot: Integer;
+  begin
+    LFocus := Screen.ActiveControl;
+    Result := LFocus = nil;
+
+    if Result then
+    begin
+      Exit;
+    end;
+
+    if (LReplacementCellSource <> nil) and
+      (LFocus = LReplacementCellFocus) and
+      LReplacementCellSource.CellEditFocusMatches(LReplacementCellStore,
+        LReplacementCellDraft) then
+    begin
+      Exit(True);
+    end;
+
+    if LFocus <> LCellFocusAnchor then
+    begin
+      Exit(False);
+    end;
+    for LSlot := 0 to High(LCellEdits) do
+    begin
+
+      if LCellEdits[LSlot].Focused.Defined and
+        LCellEdits[LSlot].Source.CellEditFocusMatches(LCellEdits[LSlot].Store,
+          LCellEdits[LSlot].Focused) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+  procedure ResumeFormerCellDrafts;
+  var
+    LSlot: Integer;
+  begin
+    for LSlot := 0 to High(LCellEdits) do
+    begin
+
+      if LCellEdits[LSlot].Snapshot = nil then
+      begin
+        Continue;
+      end;
+      try
+        LCellEdits[LSlot].Source.ResumeCellEdits(LCellEdits[LSlot].Snapshot,
+          LCellFocusAllowed);
+      except
+        on E: Exception do
+        begin
+
+          if LCellResumeError = '' then
+          begin
+            LCellResumeError := TNyxText(E.Message);
+          end;
+        end;
+      end;
+    end;
+
+    if LCellResumeError <> '' then
+    begin
+      { Preserve the original refusal exception while exposing secondary
+        all-attempt draft-rollback failure through existing renderer diagnostics. }
+      FLastBindingError := 'Cell draft rollback failed: ' + LCellResumeError;
+      FLastBindingFailure := nbfRejected;
+    end;
+  end;
 
   procedure RememberCleanupFailure(AError: Exception);
   begin
@@ -4865,9 +6737,13 @@ var
     end;
   end;
 begin
-  { Stage a hidden owned control tree beside the accepted view. A factory or
-    layout exception destroys that candidate while retaining the live controls,
-    their focus/state, and the accepted realized model. }
+  { Exact receiver attempt authority is independent of the accepted view
+    generation, which intentionally changes during this operation's commit. }
+  LAttemptLifetime := FContentLifetime;
+  LRenderEvents := FEvents;
+  LAttempt := TNativeRenderObject.Create(nil);
+  FRenderAttempt := LAttempt;
+  RequireAttempt;
 
   if AHost = nil then
   begin
@@ -4882,42 +6758,105 @@ begin
       raise ENyxModel.Create('A native view cannot replace itself inside its own descendant');
     end;
     LParent := LParent.Parent;
+    RequireAttempt;
+  end;
+
+  if FDestroying then
+  begin
+    raise ENyxModel.Create('A destroying native renderer cannot accept a view');
   end;
   LCandidate := nil;
+  RequireAttempt;
   LMeasuredRoot := nil;
+  RequireAttempt;
   LSettlement := nil;
+  RequireAttempt;
   LBlueprint := nil;
+  RequireAttempt;
   LEventView := nil;
+  RequireAttempt;
   LEventFence := nil;
+  RequireAttempt;
   { Incoming arguments may alias the retained field during implicit remount.
     Snapshot both owners before Clear or any external preparation can run. }
   LSource := APublicationSource;
+  RequireAttempt;
   LFormerSource := FViewPublicationSource;
+  RequireAttempt;
   LRootPublication := nil;
+  RequireAttempt;
   LRootFence := nil;
+  RequireAttempt;
   LCleanupFailed := False;
   LCleanupError := '';
+  LCellEdits := nil;
+  RequireAttempt;
+  LCollectionAdmissions := nil;
+  RequireAttempt;
+  LCollectionObservations := nil;
+  RequireAttempt;
+  LCollectionInputGate := nil;
+  RequireAttempt;
+  LFormerCellFocus := False;
+  LCellFocusAllowed := False;
+  LCellFocusAnchor := nil;
+  RequireAttempt;
+  LReplacementCellFocus := nil;
+  RequireAttempt;
+  LReplacementCellSource := nil;
+  RequireAttempt;
+  LReplacementCellStore := nil;
+  RequireAttempt;
+  LReplacementCellDraft := Default(TNyxCollectionCellEdit);
+  RequireAttempt;
+  LCellResumeError := '';
   LFormerCoordinators := nil;
+  RequireAttempt;
   LAcceptedCoordinators := nil;
+  RequireAttempt;
   { Capture once before any factory callout, including hidden settling passes.
     A registration made by a creator belongs to a later Render operation. }
   LCoordinatorRegistry := FCoordinatorRegistry;
+  RequireAttempt;
   LCallerCoordinatorSnapshot := FInheritedCoordinatorSnapshot;
+  RequireAttempt;
   LFormerCallerCoordinatorSnapshot := FCallerCoordinatorSnapshot;
+  RequireAttempt;
   LCoordinatorTarget := FCoordinatorRefreshTarget;
+  RequireAttempt;
   LCoordinatorSnapshot := nil;
+  RequireAttempt;
 
   LCommitted := False;
   LRuntimeState := AState;
   LOwnRuntimeState := AState = nil;
   LCollections := ACollections;
+  RequireAttempt;
   LMeasurements := AMeasurements;
+  RequireAttempt;
   LFrame := AFrame;
+  RequireAttempt;
   LStates := Copy(AStates, 0, Length(AStates));
+  RequireAttempt;
   LContext := AContext;
+  RequireAttempt;
   LResolver := AResolver;
+  RequireAttempt;
   LFirstCandidate := True;
-  LTransferState := (AState <> nil) and FOwnState and (AState = FState);
+  LRuntimeOwner := nil;
+  RequireAttempt;
+
+  if (AState <> nil) and (FOwnedState <> nil) and
+    (AState = FOwnedState.State) then
+  begin
+    RequireAttempt;
+    { Capture the actual owner before any staging callback. Raw equality alone
+      never creates an owner or retargets an entered generation. }
+    LRuntimeOwner := FOwnedState;
+    RequireAttempt;
+  end;
+  RequireAttempt;
+  LTransferState := LRuntimeOwner <> nil;
 
   if LCoordinatorRegistry <> nil then
   begin
@@ -4925,23 +6864,30 @@ begin
       later embedded mounts. No mutable registry survives through this field. }
     LCallerCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(nil,
       LCoordinatorRegistry.Snapshot);
+      RequireAttempt;
   end;
   { Built-ins and caller behavior share one immutable membership and prepared
     lifetime. Authored applications keep their automatic registrations. }
   LBuiltInCoordinators := NewNyxCoordinatorRegistry;
+  RequireAttempt;
   LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkMasterDetail)),
     NyxExtension(NyxMasterDetailIntentKey), NewNyxMasterDetailCoordinatorFactory);
+    RequireAttempt;
   LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkKanbanBoard)),
     NyxExtension(NyxKanbanIntentKey), NewNyxKanbanCoordinatorFactory);
+    RequireAttempt;
   LCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(
     LBuiltInCoordinators.Snapshot, LCallerCoordinatorSnapshot);
-  {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
+    RequireAttempt;
+  {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;
+                             {$endif}
   { LCL propagates this balanced sizing lock through the host's parents and
     descendants. Stage the whole candidate before one final native alignment;
     per-child parenting/font/bounds changes must not relayout the accepted shell
     and every partly constructed sibling. Explicit Nyx layout still runs while
     locked. The host remains borrowed and the failure path releases the lock. }
   AHost.DisableAutoSizing;
+  RequireAttempt;
   LHostSizingLocked := True;
   try
   try
@@ -4949,21 +6895,39 @@ begin
     if LOwnRuntimeState then
     begin
       LRuntimeState := ADocument.State.Clone;
+      RequireAttempt;
+      LRuntimeOwner := OwnNyxBindingState(LRuntimeState);
+      RequireAttempt;
+      LOwnRuntimeState := False;
     end;
     LBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
+    RequireAttempt;
 
     if LBlueprint <> nil then
     begin
       LSettlement := TNyxContentSettlement.Create;
+      RequireAttempt;
     end;
     repeat
       LCandidate := TNyxLCLRenderer.Create(FTheme);
+      RequireAttempt;
+      LCollectionAdmissions := nil;
+      RequireAttempt;
+      LCollectionObservations := nil;
+      RequireAttempt;
+      LCollectionInputGate := NewNyxCollectionInputGate(FInheritedCollectionInputGate);
+      RequireAttempt;
+      LCandidate.FCollectionInputGate := LCollectionInputGate;
+      RequireAttempt;
+      LCandidate.FCollectionInputPhase := ncipStaged;
       { Build may mount saved canvases before this outer candidate commits. }
       LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
+      RequireAttempt;
 
       if AResourceMode = nrmConfigured then
       begin
         LCandidate.FResourceContext := FResourceContext;
+        RequireAttempt;
         { Retain the same update port during staging. Nested saved canvases
           subscribe before their parent adopts the candidate's target faces. }
         LCandidate.FResourceUpdates := FResourceUpdates;
@@ -4974,118 +6938,171 @@ begin
       if FBorrowedTheme <> nil then
       begin
         LCandidate.FTheme := NewNyxDocumentTheme(ADocument, FBorrowedTheme);
+        RequireAttempt;
       end
       else
       begin
         LCandidate.FTheme := NewNyxDocumentTheme(ADocument, FBaseTheme);
+        RequireAttempt;
       end;
       LCandidate.FOwnTheme := True;
+      LCandidate.FThemeOwner := TNativeRenderObject.Create(LCandidate.FTheme);
+      RequireAttempt;
       LCandidate.FFactoryKinds := Copy(FFactoryKinds, 0, Length(FFactoryKinds));
+      RequireAttempt;
       LCandidate.FDrawingNames := Copy(FDrawingNames, 0, Length(FDrawingNames));
+      RequireAttempt;
       LCandidate.FDrawingProviders := Copy(FDrawingProviders, 0, Length(FDrawingProviders));
+      RequireAttempt;
       LCandidate.FEmbeddedContext := FEmbeddedContext;
+      RequireAttempt;
       LCandidate.FEmbeddedResolver := FEmbeddedResolver;
 
       if AUseContext then
       begin
         LCandidate.FEmbeddedContext := LContext;
+        RequireAttempt;
         LCandidate.FEmbeddedResolver := LResolver;
       end;
       LCandidate.FCanvasAdoptionHost := FCanvasAdoptionHost;
       LCandidate.FFactories := Copy(FFactories, 0, Length(FFactories));
+      RequireAttempt;
       LCandidate.FEventFactories := Copy(FEventFactories, 0, Length(FEventFactories));
+      RequireAttempt;
       { Candidate ports belong to the final owner's scheduler and view lifetime. }
       LCandidate.FEmitterScope := NewNyxEventEmitterScope(FEvents.Scheduler);
+      RequireAttempt;
       LCandidate.FViewportObserver := NewNyxViewportObserver;
+      RequireAttempt;
       LCandidate.FEditingObserver := NewNyxLCLEditingObserver;
+      RequireAttempt;
       LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
+      RequireAttempt;
       LCandidate.FDesignMode := ADesignMode;
       LCandidate.FPublishingContent := True;
       LCandidate.FDesignerInput := FDesignerInput;
       LCandidate.FOnDesignerGesture := FOnDesignerGesture;
+
       if AKeepPresentation then
       begin
         LCandidate.FProjectionContext := FProjectionContext;
+        RequireAttempt;
       end
       else
       begin
         LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
+        RequireAttempt;
       end;
       LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
       LCandidate.FPresentationSelection := LFrame.Selection;
+      RequireAttempt;
       LCandidate.FRoot := RealizeNyxView(ADocument, ARoot, LFrame, LMeasurements);
+      RequireAttempt;
 
       if (AResourceMode = nrmConfigured) and (FResourceContext <> nil) then
       begin
         LCandidate.FRoot.BindResources(FResourceContext.Snapshot,
           FResourceContext.Locale, FResourceContext.Fallback);
+          RequireAttempt;
       end;
+      RequireAttempt;
       ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
+      RequireAttempt;
       LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight),
         npfNativeLCL, LFrame.Selection, LMeasurements);
+        RequireAttempt;
       LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
+      RequireAttempt;
       RestoreNyxContentValues(LCandidate.FRoot, LStates);
+      RequireAttempt;
       LCandidate.FCollectionBindings := LCollections;
 
       if LCollections <> nil then
       begin
+
         if AKeepPresentation or not LFirstCandidate then
         begin
           LCandidate.FCollectionBindings := LCollections.Recompose(LCandidate.FRoot);
+          RequireAttempt;
         end
         else
         begin
           LCollections.ValidateRoot(LCandidate.FRoot);
+          RequireAttempt;
         end;
       end
       else
       begin
         LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
           NewNyxCollectionContext(ADocument.Collections, LCandidate.FRoot.ResourceContext));
+          RequireAttempt;
       end;
+
       if ((not ADesignMode) and
         NyxHasCoordinatorMounts(LCandidate.FRoot, LCoordinatorSnapshot)) or
         (Length(FCoordinatorMounts) <> 0) or (LSource <> nil) or
         (LFormerSource <> nil) then
       begin
+        RequireAttempt;
 
         if not Supports(FEvents, INyxEventViewPreparation, LEventPreparation) then
         begin
+          RequireAttempt;
           raise ENyxModel.Create('Native view publication requires prepared event views');
         end;
+        RequireAttempt;
         LEventView := LEventPreparation.PrepareView;
+        RequireAttempt;
 
         if not Supports(LEventView, INyxPublicationReadiness, LEventFence) then
         begin
+          RequireAttempt;
           raise ENyxModel.Create('Native event view has no final readiness fence');
         end;
+        RequireAttempt;
 
         if not ADesignMode then
         begin
           PrepareNyxCoordinatorMounts(LCandidate.FRoot, LCandidate.FCollectionBindings,
             LEventView, FEvents.Scheduler, LCoordinatorSnapshot, LCoordinatorTarget,
             LCandidate.FCoordinatorMounts, LCandidate.FCoordinatorIDs);
+            RequireAttempt;
         end;
       end;
+      RequireAttempt;
 
       if LSource <> nil then
       begin
         LRootPublication := LSource.Prepare(ADocument, LCandidate.FRoot, LEventView);
+        RequireAttempt;
 
         if (LRootPublication = nil) or
           not Supports(LRootPublication, INyxPublicationReadiness, LRootFence) then
         begin
+          RequireAttempt;
           raise ENyxModel.Create('Native root publication requires a participant and final readiness fence');
         end;
+        RequireAttempt;
       end;
       { Hidden passes share one runtime store/context. Candidate teardown removes
         staged validators and controls without freeing borrowed accepted data. }
       LCandidate.FState := LRuntimeState;
-      LCandidate.FOwnState := False;
+      LCandidate.FOwnedState := LRuntimeOwner;
+      LCandidate.FOwnState := LRuntimeOwner <> nil;
       LCandidate.FLiveBindings := TNyxLiveBindings.Create(LCandidate.FRoot, LCandidate.FState);
+      RequireAttempt;
+      LCandidateGeneration := TNativeBindingGeneration.Create(LCandidate);
+      RequireAttempt;
+      LCandidate.FGenerationObject := LCandidateGeneration;
+      LCandidate.FGeneration := LCandidateGeneration;
+      RequireAttempt;
       LCandidate.FLiveBindings.OnSync := LCandidate.Sync;
+      RequireAttempt;
       LCandidate.FLiveBindings.OnValueSync := LCandidate.SyncEditedValue;
+      RequireAttempt;
       LCandidate.FPanel := TNyxLogicalScrollBox.Create(nil);
+      TNativePanelGenerationLease.CreateFor(LCandidate.FPanel, LCandidate.FGeneration);
+      RequireAttempt;
       LCandidate.FPanel.Visible := False;
       LCandidate.FPanel.Parent := AHost;
       LCandidate.FPanel.Align := alClient;
@@ -5094,13 +7111,20 @@ begin
         run during reversible physical preview, including existing siblings. }
       LCandidate.FPanel.SetBounds(AHost.ClientRect.Left, AHost.ClientRect.Top,
         AHost.ClientWidth, AHost.ClientHeight);
+        RequireAttempt;
       LCandidate.FPanel.BorderStyle := bsNone;
       LCandidate.FPanel.Color := ThemeColor(LCandidate.FTheme.Background);
+      RequireAttempt;
       LCandidate.FPanel.Font.Assign(AHost.Font);
+      RequireAttempt;
       LCandidate.FPanel.Font.Height := -LCandidate.FTheme.FontSize;
+      RequireAttempt;
       LCandidate.FPanel.Font.Color := ThemeColor(LCandidate.FTheme.Text);
-      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('realize');{$endif}
+      RequireAttempt;
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('realize');
+                                 RequireAttempt;{$endif}
       LCandidate.Build(LCandidate.FRoot, LCandidate.FPanel);
+      RequireAttempt;
       {$ifdef NYX_STUDIO_PROFILE}
       WriteLn('native-build,nodes,', LCandidate.FBuildNodes,
         ',validation,', LCandidate.FBuildValidationMilliseconds,
@@ -5110,107 +7134,187 @@ begin
         ',completion,', LCandidate.FBuildCompletionMilliseconds,
         ',total,', GetTickCount64 - LPhaseStarted,
         ',collections,', LCandidate.FCollectionBindings.Count);
+                       RequireAttempt;
       {$endif}
       for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
       begin
+        RequireAttempt;
         LCandidate.FCollectionQueryEvents := FEvents;
-        LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
+        LCollectionMount := LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
           LCandidate.FCollectionBindings.View(LIndex));
+          RequireAttempt;
+        LCollectionAdmission := nil;
+        RequireAttempt;
+
+        if Supports(LCollectionMount, INyxCollectionInputAdmission, LCollectionAdmission) then
+        begin
+          RequireAttempt;
+          SetLength(LCollectionAdmissions, Length(LCollectionAdmissions) + 1);
+          RequireAttempt;
+          LCollectionAdmissions[High(LCollectionAdmissions)] := LCollectionAdmission;
+          RequireAttempt;
+        end;
+        RequireAttempt;
+        LCollectionObservation := nil;
+        RequireAttempt;
+
+        if Supports(LCollectionMount, INyxLCLCollectionObservation,
+          LCollectionObservation) then
+        begin
+          RequireAttempt;
+          LCollectionEditingPublication := LCollectionObservation.GetEditingPublication;
+          RequireAttempt;
+
+          if LCollectionEditingPublication <> nil then
+          begin
+            SetLength(LCollectionObservations, Length(LCollectionObservations) + 1);
+            RequireAttempt;
+            LCollectionObservations[High(LCollectionObservations)] := LCollectionEditingPublication;
+            RequireAttempt;
+          end;
+        end;
+        RequireAttempt;
       end;
+      RequireAttempt;
       LCandidate.BindCollectionPagers;
-      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('build');{$endif}
+      RequireAttempt;
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('build');
+                                 RequireAttempt;{$endif}
       LCandidate.Resize(LCandidate.FPanel);
-      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-layout');{$endif}
+      RequireAttempt;
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-layout');
+                                 RequireAttempt;{$endif}
       LCandidate.Sync;
+      RequireAttempt;
       LCandidate.MountCanvases(ADocument);
+      RequireAttempt;
       LCandidate.MountToolCanvases(ADocument);
+      RequireAttempt;
       LCandidate.RestoreContentFaces(LStates, False);
-      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-sync');{$endif}
+      RequireAttempt;
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-sync');
+                                 RequireAttempt;{$endif}
 
       if LBlueprint = nil then
       begin
         Break;
       end;
       LAllocated := LCandidate.MeasureContainers;
+      RequireAttempt;
       LMeasuredRoot := RealizeNyxView(ADocument, ARoot, LFrame, LAllocated);
+      RequireAttempt;
 
       if (AResourceMode = nrmConfigured) and (FResourceContext <> nil) then
       begin
         LMeasuredRoot.BindResources(FResourceContext.Snapshot,
           FResourceContext.Locale, FResourceContext.Fallback);
+          RequireAttempt;
       end;
+      RequireAttempt;
       ApplyNyxPlatform(LMeasuredRoot, npfNativeLCL);
+      RequireAttempt;
       LMeasuredRoot.ApplyViewport(LFrame.Width, LFrame.Height,
         npfNativeLCL, LFrame.Selection, LAllocated);
+        RequireAttempt;
 
       if LSettlement.Accept(LCandidate.FProjectionBaseline, LMeasuredRoot) then
       begin
+        RequireAttempt;
         ReleaseNyxNode(LMeasuredRoot);
+        RequireAttempt;
         LMeasurements := LAllocated;
+        RequireAttempt;
         Break;
       end;
+      RequireAttempt;
       ReleaseNyxNode(LMeasuredRoot);
+      RequireAttempt;
       LCollections := LCandidate.FCollectionBindings;
+      RequireAttempt;
       LMeasurements := LAllocated;
+      RequireAttempt;
       LFirstCandidate := False;
 
       RetirePreparation;
+      RequireAttempt;
       FreeAndNil(LCandidate);
+      RequireAttempt;
     until False;
+    RequireAttempt;
     { One owned authored blueprint survives successful admission. Ordinary
       scalar-only container views keep their existing native settling loop. }
     LCandidate.FContentBlueprint := LBlueprint;
     LBlueprint := nil;
+    RequireAttempt;
 
     if not ADesignMode then
     begin
       LCandidate.FLiveBindings.Activate;
+      RequireAttempt;
     end;
     { Physical preview is reversible: the old model, controls, hooks, pending
       callbacks and capability remain owned here until all target work succeeds.
       Native notifications from both trees are muted throughout this phase. }
     LFormerFocus := Screen.ActiveControl;
+    RequireAttempt;
     LFormerSelection := Default(TNyxTextSelection);
+    RequireAttempt;
     LFormerHorizontal := 0;
+    RequireAttempt;
     LFormerVertical := 0;
+    RequireAttempt;
 
     if FPanel <> nil then
     begin
       LFormerHorizontal := FPanel.HorzScrollBar.Position;
+      RequireAttempt;
       LFormerVertical := FPanel.VertScrollBar.Position;
+      RequireAttempt;
     end;
 
     if LFormerFocus <> nil then
     begin
       LFormerSelection := CaptureNyxLCLSelection(LFormerFocus);
+      RequireAttempt;
     end;
     LUpdating := FUpdating;
     FUpdating := True;
     try
+      { Capture after all arbitrary candidate factories and hidden passes. Its
+        own mount flag suppresses native blur validation throughout preview. }
+      SuspendCellDrafts;
+      RequireAttempt;
       LCandidate.FUpdating := True;
       LCandidate.FPanel.OnResize := LCandidate.Resize;
+      RequireAttempt;
       LCandidate.FPanel.Visible := True;
 
       if FPanel <> nil then
       begin
         LCandidate.FPanel.SendToBack;
+        RequireAttempt;
       end;
       { Native alignment and resize callbacks are target work, not retirement
         cleanup. Balance the host lock now, while the old tree is still alive. }
       LHostSizingLocked := False;
       AHost.EnableAutoSizing;
+      RequireAttempt;
       LCandidate.FUpdating := False;
       LCandidate.Sync;
+      RequireAttempt;
       for LIndex := 0 to High(LCandidate.FBindings) do
       begin
 
         if LCandidate.FBindings[LIndex].FCanvasView <> nil then
         begin
           LCandidate.FBindings[LIndex].FCanvasView.Refresh;
+          RequireAttempt;
         end;
       end;
+      RequireAttempt;
       LCandidate.FUpdating := True;
       LCandidate.FCaptureObserver := NewNyxLCLCaptureObserver(LCandidate.FPhysicalFrame);
+      RequireAttempt;
       for LIndex := 0 to High(LCandidate.FBindings) do
       begin
 
@@ -5221,15 +7325,20 @@ begin
           begin
             LCandidate.FViewportObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
               TWinControl(LCandidate.FBindings[LIndex].FInput));
+              RequireAttempt;
           end
           else if LCandidate.FBindings[LIndex].FControl is TWinControl then
           begin
             LCandidate.FViewportObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
               TWinControl(LCandidate.FBindings[LIndex].FControl));
+              RequireAttempt;
           end;
         end;
+        RequireAttempt;
       end;
+      RequireAttempt;
       LCandidate.FViewportObserver.Activate(FEvents, ViewportChanged);
+      RequireAttempt;
       for LIndex := 0 to High(LCandidate.FBindings) do
       begin
 
@@ -5237,16 +7346,22 @@ begin
           (LCandidate.FBindings[LIndex].FNode.ProjectionKind = 'input')) and
           (LCandidate.FBindings[LIndex].FInput is TCustomEdit) then
         begin
+          RequireAttempt;
           LCandidate.FEditingObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
             TWinControl(LCandidate.FBindings[LIndex].FInput));
+            RequireAttempt;
         end;
+        RequireAttempt;
       end;
+      RequireAttempt;
       LCandidate.FEditingObserver.Activate(FEvents, EditingChanged);
+      RequireAttempt;
       for LIndex := 0 to High(LCandidate.FBindings) do
       begin
         LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
           LCandidate.FBindings[LIndex].FControl,
           LCandidate.FBindings[LIndex].FControl = LCandidate.FBindings[LIndex].FFocusControl);
+          RequireAttempt;
 
         if (LCandidate.FBindings[LIndex].FInput <> nil) and
           (LCandidate.FBindings[LIndex].FInput <> LCandidate.FBindings[LIndex].FControl) then
@@ -5254,7 +7369,9 @@ begin
           LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
             LCandidate.FBindings[LIndex].FInput,
             LCandidate.FBindings[LIndex].FInput = LCandidate.FBindings[LIndex].FFocusControl);
+            RequireAttempt;
         end;
+        RequireAttempt;
 
         if (LCandidate.FBindings[LIndex].FFocusControl <> nil) and
           (LCandidate.FBindings[LIndex].FFocusControl <> LCandidate.FBindings[LIndex].FControl) and
@@ -5262,9 +7379,13 @@ begin
         begin
           LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
             LCandidate.FBindings[LIndex].FFocusControl, True);
+            RequireAttempt;
         end;
+        RequireAttempt;
       end;
+      RequireAttempt;
       LCandidate.FCaptureObserver.Activate(FEvents, CaptureChanged);
+      RequireAttempt;
 
       if not Supports(LCandidate.FViewportObserver, INyxObservationPublication,
         LViewportPublication) or not LViewportPublication.Ready or
@@ -5273,59 +7394,105 @@ begin
         not Supports(LCandidate.FCaptureObserver, INyxObservationPublication,
         LCapturePublication) or not LCapturePublication.Ready then
       begin
+        RequireAttempt;
         raise ENyxModel.Create('Native candidate observers cannot publish their prepared revision');
       end;
+      RequireAttempt;
       LCandidate.FPanel.BringToFront;
+      RequireAttempt;
       LCandidate.RestoreContentFaces(LStates, True);
+      RequireAttempt;
+      { An intervening preview callback can deliberately focus another control.
+        Preserve that decision; only the still-current suspension fallback may
+        transfer the former cell focus to its newly acquired logical editor. }
+      LCellFocusAllowed := LFormerCellFocus and CellRollbackFocusAllowed;
+      RestoreCandidateCellDrafts;
+      RequireAttempt;
 
       if AKeepPresentation then
       begin
         LCandidate.FPanel.HorzScrollBar.Position := LFormerHorizontal;
         LCandidate.FPanel.VertScrollBar.Position := LFormerVertical;
         LCandidate.Select(FSelectedDesignID);
+        RequireAttempt;
       end;
       LCandidate.FEmitterScope.Activate(EmitNamed);
+      RequireAttempt;
       LMeasurementKey := NyxContentMeasurements(LCandidate.FRoot, LMeasurements);
+      RequireAttempt;
 
       if LEventView <> nil then
       begin
         ValidateNyxCoordinatorMounts(LCandidate.FCoordinatorMounts);
+        RequireAttempt;
 
         if LRootPublication <> nil then
         begin
           LRootPublication.Validate;
+          RequireAttempt;
         end;
         LEventView.Validate;
+        RequireAttempt;
         CheckNyxCoordinatorMounts(LCandidate.FCoordinatorMounts);
+        RequireAttempt;
 
         if LRootFence <> nil then
         begin
           LRootFence.CheckReady;
+          RequireAttempt;
         end;
         LEventFence.CheckReady;
+        RequireAttempt;
       end;
+
+      for LIndex := 0 to High(LCollectionObservations) do
+      begin
+
+        if not LCollectionObservations[LIndex].Ready then
+        begin
+          RequireAttempt;
+          raise ENyxModel.Create('Native cell observers cannot publish their prepared revision');
+        end;
+        RequireAttempt;
+      end;
+      RequireAttempt;
+
+      if not LCollectionInputGate.Current then
+      begin
+        RequireAttempt;
+        raise ENyxModel.Create('Native collection input generation retired during preview');
+      end;
+      RequireAttempt;
     except
+      RequireAttempt;
       { Retain exact old controls, input ranges and pending router revision.
         The candidate owns every newly installed hook and releases it on failure. }
       try
+        LCellFocusAllowed := CellRollbackFocusAllowed;
         LCandidate.FUpdating := True;
         LCandidate.FPanel.OnResize := nil;
+        RequireAttempt;
         LCandidate.FPanel.Visible := False;
 
         if FPanel <> nil then
         begin
           FPanel.BringToFront;
+          RequireAttempt;
         end;
 
-        if (LFormerFocus <> nil) and LFormerFocus.CanFocus then
+        if not LFormerCellFocus and (LFormerFocus <> nil) and LFormerFocus.CanFocus then
         begin
+          RequireAttempt;
           LFormerFocus.SetFocus;
+          RequireAttempt;
 
           if LFormerSelection.Defined then
           begin
             SelectNyxLCLText(LFormerFocus, LFormerSelection);
+            RequireAttempt;
           end;
         end;
+        RequireAttempt;
 
         if FPanel <> nil then
         begin
@@ -5333,8 +7500,19 @@ begin
           FPanel.VertScrollBar.Position := LFormerVertical;
         end;
       finally
-        FUpdating := LUpdating;
+        try
+          { Old physical faces are back before their exact single-use leases
+            resume. No hidden former editor pointer is dereferenced here. }
+          ResumeFormerCellDrafts;
+        finally
+
+          if AttemptCurrent then
+          begin
+            FUpdating := LUpdating;
+          end;
+        end;
       end;
+      RequireAttempt;
       raise;
     end;
     { Preserve an explicitly reused owned runtime store through full remount.
@@ -5347,77 +7525,143 @@ begin
     end;
     LFormerCoordinators := FCoordinatorMounts;
     Clear(AKeepPresentation, LEventView);
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('retire');{$endif}
+    RequireAttempt;
+    LAcceptedRevision := LRenderEvents.ViewRevision;
+    RequireAttempt;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('retire');
+                               RequireAttempt;{$endif}
     { Publish effective tokens with the successfully staged native controls. }
 
-    if FOwnTheme then
-    begin
-      FTheme.Free;
-    end;
+    FThemeOwner := LCandidate.FThemeOwner;
+    RequireAttempt;
+    LCandidate.FThemeOwner := nil;
+    RequireAttempt;
     FTheme := LCandidate.FTheme;
     FOwnTheme := True;
     LCandidate.FTheme := nil;
+    RequireAttempt;
     LCandidate.FOwnTheme := False;
     FState := LCandidate.FState;
     FEmbeddedContext := LCandidate.FEmbeddedContext;
+    RequireAttempt;
     FEmbeddedResolver := LCandidate.FEmbeddedResolver;
-    FOwnState := LOwnRuntimeState or LTransferState;
+    RequireAttempt;
+    FOwnedState := LCandidate.FOwnedState;
+    RequireAttempt;
+    LCandidate.FOwnedState := nil;
+    RequireAttempt;
+    FOwnState := FOwnedState <> nil;
     LOwnRuntimeState := False;
     LCandidate.FState := nil;
+    RequireAttempt;
     LCandidate.FOwnState := False;
     FLiveBindings := LCandidate.FLiveBindings;
     LCandidate.FLiveBindings := nil;
+    RequireAttempt;
+    FGeneration := LCandidate.FGeneration;
+    RequireAttempt;
+    FGenerationObject := LCandidate.FGenerationObject;
+    LCandidate.FGeneration := nil;
+    RequireAttempt;
+    LCandidate.FGenerationObject := nil;
+    RequireAttempt;
+    { Only this fresh, never-accepted candidate changes receiver at adoption. }
+    TNativeBindingGeneration(FGenerationObject).Owner := Self;
+    RequireAttempt;
+    TNativeBindingGeneration(FGenerationObject).Source := LSource;
+    RequireAttempt;
+    TNativeBindingGeneration(FGenerationObject).BaseThemeOwner := FBaseThemeOwner;
+    RequireAttempt;
+    FButtonGlyphCache := LCandidate.FButtonGlyphCache;
+    FGlyphCacheOwner := LCandidate.FGlyphCacheOwner;
+    RequireAttempt;
+    LCandidate.FButtonGlyphCache := nil;
+    RequireAttempt;
+    LCandidate.FGlyphCacheOwner := nil;
+    RequireAttempt;
     FLiveBindings.OnSync := Sync;
     FLiveBindings.OnValueSync := SyncEditedValue;
     FCollectionBindings := LCandidate.FCollectionBindings;
+    RequireAttempt;
     LCandidate.FCollectionBindings := nil;
+    RequireAttempt;
+    FCollectionInputGate := LCollectionInputGate;
+    RequireAttempt;
+    LCandidate.FCollectionInputGate := nil;
+    RequireAttempt;
     FCallerCoordinatorSnapshot := LCandidate.FCallerCoordinatorSnapshot;
+    RequireAttempt;
     LCandidate.FCallerCoordinatorSnapshot := nil;
+    RequireAttempt;
     FCoordinatorMounts := LCandidate.FCoordinatorMounts;
     FCoordinatorIDs := LCandidate.FCoordinatorIDs;
     LCandidate.FCoordinatorMounts := nil;
+    RequireAttempt;
     LCandidate.FCoordinatorIDs := nil;
+    RequireAttempt;
     FLastBindingError := '';
     FLastBindingFailure := nbfNone;
     FRoot := LCandidate.FRoot;
     FResourceContext := LCandidate.FResourceContext;
+    RequireAttempt;
     LCandidate.FRoot := nil;
+    RequireAttempt;
     FContentBlueprint := LCandidate.FContentBlueprint;
     LCandidate.FContentBlueprint := nil;
+    RequireAttempt;
     FPresentationSelection := LFrame.Selection;
+    RequireAttempt;
     FContentRequestedSelection := LFrame.Selection;
+    RequireAttempt;
     FContentFrame := LFrame;
     FContentFrameKnown := True;
     FContentMeasurementKey := LMeasurementKey;
     FDesignMode := ADesignMode;
     FProjectionContext := LCandidate.FProjectionContext;
+    RequireAttempt;
     FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
+    RequireAttempt;
     FProjectionBaseline := LCandidate.FProjectionBaseline;
     LCandidate.FProjectionBaseline := nil;
+    RequireAttempt;
     FVirtualLayout := LCandidate.FVirtualLayout;
     FPanel := LCandidate.FPanel;
     LCandidate.FPanel := nil;
+    RequireAttempt;
     FSelectedDesignID := LCandidate.FSelectedDesignID;
     for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
     begin
       FSelectionEdges[LIndex] := LCandidate.FSelectionEdges[LIndex];
       LCandidate.FSelectionEdges[LIndex] := nil;
+      RequireAttempt;
     end;
+    RequireAttempt;
     FBindings := LCandidate.FBindings;
     FEmitterScope := LCandidate.FEmitterScope;
+    RequireAttempt;
     LCandidate.FEmitterScope := nil;
+    RequireAttempt;
     FViewportObserver := LCandidate.FViewportObserver;
+    RequireAttempt;
     LCandidate.FViewportObserver := nil;
+    RequireAttempt;
     FEditingObserver := LCandidate.FEditingObserver;
+    RequireAttempt;
     LCandidate.FEditingObserver := nil;
+    RequireAttempt;
     FPhysicalFrame := LCandidate.FPhysicalFrame;
+    RequireAttempt;
     FCaptureObserver := LCandidate.FCaptureObserver;
+    RequireAttempt;
     LCandidate.FCaptureObserver := nil;
+    RequireAttempt;
     LCandidate.FBindings := nil;
+    RequireAttempt;
     { Logical scroll ports borrow their renderer receiver. The prepared frame
       was wired to LCandidate, which is released below. Rebase every port during
       ownership transfer, without rerunning native layout after old retirement. }
     FPanel.RebindProjection(ProjectViewport);
+    RequireAttempt;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       FBindings[LIndex].FRenderer := Self;
@@ -5425,32 +7669,64 @@ begin
       if FBindings[LIndex].FControl is TNyxLogicalScrollBox then
       begin
         TNyxLogicalScrollBox(FBindings[LIndex].FControl).RebindProjection(ProjectViewport);
+        RequireAttempt;
       end;
     end;
+    RequireAttempt;
     FPanel.OnResize := Resize;
     { Commit updates installed revisions through pure managed publication ports.
       No showing, focus or hook installation follows old retirement. Target
       extensions must release their controls without raising in destruction. }
-    LViewportPublication.PublishRevision(FEvents.ViewRevision);
-    LEditingPublication.PublishRevision(FEvents.ViewRevision);
-    LCapturePublication.PublishRevision(FEvents.ViewRevision);
+    LViewportPublication.PublishRevision(LAcceptedRevision);
+    RequireAttempt;
+    LEditingPublication.PublishRevision(LAcceptedRevision);
+    RequireAttempt;
+    LCapturePublication.PublishRevision(LAcceptedRevision);
+    RequireAttempt;
+    for LIndex := 0 to High(LCollectionObservations) do
+    begin
+      LCollectionObservations[LIndex].PublishRevision(LAcceptedRevision);
+      RequireAttempt;
+    end;
+    RequireAttempt;
     InstallNyxCoordinatorMounts(FCoordinatorMounts);
+    RequireAttempt;
 
     if not ADesignMode then
     begin
       FViewPublicationSource := LSource;
+      RequireAttempt;
     end;
 
     if LRootPublication <> nil then
     begin
       LRootPublication.Install;
+      RequireAttempt;
     end;
     LAcceptedCoordinators := FCoordinatorMounts;
     FImageViewPublished := True;
-    FUpdating := LUpdating;
+    { All facets were retained before retirement. Release only flags here;
+      embedded children observe the SAME gate once the outer owner accepts. }
+    for LIndex := 0 to High(LCollectionAdmissions) do
+    begin
+      LCollectionAdmissions[LIndex].InstallInput;
+      RequireAttempt;
+    end;
+    RequireAttempt;
+    LCollectionInputGate.Install;
+    RequireAttempt;
+    { A successor never inherits the entered old command synchronizing shield. }
+    FUpdating := False;
+    FForceValues := False;
+    FForceValueNode := nil;
+    RequireAttempt;
+    FLayouting := False;
+    FProjecting := False;
     LCommitted := True;
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('publish');{$endif}
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('observe');{$endif}
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('publish');
+                               RequireAttempt;{$endif}
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('observe');
+                               RequireAttempt;{$endif}
   finally
     try
       try
@@ -5478,37 +7754,57 @@ begin
       begin
         raise;
       end;
+      { Only local notification state remains here, even after disposal. }
       RememberCleanupFailure(E);
     end;
   end;
-  {$ifdef NYX_STUDIO_PROFILE}RecordPhase('settle');{$endif}
+  {$ifdef NYX_STUDIO_PROFILE}
+
+  if AttemptCurrent then
+  begin
+    RecordPhase('settle');
+  end;
+  {$endif}
   { Cancellation may enter application code or dispose this renderer. Nothing
     following this boundary borrows Self or its newly accepted widgets. }
   FinishPublication;
 end;
 
+
 procedure TNyxLCLRenderer.FlushImages;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LDeliveries: TNyxImageDeliveries;
   LIndex: Integer;
 begin
+  LGeneration := FGeneration;
+
+  if not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
 
   if FUpdating or not FImageViewPublished or FPublishingContent or FDesignMode then
   begin
     Exit;
   end;
   LDeliveries := nil;
+  RequireNativeGeneration(LGeneration);
   try
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       PrepareNyxImageDeliveries(FEvents, FBindings[LIndex].FNode,
         FBindings[LIndex].FImageLifecycle, LDeliveries);
+        RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   except
     for LIndex := 0 to Length(LDeliveries) - 1 do
     begin
       LDeliveries[LIndex].Free;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     raise;
   end;
   { The FIFO retains no borrowed binding or node across its UI turn. }
@@ -5516,12 +7812,17 @@ begin
   if FImageDeliveryQueue = nil then
   begin
     FImageDeliveryQueue := NewNyxImageDeliveryQueue;
+    RequireNativeGeneration(LGeneration);
   end;
   FImageDeliveryQueue.Enqueue(FEvents, LDeliveries);
+  RequireNativeGeneration(LGeneration);
 end;
+
 
 procedure TNyxLCLRenderer.ArrangeControls(AFormer: TNyxNode);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LPanel: TNyxLogicalScrollBox;
   LSelections: array of TNyxTextSelection;
   LFocus: TWinControl;
   LAncestor: TWinControl;
@@ -5540,6 +7841,7 @@ var
   begin
     LBinding := Binding(ANode);
     LTabOrder := 0;
+
     if NyxProjectionChildrenChanged(ANode, AFormer) then
     begin
       for LChild := 0 to ANode.Count - 1 do
@@ -5549,6 +7851,7 @@ var
         if LChildBinding.FLogicalParent <> LBinding then
         begin
           LChildBinding.FControl.Parent := TWinControl(LBinding.FControl);
+          RequireNativeGeneration(LGeneration);
           LChildBinding.FLogicalParent := LBinding;
         end;
 
@@ -5558,6 +7861,7 @@ var
           { Layout uses the portable tree; native keyboard traversal must follow
             that same order rather than the former TWinControl insertion order. }
           TWinControl(LChildBinding.FControl).TabOrder := LTabOrder;
+          RequireNativeGeneration(LGeneration);
           Inc(LTabOrder);
         end;
       end;
@@ -5565,11 +7869,20 @@ var
     for LChild := 0 to ANode.Count - 1 do
     begin
       Arrange(ANode.Children[LChild]);
+      RequireNativeGeneration(LGeneration);
     end;
   end;
 
 begin
+  LGeneration := FGeneration;
+
+  if not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+
   LFocus := Screen.ActiveControl;
+  RequireNativeGeneration(LGeneration);
   LAncestor := LFocus;
   LInside := False;
   while LAncestor <> nil do
@@ -5581,32 +7894,45 @@ begin
       Break;
     end;
     LAncestor := LAncestor.Parent;
+    RequireNativeGeneration(LGeneration);
   end;
   SetLength(LSelections, Length(FBindings));
+  RequireNativeGeneration(LGeneration);
   for LIndex := 0 to High(FBindings) do
   begin
 
     if FBindings[LIndex].FInput is TWinControl then
     begin
       LSelections[LIndex] := CaptureNyxLCLSelection(TWinControl(FBindings[LIndex].FInput));
+      RequireNativeGeneration(LGeneration);
     end;
   end;
+  RequireNativeGeneration(LGeneration);
   LHorizontal := FPanel.HorzScrollBar.Position;
+  RequireNativeGeneration(LGeneration);
   LVertical := FPanel.VertScrollBar.Position;
+  RequireNativeGeneration(LGeneration);
   LUpdating := FUpdating;
   FUpdating := True;
-  FPanel.DisableAutoSizing;
+  LPanel := FPanel;
+  LPanel.DisableAutoSizing;
+  RequireNativeGeneration(LGeneration);
   try
     Arrange(FRoot);
+    RequireNativeGeneration(LGeneration);
     { An emptied destination can still have a zero-height physical client box
       from its former layout. Allocate the new tree before restoring focus;
       focusing into the old empty box would be lost during the following Sync. }
     Resize(FPanel);
+    RequireNativeGeneration(LGeneration);
 
     if LInside and LFocus.CanFocus then
     begin
+      RequireNativeGeneration(LGeneration);
       LFocus.SetFocus;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     for LIndex := 0 to High(FBindings) do
     begin
 
@@ -5616,20 +7942,31 @@ begin
           Recreate that same control's handle before using its physical range
           bridge; the LCL object, Text and portable event binding stay retained. }
         TWinControl(FBindings[LIndex].FInput).HandleNeeded;
+        RequireNativeGeneration(LGeneration);
         SelectNyxLCLText(TWinControl(FBindings[LIndex].FInput), LSelections[LIndex]);
+        RequireNativeGeneration(LGeneration);
       end;
     end;
+    RequireNativeGeneration(LGeneration);
     FPanel.HorzScrollBar.Position := LHorizontal;
     FPanel.VertScrollBar.Position := LVertical;
   finally
-    FPanel.EnableAutoSizing;
-    FUpdating := LUpdating;
+
+    if NativeGenerationCurrent(LGeneration) then
+    begin
+      FUpdating := LUpdating;
+    end;
+    LPanel.EnableAutoSizing;
   end;
+  RequireNativeGeneration(LGeneration);
 end;
+
 
 function TNyxLCLRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
   ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores): Boolean;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LCandidate: TNyxNode;
   LPrevious: TNyxNode;
   LProjectedCandidate: TNyxNode;
@@ -5720,7 +8057,19 @@ var
     end;
   end;
 begin
+  LGeneration := FGeneration;
+  Result := False;
+
+  if not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+
   FEvents.Scheduler.RequireUI;
+  RequireNativeGeneration(LGeneration);
   Result := False;
 
   { Live collection edits call Sync directly. An authored replacement of a
@@ -5738,8 +8087,10 @@ begin
     ((FState <> nil) and FState.Busy) or
     (FProjectionSchemaRevision <> NyxSchemaRevision) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   { An unbound design canvas deliberately has no live subscription. That idle
     absence must not force scalar edits to replace every control. Runtime and
     bound design views retain the coordinator's complete readiness guard; an
@@ -5751,55 +8102,80 @@ begin
     begin
       Exit;
     end;
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
   { Validate fresh public data before comparing the immutable context. Retaining
     controls never implies a stale document cache or skipped source admission. }
   ValidateNyxDocumentProperties(ADocument);
+  RequireNativeGeneration(LGeneration);
 
   if NyxProjectionContext(ADocument) <> FProjectionContext then
   begin
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LCandidate := nil;
+  RequireNativeGeneration(LGeneration);
   LPrevious := nil;
+  RequireNativeGeneration(LGeneration);
   LProjectedCandidate := nil;
+  RequireNativeGeneration(LGeneration);
   LProjectedBaseline := nil;
+  RequireNativeGeneration(LGeneration);
   LTheme := nil;
+  RequireNativeGeneration(LGeneration);
   LBound := (FLiveBindings <> nil) and FLiveBindings.HasBindings;
+  RequireNativeGeneration(LGeneration);
   LContentBlueprint := nil;
+  RequireNativeGeneration(LGeneration);
   try
 
     if FBorrowedTheme <> nil then
     begin
       LTheme := NewNyxDocumentTheme(ADocument, FBorrowedTheme);
+      RequireNativeGeneration(LGeneration);
     end
     else
     begin
       LTheme := NewNyxDocumentTheme(ADocument, FBaseTheme);
+      RequireNativeGeneration(LGeneration);
     end;
 
     if LTheme.CSS <> FTheme.CSS then
     begin
+      RequireNativeGeneration(LGeneration);
       Exit;
     end;
+    RequireNativeGeneration(LGeneration);
     LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
       Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+      RequireNativeGeneration(LGeneration);
     LNextSelection := FPresentationSelection.Reconciled(ADocument.Presentations.Snapshot);
+    RequireNativeGeneration(LGeneration);
 
     if LNextSelection.Reference.Defined then
     begin
+      RequireNativeGeneration(LGeneration);
       LFrame := LFrame.Selecting(LNextSelection.Reference);
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
     LMeasurements := MeasureContainers;
+    RequireNativeGeneration(LGeneration);
     LCandidate := RealizeNyxView(ADocument, ARoot, LFrame, LMeasurements);
+    RequireNativeGeneration(LGeneration);
 
     if FResourceContext <> nil then
     begin
       LCandidate.BindResources(FResourceContext.Snapshot,
         FResourceContext.Locale, FResourceContext.Fallback);
+        RequireNativeGeneration(LGeneration);
     end;
     LContentBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
+    RequireNativeGeneration(LGeneration);
     ApplyNyxPlatform(LCandidate, npfNativeLCL);
+    RequireNativeGeneration(LGeneration);
 
     LAccepted := LCandidate;
     LBaseline := FProjectionBaseline;
@@ -5810,12 +8186,15 @@ begin
       if not FLiveBindings.TryPrepareRefresh(LCandidate, FProjectionBaseline,
         LProjectedCandidate, LProjectedBaseline) then
       begin
+        RequireNativeGeneration(LGeneration);
         Exit;
       end;
+      RequireNativeGeneration(LGeneration);
       LAccepted := LProjectedCandidate;
       LBaseline := LProjectedBaseline;
     end;
     LArrangement := not Compatible(FRoot, LAccepted, False);
+    RequireNativeGeneration(LGeneration);
 
     if ((not LArrangement) and not Compatible(LBaseline, LAccepted, False)) or
       (LArrangement and (not Compatible(FRoot, LAccepted, True) or
@@ -5824,7 +8203,9 @@ begin
     begin
       Exit;
     end;
+    RequireNativeGeneration(LGeneration);
     LPrevious := FRoot.Clone;
+    RequireNativeGeneration(LGeneration);
     LPreviousSelection := FPresentationSelection;
 
     try
@@ -5833,15 +8214,26 @@ begin
       begin
         Exit;
       end;
+      RequireNativeGeneration(LGeneration);
 
       if LArrangement then
       begin
         ArrangeControls(LPrevious);
+        RequireNativeGeneration(LGeneration);
       end;
       RestoreFields;
+      RequireNativeGeneration(LGeneration);
       FPresentationSelection := FPresentationSelection.Reconciled(FRoot.PresentationSnapshot);
+      RequireNativeGeneration(LGeneration);
       Sync;
+      RequireNativeGeneration(LGeneration);
     except
+
+      if not NativeGenerationCurrent(LGeneration) then
+      begin
+        raise;
+      end;
+      RequireNativeGeneration(LGeneration);
       { No custom updater entered this path. Restore properties AND admitted
         arrangement before normal synchronization; callbacks still refer to
         the same independently owned realized nodes and native controls. }
@@ -5849,25 +8241,35 @@ begin
       if LArrangement then
       begin
         ApplyProjection(LPrevious, nil, nil);
+        RequireNativeGeneration(LGeneration);
         ArrangeControls(LCandidate);
+        RequireNativeGeneration(LGeneration);
       end
       else
       begin
         ApplyProjection(LPrevious, nil, nil);
+        RequireNativeGeneration(LGeneration);
       end;
       FPresentationSelection := LPreviousSelection;
       Sync;
+      RequireNativeGeneration(LGeneration);
       raise;
     end;
     ReleaseNyxNode(FProjectionBaseline);
+    RequireNativeGeneration(LGeneration);
     FProjectionBaseline := LCandidate;
     LCandidate := nil;
+    RequireNativeGeneration(LGeneration);
     FreeAndNil(FContentBlueprint);
+    RequireNativeGeneration(LGeneration);
     FContentBlueprint := LContentBlueprint;
     LContentBlueprint := nil;
+    RequireNativeGeneration(LGeneration);
     FContentFrameKnown := False;
     FContentRequestedSelection := FContentRequestedSelection.Reconciled(FRoot.PresentationSnapshot);
+    RequireNativeGeneration(LGeneration);
     QueueContent;
+    RequireNativeGeneration(LGeneration);
     Result := True;
   finally
     LContentBlueprint.Free;
@@ -5877,7 +8279,12 @@ begin
     ReleaseNyxNode(LPrevious);
     ReleaseNyxNode(LCandidate);
   end;
+  RequireNativeGeneration(LGeneration);
+  finally
+    LEnteredFrame.Leave;
+  end;
 end;
+
 
 procedure TNyxLCLRenderer.SetResourceContext(const AContext: INyxResourceContext);
 var
@@ -6064,6 +8471,7 @@ end;
 
 procedure TNyxLCLRenderer.Unmount;
 begin
+  FRenderAttempt := nil;
   Clear;
 end;
 
@@ -6171,6 +8579,8 @@ var
   LBinding: TNyxLCLBinding;
   LKind: TNyxText;
   LQueryMount: INyxCollectionQueryMount;
+  LColumnsMount: INyxCollectionColumnArrangementMount;
+  LInputAdmission: INyxCollectionInputAdmission;
 begin
 
   if AView = nil then
@@ -6198,8 +8608,15 @@ begin
   begin
     raise ENyxModel.Create('Control already has a live collection binding');
   end;
-  Result := MountNyxLCLCollection(LBinding.FControl, AView);
+  Result := MountNyxLCLCollection(LBinding.FControl, AView,
+    FCollectionInputPhase, FCollectionInputGate, FPhysicalFrame,
+    FCollectionQueryEvents, LBinding.FNode.ID, LBinding.PerformClick);
   LBinding.FCollectionMount := Result;
+
+  if Supports(Result, INyxCollectionInputAdmission, LInputAdmission) then
+  begin
+    LBinding.FCollectionInputLifetime := LInputAdmission.GetInputLifetime;
+  end;
   Result.ObserveSelection(LBinding.CollectionSelectionChanged);
 
   if not FDesignMode and (AView.Projection = cpTable) and
@@ -6208,6 +8625,16 @@ begin
     LQueryMount.ConfigureQueries(NewNyxLCLQueryFormFactory(
       TWinControl(LBinding.FControl), FTheme), FCollectionQueryEvents,
       NyxControlEvents(LBinding.FNode.ID, niRuntime), LBinding.FNode.DesignID);
+  end;
+
+  if not FDesignMode and (AView.Projection = cpTable) and
+    AView.Spec.HasLayoutControls and
+    Supports(Result, INyxCollectionColumnArrangementMount, LColumnsMount) and
+    Supports(Result, INyxCollectionInputAdmission, LInputAdmission) then
+  begin
+    LColumnsMount.ConfigureColumnArrangement(
+      NewNyxLCLColumnArrangementFactory(TWinControl(LBinding.FControl), FTheme,
+        LInputAdmission.GetInputLifetime), FCollectionQueryEvents);
   end;
 end;
 
@@ -6284,6 +8711,13 @@ begin
     begin
       Exit(NyxControl(FBindings[LIndex].FNode.ID));
     end;
+
+    if (FBindings[LIndex].FInput is TNyxCollectionStringGrid) and
+      TNyxCollectionStringGrid(FBindings[LIndex].FInput).HasColumnComposite and
+      TNyxCollectionStringGrid(FBindings[LIndex].FInput).OwnsColumnInput(AControl) then
+    begin
+      Exit(NyxControl(FBindings[LIndex].FNode.ID));
+    end;
   end;
 end;
 
@@ -6348,24 +8782,54 @@ end;
 
 function TNyxLCLRenderer.ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LBinding: TNyxLCLBinding;
   LControl: TControl;
 begin
-  FEvents.Scheduler.RequireUI;
-  LBinding := IdentityBinding(AID, niAutomatic);
-  LControl := LBinding.FControl;
+  LGeneration := FGeneration;
+  Result := Default(TNyxViewportSnapshot);
 
-  if LBinding.FInput <> nil then
+  if not NativeGenerationCurrent(LGeneration) then
   begin
-    LControl := LBinding.FInput;
+    Exit;
   end;
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if not NyxSupportsViewport(LBinding.FNode) or not (LControl is TWinControl) then
-  begin
-    raise ENyxModel.Create('This native control has no declared viewport');
+      FEvents.Scheduler.RequireUI;
+      RequireNativeGeneration(LGeneration);
+      LBinding := IdentityBinding(AID, niAutomatic);
+      RequireNativeGeneration(LGeneration);
+      LControl := LBinding.FControl;
+      RequireNativeGeneration(LGeneration);
+
+      if LBinding.FInput <> nil then
+      begin
+        LControl := LBinding.FInput;
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if not NyxSupportsViewport(LBinding.FNode) or not (LControl is TWinControl) then
+      begin
+        raise ENyxModel.Create('This native control has no declared viewport');
+      end;
+      RequireNativeGeneration(LGeneration);
+      Result := CaptureNyxViewport(TWinControl(LControl));
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        Result := Default(TNyxViewportSnapshot);
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  Result := CaptureNyxViewport(TWinControl(LControl));
 end;
+
 
 function TNyxLCLRenderer.SizeFor(const AID: TNyxText;
   AIdentity: TNyxIdentityKind): TNyxResizeSize;
@@ -6515,21 +8979,46 @@ end;
 procedure TNyxLCLRenderer.ViewportChanged(const AOriginID: TNyxText;
   const AViewport: TNyxViewportSnapshot);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LBinding: TNyxLCLBinding;
   LDispatch: TNyxDispatch;
 begin
+  LGeneration := FGeneration;
 
-  if FUpdating or FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LBinding := IdentityBinding(AOriginID, niRuntime);
-  LDispatch := FLiveBindings.Signal(LBinding.FNode, ntScroll);
-  LDispatch.Info.HasViewport := True;
-  LDispatch.Info.Viewport := AViewport;
-  Emit(LBinding.FNode, LDispatch);
-  { The borrowed binding/renderer may have ended inside Emit. }
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      if FUpdating or FDesignMode then
+      begin
+        Exit;
+      end;
+      LBinding := IdentityBinding(AOriginID, niRuntime);
+      RequireNativeGeneration(LGeneration);
+      LDispatch := FLiveBindings.Signal(LBinding.FNode, ntScroll);
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasViewport := True;
+      LDispatch.Info.Viewport := AViewport;
+      Emit(LBinding.FNode, LDispatch);
+      RequireNativeGeneration(LGeneration);
+      { The borrowed binding/renderer may have ended inside Emit. }
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
 end;
+
 
 procedure TNyxLCLRenderer.SetDesignerInput(const AValue: TNyxDesignerInput);
 begin
@@ -6556,44 +9045,89 @@ end;
 
 procedure TNyxLCLRenderer.CaptureChanged(const AOriginID: TNyxText; ATrigger: TNyxTrigger);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LBinding: TNyxLCLBinding;
   LDispatch: TNyxDispatch;
 begin
+  LGeneration := FGeneration;
 
-  if ATrigger in [ntAfterEnter, ntAfterExit] then
-  begin
-    { Update the transition baseline even without subscribers. Do not project
-      native focus as a pointer signal or invoke the creator's logical slot. }
-    LBinding := IdentityBinding(AOriginID, niRuntime);
-    LBinding.ObserveFocus(ATrigger);
-    Exit;
-  end;
-
-  if ATrigger = ntPointerCaptureLost then
-  begin
-    QueueContent;
-  end;
-
-  if FUpdating or FDesignMode or not FEvents.HasSubscribers(ATrigger) then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LBinding := IdentityBinding(AOriginID, niRuntime);
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if not NyxInteractionPolicy(LBinding.FNode).CanIssueCommand then
-  begin
-    Exit;
+      if ATrigger in [ntAfterEnter, ntAfterExit] then
+      begin
+        { Update the transition baseline even without subscribers. Do not project
+          native focus as a pointer signal or invoke the creator's logical slot. }
+        LBinding := IdentityBinding(AOriginID, niRuntime);
+        RequireNativeGeneration(LGeneration);
+        LBinding.ObserveFocus(ATrigger);
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+
+      if ATrigger = ntPointerCaptureLost then
+      begin
+        QueueContent;
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if FUpdating or FDesignMode or not FEvents.HasSubscribers(ATrigger) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LBinding := IdentityBinding(AOriginID, niRuntime);
+      RequireNativeGeneration(LGeneration);
+
+      if (LBinding.FCollectionInputLifetime <> nil) and
+        not LBinding.FCollectionInputLifetime.Ready then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { Capture is outside the grid's LCL procedure. Actual Windows input is
+          intercepted earlier at HWND level; this also refuses direct LCL capture
+          injection while an enclosing embedded candidate remains unaccepted. }
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if not NyxInteractionPolicy(LBinding.FNode).CanIssueCommand then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LDispatch := FLiveBindings.Signal(LBinding.FNode, ATrigger);
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasPointer := True;
+      LDispatch.Info.Pointer.Kind := npiMouse;
+      { Native capture belongs to the single LCL mouse stream (ID zero). This is an
+        observation, without invented pressure, coordinates or response authority. }
+      Emit(LBinding.FNode, LDispatch);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  LDispatch := FLiveBindings.Signal(LBinding.FNode, ATrigger);
-  LDispatch.Info.HasPointer := True;
-  LDispatch.Info.Pointer.Kind := npiMouse;
-  { Native capture belongs to the single LCL mouse stream (ID zero). This is an
-    observation, without invented pressure, coordinates or response authority. }
-  Emit(LBinding.FNode, LDispatch);
 end;
+
 
 procedure TNyxLCLBinding.StartDrag(ASender: TObject; var ADragObject: TDragObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LPrevious: TStartDragEvent;
   LEvents: INyxEvents;
   LRevision: Integer;
@@ -6605,119 +9139,205 @@ var
   LPolicy: TNyxInteractionPolicy;
   LSource: Boolean;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].StartDrag;
-  LRenderer := FRenderer;
-  LEvents := LRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LFrame := LRenderer.FPhysicalFrame;
-  LOriginID := FNode.ID;
-  LPolicy := NyxInteractionPolicy(FNode);
-  LSource := FNode.Prop('drag-source') = 'true';
-  LFrame.Enter;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
+    try
 
-    if Assigned(LPrevious) then
-    begin
-      LPrevious(ASender, ADragObject);
-    end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LPrevious := FPointerHooks[PointerSlot(ASender)].StartDrag;
+      RequireNativeGeneration(LGeneration);
+      LRenderer := FRenderer;
+      LEvents := LRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LFrame := LRenderer.FPhysicalFrame;
+      RequireNativeGeneration(LGeneration);
+      LOriginID := FNode.ID;
+      RequireNativeGeneration(LGeneration);
+      LPolicy := NyxInteractionPolicy(FNode);
+      RequireNativeGeneration(LGeneration);
+      LSource := FNode.Prop('drag-source') = 'true';
+      RequireNativeGeneration(LGeneration);
+      LFrame.Enter;
+      RequireNativeGeneration(LGeneration);
+      try
 
-    if LEvents.ViewRevision <> LRevision then
-    begin
-      LFrame.AbortDrag(TControl(ASender));
-      Exit;
-    end;
+        if Assigned(LPrevious) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LPrevious(ASender, ADragObject);
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
 
-    if not LSource then
-    begin
-      Exit;
-    end;
+        if LEvents.ViewRevision <> LRevision then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LFrame.AbortDrag(TControl(ASender));
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
 
-    if ADragObject <> nil then
-    begin
-      LFrame.AbortDrag(TControl(ASender));
-      LRenderer.GestureFailed(LOriginID,
-        'A custom LCL drag object requires its own explicit Nyx transfer adapter');
-      Exit;
-    end;
-    { Supply an object even when refused. Otherwise LCL silently substitutes an
-      untyped default object. Cancellation waits until its constructor returns. }
-    LDrag := TNyxNativeDragObject.Create(TControl(ASender));
-    ADragObject := LDrag;
-    FActiveDrag := LDrag;
-    LDrag.Events := LEvents;
-    LDrag.Revision := LRevision;
-    LDrag.SourceID := LOriginID;
-    LDrag.Transfer := NyxTransferFromData(NyxArray([]), True);
-    LResult := DragEvent(ASender, LDrag, ntDragStart, ndpStart, 0, 0);
+        if not LSource then
+        begin
+          Exit;
+        end;
 
-    if LEvents.ViewRevision <> LRevision then
-    begin
-      LFrame.AbortDrag(TControl(ASender));
-      Exit;
-    end;
+        if ADragObject <> nil then
+        begin
+          LFrame.AbortDrag(TControl(ASender));
+          RequireNativeGeneration(LGeneration);
+          LRenderer.GestureFailed(LOriginID,
+            'A custom LCL drag object requires its own explicit Nyx transfer adapter');
+                                                                                     RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        { Supply an object even when refused. Otherwise LCL silently substitutes an
+          untyped default object. Cancellation waits until its constructor returns. }
+        LDrag := TNyxNativeDragObject.Create(TControl(ASender));
+        RequireNativeGeneration(LGeneration);
+        ADragObject := LDrag;
+        FActiveDrag := LDrag;
+        LDrag.Events := LEvents;
+        LDrag.Revision := LRevision;
+        LDrag.SourceID := LOriginID;
+        LDrag.Transfer := NyxTransferFromData(NyxArray([]), True);
+        RequireNativeGeneration(LGeneration);
+        LResult := DragEvent(ASender, LDrag, ntDragStart, ndpStart, 0, 0);
+        RequireNativeGeneration(LGeneration);
 
-    if not LResult.Offered or not LPolicy.CanIssueCommand or
-      (LPolicy.ReadOnly and (ndoMove in LResult.Allowed)) then
-    begin
-      LFrame.AbortDrag(TControl(ASender));
-      LRenderer.GestureFailed(LOriginID,
-        'The native drag source did not offer an admitted sequential transfer');
-      Exit;
+        if LEvents.ViewRevision <> LRevision then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LFrame.AbortDrag(TControl(ASender));
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+
+        if not LResult.Offered or not LPolicy.CanIssueCommand or
+          (LPolicy.ReadOnly and (ndoMove in LResult.Allowed)) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LFrame.AbortDrag(TControl(ASender));
+          RequireNativeGeneration(LGeneration);
+          LRenderer.GestureFailed(LOriginID,
+            'The native drag source did not offer an admitted sequential transfer');
+                                                                                  RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        LDrag.Transfer := LResult.Transfer;
+        RequireNativeGeneration(LGeneration);
+        LDrag.Allowed := LResult.Allowed;
+        RequireNativeGeneration(LGeneration);
+        LDrag.Offered := True;
+        LRenderer.FLastGestureError := '';
+      finally
+        LFrame.Leave;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
     end;
-    LDrag.Transfer := LResult.Transfer;
-    LDrag.Allowed := LResult.Allowed;
-    LDrag.Offered := True;
-    LRenderer.FLastGestureError := '';
   finally
-    LFrame.Leave;
+    LEnteredFrame.Leave;
   end;
 end;
 
+
 procedure TNyxLCLBinding.EndDrag(ASender, ATarget: TObject; AX, AY: Integer);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LPrevious: TEndDragEvent;
   LDrag: TDragObject;
   LEvents: INyxEvents;
   LRevision: Integer;
   LFrame: INyxNativeGestureFrame;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].EndDrag;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LFrame := FRenderer.FPhysicalFrame;
-  LDrag := FActiveDrag;
-  FActiveDrag := nil;
-  LFrame.Enter;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
+    try
 
-    if Assigned(LPrevious) then
-    begin
-      LPrevious(ASender, ATarget, AX, AY);
-    end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LPrevious := FPointerHooks[PointerSlot(ASender)].EndDrag;
+      RequireNativeGeneration(LGeneration);
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LFrame := FRenderer.FPhysicalFrame;
+      RequireNativeGeneration(LGeneration);
+      LDrag := FActiveDrag;
+      FActiveDrag := nil;
+      RequireNativeGeneration(LGeneration);
+      LFrame.Enter;
+      RequireNativeGeneration(LGeneration);
+      try
 
-    if (LEvents.ViewRevision = LRevision) and
-      (LDrag is TNyxNativeDragObject) and TNyxNativeDragObject(LDrag).Live then
-    begin
-      DragEvent(ASender, LDrag, ntDragEnd, ndpEnd, AX, AY);
+        if Assigned(LPrevious) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LPrevious(ASender, ATarget, AX, AY);
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+
+        if (LEvents.ViewRevision = LRevision) and
+          (LDrag is TNyxNativeDragObject) and TNyxNativeDragObject(LDrag).Live then
+        begin
+          RequireNativeGeneration(LGeneration);
+          DragEvent(ASender, LDrag, ntDragEnd, ndpEnd, AX, AY);
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+      finally
+        LFrame.Leave;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
     end;
   finally
-    LFrame.Leave;
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.DragOver(ASender, ASource: TObject; AX, AY: Integer;
   AState: TDragState; var AAccept: Boolean);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LPrevious: TDragOverEvent;
   LEvents: INyxEvents;
   LRevision: Integer;
@@ -6729,95 +9349,145 @@ var
   LPhase: TNyxDragPhase;
   LTarget: Boolean;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode and not FRenderer.FDesignerInput.DropEnabled then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     AAccept := False;
     Exit;
   end;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].DragOver;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LFrame := FRenderer.FPhysicalFrame;
-  LOriginID := FNode.ID;
-  LTarget := FRenderer.FDesignMode or (FNode.Prop('drop-target') = 'true');
-  LFrame.Enter;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
+    try
 
-    if not FRenderer.FDesignMode and Assigned(LPrevious) then
-    begin
-      LPrevious(ASender, ASource, AX, AY, AState, AAccept);
-    end;
-
-    if LEvents.ViewRevision <> LRevision then
-    begin
-      AAccept := False;
-      Exit;
-    end;
-
-    if not LTarget then
-    begin
-      Exit;
-    end;
-    AAccept := False;
-
-    if not (ASource is TNyxNativeDragObject) then
-    begin
-      Exit;
-    end;
-    LDrag := TNyxNativeDragObject(ASource);
-
-    if not LDrag.Live then
-    begin
-      Exit;
-    end;
-    case AState of
-      dsDragEnter:
-        begin
-          LTrigger := ntDragEnter;
-          LPhase := ndpEnter;
-        end;
-      dsDragLeave:
-        begin
-          LTrigger := ntDragExit;
-          LPhase := ndpExit;
-        end;
-    else
+      if FRenderer.FDesignMode and not FRenderer.FDesignerInput.DropEnabled then
       begin
-        LTrigger := ntDragOver;
-        LPhase := ndpOver;
+        RequireNativeGeneration(LGeneration);
+        AAccept := False;
+        Exit;
       end;
-    end;
-    { LCL asks DragLeave for the final acceptance before delivering DragDrop.
-      Preserve the last hover agreement, while exit has no response window. }
-    AAccept := (AState = dsDragLeave) and (LDrag.HoverID = LOriginID) and
-      (LDrag.HoverOperation <> ndoNone);
-    LResult := DragEvent(ASender, LDrag, LTrigger, LPhase, AX, AY);
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].DragOver;
+      RequireNativeGeneration(LGeneration);
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LFrame := FRenderer.FPhysicalFrame;
+      RequireNativeGeneration(LGeneration);
+      LOriginID := FNode.ID;
+      RequireNativeGeneration(LGeneration);
+      LTarget := FRenderer.FDesignMode or (FNode.Prop('drop-target') = 'true');
+      RequireNativeGeneration(LGeneration);
+      LFrame.Enter;
+      RequireNativeGeneration(LGeneration);
+      try
 
-    if (LEvents.ViewRevision <> LRevision) or not LDrag.Live then
-    begin
-      AAccept := False;
-      Exit;
-    end;
+        if not FRenderer.FDesignMode and Assigned(LPrevious) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LPrevious(ASender, ASource, AX, AY, AState, AAccept);
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
 
-    if AState <> dsDragLeave then
-    begin
-      LDrag.HoverID := LOriginID;
-      LDrag.HoverOperation := ndoNone;
+        if LEvents.ViewRevision <> LRevision then
+        begin
+          RequireNativeGeneration(LGeneration);
+          AAccept := False;
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
 
-      if LResult.Accepted then
+        if not LTarget then
+        begin
+          Exit;
+        end;
+        AAccept := False;
+
+        if not (ASource is TNyxNativeDragObject) then
+        begin
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        LDrag := TNyxNativeDragObject(ASource);
+        RequireNativeGeneration(LGeneration);
+
+        if not LDrag.Live then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        case AState of
+          dsDragEnter:
+            begin
+              LTrigger := ntDragEnter;
+              LPhase := ndpEnter;
+            end;
+          dsDragLeave:
+            begin
+              LTrigger := ntDragExit;
+              LPhase := ndpExit;
+            end;
+        else
+          begin
+            LTrigger := ntDragOver;
+            LPhase := ndpOver;
+          end;
+        end;
+        { LCL asks DragLeave for the final acceptance before delivering DragDrop.
+          Preserve the last hover agreement, while exit has no response window. }
+        AAccept := (AState = dsDragLeave) and (LDrag.HoverID = LOriginID) and
+          (LDrag.HoverOperation <> ndoNone);
+          RequireNativeGeneration(LGeneration);
+        LResult := DragEvent(ASender, LDrag, LTrigger, LPhase, AX, AY);
+        RequireNativeGeneration(LGeneration);
+
+        if (LEvents.ViewRevision <> LRevision) or not LDrag.Live then
+        begin
+          RequireNativeGeneration(LGeneration);
+          AAccept := False;
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+
+        if AState <> dsDragLeave then
+        begin
+          LDrag.HoverID := LOriginID;
+          LDrag.HoverOperation := ndoNone;
+
+          if LResult.Accepted then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LDrag.HoverOperation := LResult.Operation;
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+          AAccept := LDrag.HoverOperation <> ndoNone;
+          RequireNativeGeneration(LGeneration);
+        end;
+      finally
+        LFrame.Leave;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
       begin
-        LDrag.HoverOperation := LResult.Operation;
+        AAccept := False;
       end;
-      AAccept := LDrag.HoverOperation <> ndoNone;
     end;
   finally
-    LFrame.Leave;
+    LEnteredFrame.Leave;
   end;
 end;
 
+
 procedure TNyxLCLBinding.DragDrop(ASender, ASource: TObject; AX, AY: Integer);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LPrevious: TDragDropEvent;
   LEvents: INyxEvents;
   LRevision: Integer;
@@ -6826,55 +9496,97 @@ var
   LResult: TNyxGestureResult;
   LTarget: Boolean;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode and not FRenderer.FDesignerInput.DropEnabled then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].DragDrop;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LFrame := FRenderer.FPhysicalFrame;
-  LTarget := FRenderer.FDesignMode or (FNode.Prop('drop-target') = 'true');
-  LFrame.Enter;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
+    try
 
-    if not LTarget then
-    begin
-
-      if Assigned(LPrevious) then
+      if FRenderer.FDesignMode and not FRenderer.FDesignerInput.DropEnabled then
       begin
-        LPrevious(ASender, ASource, AX, AY);
+        RequireNativeGeneration(LGeneration);
+        Exit;
       end;
-      Exit;
-    end;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].DragDrop;
+      RequireNativeGeneration(LGeneration);
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LFrame := FRenderer.FPhysicalFrame;
+      RequireNativeGeneration(LGeneration);
+      LTarget := FRenderer.FDesignMode or (FNode.Prop('drop-target') = 'true');
+      RequireNativeGeneration(LGeneration);
+      LFrame.Enter;
+      RequireNativeGeneration(LGeneration);
+      try
 
-    if not (ASource is TNyxNativeDragObject) then
-    begin
-      Exit;
-    end;
-    LDrag := TNyxNativeDragObject(ASource);
+        if not LTarget then
+        begin
 
-    if not LDrag.Live then
-    begin
-      Exit;
-    end;
-    LResult := DragEvent(ASender, LDrag, ntDrop, ndpDrop, AX, AY);
+          if Assigned(LPrevious) then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LPrevious(ASender, ASource, AX, AY);
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
 
-    if (LEvents.ViewRevision = LRevision) and LDrag.Live and LResult.Accepted then
-    begin
-      LDrag.Operation := LResult.Operation;
+        if not (ASource is TNyxNativeDragObject) then
+        begin
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        LDrag := TNyxNativeDragObject(ASource);
+        RequireNativeGeneration(LGeneration);
+
+        if not LDrag.Live then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        LResult := DragEvent(ASender, LDrag, ntDrop, ndpDrop, AX, AY);
+        RequireNativeGeneration(LGeneration);
+
+        if (LEvents.ViewRevision = LRevision) and LDrag.Live and LResult.Accepted then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LDrag.Operation := LResult.Operation;
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+        { Accepted operations never mutate the source or target model implicitly.
+          The application's typed callback owns its copy/move/link operation. }
+      finally
+        LFrame.Leave;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
     end;
-    { Accepted operations never mutate the source or target model implicitly.
-      The application's typed callback owns its copy/move/link operation. }
   finally
-    LFrame.Leave;
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 function TNyxLCLBinding.DragEvent(ASender: TObject; ADragObject: TDragObject;
   ATrigger: TNyxTrigger; APhase: TNyxDragPhase; AX, AY: Integer): TNyxGestureResult;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LDrag: TNyxNativeDragObject;
   LDispatch: TNyxDispatch;
   LCapabilities: TNyxGestureCapabilities;
@@ -6883,83 +9595,129 @@ var
   LOperation: TNyxDropOperation;
   LDesignerTarget: TNyxDesignerTarget;
 begin
+  LGeneration := GenerationLease;
   Result := Default(TNyxGestureResult);
 
-  if FRenderer.FUpdating or
-    (FRenderer.FDesignMode and ((APhase in [ndpStart, ndpDrag, ndpEnd]) or
-      not FRenderer.FDesignerInput.DropEnabled)) or
-    (not FRenderer.FDesignMode and not NyxInteractionPolicy(FNode).CanIssueCommand) or
-    not (ADragObject is TNyxNativeDragObject) then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LDrag := TNyxNativeDragObject(ADragObject);
-  LCapabilities := [];
-
-  if APhase = ndpStart then
-  begin
-    Include(LCapabilities, ngcOfferDrag);
-  end
-  else if (APhase in [ndpEnter, ndpOver, ndpDrop]) and
-    (FRenderer.FDesignMode or NyxInteractionPolicy(FNode).CanEditValue) then
-  begin
-    Include(LCapabilities, ngcAcceptDrop);
-  end;
-  LOperation := LDrag.HoverOperation;
-
-  if APhase = ndpEnd then
-  begin
-    LOperation := LDrag.Operation;
-  end;
-
-  if FRenderer.FDesignMode then
-  begin
-    LDispatch := Default(TNyxDispatch);
-    LDispatch.Info := NyxDesignerDragEvent(FNode, ATrigger);
-  end
-  else
-  begin
-    LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
-  end;
-  LDispatch.Info.HasDrag := True;
-  LDispatch.Info.Drag := NyxDragSnapshot(APhase, LDrag.Transfer,
-    LDrag.Allowed, LOperation, LDrag.SourceID, LCapabilities <> []);
-  LDispatch.Info.HasPointer := True;
-  LDispatch.Info.Pointer.Kind := npiMouse;
-  LDispatch.Info.Pointer.HasPosition := not (APhase in [ndpStart, ndpEnd]);
-
-  if LDispatch.Info.Pointer.HasPosition then
-  begin
-    { Portable positions belong to the outer face, including native decorations.
-      Use the parent's client coordinates for that outer origin; a groupbox's
-      own ClientToScreen(0,0) begins below its caption and inside its frame. }
-    LPosition := TControl(ASender).ClientToScreen(Point(AX, AY));
-    LPosition := FControl.Parent.ScreenToClient(LPosition);
-    Dec(LPosition.X, FControl.Left);
-    Dec(LPosition.Y, FControl.Top);
-    LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
-    LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
-  end;
-  LDecision := NewNyxGestureDecision(LCapabilities, LDrag.Allowed);
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
+    try
 
-    if FRenderer.FDesignMode then
-    begin
+      Result := Default(TNyxGestureResult);
+      RequireNativeGeneration(LGeneration);
 
-      if Assigned(FRenderer.FOnDesignerGesture) then
+      if FRenderer.FUpdating or
+        (FRenderer.FDesignMode and ((APhase in [ndpStart, ndpDrag, ndpEnd]) or
+          not FRenderer.FDesignerInput.DropEnabled)) or
+        (not FRenderer.FDesignMode and not NyxInteractionPolicy(FNode).CanIssueCommand) or
+        not (ADragObject is TNyxNativeDragObject) then
       begin
-        LDesignerTarget := NyxDesignerTarget(FNode).WithFrame(FRenderer.DropFrameFor(FNode.ID));
-        FRenderer.FOnDesignerGesture(LDesignerTarget, LDispatch.Info, LDecision);
+        RequireNativeGeneration(LGeneration);
+        Exit;
       end;
-    end
-    else
-    begin
-      DispatchNyxGesture(FRenderer.FEvents, FNode, LDispatch, LDecision);
+      RequireNativeGeneration(LGeneration);
+      LDrag := TNyxNativeDragObject(ADragObject);
+      RequireNativeGeneration(LGeneration);
+      LCapabilities := [];
+
+      if APhase = ndpStart then
+      begin
+        Include(LCapabilities, ngcOfferDrag);
+      end
+      else if (APhase in [ndpEnter, ndpOver, ndpDrop]) and
+        (FRenderer.FDesignMode or NyxInteractionPolicy(FNode).CanEditValue) then
+      begin
+        Include(LCapabilities, ngcAcceptDrop);
+      end;
+      LOperation := LDrag.HoverOperation;
+      RequireNativeGeneration(LGeneration);
+
+      if APhase = ndpEnd then
+      begin
+        LOperation := LDrag.Operation;
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if FRenderer.FDesignMode then
+      begin
+        LDispatch := Default(TNyxDispatch);
+        RequireNativeGeneration(LGeneration);
+        LDispatch.Info := NyxDesignerDragEvent(FNode, ATrigger);
+        RequireNativeGeneration(LGeneration);
+      end
+      else
+      begin
+        LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
+        RequireNativeGeneration(LGeneration);
+      end;
+      LDispatch.Info.HasDrag := True;
+      LDispatch.Info.Drag := NyxDragSnapshot(APhase, LDrag.Transfer,
+        LDrag.Allowed, LOperation, LDrag.SourceID, LCapabilities <> []);
+        RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasPointer := True;
+      LDispatch.Info.Pointer.Kind := npiMouse;
+      LDispatch.Info.Pointer.HasPosition := not (APhase in [ndpStart, ndpEnd]);
+      RequireNativeGeneration(LGeneration);
+
+      if LDispatch.Info.Pointer.HasPosition then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { Portable positions belong to the outer face, including native decorations.
+          Use the parent's client coordinates for that outer origin; a groupbox's
+          own ClientToScreen(0,0) begins below its caption and inside its frame. }
+        LPosition := TControl(ASender).ClientToScreen(Point(AX, AY));
+        RequireNativeGeneration(LGeneration);
+        LPosition := FControl.Parent.ScreenToClient(LPosition);
+        RequireNativeGeneration(LGeneration);
+        Dec(LPosition.X, FControl.Left);
+        Dec(LPosition.Y, FControl.Top);
+        LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
+        RequireNativeGeneration(LGeneration);
+        LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+      LDecision := NewNyxGestureDecision(LCapabilities, LDrag.Allowed);
+      RequireNativeGeneration(LGeneration);
+      try
+
+        if FRenderer.FDesignMode then
+        begin
+
+          if Assigned(FRenderer.FOnDesignerGesture) then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LDesignerTarget := NyxDesignerTarget(FNode).WithFrame(FRenderer.DropFrameFor(FNode.ID));
+            RequireNativeGeneration(LGeneration);
+            FRenderer.FOnDesignerGesture(LDesignerTarget, LDispatch.Info, LDecision);
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+        end
+        else
+        begin
+          DispatchNyxGesture(FRenderer.FEvents, FNode, LDispatch, LDecision);
+          RequireNativeGeneration(LGeneration);
+        end;
+      finally
+        Result := LDecision.Seal;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        Result := Default(TNyxGestureResult);
+      end;
     end;
   finally
-    Result := LDecision.Seal;
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.DisconnectControl(AControl: TControl);
 begin
@@ -7074,97 +9832,191 @@ end;
 procedure TNyxLCLBinding.Wheel(ASender: TObject; AShift: TShiftState;
   ADelta: Integer; APosition: TPoint; var AHandled: Boolean);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LPrevious: TMouseWheelEvent;
   LEvents: INyxEvents;
   LRevision: Integer;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
+    AHandled := True;
     Exit;
   end;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].Wheel;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  WheelEvent(ASender, AShift, ADelta, False, AHandled);
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if not AHandled and (LEvents.ViewRevision = LRevision) and Assigned(LPrevious) then
-  begin
-    LPrevious(ASender, AShift, ADelta, APosition, AHandled);
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LPrevious := FPointerHooks[PointerSlot(ASender)].Wheel;
+      RequireNativeGeneration(LGeneration);
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      WheelEvent(ASender, AShift, ADelta, False, AHandled);
+      RequireNativeGeneration(LGeneration);
+
+      if not AHandled and (LEvents.ViewRevision = LRevision) and Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender, AShift, ADelta, APosition, AHandled);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        AHandled := True;
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.WheelHorz(ASender: TObject; AShift: TShiftState;
   ADelta: Integer; APosition: TPoint; var AHandled: Boolean);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LPrevious: TMouseWheelEvent;
   LEvents: INyxEvents;
   LRevision: Integer;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
+    AHandled := True;
     Exit;
   end;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].WheelHorz;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  WheelEvent(ASender, AShift, ADelta, True, AHandled);
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if not AHandled and (LEvents.ViewRevision = LRevision) and Assigned(LPrevious) then
-  begin
-    LPrevious(ASender, AShift, ADelta, APosition, AHandled);
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LPrevious := FPointerHooks[PointerSlot(ASender)].WheelHorz;
+      RequireNativeGeneration(LGeneration);
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      WheelEvent(ASender, AShift, ADelta, True, AHandled);
+      RequireNativeGeneration(LGeneration);
+
+      if not AHandled and (LEvents.ViewRevision = LRevision) and Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender, AShift, ADelta, APosition, AHandled);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        AHandled := True;
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.WheelEvent(ASender: TObject; AShift: TShiftState;
   ADelta: Integer; AHorizontal: Boolean; var AHandled: Boolean);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LDispatch: TNyxDispatch;
   LModifiers: TNyxKeyModifiers;
   LX, LY: Double;
 begin
-  LEvents := FRenderer.FEvents;
+  LGeneration := GenerationLease;
 
-  if AHandled or FRenderer.FUpdating or FRenderer.FDesignMode or
-    (not LEvents.HasSubscribers(ntBeforeWheel) and not LEvents.HasSubscribers(ntWheel) and
-      not LEvents.HasSubscribers(ntAfterWheel)) then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
+    AHandled := True;
     Exit;
   end;
-  LModifiers := [];
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if ssShift in AShift then
-  begin
-    Include(LModifiers, nmShift);
-  end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
 
-  if ssCtrl in AShift then
-  begin
-    Include(LModifiers, nmControl);
-  end;
+      if AHandled or FRenderer.FUpdating or FRenderer.FDesignMode or
+        (not LEvents.HasSubscribers(ntBeforeWheel) and not LEvents.HasSubscribers(ntWheel) and
+          not LEvents.HasSubscribers(ntAfterWheel)) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LModifiers := [];
 
-  if ssAlt in AShift then
-  begin
-    Include(LModifiers, nmAlt);
-  end;
-  LX := 0;
-  LY := -ADelta / 120;
+      if ssShift in AShift then
+      begin
+        Include(LModifiers, nmShift);
+      end;
 
-  if AHorizontal then
-  begin
-    { LCL horizontal positive deltas mean right; vertical positive means up. }
-    LX := ADelta / 120;
-    LY := 0;
+      if ssCtrl in AShift then
+      begin
+        Include(LModifiers, nmControl);
+      end;
+
+      if ssAlt in AShift then
+      begin
+        Include(LModifiers, nmAlt);
+      end;
+      LX := 0;
+      RequireNativeGeneration(LGeneration);
+      LY := -ADelta / 120;
+      RequireNativeGeneration(LGeneration);
+
+      if AHorizontal then
+      begin
+        { LCL horizontal positive deltas mean right; vertical positive means up. }
+        LX := ADelta / 120;
+        RequireNativeGeneration(LGeneration);
+        LY := 0;
+        RequireNativeGeneration(LGeneration);
+      end;
+      LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntWheel);
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasWheel := True;
+      LDispatch.Info.Wheel := NyxWheel(LX, LY, 0, nwuDetents, LModifiers, True);
+      RequireNativeGeneration(LGeneration);
+      AHandled := DispatchNyxWheel(LEvents, FNode, LDispatch,
+        FRenderer.FLiveBindings.SignalSnapshot);
+        RequireNativeGeneration(LGeneration);
+      { No binding/renderer access follows callbacks that may dispose this view. }
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        AHandled := True;
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntWheel);
-  LDispatch.Info.HasWheel := True;
-  LDispatch.Info.Wheel := NyxWheel(LX, LY, 0, nwuDetents, LModifiers, True);
-  AHandled := DispatchNyxWheel(LEvents, FNode, LDispatch,
-    FRenderer.FLiveBindings.SignalSnapshot);
-  { No binding/renderer access follows callbacks that may dispose this view. }
 end;
+
 
 function NativePointerButton(AButton: TMouseButton): TNyxPointerButton;
 begin
@@ -7190,6 +10042,8 @@ function TNyxLCLBinding.PointerEvent(ASender: TObject; ATrigger: TNyxTrigger;
   const APosition: TPoint; AHasPosition: Boolean; AButton: TNyxPointerButton;
   AShift: TShiftState): Boolean;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LDispatch: TNyxDispatch;
   LPosition: TPoint;
   LEvents: INyxEvents;
@@ -7204,526 +10058,1044 @@ var
   LRenderer: TNyxLCLRenderer;
   LOriginID: TNyxText;
 begin
+  LGeneration := GenerationLease;
   Result := False;
-  LEvents := FRenderer.FEvents;
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode or not LEvents.HasSubscribers(ATrigger) or
-    not NyxInteractionPolicy(FNode).CanIssueCommand then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
-  LDispatch.Info.HasPointer := True;
-  LDispatch.Info.Pointer.Kind := npiMouse;
-  LDispatch.Info.Pointer.Button := AButton;
-  LDispatch.Info.Pointer.HasPosition := AHasPosition;
-
-  if not AHasPosition then
-  begin
-    LDispatch.Info.Pointer.Kind := npiUnknown;
-  end;
-
-  if AHasPosition then
-  begin
-    LPosition := TControl(ASender).ClientToScreen(APosition);
-    LPosition := FControl.Parent.ScreenToClient(LPosition);
-    Dec(LPosition.X, FControl.Left);
-    Dec(LPosition.Y, FControl.Top);
-    LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
-    LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
-  end;
-
-  if ssLeft in AShift then
-  begin
-    Include(LDispatch.Info.Pointer.Buttons, npbPrimary);
-  end;
-
-  if ssMiddle in AShift then
-  begin
-    Include(LDispatch.Info.Pointer.Buttons, npbAuxiliary);
-  end;
-
-  if ssRight in AShift then
-  begin
-    Include(LDispatch.Info.Pointer.Buttons, npbSecondary);
-  end;
-
-  if ssShift in AShift then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmShift);
-  end;
-
-  if ssCtrl in AShift then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmControl);
-  end;
-
-  if ssAlt in AShift then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmAlt);
-  end;
-
-  if (ssMeta in AShift) or (ssSuper in AShift) then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmMeta);
-  end;
-
-  if ssAltGr in AShift then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmAltGraph);
-  end;
-
-  if ATrigger = ntContextMenu then
-  begin
-    Result := DispatchNyxInput(LEvents, FNode, LDispatch);
-  end
-  else if ATrigger in [ntPointerDown, ntPointerMove, ntPointerUp] then
-  begin
-    LRenderer := FRenderer;
-    LFrame := LRenderer.FPhysicalFrame;
-    LObserver := LRenderer.FCaptureObserver;
-    LRevision := LEvents.ViewRevision;
-    LControl := FControl;
-    LInput := FInput;
-    LOriginID := FNode.ID;
-    LCapabilities := [];
-
-    if (ATrigger in [ntPointerDown, ntPointerMove]) and
-      ((LDispatch.Info.Pointer.Buttons <> []) or (ATrigger = ntPointerDown)) then
-    begin
-      Include(LCapabilities, ngcCapturePointer);
-    end;
-
-    if NyxLCLHasPointerCapture(LControl) or NyxLCLHasPointerCapture(LInput) then
-    begin
-      Include(LCapabilities, ngcReleasePointer);
-    end;
-    LDecision := NewNyxGestureDecision(LCapabilities);
-    LFrame.Enter;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
     try
-      DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
-      LResult := LDecision.Seal;
 
-      if LEvents.ViewRevision <> LRevision then
+      Result := False;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+
+      if FRenderer.FUpdating or FRenderer.FDesignMode or not LEvents.HasSubscribers(ATrigger) or
+        not NyxInteractionPolicy(FNode).CanIssueCommand then
       begin
+        RequireNativeGeneration(LGeneration);
         Exit;
       end;
-      try
-        case LResult.PointerRequest of
-          nprUnchanged:
-            begin
-              { This dispatch requests no change to native pointer capture. }
-            end;
-          nprCapture:
-            begin
-              CaptureNyxLCLPointer(LControl);
-            end;
-          nprRelease:
-            begin
-              ReleaseNyxLCLPointer(LControl);
-              ReleaseNyxLCLPointer(LInput);
-            end;
-        end;
-      except
-        on LException: Exception do
-        begin
-          LRenderer.GestureFailed(LOriginID, LException.Message);
-          Exit;
-        end;
-      end;
+      RequireNativeGeneration(LGeneration);
+      LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasPointer := True;
+      LDispatch.Info.Pointer.Kind := npiMouse;
+      LDispatch.Info.Pointer.Button := AButton;
+      LDispatch.Info.Pointer.HasPosition := AHasPosition;
 
-      if LResult.PointerRequest <> nprUnchanged then
+      if not AHasPosition then
       begin
-        LRenderer.FLastGestureError := '';
+        LDispatch.Info.Pointer.Kind := npiUnknown;
       end;
 
-      if LObserver <> nil then
+      if AHasPosition then
       begin
-        LObserver.Observe(LControl);
-
-        if (LEvents.ViewRevision = LRevision) and (LInput <> nil) and
-          (LInput <> LControl) then
-        begin
-          LObserver.Observe(LInput);
-        end;
+        LPosition := TControl(ASender).ClientToScreen(APosition);
+        RequireNativeGeneration(LGeneration);
+        LPosition := FControl.Parent.ScreenToClient(LPosition);
+        RequireNativeGeneration(LGeneration);
+        Dec(LPosition.X, FControl.Left);
+        Dec(LPosition.Y, FControl.Top);
+        LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
+        RequireNativeGeneration(LGeneration);
+        LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
+        RequireNativeGeneration(LGeneration);
       end;
-    finally
-      LFrame.Leave;
+
+      if ssLeft in AShift then
+      begin
+        Include(LDispatch.Info.Pointer.Buttons, npbPrimary);
+      end;
+
+      if ssMiddle in AShift then
+      begin
+        Include(LDispatch.Info.Pointer.Buttons, npbAuxiliary);
+      end;
+
+      if ssRight in AShift then
+      begin
+        Include(LDispatch.Info.Pointer.Buttons, npbSecondary);
+      end;
+
+      if ssShift in AShift then
+      begin
+        Include(LDispatch.Info.Pointer.Modifiers, nmShift);
+      end;
+
+      if ssCtrl in AShift then
+      begin
+        Include(LDispatch.Info.Pointer.Modifiers, nmControl);
+      end;
+
+      if ssAlt in AShift then
+      begin
+        Include(LDispatch.Info.Pointer.Modifiers, nmAlt);
+      end;
+
+      if (ssMeta in AShift) or (ssSuper in AShift) then
+      begin
+        Include(LDispatch.Info.Pointer.Modifiers, nmMeta);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if ssAltGr in AShift then
+      begin
+        Include(LDispatch.Info.Pointer.Modifiers, nmAltGraph);
+      end;
+
+      if ATrigger = ntContextMenu then
+      begin
+        Result := DispatchNyxInput(LEvents, FNode, LDispatch);
+        RequireNativeGeneration(LGeneration);
+      end
+      else if ATrigger in [ntPointerDown, ntPointerMove, ntPointerUp] then
+      begin
+        LRenderer := FRenderer;
+        LFrame := LRenderer.FPhysicalFrame;
+        RequireNativeGeneration(LGeneration);
+        LObserver := LRenderer.FCaptureObserver;
+        RequireNativeGeneration(LGeneration);
+        LRevision := LEvents.ViewRevision;
+        RequireNativeGeneration(LGeneration);
+        LControl := FControl;
+        RequireNativeGeneration(LGeneration);
+        LInput := FInput;
+        LOriginID := FNode.ID;
+        RequireNativeGeneration(LGeneration);
+        LCapabilities := [];
+
+        if (ATrigger in [ntPointerDown, ntPointerMove]) and
+          ((LDispatch.Info.Pointer.Buttons <> []) or (ATrigger = ntPointerDown)) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Include(LCapabilities, ngcCapturePointer);
+        end;
+        RequireNativeGeneration(LGeneration);
+
+        if NyxLCLHasPointerCapture(LControl) or NyxLCLHasPointerCapture(LInput) then
+        begin
+          Include(LCapabilities, ngcReleasePointer);
+        end;
+        RequireNativeGeneration(LGeneration);
+        LDecision := NewNyxGestureDecision(LCapabilities);
+        RequireNativeGeneration(LGeneration);
+        LFrame.Enter;
+        RequireNativeGeneration(LGeneration);
+        try
+          DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
+          RequireNativeGeneration(LGeneration);
+          LResult := LDecision.Seal;
+          RequireNativeGeneration(LGeneration);
+
+          if LEvents.ViewRevision <> LRevision then
+          begin
+            RequireNativeGeneration(LGeneration);
+            Exit;
+          end;
+          RequireNativeGeneration(LGeneration);
+          try
+            case LResult.PointerRequest of
+              nprUnchanged:
+                begin
+                  { This dispatch requests no change to native pointer capture. }
+                end;
+              nprCapture:
+                begin
+                  CaptureNyxLCLPointer(LControl);
+                  RequireNativeGeneration(LGeneration);
+                end;
+              nprRelease:
+                begin
+                  ReleaseNyxLCLPointer(LControl);
+                  RequireNativeGeneration(LGeneration);
+                  ReleaseNyxLCLPointer(LInput);
+                  RequireNativeGeneration(LGeneration);
+                end;
+            end;
+          except
+            on ENyxNativeGenerationRetired do raise;
+            on LException: Exception do
+            begin
+              LRenderer.GestureFailed(LOriginID, LException.Message);
+              RequireNativeGeneration(LGeneration);
+              Exit;
+            end;
+          end;
+
+          if LResult.PointerRequest <> nprUnchanged then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LRenderer.FLastGestureError := '';
+          end;
+          RequireNativeGeneration(LGeneration);
+
+          if LObserver <> nil then
+          begin
+            LObserver.Observe(LControl);
+            RequireNativeGeneration(LGeneration);
+
+            if (LEvents.ViewRevision = LRevision) and (LInput <> nil) and
+              (LInput <> LControl) then
+            begin
+              RequireNativeGeneration(LGeneration);
+              LObserver.Observe(LInput);
+              RequireNativeGeneration(LGeneration);
+            end;
+            RequireNativeGeneration(LGeneration);
+          end;
+        finally
+          LFrame.Leave;
+        end;
+        RequireNativeGeneration(LGeneration);
+      end
+      else
+      begin
+        FRenderer.Emit(FNode, LDispatch);
+        RequireNativeGeneration(LGeneration);
+      end;
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        Result := False;
+      end;
     end;
-  end
-  else
-  begin
-    FRenderer.Emit(FNode, LDispatch);
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.DoubleClick(ASender: TObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TNotifyEvent;
   LPosition: TPoint;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].DoubleClick;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender);
-  end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].DoubleClick;
+      RequireNativeGeneration(LGeneration);
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LPosition := TControl(ASender).ScreenToClient(Mouse.CursorPos);
+      RequireNativeGeneration(LGeneration);
+      PointerEvent(ASender, ntDoubleClick, LPosition, True, npbNone, []);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  LPosition := TControl(ASender).ScreenToClient(Mouse.CursorPos);
-  PointerEvent(ASender, ntDoubleClick, LPosition, True, npbNone, []);
 end;
+
 
 procedure TNyxLCLBinding.PointerEnter(ASender: TObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TNotifyEvent;
   LPosition: TPoint;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].Enter;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender);
-  end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].Enter;
+      RequireNativeGeneration(LGeneration);
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LPosition := TControl(ASender).ScreenToClient(Mouse.CursorPos);
+      RequireNativeGeneration(LGeneration);
+      PointerEvent(ASender, ntPointerEnter, LPosition, True, npbNone, []);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  LPosition := TControl(ASender).ScreenToClient(Mouse.CursorPos);
-  PointerEvent(ASender, ntPointerEnter, LPosition, True, npbNone, []);
 end;
+
 
 procedure TNyxLCLBinding.PointerExit(ASender: TObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TNotifyEvent;
   LPosition: TPoint;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].Leave;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender);
-  end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].Leave;
+      RequireNativeGeneration(LGeneration);
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LPosition := TControl(ASender).ScreenToClient(Mouse.CursorPos);
+      RequireNativeGeneration(LGeneration);
+      PointerEvent(ASender, ntPointerExit, LPosition, True, npbNone, []);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  LPosition := TControl(ASender).ScreenToClient(Mouse.CursorPos);
-  PointerEvent(ASender, ntPointerExit, LPosition, True, npbNone, []);
 end;
+
 
 procedure TNyxLCLBinding.PointerDown(ASender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TMouseEvent;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].Down;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender, AButton, AShift, AX, AY);
-  end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].Down;
+      RequireNativeGeneration(LGeneration);
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender, AButton, AShift, AX, AY);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      PointerEvent(ASender, ntPointerDown, Point(AX, AY), True,
+        NativePointerButton(AButton), AShift);
+        RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  PointerEvent(ASender, ntPointerDown, Point(AX, AY), True,
-    NativePointerButton(AButton), AShift);
 end;
+
 
 procedure TNyxLCLBinding.PointerUp(ASender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TMouseEvent;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].Up;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender, AButton, AShift, AX, AY);
-  end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].Up;
+      RequireNativeGeneration(LGeneration);
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender, AButton, AShift, AX, AY);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      PointerEvent(ASender, ntPointerUp, Point(AX, AY), True,
+        NativePointerButton(AButton), AShift);
+        RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  PointerEvent(ASender, ntPointerUp, Point(AX, AY), True,
-    NativePointerButton(AButton), AShift);
 end;
+
 
 procedure TNyxLCLBinding.PointerMove(ASender: TObject; AShift: TShiftState; AX, AY: Integer);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TMouseMoveEvent;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].Move;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender, AShift, AX, AY);
-  end;
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].Move;
+      RequireNativeGeneration(LGeneration);
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender, AShift, AX, AY);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      PointerEvent(ASender, ntPointerMove, Point(AX, AY), True,
+        npbNone, AShift);
+        RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  PointerEvent(ASender, ntPointerMove, Point(AX, AY), True,
-    npbNone, AShift);
 end;
+
 
 procedure TNyxLCLBinding.ContextMenu(ASender: TObject; APosition: TPoint;
   var AHandled: Boolean);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TContextPopupEvent;
+  LMount: INyxCollectionMount;
+  LInput: INyxLCLCollectionCellContextInput;
+  LCommand: INyxCollectionClipboardCommand;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
-  begin
-    Exit;
-  end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPointerHooks[PointerSlot(ASender)].ContextMenu;
-
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender, APosition, AHandled);
-  end;
-
-  if LEvents.ViewRevision <> LRevision then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     AHandled := True;
     Exit;
   end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if not AHandled then
-  begin
-    AHandled := PointerEvent(ASender, ntContextMenu, APosition,
-      (APosition.X >= 0) and (APosition.Y >= 0), npbNone, []);
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      { Capture exact cell/input authority before the first real router getter
+        or previous context callback. The command owns its mount only until
+        default handoff to the existing scheduler; the session never does. }
+      LMount := FCollectionMount;
+
+      if not AHandled and Supports(LMount, INyxLCLCollectionCellContextInput, LInput) then
+      begin
+        LCommand := LInput.BeginCellContext(ASender, APosition);
+        RequireNativeGeneration(LGeneration);
+
+        if (LCommand <> nil) and LCommand.Current then
+        begin
+          LCommand.Prepare;
+          RequireNativeGeneration(LGeneration);
+        end;
+      end;
+
+      if (LCommand <> nil) and not LCommand.DispatchCurrent then
+      begin
+        AHandled := True;
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPointerHooks[PointerSlot(ASender)].ContextMenu;
+      RequireNativeGeneration(LGeneration);
+
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender, APosition, AHandled);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        AHandled := True;
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if (LCommand <> nil) and not LCommand.DispatchCurrent then
+      begin
+        AHandled := True;
+        Exit;
+      end;
+
+      if not AHandled then
+      begin
+        AHandled := PointerEvent(ASender, ntContextMenu, APosition,
+          (APosition.X >= 0) and (APosition.Y >= 0), npbNone, []);
+          RequireNativeGeneration(LGeneration);
+      end;
+
+      if LCommand <> nil then
+      begin
+        LCommand.Complete(not AHandled and LCommand.DispatchCurrent);
+      end;
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        AHandled := True;
+      end;
+    end;
+  finally
+    try
+
+      if LCommand <> nil then
+      begin
+        AHandled := True;
+        LCommand.Retire;
+      end;
+    finally
+      LEnteredFrame.Leave;
+    end;
   end;
 end;
 
-procedure TNyxLCLBinding.Focus(ASender: TObject);
-begin
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode then
+procedure TNyxLCLBinding.Focus(ASender: TObject);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
+begin
+  LGeneration := GenerationLease;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  { LCL owns focus transitions. Repaint only the frame that visualizes that
-    native state; there is no competing Nyx focus or keyboard state machine. }
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if (FInput <> nil) and (FInput.Parent is TNyxLCLSurface) then
-  begin
-    FInput.Parent.Invalidate;
+      if FRenderer.FUpdating or FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      { LCL owns focus transitions. Repaint only the frame that visualizes that
+        native state; there is no competing Nyx focus or keyboard state machine. }
+
+      if (FInput <> nil) and (FInput.Parent is TNyxLCLSurface) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FInput.Parent.Invalidate;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.SplitLayout(ASender: TObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LSplit: TNyxLCLSplitView;
   LIndex: Integer;
 begin
-  LSplit := TNyxLCLSplitView(ASender);
-  for LIndex := 0 to FNode.Count - 1 do
-  begin
-    FRenderer.Layout(FNode.Children[LIndex], 0, 0,
-      LSplit.Panes[LIndex].ClientWidth, LSplit.Panes[LIndex].ClientHeight);
-  end;
-end;
+  LGeneration := GenerationLease;
 
-procedure TNyxLCLBinding.SplitChanged(ASender: TObject);
-begin
-  FRenderer.Emit(FNode, NyxSplitChange(FNode, TNyxLCLSplitView(ASender).State.Position));
-end;
-
-function TNyxLCLBinding.AdmitTabs(const AChange: TNyxTabTransition): Boolean;
-begin
-  Result := False;
-  FHasTabDispatch := False;
-
-  if FRenderer.FUpdating or (AChange.AfterSelection < 0) then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-
-  if FRenderer.FDesignMode then
-  begin
-    Exit(True);
-  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
-    FTabDispatch := FRenderer.FLiveBindings.Edit(FNode, NyxTabValue(
-      TNyxLCLTabHost(FControl).State.Entry(AChange.AfterSelection).SourceReference));
-    FHasTabDispatch := True;
-    FRenderer.FLastBindingError := '';
-    FRenderer.FLastBindingFailure := nbfNone;
-    Result := True;
-  except
-    on LException: ENyxStateNotification do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+    try
+
+      LSplit := TNyxLCLSplitView(ASender);
+      RequireNativeGeneration(LGeneration);
+      for LIndex := 0 to FNode.Count - 1 do
+      begin
+        RequireNativeGeneration(LGeneration);
+        FRenderer.Layout(FNode.Children[LIndex], 0, 0,
+          LSplit.Panes[LIndex].ClientWidth, LSplit.Panes[LIndex].ClientHeight);
+          RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
     end;
-    on LException: Exception do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message, nbfRejected, False);
-    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
+
+procedure TNyxLCLBinding.SplitChanged(ASender: TObject);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
+begin
+  LGeneration := GenerationLease;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      FRenderer.Emit(FNode, NyxSplitChange(FNode, TNyxLCLSplitView(ASender).State.Position));
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
+end;
+
+
+function TNyxLCLBinding.AdmitTabs(const AChange: TNyxTabTransition): Boolean;
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
+begin
+  LGeneration := GenerationLease;
+  Result := False;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      Result := False;
+      FHasTabDispatch := False;
+
+      if FRenderer.FUpdating or (AChange.AfterSelection < 0) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if FRenderer.FDesignMode then
+      begin
+        Exit(True);
+      end;
+      try
+        FTabDispatch := FRenderer.FLiveBindings.Edit(FNode, NyxTabValue(
+          TNyxLCLTabHost(FControl).State.Entry(AChange.AfterSelection).SourceReference));
+          RequireNativeGeneration(LGeneration);
+        FHasTabDispatch := True;
+        FRenderer.FLastBindingError := '';
+        FRenderer.FLastBindingFailure := nbfNone;
+        Result := True;
+      except
+        on ENyxNativeGenerationRetired do raise;
+        on LException: ENyxStateNotification do
+        begin
+          { An old notification may have accepted a successor before raising.
+            Its diagnostic belongs only to the original entered generation. }
+          RequireNativeGeneration(LGeneration);
+          FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+          RequireNativeGeneration(LGeneration);
+        end;
+        on LException: Exception do
+        begin
+          { An old notification may have accepted a successor before raising.
+            Its diagnostic belongs only to the original entered generation. }
+          RequireNativeGeneration(LGeneration);
+          FRenderer.BindingFailed(FNode, LException.Message, nbfRejected, False);
+          RequireNativeGeneration(LGeneration);
+        end;
+      end;
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        Result := False;
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
+end;
+
 
 procedure TNyxLCLBinding.TabsChanged(const AChange: TNyxTabTransition);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LDispatch: TNyxDispatch;
 begin
+  LGeneration := GenerationLease;
 
-  if FHasTabDispatch then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
-    LDispatch := FTabDispatch;
-    FHasTabDispatch := False;
-    FTabDispatch := Default(TNyxDispatch);
-    FRenderer.Emit(FNode, LDispatch);
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      if FHasTabDispatch then
+      begin
+        LDispatch := FTabDispatch;
+        FHasTabDispatch := False;
+        FTabDispatch := Default(TNyxDispatch);
+        RequireNativeGeneration(LGeneration);
+        FRenderer.Emit(FNode, LDispatch);
+        RequireNativeGeneration(LGeneration);
+      end;
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
 
+
 procedure TNyxLCLBinding.Click(ASender: TObject);
+begin
+  PerformClick(ASender);
+end;
+
+function TNyxLCLBinding.PerformClick(ASender: TObject): Boolean;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LDispatch: TNyxDispatch;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TNotifyEvent;
 begin
+  Result := False;
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode then
-  begin
-
-    if not FRenderer.FUpdating and Assigned(FRenderer.FOnEvent) then
-    begin
-      FRenderer.FOnEvent(FNode, NyxDesignEvent(FNode, ntDesignSelect));
-    end;
-    { A designer selection never calls a creator's application click hook or
-      a live binding action. Native editable controls keep their own defaults. }
-    Exit;
-  end;
-  { Native accessibility messages can arrive during a synchronizing layout.
-    A creator's callback is application behavior too; refuse before invoking it. }
-
-  if FRenderer.FUpdating then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPreviousClick;
-
-  if (ASender = FInput) and (FInput <> FControl) then
-  begin
-    LPrevious := FPreviousInputClick;
-  end;
-
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender);
-  end;
-
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    { A custom callback may replace/dispose this view and its binding. Retain
-      only the router above and never read Self's borrowed fields afterward. }
-    Exit;
-  end;
-
-  if FRenderer.FUpdating then
-  begin
-    Exit;
-  end;
-  { General click subscriptions are opt-in. Older global callbacks retain their
-    command/named-click behavior, and ordinary checkbox edits still emit once. }
-
-  if not NyxHasLegacyClick(FNode) and not FRenderer.FEvents.HasSubscribers(ntClick) and
-    (FNode.Prop(NyxAttributeName(atAction)) = '') then
-  begin
-    Exit;
-  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
-    LDispatch := FRenderer.FLiveBindings.Dispatch(FNode, ntClick);
-    FRenderer.FLastBindingError := '';
-    FRenderer.FLastBindingFailure := nbfNone;
-  except
-    on LException: ENyxStateNotification do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
-      Exit;
-    end;
-    on LException: Exception do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message, nbfRejected,
-          not NyxIsDisclosureHeader(FNode));
-      Exit;
-    end;
-  end;
+    try
 
-  FRenderer.Emit(FNode, LDispatch);
+      if FRenderer.FDesignMode then
+      begin
+
+        if not FRenderer.FUpdating and Assigned(FRenderer.FOnEvent) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          FRenderer.FOnEvent(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+        { A designer selection never calls a creator's application click hook or
+          a live binding action. Native editable controls keep their own defaults. }
+        Exit;
+      end;
+      { Native accessibility messages can arrive during a synchronizing layout.
+        A creator's callback is application behavior too; refuse before invoking it. }
+
+      if FRenderer.FUpdating then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPreviousClick;
+
+      if (ASender = FInput) and (FInput <> FControl) then
+      begin
+        LPrevious := FPreviousInputClick;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { A custom callback may replace/dispose this view and its binding. Retain
+          only the router above and never read Self's borrowed fields afterward. }
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if FRenderer.FUpdating then
+      begin
+        Exit;
+      end;
+      { General click subscriptions are opt-in. Older global callbacks retain their
+        command/named-click behavior, and ordinary checkbox edits still emit once. }
+
+      if not NyxHasLegacyClick(FNode) and not FRenderer.FEvents.HasSubscribers(ntClick) and
+        (FNode.Prop(NyxAttributeName(atAction)) = '') then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Result := True;
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      try
+        LDispatch := FRenderer.FLiveBindings.Dispatch(FNode, ntClick);
+        RequireNativeGeneration(LGeneration);
+        FRenderer.FLastBindingError := '';
+        FRenderer.FLastBindingFailure := nbfNone;
+      except
+        on ENyxNativeGenerationRetired do raise;
+        on LException: ENyxStateNotification do
+        begin
+          { An old notification may have accepted a successor before raising.
+            Its diagnostic belongs only to the original entered generation. }
+          RequireNativeGeneration(LGeneration);
+          FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        on LException: Exception do
+        begin
+          { An old notification may have accepted a successor before raising.
+            Its diagnostic belongs only to the original entered generation. }
+          RequireNativeGeneration(LGeneration);
+          FRenderer.BindingFailed(FNode, LException.Message, nbfRejected,
+              not NyxIsDisclosureHeader(FNode));
+              RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+      end;
+
+      FRenderer.Emit(FNode, LDispatch);
+      RequireNativeGeneration(LGeneration);
+      Result := True;
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
 end;
+
 
 function TNyxLCLRenderer.TextSelectionFor(const AID: TNyxText): TNyxTextSelection;
 var
@@ -7802,6 +11174,8 @@ end;
 procedure TNyxLCLRenderer.EditingChanged(const AOriginID: TNyxText;
   const AEditing: TNyxEditingSnapshot);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LIndex: Integer;
   LBinding: TNyxLCLBinding;
   LEvents: INyxEvents;
@@ -7809,78 +11183,119 @@ var
   LTrigger: TNyxTrigger;
   LDispatch: TNyxDispatch;
 begin
-  LEvents := FEvents;
-  LRevision := LEvents.ViewRevision;
+  LGeneration := FGeneration;
 
-  if FUpdating or FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LBinding := nil;
-  for LIndex := 0 to High(FBindings) do
-  begin
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-    if FBindings[LIndex].FNode.ID = AOriginID then
-    begin
-      LBinding := FBindings[LIndex];
-      Break;
-    end;
-  end;
+      LEvents := FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
 
-  if (LBinding = nil) or not NyxSupportsTextInput(LBinding.FNode) or
-    not NyxInteractionPolicy(LBinding.FNode).CanIssueCommand then
-  begin
-    Exit;
-  end;
-  case AEditing.Phase of
-    nepCompositionStart:
+      if FUpdating or FDesignMode then
+      begin
+        Exit;
+      end;
+      LBinding := nil;
+      RequireNativeGeneration(LGeneration);
+      for LIndex := 0 to High(FBindings) do
       begin
 
-        if not NyxInteractionPolicy(LBinding.FNode).CanEditValue then
+        if FBindings[LIndex].FNode.ID = AOriginID then
+        begin
+          LBinding := FBindings[LIndex];
+          RequireNativeGeneration(LGeneration);
+          Break;
+        end;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if (LBinding = nil) or not NyxSupportsTextInput(LBinding.FNode) or
+        not NyxInteractionPolicy(LBinding.FNode).CanIssueCommand then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      case AEditing.Phase of
+        nepCompositionStart:
+          begin
+
+            if not NyxInteractionPolicy(LBinding.FNode).CanEditValue then
+            begin
+              RequireNativeGeneration(LGeneration);
+              Exit;
+            end;
+            RequireNativeGeneration(LGeneration);
+            LBinding.FComposing := True;
+            LTrigger := ntCompositionStart;
+          end;
+        nepCompositionUpdate:
+          begin
+            LTrigger := ntCompositionUpdate;
+          end;
+        nepCompositionEnd:
+          begin
+            LBinding.FComposing := False;
+            LBinding.FEditingContext := NyxEditingSnapshot(nepInput,
+              AEditing.Intent, AEditing.Text, AEditing.Data, AEditing.HasData,
+              AEditing.Selection, False, False);
+              RequireNativeGeneration(LGeneration);
+            LBinding.Change(LBinding.FInput);
+            RequireNativeGeneration(LGeneration);
+
+            if LEvents.ViewRevision <> LRevision then
+            begin
+              RequireNativeGeneration(LGeneration);
+              Exit;
+            end;
+            RequireNativeGeneration(LGeneration);
+            LTrigger := ntCompositionEnd;
+          end;
+        nepSelectionChange:
+          begin
+            LTrigger := ntTextSelectionChange;
+          end;
+      else
         begin
           Exit;
         end;
-        LBinding.FComposing := True;
-        LTrigger := ntCompositionStart;
       end;
-    nepCompositionUpdate:
+      LDispatch := FLiveBindings.Signal(LBinding.FNode, LTrigger);
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasEditing := True;
+      LDispatch.Info.Editing := AEditing;
+      QueueContent;
+      RequireNativeGeneration(LGeneration);
+      { Last borrowed renderer/control access. The observer keeps its own producer
+        alive, while navigation revokes its handles and pending final admission. }
+      Emit(LBinding.FNode, LDispatch);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
       begin
-        LTrigger := ntCompositionUpdate;
+        { The original generation retired; only retained locals may unwind. }
       end;
-    nepCompositionEnd:
-      begin
-        LBinding.FComposing := False;
-        LBinding.FEditingContext := NyxEditingSnapshot(nepInput,
-          AEditing.Intent, AEditing.Text, AEditing.Data, AEditing.HasData,
-          AEditing.Selection, False, False);
-        LBinding.Change(LBinding.FInput);
-
-        if LEvents.ViewRevision <> LRevision then
-        begin
-          Exit;
-        end;
-        LTrigger := ntCompositionEnd;
-      end;
-    nepSelectionChange:
-      begin
-        LTrigger := ntTextSelectionChange;
-      end;
-  else
-    begin
-      Exit;
     end;
+  finally
+    LEnteredFrame.Leave;
   end;
-  LDispatch := FLiveBindings.Signal(LBinding.FNode, LTrigger);
-  LDispatch.Info.HasEditing := True;
-  LDispatch.Info.Editing := AEditing;
-  QueueContent;
-  { Last borrowed renderer/control access. The observer keeps its own producer
-    alive, while navigation revokes its handles and pending final admission. }
-  Emit(LBinding.FNode, LDispatch);
 end;
+
 
 procedure TNyxLCLBinding.Change(ASender: TObject);
 var
+  LSnapshotObject: TNativeSignalSnapshot;
+  LSnapshotLease: IInterface;
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LValue: TNyxText;
   LDispatch: TNyxDispatch;
   LProposal: TNyxDispatch;
@@ -7889,158 +11304,236 @@ var
   LConsumed: Boolean;
   LEditing: TNyxEditingSnapshot;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FUpdating then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-
-  if FComposing then
-  begin
-    { The IME owns its draft until the genuine end notification is drained at
-      UI idle. Do not admit or normalize individual committed WM_CHAR units. }
-    Exit;
-  end;
-  LEditing := FEditingContext;
-  FEditingContext := Default(TNyxEditingSnapshot);
-
-  if not LEditing.Defined and NyxSupportsTextInput(FNode) then
-  begin
-    LEditing := CaptureNyxLCLEditing(TWinControl(FInput), nepInput, False);
-  end;
-
-  if not NyxInteractionPolicy(FNode).CanEditValue then
-  begin
-    { Native selectors lacking ReadOnly may propose a changed physical value.
-      Restore before any callback/admission; editable text uses the real LCL
-      ReadOnly flag as well. Programmatic state refresh remains independent. }
-    FRenderer.FForceValues := True;
-    try
-      FRenderer.Sync;
-    finally
-      FRenderer.FForceValues := False;
-    end;
-    Exit;
-  end;
-
-  if FDeferredValue and not FCommitting then
-  begin
-    { A numeric/clock draft such as '-' or '08:30:00.1' is meaningful while typing.
-      Lazarus's editing-complete event supplies the admission boundary, matching
-      browser commit behavior instead of restoring a value on every keystroke. }
-    Exit;
-  end;
-  LValue := '';
-
-  if FInput is TMemo then
-  begin
-    LValue := StringReplace(TMemo(FInput).Text, #13#10, #10, [rfReplaceAll]);
-  end
-  else if FInput is TCustomEdit then
-  begin
-    LValue := TEdit(FInput).Text;
-  end
-  else if FInput is TComboBox then
-  begin
-    LValue := TComboBox(FInput).Text;
-  end
-  else if FInput is TCheckBox then
-  begin
-    LValue := 'false';
-
-    if TCheckBox(FInput).Checked then
-    begin
-      LValue := 'true';
-    end;
-  end
-  else if FInput is TRadioButton then
-  begin
-    LValue := 'false';
-
-    if TRadioButton(FInput).Checked then
-    begin
-      LValue := 'true';
-    end;
-  end
-  else if FInput is TNyxLCLSlider then
-  begin
-    LValue := TNyxLCLSlider(FInput).NumericValue;
-  end
-  else if FInput is TTrackBar then
-  begin
-    LValue := IntToStr(TTrackBar(FInput).Position);
-  end;
-
-  if FRenderer.FDesignMode then
-  begin
-    { This is a realized proposal, not a store/application mutation. The host
-      owns admission and can restore a refused value through ordinary Sync. }
-    FNode.SetProp('value', LValue);
-
-    if Assigned(FRenderer.FOnEvent) then
-    begin
-      FRenderer.FOnEvent(FNode, NyxDesignEvent(FNode, ntDesignValue));
-    end;
-    Exit;
-  end;
-  { Win32 may deliver a second change after a setter/restoration has returned.
-    It already contains the accepted value. Ignore it so a rejected edit cannot
-    emit a synthetic success or clear its diagnostic after the update guard. }
-
-  if LValue = FNode.Prop('value') then
-  begin
-    Exit;
-  end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-
-  if NyxSupportsTextInput(FNode) and LEvents.HasSubscribers(ntBeforeTextInput) then
-  begin
-    LProposal := FRenderer.FLiveBindings.ProposeText(FNode, LValue);
-    LProposal.Info.HasEditing := LEditing.Defined;
-    LProposal.Info.Editing := LEditing;
-    LConsumed := DispatchNyxInput(LEvents, FNode, LProposal);
-
-    if LEvents.ViewRevision <> LRevision then
-    begin
-      Exit;
-    end;
-
-    if LConsumed then
-    begin
-      FRenderer.FForceValues := True;
-      try
-        FRenderer.Sync;
-      finally
-        FRenderer.FForceValues := False;
-      end;
-      LProposal.Info.DefaultPrevented := True;
-      DispatchNyxTextResult(LEvents, FNode, LProposal,
-        FRenderer.FLiveBindings.SignalSnapshot);
-      Exit;
-    end;
-  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
-    LDispatch := FRenderer.FLiveBindings.Edit(FNode, LValue);
-    LDispatch.Info.HasEditing := LEditing.Defined;
-    LDispatch.Info.Editing := LEditing;
-    FRenderer.FLastBindingError := '';
-    FRenderer.FLastBindingFailure := nbfNone;
-  except
-    on LException: ENyxStateNotification do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
-      Exit;
-    end;
-    on LException: Exception do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message);
-      Exit;
-    end;
-  end;
+    try
 
-  FRenderer.Emit(FNode, LDispatch);
+      if FRenderer.FUpdating then
+      begin
+        Exit;
+      end;
+
+      if FComposing then
+      begin
+        { The IME owns its draft until the genuine end notification is drained at
+          UI idle. Do not admit or normalize individual committed WM_CHAR units. }
+        Exit;
+      end;
+      LEditing := FEditingContext;
+      FEditingContext := Default(TNyxEditingSnapshot);
+      RequireNativeGeneration(LGeneration);
+
+      if not LEditing.Defined and NyxSupportsTextInput(FNode) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LEditing := CaptureNyxLCLEditing(TWinControl(FInput), nepInput, False);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if not NyxInteractionPolicy(FNode).CanEditValue then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { Native selectors lacking ReadOnly may propose a changed physical value.
+          Restore before any callback/admission; editable text uses the real LCL
+          ReadOnly flag as well. Programmatic state refresh remains independent. }
+        FRenderer.FForceValues := True;
+        try
+          FRenderer.Sync;
+          RequireNativeGeneration(LGeneration);
+        finally
+
+          if NativeGenerationCurrent(LGeneration) then
+          begin
+            FRenderer.FForceValues := False;
+          end;
+        end;
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if FDeferredValue and not FCommitting then
+      begin
+        { A numeric/clock draft such as '-' or '08:30:00.1' is meaningful while typing.
+          Lazarus's editing-complete event supplies the admission boundary, matching
+          browser commit behavior instead of restoring a value on every keystroke. }
+        Exit;
+      end;
+      LValue := '';
+
+      if FInput is TMemo then
+      begin
+        LValue := StringReplace(TMemo(FInput).Text, #13#10, #10, [rfReplaceAll]);
+        RequireNativeGeneration(LGeneration);
+      end
+      else if FInput is TCustomEdit then
+      begin
+        LValue := TEdit(FInput).Text;
+        RequireNativeGeneration(LGeneration);
+      end
+      else if FInput is TComboBox then
+      begin
+        LValue := TComboBox(FInput).Text;
+        RequireNativeGeneration(LGeneration);
+      end
+      else if FInput is TCheckBox then
+      begin
+        LValue := 'false';
+
+        if TCheckBox(FInput).Checked then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LValue := 'true';
+        end;
+        RequireNativeGeneration(LGeneration);
+      end
+      else if FInput is TRadioButton then
+      begin
+        LValue := 'false';
+
+        if TRadioButton(FInput).Checked then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LValue := 'true';
+        end;
+        RequireNativeGeneration(LGeneration);
+      end
+      else if FInput is TNyxLCLSlider then
+      begin
+        LValue := TNyxLCLSlider(FInput).NumericValue;
+        RequireNativeGeneration(LGeneration);
+      end
+      else if FInput is TTrackBar then
+      begin
+        LValue := IntToStr(TTrackBar(FInput).Position);
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if FRenderer.FDesignMode then
+      begin
+        { This is a realized proposal, not a store/application mutation. The host
+          owns admission and can restore a refused value through ordinary Sync. }
+        FNode.SetProp('value', LValue);
+        RequireNativeGeneration(LGeneration);
+
+        if Assigned(FRenderer.FOnEvent) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          FRenderer.FOnEvent(FNode, NyxDesignEvent(FNode, ntDesignValue));
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      { Win32 may deliver a second change after a setter/restoration has returned.
+        It already contains the accepted value. Ignore it so a rejected edit cannot
+        emit a synthetic success or clear its diagnostic after the update guard. }
+
+      if LValue = FNode.Prop('value') then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LSnapshotObject := TNativeSignalSnapshot.Create(LGeneration, LEvents, LRevision);
+      LSnapshotLease := LSnapshotObject;
+      RequireNativeGeneration(LGeneration);
+
+      if NyxSupportsTextInput(FNode) and LEvents.HasSubscribers(ntBeforeTextInput) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LProposal := FRenderer.FLiveBindings.ProposeText(FNode, LValue);
+        RequireNativeGeneration(LGeneration);
+        LProposal.Info.HasEditing := LEditing.Defined;
+        RequireNativeGeneration(LGeneration);
+        LProposal.Info.Editing := LEditing;
+        LConsumed := DispatchNyxInput(LEvents, FNode, LProposal);
+        RequireNativeGeneration(LGeneration);
+
+        if LEvents.ViewRevision <> LRevision then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+
+        if LConsumed then
+        begin
+          FRenderer.FForceValues := True;
+          try
+            FRenderer.Sync;
+            RequireNativeGeneration(LGeneration);
+          finally
+
+            if NativeGenerationCurrent(LGeneration) then
+          begin
+            FRenderer.FForceValues := False;
+          end;
+          end;
+          RequireNativeGeneration(LGeneration);
+          LProposal.Info.DefaultPrevented := True;
+          DispatchNyxTextResult(LEvents, FNode, LProposal,
+            LSnapshotObject.Read);
+            RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+      end;
+      RequireNativeGeneration(LGeneration);
+      try
+        LDispatch := FRenderer.FLiveBindings.Edit(FNode, LValue);
+        RequireNativeGeneration(LGeneration);
+        LDispatch.Info.HasEditing := LEditing.Defined;
+        RequireNativeGeneration(LGeneration);
+        LDispatch.Info.Editing := LEditing;
+        FRenderer.FLastBindingError := '';
+        FRenderer.FLastBindingFailure := nbfNone;
+      except
+        on ENyxNativeGenerationRetired do raise;
+        on LException: ENyxStateNotification do
+        begin
+          { An old notification may have accepted a successor before raising.
+            Its diagnostic belongs only to the original entered generation. }
+          RequireNativeGeneration(LGeneration);
+          FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        on LException: Exception do
+        begin
+          { An old notification may have accepted a successor before raising.
+            Its diagnostic belongs only to the original entered generation. }
+          RequireNativeGeneration(LGeneration);
+          FRenderer.BindingFailed(FNode, LException.Message);
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+      end;
+
+      FRenderer.Emit(FNode, LDispatch);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
 end;
+
 
 function TNyxLCLRenderer.EmitNamed(const AOriginID: TNyxText;
   const AName: TNyxEventRef; const APayload: TNyxDataValue;
@@ -8070,22 +11563,52 @@ end;
 procedure TNyxLCLBinding.CollectionSelectionChanged(
   const ABefore, AAfter: INyxCollectionSelection);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LDispatch: TNyxDispatch;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntSelectionChange);
-  LDispatch.Info.HasCollectionSelection := True;
-  LDispatch.Info.SelectionBefore := ABefore.Snapshot;
-  LDispatch.Info.Selection := AAfter.Snapshot;
-  FRenderer.Emit(FNode, LDispatch);
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      if FRenderer.FUpdating or FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntSelectionChange);
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasCollectionSelection := True;
+      LDispatch.Info.SelectionBefore := ABefore.Snapshot;
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.Selection := AAfter.Snapshot;
+      RequireNativeGeneration(LGeneration);
+      FRenderer.Emit(FNode, LDispatch);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
 end;
+
 
 procedure TNyxLCLRenderer.Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
 var
+  LSnapshotObject: TNativeSignalSnapshot;
+  LSnapshotLease: IInterface;
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LInfo: TNyxEventInfo;
   LLegacy: TNyxLCLEvent;
@@ -8095,206 +11618,470 @@ var
   LIndex: Integer;
   LPager: INyxCollectionPager;
 begin
+  LGeneration := FGeneration;
 
-  if FDesignMode or FUpdating or FPublishingContent or (ADispatch.EventName = '') then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FEvents;
-  LLegacy := FOnEvent;
-  LLegacyClick := NyxHasLegacyClick(AOrigin);
-  LRevision := LEvents.ViewRevision;
-  LContentGuard := FContentGuard;
-  LContentGuard.Enter;
-  AOrigin.AcquireReference;
-  ADispatch.Source.AcquireReference;
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
   try
-    for LIndex := 0 to High(FBindings) do
-    begin
+    try
 
-      if FBindings[LIndex].FNode = ADispatch.Source then
+      if FDesignMode or FUpdating or FPublishingContent or (ADispatch.EventName = '') then
       begin
-        LPager := FBindings[LIndex].FCollectionPager;
-        Break;
-      end;
-    end;
-
-    if LPager <> nil then
-    begin
-      LPager.ApplyEvent(ADispatch.Info);
-
-      if LEvents.ViewRevision <> LRevision then
-      begin
+        RequireNativeGeneration(LGeneration);
         Exit;
       end;
-    end;
-    { Freeze the selected record before the router captures queued callbacks. }
-    LInfo := EnrichNyxCoordinatorEvent(FCoordinatorMounts, ADispatch.Info);
+      RequireNativeGeneration(LGeneration);
+      LEvents := FEvents;
+      RequireNativeGeneration(LGeneration);
+      LLegacy := FOnEvent;
+      LLegacyClick := NyxHasLegacyClick(AOrigin);
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LSnapshotObject := TNativeSignalSnapshot.Create(LGeneration, LEvents, LRevision);
+      LSnapshotLease := LSnapshotObject;
+      RequireNativeGeneration(LGeneration);
+      LContentGuard := FContentGuard;
+      RequireNativeGeneration(LGeneration);
+      LContentGuard.Enter;
+      RequireNativeGeneration(LGeneration);
+      AOrigin.AcquireReference;
+      RequireNativeGeneration(LGeneration);
+      ADispatch.Source.AcquireReference;
+      RequireNativeGeneration(LGeneration);
+      try
+        for LIndex := 0 to High(FBindings) do
+        begin
 
-    if LEvents.ViewRevision <> LRevision then
-    begin
-      Exit;
-    end;
-    LEvents.Dispatch(LInfo, AOrigin.DesignID, ADispatch.Source.DesignID);
+          if FBindings[LIndex].FNode = ADispatch.Source then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LPager := FBindings[LIndex].FCollectionPager;
+            RequireNativeGeneration(LGeneration);
+            Break;
+          end;
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
 
-    if ADispatch.Info.HasTextEdit and (LEvents.ViewRevision = LRevision) then
-    begin
-      DispatchNyxTextResult(LEvents, AOrigin, ADispatch, FLiveBindings.SignalSnapshot);
-    end;
+        if LPager <> nil then
+        begin
+          LPager.ApplyEvent(ADispatch.Info);
+          RequireNativeGeneration(LGeneration);
 
-    if Assigned(LLegacy) and (ADispatch.Info.Trigger in [ntClick, ntChange, ntNamed]) and
-      ((ADispatch.Info.Trigger <> ntClick) or LLegacyClick) and
-      (LEvents.ViewRevision = LRevision) then
-    begin
-      LLegacy(ADispatch.Source, LInfo);
+          if LEvents.ViewRevision <> LRevision then
+          begin
+            RequireNativeGeneration(LGeneration);
+            Exit;
+          end;
+          RequireNativeGeneration(LGeneration);
+        end;
+        { Freeze the selected record before the router captures queued callbacks. }
+        LInfo := EnrichNyxCoordinatorEvent(FCoordinatorMounts, ADispatch.Info);
+        RequireNativeGeneration(LGeneration);
+
+        if LEvents.ViewRevision <> LRevision then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        LEvents.Dispatch(LInfo, AOrigin.DesignID, ADispatch.Source.DesignID);
+        RequireNativeGeneration(LGeneration);
+
+        if ADispatch.Info.HasTextEdit and (LEvents.ViewRevision = LRevision) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          DispatchNyxTextResult(LEvents, AOrigin, ADispatch, LSnapshotObject.Read);
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+
+        if Assigned(LLegacy) and (ADispatch.Info.Trigger in [ntClick, ntChange, ntNamed]) and
+          ((ADispatch.Info.Trigger <> ntClick) or LLegacyClick) and
+          (LEvents.ViewRevision = LRevision) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LLegacy(ADispatch.Source, LInfo);
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+      finally
+        ADispatch.Source.ReleaseReference;
+        AOrigin.ReleaseReference;
+        LContentGuard.Leave;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
     end;
   finally
-    ADispatch.Source.ReleaseReference;
-    AOrigin.ReleaseReference;
-    LContentGuard.Leave;
+    LEnteredFrame.Leave;
   end;
 end;
 
 { Opt-in NYX_FOCUS_TRACE samples before dispatch, which can retire this binding.
   Ordinary builds contain no diagnostic output or additional focus operation. }
+
+
 procedure TNyxLCLBinding.Enter(ASender: TObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LChanged: Boolean;
 begin
-  {$ifdef NYX_FOCUS_TRACE}
-  WriteLn('FOCUS logical enter ', FNode.ID, ' before=', FHasFocus,
-    ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
-  {$endif}
-  LChanged := not FHasFocus;
-  FHasFocus := True;
+  LGeneration := GenerationLease;
 
-  if not FRenderer.FUpdating and
-    not FRenderer.FFocusReplay.Preserves(FNode.ID) then
-  begin
-    { Native Tab assigns focus without scrolling nested ordinary containers.
-      Reveal before user callbacks, so their later focus/scroll choice wins.
-      Transactional replay and explicit viewport-preserving focus stay neutral. }
-    FRenderer.Reveal(FNode.ID, niRuntime);
-  end;
-
-  if FRenderer.FDesignMode or FRenderer.FUpdating then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  Focus(ASender);
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(FPreviousEnter) then
-  begin
-    FPreviousEnter(ASender);
-  end;
+      if FFocusControl is TNyxCollectionStringGrid then
+      begin
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
-  end;
+        if TNyxCollectionStringGrid(FFocusControl).ColumnTransitionActive then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
 
-  if LChanged and not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterEnter) then
-  begin
-    FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterEnter));
+        if TNyxCollectionStringGrid(FFocusControl).HasColumnComposite then
+        begin
+          RequireNativeGeneration(LGeneration);
+          ObserveFocus(ntAfterEnter);
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+      {$ifdef NYX_FOCUS_TRACE}
+      WriteLn('FOCUS logical enter ', FNode.ID, ' before=', FHasFocus,
+        ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
+                  RequireNativeGeneration(LGeneration);
+      {$endif}
+      LChanged := not FHasFocus;
+      FHasFocus := True;
+
+      if not FRenderer.FUpdating and
+        not FRenderer.FFocusReplay.Preserves(FNode.ID) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { Native Tab assigns focus without scrolling nested ordinary containers.
+          Reveal before user callbacks, so their later focus/scroll choice wins.
+          Transactional replay and explicit viewport-preserving focus stay neutral. }
+        FRenderer.Reveal(FNode.ID, niRuntime);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if FRenderer.FDesignMode or FRenderer.FUpdating then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      Focus(ASender);
+      RequireNativeGeneration(LGeneration);
+
+      if Assigned(FPreviousEnter) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FPreviousEnter(ASender);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LChanged and not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterEnter) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterEnter));
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.Leave(ASender: TObject);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LIndex: Integer;
   LChanged: Boolean;
 begin
-  {$ifdef NYX_FOCUS_TRACE}
-  WriteLn('FOCUS logical exit ', FNode.ID, ' before=', FHasFocus,
-    ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
-  {$endif}
-  LChanged := FHasFocus;
-  FHasFocus := False;
-  for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
-  begin
-    FPressedKeys[LIndex] := False;
-  end;
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode or FRenderer.FUpdating then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  Focus(ASender);
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(FPreviousExit) then
-  begin
-    FPreviousExit(ASender);
-  end;
+      if FFocusControl is TNyxCollectionStringGrid then
+      begin
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
-  end;
+        if TNyxCollectionStringGrid(FFocusControl).ColumnTransitionActive then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
 
-  if LChanged and not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterExit) then
-  begin
-    FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterExit));
+        if TNyxCollectionStringGrid(FFocusControl).HasColumnComposite then
+        begin
+          RequireNativeGeneration(LGeneration);
+          ObserveFocus(ntAfterExit);
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+      {$ifdef NYX_FOCUS_TRACE}
+      WriteLn('FOCUS logical exit ', FNode.ID, ' before=', FHasFocus,
+        ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
+                  RequireNativeGeneration(LGeneration);
+      {$endif}
+      LChanged := FHasFocus;
+      FHasFocus := False;
+      for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
+      begin
+        FPressedKeys[LIndex] := False;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if FRenderer.FDesignMode or FRenderer.FUpdating then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      Focus(ASender);
+      RequireNativeGeneration(LGeneration);
+
+      if Assigned(FPreviousExit) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FPreviousExit(ASender);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LChanged and not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterExit) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterExit));
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.ObserveFocus(ATrigger: TNyxTrigger);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEntered: Boolean;
+  LActualFocus: Boolean;
   LIndex: Integer;
+  LComposite: Boolean;
+  LEvents: INyxEvents;
+  LRevision: Integer;
+  LPrevious: TNotifyEvent;
 begin
-  LEntered := ATrigger = ntAfterEnter;
-  {$ifdef NYX_FOCUS_TRACE}
-  WriteLn('FOCUS native ', FNode.ID, ' enter=', LEntered, ' before=', FHasFocus,
-    ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
-  {$endif}
+  LGeneration := GenerationLease;
 
-  if (FFocusControl = nil) or (FFocusControl.Focused <> LEntered) then
-  begin
-    { Native/default handling may have already redirected or restored focus.
-      LCL also reaffirms the active editor with a synthetic kill/set pair whose
-      kill message names that same editor as the next target. Only the admitted
-      keyboard surface's actual post-handler focus may change our baseline;
-      otherwise that stale exit would fabricate a second returning callback.
-      Focused resolves widgetset-owned inner handles through LCL, preserving
-      composite controls without assuming a Win32 HWND or disturbing focus. }
-    Exit;
-  end;
-
-  if FHasFocus = LEntered then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  FHasFocus := LEntered;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if not LEntered then
-  begin
-    for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
-    begin
-      FPressedKeys[LIndex] := False;
+      LEntered := ATrigger = ntAfterEnter;
+      {$ifdef NYX_FOCUS_TRACE}
+      WriteLn('FOCUS native ', FNode.ID, ' enter=', LEntered, ' before=', FHasFocus,
+        ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
+                  RequireNativeGeneration(LGeneration);
+      {$endif}
+
+      if (FFocusControl is TNyxCollectionStringGrid) and
+        TNyxCollectionStringGrid(FFocusControl).ColumnTransitionActive then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LActualFocus := (FFocusControl <> nil) and FFocusControl.Focused;
+      RequireNativeGeneration(LGeneration);
+      LComposite := (FFocusControl is TNyxCollectionStringGrid) and
+        TNyxCollectionStringGrid(FFocusControl).HasColumnComposite;
+        RequireNativeGeneration(LGeneration);
+
+      if LComposite then
+      begin
+        { Crossing between a middle editor and an owned pinned editor stays inside
+          ONE logical Nyx control. Native child focus must not fabricate Exit/Enter. }
+        LActualFocus := TNyxCollectionStringGrid(FFocusControl).HasOwnedColumnFocus;
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if (FFocusControl = nil) or (LActualFocus <> LEntered) then
+      begin
+        { Native/default handling may have already redirected or restored focus.
+          LCL also reaffirms the active editor with a synthetic kill/set pair whose
+          kill message names that same editor as the next target. Only the admitted
+          keyboard surface's actual post-handler focus may change our baseline;
+          otherwise that stale exit would fabricate a second returning callback.
+          Focused resolves widgetset-owned inner handles through LCL, preserving
+          composite controls without assuming a Win32 HWND or disturbing focus. }
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if FHasFocus = LEntered then
+      begin
+        Exit;
+      end;
+      FHasFocus := LEntered;
+
+      if not LEntered then
+      begin
+        for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
+        begin
+          FPressedKeys[LIndex] := False;
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if FRenderer.FDesignMode or FRenderer.FUpdating then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+
+      if LComposite and LEntered and
+        not FRenderer.FFocusReplay.Preserves(FNode.ID) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FRenderer.Reveal(FNode.ID, niRuntime);
+        RequireNativeGeneration(LGeneration);
+
+        if LEvents.ViewRevision <> LRevision then
+        begin
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+      Focus(FFocusControl);
+      RequireNativeGeneration(LGeneration);
+
+      if LComposite then
+      begin
+        LPrevious := FPreviousExit;
+
+        if LEntered then
+        begin
+          LPrevious := FPreviousEnter;
+        end;
+
+        if Assigned(LPrevious) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LPrevious(FFocusControl);
+          RequireNativeGeneration(LGeneration);
+
+          if LEvents.ViewRevision <> LRevision then
+          begin
+            RequireNativeGeneration(LGeneration);
+            Exit;
+          end;
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if FRenderer.FEvents.HasSubscribers(ATrigger) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { Emit can unmount this binding. No binding/widget access follows it. The
+          caller's native physical frame owns safe deferred control retirement. }
+        FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ATrigger));
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
     end;
-  end;
-
-  if FRenderer.FDesignMode or FRenderer.FUpdating then
-  begin
-    Exit;
-  end;
-  Focus(FFocusControl);
-
-  if FRenderer.FEvents.HasSubscribers(ATrigger) then
-  begin
-    { Emit can unmount this binding. No binding/widget access follows it. The
-      caller's native physical frame owns safe deferred control retirement. }
-    FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ATrigger));
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.KeyDown(ASender: TObject; var AKey: Word; AShift: TShiftState);
 begin
@@ -8309,6 +12096,10 @@ end;
 procedure TNyxLCLBinding.Keyboard(ASender: TObject; var AKey: Word;
   AShift: TShiftState; ATrigger: TNyxTrigger);
 var
+  LSnapshotObject: TNativeSignalSnapshot;
+  LSnapshotLease: IInterface;
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LRevision: Integer;
   LPrevious: TKeyEvent;
@@ -8317,127 +12108,253 @@ var
   LDispatch: TNyxDispatch;
   LConsumed: Boolean;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FDesignMode or FRenderer.FUpdating then
-  begin
-    Exit;
-  end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-  LPrevious := FPreviousKeyDown;
-  LRepeating := False;
-
-  if ATrigger = ntKeyUp then
-  begin
-    LPrevious := FPreviousKeyUp;
-  end;
-
-  if AKey <= High(FPressedKeys) then
-  begin
-    LRepeating := (ATrigger = ntKeyDown) and FPressedKeys[AKey];
-    FPressedKeys[AKey] := ATrigger = ntKeyDown;
-  end;
-
-  if Assigned(LPrevious) then
-  begin
-    LPrevious(ASender, AKey, AShift);
-  end;
-
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    { The custom hook disposed this binding; touch only the caller's key now. }
-    AKey := 0;
-    Exit;
-  end;
-  { Preserve consumed custom keys and the widgetset's IME/process/packet input.
-    Those are text-composition messages, not ordinary shortcut keys. }
-
-  if FComposing or (AKey = 0) or (AKey = $E5) or (AKey = $E7) or FRenderer.FUpdating or
-    not NyxHasKeyboardSubscribers(LEvents, ATrigger) then
-  begin
-    Exit;
-  end;
-  LModifiers := [];
-
-  if ssShift in AShift then
-  begin
-    Include(LModifiers, nmShift);
-  end;
-
-  if ssCtrl in AShift then
-  begin
-    Include(LModifiers, nmControl);
-  end;
-
-  if ssAlt in AShift then
-  begin
-    Include(LModifiers, nmAlt);
-  end;
-
-  if (ssMeta in AShift) or (ssSuper in AShift) then
-  begin
-    Include(LModifiers, nmMeta);
-  end;
-
-  if ssAltGr in AShift then
-  begin
-    Include(LModifiers, nmAltGraph);
-  end;
-  LDispatch := FRenderer.FLiveBindings.Keyboard(FNode, ATrigger,
-    NyxKeyStroke(NyxKeyFromVirtualCode(AKey), LModifiers, LRepeating));
-  LConsumed := DispatchNyxKeyboard(LEvents, FNode, LDispatch,
-    FRenderer.FLiveBindings.SignalSnapshot);
-
-  if LConsumed or (LEvents.ViewRevision <> LRevision) then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     AKey := 0;
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      if FRenderer.FDesignMode or FRenderer.FUpdating then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LSnapshotObject := TNativeSignalSnapshot.Create(LGeneration, LEvents, LRevision);
+      LSnapshotLease := LSnapshotObject;
+      RequireNativeGeneration(LGeneration);
+      LPrevious := FPreviousKeyDown;
+      LRepeating := False;
+
+      if ATrigger = ntKeyUp then
+      begin
+        LPrevious := FPreviousKeyUp;
+      end;
+
+      if AKey <= High(FPressedKeys) then
+      begin
+        LRepeating := (ATrigger = ntKeyDown) and FPressedKeys[AKey];
+        RequireNativeGeneration(LGeneration);
+        FPressedKeys[AKey] := ATrigger = ntKeyDown;
+      end;
+
+      if Assigned(LPrevious) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LPrevious(ASender, AKey, AShift);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { The custom hook disposed this binding; touch only the caller's key now. }
+        AKey := 0;
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      { Preserve consumed custom keys and the widgetset's IME/process/packet input.
+        Those are text-composition messages, not ordinary shortcut keys. }
+
+      if FComposing or (AKey = 0) or (AKey = $E5) or (AKey = $E7) or FRenderer.FUpdating or
+        not NyxHasKeyboardSubscribers(LEvents, ATrigger) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+      LModifiers := [];
+
+      if ssShift in AShift then
+      begin
+        Include(LModifiers, nmShift);
+      end;
+
+      if ssCtrl in AShift then
+      begin
+        Include(LModifiers, nmControl);
+      end;
+
+      if ssAlt in AShift then
+      begin
+        Include(LModifiers, nmAlt);
+      end;
+
+      if (ssMeta in AShift) or (ssSuper in AShift) then
+      begin
+        Include(LModifiers, nmMeta);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if ssAltGr in AShift then
+      begin
+        Include(LModifiers, nmAltGraph);
+      end;
+      LDispatch := FRenderer.FLiveBindings.Keyboard(FNode, ATrigger,
+        NyxKeyStroke(NyxKeyFromVirtualCode(AKey), LModifiers, LRepeating));
+        RequireNativeGeneration(LGeneration);
+      LConsumed := DispatchNyxKeyboard(LEvents, FNode, LDispatch,
+        LSnapshotObject.Read);
+        RequireNativeGeneration(LGeneration);
+
+      if LConsumed or (LEvents.ViewRevision <> LRevision) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        AKey := 0;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        AKey := 0;
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.CommitValue(ASender: TObject);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
 begin
-  FCommitting := True;
+  LGeneration := GenerationLease;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
   try
-    Change(ASender);
+    try
+
+      FCommitting := True;
+      try
+        Change(ASender);
+        RequireNativeGeneration(LGeneration);
+      finally
+        FCommitting := False;
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
   finally
-    FCommitting := False;
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLRenderer.BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
   AFailure: TNyxBindingFailure; ARestoreInput: Boolean);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
 begin
-  FLastBindingError := AReason;
-  FLastBindingFailure := AFailure;
+  LGeneration := FGeneration;
 
-  if (AFailure = nbfRejected) and ARestoreInput then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
-    { A rejected date changes only its own physical draft. Other unchanged
-      date fields may hold incomplete text that must survive this rejection. }
-
-    if (ANode <> nil) and (ANode.ProjectionKind = NyxKindName(nkDate)) then
-    begin
-      FForceValueNode := ANode;
-    end;
-    FForceValues := True;
-    try
-      Sync;
-    finally
-      FForceValues := False;
-      FForceValueNode := nil;
-    end;
+    Exit;
   end;
+  LEnteredFrame := FPhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if Assigned(FOnBindingError) then
-  begin
-    FOnBindingError(ANode, AReason, AFailure);
+      FLastBindingError := AReason;
+      FLastBindingFailure := AFailure;
+
+      if (AFailure = nbfRejected) and ARestoreInput then
+      begin
+        { A rejected date changes only its own physical draft. Other unchanged
+          date fields may hold incomplete text that must survive this rejection. }
+
+        if (ANode <> nil) and (ANode.ProjectionKind = NyxKindName(nkDate)) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          FForceValueNode := ANode;
+        end;
+        RequireNativeGeneration(LGeneration);
+        FForceValues := True;
+        try
+          Sync;
+          RequireNativeGeneration(LGeneration);
+        finally
+
+          if NativeGenerationCurrent(LGeneration) then
+          begin
+            FForceValues := False;
+            FForceValueNode := nil;
+          end;
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if Assigned(FOnBindingError) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        FOnBindingError(ANode, AReason, AFailure);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 procedure TNyxLCLBinding.RefreshPager;
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
 begin
-  FRenderer.Sync;
+  LGeneration := GenerationLease;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      FRenderer.Sync;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
 end;
+
 
 function TNyxLCLRenderer.CollectionPager(const AID: TNyxText): INyxCollectionPager;
 var
@@ -8507,6 +12424,7 @@ end;
 
 procedure TNyxLCLBinding.SyncLiteralItems;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LKind: TNyxKind;
   LText: TNyxText;
   LSelected: TNyxText;
@@ -8523,157 +12441,231 @@ var
   LOldColumn: Integer;
   LOldTop: Integer;
 begin
+  LGeneration := GenerationLease;
+  RequireNativeGeneration(LGeneration);
 
   if FCustom or (FCollectionMount <> nil) or
     not TryNyxKind(FNode.ProjectionKind, LKind) or
     not (LKind in [nkSelect, nkList, nkTable, nkTree]) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LText := FNode.Prop('items');
+  RequireNativeGeneration(LGeneration);
 
   if FHasItemsBaseline and (FLastItems = LText) then
   begin
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LRows := TNyxStrings.Create;
+  RequireNativeGeneration(LGeneration);
   try
     LRows.Text := LText;
     case LKind of
       nkSelect:
         begin
           LChoice := TComboBox(FInput);
+          RequireNativeGeneration(LGeneration);
           LSelected := FNode.Prop('value');
+          RequireNativeGeneration(LGeneration);
 
           if FHasValueBaseline and (FLastValue = LSelected) then
           begin
             LSelected := LChoice.Text;
+            RequireNativeGeneration(LGeneration);
           end;
+          RequireNativeGeneration(LGeneration);
           LChoice.Items.BeginUpdate;
+          RequireNativeGeneration(LGeneration);
           try
             LChoice.Items.Clear;
+            RequireNativeGeneration(LGeneration);
             for LIndex := 0 to LRows.Count - 1 do
             begin
+              RequireNativeGeneration(LGeneration);
               LChoice.Items.Add(LRows[LIndex]);
+              RequireNativeGeneration(LGeneration);
             end;
+            RequireNativeGeneration(LGeneration);
             LChoice.ItemIndex := LChoice.Items.IndexOf(LSelected);
+            RequireNativeGeneration(LGeneration);
 
             if (LChoice.ItemIndex < 0) and FHasValueBaseline and
               (FLastValue = FNode.Prop('value')) and
               (LChoice.Style <> csDropDownList) then
             begin
+              RequireNativeGeneration(LGeneration);
               { The existing editable native choice can have an unfinished
                 draft. A row publication does not replace that physical text. }
               LChoice.Text := LSelected;
             end;
+            RequireNativeGeneration(LGeneration);
           finally
             LChoice.Items.EndUpdate;
           end;
+          RequireNativeGeneration(LGeneration);
         end;
       nkList:
         begin
           LList := TListBox(FControl);
+          RequireNativeGeneration(LGeneration);
           LSelected := '';
           LOldTop := LList.TopIndex;
+          RequireNativeGeneration(LGeneration);
 
           if LList.ItemIndex >= 0 then
           begin
+            RequireNativeGeneration(LGeneration);
             LSelected := LList.Items[LList.ItemIndex];
+            RequireNativeGeneration(LGeneration);
           end;
+          RequireNativeGeneration(LGeneration);
           LList.Items.BeginUpdate;
+          RequireNativeGeneration(LGeneration);
           try
             LList.Items.Clear;
+            RequireNativeGeneration(LGeneration);
             for LIndex := 0 to LRows.Count - 1 do
             begin
+              RequireNativeGeneration(LGeneration);
               LList.Items.Add(LRows[LIndex]);
+              RequireNativeGeneration(LGeneration);
             end;
+            RequireNativeGeneration(LGeneration);
             LList.ItemIndex := LList.Items.IndexOf(LSelected);
+            RequireNativeGeneration(LGeneration);
 
             if LRows.Count > 0 then
             begin
+              RequireNativeGeneration(LGeneration);
               LList.TopIndex := Min(LOldTop, LRows.Count - 1);
+              RequireNativeGeneration(LGeneration);
             end;
+            RequireNativeGeneration(LGeneration);
           finally
             LList.Items.EndUpdate;
           end;
+          RequireNativeGeneration(LGeneration);
         end;
       nkTree:
         begin
           LTree := TTreeView(FControl);
+          RequireNativeGeneration(LGeneration);
           LSelected := '';
 
           if LTree.Selected <> nil then
           begin
+            RequireNativeGeneration(LGeneration);
             LSelected := LTree.Selected.Text;
+            RequireNativeGeneration(LGeneration);
           end;
+          RequireNativeGeneration(LGeneration);
           LTree.Items.BeginUpdate;
+          RequireNativeGeneration(LGeneration);
           try
             LTree.Items.Clear;
+            RequireNativeGeneration(LGeneration);
             for LIndex := 0 to LRows.Count - 1 do
             begin
+              RequireNativeGeneration(LGeneration);
               LTree.Items.Add(nil, LRows[LIndex]);
+              RequireNativeGeneration(LGeneration);
             end;
+            RequireNativeGeneration(LGeneration);
 
             if LSelected <> '' then
             begin
               LTree.Selected := LTree.Items.FindNodeWithText(LSelected);
+              RequireNativeGeneration(LGeneration);
             end;
           finally
             LTree.Items.EndUpdate;
           end;
+          RequireNativeGeneration(LGeneration);
         end;
       nkTable:
         begin
           LGrid := TStringGrid(FControl);
+          RequireNativeGeneration(LGeneration);
           LOldRow := LGrid.Row;
+          RequireNativeGeneration(LGeneration);
           LOldColumn := LGrid.Col;
+          RequireNativeGeneration(LGeneration);
           LColumns := 1;
+          RequireNativeGeneration(LGeneration);
           for LIndex := 0 to LRows.Count - 1 do
           begin
+            RequireNativeGeneration(LGeneration);
             LCells := NyxLiteralCells(LRows[LIndex]);
+            RequireNativeGeneration(LGeneration);
             try
               LColumns := Max(LColumns, LCells.Count);
+              RequireNativeGeneration(LGeneration);
             finally
               LCells.Free;
             end;
+            RequireNativeGeneration(LGeneration);
           end;
+          RequireNativeGeneration(LGeneration);
           LGrid.BeginUpdate;
+          RequireNativeGeneration(LGeneration);
           try
             LGrid.FixedRows := 0;
             LGrid.FixedCols := 0;
             LGrid.RowCount := Max(1, LRows.Count);
+            RequireNativeGeneration(LGeneration);
             LGrid.ColCount := LColumns;
             { A widget needs one physical row even for empty Items. It contains
               no authored data. Clear retained cells when ragged rows shrink. }
             for LIndex := 0 to LGrid.RowCount - 1 do
             begin
+              RequireNativeGeneration(LGeneration);
               for LColumn := 0 to LGrid.ColCount - 1 do
               begin
+                RequireNativeGeneration(LGeneration);
                 LGrid.Cells[LColumn, LIndex] := '';
+                RequireNativeGeneration(LGeneration);
               end;
+              RequireNativeGeneration(LGeneration);
             end;
+            RequireNativeGeneration(LGeneration);
             for LIndex := 0 to LRows.Count - 1 do
             begin
+              RequireNativeGeneration(LGeneration);
               LCells := NyxLiteralCells(LRows[LIndex]);
+              RequireNativeGeneration(LGeneration);
               try
                 for LColumn := 0 to LCells.Count - 1 do
                 begin
+                  RequireNativeGeneration(LGeneration);
                   LGrid.Cells[LColumn, LIndex] := LCells[LColumn];
+                  RequireNativeGeneration(LGeneration);
                 end;
+                RequireNativeGeneration(LGeneration);
               finally
                 LCells.Free;
               end;
+              RequireNativeGeneration(LGeneration);
             end;
+            RequireNativeGeneration(LGeneration);
 
             if LRows.Count > 1 then
             begin
+              RequireNativeGeneration(LGeneration);
               LGrid.FixedRows := 1;
             end;
+            RequireNativeGeneration(LGeneration);
             LGrid.Row := EnsureRange(LOldRow, LGrid.FixedRows, LGrid.RowCount - 1);
+            RequireNativeGeneration(LGeneration);
             LGrid.Col := EnsureRange(LOldColumn, 0, LGrid.ColCount - 1);
+            RequireNativeGeneration(LGeneration);
           finally
             LGrid.EndUpdate;
           end;
+          RequireNativeGeneration(LGeneration);
         end;
       else
         begin
@@ -8685,10 +12677,12 @@ begin
   finally
     LRows.Free;
   end;
+  RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLBinding.SyncButtonFace;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LPresentation: TNyxButtonPresentation;
   LSource: TNyxImageSource;
   LIdentity: TNyxText;
@@ -8698,63 +12692,89 @@ var
   LSourceWidth, LSourceHeight: Integer;
   LSourceChanged: Boolean;
 begin
+  LGeneration := GenerationLease;
+  RequireNativeGeneration(LGeneration);
 
   if FCustom or not (FControl is TNyxLCLButton) then
   begin
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LPresentation := NyxButtonPresentationOf(FNode);
+  RequireNativeGeneration(LGeneration);
   LSource := NyxButtonGlyphSource(FNode, LPresentation);
+  RequireNativeGeneration(LGeneration);
   LForeground := TNyxControlAccess(FControl).Font.Color;
+  RequireNativeGeneration(LGeneration);
   LIdentity := LPresentation.ToData.ToJSON + #10 + IntToStr(LForeground);
+  RequireNativeGeneration(LGeneration);
 
   if (LIdentity = FLastButtonFace) and (LSource.ToWire = FLastButtonGlyphSource) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   LGlyph := nil;
+  RequireNativeGeneration(LGeneration);
 
   if not LPresentation.HasGlyph and (FImageLifecycle = nil) then
   begin
+    RequireNativeGeneration(LGeneration);
     TNyxLCLButton(FControl).ApplyPresentation(LPresentation, nil);
+    RequireNativeGeneration(LGeneration);
     FLastButtonFace := LIdentity;
     FLastButtonGlyphSource := LSource.ToWire;
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
 
   if FImageLifecycle = nil then
   begin
     FImageLifecycle := NewNyxImageLifecycle;
+    RequireNativeGeneration(LGeneration);
   end;
   LSourceChanged := not FImageLifecycle.Current.Defined or
     (FImageLifecycle.Current.Source.ToWire <> LSource.ToWire);
+    RequireNativeGeneration(LGeneration);
   { Loading belongs to source identity. A new ink, gap or caption policy must
     neither restart the request nor manufacture an error for a valid image. }
 
   if LSourceChanged then
   begin
     LRequest := FImageLifecycle.Start(LSource);
+    RequireNativeGeneration(LGeneration);
 
     if LSource.Kind <> nisEmpty then
     begin
+      RequireNativeGeneration(LGeneration);
       try
         FRenderer.FButtonGlyphCache.Dimensions(LSource, LSourceWidth, LSourceHeight);
+        RequireNativeGeneration(LGeneration);
 
         if (LSourceWidth > 0) and (LSourceHeight > 0) then
         begin
           FImageLifecycle.Ready(LRequest, LSourceWidth, LSourceHeight);
+          RequireNativeGeneration(LGeneration);
         end
         else
         begin
+          RequireNativeGeneration(LGeneration);
           FImageLifecycle.Fail(LRequest, nifUnavailable, 'Button image is unavailable; caption retained');
+          RequireNativeGeneration(LGeneration);
         end;
+        RequireNativeGeneration(LGeneration);
       except
+        on ENyxNativeGenerationRetired do raise;
         on E: Exception do
         begin
           FImageLifecycle.Fail(LRequest, nifDecode, 'Button image could not be decoded; caption retained');
+          RequireNativeGeneration(LGeneration);
         end;
       end;
     end;
+    RequireNativeGeneration(LGeneration);
   end;
   try
     try
@@ -8762,37 +12782,50 @@ begin
       if (LPresentation.ContentMode <> nbcCaption) and
         (FImageLifecycle.Current.Phase = nipReady) then
       begin
+        RequireNativeGeneration(LGeneration);
         LGlyph := FRenderer.FButtonGlyphCache.Prepare(LSource, LPresentation, LForeground);
+        RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
       TNyxLCLButton(FControl).ApplyPresentation(LPresentation, LGlyph);
+      RequireNativeGeneration(LGeneration);
     except
+      on ENyxNativeGenerationRetired do raise;
       on E: Exception do
       begin
         { A crop can be invalid for this decoded image without invalidating the
           source's Ready observation. Keep the accessible command usable. }
         TNyxLCLButton(FControl).ApplyPresentation(LPresentation, nil);
+        RequireNativeGeneration(LGeneration);
       end;
     end;
     FLastButtonFace := LIdentity;
     FLastButtonGlyphSource := LSource.ToWire;
+    RequireNativeGeneration(LGeneration);
   finally
     LGlyph.Free;
   end;
+  RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLBinding.SyncPicture;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LSource: TNyxText;
   LPicture: TPicture;
   LRequest: TNyxImageRequestID;
   LPeer: INyxImageLifecycle;
 begin
+  LGeneration := GenerationLease;
+  RequireNativeGeneration(LGeneration);
 
   if FCustom or not (FControl is TImage) then
   begin
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   FControl.AccessibleDescription := FNode.Prop('alt');
+  RequireNativeGeneration(LGeneration);
   { Policy changes retain the source cache and physical LCL image. }
 
   if FControl is TNyxLCLImage then
@@ -8801,58 +12834,79 @@ begin
       ReadNyxImageFit(FNode.Prop('image-fit', 'contain')),
       ReadNyxImageAnchor(FNode.Prop('image-position-x', 'center')),
       ReadNyxImageAnchor(FNode.Prop('image-position-y', 'center')));
+      RequireNativeGeneration(LGeneration);
   end;
   LSource := FNode.Prop('src');
+  RequireNativeGeneration(LGeneration);
 
   if FHasSourceBaseline and (FLastSource = LSource) and
     (FImageLifecycle <> nil) and
     (FImageLifecycle.Current.Source.ToWire = LSource) then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
+
   if FImageLifecycle = nil then
   begin
     FImageLifecycle := NewNyxImageLifecycle;
+    RequireNativeGeneration(LGeneration);
   end;
   LPeer := FImageLifecycle;
+  RequireNativeGeneration(LGeneration);
   LRequest := LPeer.Start(TNyxImageSource.FromWire(LSource));
+  RequireNativeGeneration(LGeneration);
   LPicture := nil;
+  RequireNativeGeneration(LGeneration);
   try
     try
 
       if not FHasSourceBaseline or (FLastSource <> LSource) then
       begin
         LPicture := NewNyxLCLPicture(TNyxImageSource.FromWire(LSource));
+        RequireNativeGeneration(LGeneration);
         { Decode on an independent picture before changing this accepted face. }
         TImage(FControl).Picture.Assign(LPicture);
+        RequireNativeGeneration(LGeneration);
         FLastSource := LSource;
+        RequireNativeGeneration(LGeneration);
         FHasSourceBaseline := True;
       end;
+      RequireNativeGeneration(LGeneration);
 
       if LSource <> '' then
       begin
 
         if (TImage(FControl).Picture.Width > 0) and (TImage(FControl).Picture.Height > 0) then
         begin
+          RequireNativeGeneration(LGeneration);
           LPeer.Ready(LRequest, TImage(FControl).Picture.Width, TImage(FControl).Picture.Height);
+          RequireNativeGeneration(LGeneration);
         end
         else
         begin
+          RequireNativeGeneration(LGeneration);
           { Missing/unsupported native locations keep their existing empty face
             semantics; report the observation without inventing network fetch. }
           LPeer.Fail(LRequest, nifUnavailable, 'Native image location is unavailable');
+          RequireNativeGeneration(LGeneration);
         end;
+        RequireNativeGeneration(LGeneration);
       end;
     except
+      on ENyxNativeGenerationRetired do raise;
       on LException: Exception do
       begin
         LPeer.Fail(LRequest, nifDecode, 'Native decoder rejected the image request');
+        RequireNativeGeneration(LGeneration);
         raise;
       end;
     end;
   finally
     LPicture.Free;
   end;
+  RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLRenderer.SyncRadioFocus;
@@ -8865,70 +12919,104 @@ type
     Checked: Boolean;
   end;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LScopes: array of TRadioScope;
   LIndex: Integer;
   LScope: Integer;
   LRadio: TRadioButton;
   LPolicy: TNyxInteractionPolicy;
 begin
+  LGeneration := FGeneration;
+
+  if not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+
   SetLength(LScopes, 0);
+  RequireNativeGeneration(LGeneration);
   for LIndex := 0 to High(FBindings) do
   begin
 
     if not FBindings[LIndex].FCustom and (FBindings[LIndex].FInput is TRadioButton) then
     begin
       LRadio := TRadioButton(FBindings[LIndex].FInput);
+      RequireNativeGeneration(LGeneration);
       LRadio.TabStop := False;
       LPolicy := NyxInteractionPolicy(FBindings[LIndex].FNode);
+      RequireNativeGeneration(LGeneration);
 
       if not LPolicy.Enabled or not LPolicy.Visible then
       begin
+        RequireNativeGeneration(LGeneration);
         Continue;
       end;
+      RequireNativeGeneration(LGeneration);
       LScope := 0;
+      RequireNativeGeneration(LGeneration);
       while (LScope < Length(LScopes)) and (LScopes[LScope].Parent <> LRadio.Parent) do
       begin
+        RequireNativeGeneration(LGeneration);
         Inc(LScope);
       end;
+      RequireNativeGeneration(LGeneration);
 
       if LScope = Length(LScopes) then
       begin
         SetLength(LScopes, LScope + 1);
+        RequireNativeGeneration(LGeneration);
         LScopes[LScope].Parent := LRadio.Parent;
+        RequireNativeGeneration(LGeneration);
         LScopes[LScope].Entry := LRadio;
         LScopes[LScope].Checked := False;
       end;
 
       if LRadio.Checked and not LScopes[LScope].Checked then
       begin
+        RequireNativeGeneration(LGeneration);
         LScopes[LScope].Entry := LRadio;
         LScopes[LScope].Checked := True;
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
   for LScope := 0 to High(LScopes) do
   begin
     LScopes[LScope].Entry.TabStop := True;
   end;
+  RequireNativeGeneration(LGeneration);
 end;
 
 function TNyxLCLRenderer.SyncEditedValue(ANode: TNyxNode): Boolean;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LPhysicalFrame: INyxNativeGestureFrame;
   LIndex: Integer;
   LBinding: TNyxLCLBinding;
   LValue: TNyxText;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+  LPhysicalFrame := FPhysicalFrame;
+  LPhysicalFrame.Enter;
+  try
+
   Result := False;
 
   if FUpdating or FDesignMode or FForceValues or (ANode = nil) or
     not ((ANode.ProjectionKind = 'input') or (ANode.ProjectionKind = 'memo')) or
     (ANode.Prop('width-sizing') = 'content') or (ANode.Prop('height-sizing') = 'content') then
   begin
+    RequireNativeGeneration(LGeneration);
     Exit;
   end;
+  RequireNativeGeneration(LGeneration);
   for LIndex := 0 to High(FBindings) do
   begin
     LBinding := FBindings[LIndex];
+    RequireNativeGeneration(LGeneration);
 
     if LBinding.FNode <> ANode then
     begin
@@ -8940,7 +13028,9 @@ begin
     begin
       Exit;
     end;
+    RequireNativeGeneration(LGeneration);
     LValue := ANode.Prop('value');
+    RequireNativeGeneration(LGeneration);
     FUpdating := True;
     try
       { Physical typing normally already has this exact admitted value. Keep
@@ -8949,22 +13039,38 @@ begin
       if StringReplace(TNyxText(TCustomEdit(LBinding.FInput).Text), #13#10, #10,
         [rfReplaceAll]) <> LValue then
       begin
+        RequireNativeGeneration(LGeneration);
         TCustomEdit(LBinding.FInput).Text := LValue;
+        RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
       LBinding.FHasValueBaseline := True;
       LBinding.FLastValue := LValue;
     finally
-      FUpdating := False;
+
+      if NativeGenerationCurrent(LGeneration) then
+      begin
+        FUpdating := False;
+      end;
     end;
+    RequireNativeGeneration(LGeneration);
     Result := True;
     { Structural recipes still receive the ordinary queued observation. }
     QueueContent;
+    RequireNativeGeneration(LGeneration);
     Exit;
+  end;
+  RequireNativeGeneration(LGeneration);
+  finally
+    { LAST: retain the exact original native frame across every callback tail. }
+    LPhysicalFrame.Leave;
   end;
 end;
 
 procedure TNyxLCLRenderer.Sync;
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LPhysicalFrame: INyxNativeGestureFrame;
   {$ifdef NYX_STUDIO_PROFILE}
   LSyncStarted: QWord;
   LLayoutStarted: QWord;
@@ -8972,6 +13078,14 @@ var
   LIndex: Integer;
   LProjectionPass, LMaximumPasses: Integer;
   LBinding: TNyxLCLBinding;
+  LDrawing: TNyxLCLDrawing;
+  LDrawingProvider: INyxDrawingProvider;
+  LDrawingScene: INyxDrawingPlan;
+  LDrawingSource: INyxDrawingSource;
+  LDrawingTheme: TNyxTheme;
+  LDrawingLabel: TNyxText;
+  LCanvasView: INyxCanvasWorkspaceView;
+  LCollectionMount: INyxCollectionMount;
   LCanvasAccessibility: INyxCanvasAccessibilityView;
   LCanvasName: TNyxText;
   LCanvasDescription: TNyxText;
@@ -9000,459 +13114,644 @@ var
   LOriginHadFocus: Boolean;
   LBeforeExit: TControl;
 begin
-  { Resource model adoption precedes row/scalar notifications. Capture its frame
-    for later navigation/responsive preparation before updating target controls. }
-
-  if FRoot <> nil then
-  begin
-    FResourceContext := FRoot.ResourceContext;
-  end;
-  { Native setters can fire change events. One guard covers every control kind,
-    including Boolean/range widgets and layout side effects. Skip unchanged edit
-    text so synchronization preserves selection, caret and focused drafts. }
-
-  if FUpdating then
-  begin
-    Exit;
-  end;
-  { Native visibility changes may transfer focus before the remaining controls
-    synchronize. Capture the owned origin and available disclosure header first;
-    apply recovery only after the complete presentation has settled. }
-  LDisclosureFocus := nil;
-  LFocusBinding := nil;
-  LActive := Screen.ActiveControl;
-  for LIndex := 0 to High(FBindings) do
-  begin
-    LFocusCursor := LActive;
-    while (LFocusCursor <> nil) and
-      (LFocusCursor <> FBindings[LIndex].FControl) do
-    begin
-      LFocusCursor := LFocusCursor.Parent;
-    end;
-
-    if not FDesignMode and (LFocusCursor <> nil) then
-    begin
-      LFocusHeader := NyxDisclosureClosingHeader(FBindings[LIndex].FNode);
-
-      if (LFocusHeader <> nil) and NyxInteractionPolicy(LFocusHeader).CanIssueCommand then
-      begin
-        LDisclosureFocus := FocusFor(LFocusHeader.ID);
-        LFocusBinding := IdentityBinding(LFocusHeader.ID, niRuntime);
-        LHeaderHadFocus := LFocusBinding.FHasFocus;
-        LOriginBinding := FBindings[LIndex];
-        LOriginHadFocus := LOriginBinding.FHasFocus;
-      end;
-    end;
-  end;
-
-  if LDisclosureFocus <> nil then
-  begin
-    LFocusEvents := FEvents;
-    LFocusRevision := LFocusEvents.ViewRevision;
-  end;
-  FUpdating := True;
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
+  LPhysicalFrame := FPhysicalFrame;
+  LPhysicalFrame.Enter;
   try
-    { Container containment removes child feedback on queried axes. Nested
-      allocations propagate at most once per publisher, with two extra rounds
-      for scrollbar/client-area settling. Never silently publish an oscillation. }
-    LMaximumPasses := 2;
-    for LIndex := 0 to High(FBindings) do
-    begin
+    try
 
-      if FBindings[LIndex].FNode.QueryContainer.Defined then
+      if FRoot <> nil then
       begin
-        Inc(LMaximumPasses);
+        FResourceContext := FRoot.ResourceContext;
+        RequireNativeGeneration(LGeneration);
       end;
-    end;
-    for LProjectionPass := 0 to LMaximumPasses do
-    begin
-      {$ifdef NYX_STUDIO_PROFILE}LSyncStarted := GetTickCount64;{$endif}
+      { Native setters can fire change events. One guard covers every control kind,
+        including Boolean/range widgets and layout side effects. Skip unchanged edit
+        text so synchronization preserves selection, caret and focused drafts. }
 
-      if (FRoot <> nil) and (FPanel <> nil) then
-      begin
-        UpdateViewport;
-      end;
-      for LIndex := 0 to Length(FBindings) - 1 do
-      begin
-        LBinding := FBindings[LIndex];
-        LNode := LBinding.FNode;
-        LBinding.FControl.Visible := NyxInteractionPolicy(LNode).Visible;
-        LBinding.FControl.Hint := LNode.Prop('hint');
-        LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
-        LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
-        SyncNyxLCLAccessibility(LBinding.FControl);
-        LPolicy := NyxInteractionPolicy(LNode);
-        LEnabled := LPolicy.Enabled;
-        LReadOnly := LPolicy.ReadOnly;
-
-        if LBinding.FCanvasView <> nil then
-        begin
-          { The outer layout panel is not the keyboard-focusable canvas. Apply
-            its effective typed/bound name to that retained surface as well.
-            Optional target capability preserves alternate view implementations. }
-          LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
-          LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
-
-          if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
-          begin
-            LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
-          end;
-          LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
-        end;
-        LBinding.FControl.Enabled := LEnabled;
-
-        if LBinding.FDateField <> nil then
-        begin
-          LValueDomain := NyxNodeValueDomain(LNode);
-          LBinding.FDateField.SetDomain(LValueDomain);
-          LBinding.FDateField.SetAcceptedValue(
-            TNyxCalendarDate.FromText(LNode.Prop('value')));
-          LBinding.FDateField.SetInteraction(LEnabled, LReadOnly,
-            LBinding.FControl.IsVisible);
-        end;
-
-        if LBinding.FTimeField <> nil then
-        begin
-          LValueDomain := NyxNodeValueDomain(LNode);
-          LBinding.FTimeField.SetDomain(LValueDomain);
-          LBinding.FTimeField.SetAcceptedValue(
-            TNyxClockTime.FromText(LNode.Prop('value')));
-          LBinding.FTimeField.SetInteraction(LEnabled, LReadOnly,
-            LBinding.FControl.IsVisible);
-        end;
-
-        if LBinding.FColorField <> nil then
-        begin
-          LValueDomain := NyxNodeValueDomain(LNode);
-          LBinding.FColorField.SetDomain(LValueDomain);
-          LBinding.FColorField.SetAcceptedValue(TNyxRGBColor.FromText(LNode.Prop('value')));
-          LBinding.FColorField.SetInteraction(LEnabled, LReadOnly,
-            LBinding.FControl.IsVisible);
-        end;
-
-        if LNode.Props.IndexOfName('drag-source') >= 0 then
-        begin
-
-          if not FDesignMode and (LNode.Prop('drag-source') = 'true') then
-          begin
-            TNyxControlAccess(LBinding.FControl).DragMode := dmAutomatic;
-          end
-          else
-          begin
-            TNyxControlAccess(LBinding.FControl).DragMode := dmManual;
-          end;
-
-          if (LBinding.FInput <> nil) and (LBinding.FInput <> LBinding.FControl) then
-          begin
-            TNyxControlAccess(LBinding.FInput).DragMode :=
-              TNyxControlAccess(LBinding.FControl).DragMode;
-          end;
-        end;
-
-        if LBinding.FControl is TNyxLCLSplitView then
-        begin
-          TNyxLCLSplitView(LBinding.FControl).SetInteraction(LEnabled and not FDesignMode,
-            LReadOnly or FDesignMode);
-        end;
-
-        if LBinding.FControl is TNyxLCLTabHost then
-        begin
-
-          TNyxLCLTabHost(LBinding.FControl).SynchronizeDescriptor(LNode);
-        end;
-
-        if LBinding.FCollectionMount <> nil then
-        begin
-          LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
-            LReadOnly or FDesignMode);
-        end;
-        LBinding.SyncLiteralItems;
-
-
-        if not LBinding.FCustom and (LBinding.FControl is TNyxLCLDrawing) then
-        begin
-
-          if LBinding.FDrawingSource = nil then
-          begin
-            LBinding.FDrawingSource := NewNyxDrawingSource;
-          end;
-          TNyxLCLDrawing(LBinding.FControl).Configure(LBinding.FDrawingSource.Read(LBinding.FNode),
-            DrawingProvider(LBinding.FNode), FTheme, LBinding.FNode.Prop('text'));
-        end;
-        LBinding.SyncPicture;
-        LBinding.FControl.AccessibleValue := LNode.Prop('pressed');
-
-        if LBinding.FCaption <> nil then
-        begin
-          LBinding.FCaption.Caption := LNode.Prop('text');
-        end
-        else if not LBinding.FCustom then
-        begin
-
-          if (LBinding.FControl is TLabel) or (LBinding.FControl is TNyxLCLButton) or
-            (LBinding.FControl is TButton) or (LBinding.FControl is TCheckBox) or
-            (LBinding.FControl is TRadioButton) or (LBinding.FControl is TGroupBox) then
-          begin
-            TNyxControlAccess(LBinding.FControl).Caption := LNode.Prop('text');
-
-            if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
-            begin
-              TNyxControlAccess(LBinding.FControl).Caption := LDisclosureCaption;
-            end;
-          end;
-        end;
-
-        if not LBinding.FCustom and (LNode.ProjectionKind = 'code') and
-          (StringReplace(TNyxText(TMemo(LBinding.FControl).Text), #13#10, #10,
-          [rfReplaceAll]) <> LNode.Prop('text')) then
-        begin
-          { A code block's content is Text, not the editable scalar Value. Skip
-            unchanged text to preserve its inspection caret/selection and scroll. }
-          TMemo(LBinding.FControl).Text := LNode.Prop('text');
-        end;
-
-        if LBinding.FControl is TNyxLCLButton then
-        begin
-          TNyxLCLButton(LBinding.FControl).ApplyTheme(FTheme, LNode.Prop('variant'));
-          LBinding.SyncButtonFace;
-
-          if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
-          begin
-
-            if NyxInteractionPolicy(LDisclosureBody).Visible then
-            begin
-              TNyxLCLButton(LBinding.FControl).Disclosure(ndcExpanded);
-            end
-            else
-            begin
-              TNyxLCLButton(LBinding.FControl).Disclosure(ndcCollapsed);
-            end;
-          end
-          else
-          begin
-            TNyxLCLButton(LBinding.FControl).Disclosure(ndcNone);
-          end;
-        end;
-        LInput := LBinding.FInput;
-        LValue := LNode.Prop('value');
-        { Composition owns its physical text until the OS end has drained. }
-
-        if LBinding.FComposing then
-        begin
-          Continue;
-        end;
-        LWriteValue := (FForceValues and ((FForceValueNode = nil) or
-          (FForceValueNode = LNode))) or not LBinding.FHasValueBaseline or
-          (LBinding.FLastValue <> LValue);
-        LBinding.FHasValueBaseline := True;
-        LBinding.FLastValue := LValue;
-
-        if LInput <> nil then
-        begin
-          LInput.Enabled := LEnabled;
-          LInput.Hint := LBinding.FControl.Hint;
-          LInput.ShowHint := LBinding.FControl.ShowHint;
-          LInput.AccessibleName := LBinding.FControl.AccessibleName;
-          SyncNyxLCLAccessibility(LInput);
-        end;
-
-        if LInput is TSpinEdit then
-        begin
-          LMinimum := StrToIntDef(LNode.Prop('min'), 0);
-          LMaximum := StrToIntDef(LNode.Prop('max'), 100);
-
-          if LMinimum > TSpinEdit(LInput).MaxValue then
-          begin
-            TSpinEdit(LInput).MaxValue := LMaximum;
-          end;
-          TSpinEdit(LInput).MinValue := LMinimum;
-          TSpinEdit(LInput).MaxValue := LMaximum;
-          TSpinEdit(LInput).ReadOnly := LReadOnly;
-
-          if LWriteValue and (TSpinEdit(LInput).Value <> StrToIntDef(LValue, 0)) then
-          begin
-            TSpinEdit(LInput).Value := StrToIntDef(LValue, 0);
-          end;
-        end
-        else if LInput is TCustomEdit then
-        begin
-          TEdit(LInput).ReadOnly := LReadOnly;
-          TEdit(LInput).TextHint := LNode.Prop('placeholder');
-
-          if not LBinding.FCustom and (LNode.ProjectionKind = 'input') then
-          begin
-            { Formatting can change after mounting. Re-resolve its actual scalar
-              domain so a newly numeric face keeps unfinished drafts until commit,
-              and returning to Text restores ordinary per-change admission. An
-              explicit recipe domain remains authoritative over the format hint. }
-            LValueDomain := NyxNodeValueDomain(LNode);
-            LBinding.FDeferredValue := LValueDomain.Defined and
-              (LValueDomain.Kind in [nskInteger, nskNumber]);
-
-            if LBinding.FDeferredValue then
-            begin
-              TEdit(LInput).OnEditingDone := LBinding.CommitValue;
-            end
-            else
-            begin
-              TEdit(LInput).OnEditingDone := nil;
-            end;
-
-            if LNode.Prop('input-type') = 'password' then
-            begin
-              TEdit(LInput).PasswordChar := '*';
-            end
-            else
-            begin
-              TEdit(LInput).PasswordChar := #0;
-            end;
-          end;
-
-          if LWriteValue and
-            (StringReplace(TNyxText(TEdit(LInput).Text), #13#10, #10, [rfReplaceAll]) <> LValue) then
-          begin
-            TEdit(LInput).Text := LValue;
-          end;
-        end
-        else if LInput is TComboBox then
-        begin
-
-          if LWriteValue and (TNyxText(TComboBox(LInput).Text) <> LValue) then
-          begin
-            TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(LValue);
-          end;
-        end
-        else if LInput is TCheckBox then
-        begin
-
-          if LWriteValue then
-          begin
-            TCheckBox(LInput).Checked := LValue = 'true';
-          end;
-        end
-        else if LInput is TRadioButton then
-        begin
-
-          if LWriteValue then
-          begin
-            TRadioButton(LInput).Checked := LValue = 'true';
-          end;
-        end
-        else if LInput is TNyxLCLSlider then
-        begin
-          TNyxLCLSlider(LInput).Accept(TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
-            StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
-            StrToIntDef(LNode.Prop('slider-intervals'), 1000)), LValue);
-        end
-        else if LInput is TTrackBar then
-        begin
-          LMinimum := StrToIntDef(LNode.Prop('min'), 0);
-          LMaximum := StrToIntDef(LNode.Prop('max'), 100);
-
-          if LMinimum > TTrackBar(LInput).Max then
-          begin
-            TTrackBar(LInput).Max := LMaximum;
-          end;
-          TTrackBar(LInput).Min := LMinimum;
-          TTrackBar(LInput).Max := LMaximum;
-
-          if LWriteValue then
-          begin
-            TTrackBar(LInput).Position := StrToIntDef(LValue, 0);
-          end;
-        end;
-
-        if LBinding.FControl is TProgressBar then
-        begin
-          TProgressBar(LBinding.FControl).Min := StrToIntDef(LNode.Prop('min'), 0);
-          TProgressBar(LBinding.FControl).Max := StrToIntDef(LNode.Prop('max'), 100);
-          TProgressBar(LBinding.FControl).Position := StrToIntDef(LValue, 0);
-
-          if LBinding.FControl is TNyxLCLProgress then
-          begin
-            TNyxLCLProgress(LBinding.FControl).Indeterminate :=
-              LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true';
-          end
-          else if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
-          begin
-            TProgressBar(LBinding.FControl).Style := pbstMarquee;
-          end
-          else
-          begin
-            TProgressBar(LBinding.FControl).Style := pbstNormal;
-          end;
-        end;
-
-        if Assigned(LBinding.FUpdater) then
-        begin
-          LBinding.FUpdater(LNode, LBinding.FControl);
-        end;
-      end;
-      SyncRadioFocus;
-      {$ifdef NYX_STUDIO_PROFILE}
-      WriteLn('native-sync,properties,', Length(FBindings), ',', GetTickCount64 - LSyncStarted);
-      LLayoutStarted := GetTickCount64;
-      {$endif}
-      Resize(FPanel);
-      {$ifdef NYX_STUDIO_PROFILE}
-      WriteLn('native-sync,layout,', Length(FBindings), ',', GetTickCount64 - LLayoutStarted);
-      {$endif}
-
-      if not UpdateViewport then
-      begin
-        Break;
-      end;
-
-      if LProjectionPass = LMaximumPasses then
-      begin
-        raise ENyxModel.Create('Container presentation allocation did not settle');
-      end;
-    end;
-  finally
-    FUpdating := False;
-    FlushImages;
-  end;
-  InitializeCanvases;
-  QueueContent;
-
-  if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) and
-    LDisclosureFocus.CanFocus then
-  begin
-    { Win32 can focus this header while the hidden body is synchronizing. Those
-      guarded notifications update the physical baseline but do not dispatch.
-      Recover the prior header baseline so the settled transition is delivered
-      once even when SetFocus would now be a physical no-op. }
-    LFocusBinding.FHasFocus := LHeaderHadFocus;
-
-    if LOriginHadFocus then
-    begin
-      LOriginBinding.FHasFocus := True;
-      LBeforeExit := Screen.ActiveControl;
-      LOriginBinding.ObserveFocus(ntAfterExit);
-
-      if (LFocusEvents.ViewRevision <> LFocusRevision) or
-        (Screen.ActiveControl <> LBeforeExit) then
+      if FUpdating then
       begin
         Exit;
       end;
-    end;
+      { Native visibility changes may transfer focus before the remaining controls
+        synchronize. Capture the owned origin and available disclosure header first;
+        apply recovery only after the complete presentation has settled. }
+      LDisclosureFocus := nil;
+      RequireNativeGeneration(LGeneration);
+      LFocusBinding := nil;
+      RequireNativeGeneration(LGeneration);
+      LActive := Screen.ActiveControl;
+      RequireNativeGeneration(LGeneration);
+      for LIndex := 0 to High(FBindings) do
+      begin
+        LFocusCursor := LActive;
+        while (LFocusCursor <> nil) and
+          (LFocusCursor <> FBindings[LIndex].FControl) do
+        begin
+          LFocusCursor := LFocusCursor.Parent;
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
 
-    if LDisclosureFocus.Focused then
-    begin
-      LFocusBinding.ObserveFocus(ntAfterEnter);
-      Exit;
+        if not FDesignMode and (LFocusCursor <> nil) then
+        begin
+          LFocusHeader := NyxDisclosureClosingHeader(FBindings[LIndex].FNode);
+          RequireNativeGeneration(LGeneration);
+
+          if (LFocusHeader <> nil) and NyxInteractionPolicy(LFocusHeader).CanIssueCommand then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LDisclosureFocus := FocusFor(LFocusHeader.ID);
+            RequireNativeGeneration(LGeneration);
+            LFocusBinding := IdentityBinding(LFocusHeader.ID, niRuntime);
+            RequireNativeGeneration(LGeneration);
+            LHeaderHadFocus := LFocusBinding.FHasFocus;
+            LOriginBinding := FBindings[LIndex];
+            LOriginHadFocus := LOriginBinding.FHasFocus;
+          end;
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if LDisclosureFocus <> nil then
+      begin
+        LFocusEvents := FEvents;
+        RequireNativeGeneration(LGeneration);
+        LFocusRevision := LFocusEvents.ViewRevision;
+        RequireNativeGeneration(LGeneration);
+      end;
+      FUpdating := True;
+      try
+        { Container containment removes child feedback on queried axes. Nested
+          allocations propagate at most once per publisher, with two extra rounds
+          for scrollbar/client-area settling. Never silently publish an oscillation. }
+        LMaximumPasses := 2;
+        for LIndex := 0 to High(FBindings) do
+        begin
+
+          if FBindings[LIndex].FNode.QueryContainer.Defined then
+          begin
+            RequireNativeGeneration(LGeneration);
+            Inc(LMaximumPasses);
+          end;
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+        for LProjectionPass := 0 to LMaximumPasses do
+        begin
+          {$ifdef NYX_STUDIO_PROFILE}LSyncStarted := GetTickCount64;
+                                     {$endif}
+
+          if (FRoot <> nil) and (FPanel <> nil) then
+          begin
+            UpdateViewport;
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+          for LIndex := 0 to Length(FBindings) - 1 do
+          begin
+            LBinding := FBindings[LIndex];
+            RequireNativeGeneration(LGeneration);
+            LNode := LBinding.FNode;
+            LBinding.FControl.Visible := NyxInteractionPolicy(LNode).Visible;
+            RequireNativeGeneration(LGeneration);
+            LBinding.FControl.Hint := LNode.Prop('hint');
+            RequireNativeGeneration(LGeneration);
+            LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
+            RequireNativeGeneration(LGeneration);
+            LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
+            RequireNativeGeneration(LGeneration);
+            SyncNyxLCLAccessibility(LBinding.FControl);
+            RequireNativeGeneration(LGeneration);
+            LPolicy := NyxInteractionPolicy(LNode);
+            RequireNativeGeneration(LGeneration);
+            LEnabled := LPolicy.Enabled;
+            RequireNativeGeneration(LGeneration);
+            LReadOnly := LPolicy.ReadOnly;
+            RequireNativeGeneration(LGeneration);
+
+            if LBinding.FCanvasView <> nil then
+            begin
+              { The outer layout panel is not the keyboard-focusable canvas. Apply
+                its effective typed/bound name to that retained surface as well.
+                Optional target capability preserves alternate view implementations. }
+              LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
+              RequireNativeGeneration(LGeneration);
+              LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
+              RequireNativeGeneration(LGeneration);
+
+              if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
+              begin
+                RequireNativeGeneration(LGeneration);
+                LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+              LCanvasView := LBinding.FCanvasView;
+              LCanvasView.Constrain(LEnabled, LReadOnly);
+              RequireNativeGeneration(LGeneration);
+            end;
+            LBinding.FControl.Enabled := LEnabled;
+
+            if LBinding.FDateField <> nil then
+            begin
+              LValueDomain := NyxNodeValueDomain(LNode);
+              RequireNativeGeneration(LGeneration);
+              LBinding.FDateField.SetDomain(LValueDomain);
+              RequireNativeGeneration(LGeneration);
+              LBinding.FDateField.SetAcceptedValue(
+                TNyxCalendarDate.FromText(LNode.Prop('value')));
+                RequireNativeGeneration(LGeneration);
+              LBinding.FDateField.SetInteraction(LEnabled, LReadOnly,
+                LBinding.FControl.IsVisible);
+                RequireNativeGeneration(LGeneration);
+            end;
+
+            if LBinding.FTimeField <> nil then
+            begin
+              LValueDomain := NyxNodeValueDomain(LNode);
+              RequireNativeGeneration(LGeneration);
+              LBinding.FTimeField.SetDomain(LValueDomain);
+              RequireNativeGeneration(LGeneration);
+              LBinding.FTimeField.SetAcceptedValue(
+                TNyxClockTime.FromText(LNode.Prop('value')));
+                RequireNativeGeneration(LGeneration);
+              LBinding.FTimeField.SetInteraction(LEnabled, LReadOnly,
+                LBinding.FControl.IsVisible);
+                RequireNativeGeneration(LGeneration);
+            end;
+
+            if LBinding.FColorField <> nil then
+            begin
+              LValueDomain := NyxNodeValueDomain(LNode);
+              RequireNativeGeneration(LGeneration);
+              LBinding.FColorField.SetDomain(LValueDomain);
+              RequireNativeGeneration(LGeneration);
+              LBinding.FColorField.SetAcceptedValue(TNyxRGBColor.FromText(LNode.Prop('value')));
+              RequireNativeGeneration(LGeneration);
+              LBinding.FColorField.SetInteraction(LEnabled, LReadOnly,
+                LBinding.FControl.IsVisible);
+                RequireNativeGeneration(LGeneration);
+            end;
+
+            if LNode.Props.IndexOfName('drag-source') >= 0 then
+            begin
+              RequireNativeGeneration(LGeneration);
+
+              if not FDesignMode and (LNode.Prop('drag-source') = 'true') then
+              begin
+                RequireNativeGeneration(LGeneration);
+                TNyxControlAccess(LBinding.FControl).DragMode := dmAutomatic;
+                RequireNativeGeneration(LGeneration);
+              end
+              else
+              begin
+                RequireNativeGeneration(LGeneration);
+                TNyxControlAccess(LBinding.FControl).DragMode := dmManual;
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+
+              if (LBinding.FInput <> nil) and (LBinding.FInput <> LBinding.FControl) then
+              begin
+                TNyxControlAccess(LBinding.FInput).DragMode :=
+                  TNyxControlAccess(LBinding.FControl).DragMode;
+                  RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+            end;
+            RequireNativeGeneration(LGeneration);
+
+            if LBinding.FControl is TNyxLCLSplitView then
+            begin
+              TNyxLCLSplitView(LBinding.FControl).SetInteraction(LEnabled and not FDesignMode,
+                LReadOnly or FDesignMode);
+                RequireNativeGeneration(LGeneration);
+            end;
+
+            if LBinding.FControl is TNyxLCLTabHost then
+            begin
+
+              TNyxLCLTabHost(LBinding.FControl).SynchronizeDescriptor(LNode);
+              RequireNativeGeneration(LGeneration);
+            end;
+
+            if LBinding.FCollectionMount <> nil then
+            begin
+              LCollectionMount := LBinding.FCollectionMount;
+              LCollectionMount.SetInteraction(LEnabled and not FDesignMode,
+                LReadOnly or FDesignMode);
+                RequireNativeGeneration(LGeneration);
+            end;
+            LBinding.SyncLiteralItems;
+            RequireNativeGeneration(LGeneration);
+
+
+            if not LBinding.FCustom and (LBinding.FControl is TNyxLCLDrawing) then
+            begin
+
+              if LBinding.FDrawingSource = nil then
+              begin
+                LBinding.FDrawingSource := NewNyxDrawingSource;
+                RequireNativeGeneration(LGeneration);
+              end;
+              LDrawing := TNyxLCLDrawing(LBinding.FControl);
+              LDrawingSource := LBinding.FDrawingSource;
+              LDrawingTheme := FTheme;
+              LDrawingLabel := LBinding.FNode.Prop('text');
+              LDrawingScene := LDrawingSource.Read(LBinding.FNode);
+              RequireNativeGeneration(LGeneration);
+              LDrawingProvider := DrawingProvider(LBinding.FNode);
+              RequireNativeGeneration(LGeneration);
+              LDrawing.Configure(LDrawingScene, LDrawingProvider, LDrawingTheme, LDrawingLabel);
+                RequireNativeGeneration(LGeneration);
+            end;
+            RequireNativeGeneration(LGeneration);
+            LBinding.SyncPicture;
+            RequireNativeGeneration(LGeneration);
+            LBinding.FControl.AccessibleValue := LNode.Prop('pressed');
+            RequireNativeGeneration(LGeneration);
+
+            if LBinding.FCaption <> nil then
+            begin
+              LBinding.FCaption.Caption := LNode.Prop('text');
+              RequireNativeGeneration(LGeneration);
+            end
+            else if not LBinding.FCustom then
+            begin
+
+              if (LBinding.FControl is TLabel) or (LBinding.FControl is TNyxLCLButton) or
+                (LBinding.FControl is TButton) or (LBinding.FControl is TCheckBox) or
+                (LBinding.FControl is TRadioButton) or (LBinding.FControl is TGroupBox) then
+              begin
+                TNyxControlAccess(LBinding.FControl).Caption := LNode.Prop('text');
+                RequireNativeGeneration(LGeneration);
+
+                if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+                begin
+                  TNyxControlAccess(LBinding.FControl).Caption := LDisclosureCaption;
+                  RequireNativeGeneration(LGeneration);
+                end;
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+            end;
+
+            if not LBinding.FCustom and (LNode.ProjectionKind = 'code') and
+              (StringReplace(TNyxText(TMemo(LBinding.FControl).Text), #13#10, #10,
+              [rfReplaceAll]) <> LNode.Prop('text')) then
+            begin
+              RequireNativeGeneration(LGeneration);
+              { A code block's content is Text, not the editable scalar Value. Skip
+                unchanged text to preserve its inspection caret/selection and scroll. }
+              TMemo(LBinding.FControl).Text := LNode.Prop('text');
+              RequireNativeGeneration(LGeneration);
+            end;
+            RequireNativeGeneration(LGeneration);
+
+            if LBinding.FControl is TNyxLCLButton then
+            begin
+              TNyxLCLButton(LBinding.FControl).ApplyTheme(FTheme, LNode.Prop('variant'));
+              RequireNativeGeneration(LGeneration);
+              LBinding.SyncButtonFace;
+              RequireNativeGeneration(LGeneration);
+
+              if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+              begin
+
+                if NyxInteractionPolicy(LDisclosureBody).Visible then
+                begin
+                  RequireNativeGeneration(LGeneration);
+                  TNyxLCLButton(LBinding.FControl).Disclosure(ndcExpanded);
+                  RequireNativeGeneration(LGeneration);
+                end
+                else
+                begin
+                  RequireNativeGeneration(LGeneration);
+                  TNyxLCLButton(LBinding.FControl).Disclosure(ndcCollapsed);
+                  RequireNativeGeneration(LGeneration);
+                end;
+                RequireNativeGeneration(LGeneration);
+              end
+              else
+              begin
+                RequireNativeGeneration(LGeneration);
+                TNyxLCLButton(LBinding.FControl).Disclosure(ndcNone);
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+            end;
+            LInput := LBinding.FInput;
+            LValue := LNode.Prop('value');
+            RequireNativeGeneration(LGeneration);
+            { Composition owns its physical text until the OS end has drained. }
+
+            if LBinding.FComposing then
+            begin
+              Continue;
+            end;
+            LWriteValue := (FForceValues and ((FForceValueNode = nil) or
+              (FForceValueNode = LNode))) or not LBinding.FHasValueBaseline or
+              (LBinding.FLastValue <> LValue);
+              RequireNativeGeneration(LGeneration);
+            LBinding.FHasValueBaseline := True;
+            LBinding.FLastValue := LValue;
+
+            if LInput <> nil then
+            begin
+              LInput.Enabled := LEnabled;
+              LInput.Hint := LBinding.FControl.Hint;
+              RequireNativeGeneration(LGeneration);
+              LInput.ShowHint := LBinding.FControl.ShowHint;
+              RequireNativeGeneration(LGeneration);
+              LInput.AccessibleName := LBinding.FControl.AccessibleName;
+              RequireNativeGeneration(LGeneration);
+              SyncNyxLCLAccessibility(LInput);
+              RequireNativeGeneration(LGeneration);
+            end;
+
+            if LInput is TSpinEdit then
+            begin
+              LMinimum := StrToIntDef(LNode.Prop('min'), 0);
+              RequireNativeGeneration(LGeneration);
+              LMaximum := StrToIntDef(LNode.Prop('max'), 100);
+              RequireNativeGeneration(LGeneration);
+
+              if LMinimum > TSpinEdit(LInput).MaxValue then
+              begin
+                RequireNativeGeneration(LGeneration);
+                TSpinEdit(LInput).MaxValue := LMaximum;
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+              TSpinEdit(LInput).MinValue := LMinimum;
+              RequireNativeGeneration(LGeneration);
+              TSpinEdit(LInput).MaxValue := LMaximum;
+              RequireNativeGeneration(LGeneration);
+              TSpinEdit(LInput).ReadOnly := LReadOnly;
+              RequireNativeGeneration(LGeneration);
+
+              if LWriteValue and (TSpinEdit(LInput).Value <> StrToIntDef(LValue, 0)) then
+              begin
+                RequireNativeGeneration(LGeneration);
+                TSpinEdit(LInput).Value := StrToIntDef(LValue, 0);
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+            end
+            else if LInput is TCustomEdit then
+            begin
+              TEdit(LInput).ReadOnly := LReadOnly;
+              RequireNativeGeneration(LGeneration);
+              TEdit(LInput).TextHint := LNode.Prop('placeholder');
+              RequireNativeGeneration(LGeneration);
+
+              if not LBinding.FCustom and (LNode.ProjectionKind = 'input') then
+              begin
+                RequireNativeGeneration(LGeneration);
+                { Formatting can change after mounting. Re-resolve its actual scalar
+                  domain so a newly numeric face keeps unfinished drafts until commit,
+                  and returning to Text restores ordinary per-change admission. An
+                  explicit recipe domain remains authoritative over the format hint. }
+                LValueDomain := NyxNodeValueDomain(LNode);
+                RequireNativeGeneration(LGeneration);
+                LBinding.FDeferredValue := LValueDomain.Defined and
+                  (LValueDomain.Kind in [nskInteger, nskNumber]);
+                  RequireNativeGeneration(LGeneration);
+
+                if LBinding.FDeferredValue then
+                begin
+                  TEdit(LInput).OnEditingDone := LBinding.CommitValue;
+                  RequireNativeGeneration(LGeneration);
+                end
+                else
+                begin
+                  TEdit(LInput).OnEditingDone := nil;
+                  RequireNativeGeneration(LGeneration);
+                end;
+
+                if LNode.Prop('input-type') = 'password' then
+                begin
+                  RequireNativeGeneration(LGeneration);
+                  TEdit(LInput).PasswordChar := '*';
+                  RequireNativeGeneration(LGeneration);
+                end
+                else
+                begin
+                  RequireNativeGeneration(LGeneration);
+                  TEdit(LInput).PasswordChar := #0;
+                  RequireNativeGeneration(LGeneration);
+                end;
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+
+              if LWriteValue and
+                (StringReplace(TNyxText(TEdit(LInput).Text), #13#10, #10, [rfReplaceAll]) <> LValue) then
+              begin
+                RequireNativeGeneration(LGeneration);
+                TEdit(LInput).Text := LValue;
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+            end
+            else if LInput is TComboBox then
+            begin
+
+              if LWriteValue and (TNyxText(TComboBox(LInput).Text) <> LValue) then
+              begin
+                RequireNativeGeneration(LGeneration);
+                TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(LValue);
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+            end
+            else if LInput is TCheckBox then
+            begin
+
+              if LWriteValue then
+              begin
+                TCheckBox(LInput).Checked := LValue = 'true';
+                RequireNativeGeneration(LGeneration);
+              end;
+            end
+            else if LInput is TRadioButton then
+            begin
+
+              if LWriteValue then
+              begin
+                TRadioButton(LInput).Checked := LValue = 'true';
+                RequireNativeGeneration(LGeneration);
+              end;
+            end
+            else if LInput is TNyxLCLSlider then
+            begin
+              TNyxLCLSlider(LInput).Accept(TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
+                StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
+                StrToIntDef(LNode.Prop('slider-intervals'), 1000)), LValue);
+                RequireNativeGeneration(LGeneration);
+            end
+            else if LInput is TTrackBar then
+            begin
+              LMinimum := StrToIntDef(LNode.Prop('min'), 0);
+              RequireNativeGeneration(LGeneration);
+              LMaximum := StrToIntDef(LNode.Prop('max'), 100);
+              RequireNativeGeneration(LGeneration);
+
+              if LMinimum > TTrackBar(LInput).Max then
+              begin
+                RequireNativeGeneration(LGeneration);
+                TTrackBar(LInput).Max := LMaximum;
+                RequireNativeGeneration(LGeneration);
+              end;
+              RequireNativeGeneration(LGeneration);
+              TTrackBar(LInput).Min := LMinimum;
+              RequireNativeGeneration(LGeneration);
+              TTrackBar(LInput).Max := LMaximum;
+              RequireNativeGeneration(LGeneration);
+
+              if LWriteValue then
+              begin
+                TTrackBar(LInput).Position := StrToIntDef(LValue, 0);
+                RequireNativeGeneration(LGeneration);
+              end;
+            end;
+
+            if LBinding.FControl is TProgressBar then
+            begin
+              TProgressBar(LBinding.FControl).Min := StrToIntDef(LNode.Prop('min'), 0);
+              RequireNativeGeneration(LGeneration);
+              TProgressBar(LBinding.FControl).Max := StrToIntDef(LNode.Prop('max'), 100);
+              RequireNativeGeneration(LGeneration);
+              TProgressBar(LBinding.FControl).Position := StrToIntDef(LValue, 0);
+              RequireNativeGeneration(LGeneration);
+
+              if LBinding.FControl is TNyxLCLProgress then
+              begin
+                TNyxLCLProgress(LBinding.FControl).Indeterminate :=
+                  LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true';
+                  RequireNativeGeneration(LGeneration);
+              end
+              else if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
+              begin
+                TProgressBar(LBinding.FControl).Style := pbstMarquee;
+                RequireNativeGeneration(LGeneration);
+              end
+              else
+              begin
+                TProgressBar(LBinding.FControl).Style := pbstNormal;
+                RequireNativeGeneration(LGeneration);
+              end;
+            end;
+
+            if Assigned(LBinding.FUpdater) then
+            begin
+              RequireNativeGeneration(LGeneration);
+              LBinding.FUpdater(LNode, LBinding.FControl);
+              RequireNativeGeneration(LGeneration);
+            end;
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+          SyncRadioFocus;
+          RequireNativeGeneration(LGeneration);
+          {$ifdef NYX_STUDIO_PROFILE}
+          WriteLn('native-sync,properties,', Length(FBindings), ',', GetTickCount64 - LSyncStarted);
+          RequireNativeGeneration(LGeneration);
+          LLayoutStarted := GetTickCount64;
+          {$endif}
+          Resize(FPanel);
+          RequireNativeGeneration(LGeneration);
+          {$ifdef NYX_STUDIO_PROFILE}
+          WriteLn('native-sync,layout,', Length(FBindings), ',', GetTickCount64 - LLayoutStarted);
+          RequireNativeGeneration(LGeneration);
+          {$endif}
+
+          if not UpdateViewport then
+          begin
+            Break;
+          end;
+
+          if LProjectionPass = LMaximumPasses then
+          begin
+            raise ENyxModel.Create('Container presentation allocation did not settle');
+          end;
+        end;
+      finally
+
+        if NativeGenerationCurrent(LGeneration) then
+        begin
+          FUpdating := False;
+          FlushImages;
+        end;
+      end;
+      RequireNativeGeneration(LGeneration);
+      InitializeCanvases;
+      RequireNativeGeneration(LGeneration);
+      QueueContent;
+      RequireNativeGeneration(LGeneration);
+
+      if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) and
+        LDisclosureFocus.CanFocus then
+      begin
+        RequireNativeGeneration(LGeneration);
+        { Win32 can focus this header while the hidden body is synchronizing. Those
+          guarded notifications update the physical baseline but do not dispatch.
+          Recover the prior header baseline so the settled transition is delivered
+          once even when SetFocus would now be a physical no-op. }
+        LFocusBinding.FHasFocus := LHeaderHadFocus;
+
+        if LOriginHadFocus then
+        begin
+          LOriginBinding.FHasFocus := True;
+          LBeforeExit := Screen.ActiveControl;
+          RequireNativeGeneration(LGeneration);
+          LOriginBinding.ObserveFocus(ntAfterExit);
+          RequireNativeGeneration(LGeneration);
+
+          if (LFocusEvents.ViewRevision <> LFocusRevision) or
+            (Screen.ActiveControl <> LBeforeExit) then
+          begin
+            RequireNativeGeneration(LGeneration);
+            Exit;
+          end;
+          RequireNativeGeneration(LGeneration);
+        end;
+
+        if LDisclosureFocus.Focused then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LFocusBinding.ObserveFocus(ntAfterEnter);
+          RequireNativeGeneration(LGeneration);
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        { Last borrowed call: focus callbacks may retire or dispose this renderer. }
+        LDisclosureFocus.SetFocus;
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { Obsolete receiver: committed data stays intact; no successor tail runs. }
+      end;
     end;
-    { Last borrowed call: focus callbacks may retire or dispose this renderer. }
-    LDisclosureFocus.SetFocus;
+  finally
+    { LAST: retain the exact original native frame across every callback tail. }
+    LPhysicalFrame.Leave;
   end;
 end;
-
 
 procedure TNyxLCLBinding.SetupCanvas(ARenderer: TNyxLCLRenderer);
 begin
   { Children compose their own built-ins. A later parent registration cannot
     rewrite this accepted membership; an explicit child registry still wins. }
   ARenderer.FInheritedCoordinatorSnapshot := FRenderer.FCallerCoordinatorSnapshot;
+  ARenderer.FInheritedCollectionInputGate := FRenderer.FCollectionInputGate;
   ARenderer.FFactoryKinds := Copy(FRenderer.FFactoryKinds, 0, Length(FRenderer.FFactoryKinds));
   ARenderer.FDrawingNames := Copy(FRenderer.FDrawingNames, 0, Length(FRenderer.FDrawingNames));
   ARenderer.FDrawingProviders := Copy(FRenderer.FDrawingProviders, 0, Length(FRenderer.FDrawingProviders));
@@ -9467,43 +13766,76 @@ end;
 
 procedure TNyxLCLBinding.CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
   LEvents: INyxEvents;
   LCallback: TNyxLCLEvent;
   LRevision: Integer;
 begin
+  LGeneration := GenerationLease;
 
-  if FRenderer.FUpdating or FRenderer.FPublishingContent then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-  LEvents := FRenderer.FEvents;
-  LCallback := FRenderer.FOnEvent;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
 
-  if FRenderer.FDesignMode then
-  begin
+      if FRenderer.FUpdating or FRenderer.FPublishingContent then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      RequireNativeGeneration(LGeneration);
+      LCallback := FRenderer.FOnEvent;
 
-    if Assigned(LCallback) then
-    begin
-      LCallback(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+      if FRenderer.FDesignMode then
+      begin
+
+        if Assigned(LCallback) then
+        begin
+          RequireNativeGeneration(LGeneration);
+          LCallback(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+          RequireNativeGeneration(LGeneration);
+        end;
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      { Dispatch may free this binding and its entire parent renderer. Keep only
+        the managed stream and copied legacy callback afterward; retirement changes
+        the captured revision and revokes the borrowed child node. }
+      LEvents.Dispatch(AEvent, ANode.DesignID, ANode.DesignID);
+      RequireNativeGeneration(LGeneration);
+
+      if LEvents.ViewRevision <> LRevision then
+      begin
+        RequireNativeGeneration(LGeneration);
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if Assigned(LCallback) then
+      begin
+        RequireNativeGeneration(LGeneration);
+        LCallback(ANode, AEvent);
+        RequireNativeGeneration(LGeneration);
+      end;
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The original generation retired; only retained locals may unwind. }
+      end;
     end;
-    Exit;
-  end;
-  LRevision := LEvents.ViewRevision;
-  { Dispatch may free this binding and its entire parent renderer. Keep only
-    the managed stream and copied legacy callback afterward; retirement changes
-    the captured revision and revokes the borrowed child node. }
-  LEvents.Dispatch(AEvent, ANode.DesignID, ANode.DesignID);
-
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
-  end;
-
-  if Assigned(LCallback) then
-  begin
-    LCallback(ANode, AEvent);
+  finally
+    LEnteredFrame.Leave;
   end;
 end;
+
 
 function TNyxLCLRenderer.ToolCanvasView(const AID: TNyxText;
   AIdentity: TNyxIdentityKind): INyxToolCanvasView;
@@ -9576,10 +13908,13 @@ end;
 
 procedure TNyxLCLRenderer.InitializeCanvases;
 var
+  LGeneration: INyxLCLBindingGeneration;
   LIndex: Integer;
   LView: INyxCanvasWorkspaceView;
   LLayout: INyxCanvasLayoutView;
 begin
+  LGeneration := FGeneration;
+  RequireNativeGeneration(LGeneration);
 
   if FUpdating or FLayouting or FProjecting then
   begin
@@ -9588,19 +13923,26 @@ begin
   for LIndex := 0 to High(FBindings) do
   begin
     LView := FBindings[LIndex].FCanvasView;
+    RequireNativeGeneration(LGeneration);
 
     if (LView <> nil) and LView.Connected and
       Supports(LView, INyxCanvasLayoutView, LLayout) then
     begin
+      RequireNativeGeneration(LGeneration);
 
       if LLayout.PresentationRevision = 0 then
       begin
+        RequireNativeGeneration(LGeneration);
         { Refresh owns factory failure on this caller's stack. A candidate's
           outer physical preview can still refuse before retiring its old tree. }
         LView.Refresh;
+        RequireNativeGeneration(LGeneration);
       end;
+      RequireNativeGeneration(LGeneration);
     end;
+    RequireNativeGeneration(LGeneration);
   end;
+  RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLRenderer.MountCanvases(ADocument: TNyxDocument);

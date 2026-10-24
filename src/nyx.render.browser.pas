@@ -86,6 +86,7 @@ uses
   nyx.resources,
   nyx.resource.context,
   nyx.binding,
+  nyx.binding.lifetime,
   nyx.binding.types,
   nyx.collections.view,
   nyx.collections.selection,
@@ -118,11 +119,19 @@ type
     may silently destroy extension-owned markup. }
   TNyxBrowserUpdater = procedure(ANode: TNyxNode; AElement: TJSHTMLElement);
 
-  { A binding borrows a realized node and DOM handles. The renderer owns both
-    the binding and realized tree, clearing bindings before freeing that tree.
-    All target events cross one portable node/event-name boundary. }
+  { A binding borrows a realized node and DOM handles. Its exact generation
+    retains the binding/tree through entered callbacks; disconnect revokes all
+    input before final memory release. Target events cross one portable boundary. }
   TNyxBrowserBinding = class
   private
+    { Weak canonical generation. An entered method takes a managed local lease
+      before its first callout; the generation owns this binding after detach. }
+    FGenerationObject: TObject;
+    FDisconnected: Boolean;
+    procedure Disconnect;
+    procedure RequireCurrent;
+    function RetainView: IInterface;
+    function CurrentRenderer: TNyxBrowserRenderer;
     FRenderer: TNyxBrowserRenderer;
     FNode: TNyxNode;
     FElement: TJSHTMLElement;
@@ -201,6 +210,11 @@ type
     procedure TabsChanged(const AChange: TNyxTabTransition);
     function AdmitTabs(const AChange: TNyxTabTransition): Boolean;
     function Click(AEvent: TJSMouseEvent): Boolean;
+    { One captured Fit-button activation uses the ordinary Click dispatcher.
+      Keyboard callers have already prepared this same command before their
+      key callbacks; they never recapture a newly enabled/replaced column. }
+    function ColumnClick(AEvent: TEventListenerEvent;
+      const ACommand: INyxBrowserColumnCommand; APrepared: Boolean = False): Boolean;
     function Change(AEvent: TEventListenerEvent): Boolean;
     function Enter(AEvent: TEventListenerEvent): Boolean;
     function Leave(AEvent: TEventListenerEvent): Boolean;
@@ -215,6 +229,13 @@ type
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     function KeyUp(AEvent: TJSKeyboardEvent): Boolean;
     function Keyboard(AEvent: TJSKeyboardEvent; ATrigger: TNyxTrigger): Boolean;
+    { Arranged-column defaults retain their entry proof across the SAME public
+      callbacks. These claimed routes never let bubbling recapture a newer view. }
+    function ColumnKeyboard(AEvent: TJSKeyboardEvent;
+      const ACommand: INyxBrowserColumnCommand;
+      ATrigger: TNyxTrigger = ntKeyDown; APrepared: Boolean = False): Boolean;
+    function ColumnDoubleClick(AEvent: TJSMouseEvent;
+      const ACommand: INyxBrowserColumnCommand): Boolean;
     function DoubleClick(AEvent: TJSMouseEvent): Boolean;
     function PointerDown(AEvent: TJSPointerEvent): Boolean;
     function PointerUp(AEvent: TJSPointerEvent): Boolean;
@@ -255,6 +276,22 @@ type
     before retirement; extension destructors must release without raising. }
   TNyxBrowserRenderer = class
   private
+    { These leases own one immutable view generation and its actual palettes.
+      The typed objects are private implementation views, never extra owners. }
+    FGeneration: IInterface;
+    FGenerationObject: TObject;
+    FThemeOwner: IInterface;
+    FBaseThemeOwner: IInterface;
+    FStateOwner: INyxBindingOwnedState;
+    FRetirementShell: Boolean;
+    FDetachedRetirementHost: TJSHTMLElement;
+    { Exact per-attempt authority, separate from accepted view identity. Nested
+      rendering and explicit Unmount invalidate an older unfinished candidate. }
+    FRenderAttempt: IInterface;
+    constructor CreateRetirementShell;
+    procedure DetachView(ATarget: TNyxBrowserRenderer; AKeepPresentation: Boolean);
+    procedure RetireDetached(const AEventView: INyxPreparedEventView);
+    procedure ReleaseDetached;
     FTheme: TNyxTheme;
     FOwnTheme: Boolean;
     { Independent startup palette. Document overrides never accumulate across
@@ -389,6 +426,10 @@ type
     FOwnState: Boolean;
     FLiveBindings: TNyxLiveBindings;
     FCollectionBindings: INyxCollectionBindings;
+    { Own and inherited gates remain distinct through embedded publication. }
+    FCollectionInputGate: INyxCollectionInputGate;
+    FInheritedCollectionInputGate: INyxCollectionInputGate;
+    FCollectionInputPhase: TNyxCollectionInputPhase;
     { Caller-owned executable registrations affect future candidates only.
       Built-ins compose through that same immutable membership and lifetime;
       accepted ports revoke before DOM, with cleanup deferred past adoption. }
@@ -730,10 +771,81 @@ implementation
 
 uses
   nyx.canvas.browser, nyx.canvas.scene, nyx.tool.canvas.browser,
-  nyx.collections.query.browser,
+  nyx.collections, nyx.collections.query.browser,
+  nyx.collections.arrangement.browser,
   nyx.application.resources;
 
 type
+  { One exact owned palette shared by the renderer and an entered generation.
+    Replacing a palette releases only the replacing owner's lease. Supplied
+    caller palettes remain borrowed and are never adopted by this helper. }
+  TBrowserThemeOwner = class(TInterfacedObject)
+  private
+    FTheme: TNyxTheme;
+  public
+    constructor Create(ATheme: TNyxTheme);
+    destructor Destroy; override;
+  end;
+
+  { A view has one canonical, terminal authority flag and one preallocated
+    retirement shell. Clear moves the old fields there before any callout.
+    Entered locals defer destruction of nodes, bindings, state and source;
+    the shell never owns or closes the live renderer's event service. }
+  TBrowserViewGeneration = class(TInterfacedObject)
+  public
+    Current: Boolean;
+    RetiredView: TNyxBrowserRenderer;
+    ThemeOwner: IInterface;
+    BaseThemeOwner: IInterface;
+    { Borrowed from this generation's active view or retirement shell. Input
+      phase dispatch owns an outer generation lease while using this reader. }
+    LiveBindings: TNyxLiveBindings;
+    function ReadSignalSnapshot(ANode: TNyxNode;
+      ATrigger: TNyxTrigger): TNyxEventInfo;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  { Private normal unwind after callback-driven view retirement. Only the
+    synchronization boundary catches it; authored exceptions remain errors. }
+  ENyxBrowserViewRetired = class(ENyxModel);
+
+  { One remount's retained editing facts. The local managed lease array owns
+    these objects until rollback/adoption finishes; a parallel typed array is
+    only a borrowed view. Class storage gives pas2js the interface finalization
+    that anonymous record members cannot provide. No renderer/widget is owned. }
+  TBrowserCellEditTransfer = class(TInterfacedObject)
+  public
+    Identity: TNyxContentIdentity;
+    Source: INyxCollectionEditMount;
+    Snapshot: INyxCollectionEditsSnapshot;
+    Store: INyxCollection;
+    Focused: TNyxCollectionCellEdit;
+  end;
+
+  { Internal control-flow refusal. A router query may navigate while the shared
+    keyboard dispatcher is asking for a fresh phase snapshot. Unwind that cycle
+    before invoking its borrowed snapshot method; ordinary application errors
+    still propagate to the listener's exception boundary. }
+  ENyxColumnInputRetired = class(ENyxModel);
+
+  { One synchronous keyboard cycle owns this adapter, the original command and
+    real router. The callback itself still borrows the accepted live bindings;
+    each Read checks the real revision and entry proof AFTER outward queries.
+    Fresh per-phase payloads are preserved without retaining a renderer/tree or
+    inventing a second keyboard dispatcher. }
+  TColumnKeyboardSnapshot = class(TInterfacedObject)
+  private
+    FEvents: INyxEvents;
+    FRevision: Integer;
+    FCommand: INyxBrowserColumnCommand;
+    FRead: TNyxSignalSnapshot;
+  public
+    constructor Create(const AEvents: INyxEvents; ARevision: Integer;
+      const ACommand: INyxBrowserColumnCommand; ARead: TNyxSignalSnapshot);
+    function Read(ANode: TNyxNode; ATrigger: TNyxTrigger): TNyxEventInfo;
+  end;
+
   { Final presentation receiver is weak. A scope retains this managed port,
     never a renderer/controller; Sync is the last outward action in Request. }
   TNyxBrowserCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget)
@@ -765,6 +877,33 @@ type
     procedure Unlisten(const AName: String; AHandler: TJSEventHandler;
       ACapture: Boolean); external name 'removeEventListener';
   end;
+
+constructor TColumnKeyboardSnapshot.Create(const AEvents: INyxEvents;
+  ARevision: Integer; const ACommand: INyxBrowserColumnCommand;
+  ARead: TNyxSignalSnapshot);
+begin
+  inherited Create;
+  FEvents := AEvents;
+  FRevision := ARevision;
+  FCommand := ACommand;
+  FRead := ARead;
+end;
+
+function TColumnKeyboardSnapshot.Read(ANode: TNyxNode;
+  ATrigger: TNyxTrigger): TNyxEventInfo;
+var
+  LRevision: Integer;
+begin
+  LRevision := FEvents.ViewRevision;
+
+  if (LRevision <> FRevision) or not FCommand.DispatchCurrent then
+  begin
+    raise ENyxColumnInputRetired.Create('The original column key input retired');
+  end;
+  { This exact internal reader captures accepted tree facts without callouts.
+    No borrowed live-binding access precedes the final original-command check. }
+  Result := FRead(ANode, ATrigger);
+end;
 
 function CaptureBrowserViewport(AElement: TJSHTMLElement): TNyxViewportSnapshot;
 begin
@@ -1109,6 +1248,59 @@ begin
   end;
 end;
 
+constructor TBrowserThemeOwner.Create(ATheme: TNyxTheme);
+begin
+  inherited Create;
+  FTheme := ATheme;
+end;
+
+destructor TBrowserThemeOwner.Destroy;
+var
+  LTheme: TNyxTheme;
+begin
+  LTheme := FTheme;
+  FTheme := nil;
+  LTheme.Free;
+  inherited Destroy;
+end;
+
+constructor TBrowserViewGeneration.Create;
+begin
+  inherited Create;
+  RetiredView := TNyxBrowserRenderer.CreateRetirementShell;
+  Current := True;
+end;
+
+destructor TBrowserViewGeneration.Destroy;
+begin
+  Current := False;
+  FreeAndNil(RetiredView);
+  inherited Destroy;
+end;
+
+function TBrowserViewGeneration.ReadSignalSnapshot(ANode: TNyxNode;
+  ATrigger: TNyxTrigger): TNyxEventInfo;
+begin
+
+  if not Current then
+  begin
+    raise ENyxBrowserViewRetired.Create('The browser view was retired');
+  end;
+  Result := LiveBindings.SignalSnapshot(ANode, ATrigger);
+
+  if not Current then
+  begin
+    raise ENyxBrowserViewRetired.Create('The browser view was retired');
+  end;
+end;
+
+constructor TNyxBrowserRenderer.CreateRetirementShell;
+begin
+  inherited Create;
+  FRetirementShell := True;
+  FDetachedRetirementHost := TJSHTMLElement(document.createElement('div'));
+end;
+
 constructor TNyxBrowserRenderer.Create(ATheme: TNyxTheme);
 begin
   inherited Create;
@@ -1121,9 +1313,16 @@ begin
   if FOwnTheme then
   begin
     FTheme := TNyxTheme.Create;
+    FThemeOwner := TBrowserThemeOwner.Create(FTheme);
+    FOwnTheme := False;
   end;
   FTheme.Validate;
   FBaseTheme := NewNyxDocumentTheme(nil, FTheme);
+  FBaseThemeOwner := TBrowserThemeOwner.Create(FBaseTheme);
+  FGenerationObject := TBrowserViewGeneration.Create;
+  FGeneration := TBrowserViewGeneration(FGenerationObject);
+  TBrowserViewGeneration(FGenerationObject).ThemeOwner := FThemeOwner;
+  TBrowserViewGeneration(FGenerationObject).BaseThemeOwner := FBaseThemeOwner;
   FEvents := NewNyxEvents;
   FCollectionQueryEvents := FEvents;
   FCoordinatorRefreshObject := TNyxBrowserCoordinatorRefresh.Create(Self);
@@ -1136,7 +1335,35 @@ end;
 destructor TNyxBrowserRenderer.Destroy;
 var
   LRetiringCoordinators: TNyxCoordinatorMounts;
+  LEvents: INyxEvents;
+  LTheme: TNyxTheme;
+  LBaseTheme: TNyxTheme;
+  LOwnTheme: Boolean;
+  LThemeOwner: IInterface;
+  LBaseThemeOwner: IInterface;
 begin
+
+  if FRetirementShell then
+  begin
+    try
+      try
+        ReleaseDetached;
+      except
+        { Entered generations already retired their outward producers. Final
+          release cannot report a cleanup error through a destructor. }
+      end;
+    finally
+      inherited Destroy;
+    end;
+    Exit;
+  end;
+  { No producer may regain authority while service-close callbacks execute. }
+
+  if FGenerationObject <> nil then
+  begin
+    TBrowserViewGeneration(FGenerationObject).Current := False;
+  end;
+  LEvents := FEvents;
   { Flag-only weak receiver revocation precedes event/canvas/control cleanup. }
 
   if FCoordinatorRefreshObject <> nil then
@@ -1152,217 +1379,515 @@ begin
   begin
     FContentGuard.Retire;
   end;
-
-  if FEvents <> nil then
-  begin
-    FEvents.Close;
-  end;
-  Clear;
-  FBaseTheme.Free;
-
-  if FOwnTheme then
-  begin
-    FTheme.Free;
-  end;
+  { Revoke the exact asset duties before the first fallible cleanup. The local
+    managed owners keep borrowed palettes alive through coordinator/event
+    retirement; no later destructor tail can clear a reentrant successor's
+    fields. Raw fallbacks cover only partially constructed owned palettes. }
+  LTheme := FTheme;
+  LBaseTheme := FBaseTheme;
+  LOwnTheme := FOwnTheme;
+  LThemeOwner := FThemeOwner;
+  LBaseThemeOwner := FBaseThemeOwner;
+  FTheme := nil;
+  FBaseTheme := nil;
+  FOwnTheme := False;
+  FThemeOwner := nil;
+  FBaseThemeOwner := nil;
   try
-    DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
-  except
-    { No disposal error may skip theme retirement. Explicit Unmount and accepted
-      view replacement retain their cleanup diagnostics. }
+    try
+      Clear;
+    except
+      { Explicit Unmount reports the same supported disconnect failure. Final
+        destruction must still attempt every independent retirement below. }
+    end;
+    try
+      DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
+    except
+      { The ordinary coordinator owner attempts every registered participant. }
+    end;
+    try
+
+      if LEvents <> nil then
+      begin
+        LEvents.Close;
+      end;
+    except
+      { Event retirement cannot skip the exact remaining palette duties. }
+    end;
+    try
+
+      if LBaseThemeOwner = nil then
+      begin
+        LBaseTheme.Free;
+      end;
+    except
+      { Independent assets still receive their own final release attempt. }
+    end;
+    try
+
+      if LOwnTheme then
+      begin
+        LTheme.Free;
+      end;
+    except
+      { Extension destructors must not raise; explicit cleanup owns reporting. }
+    end;
+  finally
+    inherited Destroy;
   end;
-  inherited Destroy;
 end;
 
 procedure TNyxBrowserRenderer.Clear(AKeepPresentation: Boolean;
   const AEventView: INyxPreparedEventView);
 var
-  LIndex: Integer;
-  LRetiringCoordinators: TNyxCoordinatorMounts;
-  LRetiringSource: INyxViewPublicationSource;
-  LRetiringCallerSnapshot: INyxCoordinatorRegistrySnapshot;
+  LGeneration: TBrowserViewGeneration;
+  LLease: IInterface;
+  LRetired: TNyxBrowserRenderer;
 begin
-  LRetiringSource := FViewPublicationSource;
-  LRetiringCallerSnapshot := FCallerCoordinatorSnapshot;
-  FCallerCoordinatorSnapshot := nil;
-  FUpdating := True;
-  RevokeNyxCoordinatorMounts(FCoordinatorMounts);
-  LRetiringCoordinators := nil;
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LLease := FGeneration;
 
-  if AEventView <> nil then
+  if LGeneration = nil then
   begin
-    { Old plan leases remain with RenderFrame until complete ownership transfer. }
-    AEventView.Install;
-  end
-  else
-  begin
-    LRetiringCoordinators := FCoordinatorMounts;
+    Exit;
   end;
-  FCoordinatorMounts := nil;
-  FCoordinatorIDs := nil;
-  { Retire the live document before its borrowed placement is cleared. Pending
-    allocation callbacks must never retain a disposed renderer or mount. }
-  FreeAndNil(FCompiledMount);
+  LGeneration.Current := False;
+  LRetired := LGeneration.RetiredView;
+  DetachView(LRetired, AKeepPresentation);
+  FGenerationObject := nil;
+  FGeneration := nil;
+  { From here on cleanup reads only the displaced shell. A cleanup receiver may
+    mount a successor, or free the original renderer, without old finally tails
+    clearing its fields. The local lease also covers cleanup exceptions. }
+  LRetired.RetireDetached(AEventView);
+end;
+
+procedure TNyxBrowserRenderer.DetachView(ATarget: TNyxBrowserRenderer;
+  AKeepPresentation: Boolean);
+var
+  LIndex: Integer;
+  LAxis: TNyxResizeAxis;
+begin
+  { This block performs assignments only. Every teardown-owned field leaves
+    the live receiver BEFORE the first subscription/control/service callout. }
+  ATarget.FEvents := FEvents;
+  ATarget.FTheme := FTheme;
+  ATarget.FThemeOwner := FThemeOwner;
+  ATarget.FBaseTheme := FBaseTheme;
+  ATarget.FBaseThemeOwner := FBaseThemeOwner;
+  ATarget.FRoot := FRoot;
+  FRoot := nil;
+  ATarget.FState := FState;
+  FState := nil;
+  ATarget.FStateOwner := FStateOwner;
+  FStateOwner := nil;
+  ATarget.FOwnState := FOwnState;
+  FOwnState := False;
+  ATarget.FLiveBindings := FLiveBindings;
+  FLiveBindings := nil;
+  ATarget.FBindings := FBindings;
+  FBindings := nil;
+  ATarget.FHost := FHost;
+  FHost := nil;
+  ATarget.FDetachedCandidate := FDetachedCandidate;
+  ATarget.FCompiledMount := FCompiledMount;
+  FCompiledMount := nil;
   FCompiledArtifact := '';
-
-  if FDisclosureFocusWork <> nil then
-  begin
-    FDisclosureFocusWork.Retire;
-    FDisclosureFocusWork := nil;
-  end;
-
-  if FDisclosureFocusExecution <> nil then
-  begin
-    FDisclosureFocusExecution.Cancel;
-    FDisclosureFocusExecution := nil;
-  end;
+  ATarget.FViewportObserver := FViewportObserver;
+  FViewportObserver := nil;
+  ATarget.FStagingMeasurements := FStagingMeasurements;
+  FStagingMeasurements := nil;
+  ATarget.FContentBlueprint := FContentBlueprint;
+  FContentBlueprint := nil;
+  FContentFrameKnown := False;
+  FContentMeasurementKey := '';
+  ATarget.FViewPublicationSource := FViewPublicationSource;
+  FViewPublicationSource := nil;
+  ATarget.FCallerCoordinatorSnapshot := FCallerCoordinatorSnapshot;
+  FCallerCoordinatorSnapshot := nil;
+  ATarget.FCoordinatorMounts := FCoordinatorMounts;
+  FCoordinatorMounts := nil;
+  ATarget.FCoordinatorIDs := FCoordinatorIDs;
+  FCoordinatorIDs := nil;
+  ATarget.FCollectionBindings := FCollectionBindings;
+  FCollectionBindings := nil;
+  ATarget.FCollectionInputGate := FCollectionInputGate;
+  FCollectionInputGate := nil;
+  ATarget.FEmitterScope := FEmitterScope;
+  FEmitterScope := nil;
+  ATarget.FProjectionBaseline := FProjectionBaseline;
+  FProjectionBaseline := nil;
+  FProjectionContext := '';
+  FProjectionSchemaRevision := 0;
+  ATarget.FDisclosureFocusWork := FDisclosureFocusWork;
+  FDisclosureFocusWork := nil;
+  ATarget.FDisclosureFocusExecution := FDisclosureFocusExecution;
+  FDisclosureFocusExecution := nil;
   FDisclosureFocusOrigin := '';
   FDisclosureFocusHeader := '';
   FDisclosureFocusActive := nil;
   FDisclosureFocusExpected := nil;
 
-  if not AKeepPresentation and (FPresentationView <> nil) then
-  begin
-    FPresentationView.Retire;
-    FPresentationView := nil;
-  end;
-
   if not AKeepPresentation then
   begin
+    ATarget.FPresentationView := FPresentationView;
+    FPresentationView := nil;
+    ATarget.FContentWork := FContentWork;
+    FContentWork := nil;
+    ATarget.FContentExecution := FContentExecution;
+    FContentExecution := nil;
+    FContentRequestedSelection := TNyxPresentationSelection.None;
+    FLastContentError := '';
+  end;
+  FPresentationSelection := TNyxPresentationSelection.None;
+  ATarget.FCanvasResizeGrips := FCanvasResizeGrips;
+  FCanvasResizeGrips := nil;
+  ATarget.FCanvasMoveGrip := FCanvasMoveGrip;
+  FCanvasMoveGrip := nil;
+  ATarget.FCanvasMoveView := FCanvasMoveView;
+  FCanvasMoveView := nil;
+  ATarget.FCanvasMoveHost := FCanvasMoveHost;
+  FCanvasMoveHost := nil;
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+    ATarget.FCanvasGripViews[LAxis] := FCanvasGripViews[LAxis];
+    FCanvasGripViews[LAxis] := nil;
+    ATarget.FCanvasGripHosts[LAxis] := FCanvasGripHosts[LAxis];
+    FCanvasGripHosts[LAxis] := nil;
+  end;
+  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+  begin
+    ATarget.FResizeEdges[LIndex] := FResizeEdges[LIndex];
+    FResizeEdges[LIndex] := nil;
+  end;
+  ATarget.FResizePreview := FResizePreview;
+  FResizePreview := Default(TNyxResizePreview);
+  ATarget.FDropPreview := FDropPreview;
+  FDropPreview := Default(TNyxDropPreview);
+  ATarget.FResizePreviewHandler := FResizePreviewHandler;
+  ATarget.FResizeListening := FResizeListening;
+  FResizeListening := False;
+  FSelectedDesignID := '';
+  FUpdating := False;
+  FForceValues := False;
+  FForceValueNode := nil;
+end;
+
+procedure TNyxBrowserRenderer.RetireDetached(
+  const AEventView: INyxPreparedEventView);
+var
+  LIndex: Integer;
+  LHost: TJSHTMLElement;
+  LParent: TJSNode;
+  LChildren: array of TJSNode;
+  LRetiringCoordinators: TNyxCoordinatorMounts;
+  LFailure: JSValue;
+  LHasFailure: Boolean;
+
+  procedure RememberFailure(AFailure: JSValue);
+  begin
+    { pas2js exceptions are retained JavaScript values. Keep the original
+      Pascal exception OR platform throw, rather than inventing a replacement
+      diagnostic or relying on native-only AcquireExceptionObject. }
+
+    if not LHasFailure then
+    begin
+      LFailure := AFailure;
+      LHasFailure := True;
+    end;
+  end;
+
+begin
+  LHasFailure := False;
+  LFailure := Undefined;
+  LHost := FHost;
+  LParent := nil;
+  LChildren := nil;
+
+  if LHost <> nil then
+  begin
+    LParent := LHost.parentNode;
+    SetLength(LChildren, LHost.childNodes.length);
+    for LIndex := 0 to High(LChildren) do
+    begin
+      LChildren[LIndex] := LHost.childNodes[LIndex];
+    end;
+  end;
+  { The shell never clears the external host after a callout. Its preallocated
+    holder receives only the captured original children still owned by that
+    host; cleanup-triggered successor children are a different cohort. }
+  FHost := FDetachedRetirementHost;
+  FUpdating := True;
+  LRetiringCoordinators := FCoordinatorMounts;
+  FCoordinatorMounts := nil;
+  FCoordinatorIDs := nil;
+  try
+
+    if FViewportObserver <> nil then
+    begin
+      FViewportObserver.disconnect;
+      FViewportObserver := nil;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  try
+
+    if FResizeListening then
+    begin
+      TNyxPreviewEventTarget(document).Unlisten('scroll', FResizePreviewHandler, True);
+      window.removeEventListener('resize', FResizePreviewHandler);
+      FResizeListening := False;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  { Canonical subscription/gate retirement is noncalling and must precede
+    every cancellation or target callback that can observe the external store. }
+  try
+
+    if FLiveBindings <> nil then
+    begin
+      FLiveBindings.Retire;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  try
+
+    if FCollectionInputGate <> nil then
+    begin
+      FCollectionInputGate.Retire;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  { Retire only the old event generation BEFORE any arbitrary disposal,
+    cancellation or custom-element disconnect reaction can mount a successor. }
+  try
+
+    if AEventView <> nil then
+    begin
+      AEventView.Install;
+    end
+    else if FEvents <> nil then
+    begin
+      FEvents.CancelPending;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  try
+    RevokeNyxCoordinatorMounts(LRetiringCoordinators);
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  for LIndex := 0 to High(LChildren) do
+  begin
+    try
+
+      if LChildren[LIndex].parentNode = LHost then
+      begin
+        FDetachedRetirementHost.appendChild(LChildren[LIndex]);
+      end;
+    except
+      RememberFailure(JSExceptValue);
+    end;
+  end;
+  try
+    { A hidden candidate owns its empty probe. A callback that has reused that
+      probe or moved it elsewhere takes precedence over this old cleanup. }
+
+    if FDetachedCandidate and (LHost <> nil) and
+      (LHost.parentNode = LParent) and (LHost.childNodes.length = 0) then
+    begin
+      LHost.remove;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+    try
+      FBindings[LIndex].Disconnect;
+    except
+      RememberFailure(JSExceptValue);
+    end;
+  end;
+  try
+    FreeAndNil(FCompiledMount);
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  FCompiledArtifact := '';
+  try
+
+    if FDisclosureFocusWork <> nil then
+    begin
+      FDisclosureFocusWork.Retire;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  try
+
+    if FDisclosureFocusExecution <> nil then
+    begin
+      FDisclosureFocusExecution.Cancel;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  try
+
+    if FPresentationView <> nil then
+    begin
+      FPresentationView.Retire;
+    end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  try
 
     if FContentWork <> nil then
     begin
       FContentWork.Retire;
-      FContentWork := nil;
     end;
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  try
 
     if FContentExecution <> nil then
     begin
       FContentExecution.Cancel;
-      FContentExecution := nil;
     end;
-    FContentRequestedSelection := TNyxPresentationSelection.None;
-    FLastContentError := '';
+  except
+    RememberFailure(JSExceptValue);
   end;
-  FreeAndNil(FContentBlueprint);
-  FContentFrameKnown := False;
-  FContentMeasurementKey := '';
-
-  if FViewportObserver <> nil then
-  begin
-    FViewportObserver.disconnect;
-    FViewportObserver := nil;
+  try
+    ClearCanvasResizeGrips;
+  except
+    RememberFailure(JSExceptValue);
   end;
-  { Disconnect before clearing any controls: their destructors and retained
-    external producers must never enter a half-disposed view. }
-  ClearCanvasResizeGrips;
-  ClearCanvasMoveGrip;
-  ClearResizePreview;
-  FSelectedDesignID := '';
-
-  if FEmitterScope <> nil then
-  begin
-    FEmitterScope.Disconnect;
-    FEmitterScope := nil;
+  try
+    ClearCanvasMoveGrip;
+  except
+    RememberFailure(JSExceptValue);
   end;
-  FUpdating := True;
-  FProjectionContext := '';
-  FProjectionSchemaRevision := 0;
-  ReleaseNyxNode(FProjectionBaseline);
-
-  if (FEvents <> nil) and (AEventView = nil) then
-  begin
-    FEvents.CancelPending;
+  try
+    ClearResizePreview;
+  except
+    RememberFailure(JSExceptValue);
   end;
-  { Disconnect before releasing DOM/model/state borrowed by the coordinator. }
-  FLiveBindings.Free;
-  FLiveBindings := nil;
-  for LIndex := 0 to Length(FBindings) - 1 do
-  begin
+  try
 
-    if FBindings[LIndex].FCollectionMount <> nil then
+    if FEmitterScope <> nil then
     begin
-      FBindings[LIndex].FCollectionMount.Disconnect;
-      FBindings[LIndex].FCollectionMount := nil;
+      FEmitterScope.Disconnect;
     end;
-
-    if FBindings[LIndex].FToolCanvasView <> nil then
-    begin
-      FBindings[LIndex].FToolCanvasView.Disconnect;
-      FBindings[LIndex].FToolCanvasView := nil;
-    end;
-
-    if FBindings[LIndex].FCanvasView <> nil then
-    begin
-      FBindings[LIndex].FCanvasView.Disconnect;
-      FBindings[LIndex].FCanvasView := nil;
-    end;
-
-    FreeAndNil(FBindings[LIndex].FDrawingView);
-    FBindings[LIndex].FDrawingSource := nil;
-
-    if FBindings[LIndex].FCollectionPager <> nil then
-    begin
-      FBindings[LIndex].FCollectionPager.Disconnect;
-      FBindings[LIndex].FCollectionPager := nil;
-    end;
+  except
+    RememberFailure(JSExceptValue);
   end;
-  { Release the DOM first: handlers cannot run against nodes during teardown. }
-
-  if FHost <> nil then
+  for LIndex := 0 to High(FBindings) do
   begin
-    FHost.textContent := '';
+    try
 
-    if FDetachedCandidate then
-    begin
-      FHost.remove;
+      if FBindings[LIndex].FCollectionMount <> nil then
+      begin
+        FBindings[LIndex].FCollectionMount.Disconnect;
+      end;
+    except
+      RememberFailure(JSExceptValue);
+    end;
+    try
+
+      if FBindings[LIndex].FToolCanvasView <> nil then
+      begin
+        FBindings[LIndex].FToolCanvasView.Disconnect;
+      end;
+    except
+      RememberFailure(JSExceptValue);
+    end;
+    try
+
+      if FBindings[LIndex].FCanvasView <> nil then
+      begin
+        FBindings[LIndex].FCanvasView.Disconnect;
+      end;
+    except
+      RememberFailure(JSExceptValue);
+    end;
+    try
+
+      if FBindings[LIndex].FDrawingView <> nil then
+      begin
+        FBindings[LIndex].FDrawingView.Disconnect;
+      end;
+    except
+      RememberFailure(JSExceptValue);
+    end;
+    try
+
+      if FBindings[LIndex].FCollectionPager <> nil then
+      begin
+        FBindings[LIndex].FCollectionPager.Disconnect;
+      end;
+    except
+      RememberFailure(JSExceptValue);
     end;
   end;
-  FStagingMeasurements := nil;
-  for LIndex := 0 to Length(FBindings) - 1 do
-  begin
-    { Detached nodes may still be held by caller code. Clear callbacks before
-      releasing their Pascal bindings so those references cannot dispatch into
-      a disposed tree. }
-    FBindings[LIndex].FElement.onclick := nil;
+  try
 
-    if FBindings[LIndex].FInput <> nil then
+    if AEventView = nil then
     begin
-      FBindings[LIndex].FInput.onchange := nil;
-      FBindings[LIndex].FInput.removeEventListener('focus', @FBindings[LIndex].Enter);
-      FBindings[LIndex].FInput.removeEventListener('blur', @FBindings[LIndex].Leave);
+      DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
     end;
-    FBindings[LIndex].FElement.removeEventListener('focus', @FBindings[LIndex].Enter);
-    FBindings[LIndex].FElement.removeEventListener('blur', @FBindings[LIndex].Leave);
+  except
+    RememberFailure(JSExceptValue);
+  end;
+  { Exact source/factory/state/palette owners remain in this shell until every
+    entered call returns. Failure does not skip another independent retirement. }
+
+  if LHasFailure then
+  begin
+    { Casting an arbitrary JSValue to Exception emits rtl.getObject, which
+      converts undefined and other primitive throws to null. Preserve the
+      original platform value through this minimal pas2js exception bridge. }
+    asm
+      throw LFailure;
+    end;
+  end;
+end;
+
+procedure TNyxBrowserRenderer.ReleaseDetached;
+var
+  LIndex: Integer;
+begin
+  { All outward producers were disconnected in RetireDetached. This final
+    release runs only after cleanup and every entered generation lease unwind. }
+  FreeAndNil(FLiveBindings);
+  for LIndex := 0 to High(FBindings) do
+  begin
     FBindings[LIndex].Free;
   end;
-  SetLength(FBindings, 0);
-  FCollectionBindings := nil;
+  FBindings := nil;
+  FreeAndNil(FContentBlueprint);
+  ReleaseNyxNode(FProjectionBaseline);
   ReleaseNyxNode(FRoot);
-  FPresentationSelection := TNyxPresentationSelection.None;
 
   if FOwnState then
   begin
     FState.Free;
   end;
   FState := nil;
-  FOwnState := False;
-  FUpdating := False;
-  FHost := nil;
-  { Runtime owners outlive every borrowed DOM/store link above. RenderFrame
-    retains the displaced source locally until successor adoption is complete. }
+  FStateOwner := nil;
+  FCollectionBindings := nil;
   FViewPublicationSource := nil;
-  { A subscription receiver may reenter or fail. Detach every renderer field
-    first so its cleanup cannot interrupt retirement of borrowed DOM/model. }
-  try
-    DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
-  finally
-    try
-      { Keep factories leased until every old child/control link is retired. }
-      LRetiringCallerSnapshot := nil;
-    finally
-      LRetiringSource := nil;
-    end;
-  end;
+  FTheme := nil;
+  FBaseTheme := nil;
+  FThemeOwner := nil;
+  FBaseThemeOwner := nil;
 end;
 
 procedure TNyxBrowserRenderer.RegisterDrawingProvider(const AName: TNyxDrawingProviderRef;
@@ -1687,6 +2212,7 @@ begin
   begin
     Result := Element('progress', '');
     TJSHTMLProgressElement(Result).max := StrToFloatDef(ANode.Prop('max'), 100);
+
     if ANode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'false' then
     begin
       TJSHTMLProgressElement(Result).value := StrToFloatDef(ANode.Prop('value'), 0);
@@ -1900,6 +2426,7 @@ begin
     Result.setAttribute('disabled', '');
   end;
   LBinding := TNyxBrowserBinding.Create;
+  LBinding.FGenerationObject := FGenerationObject;
   LBinding.FRenderer := Self;
   LBinding.FNode := ANode;
   LBinding.FElement := Result;
@@ -1932,6 +2459,7 @@ begin
       LBinding.FCaption := TJSHTMLElement(Result.querySelector('legend'));
     end;
   end;
+
   if not LBinding.FCustom and (ANode.ProjectionKind = 'radio') then
   begin
     Result.addEventListener('focus', @LBinding.ForwardRadioFocus);
@@ -2196,8 +2724,26 @@ begin
 end;
 
 procedure TNyxBrowserRenderer.QueueContent;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LScheduler: INyxScheduler;
+  LExecution: INyxExecution;
+  LStatus: TNyxExecutionStatus;
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
   WakeResources;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
 
   if (FContentBlueprint = nil) or FDetachedCandidate or FPublishingContent then
   begin
@@ -2215,17 +2761,36 @@ begin
     Exit;
   end;
 
-  if (FContentExecution <> nil) and
-    (FContentExecution.Status in [nesPending, nesRunning]) then
+  LExecution := FContentExecution;
+
+  if LExecution <> nil then
   begin
-    Exit;
+    LStatus := LExecution.Status;
+
+    if not LGeneration.Current or (LStatus in [nesPending, nesRunning]) then
+    begin
+      Exit;
+    end;
   end;
 
   if FContentWork = nil then
   begin
     FContentWork := NewNyxContentWork(@RefreshContent);
   end;
-  FContentExecution := FEvents.Scheduler.Submit(FContentWork, neUIQueue);
+  LScheduler := FEvents.Scheduler;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
+  LExecution := LScheduler.Submit(FContentWork, neUIQueue);
+
+  if not LGeneration.Current then
+  begin
+    LExecution.Cancel;
+    Exit;
+  end;
+  FContentExecution := LExecution;
 end;
 
 procedure TNyxBrowserRenderer.RefreshContent;
@@ -2495,10 +3060,20 @@ var
   LCandidate: TNyxBrowserRenderer;
   LStyle: TJSHTMLElement;
   LIndex: Integer;
-  LTransferState: Boolean;
   LRuntimeState: TNyxState;
   LOwnRuntimeState: Boolean;
+  LRuntimeStateOwner: INyxBindingOwnedState;
+  LEnteredGeneration: IInterface;
+  LRenderAttempt: IInterface;
+  LReceiverLifetime: INyxContentLifetime;
+  LCommittedRevision: Integer;
+  LThemeOwner: IInterface;
+  LBaseThemeOwner: IInterface;
   LCollections: INyxCollectionBindings;
+  LCollectionInputGate: INyxCollectionInputGate;
+  LCollectionAdmissions: array of INyxCollectionInputAdmission;
+  LCollectionAdmission: INyxCollectionInputAdmission;
+  LCollectionMount: INyxCollectionMount;
   LMeasurements: INyxContainerSnapshot;
   { Incoming managed const arguments can alias caller slots. Retain their
     intended values before asking an alternate registry for its snapshot. }
@@ -2518,6 +3093,17 @@ var
   LNewChildren: array of TJSNode;
   LFormerFocus: TJSHTMLElement;
   LFormerSelection: TNyxTextSelection;
+  { Managed source facets remain leased until rollback or accepted Disconnect.
+    Snapshots contain copied cell values and exact content/store identity only. }
+  LCellEdits: array of TBrowserCellEditTransfer;
+  LCellEditLeases: array of IInterface;
+  LFormerCellFocus, LCellFocusAllowed: Boolean;
+  LCellFocusAnchor: TJSElement;
+  LReplacementCellFocus: TJSElement;
+  LReplacementCellSource: INyxCollectionEditMount;
+  LReplacementCellStore: INyxCollection;
+  LReplacementCellDraft: TNyxCollectionCellEdit;
+  LCellResumeError: TNyxText;
   LFormerClass: TNyxText;
   LFormerScope: TNyxText;
   LHadScope: Boolean;
@@ -2545,6 +3131,208 @@ var
   LRootFence: INyxPublicationReadiness;
   LCleanupFailed: Boolean;
   LCleanupError: TNyxText;
+
+  function AttemptCurrent: Boolean;
+  begin
+    { The retained lifetime is local and noncalling. Never inspect a destroyed
+      receiver merely to discover that its attempt has already retired. }
+    Result := False;
+
+    if (LReceiverLifetime = nil) or not LReceiverLifetime.Active then
+    begin
+      Exit;
+    end;
+    Result := FRenderAttempt = LRenderAttempt;
+  end;
+
+  procedure CheckAttempt;
+  begin
+
+    if not AttemptCurrent then
+    begin
+      raise ENyxBrowserViewRetired.Create('The browser render attempt was retired');
+    end;
+  end;
+
+  procedure SuspendCellDrafts;
+  var
+    LBindingIndex, LPrevious, LSlot, LCell: Integer;
+    LMount: INyxCollectionMount;
+    LEdits: INyxCollectionEditMount;
+    LIdentity: TNyxContentIdentity;
+    LTransfer: TBrowserCellEditTransfer;
+    LTransferLease: IInterface;
+  begin
+    for LBindingIndex := 0 to High(FBindings) do
+    begin
+      LMount := FBindings[LBindingIndex].FCollectionMount;
+
+      if (LMount = nil) or not LMount.Connected or
+        not LMount.View.Spec.HasLayoutControls then
+      begin
+        Continue;
+      end;
+      LEdits := nil;
+
+      if not Supports(LMount, INyxCollectionEditMount, LEdits) then
+      begin
+        raise ENyxModel.Create('Browser table has no cell edit handoff');
+      end;
+      LIdentity := NyxContentIdentity(FBindings[LBindingIndex].FNode);
+      for LPrevious := 0 to High(LCellEdits) do
+      begin
+
+        if LCellEdits[LPrevious].Identity.Same(LIdentity) then
+        begin
+          raise ENyxModel.Create('Browser cell edit handoff has an ambiguous content identity');
+        end;
+      end;
+      LSlot := Length(LCellEdits);
+      { Grow ownership storage first. Even allocation refusal cannot leave an
+        unowned or nil transfer inside the rollback traversal's typed array. }
+      SetLength(LCellEditLeases, LSlot + 1);
+      LTransfer := TBrowserCellEditTransfer.Create;
+      LTransferLease := LTransfer;
+      SetLength(LCellEdits, LSlot + 1);
+      LCellEdits[LSlot] := LTransfer;
+      LCellEditLeases[LSlot] := LTransferLease;
+      LCellEdits[LSlot].Identity := LIdentity;
+      LCellEdits[LSlot].Source := LEdits;
+      LCellEdits[LSlot].Snapshot := LEdits.SuspendCellEdits;
+      LCellEdits[LSlot].Store := LCellEdits[LSlot].Snapshot.Store;
+      for LCell := 0 to LCellEdits[LSlot].Snapshot.Count - 1 do
+      begin
+        LFormerCellFocus := LFormerCellFocus or
+          LCellEdits[LSlot].Snapshot.CellAt(LCell).Focused;
+
+        if LCellEdits[LSlot].Snapshot.CellAt(LCell).Focused then
+        begin
+          LCellEdits[LSlot].Focused := LCellEdits[LSlot].Snapshot.CellAt(LCell);
+        end;
+      end;
+    end;
+    LCellFocusAnchor := document.activeElement;
+  end;
+
+  procedure RestoreCandidateCellDrafts;
+  var
+    LSlot, LBindingIndex, LFound: Integer;
+    LMount: INyxCollectionMount;
+    LEdits: INyxCollectionEditMount;
+    LIdentity: TNyxContentIdentity;
+  begin
+    for LSlot := 0 to High(LCellEdits) do
+    begin
+      LFound := -1;
+      for LBindingIndex := 0 to High(LCandidate.FBindings) do
+      begin
+        LIdentity := NyxContentIdentity(LCandidate.FBindings[LBindingIndex].FNode);
+
+        if not LIdentity.Same(LCellEdits[LSlot].Identity) then
+        begin
+          Continue;
+        end;
+
+        if LFound >= 0 then
+        begin
+          raise ENyxModel.Create('Browser replacement repeats a cell edit identity');
+        end;
+        LFound := LBindingIndex;
+      end;
+
+      if LFound < 0 then
+      begin
+        Continue;
+      end;
+      LMount := LCandidate.FBindings[LFound].FCollectionMount;
+      LEdits := nil;
+
+      if (LMount <> nil) and LMount.Connected and
+        LMount.View.Spec.HasLayoutControls and
+        Supports(LMount, INyxCollectionEditMount, LEdits) then
+      begin
+
+        if LEdits.RestoreCellEdits(LCellEdits[LSlot].Snapshot, LCellFocusAllowed) then
+        begin
+          LReplacementCellFocus := document.activeElement;
+          LReplacementCellSource := LEdits;
+          LReplacementCellStore := LCellEdits[LSlot].Store;
+          LReplacementCellDraft := LCellEdits[LSlot].Focused;
+        end;
+      end;
+    end;
+  end;
+
+  function CellRollbackFocusAllowed: Boolean;
+  var
+    LFocus: TJSElement;
+    LSlot: Integer;
+  begin
+    LFocus := document.activeElement;
+    Result := (LFocus = nil) or (LFocus = document.body);
+
+    if Result then
+    begin
+      Exit;
+    end;
+
+    if (LReplacementCellSource <> nil) and
+      (LFocus = LReplacementCellFocus) and
+      LReplacementCellSource.CellEditFocusMatches(LReplacementCellStore,
+        LReplacementCellDraft) then
+    begin
+      Exit(True);
+    end;
+
+    if LFocus <> LCellFocusAnchor then
+    begin
+      Exit(False);
+    end;
+    for LSlot := 0 to High(LCellEdits) do
+    begin
+
+      if LCellEdits[LSlot].Focused.Defined and
+        LCellEdits[LSlot].Source.CellEditFocusMatches(LCellEdits[LSlot].Store,
+          LCellEdits[LSlot].Focused) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+  procedure ResumeFormerCellDrafts;
+  var
+    LSlot: Integer;
+  begin
+    for LSlot := 0 to High(LCellEdits) do
+    begin
+
+      if LCellEdits[LSlot].Snapshot = nil then
+      begin
+        Continue;
+      end;
+      try
+        LCellEdits[LSlot].Source.ResumeCellEdits(LCellEdits[LSlot].Snapshot,
+          LCellFocusAllowed);
+      except
+        on E: Exception do
+        begin
+
+          if LCellResumeError = '' then
+          begin
+            LCellResumeError := E.Message;
+          end;
+        end;
+      end;
+    end;
+
+    if LCellResumeError <> '' then
+    begin
+      FLastBindingError := 'Cell draft rollback failed: ' + LCellResumeError;
+      FLastBindingFailure := nbfRejected;
+    end;
+  end;
 
   procedure RememberCleanupFailure(AError: Exception);
   begin
@@ -2689,6 +3477,9 @@ begin
   { Build the entire candidate offscreen, then preview fallible physical work in
     the actual host. Model admission alone is insufficient. Transfer ownership
     only after target synchronization, observation and face restoration succeed. }
+  LReceiverLifetime := FContentLifetime;
+  LRenderAttempt := TInterfacedObject.Create;
+  FRenderAttempt := LRenderAttempt;
 
   if AHost = nil then
   begin
@@ -2709,10 +3500,34 @@ begin
     Snapshot both owners before Clear or any external preparation can run. }
   LSource := APublicationSource;
   LFormerSource := FViewPublicationSource;
+  LEnteredGeneration := FGeneration;
+  LThemeOwner := FThemeOwner;
+  LBaseThemeOwner := FBaseThemeOwner;
+  { Capture the actual owned holder before alternate registry/source callouts.
+    A borrowed store with the same raw address cannot manufacture ownership. }
+  LRuntimeStateOwner := FStateOwner;
+
+  if (AState = nil) or (LRuntimeStateOwner = nil) or
+    (LRuntimeStateOwner.State <> AState) then
+  begin
+    LRuntimeStateOwner := nil;
+  end;
   LRootPublication := nil;
   LRootFence := nil;
   LCleanupFailed := False;
   LCleanupError := '';
+  LCellEdits := nil;
+  LCellEditLeases := nil;
+  LCollectionAdmissions := nil;
+  LCollectionInputGate := nil;
+  LFormerCellFocus := False;
+  LCellFocusAllowed := False;
+  LCellFocusAnchor := nil;
+  LReplacementCellFocus := nil;
+  LReplacementCellSource := nil;
+  LReplacementCellStore := nil;
+  LReplacementCellDraft := Default(TNyxCollectionCellEdit);
+  LCellResumeError := '';
   LFormerCoordinators := nil;
   LAcceptedCoordinators := nil;
   { Capture once before any factory callout, including hidden settling passes.
@@ -2735,7 +3550,6 @@ begin
   LFirstCandidate := True;
   LFormat := FormatSettings;
   LFormat.DecimalSeparator := '.';
-  LTransferState := (AState <> nil) and FOwnState and (AState = FState);
 
   if LCoordinatorRegistry <> nil then
   begin
@@ -2743,6 +3557,7 @@ begin
       later embedded mounts. No mutable registry survives through this field. }
     LCallerCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(nil,
       LCoordinatorRegistry.Snapshot);
+    CheckAttempt;
   end;
   { Built-ins and caller behavior share one immutable membership and prepared
     lifetime. Authored applications keep their automatic registrations. }
@@ -2759,6 +3574,8 @@ begin
     if LOwnRuntimeState then
     begin
       LRuntimeState := ADocument.State.Clone;
+      LRuntimeStateOwner := OwnNyxBindingState(LRuntimeState);
+      LOwnRuntimeState := False;
     end;
     LBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
 
@@ -2767,7 +3584,12 @@ begin
       LSettlement := TNyxContentSettlement.Create;
     end;
     repeat
+      CheckAttempt;
       LCandidate := TNyxBrowserRenderer.Create(FTheme);
+      LCollectionAdmissions := nil;
+      LCollectionInputGate := NewNyxCollectionInputGate(FInheritedCollectionInputGate);
+      LCandidate.FCollectionInputGate := LCollectionInputGate;
+      LCandidate.FCollectionInputPhase := ncipStaged;
       { Build may mount saved canvases before this outer candidate commits. }
       LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
 
@@ -2791,6 +3613,9 @@ begin
         LCandidate.FTheme := NewNyxDocumentTheme(ADocument, FBaseTheme);
       end;
       LCandidate.FOwnTheme := True;
+      LCandidate.FThemeOwner := TBrowserThemeOwner.Create(LCandidate.FTheme);
+      LCandidate.FOwnTheme := False;
+      TBrowserViewGeneration(LCandidate.FGenerationObject).ThemeOwner := LCandidate.FThemeOwner;
       LCandidate.FFactoryKinds := Copy(FFactoryKinds, 0, Length(FFactoryKinds));
       LCandidate.FDrawingNames := Copy(FDrawingNames, 0, Length(FDrawingNames));
       LCandidate.FDrawingProviders := Copy(FDrawingProviders, 0, Length(FDrawingProviders));
@@ -2808,6 +3633,7 @@ begin
       { Use the final owner's scheduler, never the candidate's temporary router. }
       LCandidate.FEmitterScope := NewNyxEventEmitterScope(FEvents.Scheduler);
       LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
+
       if AKeepPresentation then
       begin
         LCandidate.FProjectionContext := FProjectionContext;
@@ -2836,6 +3662,7 @@ begin
 
       if LCollections <> nil then
       begin
+
         if AKeepPresentation or not LFirstCandidate then
         begin
           LCandidate.FCollectionBindings := LCollections.Recompose(LCandidate.FRoot);
@@ -2850,6 +3677,7 @@ begin
         LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
           NewNyxCollectionContext(ADocument.Collections, LCandidate.FRoot.ResourceContext));
       end;
+
       if ((not ADesignMode) and
         NyxHasCoordinatorMounts(LCandidate.FRoot, LCoordinatorSnapshot)) or
         (Length(FCoordinatorMounts) <> 0) or (LSource <> nil) or
@@ -2878,6 +3706,7 @@ begin
       if LSource <> nil then
       begin
         LRootPublication := LSource.Prepare(ADocument, LCandidate.FRoot, LEventView);
+        CheckAttempt;
 
         if (LRootPublication = nil) or
           not Supports(LRootPublication, INyxPublicationReadiness, LRootFence) then
@@ -2888,8 +3717,10 @@ begin
       { One independent store/context serves every hidden pass. Failed passes
         release only their views/validators, never reimporting application defaults. }
       LCandidate.FState := LRuntimeState;
+      LCandidate.FStateOwner := LRuntimeStateOwner;
       LCandidate.FOwnState := False;
       LCandidate.FLiveBindings := TNyxLiveBindings.Create(LCandidate.FRoot, LCandidate.FState);
+      TBrowserViewGeneration(LCandidate.FGenerationObject).LiveBindings := LCandidate.FLiveBindings;
       LCandidate.FLiveBindings.OnSync := @LCandidate.Sync;
       LCandidate.FLiveBindings.OnValueSync := @LCandidate.SyncEditedValue;
       LCandidate.FHost := Element('div', '');
@@ -2916,11 +3747,19 @@ begin
       for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
       begin
         LCandidate.FCollectionQueryEvents := FEvents;
-        LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
+        LCollectionMount := LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
           LCandidate.FCollectionBindings.View(LIndex));
+        LCollectionAdmission := nil;
+
+        if Supports(LCollectionMount, INyxCollectionInputAdmission, LCollectionAdmission) then
+        begin
+          SetLength(LCollectionAdmissions, Length(LCollectionAdmissions) + 1);
+          LCollectionAdmissions[High(LCollectionAdmissions)] := LCollectionAdmission;
+        end;
       end;
       LCandidate.BindCollectionPagers;
       LCandidate.Sync;
+      CheckAttempt;
       LCandidate.MountCanvases(ADocument);
       LCandidate.MountToolCanvases(ADocument);
       LCandidate.RestoreContentFaces(LStates, False);
@@ -3038,6 +3877,11 @@ begin
     FUpdating := True;
     LCandidate.FUpdating := True;
     try
+      { Capture at the final reversible boundary, after all arbitrary Build
+        callbacks. Mount suppression covers focusout/change caused by detaching
+        the exact accepted DOM objects, including dormant offscreen drafts. }
+      SuspendCellDrafts;
+      CheckAttempt;
 
       if FHost = AHost then
       begin
@@ -3066,6 +3910,7 @@ begin
       LCandidate.FHost := AHost;
       LCandidate.FUpdating := False;
       LCandidate.Sync;
+      CheckAttempt;
       { Nested workspaces first construct in an inert candidate. Refresh their
         actual final host allocations before accepting the parent publication;
         a lazy item's factory can still fail and must preserve the old view. }
@@ -3075,11 +3920,16 @@ begin
         if LCandidate.FBindings[LIndex].FCanvasView <> nil then
         begin
           LCandidate.FBindings[LIndex].FCanvasView.Refresh;
+          CheckAttempt;
         end;
       end;
       LCandidate.FUpdating := True;
       LCandidate.ObserveViewport(Self);
       LCandidate.RestoreContentFaces(LStates, True);
+      CheckAttempt;
+      LCellFocusAllowed := LFormerCellFocus and CellRollbackFocusAllowed;
+      RestoreCandidateCellDrafts;
+      CheckAttempt;
 
       if AKeepPresentation then
       begin
@@ -3107,6 +3957,12 @@ begin
         end;
         LEventFence.CheckReady;
       end;
+      CheckAttempt;
+
+      if not LCollectionInputGate.Current then
+      begin
+        raise ENyxModel.Create('Browser collection input generation retired during preview');
+      end;
     except
       { Disconnect the new observer before restoring exact accepted DOM objects.
         Only candidate nodes are removed from a different borrowed host. }
@@ -3118,6 +3974,17 @@ begin
       end;
       LCandidate.FUpdating := True;
       LCandidate.FHost := LProbeHost;
+
+      if not AttemptCurrent then
+      begin
+        raise;
+      end;
+      LCellFocusAllowed := CellRollbackFocusAllowed;
+
+      if not AttemptCurrent then
+      begin
+        raise;
+      end;
       try
         for LIndex := 0 to High(LNewChildren) do
         begin
@@ -3138,7 +4005,8 @@ begin
           AHost.removeAttribute('data-nyx-theme');
         end;
 
-        if (LFormerFocus <> nil) and document.body.contains(LFormerFocus) then
+        if not LFormerCellFocus and (LFormerFocus <> nil) and
+          document.body.contains(LFormerFocus) then
         begin
           NyxFocusWithoutScroll(LFormerFocus);
 
@@ -3152,7 +4020,15 @@ begin
         AHost.scrollTop := LFormerTop;
         AHost.scrollLeft := LFormerLeft;
       finally
-        FUpdating := LUpdating;
+        try
+          ResumeFormerCellDrafts;
+        finally
+
+          if AttemptCurrent then
+          begin
+            FUpdating := LUpdating;
+          end;
+        end;
       end;
       raise;
     end;
@@ -3168,27 +4044,26 @@ begin
       remount. Until admission the candidate only borrows it, so failure cannot
       release the still-mounted store. Clear must not free it during transfer. }
 
-    if LTransferState then
-    begin
-      FOwnState := False;
-    end;
     LFormerCoordinators := FCoordinatorMounts;
     Clear(AKeepPresentation, LEventView);
+    CheckAttempt;
+    LCommittedRevision := FEvents.ViewRevision;
+    CheckAttempt;
     { Transfer the independently admitted effective palette with its controls.
       Failure before this point preserves the mounted palette and tree. }
 
-    if FOwnTheme then
-    begin
-      FTheme.Free;
-    end;
     FTheme := LCandidate.FTheme;
-    FOwnTheme := True;
+    FThemeOwner := LCandidate.FThemeOwner;
+    LCandidate.FThemeOwner := nil;
+    FOwnTheme := False;
     LCandidate.FTheme := nil;
     LCandidate.FOwnTheme := False;
     FState := LCandidate.FState;
+    FStateOwner := LCandidate.FStateOwner;
+    LCandidate.FStateOwner := nil;
     FEmbeddedContext := LCandidate.FEmbeddedContext;
     FEmbeddedResolver := LCandidate.FEmbeddedResolver;
-    FOwnState := LOwnRuntimeState or LTransferState;
+    FOwnState := False;
     LOwnRuntimeState := False;
     LCandidate.FState := nil;
     LCandidate.FOwnState := False;
@@ -3198,6 +4073,8 @@ begin
     FLiveBindings.OnValueSync := @SyncEditedValue;
     FCollectionBindings := LCandidate.FCollectionBindings;
     LCandidate.FCollectionBindings := nil;
+    FCollectionInputGate := LCollectionInputGate;
+    LCandidate.FCollectionInputGate := nil;
     FCallerCoordinatorSnapshot := LCandidate.FCallerCoordinatorSnapshot;
     LCandidate.FCallerCoordinatorSnapshot := nil;
     FCoordinatorMounts := LCandidate.FCoordinatorMounts;
@@ -3234,10 +4111,15 @@ begin
     FProjectionBaseline := LCandidate.FProjectionBaseline;
     LCandidate.FProjectionBaseline := nil;
     FThemeScope := LCandidate.FThemeScope;
+    FGeneration := LCandidate.FGeneration;
+    FGenerationObject := LCandidate.FGenerationObject;
+    LCandidate.FGeneration := nil;
+    LCandidate.FGenerationObject := nil;
+    TBrowserViewGeneration(FGenerationObject).BaseThemeOwner := FBaseThemeOwner;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       FBindings[LIndex].FRenderer := Self;
-      FBindings[LIndex].FViewRevision := FEvents.ViewRevision;
+      FBindings[LIndex].FViewRevision := LCommittedRevision;
     end;
     { Prepared DOM handlers receive the committed epoch by assignment. Target
       extensions must not raise during destruction of the retired controls. }
@@ -3253,7 +4135,14 @@ begin
       LRootPublication.Install;
     end;
     LAcceptedCoordinators := FCoordinatorMounts;
-    FUpdating := LUpdating;
+    for LIndex := 0 to High(LCollectionAdmissions) do
+    begin
+      LCollectionAdmissions[LIndex].InstallInput;
+    end;
+    LCollectionInputGate.Install;
+    { The accepted generation owns its own shield. An old entered Sync may
+      have been updating at launch; its finally no longer owns this successor. }
+    FUpdating := False;
     LCommitted := True;
   finally
     try
@@ -3283,17 +4172,36 @@ begin
 end;
 
 procedure TNyxBrowserBinding.ImageSignal;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FButtonGlyphImage <> nil then
-  begin
-    PaintButtonFace;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
+
+    if FButtonGlyphImage <> nil then
+    begin
+      PaintButtonFace;
+    end;
+    CurrentRenderer.FlushImages;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
   end;
-  FRenderer.FlushImages;
 end;
 
 procedure TNyxBrowserBinding.PaintButtonFace;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LReady, LCaptionVisible: Boolean;
   LBounds: TNyxGlyphBounds;
   LWidth, LHeight, LScale, LRatio: Double;
@@ -3305,198 +4213,265 @@ var
     Result := FloatToStr(AValue, LFormat) + 'px';
   end;
 begin
-  LFormat := FormatSettings;
-  LFormat.DecimalSeparator := '.';
-  LReady := (FImageLifecycle <> nil) and (FImageLifecycle.Current.Phase = nipReady) and
-    (FButtonPresentation.ContentMode <> nbcCaption);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if LReady then
-  begin
-    try
-      LBounds := FButtonPresentation.GlyphCell.PixelBounds(
-        FImageLifecycle.Current.Width, FImageLifecycle.Current.Height);
-    except
-      { A decoded image may be too small for the authored grid. Keep its command
-        usable without presenting an arbitrary adjacent cell or broken image. }
-      LReady := False;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
     end;
-  end;
+    LFormat := FormatSettings;
+    LFormat.DecimalSeparator := '.';
+    LReady := (FImageLifecycle <> nil) and (FImageLifecycle.Current.Phase = nipReady) and
+      (FButtonPresentation.ContentMode <> nbcCaption);
 
-  if LReady then
-  begin
-    try
-      LScale := FButtonPresentation.GlyphBoxSize / Max(LBounds.Width, LBounds.Height);
-      LWidth := LBounds.Width * LScale;
-      LHeight := LBounds.Height * LScale;
-      { Bound decorative raster work independently of browser zoom. CSS retains
-        logical dimensions, while up to four device pixels per logical pixel
-        keeps normal high-density displays crisp without unbounded tile memory. }
-      LRatio := EnsureRange(window.devicePixelRatio, 1, 4);
-      LInk := '';
-
-      if FButtonPresentation.Tone = ngtForeground then
-      begin
-        LInk := window.getComputedStyle(FElement).getPropertyValue('color');
-
-        if LInk = '' then
-        begin
-          LInk := FRenderer.FTheme.Text;
-        end;
+    if LReady then
+    begin
+      try
+        LBounds := FButtonPresentation.GlyphCell.PixelBounds(
+          FImageLifecycle.Current.Width, FImageLifecycle.Current.Height);
+      except
+        { A decoded image may be too small for the authored grid. Keep its command
+          usable without presenting an arbitrary adjacent cell or broken image. }
+        LReady := False;
       end;
-      LKey := IntToStr(FImageLifecycle.Current.Request) + '/' +
-        IntToStr(LBounds.Left) + '/' + IntToStr(LBounds.Top) + '/' +
-        IntToStr(LBounds.Width) + '/' + IntToStr(LBounds.Height) + '/' +
-        IntToStr(FButtonPresentation.GlyphBoxSize) + '/' +
-        FloatToStr(LRatio, LFormat) + '/' + IntToStr(Ord(FButtonPresentation.Tone)) + '/' + LInk;
+    end;
 
-      if FButtonGlyphRasterKey <> LKey then
-      begin
-        FButtonGlyphFace.width := Max(1, Round(LWidth * LRatio));
-        FButtonGlyphFace.height := Max(1, Round(LHeight * LRatio));
-        LContext := FButtonGlyphFace.getContextAs2DContext('2d');
-
-        if LContext = nil then
-        begin
-          raise ENyxModel.Create('Decorative canvas rendering is unavailable');
-        end;
-        { Draw from the existing decoded image request. There is no readback,
-          data-URL conversion or new CORS requirement for hosted image pixels. }
-        LContext.globalCompositeOperation := 'source-over';
-        LContext.drawImage(FButtonGlyphImage, LBounds.Left, LBounds.Top,
-          LBounds.Width, LBounds.Height, 0, 0, FButtonGlyphFace.width, FButtonGlyphFace.height);
+    if LReady then
+    begin
+      try
+        LScale := FButtonPresentation.GlyphBoxSize / Max(LBounds.Width, LBounds.Height);
+        LWidth := LBounds.Width * LScale;
+        LHeight := LBounds.Height * LScale;
+        { Bound decorative raster work independently of browser zoom. CSS retains
+          logical dimensions, while up to four device pixels per logical pixel
+          keeps normal high-density displays crisp without unbounded tile memory. }
+        LRatio := EnsureRange(window.devicePixelRatio, 1, 4);
+        LInk := '';
 
         if FButtonPresentation.Tone = ngtForeground then
         begin
-          LContext.globalCompositeOperation := 'source-in';
-          LContext.fillStyleAsColor := LInk;
-          LContext.fillRect(0, 0, FButtonGlyphFace.width, FButtonGlyphFace.height);
-          LContext.globalCompositeOperation := 'source-over';
+          LInk := window.getComputedStyle(FElement).getPropertyValue('color');
+
+          if LInk = '' then
+          begin
+            LInk := CurrentRenderer.FTheme.Text;
+          end;
         end;
-        FButtonGlyphRasterKey := LKey;
+        LKey := IntToStr(FImageLifecycle.Current.Request) + '/' +
+          IntToStr(LBounds.Left) + '/' + IntToStr(LBounds.Top) + '/' +
+          IntToStr(LBounds.Width) + '/' + IntToStr(LBounds.Height) + '/' +
+          IntToStr(FButtonPresentation.GlyphBoxSize) + '/' +
+          FloatToStr(LRatio, LFormat) + '/' + IntToStr(Ord(FButtonPresentation.Tone)) + '/' + LInk;
+
+        if FButtonGlyphRasterKey <> LKey then
+        begin
+          FButtonGlyphFace.width := Max(1, Round(LWidth * LRatio));
+          FButtonGlyphFace.height := Max(1, Round(LHeight * LRatio));
+          LContext := FButtonGlyphFace.getContextAs2DContext('2d');
+
+          if LContext = nil then
+          begin
+            raise ENyxModel.Create('Decorative canvas rendering is unavailable');
+          end;
+          { Draw from the existing decoded image request. There is no readback,
+            data-URL conversion or new CORS requirement for hosted image pixels. }
+          LContext.globalCompositeOperation := 'source-over';
+          LContext.drawImage(FButtonGlyphImage, LBounds.Left, LBounds.Top,
+            LBounds.Width, LBounds.Height, 0, 0, FButtonGlyphFace.width, FButtonGlyphFace.height);
+
+          if FButtonPresentation.Tone = ngtForeground then
+          begin
+            LContext.globalCompositeOperation := 'source-in';
+            LContext.fillStyleAsColor := LInk;
+            LContext.fillRect(0, 0, FButtonGlyphFace.width, FButtonGlyphFace.height);
+            LContext.globalCompositeOperation := 'source-over';
+          end;
+          FButtonGlyphRasterKey := LKey;
+        end;
+        FButtonGlyphFace.style.setProperty('width', Pixels(LWidth));
+        FButtonGlyphFace.style.setProperty('height', Pixels(LHeight));
+      except
+        { The source may remain Ready even when a host cannot paint its crop.
+          The ordinary caption still names and invokes the same command. }
+        FButtonGlyphRasterKey := '';
+        LReady := False;
       end;
-      FButtonGlyphFace.style.setProperty('width', Pixels(LWidth));
-      FButtonGlyphFace.style.setProperty('height', Pixels(LHeight));
-    except
-      { The source may remain Ready even when a host cannot paint its crop.
-        The ordinary caption still names and invokes the same command. }
-      FButtonGlyphRasterKey := '';
-      LReady := False;
     end;
-  end;
 
-  if LReady then
-  begin
-    FButtonGlyphFace.style.setProperty('display', 'inline-block');
-  end
-  else
-  begin
-    FButtonGlyphRasterKey := '';
-    FButtonGlyphFace.style.setProperty('display', 'none');
-  end;
-  LCaptionVisible := not LReady or (FButtonPresentation.ContentMode <> nbcGlyphOnly);
+    if LReady then
+    begin
+      FButtonGlyphFace.style.setProperty('display', 'inline-block');
+    end
+    else
+    begin
+      FButtonGlyphRasterKey := '';
+      FButtonGlyphFace.style.setProperty('display', 'none');
+    end;
+    LCaptionVisible := not LReady or (FButtonPresentation.ContentMode <> nbcGlyphOnly);
 
-  if FCaption.textContent = '' then
-  begin
-    FCaption.textContent := FNode.Prop('aria-label');
-  end;
-  FCaption.style.removeProperty('display');
+    if FCaption.textContent = '' then
+    begin
+      FCaption.textContent := FNode.Prop('aria-label');
+    end;
+    FCaption.style.removeProperty('display');
 
-  if not LCaptionVisible then
-  begin
-    FCaption.style.setProperty('display', 'none');
+    if not LCaptionVisible then
+    begin
+      FCaption.style.setProperty('display', 'none');
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
   end;
 end;
 
 procedure TNyxBrowserBinding.SyncButtonFace;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LSource: TNyxImageSource;
   LMinimumHeight: Integer;
   LDisclosureRoot, LDisclosureBody: TNyxNode;
   LCaption: TNyxText;
 begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FCustom or (FNode.ProjectionKind <> 'button') then
-  begin
-    Exit;
-  end;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
 
-  if (FNode.Prop(NyxAttributeName(atButtonPresentation)) = '') and
-    (FButtonGlyphImage = nil) then
-  begin
-    Exit;
-  end;
-  FButtonPresentation := NyxButtonPresentationOf(FNode);
-  LSource := NyxButtonGlyphSource(FNode, FButtonPresentation);
+    if FCustom or (FNode.ProjectionKind <> 'button') then
+    begin
+      Exit;
+    end;
 
-  if not SafeURL(LSource.ToWire, True) then
-  begin
-    raise ENyxModel.Create('Unsupported button glyph URL');
-  end;
+    if (FNode.Prop(NyxAttributeName(atButtonPresentation)) = '') and
+      (FButtonGlyphImage = nil) then
+    begin
+      Exit;
+    end;
+    FButtonPresentation := NyxButtonPresentationOf(FNode);
+    LSource := NyxButtonGlyphSource(FNode, FButtonPresentation);
 
-  if FButtonGlyphImage = nil then
-  begin
-    FElement.textContent := '';
-    FButtonGlyphFace := TJSHTMLCanvasElement(document.createElement('canvas'));
-    FButtonGlyphFace.setAttribute('aria-hidden', 'true');
-    FButtonGlyphFace.style.setProperty('flex-shrink', '0');
-    FButtonGlyphFace.style.setProperty('pointer-events', 'none');
-    FElement.appendChild(FButtonGlyphFace);
-    FCaption := TJSHTMLElement(document.createElement('span'));
-    FElement.appendChild(FCaption);
-    FButtonGlyphImage := TJSHTMLImageElement(document.createElement('img'));
-    FButtonGlyphImage.alt := '';
-    FButtonGlyphImage.setAttribute('aria-hidden', 'true');
-    FButtonGlyphImage.style.setProperty('display', 'none');
-    FElement.appendChild(FButtonGlyphImage);
-  end;
-  LCaption := FNode.Prop('text');
+    if not SafeURL(LSource.ToWire, True) then
+    begin
+      raise ENyxModel.Create('Unsupported button glyph URL');
+    end;
 
-  if NyxDisclosureHeader(FNode, LDisclosureRoot, LDisclosureBody, LCaption) then
-  begin
-    { The ordinary header inherits its compound root caption. Decorative
-      presentation must not replace that effective name with empty local Text. }
-    FCaption.textContent := LCaption;
-  end
-  else
-  begin
-    FCaption.textContent := FNode.Prop('text');
-  end;
+    if FButtonGlyphImage = nil then
+    begin
+      FElement.textContent := '';
+      FButtonGlyphFace := TJSHTMLCanvasElement(document.createElement('canvas'));
+      FButtonGlyphFace.setAttribute('aria-hidden', 'true');
+      FButtonGlyphFace.style.setProperty('flex-shrink', '0');
+      FButtonGlyphFace.style.setProperty('pointer-events', 'none');
+      FElement.appendChild(FButtonGlyphFace);
+      FCaption := TJSHTMLElement(document.createElement('span'));
+      FElement.appendChild(FCaption);
+      FButtonGlyphImage := TJSHTMLImageElement(document.createElement('img'));
+      FButtonGlyphImage.alt := '';
+      FButtonGlyphImage.setAttribute('aria-hidden', 'true');
+      FButtonGlyphImage.style.setProperty('display', 'none');
+      FElement.appendChild(FButtonGlyphImage);
+    end;
+    LCaption := FNode.Prop('text');
 
-  if NyxInteractionPolicy(FNode).Visible then
-  begin
-    FElement.style.setProperty('display', 'inline-flex');
-  end
-  else
-  begin
-    { The face owns its decoration; portable interaction still owns visibility. }
-    FElement.style.setProperty('display', 'none');
-  end;
-  FElement.style.setProperty('align-items', 'center');
-  FElement.style.setProperty('gap', IntToStr(FButtonPresentation.GlyphSpacing) + 'px');
-  FElement.style.setProperty('justify-content', 'center');
+    if NyxDisclosureHeader(FNode, LDisclosureRoot, LDisclosureBody, LCaption) then
+    begin
+      { The ordinary header inherits its compound root caption. Decorative
+        presentation must not replace that effective name with empty local Text. }
+      FCaption.textContent := LCaption;
+    end
+    else
+    begin
+      FCaption.textContent := FNode.Prop('text');
+    end;
 
-  if FButtonPresentation.ContentAlignment = nbaStart then
-  begin
-    FElement.style.setProperty('justify-content', 'flex-start');
-  end;
-  LMinimumHeight := 44;
-  case FButtonPresentation.ControlDensity of
-    nbdNormal: ; { Ordinary browser button metrics. }
-    nbdCompact: LMinimumHeight := 36;
-    nbdTouch: LMinimumHeight := 44;
-  end;
-  FElement.style.setProperty('min-height', IntToStr(LMinimumHeight) + 'px');
-  FElement.style.setProperty('padding', '4px 12px');
-  FElement.style.removeProperty('font-weight');
-  case FButtonPresentation.Weight of
-    nbwInherit: ; { The existing stylesheet supplies the inherited weight. }
-    nbwRegular: FElement.style.setProperty('font-weight', '400');
-    nbwSemibold: FElement.style.setProperty('font-weight', '600');
-  end;
+    if NyxInteractionPolicy(FNode).Visible then
+    begin
+      FElement.style.setProperty('display', 'inline-flex');
+    end
+    else
+    begin
+      { The face owns its decoration; portable interaction still owns visibility. }
+      FElement.style.setProperty('display', 'none');
+    end;
+    FElement.style.setProperty('align-items', 'center');
+    FElement.style.setProperty('gap', IntToStr(FButtonPresentation.GlyphSpacing) + 'px');
+    FElement.style.setProperty('justify-content', 'center');
 
-  if (FImageLifecycle = nil) or not FImageLifecycle.Current.Defined or
-    (FImageLifecycle.Current.Source.ToWire <> LSource.ToWire) then
-  begin
+    if FButtonPresentation.ContentAlignment = nbaStart then
+    begin
+      FElement.style.setProperty('justify-content', 'flex-start');
+    end;
+    LMinimumHeight := 44;
+    case FButtonPresentation.ControlDensity of
+      nbdNormal: ; { Ordinary browser button metrics. }
+      nbdCompact: LMinimumHeight := 36;
+      nbdTouch: LMinimumHeight := 44;
+    end;
+    FElement.style.setProperty('min-height', IntToStr(LMinimumHeight) + 'px');
+    FElement.style.setProperty('padding', '4px 12px');
+    FElement.style.removeProperty('font-weight');
+    case FButtonPresentation.Weight of
+      nbwInherit: ; { The existing stylesheet supplies the inherited weight. }
+      nbwRegular: FElement.style.setProperty('font-weight', '400');
+      nbwSemibold: FElement.style.setProperty('font-weight', '600');
+    end;
+
+    if (FImageLifecycle = nil) or not FImageLifecycle.Current.Defined or
+      (FImageLifecycle.Current.Source.ToWire <> LSource.ToWire) then
+    begin
+
+      if FImageRequest <> nil then
+      begin
+        FImageRequest.Retire;
+        FImageRequest := nil;
+      end;
+
+      if FImageLifecycle = nil then
+      begin
+        FImageLifecycle := NewNyxImageLifecycle;
+      end;
+      FImageRequest := StartNyxBrowserImage(FButtonGlyphImage, LSource, FImageLifecycle, ImageSignal);
+    end;
+    PaintButtonFace;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
+  end;
+end;
+
+procedure TNyxBrowserBinding.SyncImage;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LSource: TNyxImageSource;
+begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
+    LSource := TNyxImageSource.FromWire(FNode.Prop('src'));
+
+    if (FImageLifecycle <> nil) and FImageLifecycle.Current.Defined and
+      (FImageLifecycle.Current.Source.ToWire = LSource.ToWire) then
+    begin
+      Exit;
+    end;
 
     if FImageRequest <> nil then
     begin
@@ -3508,42 +4483,31 @@ begin
     begin
       FImageLifecycle := NewNyxImageLifecycle;
     end;
-    FImageRequest := StartNyxBrowserImage(FButtonGlyphImage, LSource, FImageLifecycle, ImageSignal);
+    FImageRequest := StartNyxBrowserImage(TJSHTMLImageElement(FElement), LSource,
+      FImageLifecycle, ImageSignal);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
   end;
-  PaintButtonFace;
-end;
-
-procedure TNyxBrowserBinding.SyncImage;
-var
-  LSource: TNyxImageSource;
-begin
-  LSource := TNyxImageSource.FromWire(FNode.Prop('src'));
-
-  if (FImageLifecycle <> nil) and FImageLifecycle.Current.Defined and
-    (FImageLifecycle.Current.Source.ToWire = LSource.ToWire) then
-  begin
-    Exit;
-  end;
-
-  if FImageRequest <> nil then
-  begin
-    FImageRequest.Retire;
-    FImageRequest := nil;
-  end;
-
-  if FImageLifecycle = nil then
-  begin
-    FImageLifecycle := NewNyxImageLifecycle;
-  end;
-  FImageRequest := StartNyxBrowserImage(TJSHTMLImageElement(FElement), LSource,
-    FImageLifecycle, ImageSignal);
 end;
 
 procedure TNyxBrowserRenderer.FlushImages;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LDeliveries: TNyxImageDeliveries;
   LIndex: Integer;
+  LDeliveryIndex: Integer;
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
 
   if FUpdating or FDetachedCandidate or FPublishingContent or FDesignMode then
   begin
@@ -3555,6 +4519,15 @@ begin
     begin
       PrepareNyxImageDeliveries(FEvents, FBindings[LIndex].FNode,
         FBindings[LIndex].FImageLifecycle, LDeliveries);
+
+      if not LGeneration.Current then
+      begin
+        for LDeliveryIndex := 0 to High(LDeliveries) do
+        begin
+          LDeliveries[LDeliveryIndex].Free;
+        end;
+        Exit;
+      end;
     end;
   except
     for LIndex := 0 to Length(LDeliveries) - 1 do
@@ -3604,6 +4577,7 @@ var
       DOM cycle. Reverse insertion establishes exact authored sibling order,
       leaving each host's private caption/glyph nodes in place. }
     LNext := nil;
+
     if NyxProjectionChildrenChanged(ANode, AFormer) then
     begin
       for LChild := ANode.Count - 1 downto 0 do
@@ -3887,6 +4861,7 @@ begin
         it. A retained projection must follow the same mount lifetime as Render. }
       ObserveViewport;
     except
+
       if LArrangement then
       begin
         ApplyProjection(LPrevious, nil, nil);
@@ -4107,6 +5082,7 @@ end;
 
 procedure TNyxBrowserRenderer.Unmount;
 begin
+  FRenderAttempt := nil;
   Clear;
 end;
 
@@ -4226,6 +5202,8 @@ var
   LIndex: Integer;
   LKind: TNyxText;
   LQueryMount: INyxCollectionQueryMount;
+  LColumnsMount: INyxCollectionColumnArrangementMount;
+  LColumnsInput: INyxCollectionInputAdmission;
 begin
 
   if AView = nil then
@@ -4259,7 +5237,8 @@ begin
       begin
         raise ENyxModel.Create('Control already has a live collection binding');
       end;
-      Result := MountNyxBrowserCollection(LElement, AView);
+      Result := MountNyxBrowserCollection(LElement, AView,
+        FCollectionInputPhase, FCollectionInputGate);
       FBindings[LIndex].FCollectionMount := Result;
       Result.ObserveSelection(FBindings[LIndex].CollectionSelectionChanged);
 
@@ -4269,6 +5248,16 @@ begin
         LQueryMount.ConfigureQueries(NewNyxBrowserQueryFormFactory(
           LElement, FTheme), FCollectionQueryEvents,
           NyxControlEvents(FBindings[LIndex].FNode.ID, niRuntime), FBindings[LIndex].FNode.DesignID);
+      end;
+
+      if not FDesignMode and (AView.Projection = cpTable) and
+        AView.Spec.HasLayoutControls and
+        Supports(Result, INyxCollectionColumnArrangementMount, LColumnsMount) and
+        Supports(Result, INyxCollectionInputAdmission, LColumnsInput) then
+      begin
+        LColumnsMount.ConfigureColumnArrangement(
+          NewNyxBrowserColumnArrangementFactory(LElement, FTheme,
+            LColumnsInput.GetInputLifetime), FCollectionQueryEvents);
       end;
       Exit;
     end;
@@ -4812,6 +5801,11 @@ end;
 
 procedure TNyxBrowserRenderer.UpdateCanvasResizeGrips;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LGrips: INyxCanvasResizeGrips;
+  LOwner: TNyxControlRef;
+  LDragging: Boolean;
   LAxis: TNyxResizeAxis;
   LElement: TJSHTMLElement;
   LFace: TJSDOMRect;
@@ -4823,13 +5817,32 @@ var
   LVisible: Boolean;
   LFormat: TFormatSettings;
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
   UpdateCanvasMoveGrip;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
 
   if (FCanvasResizeGrips = nil) or (FHost = nil) then
   begin
     Exit;
   end;
-  LElement := ElementFor(FCanvasResizeGrips.Owner.ID, niDesign);
+  LGrips := FCanvasResizeGrips;
+  LOwner := LGrips.Owner;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
+  LElement := ElementFor(LOwner.ID, niDesign);
   LFace := LElement.getBoundingClientRect;
   LClip := FHost.getBoundingClientRect;
   LWidth := LFace.width;
@@ -4872,7 +5885,14 @@ begin
       (LX >= Max(0, LClip.left)) and (LX <= Min(window.innerWidth, LClip.right)) and
       (LY >= Max(0, LClip.top)) and (LY <= Min(window.innerHeight, LClip.bottom));
 
-    if not FCanvasResizeGrips.Dragging(LAxis) then
+    LDragging := LGrips.Dragging(LAxis);
+
+    if not LGeneration.Current then
+    begin
+      Exit;
+    end;
+
+    if not LDragging then
     begin
       LVisible := LVisible and ((LAxis <> nraWidth) or (LHeight >= 88)) and
         ((LAxis <> nraHeight) or (LWidth >= 88));
@@ -4971,23 +5991,41 @@ end;
 
 procedure TNyxBrowserRenderer.UpdateCanvasMoveGrip;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LGrip: INyxCanvasMoveGrip;
+  LOwner: TNyxControlRef;
   LElement: TJSHTMLElement;
   LFace, LClip: TJSDOMRect;
   LX, LY: Double;
   LFormat: TFormatSettings;
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
 
   if (FCanvasMoveGrip = nil) or (FCanvasMoveHost = nil) or (FHost = nil) then
   begin
     Exit;
   end;
-  LElement := ElementFor(FCanvasMoveGrip.Owner.ID, niDesign);
+  LGrip := FCanvasMoveGrip;
+  LOwner := LGrip.Owner;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
+  LElement := ElementFor(LOwner.ID, niDesign);
   LFace := LElement.getBoundingClientRect;
   LClip := FHost.getBoundingClientRect;
   LX := LFace.left;
   LY := LFace.top;
 
-  if FResizePreview.Active and (FResizePreview.Control.ID = FCanvasMoveGrip.Owner.ID) then
+  if FResizePreview.Active and (FResizePreview.Control.ID = LOwner.ID) then
   begin
     LX := LX + FResizePreview.OffsetX * LFace.width / Max(1, LElement.offsetWidth);
     LY := LY + FResizePreview.OffsetY * LFace.height / Max(1, LElement.offsetHeight);
@@ -5138,6 +6176,7 @@ begin
   begin
     Exit;
   end;
+
   if FDropPreview.Active then
   begin
     LElement := ElementFor(FDropPreview.Origin.ID, niRuntime);
@@ -5191,6 +6230,7 @@ begin
       document.body.appendChild(FResizeEdges[LIndex]);
     end;
   end;
+
   if FDropPreview.Active then
   begin
     LDropFrame := DropFrameFor(FDropPreview.Origin.ID);
@@ -5229,119 +6269,350 @@ begin
 end;
 
 procedure TNyxBrowserBinding.SplitChanged(ASplit: TNyxBrowserSplit);
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  FRenderer.Emit(FNode, NyxSplitChange(FNode, ASplit.State.Position));
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
+    CurrentRenderer.Emit(FNode, NyxSplitChange(FNode, ASplit.State.Position));
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.AdmitTabs(const AChange: TNyxTabTransition): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := False;
-  FHasTabDispatch := False;
-
-  if FRenderer.FUpdating or (AChange.AfterSelection < 0) then
-  begin
-    Exit;
-  end;
-
-  if FRenderer.FDesignMode then
-  begin
-    { Designers can inspect retained pages locally without executing a bound
-      application command or changing authored/runtime state. }
-    Exit(True);
-  end;
   try
-    { Edit owns candidate validation/publication. Source identities remain local
-      to this instance; no accepted host index changes before this call. }
-    FTabDispatch := FRenderer.FLiveBindings.Edit(FNode,
-      NyxTabValue(FTabs.State.Entry(AChange.AfterSelection).SourceReference));
-    FHasTabDispatch := True;
-    FRenderer.FLastBindingError := '';
-    FRenderer.FLastBindingFailure := nbfNone;
-    Result := True;
-  except
-    on LException: ENyxStateNotification do
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
     begin
-      FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+      Exit(False);
     end;
-    on LException: Exception do
+    Result := False;
+    FHasTabDispatch := False;
+
+    if CurrentRenderer.FUpdating or (AChange.AfterSelection < 0) then
     begin
-      { The host has proposed values only. Restoring every text input would
-        discard unrelated unfinished drafts although no physical edit occurred. }
-      FRenderer.BindingFailed(FNode, LException.Message, nbfRejected, False);
+      Exit;
+    end;
+
+    if CurrentRenderer.FDesignMode then
+    begin
+      { Designers can inspect retained pages locally without executing a bound
+        application command or changing authored/runtime state. }
+      Exit(True);
+    end;
+    try
+      { Edit owns candidate validation/publication. Source identities remain local
+        to this instance; no accepted host index changes before this call. }
+      FTabDispatch := CurrentRenderer.FLiveBindings.Edit(FNode,
+        NyxTabValue(FTabs.State.Entry(AChange.AfterSelection).SourceReference));
+      FHasTabDispatch := True;
+      CurrentRenderer.FLastBindingError := '';
+      CurrentRenderer.FLastBindingFailure := nbfNone;
+      Result := True;
+    except
+      on LException: ENyxStateNotification do
+      begin
+
+        if LGeneration.Current then
+        begin
+          CurrentRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+        end;
+      end;
+      on LException: Exception do
+      begin
+        { The host has proposed values only. Restoring every text input would
+          discard unrelated unfinished drafts although no physical edit occurred. }
+
+        if LGeneration.Current then
+        begin
+          CurrentRenderer.BindingFailed(FNode, LException.Message, nbfRejected, False);
+        end;
+      end;
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(False);
     end;
   end;
 end;
 
 procedure TNyxBrowserBinding.TabsChanged(const AChange: TNyxTabTransition);
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LDispatch: TNyxDispatch;
 begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FHasTabDispatch then
-  begin
-    LDispatch := FTabDispatch;
-    FHasTabDispatch := False;
-    FTabDispatch := Default(TNyxDispatch);
-    { Last operation: a receiver may replace the view and retire this binding. }
-    FRenderer.Emit(FNode, LDispatch);
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
+
+    if FHasTabDispatch then
+    begin
+      LDispatch := FTabDispatch;
+      FHasTabDispatch := False;
+      FTabDispatch := Default(TNyxDispatch);
+      { Last operation: a receiver may replace the view and retire this binding. }
+      CurrentRenderer.Emit(FNode, LDispatch);
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
   end;
 end;
 
 function TNyxBrowserBinding.Click(AEvent: TJSMouseEvent): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LDispatch: TNyxDispatch;
+  LEvents: INyxEvents;
+  LLiveBindings: TNyxLiveBindings;
+  LRevision: Integer;
+  LSubscribers: Boolean;
+  LEditable: Boolean;
+  LColumnActivation: INyxBrowserCollectionColumnActivation;
+  LColumnCommand: INyxBrowserColumnCommand;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FRenderer.FUpdating then
-  begin
-    Exit;
-  end;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
 
-  if FRenderer.FDesignMode then
-  begin
+    if not CurrentRenderer.FDesignMode and
+      Supports(FCollectionMount, INyxBrowserCollectionColumnActivation, LColumnActivation) then
+    begin
+      LColumnCommand := LColumnActivation.BeginColumnClick(AEvent);
+
+      if LColumnCommand <> nil then
+      begin
+        Exit(ColumnClick(AEvent, LColumnCommand));
+      end;
+    end;
+
+    if CurrentRenderer.FUpdating then
+    begin
+      Exit;
+    end;
+    LEvents := CurrentRenderer.FEvents;
+    LLiveBindings := CurrentRenderer.FLiveBindings;
+    LRevision := FViewRevision;
+    LEditable := FInput <> nil;
+
+    if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+    begin
+      Exit;
+    end;
+
+    if CurrentRenderer.FDesignMode then
+    begin
+      AEvent.stopPropagation;
+      { Selecting an editable control preserves native focus and interaction.
+        Commands and links still select without executing application behavior. }
+
+      if FInput = nil then
+      begin
+        AEvent.preventDefault;
+      end;
+
+      if Assigned(CurrentRenderer.OnEvent) then
+      begin
+        CurrentRenderer.OnEvent(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+      end;
+      Exit(LEditable);
+    end;
+
+    { Runtime clicks route once from their nearest projected control, matching
+      native non-bubbling slots. Wrapped inputs retain their native default action. }
     AEvent.stopPropagation;
-    { Selecting an editable control preserves native focus and interaction.
-      Commands and links still select without executing application behavior. }
 
-    if FInput = nil then
+    LSubscribers := LEvents.HasSubscribers(ntClick);
+
+    if not LGeneration.Current then
     begin
-      AEvent.preventDefault;
+      Exit;
     end;
 
-    if Assigned(FRenderer.OnEvent) then
+    if NyxHasLegacyClick(FNode) or LSubscribers or
+      (FNode.Prop(NyxAttributeName(atAction)) <> '') then
     begin
-      FRenderer.OnEvent(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+      try
+        LDispatch := LLiveBindings.Dispatch(FNode, ntClick);
+
+        if not LGeneration.Current then
+        begin
+          Exit;
+        end;
+        CurrentRenderer.FLastBindingError := '';
+        CurrentRenderer.FLastBindingFailure := nbfNone;
+      except
+        on LException: ENyxStateNotification do
+        begin
+
+          if LGeneration.Current then
+          begin
+            CurrentRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+          end;
+          Exit(False);
+        end;
+        on LException: Exception do
+        begin
+
+          if LGeneration.Current then
+          begin
+            CurrentRenderer.BindingFailed(FNode, LException.Message, nbfRejected,
+              not NyxIsDisclosureHeader(FNode));
+          end;
+          Exit(False);
+        end;
+      end;
+
+      CurrentRenderer.Emit(FNode, LDispatch);
     end;
-    Exit(FInput <> nil);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxBrowserBinding.ColumnClick(AEvent: TEventListenerEvent;
+  const ACommand: INyxBrowserColumnCommand; APrepared: Boolean): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LOrigin: TNyxNode;
+  LEvents: INyxEvents;
+  LLiveBindings: TNyxLiveBindings;
+  LRevision: Integer;
+  LDispatch: TNyxDispatch;
+  LBlocked: Boolean;
+
+  function Current: Boolean;
+  begin
+    Result := LGeneration.Current and (LEvents.ViewRevision = LRevision) and
+      ACommand.DispatchCurrent;
   end;
 
-  { Runtime clicks route once from their nearest projected control, matching
-    native non-bubbling slots. Wrapped inputs retain their native default action. }
-  AEvent.stopPropagation;
+begin
+  Result := False;
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := LGeneration;
+  try
 
-  if NyxHasLegacyClick(FNode) or FRenderer.FEvents.HasSubscribers(ntClick) or
-    (FNode.Prop(NyxAttributeName(atAction)) <> '') then
-  begin
-    try
-      LDispatch := FRenderer.FLiveBindings.Dispatch(FNode, ntClick);
-      FRenderer.FLastBindingError := '';
-      FRenderer.FLastBindingFailure := nbfNone;
-    except
-      on LException: ENyxStateNotification do
-      begin
-        FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
-        Exit(False);
-      end;
-      on LException: Exception do
-      begin
-        FRenderer.BindingFailed(FNode, LException.Message, nbfRejected,
-          not NyxIsDisclosureHeader(FNode));
-        Exit(False);
-      end;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
     end;
+    LOrigin := FNode;
+    LEvents := CurrentRenderer.FEvents;
+    LLiveBindings := CurrentRenderer.FLiveBindings;
+    LRevision := FViewRevision;
+    LBlocked := CurrentRenderer.FUpdating or CurrentRenderer.FPublishingContent or
+      CurrentRenderer.FDesignMode or AEvent.defaultPrevented or
+      not NyxInteractionPolicy(LOrigin).CanIssueCommand;
+    LOrigin.AcquireReference;
+    try
+      try
 
-    FRenderer.Emit(FNode, LDispatch);
+        if LBlocked or not Current then
+        begin
+          Exit;
+        end;
+
+        if not APrepared then
+        begin
+
+          if not ACommand.Current then
+          begin
+            Exit;
+          end;
+          ACommand.Prepare;
+        end;
+
+        if not Current then
+        begin
+          Exit;
+        end;
+        { Dispatch is intentional: Click may execute authored behavior and one
+          atomic state admission. A notification failure remains committed;
+          neither Signal nor replay can substitute for this command. The entered
+          generation retains the original raw coordinator/tree/state throughout. }
+        LDispatch := LLiveBindings.Dispatch(LOrigin, ntClick);
+
+        if not Current then
+        begin
+          Exit;
+        end;
+        CurrentRenderer.FLastBindingError := '';
+        CurrentRenderer.FLastBindingFailure := nbfNone;
+        CurrentRenderer.Emit(LOrigin, LDispatch);
+
+        if Current then
+        begin
+          ACommand.Complete(not AEvent.defaultPrevented);
+        end;
+      except
+        on LException: ENyxStateNotification do
+        begin
+
+          if Current then
+          begin
+            CurrentRenderer.BindingFailed(LOrigin, LException.Message, nbfNotificationFailed);
+          end;
+        end;
+        on LException: ENyxBrowserViewRetired do
+        begin
+          { Navigation is terminal for this input, without a successor error. }
+        end;
+        on LException: Exception do
+        begin
+
+          if Current then
+          begin
+            CurrentRenderer.BindingFailed(LOrigin, LException.Message, nbfRejected);
+          end;
+        end;
+      end;
+    finally
+      LOrigin.ReleaseReference;
+    end;
+  finally
+    { Same-host listeners still run after stopPropagation. Claim cancellation,
+      refusal, completion and exceptions before they can recapture the input. }
+    AEvent.preventDefault;
+    AEvent.stopPropagation;
+    ACommand.Retire;
   end;
 end;
 
@@ -5401,31 +6672,49 @@ end;
 function TNyxBrowserBinding.EditingEvent(AEvent: TEventListenerEvent;
   ATrigger: TNyxTrigger; APhase: TNyxEditingPhase): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LEvents: INyxEvents;
   LRevision: Integer;
   LDispatch: TNyxDispatch;
 begin
-  Result := True;
-  LEvents := FRenderer.FEvents;
-  LRevision := FViewRevision;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or not NyxSupportsTextInput(FNode) or
-    not NyxInteractionPolicy(FNode).CanIssueCommand then
-  begin
-    Exit;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
+
+    if ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current) or CurrentRenderer.FUpdating or
+      CurrentRenderer.FDesignMode or not NyxSupportsTextInput(FNode) or
+      not NyxInteractionPolicy(FNode).CanIssueCommand then
+    begin
+      Exit;
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ATrigger);
+    LDispatch.Info.HasEditing := True;
+    LDispatch.Info.Editing := CaptureNyxBrowserEditing(FInput, APhase, AEvent, FComposing);
+    { The router lease is all that is read after Emit: a callback may unmount,
+      navigate or dispose both renderer and this borrowed producer. }
+    CurrentRenderer.Emit(FNode, LDispatch);
+    Result := (LEvents.ViewRevision = LRevision) and LGeneration.Current;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
-  LDispatch.Info.HasEditing := True;
-  LDispatch.Info.Editing := CaptureNyxBrowserEditing(FInput, APhase, AEvent, FComposing);
-  { The router lease is all that is read after Emit: a callback may unmount,
-    navigate or dispose both renderer and this borrowed producer. }
-  FRenderer.Emit(FNode, LDispatch);
-  Result := LEvents.ViewRevision = LRevision;
 end;
 
 function TNyxBrowserBinding.BeforeEdit(AEvent: TEventListenerEvent): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LEvents: INyxEvents;
   LRevision: Integer;
   LDispatch: TNyxDispatch;
@@ -5433,150 +6722,249 @@ var
   LHistory: INyxTextHistoryCommands;
   LIntent: TNyxEditIntent;
 begin
-  Result := True;
-  LEvents := FRenderer.FEvents;
-  LRevision := FViewRevision;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or not NyxSupportsTextInput(FNode) or
-    not NyxInteractionPolicy(FNode).CanEditValue or
-    AEvent.defaultPrevented then
-  begin
-    Exit;
-  end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntBeforeEdit);
-  LDispatch.Info.HasEditing := True;
-  LDispatch.Info.Editing := CaptureNyxBrowserEditing(FInput, nepBeforeEdit, AEvent, FComposing);
-  LIntent := LDispatch.Info.Editing.Intent;
-  LHistory := FHistory;
-  LConsumed := False;
-
-  if LHistory <> nil then
-  begin
-    LHistory.BeforeEdit(LDispatch.Info.Editing);
-  end;
-
-  if (LEvents.ViewRevision = LRevision) and LEvents.HasSubscribers(ntBeforeEdit) then
-  begin
-    LConsumed := DispatchNyxInput(LEvents, FNode, LDispatch);
-  end;
-
-  if not LConsumed and (LEvents.ViewRevision = LRevision) and
-    (LHistory <> nil) and LDispatch.Info.Editing.CanCancel and
-    not LDispatch.Info.Editing.Composing and
-    (LIntent in [neiHistoryUndo, neiHistoryRedo]) then
-  begin
-    { Cancel first: a receiver may retire its input while handling the command.
-      Noncancelable history waits for the actual input notification below. }
-    AEvent.preventDefault;
-    LConsumed := True;
-
-    if LIntent = neiHistoryUndo then
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
     begin
-      LHistory.Execute(nhcUndo);
-    end
-    else
+      Exit(True);
+    end;
+    Result := True;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
+
+    if ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current) or CurrentRenderer.FUpdating or
+      CurrentRenderer.FDesignMode or not NyxSupportsTextInput(FNode) or
+      not NyxInteractionPolicy(FNode).CanEditValue or
+      AEvent.defaultPrevented then
     begin
-      LHistory.Execute(nhcRedo);
+      Exit;
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ntBeforeEdit);
+    LDispatch.Info.HasEditing := True;
+    LDispatch.Info.Editing := CaptureNyxBrowserEditing(FInput, nepBeforeEdit, AEvent, FComposing);
+    LIntent := LDispatch.Info.Editing.Intent;
+    LHistory := FHistory;
+    LConsumed := False;
+
+    if LHistory <> nil then
+    begin
+      LHistory.BeforeEdit(LDispatch.Info.Editing);
+    end;
+
+    if ((LEvents.ViewRevision = LRevision) and LGeneration.Current) and LEvents.HasSubscribers(ntBeforeEdit) then
+    begin
+      LConsumed := DispatchNyxInput(LEvents, FNode, LDispatch);
+    end;
+
+    if not LConsumed and ((LEvents.ViewRevision = LRevision) and LGeneration.Current) and
+      (LHistory <> nil) and LDispatch.Info.Editing.CanCancel and
+      not LDispatch.Info.Editing.Composing and
+      (LIntent in [neiHistoryUndo, neiHistoryRedo]) then
+    begin
+      { Cancel first: a receiver may retire its input while handling the command.
+        Noncancelable history waits for the actual input notification below. }
+      AEvent.preventDefault;
+      LConsumed := True;
+
+      if LIntent = neiHistoryUndo then
+      begin
+        LHistory.Execute(nhcUndo);
+      end
+      else
+      begin
+        LHistory.Execute(nhcRedo);
+      end;
+    end;
+
+    if LConsumed and LDispatch.Info.Editing.CanCancel then
+    begin
+      AEvent.preventDefault;
+      Result := False;
+    end;
+    { A navigation invalidates this producer even when no physical cancellation
+      window exists. Never inspect the freed binding after synchronous dispatch. }
+    Result := Result and ((LEvents.ViewRevision = LRevision) and LGeneration.Current);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
     end;
   end;
-
-  if LConsumed and LDispatch.Info.Editing.CanCancel then
-  begin
-    AEvent.preventDefault;
-    Result := False;
-  end;
-  { A navigation invalidates this producer even when no physical cancellation
-    window exists. Never inspect the freed binding after synchronous dispatch. }
-  Result := Result and (LEvents.ViewRevision = LRevision);
 end;
 
 function TNyxBrowserBinding.CompositionStart(AEvent: TEventListenerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode or
-    not NyxSupportsTextInput(FNode) or not NyxInteractionPolicy(FNode).CanEditValue then
-  begin
-    Exit;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+
+    if CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode or
+      not NyxSupportsTextInput(FNode) or not NyxInteractionPolicy(FNode).CanEditValue then
+    begin
+      Exit;
+    end;
+    FComposing := True;
+    Result := EditingEvent(AEvent, ntCompositionStart, nepCompositionStart);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  FComposing := True;
-  Result := EditingEvent(AEvent, ntCompositionStart, nepCompositionStart);
 end;
 
 function TNyxBrowserBinding.CompositionUpdate(AEvent: TEventListenerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if not FComposing then
-  begin
-    Exit;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+
+    if not FComposing then
+    begin
+      Exit;
+    end;
+    Result := EditingEvent(AEvent, ntCompositionUpdate, nepCompositionUpdate);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  Result := EditingEvent(AEvent, ntCompositionUpdate, nepCompositionUpdate);
 end;
 
 function TNyxBrowserBinding.CompositionEnd(AEvent: TEventListenerEvent): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LEvents: INyxEvents;
   LRevision: Integer;
   LEditing: TNyxEditingSnapshot;
   LDispatch: TNyxDispatch;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if not FComposing or FRenderer.FUpdating or FRenderer.FDesignMode then
-  begin
-    Exit;
-  end;
-  LEvents := FRenderer.FEvents;
-  LRevision := FViewRevision;
-  LEditing := CaptureNyxBrowserEditing(FInput, nepCompositionEnd, AEvent, False);
-  FComposing := False;
-  { Capture the physical result first. Final model admission may deliberately
-    reject it or a callback may update accepted state; neither changes the
-    original owned IME result. Admission emits at most one accepted command. }
-  Change(AEvent);
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit(False);
+    if not FComposing or CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode then
+    begin
+      Exit;
+    end;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
+    LEditing := CaptureNyxBrowserEditing(FInput, nepCompositionEnd, AEvent, False);
+    FComposing := False;
+    { Capture the physical result first. Final model admission may deliberately
+      reject it or a callback may update accepted state; neither changes the
+      original owned IME result. Admission emits at most one accepted command. }
+    Change(AEvent);
+
+    if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+    begin
+      Exit(False);
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ntCompositionEnd);
+    LDispatch.Info.HasEditing := True;
+    LDispatch.Info.Editing := LEditing;
+    CurrentRenderer.QueueContent;
+    CurrentRenderer.Emit(FNode, LDispatch);
+    Result := (LEvents.ViewRevision = LRevision) and LGeneration.Current;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntCompositionEnd);
-  LDispatch.Info.HasEditing := True;
-  LDispatch.Info.Editing := LEditing;
-  FRenderer.QueueContent;
-  FRenderer.Emit(FNode, LDispatch);
-  Result := LEvents.ViewRevision = LRevision;
 end;
 
 function TNyxBrowserBinding.TextSelectionChanged(AEvent: TEventListenerEvent): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LSelection: TNyxTextSelection;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode or not NyxSupportsTextInput(FNode) then
-  begin
-    Exit;
-  end;
-  LSelection := CaptureNyxBrowserSelection(FInput);
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
 
-  if not LSelection.Defined or FEditingSelection.SameRange(LSelection) then
-  begin
-    Exit;
+    if CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode or not NyxSupportsTextInput(FNode) then
+    begin
+      Exit;
+    end;
+    LSelection := CaptureNyxBrowserSelection(FInput);
+
+    if not LSelection.Defined or FEditingSelection.SameRange(LSelection) then
+    begin
+      Exit;
+    end;
+    FEditingSelection := LSelection;
+    Result := EditingEvent(AEvent, ntTextSelectionChange, nepSelectionChange);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  FEditingSelection := LSelection;
-  Result := EditingEvent(AEvent, ntTextSelectionChange, nepSelectionChange);
 end;
 
 procedure TNyxBrowserBinding.ColorChanged(const AValue: TNyxRGBColor);
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  TJSHTMLInputElement(FInput).value := AValue.ToText;
-  Change(nil);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
+    TJSHTMLInputElement(FInput).value := AValue.ToText;
+    Change(nil);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.Change(AEvent: TEventListenerEvent): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LValue: TNyxText;
   LDispatch: TNyxDispatch;
   LProposal: TNyxDispatch;
@@ -5586,176 +6974,211 @@ var
   LEditing: TNyxEditingSnapshot;
   LHistory: INyxTextHistoryCommands;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FRenderer.FUpdating then
-  begin
-    Exit;
-  end;
-
-  if (FColorField <> nil) and (AEvent <> nil) and (AEvent._type = 'input') then
-  begin
-    { Hex text remains a draft until completion, including empty/pasted/IME
-      input. No native color sanitizer substitutes black during typing. }
-    Exit;
-  end;
-
-  if (AEvent <> nil) and (AEvent._type = 'input') and
-    not NyxSupportsTextInput(FNode) then
-  begin
-    { A format/domain transition must not turn an existing input listener into
-      per-keystroke numeric admission. Physical change retains commit semantics. }
-    Exit;
-  end;
-
-  LEditing := Default(TNyxEditingSnapshot);
-
-  if NyxSupportsTextInput(FNode) then
-  begin
-    LEditing := CaptureNyxBrowserEditing(FInput, nepInput, AEvent, FComposing);
-
-    if LEditing.Composing then
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
     begin
-      { IME owns its live draft. Model admission and normalization wait until
-        compositionend; neither an input listener nor Sync rewrites that draft. }
-      FComposing := True;
+      Exit(True);
+    end;
+    Result := True;
+
+    if CurrentRenderer.FUpdating then
+    begin
       Exit;
     end;
-  end;
 
-  if (FNode.ProjectionKind = 'slider') and not FCustom then
-  begin
-    LValue := FSliderValue.ReadPosition(StrToIntDef(TJSHTMLInputElement(FInput).value, -1));
-  end
-  else if FInput is TJSHTMLTextAreaElement then
-  begin
-    LValue := TJSHTMLTextAreaElement(FInput).value;
-  end
-  else if FInput is TJSHTMLSelectElement then
-  begin
-    LValue := TJSHTMLSelectElement(FInput).value;
-  end
-  else if (FNode.ProjectionKind = 'checkbox') or (FNode.ProjectionKind = 'switch') or
-    (FNode.ProjectionKind = 'radio') then
-  begin
-    LValue := 'false';
-
-    if TJSHTMLInputElement(FInput).checked then
+    if (FColorField <> nil) and (AEvent <> nil) and (AEvent._type = 'input') then
     begin
-      LValue := 'true';
+      { Hex text remains a draft until completion, including empty/pasted/IME
+        input. No native color sanitizer substitutes black during typing. }
+      Exit;
     end;
-  end
-  else
-  begin
-    LValue := TJSHTMLInputElement(FInput).value;
-  end;
 
-  if not NyxInteractionPolicy(FNode).CanEditValue then
-  begin
-    { A platform without a read-only selector can still emit a physical draft.
-      Restore it before proposal callbacks or model commands. Keep True so
-      keyboard preflight can still deliver shortcuts against accepted text. }
-
-    if LValue <> FNode.Prop('value') then
+    if (AEvent <> nil) and (AEvent._type = 'input') and
+      not NyxSupportsTextInput(FNode) then
     begin
-      FRenderer.FForceValues := True;
-      try
-        FRenderer.Sync;
-      finally
-        FRenderer.FForceValues := False;
+      { A format/domain transition must not turn an existing input listener into
+        per-keystroke numeric admission. Physical change retains commit semantics. }
+      Exit;
+    end;
+
+    LEditing := Default(TNyxEditingSnapshot);
+
+    if NyxSupportsTextInput(FNode) then
+    begin
+      LEditing := CaptureNyxBrowserEditing(FInput, nepInput, AEvent, FComposing);
+
+      if LEditing.Composing then
+      begin
+        { IME owns its live draft. Model admission and normalization wait until
+          compositionend; neither an input listener nor Sync rewrites that draft. }
+        FComposing := True;
+        Exit;
       end;
     end;
-    Exit;
-  end;
 
-  if FRenderer.FDesignMode then
-  begin
-    FNode.SetProp('value', LValue);
-    { Send the actual field, rather than a compound's semantic event root. The
-      host persists an authored value or independent reusable-part override. }
-
-    if Assigned(FRenderer.OnEvent) then
+    if (FNode.ProjectionKind = 'slider') and not FCustom then
     begin
-      FRenderer.OnEvent(FNode, NyxDesignEvent(FNode, ntDesignValue));
-    end;
-    Exit;
-  end;
-  LHistory := FHistory;
-
-  if (LHistory <> nil) and LEditing.Defined and
-    (LEditing.Intent in [neiHistoryUndo, neiHistoryRedo]) then
-  begin
-    { Some browser/OS producers cannot cancel beforeinput. Never admit the
-      platform stack's value into bindings/history: the owning timeline writes
-      its exact result back through this retained input instead. }
-
-    if LEditing.Intent = neiHistoryUndo then
+      LValue := FSliderValue.ReadPosition(StrToIntDef(TJSHTMLInputElement(FInput).value, -1));
+    end
+    else if FInput is TJSHTMLTextAreaElement then
     begin
-      LHistory.Execute(nhcUndo);
+      LValue := TJSHTMLTextAreaElement(FInput).value;
+    end
+    else if FInput is TJSHTMLSelectElement then
+    begin
+      LValue := TJSHTMLSelectElement(FInput).value;
+    end
+    else if (FNode.ProjectionKind = 'checkbox') or (FNode.ProjectionKind = 'switch') or
+      (FNode.ProjectionKind = 'radio') then
+    begin
+      LValue := 'false';
+
+      if TJSHTMLInputElement(FInput).checked then
+      begin
+        LValue := 'true';
+      end;
     end
     else
     begin
-      LHistory.Execute(nhcRedo);
-    end;
-    Exit(False);
-  end;
-  { A platform change event with the already accepted value carries no edit. }
-
-  if LValue = FNode.Prop('value') then
-  begin
-    Exit;
-  end;
-  LEvents := FRenderer.FEvents;
-  LRevision := LEvents.ViewRevision;
-
-  if NyxSupportsTextInput(FNode) and LEvents.HasSubscribers(ntBeforeTextInput) then
-  begin
-    LProposal := FRenderer.FLiveBindings.ProposeText(FNode, LValue);
-    LProposal.Info.HasEditing := LEditing.Defined;
-    LProposal.Info.Editing := LEditing;
-    LConsumed := DispatchNyxInput(LEvents, FNode, LProposal);
-
-    if LEvents.ViewRevision <> LRevision then
-    begin
-      Exit(False);
+      LValue := TJSHTMLInputElement(FInput).value;
     end;
 
-    if LConsumed then
+    if not NyxInteractionPolicy(FNode).CanEditValue then
     begin
-      { The physical edit is a proposal. Restore the latest accepted value in
-        place, without a new history/state command or a spurious error dialog. }
-      FRenderer.FForceValues := True;
-      try
-        FRenderer.Sync;
-      finally
-        FRenderer.FForceValues := False;
+      { A platform without a read-only selector can still emit a physical draft.
+        Restore it before proposal callbacks or model commands. Keep True so
+        keyboard preflight can still deliver shortcuts against accepted text. }
+
+      if LValue <> FNode.Prop('value') then
+      begin
+        CurrentRenderer.FForceValues := True;
+        try
+          CurrentRenderer.Sync;
+        finally
+
+          if LGeneration.Current then
+          begin
+            CurrentRenderer.FForceValues := False;
+          end;
+        end;
       end;
-      LProposal.Info.DefaultPrevented := True;
-      DispatchNyxTextResult(LEvents, FNode, LProposal,
-        FRenderer.FLiveBindings.SignalSnapshot);
-      Exit(False);
+      Exit;
     end;
-  end;
-  try
-    LDispatch := FRenderer.FLiveBindings.Edit(FNode, LValue);
-    LDispatch.Info.HasEditing := LEditing.Defined;
-    LDispatch.Info.Editing := LEditing;
-    FRenderer.FLastBindingError := '';
-    FRenderer.FLastBindingFailure := nbfNone;
-  except
-    on LException: ENyxStateNotification do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
-      Exit(False);
-    end;
-    on LException: Exception do
-    begin
-      FRenderer.BindingFailed(FNode, LException.Message);
-      Exit(False);
-    end;
-  end;
 
-  FRenderer.Emit(FNode, LDispatch);
+    if CurrentRenderer.FDesignMode then
+    begin
+      FNode.SetProp('value', LValue);
+      { Send the actual field, rather than a compound's semantic event root. The
+        host persists an authored value or independent reusable-part override. }
+
+      if Assigned(CurrentRenderer.OnEvent) then
+      begin
+        CurrentRenderer.OnEvent(FNode, NyxDesignEvent(FNode, ntDesignValue));
+      end;
+      Exit;
+    end;
+    LHistory := FHistory;
+
+    if (LHistory <> nil) and LEditing.Defined and
+      (LEditing.Intent in [neiHistoryUndo, neiHistoryRedo]) then
+    begin
+      { Some browser/OS producers cannot cancel beforeinput. Never admit the
+        platform stack's value into bindings/history: the owning timeline writes
+        its exact result back through this retained input instead. }
+
+      if LEditing.Intent = neiHistoryUndo then
+      begin
+        LHistory.Execute(nhcUndo);
+      end
+      else
+      begin
+        LHistory.Execute(nhcRedo);
+      end;
+      Exit(False);
+    end;
+    { A platform change event with the already accepted value carries no edit. }
+
+    if LValue = FNode.Prop('value') then
+    begin
+      Exit;
+    end;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := LEvents.ViewRevision;
+
+    if NyxSupportsTextInput(FNode) and LEvents.HasSubscribers(ntBeforeTextInput) then
+    begin
+      LProposal := CurrentRenderer.FLiveBindings.ProposeText(FNode, LValue);
+      LProposal.Info.HasEditing := LEditing.Defined;
+      LProposal.Info.Editing := LEditing;
+      LConsumed := DispatchNyxInput(LEvents, FNode, LProposal);
+
+      if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+      begin
+        Exit(False);
+      end;
+
+      if LConsumed then
+      begin
+        { The physical edit is a proposal. Restore the latest accepted value in
+          place, without a new history/state command or a spurious error dialog. }
+        CurrentRenderer.FForceValues := True;
+        try
+          CurrentRenderer.Sync;
+        finally
+
+          if LGeneration.Current then
+          begin
+            CurrentRenderer.FForceValues := False;
+          end;
+        end;
+        LProposal.Info.DefaultPrevented := True;
+        DispatchNyxTextResult(LEvents, FNode, LProposal,
+          @LGeneration.ReadSignalSnapshot);
+        Exit(False);
+      end;
+    end;
+    try
+      LDispatch := CurrentRenderer.FLiveBindings.Edit(FNode, LValue);
+
+      if not LGeneration.Current then
+      begin
+        Exit(True);
+      end;
+      LDispatch.Info.HasEditing := LEditing.Defined;
+      LDispatch.Info.Editing := LEditing;
+      CurrentRenderer.FLastBindingError := '';
+      CurrentRenderer.FLastBindingFailure := nbfNone;
+    except
+      on LException: ENyxStateNotification do
+      begin
+
+        if LGeneration.Current then
+        begin
+          CurrentRenderer.BindingFailed(FNode, LException.Message, nbfNotificationFailed);
+        end;
+        Exit(False);
+      end;
+      on LException: Exception do
+      begin
+
+        if LGeneration.Current then
+        begin
+          CurrentRenderer.BindingFailed(FNode, LException.Message);
+        end;
+        Exit(False);
+      end;
+    end;
+
+    CurrentRenderer.Emit(FNode, LDispatch);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserRenderer.EmitNamed(const AOriginID: TNyxText;
@@ -5794,30 +7217,49 @@ end;
 procedure TNyxBrowserBinding.CollectionSelectionChanged(
   const ABefore, AAfter: INyxCollectionSelection);
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LDispatch: TNyxDispatch;
   LEvents: INyxEvents;
 begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode then
-  begin
-    Exit;
-  end;
-  LEvents := FRenderer.FEvents;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
 
-  if LEvents.ViewRevision <> FViewRevision then
-  begin
-    Exit;
+    if CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode then
+    begin
+      Exit;
+    end;
+    LEvents := CurrentRenderer.FEvents;
+
+    if LEvents.ViewRevision <> FViewRevision then
+    begin
+      Exit;
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ntSelectionChange);
+    LDispatch.Info.HasCollectionSelection := True;
+    LDispatch.Info.SelectionBefore := ABefore.Snapshot;
+    LDispatch.Info.Selection := AAfter.Snapshot;
+    { Last borrowed call. Managed snapshots survive navigation/destruction. }
+    CurrentRenderer.Emit(FNode, LDispatch);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntSelectionChange);
-  LDispatch.Info.HasCollectionSelection := True;
-  LDispatch.Info.SelectionBefore := ABefore.Snapshot;
-  LDispatch.Info.Selection := AAfter.Snapshot;
-  { Last borrowed call. Managed snapshots survive navigation/destruction. }
-  FRenderer.Emit(FNode, LDispatch);
 end;
 
 procedure TNyxBrowserRenderer.Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LCoordinators: TNyxCoordinatorMounts;
   LEvents: INyxEvents;
   LInfo: TNyxEventInfo;
   LLegacy: TNyxBrowserEvent;
@@ -5827,6 +7269,14 @@ var
   LIndex: Integer;
   LPager: INyxCollectionPager;
 begin
+  try
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
 
   if FUpdating or FPublishingContent or FDesignMode or (ADispatch.EventName = '') then
   begin
@@ -5835,7 +7285,7 @@ begin
   LEvents := FEvents;
   LLegacy := FOnEvent;
   LLegacyClick := NyxHasLegacyClick(AOrigin);
-  LRevision := LEvents.ViewRevision;
+  LCoordinators := FCoordinatorMounts;
   LContentGuard := FContentGuard;
   LContentGuard.Enter;
   AOrigin.AcquireReference;
@@ -5853,33 +7303,40 @@ begin
         Break;
       end;
     end;
+    LRevision := LEvents.ViewRevision;
+
+    if not LGeneration.Current then
+    begin
+      Exit;
+    end;
 
     if LPager <> nil then
     begin
       LPager.ApplyEvent(ADispatch.Info);
 
-      if LEvents.ViewRevision <> LRevision then
+      if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
       begin
         Exit;
       end;
     end;
     { Freeze the selected record before the router captures queued callbacks. }
-    LInfo := EnrichNyxCoordinatorEvent(FCoordinatorMounts, ADispatch.Info);
+    LInfo := EnrichNyxCoordinatorEvent(LCoordinators, ADispatch.Info);
 
-    if LEvents.ViewRevision <> LRevision then
+    if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
     begin
       Exit;
     end;
     LEvents.Dispatch(LInfo, AOrigin.DesignID, ADispatch.Source.DesignID);
 
-    if ADispatch.Info.HasTextEdit and (LEvents.ViewRevision = LRevision) then
+    if ADispatch.Info.HasTextEdit and (LEvents.ViewRevision = LRevision) and
+      LGeneration.Current then
     begin
-      DispatchNyxTextResult(LEvents, AOrigin, ADispatch, FLiveBindings.SignalSnapshot);
+      DispatchNyxTextResult(LEvents, AOrigin, ADispatch, @LGeneration.ReadSignalSnapshot);
     end;
 
     if Assigned(LLegacy) and (ADispatch.Info.Trigger in [ntClick, ntChange, ntNamed]) and
       ((ADispatch.Info.Trigger <> ntClick) or LLegacyClick) and
-      (LEvents.ViewRevision = LRevision) then
+      (LEvents.ViewRevision = LRevision) and LGeneration.Current then
     begin
       LLegacy(ADispatch.Source, LInfo);
     end;
@@ -5888,41 +7345,428 @@ begin
     AOrigin.ReleaseReference;
     LContentGuard.Leave;
   end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      { Later text/event phases lose authority with the original generation. }
+    end;
+  end;
+end;
+
+function TNyxBrowserBinding.ColumnDoubleClick(AEvent: TJSMouseEvent;
+  const ACommand: INyxBrowserColumnCommand): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LEvents: INyxEvents;
+  LRevision, LObserved, LIndex: Integer;
+  LOrigin, LSource: TNyxNode;
+  LLiveBindings: TNyxLiveBindings;
+  LRenderer: TNyxBrowserRenderer;
+  LElement: TJSHTMLElement;
+  LDispatch: TNyxDispatch;
+  LInfo: TNyxEventInfo;
+  LPointer: TNyxPointerSnapshot;
+  LBounds: TJSDOMRect;
+  LContentGuard: INyxContentGuard;
+  LCoordinators: TNyxCoordinatorMounts;
+  LPager: INyxCollectionPager;
+  LBlocked, LSubscribers: Boolean;
+
+  function Current: Boolean;
+  begin
+    { A real router getter may run application code. Only managed locals are
+      read until the entry proof has the final say about borrowed-tree access. }
+    LObserved := LEvents.ViewRevision;
+    Result := (LObserved = LRevision) and ACommand.DispatchCurrent;
+  end;
+
+begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := False;
+    LRenderer := CurrentRenderer;
+    LEvents := LRenderer.FEvents;
+    LRevision := FViewRevision;
+    LOrigin := FNode;
+    LSource := nil;
+    LLiveBindings := LRenderer.FLiveBindings;
+    LElement := FElement;
+    LContentGuard := LRenderer.FContentGuard;
+    LCoordinators := Copy(LRenderer.FCoordinatorMounts, 0,
+      Length(LRenderer.FCoordinatorMounts));
+    LBlocked := LRenderer.FUpdating or LRenderer.FPublishingContent or
+      LRenderer.FDesignMode or AEvent.defaultPrevented or
+      not NyxInteractionPolicy(LOrigin).CanIssueCommand;
+    { Retain before Prepare or the first real router query can navigate. The
+      command retains the mount, not this binding, renderer or realized tree. }
+    LOrigin.AcquireReference;
+    try
+      ACommand.Prepare;
+
+      if LBlocked or not Current then
+      begin
+        Exit;
+      end;
+      LSubscribers := LEvents.HasSubscribers(ntDoubleClick);
+
+      if not Current then
+      begin
+        Exit;
+      end;
+
+      if LSubscribers then
+      begin
+        LDispatch := LLiveBindings.Signal(LOrigin, ntDoubleClick);
+        LSource := LDispatch.Source;
+        LSource.AcquireReference;
+        { Preserve the ordinary pointer payload for the SAME canonical event.
+          This bounded route is only the claimed header double-click, so no
+          gesture/capture/text-edit/legacy callback default belongs to it. }
+        LPointer := LDispatch.Info.Pointer;
+        LPointer.Kind := npiMouse;
+
+        if AEvent is TJSPointerEvent then
+        begin
+          LPointer.ID := TJSPointerEvent(AEvent).pointerId;
+          LPointer.Primary := TJSPointerEvent(AEvent).isPrimary;
+          LPointer.Pressure := TJSPointerEvent(AEvent).pressure;
+
+          if TJSPointerEvent(AEvent).pointerType = 'touch' then
+          begin
+            LPointer.Kind := npiTouch;
+          end
+          else if TJSPointerEvent(AEvent).pointerType = 'pen' then
+          begin
+            LPointer.Kind := npiPen;
+          end;
+        end;
+        LPointer.HasPosition := True;
+        LBounds := LElement.getBoundingClientRect;
+        LPointer.X := AEvent.clientX - LBounds.left;
+        LPointer.Y := AEvent.clientY - LBounds.top;
+        LPointer.Button := npbNone;
+        LPointer.Buttons := [];
+
+        if (AEvent.buttons and 1) <> 0 then
+        begin
+          Include(LPointer.Buttons, npbPrimary);
+        end;
+
+        if (AEvent.buttons and 2) <> 0 then
+        begin
+          Include(LPointer.Buttons, npbSecondary);
+        end;
+
+        if (AEvent.buttons and 4) <> 0 then
+        begin
+          Include(LPointer.Buttons, npbAuxiliary);
+        end;
+
+        if (AEvent.buttons and not 7) <> 0 then
+        begin
+          Include(LPointer.Buttons, npbOther);
+        end;
+        LPointer.Modifiers := [];
+
+        if AEvent.shiftKey then
+        begin
+          Include(LPointer.Modifiers, nmShift);
+        end;
+
+        if AEvent.ctrlKey then
+        begin
+          Include(LPointer.Modifiers, nmControl);
+        end;
+
+        if AEvent.altKey then
+        begin
+          Include(LPointer.Modifiers, nmAlt);
+        end;
+
+        if AEvent.metaKey then
+        begin
+          Include(LPointer.Modifiers, nmMeta);
+        end;
+        LDispatch.Info.HasPointer := True;
+        LDispatch.Info.Pointer := LPointer;
+
+        if not Current then
+        begin
+          Exit;
+        end;
+        { Copy the optional pager before any outward event work. Enrichment uses
+          retained mounts; neither stage consults a renderer after callbacks. }
+        for LIndex := 0 to High(LRenderer.FBindings) do
+        begin
+
+          if LRenderer.FBindings[LIndex].FNode = LSource then
+          begin
+            LPager := LRenderer.FBindings[LIndex].FCollectionPager;
+            Break;
+          end;
+        end;
+        LContentGuard.Enter;
+        try
+
+          if LPager <> nil then
+          begin
+            LPager.ApplyEvent(LDispatch.Info);
+
+            if not Current then
+            begin
+              Exit;
+            end;
+          end;
+          LInfo := EnrichNyxCoordinatorEvent(LCoordinators, LDispatch.Info);
+
+          if not Current then
+          begin
+            Exit;
+          end;
+          LEvents.Dispatch(LInfo, LOrigin.DesignID, LSource.DesignID);
+        finally
+          LContentGuard.Leave;
+        end;
+      end;
+      { No-subscriber inputs still perform the default once. Leave may have
+        refreshed/navigated, so even that final default uses only the old proof. }
+
+      if Current then
+      begin
+        ACommand.Complete(not AEvent.defaultPrevented);
+      end;
+    finally
+      { Claim success, refusal AND exception before mount bubbling can recapture
+        a newly enabled/replaced column. Only this token's unfinished work retires. }
+      AEvent.preventDefault;
+      AEvent.stopPropagation;
+      ACommand.Retire;
+      try
+
+        if LSource <> nil then
+        begin
+          LSource.ReleaseReference;
+        end;
+      finally
+        LOrigin.ReleaseReference;
+      end;
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.DoubleClick(AEvent: TJSMouseEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LMount: INyxCollectionMount;
+  LInput: INyxBrowserCollectionColumnInput;
+  LCommand: INyxBrowserColumnCommand;
 begin
-  Result := PointerEvent(AEvent, ntDoubleClick);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    { Begin has no router/source callout: capture the exact entry identity before
+      PointerEvent's first real revision/subscriber getter can replace this view. }
+    LMount := FCollectionMount;
+
+    if Supports(LMount, INyxBrowserCollectionColumnInput, LInput) then
+    begin
+      LCommand := LInput.BeginColumnDoubleClick(AEvent);
+
+      if LCommand <> nil then
+      begin
+        Exit(ColumnDoubleClick(AEvent, LCommand));
+      end;
+    end;
+    Result := PointerEvent(AEvent, ntDoubleClick);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerDown(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := PointerEvent(AEvent, ntPointerDown);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := PointerEvent(AEvent, ntPointerDown);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerUp(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := PointerEvent(AEvent, ntPointerUp);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := PointerEvent(AEvent, ntPointerUp);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerMove(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := PointerEvent(AEvent, ntPointerMove);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := PointerEvent(AEvent, ntPointerMove);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerEnter(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := PointerEvent(AEvent, ntPointerEnter);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := PointerEvent(AEvent, ntPointerEnter);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerExit(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := PointerEvent(AEvent, ntPointerExit);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := PointerEvent(AEvent, ntPointerExit);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.ContextMenu(AEvent: TJSMouseEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LMount: INyxCollectionMount;
+  LInput: INyxBrowserCollectionCellContextInput;
+  LCommand: INyxBrowserColumnCommand;
+  LAllowed: Boolean;
 begin
-  Result := PointerEvent(AEvent, ntContextMenu);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    LMount := FCollectionMount;
+
+    if Supports(LMount, INyxBrowserCollectionCellContextInput, LInput) then
+    begin
+      LCommand := LInput.BeginCellContext(AEvent);
+    end;
+
+    if LCommand = nil then
+    begin
+      Exit(PointerEvent(AEvent, ntContextMenu));
+    end;
+    try
+
+      if not AEvent.defaultPrevented and LCommand.Current then
+      begin
+        LCommand.Prepare;
+      end;
+      LAllowed := False;
+
+      if LGeneration.Current and LCommand.DispatchCurrent then
+      begin
+        LAllowed := PointerEvent(AEvent, ntContextMenu);
+      end;
+      Result := LCommand.Complete(LAllowed and not AEvent.defaultPrevented and
+        LCommand.DispatchCurrent);
+    finally
+      AEvent.preventDefault;
+      AEvent.stopPropagation;
+      LCommand.Retire;
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 procedure TNyxBrowserBinding.ObserveCapture(APointerID: Integer; ACaptured: Boolean);
@@ -5957,25 +7801,78 @@ begin
 end;
 
 function TNyxBrowserBinding.PointerCancel(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := PointerEvent(AEvent, ntPointerCancel);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := PointerEvent(AEvent, ntPointerCancel);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerCapture(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  ObserveCapture(AEvent.pointerId, True);
-  Result := PointerEvent(AEvent, ntPointerCapture);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    ObserveCapture(AEvent.pointerId, True);
+    Result := PointerEvent(AEvent, ntPointerCapture);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerCaptureLost(AEvent: TJSPointerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  ObserveCapture(AEvent.pointerId, False);
-  Result := PointerEvent(AEvent, ntPointerCaptureLost);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    ObserveCapture(AEvent.pointerId, False);
+    Result := PointerEvent(AEvent, ntPointerCaptureLost);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.PointerEvent(AEvent: TJSMouseEvent;
   ATrigger: TNyxTrigger): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LEvents: INyxEvents;
   LRevision: Integer;
   LDispatch: TNyxDispatch;
@@ -5988,197 +7885,214 @@ var
   LCapabilities: TNyxGestureCapabilities;
   LElement: TNyxGestureElement;
   LInput: TNyxGestureElement;
-  LRenderer: TNyxBrowserRenderer;
   LOriginID: TNyxText;
 begin
-  Result := True;
-  LEvents := FRenderer.FEvents;
-  LRevision := FViewRevision;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or AEvent.defaultPrevented or
-    not LEvents.HasSubscribers(ATrigger) or
-    not NyxInteractionPolicy(FNode).CanIssueCommand then
-  begin
-    Exit;
-  end;
-  { A framed input belongs to its outer Nyx face. A separately projected child
-    belongs to that child's binding; bubbling must not duplicate its event. }
-  LTarget := TJSHTMLElement(AEvent.target);
-
-  if not (ATrigger in [ntPointerEnter, ntPointerExit]) and
-    (LTarget.closest('[data-runtime-id]') <> FElement) then
-  begin
-    Exit;
-  end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
-  LPointer := LDispatch.Info.Pointer;
-  LPointer.Kind := npiMouse;
-
-  if AEvent is TJSPointerEvent then
-  begin
-    LPointer.ID := TJSPointerEvent(AEvent).pointerId;
-    LPointer.Primary := TJSPointerEvent(AEvent).isPrimary;
-    LPointer.Pressure := TJSPointerEvent(AEvent).pressure;
-
-    if TJSPointerEvent(AEvent).pointerType = 'touch' then
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
     begin
-      LPointer.Kind := npiTouch;
-    end
-    else if TJSPointerEvent(AEvent).pointerType = 'pen' then
-    begin
-      LPointer.Kind := npiPen;
+      Exit(True);
     end;
-  end;
-  LPointer.HasPosition := not ((ATrigger = ntContextMenu) and
-    (AEvent.detail = 0) and (AEvent.clientX = 0) and (AEvent.clientY = 0));
-  LBounds := FElement.getBoundingClientRect;
-  LPointer.X := AEvent.clientX - LBounds.left;
-  LPointer.Y := AEvent.clientY - LBounds.top;
+    Result := True;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
 
-  if not LPointer.HasPosition then
-  begin
-    LPointer.Kind := npiUnknown;
-    LPointer.X := 0;
-    LPointer.Y := 0;
-  end;
-  LPointer.Button := npbNone;
-
-  if ATrigger in [ntPointerDown, ntPointerUp] then
-  begin
-    case AEvent.button of
-      0:
-        begin
-          LPointer.Button := npbPrimary;
-        end;
-      1:
-        begin
-          LPointer.Button := npbAuxiliary;
-        end;
-      2:
-        begin
-          LPointer.Button := npbSecondary;
-        end;
-    else
-      LPointer.Button := npbOther;
-    end;
-  end;
-  LPointer.Buttons := [];
-
-  if (AEvent.buttons and 1) <> 0 then
-  begin
-    Include(LPointer.Buttons, npbPrimary);
-  end;
-
-  if (AEvent.buttons and 2) <> 0 then
-  begin
-    Include(LPointer.Buttons, npbSecondary);
-  end;
-
-  if (AEvent.buttons and 4) <> 0 then
-  begin
-    Include(LPointer.Buttons, npbAuxiliary);
-  end;
-
-  if (AEvent.buttons and not 7) <> 0 then
-  begin
-    Include(LPointer.Buttons, npbOther);
-  end;
-  LPointer.Modifiers := [];
-
-  if AEvent.shiftKey then
-  begin
-    Include(LPointer.Modifiers, nmShift);
-  end;
-
-  if AEvent.ctrlKey then
-  begin
-    Include(LPointer.Modifiers, nmControl);
-  end;
-
-  if AEvent.altKey then
-  begin
-    Include(LPointer.Modifiers, nmAlt);
-  end;
-
-  if AEvent.metaKey then
-  begin
-    Include(LPointer.Modifiers, nmMeta);
-  end;
-  LDispatch.Info.HasPointer := True;
-  LDispatch.Info.Pointer := LPointer;
-  LConsumed := False;
-  LElement := TNyxGestureElement(FElement);
-  LInput := TNyxGestureElement(FInput);
-  LRenderer := FRenderer;
-  LOriginID := FNode.ID;
-
-  if ATrigger = ntContextMenu then
-  begin
-    LConsumed := DispatchNyxInput(LEvents, FNode, LDispatch);
-  end
-  else if ATrigger in [ntPointerDown, ntPointerMove, ntPointerUp] then
-  begin
-    LCapabilities := [];
-
-    if (AEvent is TJSPointerEvent) and (AEvent.buttons <> 0) and
-      (ATrigger in [ntPointerDown, ntPointerMove]) then
+    if ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current) or CurrentRenderer.FUpdating or
+      CurrentRenderer.FDesignMode or AEvent.defaultPrevented or
+      not LEvents.HasSubscribers(ATrigger) or
+      not NyxInteractionPolicy(FNode).CanIssueCommand then
     begin
-      Include(LCapabilities, ngcCapturePointer);
+      Exit;
     end;
+    { A framed input belongs to its outer Nyx face. A separately projected child
+      belongs to that child's binding; bubbling must not duplicate its event. }
+    LTarget := TJSHTMLElement(AEvent.target);
 
-    if (AEvent is TJSPointerEvent) and
-      (LElement.hasPointerCapture(LPointer.ID) or
-        ((LInput <> nil) and LInput.hasPointerCapture(LPointer.ID))) then
+    if not (ATrigger in [ntPointerEnter, ntPointerExit]) and
+      (LTarget.closest('[data-runtime-id]') <> FElement) then
     begin
-      Include(LCapabilities, ngcReleasePointer);
+      Exit;
     end;
-    LGesture := NewNyxGestureDecision(LCapabilities);
-    DispatchNyxGesture(LEvents, FNode, LDispatch, LGesture);
-    LResponse := LGesture.Seal;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ATrigger);
+    LPointer := LDispatch.Info.Pointer;
+    LPointer.Kind := npiMouse;
 
-    if (LEvents.ViewRevision = LRevision) and (LResponse.PointerRequest <> nprUnchanged) then
+    if AEvent is TJSPointerEvent then
     begin
-      try
+      LPointer.ID := TJSPointerEvent(AEvent).pointerId;
+      LPointer.Primary := TJSPointerEvent(AEvent).isPrimary;
+      LPointer.Pressure := TJSPointerEvent(AEvent).pressure;
 
-        if LResponse.PointerRequest = nprCapture then
-        begin
-          LElement.setPointerCapture(LPointer.ID);
-          ObserveCapture(LPointer.ID, True);
-        end
-        else
-        begin
-
-          if LElement.hasPointerCapture(LPointer.ID) then
-          begin
-            LElement.releasePointerCapture(LPointer.ID);
-          end;
-
-          if (LInput <> nil) and LInput.hasPointerCapture(LPointer.ID) then
-          begin
-            LInput.releasePointerCapture(LPointer.ID);
-          end;
-        end;
-        LRenderer.FLastGestureError := '';
-      except
-        LRenderer.GestureFailed(LOriginID,
-          'Browser refused capture/release for the current active pointer');
+      if TJSPointerEvent(AEvent).pointerType = 'touch' then
+      begin
+        LPointer.Kind := npiTouch;
+      end
+      else if TJSPointerEvent(AEvent).pointerType = 'pen' then
+      begin
+        LPointer.Kind := npiPen;
       end;
     end;
-  end
-  else
-  begin
-    FRenderer.Emit(FNode, LDispatch);
-  end;
-  { A callback can unmount the binding. Only the owned router and physical
-    event remain safe to inspect after dispatch. }
+    LPointer.HasPosition := not ((ATrigger = ntContextMenu) and
+      (AEvent.detail = 0) and (AEvent.clientX = 0) and (AEvent.clientY = 0));
+    LBounds := FElement.getBoundingClientRect;
+    LPointer.X := AEvent.clientX - LBounds.left;
+    LPointer.Y := AEvent.clientY - LBounds.top;
 
-  if LConsumed or (LEvents.ViewRevision <> LRevision) then
-  begin
-    AEvent.preventDefault;
-    Result := False;
+    if not LPointer.HasPosition then
+    begin
+      LPointer.Kind := npiUnknown;
+      LPointer.X := 0;
+      LPointer.Y := 0;
+    end;
+    LPointer.Button := npbNone;
+
+    if ATrigger in [ntPointerDown, ntPointerUp] then
+    begin
+      case AEvent.button of
+        0:
+          begin
+            LPointer.Button := npbPrimary;
+          end;
+        1:
+          begin
+            LPointer.Button := npbAuxiliary;
+          end;
+        2:
+          begin
+            LPointer.Button := npbSecondary;
+          end;
+      else
+        LPointer.Button := npbOther;
+      end;
+    end;
+    LPointer.Buttons := [];
+
+    if (AEvent.buttons and 1) <> 0 then
+    begin
+      Include(LPointer.Buttons, npbPrimary);
+    end;
+
+    if (AEvent.buttons and 2) <> 0 then
+    begin
+      Include(LPointer.Buttons, npbSecondary);
+    end;
+
+    if (AEvent.buttons and 4) <> 0 then
+    begin
+      Include(LPointer.Buttons, npbAuxiliary);
+    end;
+
+    if (AEvent.buttons and not 7) <> 0 then
+    begin
+      Include(LPointer.Buttons, npbOther);
+    end;
+    LPointer.Modifiers := [];
+
+    if AEvent.shiftKey then
+    begin
+      Include(LPointer.Modifiers, nmShift);
+    end;
+
+    if AEvent.ctrlKey then
+    begin
+      Include(LPointer.Modifiers, nmControl);
+    end;
+
+    if AEvent.altKey then
+    begin
+      Include(LPointer.Modifiers, nmAlt);
+    end;
+
+    if AEvent.metaKey then
+    begin
+      Include(LPointer.Modifiers, nmMeta);
+    end;
+    LDispatch.Info.HasPointer := True;
+    LDispatch.Info.Pointer := LPointer;
+    LConsumed := False;
+    LElement := TNyxGestureElement(FElement);
+    LInput := TNyxGestureElement(FInput);
+    LOriginID := FNode.ID;
+
+    if ATrigger = ntContextMenu then
+    begin
+      LConsumed := DispatchNyxInput(LEvents, FNode, LDispatch);
+    end
+    else if ATrigger in [ntPointerDown, ntPointerMove, ntPointerUp] then
+    begin
+      LCapabilities := [];
+
+      if (AEvent is TJSPointerEvent) and (AEvent.buttons <> 0) and
+        (ATrigger in [ntPointerDown, ntPointerMove]) then
+      begin
+        Include(LCapabilities, ngcCapturePointer);
+      end;
+
+      if (AEvent is TJSPointerEvent) and
+        (LElement.hasPointerCapture(LPointer.ID) or
+          ((LInput <> nil) and LInput.hasPointerCapture(LPointer.ID))) then
+      begin
+        Include(LCapabilities, ngcReleasePointer);
+      end;
+      LGesture := NewNyxGestureDecision(LCapabilities);
+      DispatchNyxGesture(LEvents, FNode, LDispatch, LGesture);
+      LResponse := LGesture.Seal;
+
+      if ((LEvents.ViewRevision = LRevision) and LGeneration.Current) and (LResponse.PointerRequest <> nprUnchanged) then
+      begin
+        try
+
+          if LResponse.PointerRequest = nprCapture then
+          begin
+            LElement.setPointerCapture(LPointer.ID);
+            ObserveCapture(LPointer.ID, True);
+          end
+          else
+          begin
+
+            if LElement.hasPointerCapture(LPointer.ID) then
+            begin
+              LElement.releasePointerCapture(LPointer.ID);
+            end;
+
+            if (LInput <> nil) and LInput.hasPointerCapture(LPointer.ID) then
+            begin
+              LInput.releasePointerCapture(LPointer.ID);
+            end;
+          end;
+          RequireCurrent;
+          CurrentRenderer.FLastGestureError := '';
+        except
+
+          if LGeneration.Current then
+          begin
+            CurrentRenderer.GestureFailed(LOriginID,
+              'Browser refused capture/release for the current active pointer');
+          end;
+        end;
+      end;
+    end
+    else
+    begin
+      CurrentRenderer.Emit(FNode, LDispatch);
+    end;
+    { A callback can unmount the binding. Only the owned router and physical
+      event remain safe to inspect after dispatch. }
+
+    if LConsumed or ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current) then
+    begin
+      AEvent.preventDefault;
+      Result := False;
+    end;
+    AEvent.stopPropagation;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  AEvent.stopPropagation;
 end;
 
 procedure TNyxBrowserRenderer.SetDesignerInput(const AValue: TNyxDesignerInput);
@@ -6205,43 +8119,164 @@ begin
 end;
 
 function TNyxBrowserBinding.DragStart(AEvent: TJSDragEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := DragEvent(AEvent, ntDragStart, ndpStart);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := DragEvent(AEvent, ntDragStart, ndpStart);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.Drag(AEvent: TJSDragEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := DragEvent(AEvent, ntDrag, ndpDrag);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := DragEvent(AEvent, ntDrag, ndpDrag);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.DragEnter(AEvent: TJSDragEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := DragEvent(AEvent, ntDragEnter, ndpEnter);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := DragEvent(AEvent, ntDragEnter, ndpEnter);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.DragOver(AEvent: TJSDragEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := DragEvent(AEvent, ntDragOver, ndpOver);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := DragEvent(AEvent, ntDragOver, ndpOver);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.DragExit(AEvent: TJSDragEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := DragEvent(AEvent, ntDragExit, ndpExit);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := DragEvent(AEvent, ntDragExit, ndpExit);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.Drop(AEvent: TJSDragEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := DragEvent(AEvent, ntDrop, ndpDrop);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := DragEvent(AEvent, ntDrop, ndpDrop);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.DragEnd(AEvent: TJSDragEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := DragEvent(AEvent, ntDragEnd, ndpEnd);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := DragEvent(AEvent, ntDragEnd, ndpEnd);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.DragEvent(AEvent: TJSDragEvent; ATrigger: TNyxTrigger;
   APhase: TNyxDragPhase): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LEvents: INyxEvents;
   LRevision: Integer;
   LRenderer: TNyxBrowserRenderer;
@@ -6259,197 +8294,251 @@ var
   LSource: Boolean;
   LDesignerTarget: TNyxDesignerTarget;
 begin
-  Result := True;
-  LEvents := FRenderer.FEvents;
-  LRevision := FViewRevision;
-  LSource := APhase in [ndpStart, ndpDrag, ndpEnd];
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    (FRenderer.FDesignMode and (LSource or not FRenderer.FDesignerInput.DropEnabled)) or
-    AEvent.defaultPrevented then
-  begin
-    Exit;
-  end;
-  LTarget := TJSHTMLElement(AEvent.target);
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
+    LSource := APhase in [ndpStart, ndpDrag, ndpEnd];
 
-  if (LTarget.closest('[data-runtime-id]') <> FElement) or
-    (LSource and (FNode.Prop('drag-source') <> 'true')) or
-    (not LSource and not FRenderer.FDesignMode and (FNode.Prop('drop-target') <> 'true')) then
-  begin
-    Exit;
-  end;
-  LRenderer := FRenderer;
-  LOriginID := FNode.ID;
-  LPolicy := NyxInteractionPolicy(FNode);
-  { Opted-in sources/targets negotiate explicitly. Default browser source
-    behavior is canceled without an offer; a drop never inserts text, opens a
-    file or follows a transferred URI through a browser default. }
+    if ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current) or CurrentRenderer.FUpdating or
+      (CurrentRenderer.FDesignMode and (LSource or not CurrentRenderer.FDesignerInput.DropEnabled)) or
+      AEvent.defaultPrevented then
+    begin
+      Exit;
+    end;
+    LTarget := TJSHTMLElement(AEvent.target);
 
-  if APhase = ndpDrop then
-  begin
-    AEvent.preventDefault;
-  end;
-  AEvent.stopPropagation;
+    if (LTarget.closest('[data-runtime-id]') <> FElement) or
+      (LSource and (FNode.Prop('drag-source') <> 'true')) or
+      (not LSource and not CurrentRenderer.FDesignMode and (FNode.Prop('drop-target') <> 'true')) then
+    begin
+      Exit;
+    end;
+    LRenderer := CurrentRenderer;
+    LOriginID := FNode.ID;
+    LPolicy := NyxInteractionPolicy(FNode);
+    { Opted-in sources/targets negotiate explicitly. Default browser source
+      behavior is canceled without an offer; a drop never inserts text, opens a
+      file or follows a transferred URI through a browser default. }
 
-  if not FRenderer.FDesignMode and not LPolicy.CanIssueCommand then
-  begin
-
-    if APhase in [ndpStart, ndpDrop] then
+    if APhase = ndpDrop then
     begin
       AEvent.preventDefault;
-      Result := False;
     end;
-    Exit;
-  end;
-  try
-    LTransfer := CaptureNyxBrowserTransfer(AEvent.dataTransfer,
-      APhase in [ndpStart, ndpDrop]);
-    TryNyxDropOperations(AEvent.dataTransfer.effectAllowed, LAllowed);
-    TryNyxDropOperation(AEvent.dataTransfer.dropEffect, LOperation);
-  except
-    on LException: Exception do
-    begin
-      AEvent.preventDefault;
-      LRenderer.GestureFailed(LOriginID, LException.Message);
-      Exit(False);
-    end;
-  end;
+    AEvent.stopPropagation;
 
-  if FRenderer.FDesignMode then
-  begin
-    LDispatch := Default(TNyxDispatch);
-    LDispatch.Info := NyxDesignerDragEvent(FNode, ATrigger);
-  end
-  else
-  begin
-    LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
-  end;
-  LCapabilities := [];
-
-  if AEvent.cancelable then
-  begin
-
-    if APhase = ndpStart then
-    begin
-      Include(LCapabilities, ngcOfferDrag);
-    end
-    else if (APhase in [ndpEnter, ndpOver, ndpDrop]) and
-      (FRenderer.FDesignMode or LPolicy.CanEditValue) then
-    begin
-      Include(LCapabilities, ngcAcceptDrop);
-    end;
-  end;
-  LDispatch.Info.HasDrag := True;
-  LDispatch.Info.Drag := NyxDragSnapshot(APhase, LTransfer, LAllowed,
-    LOperation, '', LCapabilities <> []);
-  LDispatch.Info.HasPointer := True;
-  LDispatch.Info.Pointer.Kind := npiMouse;
-  LBounds := FElement.getBoundingClientRect;
-  LDispatch.Info.Pointer.X := AEvent.clientX - LBounds.left;
-  LDispatch.Info.Pointer.Y := AEvent.clientY - LBounds.top;
-  LDispatch.Info.Pointer.HasPosition := True;
-
-  if AEvent.shiftKey then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmShift);
-  end;
-
-  if AEvent.ctrlKey then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmControl);
-  end;
-
-  if AEvent.altKey then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmAlt);
-  end;
-
-  if AEvent.metaKey then
-  begin
-    Include(LDispatch.Info.Pointer.Modifiers, nmMeta);
-  end;
-  LDecision := NewNyxGestureDecision(LCapabilities, LAllowed);
-  try
-
-    if FRenderer.FDesignMode then
+    if not CurrentRenderer.FDesignMode and not LPolicy.CanIssueCommand then
     begin
 
-      if Assigned(FRenderer.FOnDesignerGesture) then
+      if APhase in [ndpStart, ndpDrop] then
       begin
-        LDesignerTarget := NyxDesignerTarget(FNode).WithFrame(FRenderer.DropFrameFor(FNode.ID));
-
-        if LDesignerTarget.Frame.Defined then
-        begin
-          { Designer placement operates in copied logical face pixels. Ordinary
-            application pointer notifications retain their existing contract. }
-          LDispatch.Info.Pointer.X := LDispatch.Info.Pointer.X *
-            LDesignerTarget.Frame.Width / LDesignerTarget.Frame.Face.Width;
-          LDispatch.Info.Pointer.Y := LDispatch.Info.Pointer.Y *
-            LDesignerTarget.Frame.Height / LDesignerTarget.Frame.Face.Height;
-        end;
-        FRenderer.FOnDesignerGesture(LDesignerTarget, LDispatch.Info, LDecision);
+        AEvent.preventDefault;
+        Result := False;
       end;
+      Exit;
+    end;
+    try
+      LTransfer := CaptureNyxBrowserTransfer(AEvent.dataTransfer,
+        APhase in [ndpStart, ndpDrop]);
+      TryNyxDropOperations(AEvent.dataTransfer.effectAllowed, LAllowed);
+      TryNyxDropOperation(AEvent.dataTransfer.dropEffect, LOperation);
+    except
+      on LException: Exception do
+      begin
+        AEvent.preventDefault;
+        LRenderer.GestureFailed(LOriginID, LException.Message);
+        Exit(False);
+      end;
+    end;
+
+    if CurrentRenderer.FDesignMode then
+    begin
+      LDispatch := Default(TNyxDispatch);
+      LDispatch.Info := NyxDesignerDragEvent(FNode, ATrigger);
     end
     else
     begin
-      DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
+      LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ATrigger);
     end;
-  finally
-    LResponse := LDecision.Seal;
-  end;
+    LCapabilities := [];
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    AEvent.preventDefault;
-    Exit(False);
-  end;
-
-  if APhase = ndpStart then
-  begin
-
-    if not LResponse.Offered or (LPolicy.ReadOnly and (ndoMove in LResponse.Allowed)) then
+    if AEvent.cancelable then
     begin
-      AEvent.preventDefault;
-      LRenderer.GestureFailed(LOriginID,
-        'Drag requires a synchronous offer; a read-only source cannot offer Move');
-      Exit(False);
+
+      if APhase = ndpStart then
+      begin
+        Include(LCapabilities, ngcOfferDrag);
+      end
+      else if (APhase in [ndpEnter, ndpOver, ndpDrop]) and
+        (CurrentRenderer.FDesignMode or LPolicy.CanEditValue) then
+      begin
+        Include(LCapabilities, ngcAcceptDrop);
+      end;
     end;
+    LDispatch.Info.HasDrag := True;
+    LDispatch.Info.Drag := NyxDragSnapshot(APhase, LTransfer, LAllowed,
+      LOperation, '', LCapabilities <> []);
+    LDispatch.Info.HasPointer := True;
+    LDispatch.Info.Pointer.Kind := npiMouse;
+    LBounds := FElement.getBoundingClientRect;
+    LDispatch.Info.Pointer.X := AEvent.clientX - LBounds.left;
+    LDispatch.Info.Pointer.Y := AEvent.clientY - LBounds.top;
+    LDispatch.Info.Pointer.HasPosition := True;
+
+    if AEvent.shiftKey then
+    begin
+      Include(LDispatch.Info.Pointer.Modifiers, nmShift);
+    end;
+
+    if AEvent.ctrlKey then
+    begin
+      Include(LDispatch.Info.Pointer.Modifiers, nmControl);
+    end;
+
+    if AEvent.altKey then
+    begin
+      Include(LDispatch.Info.Pointer.Modifiers, nmAlt);
+    end;
+
+    if AEvent.metaKey then
+    begin
+      Include(LDispatch.Info.Pointer.Modifiers, nmMeta);
+    end;
+    LDecision := NewNyxGestureDecision(LCapabilities, LAllowed);
     try
-      OfferNyxBrowserTransfer(AEvent.dataTransfer, LResponse);
-    except
-      { Host DOM failures are not necessarily Pascal Exception instances. Keep
-        the offer canceled and report an owned refusal through the public sink. }
+
+      if CurrentRenderer.FDesignMode then
+      begin
+
+        if Assigned(CurrentRenderer.FOnDesignerGesture) then
+        begin
+          LDesignerTarget := NyxDesignerTarget(FNode).WithFrame(CurrentRenderer.DropFrameFor(FNode.ID));
+
+          if LDesignerTarget.Frame.Defined then
+          begin
+            { Designer placement operates in copied logical face pixels. Ordinary
+              application pointer notifications retain their existing contract. }
+            LDispatch.Info.Pointer.X := LDispatch.Info.Pointer.X *
+              LDesignerTarget.Frame.Width / LDesignerTarget.Frame.Face.Width;
+            LDispatch.Info.Pointer.Y := LDispatch.Info.Pointer.Y *
+              LDesignerTarget.Frame.Height / LDesignerTarget.Frame.Face.Height;
+          end;
+          CurrentRenderer.FOnDesignerGesture(LDesignerTarget, LDispatch.Info, LDecision);
+        end;
+      end
+      else
+      begin
+        DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
+      end;
+    finally
+      LResponse := LDecision.Seal;
+    end;
+
+    if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+    begin
       AEvent.preventDefault;
-      LRenderer.GestureFailed(LOriginID, 'The browser refused the typed drag transfer');
       Exit(False);
     end;
-    LRenderer.FLastGestureError := '';
-  end
-  else if APhase in [ndpEnter, ndpOver, ndpDrop] then
-  begin
-    LOperation := ndoNone;
 
-    if LResponse.Accepted then
+    if APhase = ndpStart then
     begin
-      LOperation := LResponse.Operation;
-    end;
-    try
-      AEvent.dataTransfer.dropEffect := NyxDropOperationName(LOperation);
-    except
-      AEvent.preventDefault;
-      LRenderer.GestureFailed(LOriginID, 'The browser refused the typed drop operation');
-      Exit(False);
-    end;
 
-    if LOperation <> ndoNone then
-    begin
-      AEvent.preventDefault;
+      if not LResponse.Offered or (LPolicy.ReadOnly and (ndoMove in LResponse.Allowed)) then
+      begin
+        AEvent.preventDefault;
+        LRenderer.GestureFailed(LOriginID,
+          'Drag requires a synchronous offer; a read-only source cannot offer Move');
+        Exit(False);
+      end;
+      try
+        OfferNyxBrowserTransfer(AEvent.dataTransfer, LResponse);
+      except
+        { Host DOM failures are not necessarily Pascal Exception instances. Keep
+          the offer canceled and report an owned refusal through the public sink. }
+        AEvent.preventDefault;
+        LRenderer.GestureFailed(LOriginID, 'The browser refused the typed drag transfer');
+        Exit(False);
+      end;
       LRenderer.FLastGestureError := '';
+    end
+    else if APhase in [ndpEnter, ndpOver, ndpDrop] then
+    begin
+      LOperation := ndoNone;
+
+      if LResponse.Accepted then
+      begin
+        LOperation := LResponse.Operation;
+      end;
+      try
+        AEvent.dataTransfer.dropEffect := NyxDropOperationName(LOperation);
+      except
+        AEvent.preventDefault;
+        LRenderer.GestureFailed(LOriginID, 'The browser refused the typed drop operation');
+        Exit(False);
+      end;
+
+      if LOperation <> ndoNone then
+      begin
+        AEvent.preventDefault;
+        LRenderer.FLastGestureError := '';
+      end;
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
     end;
   end;
 end;
 
+procedure TNyxBrowserBinding.RequireCurrent;
+begin
+
+  if FDisconnected or (FGenerationObject = nil) or
+    not TBrowserViewGeneration(FGenerationObject).Current then
+  begin
+    raise ENyxBrowserViewRetired.Create('The browser view was retired');
+  end;
+end;
+
+function TNyxBrowserBinding.RetainView: IInterface;
+begin
+  Result := nil;
+
+  if not FDisconnected and (FGenerationObject <> nil) and
+    TBrowserViewGeneration(FGenerationObject).Current then
+  begin
+    Result := TBrowserViewGeneration(FGenerationObject);
+  end;
+end;
+
+function TNyxBrowserBinding.CurrentRenderer: TNyxBrowserRenderer;
+begin
+  { The weak receiver is never retargeted to a successor. Checking its original
+    canonical generation before EVERY borrowed receiver access also protects
+    helper/error/finally paths after an outward getter retires the view. }
+  RequireCurrent;
+  Result := FRenderer;
+end;
+
 destructor TNyxBrowserBinding.Destroy;
+begin
+  Disconnect;
+  FreeAndNil(FColorField);
+  FreeAndNil(FSplit);
+  FreeAndNil(FTabs);
+  FreeAndNil(FDrawingView);
+  inherited Destroy;
+end;
+
+procedure TNyxBrowserBinding.Disconnect;
 var
   LViewportElement: TJSHTMLElement;
   LFocus: TJSHTMLElement;
@@ -6457,18 +8546,23 @@ var
   LPointerID: Integer;
 begin
 
-  if FImageRequest <> nil then
+  if FDisconnected then
   begin
-    FImageRequest.Retire;
-    FImageRequest := nil;
+    Exit;
+  end;
+  FDisconnected := True;
+
+  if FElement <> nil then
+  begin
+    FElement.onclick := nil;
   end;
 
-  if FImageLifecycle <> nil then
+  if FInput <> nil then
   begin
-    FImageLifecycle.Close;
-    FImageLifecycle := nil;
+    FInput.onchange := nil;
+    FInput.removeEventListener('focus', @Enter);
+    FInput.removeEventListener('blur', @Leave);
   end;
-  FreeAndNil(FColorField);
   { Detach the exact focus surface before disposing a split behavior. A caller
     may still hold its old DOM element after navigation; it must have no live
     Pascal event sink. Remove both capture modes used by default/custom faces. }
@@ -6485,10 +8579,16 @@ begin
     TNyxKeyboardElement(LFocus).Unlisten('keydown', @KeyDown, True);
     TNyxKeyboardElement(LFocus).Unlisten('keyup', @KeyUp, True);
   end;
-  FSplit.Free;
-  FSplit := nil;
-  FTabs.Free;
-  FTabs := nil;
+
+  if FSplit <> nil then
+  begin
+    FSplit.Disconnect;
+  end;
+
+  if FTabs <> nil then
+  begin
+    FTabs.Disconnect;
+  end;
   { Queued DOM scroll notifications can outlive removal from the document.
     Revoke these producers before releasing their borrowed renderer/node. }
 
@@ -6546,11 +8646,29 @@ begin
     LViewportElement.removeEventListener('selectionchange', @TextSelectionChanged);
     LViewportElement.removeEventListener('select', @TextSelectionChanged);
   end;
-  inherited Destroy;
+
+  if FImageRequest <> nil then
+  begin
+    FImageRequest.Retire;
+    FImageRequest := nil;
+  end;
+
+  if FImageLifecycle <> nil then
+  begin
+    FImageLifecycle.Close;
+    FImageLifecycle := nil;
+  end;
+
+  if FColorField <> nil then
+  begin
+    FColorField.Disconnect;
+  end;
 end;
 
 function TNyxBrowserBinding.Wheel(AEvent: TJSWheelEvent): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LEvents: INyxEvents;
   LRevision: Integer;
   LDispatch: TNyxDispatch;
@@ -6558,112 +8676,176 @@ var
   LModifiers: TNyxKeyModifiers;
   LConsumed: Boolean;
 begin
-  Result := True;
-  LEvents := FRenderer.FEvents;
-  LRevision := FViewRevision;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or AEvent.defaultPrevented or
-    (TJSHTMLElement(AEvent.target).closest('[data-runtime-id]') <> FElement) then
-  begin
-    Exit;
-  end;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
 
-  if not LEvents.HasSubscribers(ntBeforeWheel) and not LEvents.HasSubscribers(ntWheel) and
-    not LEvents.HasSubscribers(ntAfterWheel) then
-  begin
-    Exit;
-  end;
-  case AEvent.deltaMode of
-    0:
-      begin
-        LUnits := nwuPixels;
-      end;
-    1:
-      begin
-        LUnits := nwuLines;
-      end;
-    2:
-      begin
-        LUnits := nwuPages;
-      end;
-  else
-    { Unknown device units cannot safely be guessed. Leave the native action. }
-    Exit;
-  end;
-  LModifiers := [];
+    if ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current) or CurrentRenderer.FUpdating or
+      CurrentRenderer.FDesignMode or AEvent.defaultPrevented or
+      (TJSHTMLElement(AEvent.target).closest('[data-runtime-id]') <> FElement) then
+    begin
+      Exit;
+    end;
 
-  if AEvent.shiftKey then
-  begin
-    Include(LModifiers, nmShift);
-  end;
+    if not LEvents.HasSubscribers(ntBeforeWheel) and not LEvents.HasSubscribers(ntWheel) and
+      not LEvents.HasSubscribers(ntAfterWheel) then
+    begin
+      Exit;
+    end;
+    case AEvent.deltaMode of
+      0:
+        begin
+          LUnits := nwuPixels;
+        end;
+      1:
+        begin
+          LUnits := nwuLines;
+        end;
+      2:
+        begin
+          LUnits := nwuPages;
+        end;
+    else
+      { Unknown device units cannot safely be guessed. Leave the native action. }
+      Exit;
+    end;
+    LModifiers := [];
 
-  if AEvent.ctrlKey then
-  begin
-    Include(LModifiers, nmControl);
-  end;
+    if AEvent.shiftKey then
+    begin
+      Include(LModifiers, nmShift);
+    end;
 
-  if AEvent.altKey then
-  begin
-    Include(LModifiers, nmAlt);
-  end;
+    if AEvent.ctrlKey then
+    begin
+      Include(LModifiers, nmControl);
+    end;
 
-  if AEvent.metaKey then
-  begin
-    Include(LModifiers, nmMeta);
-  end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntWheel);
-  LDispatch.Info.HasWheel := True;
-  LDispatch.Info.Wheel := NyxWheel(AEvent.deltaX, AEvent.deltaY, AEvent.deltaZ,
-    LUnits, LModifiers, AEvent.cancelable);
-  LConsumed := DispatchNyxWheel(LEvents, FNode, LDispatch,
-    FRenderer.FLiveBindings.SignalSnapshot);
-  { A callback may destroy this binding; use only retained locals below. }
+    if AEvent.altKey then
+    begin
+      Include(LModifiers, nmAlt);
+    end;
 
-  if (LConsumed or (LEvents.ViewRevision <> LRevision)) and AEvent.cancelable then
-  begin
-    AEvent.preventDefault;
-    Result := False;
+    if AEvent.metaKey then
+    begin
+      Include(LModifiers, nmMeta);
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ntWheel);
+    LDispatch.Info.HasWheel := True;
+    LDispatch.Info.Wheel := NyxWheel(AEvent.deltaX, AEvent.deltaY, AEvent.deltaZ,
+      LUnits, LModifiers, AEvent.cancelable);
+    LConsumed := DispatchNyxWheel(LEvents, FNode, LDispatch,
+      @LGeneration.ReadSignalSnapshot);
+    { A callback may destroy this binding; use only retained locals below. }
+
+    if (LConsumed or ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current)) and AEvent.cancelable then
+    begin
+      AEvent.preventDefault;
+      Result := False;
+    end;
+    AEvent.stopPropagation;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  AEvent.stopPropagation;
 end;
 
 function TNyxBrowserBinding.Scroll(AEvent: TEventListenerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := ViewportEvent(AEvent, ntScroll);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := ViewportEvent(AEvent, ntScroll);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.ScrollEnd(AEvent: TEventListenerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := ViewportEvent(AEvent, ntScrollEnd);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := ViewportEvent(AEvent, ntScrollEnd);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.ViewportEvent(AEvent: TEventListenerEvent;
   ATrigger: TNyxTrigger): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LElement: TJSHTMLElement;
   LDispatch: TNyxDispatch;
 begin
-  Result := True;
-  LElement := FElement;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FInput <> nil then
-  begin
-    LElement := FInput;
-  end;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+    LElement := FElement;
 
-  if (FRenderer.FEvents.ViewRevision <> FViewRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or (AEvent.target <> LElement) or
-    not FRenderer.FEvents.HasSubscribers(ATrigger) then
-  begin
-    Exit;
+    if FInput <> nil then
+    begin
+      LElement := FInput;
+    end;
+
+    if (CurrentRenderer.FEvents.ViewRevision <> FViewRevision) or CurrentRenderer.FUpdating or
+      CurrentRenderer.FDesignMode or (AEvent.target <> LElement) or
+      not CurrentRenderer.FEvents.HasSubscribers(ATrigger) then
+    begin
+      Exit;
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ATrigger);
+    LDispatch.Info.HasViewport := True;
+    LDispatch.Info.Viewport := CaptureBrowserViewport(LElement);
+    { Scroll is a post-movement observation; it never edits the document value,
+      selection or undo history, and it cannot consume a platform default. }
+    CurrentRenderer.Emit(FNode, LDispatch);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
-  LDispatch.Info.HasViewport := True;
-  LDispatch.Info.Viewport := CaptureBrowserViewport(LElement);
-  { Scroll is a post-movement observation; it never edits the document value,
-    selection or undo history, and it cannot consume a platform default. }
-  FRenderer.Emit(FNode, LDispatch);
 end;
 
 function TNyxBrowserBinding.FocusElement: TJSHTMLElement;
@@ -6683,21 +8865,37 @@ end;
 
 function TNyxBrowserBinding.ForwardRadioFocus(AEvent: TEventListenerEvent): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LPolicy: TNyxInteractionPolicy;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if (FRenderer.FEvents.ViewRevision <> FViewRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or (AEvent.target <> FElement) then
-  begin
-    Exit;
-  end;
-  LPolicy := NyxInteractionPolicy(FNode);
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
 
-  if LPolicy.CanIssueCommand and (FInput <> nil) then
-  begin
-    { The input's existing focus listener owns the one Nyx notification. }
-    NyxFocusWithoutScroll(FInput);
+    if (CurrentRenderer.FEvents.ViewRevision <> FViewRevision) or CurrentRenderer.FUpdating or
+      CurrentRenderer.FDesignMode or (AEvent.target <> FElement) then
+    begin
+      Exit;
+    end;
+    LPolicy := NyxInteractionPolicy(FNode);
+
+    if LPolicy.CanIssueCommand and (FInput <> nil) then
+    begin
+      { The input's existing focus listener owns the one Nyx notification. }
+      NyxFocusWithoutScroll(FInput);
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
 end;
 
@@ -6728,40 +8926,290 @@ begin
 end;
 
 function TNyxBrowserBinding.Enter(AEvent: TEventListenerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if IsFocusBoundary(AEvent) and
-    FRenderer.FEvents.HasSubscribers(ntAfterEnter) then
-  begin
-    FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterEnter));
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+
+    if IsFocusBoundary(AEvent) and
+      CurrentRenderer.FEvents.HasSubscribers(ntAfterEnter) then
+    begin
+      CurrentRenderer.Emit(FNode, CurrentRenderer.FLiveBindings.Focus(FNode, ntAfterEnter));
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
 end;
 
 function TNyxBrowserBinding.Leave(AEvent: TEventListenerEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if IsFocusBoundary(AEvent) and
-    FRenderer.FEvents.HasSubscribers(ntAfterExit) then
-  begin
-    FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterExit));
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := True;
+
+    if IsFocusBoundary(AEvent) and
+      CurrentRenderer.FEvents.HasSubscribers(ntAfterExit) then
+    begin
+      CurrentRenderer.Emit(FNode, CurrentRenderer.FLiveBindings.Focus(FNode, ntAfterExit));
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
 end;
 
 function TNyxBrowserBinding.KeyDown(AEvent: TJSKeyboardEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := Keyboard(AEvent, ntKeyDown);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := Keyboard(AEvent, ntKeyDown);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.KeyUp(AEvent: TJSKeyboardEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  Result := Keyboard(AEvent, ntKeyUp);
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := Keyboard(AEvent, ntKeyUp);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxBrowserBinding.ColumnKeyboard(AEvent: TJSKeyboardEvent;
+  const ACommand: INyxBrowserColumnCommand; ATrigger: TNyxTrigger;
+  APrepared: Boolean): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LEvents: INyxEvents;
+  LRevision, LObserved: Integer;
+  LOrigin, LSource: TNyxNode;
+  LLiveBindings: TNyxLiveBindings;
+  LModifiers: TNyxKeyModifiers;
+  LDispatch: TNyxDispatch;
+  LSnapshot: TColumnKeyboardSnapshot;
+  LSnapshotLease: IInterface;
+  LBlocked, LSubscribers, LConsumed: Boolean;
+  LButtonActivation: INyxBrowserColumnButtonActivation;
+  LButtonRelease: INyxBrowserColumnButtonRelease;
+  LInputAdmitted: Boolean;
+
+  function Current: Boolean;
+  begin
+    LObserved := LEvents.ViewRevision;
+    Result := (LObserved = LRevision) and ACommand.DispatchCurrent;
+  end;
+
+begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit(True);
+    end;
+    Result := False;
+    { Every borrowed dependency is copied before the first outward query. Node
+      references protect the public dispatcher's own early revision query; the
+      command protects the borrowed live bindings between individual phases. }
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
+    LOrigin := FNode;
+    LSource := nil;
+    LLiveBindings := CurrentRenderer.FLiveBindings;
+    LBlocked := CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode or FComposing or
+      AEvent.isComposing or AEvent.defaultPrevented;
+    LOrigin.AcquireReference;
+    try
+      try
+        { Initial admission is stronger than later callback lifetime. A staged
+          or composing input never enters canonical key/action dispatch; once
+          admitted, benign callback edits may still deliver remaining phases. }
+
+        LInputAdmitted := ACommand.Current;
+
+        if Supports(ACommand, INyxBrowserColumnButtonRelease, LButtonRelease) then
+        begin
+          LInputAdmitted := LButtonRelease.EntryAdmitted;
+        end;
+
+        if LBlocked or not LInputAdmitted or not Current then
+        begin
+          Exit;
+        end;
+
+        if not APrepared then
+        begin
+          ACommand.Prepare;
+        end;
+
+        if not Current then
+        begin
+          Exit;
+        end;
+        LSubscribers := NyxHasKeyboardSubscribers(LEvents, ATrigger);
+
+        if not Current then
+        begin
+          Exit;
+        end;
+
+        if LSubscribers then
+        begin
+          LModifiers := [];
+
+          if AEvent.shiftKey then
+          begin
+            Include(LModifiers, nmShift);
+          end;
+
+          if AEvent.ctrlKey then
+          begin
+            Include(LModifiers, nmControl);
+          end;
+
+          if AEvent.altKey then
+          begin
+            Include(LModifiers, nmAlt);
+          end;
+
+          if AEvent.metaKey then
+          begin
+            Include(LModifiers, nmMeta);
+          end;
+
+          if AEvent.getModifierState('AltGraph') then
+          begin
+            Include(LModifiers, nmAltGraph);
+          end;
+          LDispatch := LLiveBindings.Keyboard(LOrigin, ATrigger,
+            NyxKeyStroke(NyxKeyFromBrowser(AEvent.key), LModifiers, AEvent._repeat));
+          LSource := LDispatch.Source;
+          LSource.AcquireReference;
+          LSnapshot := TColumnKeyboardSnapshot.Create(LEvents, LRevision, ACommand,
+            @LGeneration.ReadSignalSnapshot);
+          LSnapshotLease := LSnapshot;
+          { Preserve this key's before/main/after phases and KeyDown's related
+            KeyPress phases, including fresh accepted payloads. }
+          LConsumed := DispatchNyxKeyboard(LEvents, LOrigin, LDispatch, LSnapshot.Read);
+        end
+        else
+        begin
+          LConsumed := False;
+        end;
+
+        if Current then
+        begin
+
+          if not LConsumed and not AEvent.defaultPrevented and
+            Supports(ACommand, INyxBrowserColumnButtonActivation, LButtonActivation) and
+            LButtonActivation.ActivatesButton then
+          begin
+
+            if Supports(ACommand, INyxBrowserColumnButtonRelease, LButtonRelease) and
+              LButtonRelease.AwaitsRelease then
+            begin
+              { Only owner-free prepared facts survive between physical keys.
+                A repeated Space neither clicks nor replaces the first press. }
+              LButtonRelease.HoldUntilRelease;
+            end
+            else
+            begin
+              { Enter and a matching Space release share ordinary Click actions.
+                Shortcut Fit remains a key command. No fresh target is captured. }
+              ColumnClick(AEvent, ACommand, True);
+            end;
+          end
+          else
+          begin
+            ACommand.Complete(not LConsumed and not AEvent.defaultPrevented);
+          end;
+        end;
+      except
+        on ENyxColumnInputRetired do
+        begin
+          { Navigation inside a subscriber/revision query is an expected refusal.
+            All application exceptions still pass through the outer finally. }
+        end;
+      end;
+    finally
+      AEvent.preventDefault;
+      AEvent.stopPropagation;
+      ACommand.Retire;
+      try
+
+        if LSource <> nil then
+        begin
+          LSource.ReleaseReference;
+        end;
+      finally
+        LOrigin.ReleaseReference;
+      end;
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxBrowserBinding.Keyboard(AEvent: TJSKeyboardEvent;
   ATrigger: TNyxTrigger): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LModifiers: TNyxKeyModifiers;
   LInput: TJSHTMLElement;
   LDispatch: TNyxDispatch;
@@ -6769,107 +9217,179 @@ var
   LEvents: INyxEvents;
   LRevision: Integer;
   LDomain: TNyxValueDomain;
+  LMount: INyxCollectionMount;
+  LColumnInput: INyxBrowserCollectionColumnInput;
+  LColumnCommand: INyxBrowserColumnCommand;
+  LColumnRelease: INyxBrowserCollectionColumnRelease;
+  LClipboardInput: INyxBrowserCollectionClipboardInput;
 begin
-  Result := True;
-  LEvents := FRenderer.FEvents;
-  LRevision := FViewRevision;
-  { A custom listener may have navigated before this listener was entered.
-    Check the saved mount generation before dereferencing its borrowed node. }
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    AEvent.preventDefault;
-    Exit(False);
-  end;
-
-  if FRenderer.FUpdating or FRenderer.FDesignMode or
-    FComposing or AEvent.isComposing or AEvent.defaultPrevented then
-  begin
-    Exit;
-  end;
-  LInput := FocusElement;
-  { Keyboard events bubble. Ordinary controls route their actual input/leaf.
-    A collection attachment owns its row/edit descendants, so their keys route
-    through the owning data control before its default selection action.
-    Compounds receive semantic source registrations through the router. }
-
-  if ((AEvent.target <> LInput) and
-    ((FCollectionMount = nil) or not FCollectionMount.Connected or
-    not FElement.contains(TJSNode(AEvent.target)))) or
-    not NyxHasKeyboardSubscribers(LEvents, ATrigger) then
-  begin
-    Exit;
-  end;
-  { Native text edits publish OnChange while typing; browsers normally publish
-    change on blur. Admit a pending text edit before capturing a keyboard payload,
-    so Ctrl+Enter sees the same accepted memo text without requiring a blur.
-    Numeric/domain drafts retain their explicit editing-complete boundary. }
-
-  if (FInput <> nil) and ((FNode.ProjectionKind = 'memo') or
-    (FNode.ProjectionKind = 'input') or (FNode.ProjectionKind = 'code-editor')) then
-  begin
-    LDomain := NyxNodeValueDomain(FNode);
-
-    if not LDomain.Defined or (LDomain.Kind = nskText) then
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
     begin
+      Exit(True);
+    end;
+    Result := True;
+    { Ordinary collection key capture runs before the mount's bubbling listener.
+      Reserve original authority BEFORE even a real ViewRevision query; the
+      claimed route alone brackets canonical dispatch and completes its default. }
 
-      if not Change(AEvent) then
+    if ATrigger = ntKeyDown then
+    begin
+      LMount := FCollectionMount;
+
+      if Supports(LMount, INyxBrowserCollectionClipboardInput, LClipboardInput) then
       begin
-        Exit;
+        LColumnCommand := LClipboardInput.BeginClipboardKey(AEvent);
+
+        if LColumnCommand <> nil then
+        begin
+          Exit(ColumnKeyboard(AEvent, LColumnCommand));
+        end;
       end;
 
-      if LEvents.ViewRevision <> LRevision then
+      if Supports(LMount, INyxBrowserCollectionColumnInput, LColumnInput) then
       begin
-        AEvent.preventDefault;
-        Exit(False);
+        LColumnCommand := LColumnInput.BeginColumnKey(AEvent);
+
+        if LColumnCommand <> nil then
+        begin
+          Exit(ColumnKeyboard(AEvent, LColumnCommand));
+        end;
       end;
     end;
-  end;
-  LModifiers := [];
 
-  if AEvent.shiftKey then
-  begin
-    Include(LModifiers, nmShift);
-  end;
+    if ATrigger = ntKeyUp then
+    begin
+      LMount := FCollectionMount;
 
-  if AEvent.ctrlKey then
-  begin
-    Include(LModifiers, nmControl);
-  end;
+      if Supports(LMount, INyxBrowserCollectionColumnRelease, LColumnRelease) then
+      begin
+        LColumnCommand := LColumnRelease.BeginColumnRelease(AEvent);
 
-  if AEvent.altKey then
-  begin
-    Include(LModifiers, nmAlt);
-  end;
+        if LColumnCommand <> nil then
+        begin
+          Exit(ColumnKeyboard(AEvent, LColumnCommand, ntKeyUp, True));
+        end;
+      end;
+    end;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
+    { A custom listener may have navigated before this listener was entered.
+      Check the saved mount generation before dereferencing its borrowed node. }
 
-  if AEvent.metaKey then
-  begin
-    Include(LModifiers, nmMeta);
-  end;
+    if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+    begin
+      AEvent.preventDefault;
+      Exit(False);
+    end;
 
-  if AEvent.getModifierState('AltGraph') then
-  begin
-    Include(LModifiers, nmAltGraph);
-  end;
-  LDispatch := FRenderer.FLiveBindings.Keyboard(FNode, ATrigger,
-    NyxKeyStroke(NyxKeyFromBrowser(AEvent.key), LModifiers,
-    (ATrigger = ntKeyDown) and AEvent._repeat));
-  LConsumed := DispatchNyxKeyboard(LEvents, FNode, LDispatch,
-    FRenderer.FLiveBindings.SignalSnapshot);
-  { No borrowed binding/node/widget reads after dispatch: callbacks may navigate.
-    The DOM event itself remains owned by the browser for this listener call. }
+    if CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode or
+      FComposing or AEvent.isComposing or AEvent.defaultPrevented then
+    begin
+      Exit;
+    end;
+    LInput := FocusElement;
+    { Keyboard events bubble. Ordinary controls route their actual input/leaf.
+      A collection attachment owns its row/edit descendants, so their keys route
+      through the owning data control before its default selection action.
+      Compounds receive semantic source registrations through the router. }
 
-  if LConsumed or (LEvents.ViewRevision <> LRevision) then
-  begin
-    AEvent.preventDefault;
-    AEvent.stopPropagation;
-    Result := False;
+    if ((AEvent.target <> LInput) and
+      ((FCollectionMount = nil) or not FCollectionMount.Connected or
+      not FElement.contains(TJSNode(AEvent.target)))) or
+      not NyxHasKeyboardSubscribers(LEvents, ATrigger) then
+    begin
+      Exit;
+    end;
+    { Native text edits publish OnChange while typing; browsers normally publish
+      change on blur. Admit a pending text edit before capturing a keyboard payload,
+      so Ctrl+Enter sees the same accepted memo text without requiring a blur.
+      Numeric/domain drafts retain their explicit editing-complete boundary. }
+
+    if (FInput <> nil) and ((FNode.ProjectionKind = 'memo') or
+      (FNode.ProjectionKind = 'input') or (FNode.ProjectionKind = 'code-editor')) then
+    begin
+      LDomain := NyxNodeValueDomain(FNode);
+
+      if not LDomain.Defined or (LDomain.Kind = nskText) then
+      begin
+
+        if not Change(AEvent) then
+        begin
+          Exit;
+        end;
+
+        if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+        begin
+          AEvent.preventDefault;
+          Exit(False);
+        end;
+      end;
+    end;
+    LModifiers := [];
+
+    if AEvent.shiftKey then
+    begin
+      Include(LModifiers, nmShift);
+    end;
+
+    if AEvent.ctrlKey then
+    begin
+      Include(LModifiers, nmControl);
+    end;
+
+    if AEvent.altKey then
+    begin
+      Include(LModifiers, nmAlt);
+    end;
+
+    if AEvent.metaKey then
+    begin
+      Include(LModifiers, nmMeta);
+    end;
+
+    if AEvent.getModifierState('AltGraph') then
+    begin
+      Include(LModifiers, nmAltGraph);
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Keyboard(FNode, ATrigger,
+      NyxKeyStroke(NyxKeyFromBrowser(AEvent.key), LModifiers,
+      (ATrigger = ntKeyDown) and AEvent._repeat));
+    LConsumed := DispatchNyxKeyboard(LEvents, FNode, LDispatch,
+      @LGeneration.ReadSignalSnapshot);
+    { No borrowed binding/node/widget reads after dispatch: callbacks may navigate.
+      The DOM event itself remains owned by the browser for this listener call. }
+
+    if LConsumed or ((LEvents.ViewRevision <> LRevision) or not LGeneration.Current) then
+    begin
+      AEvent.preventDefault;
+      AEvent.stopPropagation;
+      Result := False;
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
   end;
 end;
 
 procedure TNyxBrowserRenderer.BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
   AFailure: TNyxBindingFailure; ARestoreInput: Boolean);
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
   FLastBindingError := AReason;
   FLastBindingFailure := AFailure;
   { The accepted model was untouched by rejection. Restore the physical input
@@ -6888,20 +9408,41 @@ begin
     try
       Sync;
     finally
-      FForceValues := False;
-      FForceValueNode := nil;
+
+      if LGeneration.Current then
+      begin
+        FForceValues := False;
+        FForceValueNode := nil;
+      end;
     end;
   end;
 
-  if Assigned(FOnBindingError) then
+  if LGeneration.Current and Assigned(FOnBindingError) then
   begin
     FOnBindingError(ANode, AReason, AFailure);
   end;
 end;
 
 procedure TNyxBrowserBinding.RefreshPager;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
 begin
-  FRenderer.Sync;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
+    CurrentRenderer.Sync;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
+  end;
 end;
 
 function TNyxBrowserRenderer.CollectionPager(const AID: TNyxText): INyxCollectionPager;
@@ -6972,6 +9513,8 @@ end;
 
 procedure TNyxBrowserBinding.SyncLiteralItems;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LKind: TNyxKind;
   LText: TNyxText;
   LSelected: TNyxText;
@@ -6985,97 +9528,111 @@ var
   LScrollTop: NativeInt;
   LScrollLeft: NativeInt;
 begin
-
-  if FCustom or (FCollectionMount <> nil) or
-    not TryNyxKind(FNode.ProjectionKind, LKind) or
-    not (LKind in [nkSelect, nkList, nkTable, nkTree]) then
-  begin
-    Exit;
-  end;
-  LText := FNode.Prop('items');
-
-  if FHasItemsBaseline and (FLastItems = LText) then
-  begin
-    Exit;
-  end;
-  LHost := FElement;
-  LSelected := '';
-
-  if LKind = nkSelect then
-  begin
-    LHost := FInput;
-    LSelected := FNode.Prop('value');
-
-    if FHasValueBaseline and (FLastValue = LSelected) then
-    begin
-      { A changed option set preserves the physical draft when its accepted
-        value has not changed. Assigning a missing choice yields no selection;
-        it never writes an invented first item back into the portable model. }
-      LSelected := TJSHTMLSelectElement(LHost).value;
-    end;
-  end;
-  LScrollTop := LHost.scrollTop;
-  LScrollLeft := LHost.scrollLeft;
-  LRows := TNyxStrings.Create;
   try
-    LRows.Text := LText;
-    { Only these fallback-owned children are replaced. The logical host, its
-      focus, callbacks and viewport remain mounted; identical Items is a no-op. }
-    LHost.textContent := '';
-    for LIndex := 0 to LRows.Count - 1 do
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
     begin
-
-      if LKind = nkTable then
-      begin
-        LRow := Element('tr', '');
-        LCells := NyxLiteralCells(LRows[LIndex]);
-        try
-          for LColumn := 0 to LCells.Count - 1 do
-          begin
-
-            if LIndex = 0 then
-            begin
-              LCell := Element('th', '');
-            end
-            else
-            begin
-              LCell := Element('td', '');
-            end;
-            LCell.textContent := LCells[LColumn];
-            LRow.appendChild(LCell);
-          end;
-        finally
-          LCells.Free;
-        end;
-      end
-      else
-      begin
-        case LKind of
-          nkSelect: LRow := Element('option', '');
-          nkList: LRow := Element('li', '');
-        else
-          LRow := Element('div', '');
-        end;
-        LRow.textContent := LRows[LIndex];
-
-        if LKind = nkSelect then
-        begin
-          LRow.setAttribute('value', LRows[LIndex]);
-        end;
-      end;
-      LHost.appendChild(LRow);
+      Exit;
     end;
+
+    if FCustom or (FCollectionMount <> nil) or
+      not TryNyxKind(FNode.ProjectionKind, LKind) or
+      not (LKind in [nkSelect, nkList, nkTable, nkTree]) then
+    begin
+      Exit;
+    end;
+    LText := FNode.Prop('items');
+
+    if FHasItemsBaseline and (FLastItems = LText) then
+    begin
+      Exit;
+    end;
+    LHost := FElement;
+    LSelected := '';
 
     if LKind = nkSelect then
     begin
-      TJSHTMLSelectElement(LHost).value := LSelected;
+      LHost := FInput;
+      LSelected := FNode.Prop('value');
+
+      if FHasValueBaseline and (FLastValue = LSelected) then
+      begin
+        { A changed option set preserves the physical draft when its accepted
+          value has not changed. Assigning a missing choice yields no selection;
+          it never writes an invented first item back into the portable model. }
+        LSelected := TJSHTMLSelectElement(LHost).value;
+      end;
     end;
-    LHost.scrollTop := LScrollTop;
-    LHost.scrollLeft := LScrollLeft;
-    FLastItems := LText;
-    FHasItemsBaseline := True;
-  finally
-    LRows.Free;
+    LScrollTop := LHost.scrollTop;
+    LScrollLeft := LHost.scrollLeft;
+    LRows := TNyxStrings.Create;
+    try
+      LRows.Text := LText;
+      { Only these fallback-owned children are replaced. The logical host, its
+        focus, callbacks and viewport remain mounted; identical Items is a no-op. }
+      LHost.textContent := '';
+      for LIndex := 0 to LRows.Count - 1 do
+      begin
+
+        if LKind = nkTable then
+        begin
+          LRow := Element('tr', '');
+          LCells := NyxLiteralCells(LRows[LIndex]);
+          try
+            for LColumn := 0 to LCells.Count - 1 do
+            begin
+
+              if LIndex = 0 then
+              begin
+                LCell := Element('th', '');
+              end
+              else
+              begin
+                LCell := Element('td', '');
+              end;
+              LCell.textContent := LCells[LColumn];
+              LRow.appendChild(LCell);
+            end;
+          finally
+            LCells.Free;
+          end;
+        end
+        else
+        begin
+          case LKind of
+            nkSelect: LRow := Element('option', '');
+            nkList: LRow := Element('li', '');
+          else
+            LRow := Element('div', '');
+          end;
+          LRow.textContent := LRows[LIndex];
+
+          if LKind = nkSelect then
+          begin
+            LRow.setAttribute('value', LRows[LIndex]);
+          end;
+        end;
+        LHost.appendChild(LRow);
+      end;
+
+      if LKind = nkSelect then
+      begin
+        TJSHTMLSelectElement(LHost).value := LSelected;
+      end;
+      LHost.scrollTop := LScrollTop;
+      LHost.scrollLeft := LScrollLeft;
+      FLastItems := LText;
+      FHasItemsBaseline := True;
+    finally
+      LRows.Free;
+    end;
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
   end;
 end;
 
@@ -7166,11 +9723,20 @@ end;
 
 function TNyxBrowserRenderer.SyncEditedValue(ANode: TNyxNode): Boolean;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LIndex: Integer;
   LBinding: TNyxBrowserBinding;
   LValue: TNyxText;
 begin
   Result := False;
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit(True);
+  end;
 
   if FUpdating or FDesignMode or FForceValues or (ANode = nil) or
     not ((ANode.ProjectionKind = 'input') or (ANode.ProjectionKind = 'memo')) or
@@ -7215,9 +9781,18 @@ end;
 procedure TNyxBrowserRenderer.RestoreDisclosureFocus(AHeader: TJSHTMLElement;
   AOrigin: TNyxNode; AActive: TJSNode; const AEvents: INyxEvents; ARevision: Integer);
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LBeforeExit: TJSNode;
   LExitDispatch: TNyxDispatch;
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
   { A hidden input may already have lost DOM focus while callbacks were guarded.
     Dispatch its exit only after accepted command retirement. Callback redirects
     and mount retirement take precedence over returning focus to the header. }
@@ -7226,7 +9801,7 @@ begin
   begin
     TJSHTMLElement(AActive).blur;
 
-    if (AEvents.ViewRevision <> ARevision) or
+    if (AEvents.ViewRevision <> ARevision) or not LGeneration.Current or
       ((document.activeElement <> nil) and (document.activeElement <> document.body)) then
     begin
       Exit;
@@ -7236,9 +9811,15 @@ begin
   begin
     LBeforeExit := document.activeElement;
     LExitDispatch := FLiveBindings.Focus(AOrigin, ntAfterExit);
+
+    if not LGeneration.Current then
+    begin
+      Exit;
+    end;
     Emit(AOrigin, LExitDispatch);
 
-    if (AEvents.ViewRevision <> ARevision) or (document.activeElement <> LBeforeExit) then
+    if (AEvents.ViewRevision <> ARevision) or not LGeneration.Current or
+      (document.activeElement <> LBeforeExit) then
     begin
       Exit;
     end;
@@ -7249,17 +9830,37 @@ end;
 
 procedure TNyxBrowserRenderer.CompleteDisclosureFocus;
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LOrigin: TNyxNode;
   LHeader: TNyxNode;
   LEvents: INyxEvents;
   LActive: TJSNode;
   LRevision: Integer;
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
 
-  if (FEvents.ViewRevision <> FDisclosureFocusRevision) or
-    ((document.activeElement <> FDisclosureFocusExpected) and
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
+  LEvents := FEvents;
+  LRevision := FDisclosureFocusRevision;
+
+  if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
+
+  if ((document.activeElement <> FDisclosureFocusExpected) and
       (document.activeElement <> document.body)) or
     (FLiveBindings = nil) or not FLiveBindings.RefreshReady then
+  begin
+    Exit;
+  end;
+
+  if not LGeneration.Current then
   begin
     Exit;
   end;
@@ -7287,6 +9888,11 @@ procedure TNyxBrowserRenderer.Sync;
 const
   CMetricKeys: array[0..5] of TNyxText = ('width', 'height', 'gap', 'padding', 'left', 'top');
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LDrawingPlan: INyxDrawingPlan;
+  LDrawingProvider: INyxDrawingProvider;
+  LDrawingTheme: TNyxTheme;
   LIndex: Integer;
   LMetricIndex: Integer;
   LBinding: TNyxBrowserBinding;
@@ -7321,6 +9927,8 @@ var
   LLayout: TNyxText;
   LMinimum: Integer;
   LMaximum: Integer;
+  LFocusScheduler: INyxScheduler;
+  LFocusExecution: INyxExecution;
 
   procedure AttributeFlag(AElement: TJSHTMLElement; const AName: TNyxText; ASet: Boolean);
   begin
@@ -7333,796 +9941,1470 @@ var
     begin
       AElement.removeAttribute(AName);
     end;
+
+    if LBinding.FCustom and not LGeneration.Current then
+    begin
+      raise ENyxBrowserViewRetired.Create('The browser view was retired');
+    end;
+  end;
+
+  procedure CheckCurrent;
+  begin
+
+    if not LGeneration.Current then
+    begin
+      raise ENyxBrowserViewRetired.Create('The browser view was retired');
+    end;
   end;
 
 begin
-  { Resource model adoption precedes row/scalar notifications. Capture its frame
-    for later navigation/responsive preparation before updating target controls. }
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
 
-  if FRoot <> nil then
-  begin
-    FResourceContext := FRoot.ResourceContext;
-  end;
-
-  if FUpdating then
+  if (LGeneration = nil) or not LGeneration.Current then
   begin
     Exit;
   end;
-  { Capture physical focus before hiding any body. A state-driven close has no
-    header click to move focus for it; do not leave the retained editor focused
-    inside invisible content. Unrelated focus is never claimed. }
-  LDisclosureFocus := nil;
-  LActive := document.activeElement;
-  for LIndex := 0 to High(FBindings) do
-  begin
-
-    if not FDesignMode and (LActive <> nil) and
-      FBindings[LIndex].FElement.contains(LActive) then
-    begin
-      LFocusHeader := NyxDisclosureClosingHeader(FBindings[LIndex].FNode);
-
-      if (LFocusHeader <> nil) and NyxInteractionPolicy(LFocusHeader).CanIssueCommand then
-      begin
-        LDisclosureFocus := ElementFor(LFocusHeader.ID);
-        LFocusOrigin := FBindings[LIndex].FNode;
-      end;
-    end;
-  end;
-
-  if LDisclosureFocus <> nil then
-  begin
-    LFocusEvents := FEvents;
-    LFocusRevision := LFocusEvents.ViewRevision;
-  end;
-  FUpdating := True;
   try
+    { Resource model adoption precedes row/scalar notifications. Capture its frame
+      for later navigation/responsive preparation before updating target controls. }
 
     if FRoot <> nil then
     begin
-      { A first rule can arrive after an unobserved ordinary host was resized.
-        Read current space before projecting; observer callbacks are subsequent
-        automatic notifications, not the authority for initial dimensions. }
-
-      if not FDetachedCandidate then
-      begin
-        FViewportWidth := FHost.clientWidth;
-        FViewportHeight := FHost.clientHeight;
-      end;
-    FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser,
-        FPresentationSelection, MeasureContainers);
+      FResourceContext := FRoot.ResourceContext;
+      CheckCurrent;
     end;
-    for LIndex := 0 to Length(FBindings) - 1 do
+
+    if FUpdating then
     begin
-      LBinding := FBindings[LIndex];
-      LNode := LBinding.FNode;
-      LControl := LBinding.FElement;
-      LControl.setAttribute('data-variant', LNode.Prop('variant'));
-      LControl.title := LNode.Prop('hint');
-      LControl.style.removeProperty('container-type');
+      Exit;
+    end;
+    { Capture physical focus before hiding any body. A state-driven close has no
+      header click to move focus for it; do not leave the retained editor focused
+      inside invisible content. Unrelated focus is never claimed. }
+    LDisclosureFocus := nil;
+    LActive := document.activeElement;
+    for LIndex := 0 to High(FBindings) do
+    begin
 
-      if LNode.QueryContainer.Defined then
+      if not FDesignMode and (LActive <> nil) and
+        FBindings[LIndex].FElement.contains(LActive) then
       begin
+        LFocusHeader := NyxDisclosureClosingHeader(FBindings[LIndex].FNode);
 
-        if LNode.ContainerContainment = nccSize then
+        if (LFocusHeader <> nil) and NyxInteractionPolicy(LFocusHeader).CanIssueCommand then
         begin
-          LControl.style.setProperty('container-type', 'size');
-        end
-        else
-        begin
-          LControl.style.setProperty('container-type', 'inline-size');
+          LDisclosureFocus := ElementFor(LFocusHeader.ID);
+          LFocusOrigin := FBindings[LIndex].FNode;
         end;
       end;
-      LControl.draggable := not FDesignMode and (LNode.Prop('drag-source') = 'true');
-      LControl.style.setProperty('touch-action', LNode.Prop('touch-behavior', 'auto'));
+    end;
 
-      if LNode.Prop('pressed') <> '' then
-      begin
-        LControl.setAttribute('aria-pressed', LowerCase(LNode.Prop('pressed')));
-      end
-      else
-      begin
-        LControl.removeAttribute('aria-pressed');
-      end;
-      LControl.style.removeProperty('display');
-      LControl.style.removeProperty('flex-direction');
-      LControl.style.removeProperty('position');
-      LControl.style.removeProperty('flex-wrap');
-      LControl.style.removeProperty('align-items');
-      LControl.style.removeProperty('justify-content');
-      LControl.style.removeProperty('align-content');
-      LControl.classList.remove('nyx-flow-row');
-      LControl.classList.remove('nyx-flow-column');
-      LControl.classList.remove('nyx-aligned');
-      LLayout := LNode.Prop('layout');
+    if LDisclosureFocus <> nil then
+    begin
+      LFocusEvents := FEvents;
+      LFocusRevision := LFocusEvents.ViewRevision;
+      CheckCurrent;
+    end;
+    FUpdating := True;
+    try
 
-      if (LLayout = '') and not LBinding.FCustom and
-        FindNyxPrimitive(LNode.ProjectionKind, LInfo) and LInfo.Container and
-        (LNode.ProjectionKind <> 'split-view') then
+      if FRoot <> nil then
       begin
-        LLayout := NyxLayout(LNode);
-      end;
+        { A first rule can arrive after an unobserved ordinary host was resized.
+          Read current space before projecting; observer callbacks are subsequent
+          automatic notifications, not the authority for initial dimensions. }
 
-      if LLayout = 'grid' then
-      begin
-        LControl.style.setProperty('display', 'grid');
-      end
-      else if (LLayout = 'row') or (LLayout = 'column') then
-      begin
-        LControl.style.setProperty('display', 'flex');
-        LControl.style.setProperty('flex-direction', LLayout);
-        LControl.classList.add('nyx-flow-' + LLayout);
-        { Wrapped rows pack natural lines at the leading cross edge. A definite
-          height does not stretch every line's height behind the author's back. }
-        LControl.style.setProperty('align-content', 'flex-start');
-        LValue := LNode.Prop('flow-wrap', 'auto');
-
-        if (LLayout = 'row') and (LValue <> '') and (LValue <> 'auto') then
+        if not FDetachedCandidate then
         begin
-          LControl.style.setProperty('flex-wrap', LValue);
+          FViewportWidth := FHost.clientWidth;
+          FViewportHeight := FHost.clientHeight;
         end;
-        LValue := LNode.Prop('cross-alignment', 'auto');
+      FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser,
+          FPresentationSelection, MeasureContainers);
+      CheckCurrent;
+      CheckCurrent;
+      end;
+      for LIndex := 0 to Length(FBindings) - 1 do
+      begin
+        CheckCurrent;
+        LBinding := FBindings[LIndex];
+        LNode := LBinding.FNode;
+        LControl := LBinding.FElement;
+        LControl.setAttribute('data-variant', LNode.Prop('variant'));
 
-        if (LValue <> '') and (LValue <> 'auto') then
+        if LBinding.FCustom then
         begin
-          LControl.classList.add('nyx-aligned');
-
-          if (LValue = 'start') or (LValue = 'end') then
-          begin
-            LValue := 'flex-' + LValue;
-          end;
-
-          if (LValue = 'center') or (LValue = 'flex-end') then
-          begin
-            LValue := 'safe ' + LValue;
-          end;
-          LControl.style.setProperty('align-items', LValue);
+          CheckCurrent;
         end;
-        LValue := LNode.Prop('justification', 'start');
-
-        if LValue <> '' then
-        begin
-
-          if (LValue = 'start') or (LValue = 'end') then
-          begin
-            LValue := 'flex-' + LValue;
-          end;
-
-          if (LValue = 'center') or (LValue = 'flex-end') then
-          begin
-            LValue := 'safe ' + LValue;
-          end;
-          LControl.style.setProperty('justify-content', LValue);
-        end;
-      end
-      else if LLayout = 'absolute' then
-      begin
-        LControl.style.setProperty('display', 'block');
-        { Coordinates belong to this host's content box, not the page body. }
-        LControl.style.setProperty('position', 'relative');
-      end;
-
-      if (LNode.Parent <> nil) and (NyxLayout(LNode.Parent) = 'absolute') then
-      begin
-        LControl.style.setProperty('position', 'absolute');
-      end;
-
-      if not LBinding.FCustom and (LNode.ProjectionKind <> 'card') then
-      begin
-
-        if LNode.Prop('surface') = 'true' then
-        begin
-          LControl.classList.add('nyx-card');
-        end
-        else
-        begin
-          LControl.classList.remove('nyx-card');
-        end;
-      end;
-
-      if NyxSupportsViewport(LNode) and (LBinding.FInput = nil) then
-      begin
-        { Sync must retain the same scroll face as initial projection. A table
-          otherwise reverts to intrinsic height and silently loses its viewport. }
-        LControl.style.removeProperty('overflow');
-
-        if (LNode.Prop('height') <> '') or (LNode.ProjectionKind = 'scroll') then
-        begin
-          LControl.style.setProperty('overflow', 'auto');
-        end;
-
-        if (LNode.ProjectionKind = 'table') and (LNode.Prop('height') <> '') then
-        begin
-          LControl.style.setProperty('display', 'block');
-        end;
-      end;
-
-      if not NyxInteractionPolicy(LNode).Visible then
-      begin
-        LControl.style.setProperty('display', 'none');
-      end;
-      for LMetricIndex := 0 to High(CMetricKeys) do
-      begin
-        LValue := LNode.Prop(CMetricKeys[LMetricIndex]);
-        { Match native allocation and initial mounting: only an absolute parent
-          consumes its child's origin. Removing stale inline offsets is necessary
-          because ordinary Nyx faces remain relatively positioned CSS elements. }
-
-        if ((CMetricKeys[LMetricIndex] = 'left') or
-          (CMetricKeys[LMetricIndex] = 'top')) and
-          ((LNode.Parent = nil) or (NyxLayout(LNode.Parent) <> 'absolute')) then
-        begin
-          LValue := '';
-        end;
-
-        if LValue = '' then
-        begin
-          LControl.style.removeProperty(CMetricKeys[LMetricIndex]);
-        end
-        else
-        begin
-          LControl.style.setProperty(CMetricKeys[LMetricIndex], LValue + 'px');
-        end;
-      end;
-      { Sizing policies are translated only here. Retained pixel metrics become
-        effective again after Automatic/Clear; Sync never changes descriptor data. }
-      LValue := LNode.Prop('width-sizing');
-
-      if LValue = 'content' then
-      begin
-        LControl.style.setProperty('width', 'fit-content');
-      end
-      else if LValue = 'fill' then
-      begin
-        LControl.style.setProperty('width', '100%');
-      end;
-      LValue := LNode.Prop('height-sizing');
-      LControl.style.removeProperty('min-height');
-
-      if LValue = 'content' then
-      begin
-        LControl.style.setProperty('height', 'max-content');
-        LControl.style.setProperty('min-height', '0');
-      end
-      else if LValue = 'fill' then
-      begin
-        LControl.style.setProperty('height', '100%');
-        LControl.style.setProperty('min-height', '0');
-      end;
-      { Apply admitted pixel bounds after sizing defaults. Unsetting a bound
-        removes stale inline CSS, restoring the theme's containing-width cap.
-        An explicit minimum can still exceed that cap under CSS sizing rules.
-        Flexbox itself redistributes capped weights; no parallel browser layout
-        engine is maintained. These are adapter wire keys, not authoring API. }
-      LValue := LNode.Prop('min-width');
-
-      if LValue = '' then
-      begin
-        LControl.style.removeProperty('min-width');
-      end
-      else
-      begin
-        LControl.style.setProperty('min-width', LValue + 'px');
-      end;
-      LValue := LNode.Prop('max-width');
-
-      if LValue = '' then
-      begin
-        LControl.style.removeProperty('max-width');
-      end
-      else
-      begin
-        LControl.style.setProperty('max-width', 'min(100%, ' + LValue + 'px)');
-      end;
-      LValue := LNode.Prop('min-height');
-
-      if LValue <> '' then
-      begin
-        LControl.style.setProperty('min-height', LValue + 'px');
-      end;
-      LValue := LNode.Prop('max-height');
-
-      if LValue = '' then
-      begin
-        LControl.style.removeProperty('max-height');
-      end
-      else
-      begin
-        LControl.style.setProperty('max-height', LValue + 'px');
-      end;
-      LControl.style.removeProperty('flex');
-      LControl.classList.remove('nyx-flex');
-      LControl.style.removeProperty('grid-template-columns');
-
-      if (LNode.Prop('flex') <> '') or (NyxFlexWeight(LNode) > 0) then
-      begin
-
-        if NyxFlexWeight(LNode) > 0 then
-        begin
-          LControl.style.setProperty('flex', IntToStr(NyxFlexWeight(LNode)));
-          LControl.classList.add('nyx-flex');
-        end
-        else
-        begin
-          LControl.style.setProperty('flex', '0 0 auto');
-        end;
-      end;
-
-      if LNode.Prop('columns') <> '' then
-      begin
-        LControl.style.setProperty('grid-template-columns',
-          'repeat(' + LNode.Prop('columns') + ',minmax(0,1fr))');
-      end;
-      LPolicy := NyxInteractionPolicy(LNode);
-      { The header is an ordinary button; its linked retained body and desired
-        state come from the portable compound contract. Authored visibility
-        remains independent of that expansion gate. }
-
-      if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
-      begin
-        LBinding.FElement.setAttribute('aria-expanded',
-          BoolToStr(NyxInteractionPolicy(LDisclosureBody).Visible, 'true', 'false'));
-        LBinding.FElement.setAttribute('aria-controls', LDisclosureBody.ID);
-        LBinding.FElement.classList.add('nyx-disclosure-header');
-        ElementFor(LDisclosureBody.ID).id := LDisclosureBody.ID;
-      end;
-      LEnabled := LPolicy.Enabled;
-      LReadOnly := LPolicy.ReadOnly;
-
-      if LBinding.FCanvasView <> nil then
-      begin
-        { Name the retained keyboard-focusable region, including effective
-          state/resource/computed authoring, rather than only its outer panel. }
-        LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
-        LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
-
-        if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
-        begin
-          LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
-        end;
-        LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
-      end;
-      AttributeFlag(LControl, 'disabled', not LEnabled);
-      LControl.setAttribute('aria-disabled', LowerCase(BoolToStr(not LEnabled, True)));
-
-      if (LNode.ProjectionKind = 'memo') and (LNode.Prop('height') <> '') then
-      begin
-        LControl.classList.add('nyx-sized-field');
-      end
-      else
-      begin
-        LControl.classList.remove('nyx-sized-field');
-      end;
-
-      if LBinding.FTabs <> nil then
-      begin
-        LBinding.FTabs.Enabled(LEnabled);
-
-        LBinding.FTabs.SynchronizeDescriptor(LNode);
-      end;
-
-      if not LBinding.FCustom and (LBinding.FInput = nil) and
-        NyxSupportsKeyboard(LNode) and TryNyxKind(LNode.ProjectionKind, LKeyboardKind) then
-      begin
-        case LKeyboardKind of
-          nkCode, nkList, nkTable, nkTree:
-            begin
-              { These standard faces have no intrinsic HTML Tab entry. A
-                disabled static face loses tabindex altogether; a negative
-                tabindex would still allow programmatic/click focus. Read-only
-                retains inspection. The managed collection owns its own entry. }
-
-              if LBinding.FCollectionMount = nil then
-              begin
-
-                if LEnabled then
-                begin
-                  LControl.setAttribute('tabindex', '0');
-                end
-                else
-                begin
-                  LControl.removeAttribute('tabindex');
-                end;
-              end;
-            end;
-          nkLink:
-            begin
-              { An anchor ignores HTML disabled. Retain its accessible link
-                identity while withdrawing navigation/focus, then restore the
-                authored URL on re-enable. Do not hide disabled content with
-                inert or manufacture a positive focus order. }
-              LControl.setAttribute('role', 'link');
-
-              if LEnabled then
-              begin
-                LValue := LNode.Prop('href', '#');
-
-                if not SafeURL(LValue, False) then
-                begin
-                  raise ENyxModel.Create('Unsupported link URL');
-                end;
-                LControl.setAttribute('href', LValue);
-              end
-              else
-              begin
-                LControl.removeAttribute('href');
-              end;
-            end;
-          else
-            begin
-              { Other standard faces already supply their intrinsic focus and
-                accessibility behavior; this branch makes no additional change. }
-            end;
-        end;
-      end;
-
-      if LBinding.FCollectionMount <> nil then
-      begin
-        LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
-          LReadOnly or FDesignMode);
-      end;
-      LBinding.SyncLiteralItems;
-
-      if not LBinding.FCustom and (LBinding.FNode.ProjectionKind = 'drawing') then
-      begin
-
-        if LBinding.FDrawingView = nil then
-        begin
-          LBinding.FDrawingView := TNyxBrowserDrawing.Create(LBinding.FElement);
-        end;
-
-        if LBinding.FDrawingSource = nil then
-        begin
-          LBinding.FDrawingSource := NewNyxDrawingSource;
-        end;
-        LBinding.FDrawingView.Configure(LBinding.FDrawingSource.Read(LBinding.FNode),
-          DrawingProvider(LBinding.FNode), FTheme, LBinding.FNode.Prop('text'));
-      end;
-
-      if LBinding.FCaption <> nil then
-      begin
-        LBinding.FCaption.textContent := LNode.Prop('text');
-      end
-      else if not LBinding.FCustom and (LNode.Count = 0) and
-        ((LNode.ProjectionKind = 'label') or (LNode.ProjectionKind = 'heading') or
-        ((LNode.ProjectionKind = 'button') and (LBinding.FButtonGlyphImage = nil)) or (LNode.ProjectionKind = 'link') or
-        (LNode.ProjectionKind = 'badge') or (LNode.ProjectionKind = 'alert') or
-        (LNode.ProjectionKind = 'avatar') or (LNode.ProjectionKind = 'code')) then
-      begin
-        LControl.textContent := LNode.Prop('text');
-        { A default disclosure header inherits its root caption in place. }
-
-        if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
-        begin
-          LControl.textContent := LDisclosureCaption;
-        end;
-      end;
-
-      LBinding.SyncButtonFace;
-
-      if LControl is TJSHTMLProgressElement then
-      begin
-        { HTML progress has an intrinsic minimum of zero. Project the declared
-          interval while retaining its actual scalar bounds in accessibility. }
-        LMinimum := StrToIntDef(LNode.Prop('min'), 0);
-        LMaximum := StrToIntDef(LNode.Prop('max'), 100);
-        TJSHTMLProgressElement(LControl).max := Max(1, LMaximum - LMinimum);
-        LControl.setAttribute('aria-valuemin', IntToStr(LMinimum));
-        LControl.setAttribute('aria-valuemax', IntToStr(LMaximum));
-
-        if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
-        begin
-          { Removing the native HTML value selects genuine indeterminate
-            progress. Never announce a stale percentage during unknown work. }
-          LControl.removeAttribute('value');
-          LControl.removeAttribute('aria-valuenow');
-        end
-        else
-        begin
-          { Unrelated refresh must not briefly create/remove a value while
-            activity is indeterminate; that can restart host animation. }
-          TJSHTMLProgressElement(LControl).value :=
-            StrToIntDef(LNode.Prop('value'), 0) - LMinimum;
-
-          if LMaximum = LMinimum then
-          begin
-            TJSHTMLProgressElement(LControl).value := 1;
-          end;
-          LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
-        end;
-      end;
-
-      if not LBinding.FCustom and (LControl is TJSHTMLImageElement) then
-      begin
-        LValue := LNode.Prop('src');
-
-        if not SafeURL(LValue, True) then
-        begin
-          raise ENyxModel.Create('Unsupported image URL');
-        end;
-
-        LBinding.SyncImage;
-        TJSHTMLImageElement(LControl).alt := LNode.Prop('alt', LNode.Prop('text'));
-        ApplyNyxBrowserImage(LNode, TJSHTMLImageElement(LControl));
-      end;
-
-      if LNode.Prop('aria-label') <> '' then
-      begin
-        LControl.setAttribute('aria-label', LNode.Prop('aria-label'));
-      end
-      else if (LBinding.FButtonGlyphImage <> nil) and
-        (LBinding.FButtonPresentation.ContentMode = nbcGlyphOnly) then
-      begin
-        LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
-      end
-      else if not LBinding.FCustom and (LBinding.FInput = nil) and
-        (LBinding.FCollectionMount = nil) and
-        TryNyxKind(LNode.ProjectionKind, LKeyboardKind) and
-        (LKeyboardKind in [nkCode, nkList, nkTable, nkTree, nkDrawing]) then
-      begin
-        { The same authored caption names native static inspection faces. }
-        LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
-      end
-      else
-      begin
-        LControl.removeAttribute('aria-label');
-      end;
-
-      if Assigned(LBinding.FUpdater) then
-      begin
-        LBinding.FUpdater(LNode, LBinding.FElement);
-      end;
-
-      if LBinding.FInput <> nil then
-      begin
-        LControl := LBinding.FInput;
-        AttributeFlag(LControl, 'disabled', not LEnabled);
-        AttributeFlag(LControl, 'readonly', LReadOnly);
-        LControl.setAttribute('aria-readonly', LowerCase(BoolToStr(LReadOnly, True)));
         LControl.title := LNode.Prop('hint');
-        LControl.setAttribute('placeholder', LNode.Prop('placeholder'));
-        LControl.setAttribute('aria-label', LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
 
-        if LBinding.FColorField <> nil then
+        if LBinding.FCustom then
         begin
-          LBinding.FColorField.Sync(TNyxRGBColor.FromText(LNode.Prop('value')),
-            NyxNodeValueDomain(LNode), LEnabled, LReadOnly, LPolicy.Visible,
-            LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('container-type');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
         end;
 
-        if not LBinding.FCustom and not LBinding.FComposing and
-          (LNode.ProjectionKind = 'input') then
+        if LNode.QueryContainer.Defined then
         begin
-          LValue := LNode.Prop('input-type', 'text');
 
-          if LValue = '' then
+          if LNode.ContainerContainment = nccSize then
           begin
-            LValue := 'text';
-          end;
+            LControl.style.setProperty('container-type', 'size');
 
-          if TJSHTMLInputElement(LControl)._type <> LValue then
-          begin
-            TJSHTMLInputElement(LControl)._type := LValue;
-          end;
-
-          if LValue = 'number' then
-          begin
-            LControl.setAttribute('step', 'any');
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
           end
           else
           begin
-            LControl.removeAttribute('step');
+            LControl.style.setProperty('container-type', 'inline-size');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
           end;
         end;
+        LControl.draggable := not FDesignMode and (LNode.Prop('drag-source') = 'true');
 
-        if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+        if LBinding.FCustom then
         begin
-          LSliderScale := TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
-            StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
-            StrToIntDef(LNode.Prop('slider-intervals'), 1000));
-          LBinding.FSliderValue.Accept(LSliderScale, LNode.Prop('value', '0'));
-          LControl.setAttribute('min', '0');
-          LControl.setAttribute('max', IntToStr(LSliderScale.MaximumPosition));
-          LControl.setAttribute('step', '1');
-          { Accessibility exposes numeric meaning, never internal ordinal ticks. }
-          LControl.setAttribute('aria-valuemin', TNyxStateValue.FromNumber(LSliderScale.Minimum).NumberText);
-          LControl.setAttribute('aria-valuemax', TNyxStateValue.FromNumber(LSliderScale.Maximum).NumberText);
-          LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
-          LControl.setAttribute('aria-valuetext', LNode.Prop('value', '0'));
-          TJSHTMLInputElement(LControl).value := IntToStr(LBinding.FSliderValue.Position);
-        end
-        else if (LNode.ProjectionKind = 'spin') or (LNode.ProjectionKind = 'slider') then
+          CheckCurrent;
+        end;
+        LControl.style.setProperty('touch-action', LNode.Prop('touch-behavior', 'auto'));
+
+        if LBinding.FCustom then
         begin
-          LControl.setAttribute('min', LNode.Prop('min', '0'));
-          LControl.setAttribute('max', LNode.Prop('max', '100'));
+          CheckCurrent;
+        end;
+
+        if LNode.Prop('pressed') <> '' then
+        begin
+          LControl.setAttribute('aria-pressed', LowerCase(LNode.Prop('pressed')));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
         end
         else
         begin
-          LControl.removeAttribute('min');
-          LControl.removeAttribute('max');
+          LControl.removeAttribute('aria-pressed');
 
-          if LNode.Prop('min') <> '' then
+          if LBinding.FCustom then
           begin
-            LControl.setAttribute('min', LNode.Prop('min'));
+            CheckCurrent;
           end;
+        end;
+        LControl.style.removeProperty('display');
 
-          if LNode.Prop('max') <> '' then
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('flex-direction');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('position');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('flex-wrap');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('align-items');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('justify-content');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('align-content');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.classList.remove('nyx-flow-row');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.classList.remove('nyx-flow-column');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.classList.remove('nyx-aligned');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LLayout := LNode.Prop('layout');
+
+        if (LLayout = '') and not LBinding.FCustom and
+          FindNyxPrimitive(LNode.ProjectionKind, LInfo) and LInfo.Container and
+          (LNode.ProjectionKind <> 'split-view') then
+        begin
+          LLayout := NyxLayout(LNode);
+        end;
+
+        if LLayout = 'grid' then
+        begin
+          LControl.style.setProperty('display', 'grid');
+
+          if LBinding.FCustom then
           begin
-            LControl.setAttribute('max', LNode.Prop('max'));
+            CheckCurrent;
+          end;
+        end
+        else if (LLayout = 'row') or (LLayout = 'column') then
+        begin
+          LControl.style.setProperty('display', 'flex');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.setProperty('flex-direction', LLayout);
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.classList.add('nyx-flow-' + LLayout);
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          { Wrapped rows pack natural lines at the leading cross edge. A definite
+            height does not stretch every line's height behind the author's back. }
+          LControl.style.setProperty('align-content', 'flex-start');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LValue := LNode.Prop('flow-wrap', 'auto');
+
+          if (LLayout = 'row') and (LValue <> '') and (LValue <> 'auto') then
+          begin
+            LControl.style.setProperty('flex-wrap', LValue);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LValue := LNode.Prop('cross-alignment', 'auto');
+
+          if (LValue <> '') and (LValue <> 'auto') then
+          begin
+            LControl.classList.add('nyx-aligned');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+
+            if (LValue = 'start') or (LValue = 'end') then
+            begin
+              LValue := 'flex-' + LValue;
+            end;
+
+            if (LValue = 'center') or (LValue = 'flex-end') then
+            begin
+              LValue := 'safe ' + LValue;
+            end;
+            LControl.style.setProperty('align-items', LValue);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LValue := LNode.Prop('justification', 'start');
+
+          if LValue <> '' then
+          begin
+
+            if (LValue = 'start') or (LValue = 'end') then
+            begin
+              LValue := 'flex-' + LValue;
+            end;
+
+            if (LValue = 'center') or (LValue = 'flex-end') then
+            begin
+              LValue := 'safe ' + LValue;
+            end;
+            LControl.style.setProperty('justify-content', LValue);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+        end
+        else if LLayout = 'absolute' then
+        begin
+          LControl.style.setProperty('display', 'block');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          { Coordinates belong to this host's content box, not the page body. }
+          LControl.style.setProperty('position', 'relative');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
           end;
         end;
 
-        if LNode.ProjectionKind = 'date' then
+        if (LNode.Parent <> nil) and (NyxLayout(LNode.Parent) = 'absolute') then
         begin
-          { Calendar bounds share the exact typed domain used by value admission;
-            a numeric min/max property never supplies a date interpretation. }
-          LValueDomain := NyxNodeValueDomain(LNode);
-          LControl.removeAttribute('min');
-          LControl.removeAttribute('max');
+          LControl.style.setProperty('position', 'absolute');
 
-          if LValueDomain.CalendarDate then
+          if LBinding.FCustom then
           begin
-            LDateDomain := LValueDomain.ToData;
-            for LDateField := 0 to LDateDomain.Count - 1 do
-            begin
+            CheckCurrent;
+          end;
+        end;
 
-              if LDateDomain.Key(LDateField) = 'min' then
-              begin
-                LControl.setAttribute('min', LDateDomain.Field('min').AsText);
-                LControl.setAttribute('max', LDateDomain.Field('max').AsText);
-              end;
+        if not LBinding.FCustom and (LNode.ProjectionKind <> 'card') then
+        begin
+
+          if LNode.Prop('surface') = 'true' then
+          begin
+            LControl.classList.add('nyx-card');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.classList.remove('nyx-card');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
             end;
           end;
         end;
 
-        if LNode.ProjectionKind = 'time' then
+        if NyxSupportsViewport(LNode) and (LBinding.FInput = nil) then
         begin
-          { HTML time uses seconds for step; the portable contract owns exact
-            integer milliseconds and a midnight/minimum base. The default is
-            any exact reading, so never inherit the browser's minute default.
-            Raw numeric bounds do not supply clock semantics. }
-          LValueDomain := NyxNodeValueDomain(LNode);
-          LControl.removeAttribute('min');
-          LControl.removeAttribute('max');
-          LControl.setAttribute('step', 'any');
+          { Sync must retain the same scroll face as initial projection. A table
+            otherwise reverts to intrinsic height and silently loses its viewport. }
+          LControl.style.removeProperty('overflow');
 
-          if LValueDomain.ClockTime then
+          if LBinding.FCustom then
           begin
-            LTimeDomain := LValueDomain.ToData;
-            for LTimeField := 0 to LTimeDomain.Count - 1 do
-            begin
+            CheckCurrent;
+          end;
 
-              if (LTimeDomain.Key(LTimeField) = 'min') or
-                (LTimeDomain.Key(LTimeField) = 'max') then
-              begin
-                LControl.setAttribute(LTimeDomain.Key(LTimeField),
-                  LTimeDomain.Field(LTimeDomain.Key(LTimeField)).AsText);
-              end;
+          if (LNode.Prop('height') <> '') or (LNode.ProjectionKind = 'scroll') then
+          begin
+            LControl.style.setProperty('overflow', 'auto');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
             end;
-            LTimeStep := LValueDomain.TimeStepMilliseconds;
+          end;
 
-            if LTimeStep > 0 then
+          if (LNode.ProjectionKind = 'table') and (LNode.Prop('height') <> '') then
+          begin
+            LControl.style.setProperty('display', 'block');
+
+            if LBinding.FCustom then
             begin
-              LValue := IntToStr(LTimeStep div 1000);
+              CheckCurrent;
+            end;
+          end;
+        end;
 
-              if LTimeStep mod 1000 <> 0 then
+        if not NyxInteractionPolicy(LNode).Visible then
+        begin
+          LControl.style.setProperty('display', 'none');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        for LMetricIndex := 0 to High(CMetricKeys) do
+        begin
+          LValue := LNode.Prop(CMetricKeys[LMetricIndex]);
+          { Match native allocation and initial mounting: only an absolute parent
+            consumes its child's origin. Removing stale inline offsets is necessary
+            because ordinary Nyx faces remain relatively positioned CSS elements. }
+
+          if ((CMetricKeys[LMetricIndex] = 'left') or
+            (CMetricKeys[LMetricIndex] = 'top')) and
+            ((LNode.Parent = nil) or (NyxLayout(LNode.Parent) <> 'absolute')) then
+          begin
+            LValue := '';
+          end;
+
+          if LValue = '' then
+          begin
+            LControl.style.removeProperty(CMetricKeys[LMetricIndex]);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.style.setProperty(CMetricKeys[LMetricIndex], LValue + 'px');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+        end;
+        { Sizing policies are translated only here. Retained pixel metrics become
+          effective again after Automatic/Clear; Sync never changes descriptor data. }
+        LValue := LNode.Prop('width-sizing');
+
+        if LValue = 'content' then
+        begin
+          LControl.style.setProperty('width', 'fit-content');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end
+        else if LValue = 'fill' then
+        begin
+          LControl.style.setProperty('width', '100%');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        LValue := LNode.Prop('height-sizing');
+        LControl.style.removeProperty('min-height');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+
+        if LValue = 'content' then
+        begin
+          LControl.style.setProperty('height', 'max-content');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.setProperty('min-height', '0');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end
+        else if LValue = 'fill' then
+        begin
+          LControl.style.setProperty('height', '100%');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.setProperty('min-height', '0');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        { Apply admitted pixel bounds after sizing defaults. Unsetting a bound
+          removes stale inline CSS, restoring the theme's containing-width cap.
+          An explicit minimum can still exceed that cap under CSS sizing rules.
+          Flexbox itself redistributes capped weights; no parallel browser layout
+          engine is maintained. These are adapter wire keys, not authoring API. }
+        LValue := LNode.Prop('min-width');
+
+        if LValue = '' then
+        begin
+          LControl.style.removeProperty('min-width');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end
+        else
+        begin
+          LControl.style.setProperty('min-width', LValue + 'px');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        LValue := LNode.Prop('max-width');
+
+        if LValue = '' then
+        begin
+          LControl.style.removeProperty('max-width');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end
+        else
+        begin
+          LControl.style.setProperty('max-width', 'min(100%, ' + LValue + 'px)');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        LValue := LNode.Prop('min-height');
+
+        if LValue <> '' then
+        begin
+          LControl.style.setProperty('min-height', LValue + 'px');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        LValue := LNode.Prop('max-height');
+
+        if LValue = '' then
+        begin
+          LControl.style.removeProperty('max-height');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end
+        else
+        begin
+          LControl.style.setProperty('max-height', LValue + 'px');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        LControl.style.removeProperty('flex');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.classList.remove('nyx-flex');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+        LControl.style.removeProperty('grid-template-columns');
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+
+        if (LNode.Prop('flex') <> '') or (NyxFlexWeight(LNode) > 0) then
+        begin
+
+          if NyxFlexWeight(LNode) > 0 then
+          begin
+            LControl.style.setProperty('flex', IntToStr(NyxFlexWeight(LNode)));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.classList.add('nyx-flex');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.style.setProperty('flex', '0 0 auto');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+        end;
+
+        if LNode.Prop('columns') <> '' then
+        begin
+          LControl.style.setProperty('grid-template-columns',
+            'repeat(' + LNode.Prop('columns') + ',minmax(0,1fr))');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+        LPolicy := NyxInteractionPolicy(LNode);
+        { The header is an ordinary button; its linked retained body and desired
+          state come from the portable compound contract. Authored visibility
+          remains independent of that expansion gate. }
+
+        if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+        begin
+          LBinding.FElement.setAttribute('aria-expanded',
+            BoolToStr(NyxInteractionPolicy(LDisclosureBody).Visible, 'true', 'false'));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LBinding.FElement.setAttribute('aria-controls', LDisclosureBody.ID);
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LBinding.FElement.classList.add('nyx-disclosure-header');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          ElementFor(LDisclosureBody.ID).id := LDisclosureBody.ID;
+        end;
+        LEnabled := LPolicy.Enabled;
+        LReadOnly := LPolicy.ReadOnly;
+
+        if LBinding.FCanvasView <> nil then
+        begin
+          { Name the retained keyboard-focusable region, including effective
+            state/resource/computed authoring, rather than only its outer panel. }
+          LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
+          LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
+
+          if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
+          begin
+            CheckCurrent;
+            LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
+            CheckCurrent;
+          end;
+          CheckCurrent;
+          LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
+          CheckCurrent;
+        end;
+        AttributeFlag(LControl, 'disabled', not LEnabled);
+        LControl.setAttribute('aria-disabled', LowerCase(BoolToStr(not LEnabled, True)));
+
+        if LBinding.FCustom then
+        begin
+          CheckCurrent;
+        end;
+
+        if (LNode.ProjectionKind = 'memo') and (LNode.Prop('height') <> '') then
+        begin
+          LControl.classList.add('nyx-sized-field');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end
+        else
+        begin
+          LControl.classList.remove('nyx-sized-field');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end;
+
+        if LBinding.FTabs <> nil then
+        begin
+          LBinding.FTabs.Enabled(LEnabled);
+
+          LBinding.FTabs.SynchronizeDescriptor(LNode);
+        end;
+
+        if not LBinding.FCustom and (LBinding.FInput = nil) and
+          NyxSupportsKeyboard(LNode) and TryNyxKind(LNode.ProjectionKind, LKeyboardKind) then
+        begin
+          case LKeyboardKind of
+            nkCode, nkList, nkTable, nkTree:
               begin
-                LTimeFraction := Copy(TNyxText(IntToStr(LTimeStep mod 1000 + 1000)), 2, 3);
-                while LTimeFraction[Length(LTimeFraction)] = '0' do
+                { These standard faces have no intrinsic HTML Tab entry. A
+                  disabled static face loses tabindex altogether; a negative
+                  tabindex would still allow programmatic/click focus. Read-only
+                  retains inspection. The managed collection owns its own entry. }
+
+                if LBinding.FCollectionMount = nil then
                 begin
-                  SetLength(LTimeFraction, Length(LTimeFraction) - 1);
+
+                  if LEnabled then
+                  begin
+                    LControl.setAttribute('tabindex', '0');
+
+                    if LBinding.FCustom then
+                    begin
+                      CheckCurrent;
+                    end;
+                  end
+                  else
+                  begin
+                    LControl.removeAttribute('tabindex');
+
+                    if LBinding.FCustom then
+                    begin
+                      CheckCurrent;
+                    end;
+                  end;
                 end;
-                LValue := LValue + '.' + LTimeFraction;
               end;
-              LControl.setAttribute('step', LValue);
+            nkLink:
+              begin
+                { An anchor ignores HTML disabled. Retain its accessible link
+                  identity while withdrawing navigation/focus, then restore the
+                  authored URL on re-enable. Do not hide disabled content with
+                  inert or manufacture a positive focus order. }
+                LControl.setAttribute('role', 'link');
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+
+                if LEnabled then
+                begin
+                  LValue := LNode.Prop('href', '#');
+
+                  if not SafeURL(LValue, False) then
+                  begin
+                    raise ENyxModel.Create('Unsupported link URL');
+                  end;
+                  LControl.setAttribute('href', LValue);
+
+                  if LBinding.FCustom then
+                  begin
+                    CheckCurrent;
+                  end;
+                end
+                else
+                begin
+                  LControl.removeAttribute('href');
+
+                  if LBinding.FCustom then
+                  begin
+                    CheckCurrent;
+                  end;
+                end;
+              end;
+            else
+              begin
+                { Other standard faces already supply their intrinsic focus and
+                  accessibility behavior; this branch makes no additional change. }
+              end;
+          end;
+        end;
+
+        if LBinding.FCollectionMount <> nil then
+        begin
+          LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
+            LReadOnly or FDesignMode);
+          CheckCurrent;
+        end;
+        LBinding.SyncLiteralItems;
+        CheckCurrent;
+
+        if not LBinding.FCustom and (LBinding.FNode.ProjectionKind = 'drawing') then
+        begin
+
+          if LBinding.FDrawingView = nil then
+          begin
+            LBinding.FDrawingView := TNyxBrowserDrawing.Create(LBinding.FElement,
+              @LBinding.RetainView);
+          end;
+
+          if LBinding.FDrawingSource = nil then
+          begin
+            LBinding.FDrawingSource := NewNyxDrawingSource;
+          end;
+          LDrawingTheme := FTheme;
+          LDrawingProvider := DrawingProvider(LBinding.FNode);
+          LDrawingPlan := LBinding.FDrawingSource.Read(LBinding.FNode);
+          CheckCurrent;
+          LBinding.FDrawingView.Configure(LDrawingPlan, LDrawingProvider,
+            LDrawingTheme, LBinding.FNode.Prop('text'));
+          CheckCurrent;
+        end;
+
+        if LBinding.FCaption <> nil then
+        begin
+          LBinding.FCaption.textContent := LNode.Prop('text');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+        end
+        else if not LBinding.FCustom and (LNode.Count = 0) and
+          ((LNode.ProjectionKind = 'label') or (LNode.ProjectionKind = 'heading') or
+          ((LNode.ProjectionKind = 'button') and (LBinding.FButtonGlyphImage = nil)) or (LNode.ProjectionKind = 'link') or
+          (LNode.ProjectionKind = 'badge') or (LNode.ProjectionKind = 'alert') or
+          (LNode.ProjectionKind = 'avatar') or (LNode.ProjectionKind = 'code')) then
+        begin
+          LControl.textContent := LNode.Prop('text');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          { A default disclosure header inherits its root caption in place. }
+
+          if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+          begin
+            LControl.textContent := LDisclosureCaption;
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
             end;
           end;
         end;
-        LValue := LNode.Prop('value');
-        { The ordinal range already consumed the complete numeric publication.
-          Writing numeric text again would narrow it through HTML sanitization. }
 
-        if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+        LBinding.SyncButtonFace;
+        CheckCurrent;
+
+        if LControl is TJSHTMLProgressElement then
         begin
-          Continue;
-        end;
-        { Layout/state publications must not replace text owned by an IME. The
-          accepted baseline remains pending until the real composition end. }
+          { HTML progress has an intrinsic minimum of zero. Project the declared
+            interval while retaining its actual scalar bounds in accessibility. }
+          LMinimum := StrToIntDef(LNode.Prop('min'), 0);
+          LMaximum := StrToIntDef(LNode.Prop('max'), 100);
+          TJSHTMLProgressElement(LControl).max := Max(1, LMaximum - LMinimum);
 
-        if LBinding.FComposing then
-        begin
-          Continue;
-        end;
-        { A different key may update while this field holds an unfinished draft.
-          Only an accepted change to its own value replaces that physical draft;
-          failed commands explicitly force restoration above. }
-
-        if not (FForceValues and ((FForceValueNode = nil) or
-          (FForceValueNode = LNode))) and LBinding.FHasValueBaseline and
-          (LBinding.FLastValue = LValue) then
-        begin
-          Continue;
-        end;
-        LBinding.FHasValueBaseline := True;
-        LBinding.FLastValue := LValue;
-        { Setting the same value can reset selection/caret on mobile browsers.
-          Keep unchanged physical values, focus and unfinished native drafts. }
-
-        if LControl is TJSHTMLTextAreaElement then
-        begin
-
-          if TJSHTMLTextAreaElement(LControl).value <> LValue then
+          if LBinding.FCustom then
           begin
-            TJSHTMLTextAreaElement(LControl).value := LValue;
+            CheckCurrent;
+          end;
+          LControl.setAttribute('aria-valuemin', IntToStr(LMinimum));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.setAttribute('aria-valuemax', IntToStr(LMaximum));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+
+          if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
+          begin
+            { Removing the native HTML value selects genuine indeterminate
+              progress. Never announce a stale percentage during unknown work. }
+            LControl.removeAttribute('value');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.removeAttribute('aria-valuenow');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            { Unrelated refresh must not briefly create/remove a value while
+              activity is indeterminate; that can restart host animation. }
+            TJSHTMLProgressElement(LControl).value :=
+              StrToIntDef(LNode.Prop('value'), 0) - LMinimum;
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+
+            if LMaximum = LMinimum then
+            begin
+              TJSHTMLProgressElement(LControl).value := 1;
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+            LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+        end;
+
+        if not LBinding.FCustom and (LControl is TJSHTMLImageElement) then
+        begin
+          LValue := LNode.Prop('src');
+
+          if not SafeURL(LValue, True) then
+          begin
+            raise ENyxModel.Create('Unsupported image URL');
+          end;
+
+          LBinding.SyncImage;
+          CheckCurrent;
+          TJSHTMLImageElement(LControl).alt := LNode.Prop('alt', LNode.Prop('text'));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          ApplyNyxBrowserImage(LNode, TJSHTMLImageElement(LControl));
+        end;
+
+        if LNode.Prop('aria-label') <> '' then
+        begin
+          LControl.setAttribute('aria-label', LNode.Prop('aria-label'));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
           end;
         end
-        else if LControl is TJSHTMLSelectElement then
+        else if (LBinding.FButtonGlyphImage <> nil) and
+          (LBinding.FButtonPresentation.ContentMode = nbcGlyphOnly) then
         begin
+          LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
 
-          if TJSHTMLSelectElement(LControl).value <> LValue then
+          if LBinding.FCustom then
           begin
-            TJSHTMLSelectElement(LControl).value := LValue;
+            CheckCurrent;
           end;
         end
-        else if (LNode.ProjectionKind = 'checkbox') or (LNode.ProjectionKind = 'switch') or
-          (LNode.ProjectionKind = 'radio') then
+        else if not LBinding.FCustom and (LBinding.FInput = nil) and
+          (LBinding.FCollectionMount = nil) and
+          TryNyxKind(LNode.ProjectionKind, LKeyboardKind) and
+          (LKeyboardKind in [nkCode, nkList, nkTable, nkTree, nkDrawing]) then
         begin
-          TJSHTMLInputElement(LControl).checked := LValue = 'true';
+          { The same authored caption names native static inspection faces. }
+          LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
         end
         else
         begin
+          LControl.removeAttribute('aria-label');
 
-          if TJSHTMLInputElement(LControl).value <> LValue then
+          if LBinding.FCustom then
           begin
-            TJSHTMLInputElement(LControl).value := LValue;
+            CheckCurrent;
+          end;
+        end;
+
+        if Assigned(LBinding.FUpdater) then
+        begin
+          LBinding.FUpdater(LNode, LBinding.FElement);
+          CheckCurrent;
+        end;
+
+        if LBinding.FInput <> nil then
+        begin
+          LControl := LBinding.FInput;
+          AttributeFlag(LControl, 'disabled', not LEnabled);
+          AttributeFlag(LControl, 'readonly', LReadOnly);
+          LControl.setAttribute('aria-readonly', LowerCase(BoolToStr(LReadOnly, True)));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.title := LNode.Prop('hint');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.setAttribute('placeholder', LNode.Prop('placeholder'));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.setAttribute('aria-label', LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+
+          if LBinding.FColorField <> nil then
+          begin
+            LBinding.FColorField.Sync(TNyxRGBColor.FromText(LNode.Prop('value')),
+              NyxNodeValueDomain(LNode), LEnabled, LReadOnly, LPolicy.Visible,
+              LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+            CheckCurrent;
+          end;
+
+          if not LBinding.FCustom and not LBinding.FComposing and
+            (LNode.ProjectionKind = 'input') then
+          begin
+            LValue := LNode.Prop('input-type', 'text');
+
+            if LValue = '' then
+            begin
+              LValue := 'text';
+            end;
+
+            if TJSHTMLInputElement(LControl)._type <> LValue then
+            begin
+              TJSHTMLInputElement(LControl)._type := LValue;
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+
+            if LValue = 'number' then
+            begin
+              LControl.setAttribute('step', 'any');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end
+            else
+            begin
+              LControl.removeAttribute('step');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end;
+
+          if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+          begin
+            LSliderScale := TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
+              StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
+              StrToIntDef(LNode.Prop('slider-intervals'), 1000));
+            LBinding.FSliderValue.Accept(LSliderScale, LNode.Prop('value', '0'));
+            LControl.setAttribute('min', '0');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('max', IntToStr(LSliderScale.MaximumPosition));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('step', '1');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            { Accessibility exposes numeric meaning, never internal ordinal ticks. }
+            LControl.setAttribute('aria-valuemin', TNyxStateValue.FromNumber(LSliderScale.Minimum).NumberText);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('aria-valuemax', TNyxStateValue.FromNumber(LSliderScale.Maximum).NumberText);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('aria-valuetext', LNode.Prop('value', '0'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            TJSHTMLInputElement(LControl).value := IntToStr(LBinding.FSliderValue.Position);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else if (LNode.ProjectionKind = 'spin') or (LNode.ProjectionKind = 'slider') then
+          begin
+            LControl.setAttribute('min', LNode.Prop('min', '0'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('max', LNode.Prop('max', '100'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.removeAttribute('min');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.removeAttribute('max');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+
+            if LNode.Prop('min') <> '' then
+            begin
+              LControl.setAttribute('min', LNode.Prop('min'));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+
+            if LNode.Prop('max') <> '' then
+            begin
+              LControl.setAttribute('max', LNode.Prop('max'));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end;
+
+          if LNode.ProjectionKind = 'date' then
+          begin
+            { Calendar bounds share the exact typed domain used by value admission;
+              a numeric min/max property never supplies a date interpretation. }
+            LValueDomain := NyxNodeValueDomain(LNode);
+            LControl.removeAttribute('min');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.removeAttribute('max');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+
+            if LValueDomain.CalendarDate then
+            begin
+              LDateDomain := LValueDomain.ToData;
+              for LDateField := 0 to LDateDomain.Count - 1 do
+              begin
+
+                if LDateDomain.Key(LDateField) = 'min' then
+                begin
+                  LControl.setAttribute('min', LDateDomain.Field('min').AsText);
+
+                  if LBinding.FCustom then
+                  begin
+                    CheckCurrent;
+                  end;
+                  LControl.setAttribute('max', LDateDomain.Field('max').AsText);
+
+                  if LBinding.FCustom then
+                  begin
+                    CheckCurrent;
+                  end;
+                end;
+              end;
+            end;
+          end;
+
+          if LNode.ProjectionKind = 'time' then
+          begin
+            { HTML time uses seconds for step; the portable contract owns exact
+              integer milliseconds and a midnight/minimum base. The default is
+              any exact reading, so never inherit the browser's minute default.
+              Raw numeric bounds do not supply clock semantics. }
+            LValueDomain := NyxNodeValueDomain(LNode);
+            LControl.removeAttribute('min');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.removeAttribute('max');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('step', 'any');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+
+            if LValueDomain.ClockTime then
+            begin
+              LTimeDomain := LValueDomain.ToData;
+              for LTimeField := 0 to LTimeDomain.Count - 1 do
+              begin
+
+                if (LTimeDomain.Key(LTimeField) = 'min') or
+                  (LTimeDomain.Key(LTimeField) = 'max') then
+                begin
+                  LControl.setAttribute(LTimeDomain.Key(LTimeField),
+                    LTimeDomain.Field(LTimeDomain.Key(LTimeField)).AsText);
+
+                  if LBinding.FCustom then
+                  begin
+                    CheckCurrent;
+                  end;
+                end;
+              end;
+              LTimeStep := LValueDomain.TimeStepMilliseconds;
+
+              if LTimeStep > 0 then
+              begin
+                LValue := IntToStr(LTimeStep div 1000);
+
+                if LTimeStep mod 1000 <> 0 then
+                begin
+                  LTimeFraction := Copy(TNyxText(IntToStr(LTimeStep mod 1000 + 1000)), 2, 3);
+                  while LTimeFraction[Length(LTimeFraction)] = '0' do
+                  begin
+                    SetLength(LTimeFraction, Length(LTimeFraction) - 1);
+                  end;
+                  LValue := LValue + '.' + LTimeFraction;
+                end;
+                LControl.setAttribute('step', LValue);
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end;
+            end;
+          end;
+          LValue := LNode.Prop('value');
+          { The ordinal range already consumed the complete numeric publication.
+            Writing numeric text again would narrow it through HTML sanitization. }
+
+          if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+          begin
+            Continue;
+          end;
+          { Layout/state publications must not replace text owned by an IME. The
+            accepted baseline remains pending until the real composition end. }
+
+          if LBinding.FComposing then
+          begin
+            Continue;
+          end;
+          { A different key may update while this field holds an unfinished draft.
+            Only an accepted change to its own value replaces that physical draft;
+            failed commands explicitly force restoration above. }
+
+          if not (FForceValues and ((FForceValueNode = nil) or
+            (FForceValueNode = LNode))) and LBinding.FHasValueBaseline and
+            (LBinding.FLastValue = LValue) then
+          begin
+            Continue;
+          end;
+          LBinding.FHasValueBaseline := True;
+          LBinding.FLastValue := LValue;
+          { Setting the same value can reset selection/caret on mobile browsers.
+            Keep unchanged physical values, focus and unfinished native drafts. }
+
+          if LControl is TJSHTMLTextAreaElement then
+          begin
+
+            if TJSHTMLTextAreaElement(LControl).value <> LValue then
+            begin
+              TJSHTMLTextAreaElement(LControl).value := LValue;
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end
+          else if LControl is TJSHTMLSelectElement then
+          begin
+
+            if TJSHTMLSelectElement(LControl).value <> LValue then
+            begin
+              TJSHTMLSelectElement(LControl).value := LValue;
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end
+          else if (LNode.ProjectionKind = 'checkbox') or (LNode.ProjectionKind = 'switch') or
+            (LNode.ProjectionKind = 'radio') then
+          begin
+            TJSHTMLInputElement(LControl).checked := LValue = 'true';
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+
+            if TJSHTMLInputElement(LControl).value <> LValue then
+            begin
+              TJSHTMLInputElement(LControl).value := LValue;
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
           end;
         end;
       end;
+      SyncRadioFocus;
+      { Generic metrics never override an adapter-owned split layout. Do this
+        after all child bindings so their ordinary root styles cannot undo it. }
+      for LIndex := 0 to Length(FBindings) - 1 do
+      begin
+
+        if FBindings[LIndex].FSplit <> nil then
+        begin
+          FBindings[LIndex].FSplit.Update;
+          CheckCurrent;
+        end;
+      end;
+      UpdateResizePreview;
+      CheckCurrent;
+      UpdateCanvasResizeGrips;
+      CheckCurrent;
+    finally
+
+      if LGeneration.Current then
+      begin
+        FUpdating := False;
+        FlushImages;
+      end;
     end;
-    SyncRadioFocus;
-    { Generic metrics never override an adapter-owned split layout. Do this
-      after all child bindings so their ordinary root styles cannot undo it. }
-    for LIndex := 0 to Length(FBindings) - 1 do
+    CheckCurrent;
+    QueueContent;
+    CheckCurrent;
+
+    if (LDisclosureFocus <> nil) and ((LFocusEvents.ViewRevision = LFocusRevision) and LGeneration.Current) then
     begin
+      { Synchronize runs before the admitted command returns. Keep the coordinator's
+        no-reentry guard intact: UI work owns deferred focus notification instead. }
 
-      if FBindings[LIndex].FSplit <> nil then
+      if FLiveBindings.CommandActive then
       begin
-        FBindings[LIndex].FSplit.Update;
+
+        if FDisclosureFocusExecution <> nil then
+        begin
+          FDisclosureFocusExecution.Cancel;
+          CheckCurrent;
+        end;
+        FDisclosureFocusOrigin := LFocusOrigin.ID;
+        FDisclosureFocusHeader := NyxDisclosureClosingHeader(LFocusOrigin).ID;
+        FDisclosureFocusActive := LActive;
+        FDisclosureFocusExpected := document.activeElement;
+        FDisclosureFocusRevision := LFocusRevision;
+
+        if FDisclosureFocusWork = nil then
+        begin
+          FDisclosureFocusWork := NewNyxContentWork(@CompleteDisclosureFocus);
+        end;
+        LFocusScheduler := FEvents.Scheduler;
+        CheckCurrent;
+        LFocusExecution := LFocusScheduler.Submit(FDisclosureFocusWork, neUIQueue);
+
+        if not LGeneration.Current then
+        begin
+          LFocusExecution.Cancel;
+          Exit;
+        end;
+        FDisclosureFocusExecution := LFocusExecution;
+        Exit;
       end;
+      RestoreDisclosureFocus(LDisclosureFocus, LFocusOrigin, LActive, LFocusEvents, LFocusRevision);
     end;
-    UpdateResizePreview;
-    UpdateCanvasResizeGrips;
-  finally
-    FUpdating := False;
-    FlushImages;
-  end;
-  QueueContent;
-
-  if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) then
-  begin
-    { Synchronize runs before the admitted command returns. Keep the coordinator's
-      no-reentry guard intact: UI work owns deferred focus notification instead. }
-
-    if FLiveBindings.CommandActive then
+  except
+    on E: ENyxBrowserViewRetired do
     begin
-
-      if FDisclosureFocusExecution <> nil then
-      begin
-        FDisclosureFocusExecution.Cancel;
-      end;
-      FDisclosureFocusOrigin := LFocusOrigin.ID;
-      FDisclosureFocusHeader := NyxDisclosureClosingHeader(LFocusOrigin).ID;
-      FDisclosureFocusActive := LActive;
-      FDisclosureFocusExpected := document.activeElement;
-      FDisclosureFocusRevision := LFocusRevision;
-
-      if FDisclosureFocusWork = nil then
-      begin
-        FDisclosureFocusWork := NewNyxContentWork(@CompleteDisclosureFocus);
-      end;
-      FDisclosureFocusExecution := FEvents.Scheduler.Submit(FDisclosureFocusWork, neUIQueue);
-      Exit;
+      { Logical retirement is normal. It never becomes a binding error or a
+        stale synchronization/focus tail against the accepted successor. }
     end;
-    RestoreDisclosureFocus(LDisclosureFocus, LFocusOrigin, LActive, LFocusEvents, LFocusRevision);
   end;
 end;
 
@@ -8132,6 +11414,7 @@ begin
   { Children compose their own built-ins. A later parent registration cannot
     rewrite this accepted membership; an explicit child registry still wins. }
   ARenderer.FInheritedCoordinatorSnapshot := FRenderer.FCallerCoordinatorSnapshot;
+  ARenderer.FInheritedCollectionInputGate := FRenderer.FCollectionInputGate;
   ARenderer.FFactoryKinds := Copy(FRenderer.FFactoryKinds, 0, Length(FRenderer.FFactoryKinds));
   ARenderer.FDrawingNames := Copy(FRenderer.FDrawingNames, 0, Length(FRenderer.FDrawingNames));
   ARenderer.FDrawingProviders := Copy(FRenderer.FDrawingProviders, 0, Length(FRenderer.FDrawingProviders));
@@ -8146,41 +11429,57 @@ end;
 
 procedure TNyxBrowserBinding.CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LEvents: INyxEvents;
   LCallback: TNyxBrowserEvent;
   LRevision: Integer;
 begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
 
-  if FRenderer.FUpdating or FRenderer.FPublishingContent then
-  begin
-    Exit;
-  end;
-  LEvents := FRenderer.FEvents;
-  LCallback := FRenderer.FOnEvent;
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
+    begin
+      Exit;
+    end;
 
-  if FRenderer.FDesignMode then
-  begin
+    if CurrentRenderer.FUpdating or CurrentRenderer.FPublishingContent then
+    begin
+      Exit;
+    end;
+    LEvents := CurrentRenderer.FEvents;
+    LCallback := CurrentRenderer.FOnEvent;
+
+    if CurrentRenderer.FDesignMode then
+    begin
+
+      if Assigned(LCallback) then
+      begin
+        LCallback(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+      end;
+      Exit;
+    end;
+    LRevision := LEvents.ViewRevision;
+    { Dispatch may free this binding and its entire parent renderer. Keep only
+      the managed stream and copied legacy callback afterward; retirement changes
+      the captured revision and revokes the borrowed child node. }
+    LEvents.Dispatch(AEvent, ANode.DesignID, ANode.DesignID);
+
+    if (LEvents.ViewRevision <> LRevision) or not LGeneration.Current then
+    begin
+      Exit;
+    end;
 
     if Assigned(LCallback) then
     begin
-      LCallback(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+      LCallback(ANode, AEvent);
     end;
-    Exit;
-  end;
-  LRevision := LEvents.ViewRevision;
-  { Dispatch may free this binding and its entire parent renderer. Keep only
-    the managed stream and copied legacy callback afterward; retirement changes
-    the captured revision and revokes the borrowed child node. }
-  LEvents.Dispatch(AEvent, ANode.DesignID, ANode.DesignID);
-
-  if LEvents.ViewRevision <> LRevision then
-  begin
-    Exit;
-  end;
-
-  if Assigned(LCallback) then
-  begin
-    LCallback(ANode, AEvent);
+  except
+    on E: ENyxBrowserViewRetired do
+    begin
+      Exit;
+    end;
   end;
 end;
 

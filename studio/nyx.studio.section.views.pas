@@ -35,16 +35,26 @@ uses
 
 type
   {$ifdef PAS2JS}
+  { Borrowed browser renderer selected by an already mounted Studio role. }
   TNyxStudioSectionRenderer = TNyxBrowserRenderer;
+  { DOM allocation slot borrowed for the lifetime of the mounted frame. }
   TNyxStudioSectionHost = TJSHTMLElement;
+  { Browser element returned for lookup; its owning renderer controls retirement. }
   TNyxStudioSectionControl = TJSHTMLElement;
+  { Focused DOM element borrowed only during interaction capture/restoration. }
   TNyxStudioSectionFocus = TJSHTMLElement;
+  { Candidate factory callback whose borrowed receiver outlives pending frames. }
   TNyxStudioSectionConfigure = TNyxBrowserSectionConfigure;
   {$else}
+  { Borrowed LCL renderer selected by an already mounted Studio role. }
   TNyxStudioSectionRenderer = TNyxLCLRenderer;
+  { Native allocation slot borrowed for the lifetime of the mounted frame. }
   TNyxStudioSectionHost = TWinControl;
+  { Native control lookup may return a non-windowed face; never transfer its owner. }
   TNyxStudioSectionControl = TControl;
+  { Native keyboard focus requires a windowed control and expires with its view. }
   TNyxStudioSectionFocus = TWinControl;
+  { Candidate factory callback whose borrowed receiver outlives pending frames. }
   TNyxStudioSectionConfigure = TNyxLCLSectionConfigure;
   {$endif}
 
@@ -159,17 +169,24 @@ uses
 
 type
   {$ifdef PAS2JS}
+  { Managed browser section lease, independent of its borrowed renderer lookup. }
   ISection = INyxBrowserViewSection;
   {$else}
+  { Managed native section lease, independent of its borrowed renderer lookup. }
   ISection = INyxLCLViewSection;
   {$endif}
 
+  { Managed forwarding callback with a borrowed facade pointer. The frame revokes
+    that pointer before retiring sections, avoiding a cycle back into its owner. }
   TSectionObserver = class(TInterfacedObject, INyxViewSectionObserver)
   public
     Owner: TNyxStudioSectionViews; { borrowed, revoked before destruction }
     procedure Changed(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   end;
 
+  { One owned complete shell: core renderer, dedicated role hosts, section leases
+    and copied model documents. Children retire before their borrowed core-owned
+    parents; Roots is a lookup forest rather than another model-tree owner. }
   TSectionFrame = class
   public
     Core: TNyxStudioSectionRenderer;
@@ -715,6 +732,21 @@ var
   LInputs: array[TNyxStudioSection] of TNyxContentFaceStates;
   LRetained: array[TNyxStudioSection] of Boolean;
   LPublished: Boolean;
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  LPhaseStarted: QWord;
+
+  procedure RecordPhase(const AStage: TNyxText; ARole: TNyxStudioSection);
+  var
+    LNow: QWord;
+  begin
+    { Static role/stage evidence only. Native diagnostic builds keep these
+      boundaries separate from renderer clocks; production/browser omit them. }
+    LNow := GetTickCount64;
+    WriteLn('studio-section-refresh,', AStage, ',', Ord(ARole), ',',
+      LNow - LPhaseStarted);
+    LPhaseStarted := LNow;
+  end;
+  {$endif}
 
   procedure RestoreRetained;
   var
@@ -779,7 +811,13 @@ begin
     Exit;
   end;
   LFrame := TSectionFrame(FFrame);
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  LPhaseStarted := GetTickCount64;
+  {$endif}
   LDocuments := TNyxStudioSectionDocuments.Create(ADocument, FContext);
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  RecordPhase('documents', nssChrome);
+  {$endif}
   LChanges := nil;
   LPublished := False;
   for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
@@ -807,12 +845,24 @@ begin
       begin
         Exit;
       end;
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      LPhaseStarted := GetTickCount64;
+      {$endif}
       LBefore[LSection] := LView.Root.Clone;
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      RecordPhase('before-clone', LSection);
+      {$endif}
 
       if not LView.CaptureInteraction(LInputs[LSection]) then
       begin
+        {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+        RecordPhase('input-refused', LSection);
+        {$endif}
         Exit;
       end;
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      RecordPhase('input-capture', LSection);
+      {$endif}
     end;
     try
       for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
@@ -835,14 +885,23 @@ begin
             Ordinary TryRefresh recovers its model; the outer owner must also
             restore continuity for this attempted retained role. }
           LRetained[LSection] := True;
+          {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+          LPhaseStarted := GetTickCount64;
+          {$endif}
 
           if LView.TryRefresh(LDocuments[LSection], LDocuments[LSection].Pages[0], False) then
           begin
+            {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+            RecordPhase('retained-accepted', LSection);
+            {$endif}
             Continue;
           end;
+          {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+          RecordPhase('retained-refused', LSection);
+          {$endif}
           LRetained[LSection] := False; { False promises no admitted changes. }
         end;
-        {$ifdef NYX_STUDIO_PROFILE}
+        {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
         { Static role identity only; authored fields never enter timing output. }
         WriteLn('studio-ui,section-replace,', Ord(LSection));
         {$endif}
@@ -854,17 +913,32 @@ begin
         end
         else
         begin
+          {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+          LPhaseStarted := GetTickCount64;
+          {$endif}
           SetLength(LChanges, Length(LChanges) + 1);
           LChanges[High(LChanges)] := LFrame.Sections[Ord(LSection)].Prepare(
             LDocuments[LSection], LDocuments[LSection].Pages[0]);
+          {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+          RecordPhase('replacement-prepare', LSection);
+          {$endif}
         end;
       end;
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      LPhaseStarted := GetTickCount64;
+      {$endif}
 
       if not PublishNyxViewSections(LChanges) then
       begin
+        {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+        RecordPhase('publication-refused', nssChrome);
+        {$endif}
         RestoreRetained;
         Exit;
       end;
+      {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+      RecordPhase('publication-accepted', nssChrome);
+      {$endif}
       LPublished := True;
       LFrame.UpdateRoots;
       LFrame.Documents.Free;

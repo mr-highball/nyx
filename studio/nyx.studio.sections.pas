@@ -103,6 +103,11 @@ function NyxStudioResourceContinuity(ASameSession: Boolean;
 
 implementation
 
+{$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+uses
+  SysUtils;
+{$endif}
+
 function NyxStudioResourceContinuity(ASameSession: Boolean;
   ABeforeRoot, AAfterRoot: TNyxNode): TNyxStudioSectionSet;
 const
@@ -279,8 +284,26 @@ var
   LRemoved: TNyxNode;
   LRoot: TNyxNode;
   LDocument: TNyxDocument;
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  LPhaseStarted: QWord;
+
+  procedure RecordPhase(const AStage: TNyxText; ARole: TNyxStudioSection);
+  var
+    LNow: QWord;
+  begin
+    { Diagnostic native-only boundaries contain static stages/role ordinals and
+      elapsed milliseconds. No authored text, document or borrowed UI escapes. }
+    LNow := GetTickCount64;
+    WriteLn('studio-section-document,', AStage, ',', Ord(ARole), ',',
+      LNow - LPhaseStarted);
+    LPhaseStarted := LNow;
+  end;
+  {$endif}
 begin
   inherited Create;
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  LPhaseStarted := GetTickCount64;
+  {$endif}
   RequireContext(Ord(AContext));
 
   if (AShell = nil) or (AShell.Count <> 1) or
@@ -288,18 +311,36 @@ begin
   begin
     raise ENyxModel.Create('Studio sections require one shared shell root');
   end;
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  RecordPhase('context', nssChrome);
+  {$endif}
   FDocuments[nssChrome] := AShell.Clone;
+  {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+  RecordPhase('chrome-clone', nssChrome);
+  {$endif}
   for LSection := nssProject to High(TNyxStudioSection) do
   begin
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    LPhaseStarted := GetTickCount64;
+    {$endif}
     LRemoved := ExtractSection(FDocuments[nssChrome], LSection, True);
     LRemoved.Free;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    RecordPhase('chrome-extract', LSection);
+    {$endif}
 
     if AShell.Find(NyxStudioSectionRootID(LSection)) = nil then
     begin
       Continue;
     end;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    LPhaseStarted := GetTickCount64;
+    {$endif}
     LDocument := AShell.Clone;
     FDocuments[LSection] := LDocument;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    RecordPhase('role-clone', LSection);
+    {$endif}
     LRoot := ExtractSection(LDocument, LSection, False);
     try
       LDocument.RemoveRoot(NyxPageRoot(NyxStudioSectionRootID(nssChrome)));
@@ -311,6 +352,9 @@ begin
     finally
       LRoot.Free;
     end;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    RecordPhase('role-extract', LSection);
+    {$endif}
   end;
   for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
   begin
@@ -322,6 +366,9 @@ begin
     end;
     { This known editor-only default changes with design structure. Retain it
       only in roots which bind it; preserve every other creator context. }
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    LPhaseStarted := GetTickCount64;
+    {$endif}
 
     if (AContext = nscEditorOwnedHierarchy) and
       not ReferencesHierarchy(LDocument.Pages[0]) and
@@ -329,7 +376,13 @@ begin
     begin
       LDocument.Collections.Remove(NyxStudioHierarchyCollection);
     end;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    RecordPhase('role-context', LSection);
+    {$endif}
     LDocument.Validate;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    RecordPhase('role-validate', LSection);
+    {$endif}
   end;
 end;
 

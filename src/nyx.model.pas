@@ -4797,6 +4797,7 @@ var
   LCanvasIndex: Integer;
   LCanvas: INyxCanvasDefinition;
   LHasCollectionViews: Boolean;
+  LDeferredCollectionViews: Boolean;
   LHasContentRules: Boolean;
   LHasMenus: Boolean;
   LHasMenuBars: Boolean;
@@ -4968,28 +4969,37 @@ var
 
       if LViewSpec.Defined then
       begin
-        LProjection := cpList;
 
-        if ANode.ProjectionKind = 'table' then
+        if (ANode.ProjectionKind = NyxKindName(nkComponent)) or
+          (ANode.Kind = NyxKindName(nkSlotOverride)) then
         begin
-          LProjection := cpTable;
+          { A part/reference descriptor is not a List. Retain complete typed
+            data admission now; composition checks its actual target after all
+            references and override paths have passed ordinary validation. }
+          ValidateNyxCollectionDescriptorSnapshot(LCollections.Snapshot(LViewSpec.Key), LViewSpec);
+          LDeferredCollectionViews := True;
         end
-        else if (ANode.ProjectionKind = 'tree') or
-          ((ANode.ProjectionKind = 'component') or (ANode.Kind = 'slot-override')) then
+        else
         begin
-          { Reference/part projection is resolved by composition. Validate its
-            field/default meaning now; the realized primitive validates shape. }
 
-          if LViewSpec.ParentField <> '' then
+          if ANode.ProjectionKind = NyxKindName(nkTable) then
+          begin
+            LProjection := cpTable;
+          end
+          else if ANode.ProjectionKind = NyxKindName(nkTree) then
           begin
             LProjection := cpTree;
+          end
+          else if ANode.ProjectionKind = NyxKindName(nkList) then
+          begin
+            LProjection := cpList;
+          end
+          else
+          begin
+            raise ENyxModel.Create('Collection binding requires a list, table or tree on ' + ANode.ID);
           end;
-        end
-        else if ANode.ProjectionKind <> 'list' then
-        begin
-          raise ENyxModel.Create('Collection binding requires a list, table or tree on ' + ANode.ID);
+          ValidateNyxCollectionViewSnapshot(LCollections.Snapshot(LViewSpec.Key), LViewSpec, LProjection);
         end;
-        ValidateNyxCollectionViewSnapshot(LCollections.Snapshot(LViewSpec.Key), LViewSpec, LProjection);
       end;
     end;
     for LBindingIndex := 0 to ANode.BindingCount - 1 do
@@ -5394,6 +5404,7 @@ begin
   LChecked := TNyxStrings.Create;
   try
     LTotal := 0;
+    LDeferredCollectionViews := False;
     for LIndex := 0 to Count - 1 do
     begin
       Visit(FPages[LIndex], 0);
@@ -5423,6 +5434,11 @@ begin
       begin
         CheckCanvasDependencies(FComponents[LIndex], 0);
       end;
+    end;
+
+    if LDeferredCollectionViews then
+    begin
+      ValidateNyxCollectionDeclarations(Self, LCollections);
     end;
 
     if HasCanvasDeclarations then

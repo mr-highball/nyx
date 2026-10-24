@@ -761,6 +761,7 @@ uses
   nyx.popover.types,
   nyx.typeahead,
   nyx.collections.columns,
+  nyx.collections.arrangement,
   nyx.collections.query.policy,
   nyx.collections.query.controls,
   nyx.collections.paging,
@@ -855,6 +856,7 @@ type
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
     vkPopoverOptions, vkTypeAheadOptions, vkColumnSizing, vkCollectionPaging,
     vkColumnQueryPolicy, vkTableQueryPolicy,
+    vkColumnLayoutPolicy, vkTableLayoutPolicy, vkColumnPin, vkColumnLayoutFeature,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
     vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor, vkImageValidation,
@@ -961,6 +963,8 @@ type
     ColumnSizing: TNyxColumnSizing;
     ColumnQueryPolicy: TNyxColumnQueryPolicy;
     TableQueryPolicy: TNyxTableQueryPolicy;
+    ColumnLayoutPolicy: TNyxColumnLayoutPolicy;
+    TableLayoutPolicy: TNyxTableLayoutPolicy;
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
@@ -1714,6 +1718,14 @@ begin
   end;
 
   RegisterEnum(vkCollectionScope, Ord(csApplication), 'csApplication');
+  RegisterEnum(vkColumnPin, Ord(ncpNone), 'ncpNone');
+  RegisterEnum(vkColumnPin, Ord(ncpStart), 'ncpStart');
+  RegisterEnum(vkColumnPin, Ord(ncpEnd), 'ncpEnd');
+  RegisterEnum(vkColumnLayoutFeature, Ord(nclfResize), 'nclfResize');
+  RegisterEnum(vkColumnLayoutFeature, Ord(nclfAutoSize), 'nclfAutoSize');
+  RegisterEnum(vkColumnLayoutFeature, Ord(nclfReorder), 'nclfReorder');
+  RegisterEnum(vkColumnLayoutFeature, Ord(nclfVisibility), 'nclfVisibility');
+  RegisterEnum(vkColumnLayoutFeature, Ord(nclfPinning), 'nclfPinning');
   RegisterEnum(vkCollectionScope, Ord(csInstance), 'csInstance');
   RegisterEnum(vkSelectionMode, Ord(nsmSingle), 'nsmSingle');
   RegisterEnum(vkSelectionMode, Ord(nsmMultiple), 'nsmMultiple');
@@ -3735,7 +3747,8 @@ begin
           (LName = 'nyxtextfield') or (LName = 'nyxbooleanfield') or
           (LName = 'nyxintegerfield') or (LName = 'nyxnumberfield') or
           (LName = 'nyxnodomain') or (LName = 'tnyxstatevalue') or
-          (LName = 'nyxcollectionview') then
+          (LName = 'nyxcollectionview') or (LName = 'nyxcolumnlayout') or
+          (LName = 'nyxtablelayout') then
         begin
           Exit(CollectionConstructor(LName));
         end;
@@ -6713,6 +6726,7 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.arrangement') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.master.detail') then
       begin

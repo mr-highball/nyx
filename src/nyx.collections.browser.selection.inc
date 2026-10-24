@@ -83,6 +83,11 @@ procedure TBrowserMount.Gesture(const AItem: TNyxItemRef; AShift, AControl: Bool
   AFocusOnly: Boolean);
 begin
 
+  if not GetInputReady then
+  begin
+    Exit;
+  end;
+
   if AShift then
   begin
     SelectRange(AItem, VisibleOrder, AControl);
@@ -115,10 +120,16 @@ var
   LDestination: TNyxGridCell;
   LControl: Boolean;
   LPageRows: Integer;
+  LDisplayColumn: Integer;
   LOffset: Double;
   LExtent: Double;
 begin
   Result := True;
+
+  if DisplayColumnCount = 0 then
+  begin
+    Exit;
+  end;
   LRow := FView.Snapshot.IndexOf(AOrder[ARow]);
 
   if (LRow < 0) or (FRows[LRow] = nil) then
@@ -137,6 +148,13 @@ begin
     begin
       Exit;
     end;
+  end;
+  LDisplayColumn := ColumnDisplayIndex(LColumn);
+
+  if LDisplayColumn < 0 then
+  begin
+    LDisplayColumn := 0;
+    LColumn := DisplayColumn(0);
   end;
   FFocusedColumn := LColumn;
   LControl := AEvent.ctrlKey or AEvent.metaKey;
@@ -195,6 +213,22 @@ begin
         Exit(False);
       end;
   end;
+  { Arrow keys are physical. Logical start/end pins and the complete display
+    map stay direction-neutral; only this host key mapping observes RTL. }
+
+  if FHasColumnLayout and
+    (window.getComputedStyle(FHost).getPropertyValue('direction') = 'rtl') then
+  begin
+
+    if LMove = ngmLeft then
+    begin
+      LMove := ngmRight;
+    end
+    else if LMove = ngmRight then
+    begin
+      LMove := ngmLeft;
+    end;
+  end;
   LPageRows := 1;
 
   if LMove in [ngmPageUp, ngmPageDown] then
@@ -206,19 +240,20 @@ begin
     LPageRows := Max(1, FGeometry.Window(LOffset, LExtent, 0).Count - 1);
   end;
   AEvent.preventDefault;
-  LDestination := MoveNyxGridCell(ARow, LColumn, Length(AOrder), FView.Spec.Count,
+  LDestination := MoveNyxGridCell(ARow, LDisplayColumn, Length(AOrder), DisplayColumnCount,
     LMove, LPageRows);
+  LDestination.Column := DisplayColumn(LDestination.Column);
   FFocusedColumn := LDestination.Column;
   LRow := FView.Snapshot.IndexOf(AOrder[LDestination.Row]);
   EnsureRow(LRow);
 
-  if not GetConnected then
+  if not GetInputReady then
   begin
     Exit;
   end;
   LRow := FView.Snapshot.IndexOf(AOrder[LDestination.Row]);
 
-  if not GetConnected or (LRow < 0) or (LRow >= Length(FRows)) or
+  if not GetInputReady or (LRow < 0) or (LRow >= Length(FRows)) or
     (FRows[LRow] = nil) or (FRows[LRow].FRef.ID <> AOrder[LDestination.Row].ID) then
   begin
     Exit;
@@ -235,13 +270,13 @@ begin
       LControl and not AEvent.shiftKey);
   end;
 
-  if GetConnected and FHost.contains(LFocus) then
+  if GetInputReady and FHost.contains(LFocus) then
   begin
     Refresh;
     { Navigation reveals the cell using normal nearest scrolling. A surviving
       editor owns caret movement instead and takes the separate path below. }
 
-    if GetConnected and FHost.contains(LFocus) then
+    if GetInputReady and FHost.contains(LFocus) then
     begin
       LFocus.focus;
     end;
@@ -262,19 +297,51 @@ var
   LKey: String;
   LColumn: Integer;
   LNextColumn: Integer;
+  LNextDisplay, LColumnCount: Integer;
   LInput: TJSHTMLInputElement;
   LItem: TNyxItemRef;
   LRowElement: TJSHTMLElement;
+  LCopy: INyxBrowserColumnCommand;
 begin
   Result := True;
+  LCopy := BeginClipboardKey(AEvent);
 
-  if not GetConnected or not FEnabled or AEvent.defaultPrevented or
-    AEvent.isComposing or AEvent.altKey then
+  if LCopy <> nil then
+  begin
+    try
+
+      if LCopy.Current then
+      begin
+        LCopy.Prepare;
+        LCopy.Complete(not AEvent.defaultPrevented);
+      end;
+    finally
+      AEvent.preventDefault;
+      AEvent.stopPropagation;
+      LCopy.Retire;
+    end;
+    Exit;
+  end;
+
+  if not GetInputReady then
+  begin
+    AEvent.preventDefault;
+    Exit;
+  end;
+
+  if not GetInputReady or not FEnabled or AEvent.defaultPrevented or
+    AEvent.isComposing or AEvent.altKey or
+    (FHasColumnLayout and (FComposingInput <> nil)) then
   begin
     ResetTypeAhead;
     Exit;
   end;
   LElement := TJSHTMLElement(AEvent.target);
+
+  if LElement.closest(ColumnResizeSelector) <> nil then
+  begin
+    Exit;
+  end;
   LKeepAlive := Self as INyxCollectionMount;
   { A cell editor owns its text navigation and selection. A list option cannot
     contain interactive children; tables use grid/row/gridcell semantics. }
@@ -341,7 +408,7 @@ begin
         end;
         Refresh;
 
-        if GetConnected and FHost.contains(LRowElement) then
+        if GetInputReady and FHost.contains(LRowElement) then
         begin
           LOptions := TFocusOptions.new;
           LOptions.preventScroll := True;
@@ -349,14 +416,31 @@ begin
         end;
         Exit;
       end;
-      LNextColumn := LColumn + 1;
+      LNextDisplay := LColumn;
+      LColumnCount := Length(FRows[LRow].FInputs);
+
+      if FView.Projection = cpTable then
+      begin
+        LNextDisplay := ColumnDisplayIndex(LColumn);
+        LColumnCount := DisplayColumnCount;
+      end;
 
       if AEvent.shiftKey then
       begin
-        LNextColumn := LColumn - 1;
-      end;
-      while (LNextColumn >= 0) and (LNextColumn < Length(FRows[LRow].FInputs)) do
+        Dec(LNextDisplay);
+      end
+      else
       begin
+        Inc(LNextDisplay);
+      end;
+      while (LNextDisplay >= 0) and (LNextDisplay < LColumnCount) do
+      begin
+        LNextColumn := LNextDisplay;
+
+        if FView.Projection = cpTable then
+        begin
+          LNextColumn := DisplayColumn(LNextDisplay);
+        end;
         LInput := FRows[LRow].FInputs[LNextColumn];
 
         if (LInput <> nil) and not LInput.disabled then
@@ -371,7 +455,7 @@ begin
             Refresh;
           end;
 
-          if GetConnected and FHost.contains(LInput) then
+          if GetInputReady and FHost.contains(LInput) then
           begin
             LOptions := TFocusOptions.new;
             LOptions.preventScroll := True;
@@ -382,11 +466,11 @@ begin
 
         if AEvent.shiftKey then
         begin
-          Dec(LNextColumn);
+          Dec(LNextDisplay);
         end
         else
         begin
-          Inc(LNextColumn);
+          Inc(LNextDisplay);
         end;
       end;
       { At either boundary, ordinary browser Tab leaves editing rather than
@@ -441,18 +525,19 @@ begin
       LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
       EnsureRow(LRow);
 
-      if not GetConnected or (LRow < 0) or (FRows[LRow] = nil) then
+      if not GetInputReady or (LRow < 0) or (FRows[LRow] = nil) then
       begin
         Exit;
       end;
       LFocus := FRows[FView.Snapshot.IndexOf(LOrder[LTarget])].FElement;
       Select(LOrder[LTarget]);
 
-      if GetConnected and FHost.contains(LFocus) then
+      if GetInputReady and FHost.contains(LFocus) then
       begin
         { Focus reveals the matching row using the host's normal nearest-scroll
           behavior. Capturing the managed DOM object before publication avoids
           touching a row released by a selection callback. }
+
         if FView.Projection in [cpList, cpTree] then
         begin
           FocusListOption(LFocus);
@@ -491,7 +576,7 @@ begin
         end;
         Select(LItem, nsaFocus);
 
-        if GetConnected and FHost.contains(LInput) then
+        if GetInputReady and FHost.contains(LInput) then
         begin
           { Selection callbacks can remove a row or navigate away. Capture the
             DOM editor first and recheck ownership before changing its focus. }
@@ -587,13 +672,13 @@ begin
   LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
   EnsureRow(LRow);
 
-  if not GetConnected then
+  if not GetInputReady then
   begin
     Exit;
   end;
   LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
 
-  if not GetConnected or (LRow < 0) or (LRow >= Length(FRows)) or
+  if not GetInputReady or (LRow < 0) or (LRow >= Length(FRows)) or
     (FRows[LRow] = nil) or (FRows[LRow].FRef.ID <> LOrder[LTarget].ID) then
   begin
     Exit;
@@ -619,6 +704,7 @@ begin
   begin
     { Publication may have disposed every row; only the captured managed DOM
       object and retained attachment are consulted after the callback. }
+
     if FView.Projection in [cpList, cpTree] then
     begin
       { The realized logical destination must become visible, matching native

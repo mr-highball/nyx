@@ -99,8 +99,11 @@ type
     procedure Execute(const AExecution: INyxExecution);
     function CloneForUI: INyxWork;
   end;
-  { Last validator samples generic cancellation getters, then its final fence
-    reads owned flags only. No callback/getter runs during Install/CheckReady. }
+  { Last validator samples generic cancellation getters. Its final fence reads
+    owned controller flags and captured optional flags-only cancellation facets,
+    after every model validator. No application callback or mutable UI/model
+    getter runs during Install/CheckReady. Arranged main/form generations both
+    expose these facets; legacy alternative routers remain source compatible. }
   TCommandFence = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
   private
     FPort: TWorkbenchPort;
@@ -110,6 +113,8 @@ type
     FSerial: Integer;
     FGeneration: INyxCancellationScope;
     FFormGeneration: INyxCancellationScope;
+    FGenerationReady: INyxCancellationReadiness;
+    FFormReady: INyxCancellationReadiness;
     FReady: Boolean;
     FInstalled: Boolean;
     procedure Flags;
@@ -397,6 +402,16 @@ begin
   FSerial := AWork.Serial;
   FGeneration := AWork.Generation;
   FFormGeneration := AWork.FormGeneration;
+
+  if FGeneration <> nil then
+  begin
+    Supports(FGeneration, INyxCancellationReadiness, FGenerationReady);
+  end;
+
+  if FFormGeneration <> nil then
+  begin
+    Supports(FFormGeneration, INyxCancellationReadiness, FFormReady);
+  end;
 end;
 
 procedure TCommandFence.Flags;
@@ -473,6 +488,17 @@ begin
   begin
     raise ENyxCollection.Create('Query command is not ready');
   end;
+
+  if FGenerationReady <> nil then
+  begin
+    FGenerationReady.CheckReady;
+  end;
+
+  if FFormReady <> nil then
+  begin
+    FFormReady.CheckReady;
+  end;
+  Flags;
 end;
 
 procedure TCommandFence.Install;

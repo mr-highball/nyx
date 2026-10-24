@@ -45,8 +45,12 @@ var
   LSpecFive: TNyxText;
   LSpecSix: TNyxText;
   LSpecSeven: TNyxText;
+  LSpecEight: TNyxText;
   LTableQuery: TNyxText;
   LColumnQuery: TNyxText;
+  LTableLayout: TNyxText;
+  LColumnLayout: TNyxText;
+  LLayoutFeatures: TNyxText;
   LPaging: TNyxText;
   LSizing: TNyxText;
   LTypeAhead: TNyxText;
@@ -227,6 +231,35 @@ begin
     '"queryControls":{"anyOf":[{"type":"null"},' + LTableQuery + ']},"parent":{"type":"string"}', []);
   LSpecSeven := StringReplace(LSpecSeven, '"selection","query","typeAhead","paging"]',
     '"selection","query","typeAhead","paging","queryControls"]', []);
+  { Layout is a distinct authored presence choice. Start with the complete
+    version-seven envelope before its query-only declaration requirement. }
+  LLayoutFeatures := '{"type":"array","maxItems":5,"uniqueItems":true,' +
+    '"items":{"enum":["resize","auto-size","reorder","visibility","pinning"]}}';
+  LColumnLayout := '{"type":"object","properties":{"version":{"const":1},' +
+    '"visible":{"type":"boolean"},"pin":{"enum":["none","start","end"]},' +
+    '"features":' + LLayoutFeatures + '},' +
+    '"required":["version","visible","pin","features"],"additionalProperties":false}';
+  LTableLayout := '{"type":"object","properties":{"version":{"const":1},' +
+    '"enabled":{"type":"boolean"},"features":' + LLayoutFeatures + ',' +
+    '"minimumCenter":{"type":"integer","minimum":1,"maximum":100000},' +
+    '"autoSizeRows":{"type":"integer","minimum":1,"maximum":1024}},' +
+    '"required":["version","enabled","features","minimumCenter","autoSizeRows"],' +
+    '"additionalProperties":false}';
+  LSpecEight := StringReplace(LSpecSeven, '"const":7', '"const":8', []);
+  LSpecEight := StringReplace(LSpecEight, '"editable":{"type":"boolean"}',
+    '"editable":{"type":"boolean"},"layoutControls":{"anyOf":[{"type":"null"},' + LColumnLayout + ']}', []);
+  LSpecEight := StringReplace(LSpecEight,
+    '"required":["field","kind","title","editable","sizing","queryControls"]',
+    '"required":["field","kind","title","editable","sizing","queryControls","layoutControls"]', []);
+  LSpecEight := StringReplace(LSpecEight, '"parent":{"type":"string"}',
+    '"layoutControls":{"anyOf":[{"type":"null"},' + LTableLayout + ']},"parent":{"type":"string"}', []);
+  LSpecEight := StringReplace(LSpecEight,
+    '"selection","query","typeAhead","paging","queryControls"]',
+    '"selection","query","typeAhead","paging","queryControls","layoutControls"]', []);
+  Delete(LSpecEight, Length(LSpecEight), 1);
+  LSpecEight := LSpecEight + ',"anyOf":[{"properties":{"layoutControls":{"type":"object"}}},' +
+    '{"properties":{"columns":{"contains":{"properties":{"layoutControls":{"type":"object"}},' +
+    '"required":["layoutControls"]}}}}]}';
   { Version seven requires at least one raw declaration. A null table choice
     with no column declaration stays an older version; defaults are not saved. }
   Delete(LSpecSeven, Length(LSpecSeven), 1);
@@ -234,7 +267,7 @@ begin
     '{"properties":{"columns":{"contains":{"properties":{"queryControls":{"type":"object"}},' +
     '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
-    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ']}';
+    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
@@ -262,6 +295,17 @@ begin
     '"policy":{"oneOf":[{"type":"null"},' + LColumnQuery + ']}',
     '"op","owner","key","projection","field","kind","policy"');
 
+  Branch('"op":{"const":"table-layout"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LTableLayout + ']}',
+    '"op","owner","key","projection","policy"');
+  Branch('"op":{"const":"column-layout"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"field":{"type":"string","minLength":1},' +
+    '"kind":{"enum":["text","boolean","integer","number"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LColumnLayout + ']}',
+    '"op","owner","key","projection","field","kind","policy"');
+
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
@@ -275,7 +319,8 @@ begin
     end;
 
     if LAction in [scaQuery, scaTableQuery, scaColumnQuery,
-      scaDefaultTableQuery, scaDefaultColumnQuery] then
+      scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
+      scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout] then
     begin
       LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
       LRequired := LRequired + ',"baseline"';
@@ -293,6 +338,18 @@ begin
       LRequired := LRequired + ',"columnQuery"';
     end;
 
+    if LAction = scaTableLayout then
+    begin
+      LProperties := LProperties + ',"tableLayout":' + LTableLayout;
+      LRequired := LRequired + ',"tableLayout"';
+    end;
+
+    if LAction = scaColumnLayout then
+    begin
+      LProperties := LProperties + ',"columnLayout":' + LColumnLayout;
+      LRequired := LRequired + ',"columnLayout"';
+    end;
+
     if NyxStudioCollectionViewAction(LAction) then
     begin
       LProperties := LProperties + ',"owner":{"type":"string","minLength":1},' +
@@ -300,7 +357,8 @@ begin
 
       if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
         scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
-        scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery] then
+        scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
+        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout] then
       begin
         LProperties := StringReplace(LProperties,
           '"projection":{"enum":["list","table","tree"]}',
@@ -324,7 +382,7 @@ begin
 
     if LAction in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn, scaAddColumn,
       scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
-      scaColumnQuery, scaDefaultColumnQuery] then
+      scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout, scaDefaultColumnLayout] then
     begin
       LProperties := LProperties + ',"field":{"type":"string","minLength":1},' +
         '"kind":{"enum":["text","boolean","integer","number"]}';
@@ -424,13 +482,15 @@ begin
     '{"properties":{"mode":{"const":"bindings"},"owner":{"type":"string","minLength":1},' +
     '"offset":{"type":"integer","minimum":0,"maximum":64},' +
     '"limit":{"type":"integer","minimum":1,"maximum":50},' +
-    '"queryControls":{"type":"boolean","default":false}},' +
+    '"queryControls":{"type":"boolean","default":false},' +
+    '"layoutControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"column"},"owner":{"type":"string","minLength":1},' +
     '"field":{"type":"string","minLength":1},"source":{"enum":["local","effective","restorable"]},' +
     '"offset":{"type":"integer","minimum":0,"maximum":8388608},' +
     '"count":{"type":"integer","minimum":1,"maximum":4096},' +
-    '"queryControls":{"type":"boolean","default":false}},' +
+    '"queryControls":{"type":"boolean","default":false},' +
+    '"layoutControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner","field","source"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"source":{"enum":["local","effective","restorable"]},' +

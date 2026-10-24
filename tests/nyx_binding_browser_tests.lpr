@@ -29,11 +29,13 @@ uses
   nyx.types,
   nyx.behavior,
   SysUtils,
+  JS,
   Web,
   nyx.text,
   nyx.state,
   nyx.binding.types,
   nyx.model,
+  nyx.codec,
   nyx.render.browser,
   nyx.application.browser,
   nyx.test.binding;
@@ -405,6 +407,454 @@ begin
     'browser retained event outlives its application');
 end;
 
+type
+  { Distinct real callback boundaries; None refuses an accidentally armed
+    fixture rather than silently testing an unspecified retirement action. }
+  TBrowserRetirementAction = (braNone, braProgrammaticUnmount,
+    braExternalRemount, braOwnedTransfer, braCommittedFailure);
+
+  { The caller owns renderer/document and the connected host. External state
+    outlives every entered callback. Only braOwnedTransfer borrows the renderer's
+    own state; that pointer is never freed or read after the old call returns.
+    Retained DOM references prove usable detached faces, not GC destruction. }
+  TBrowserRetirementProbe = class
+  public
+    Renderer: TNyxBrowserRenderer;
+    Document: TNyxDocument;
+    Host: TJSHTMLElement;
+    Store: TNyxState;
+    OldButton: TJSHTMLElement;
+    OldInput: TJSHTMLTextAreaElement;
+    Action: TBrowserRetirementAction;
+    Armed: Boolean;
+    Updates: Integer;
+    OldEvents: Integer;
+    SuccessorEvents: Integer;
+    SawBusyStore: Boolean;
+    SawExactStateTransfer: Boolean;
+    SawLiveElement: Boolean;
+    SawLiveNode: Boolean;
+    SawRevokedHooks: Boolean;
+    SawOwnedStateAfterSuccessor: Boolean;
+    RaisedNotification: Boolean;
+    RevisionAtEntry: Integer;
+    procedure Update(ANode: TNyxNode; AElement: TJSHTMLElement);
+    procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+  end;
+
+var
+  { The platform factory uses plain callbacks. This temporary borrowed receiver
+    is valid until the independent renderer and all its bindings are retired. }
+  GBrowserRetirementProbe: TBrowserRetirementProbe;
+
+function BrowserRetirementFactory(ANode: TNyxNode): TJSHTMLElement;
+begin
+  Result := TJSHTMLElement(document.createElement('div'));
+end;
+
+procedure BrowserRetirementUpdate(ANode: TNyxNode; AElement: TJSHTMLElement);
+begin
+  GBrowserRetirementProbe.Update(ANode, AElement);
+end;
+
+procedure TBrowserRetirementProbe.Update(ANode: TNyxNode;
+  AElement: TJSHTMLElement);
+var
+  LText: TNyxText;
+  LAction: TBrowserRetirementAction;
+begin
+  LText := ANode.Prop('text');
+  AElement.textContent := LText;
+
+  if not Armed or (ANode.ID <> 'retirement-caption') then
+  begin
+    Exit;
+  end;
+  Armed := False;
+  Inc(Updates);
+  LAction := Action;
+  RevisionAtEntry := Store.Revision;
+  SawBusyStore := Store.Busy;
+  case LAction of
+    braNone:
+      raise ENyxModel.Create('An armed browser retirement probe requires a scenario');
+    braProgrammaticUnmount:
+      Renderer.Unmount;
+    braExternalRemount:
+      begin
+        Renderer.Unmount;
+        Renderer.Render(Document, Document.Pages[1], Host, False, Store);
+        { This is a no-assignment Click with an idle external store. Removing
+          the old-only key would fail if old validation were still subscribed. }
+        Store.Remove(NyxTextState('retirement-only'));
+        Store.SetValue(NyxTextState('retirement-shared'), 'Successor accepted');
+      end;
+    braOwnedTransfer:
+      begin
+        { The exact owned state enters a full successor without a prior Unmount.
+          Destroying that successor must not free state used by this entered call. }
+        Renderer.Render(Document, Document.Pages[1], Host, False, Store);
+        SawExactStateTransfer := Renderer.State = Store;
+        Renderer.Unmount;
+        SawOwnedStateAfterSuccessor :=
+          (Store.GetValue(NyxTextState('retirement-only')) = 'Old accepted') and
+          (Store.Revision = RevisionAtEntry);
+      end;
+    braCommittedFailure:
+      begin
+        { Do not subscribe a successor to the Busy committed external store.
+          Its separate owned defaults make stale state/error tails observable. }
+        Renderer.Render(Document, Document.Pages[1], Host);
+      end;
+  end;
+  SawLiveElement := AElement.textContent = LText;
+  AElement.textContent := LText + ' / entered callback still owns this face';
+  SawLiveNode := ANode.Prop('text') = LText;
+  SawRevokedHooks := not Assigned(OldButton.onclick) and
+    not Assigned(OldInput.onchange);
+
+  if LAction = braCommittedFailure then
+  begin
+    RaisedNotification := True;
+    raise ENyxState.Create('Intentional retired browser notification failure');
+  end;
+end;
+
+procedure TBrowserRetirementProbe.Event(ANode: TNyxNode;
+  const AEvent: TNyxEventInfo);
+begin
+
+  if (ANode.ID = 'retirement-click') or (ANode.ID = 'retirement-entry') then
+  begin
+    Inc(OldEvents);
+  end;
+
+  if ANode.ID = 'successor-click' then
+  begin
+    Inc(SuccessorEvents);
+  end;
+end;
+
+{ Keep the existing shared/DOM seeds exact. This local seed distinguishes the
+  old-only and successor bindings and labels its real no-op Click command. }
+function CreateBrowserRetirementFixture: TNyxDocument;
+var
+  LPage, LNode: TNyxNode;
+begin
+  Result := TNyxDocument.Create;
+  try
+    Result.State.SetValue(NyxTextState('retirement-only'), 'Old accepted')
+      .SetValue(NyxTextState('retirement-shared'), 'Shared accepted');
+    LPage := TNyxNode.Create(nkPage, 'retirement-page');
+    Result.AddPage(LPage);
+    LPage.Configure.Layout(nlColumn).Done;
+    LNode := TNyxNode.Create(nkLabel, 'retirement-caption');
+    LPage.Add(LNode);
+    LNode.Binds.Text(NyxTextState('retirement-shared')).Done;
+    LNode := TNyxNode.Create(nkMemo, 'retirement-entry');
+    LPage.Add(LNode);
+    LNode.Binds.Value(NyxTextState('retirement-only')).Done;
+    LNode := TNyxNode.Create(nkButton, 'retirement-click');
+    LPage.Add(LNode);
+    LNode.Configure.Text('Retirement command').OnClick(NyxEvent('retirement-click')).Done;
+    LPage := TNyxNode.Create(nkPage, 'retirement-successor');
+    Result.AddPage(LPage);
+    LPage.Configure.Layout(nlColumn).Done;
+    LNode := TNyxNode.Create(nkLabel, 'successor-caption');
+    LPage.Add(LNode);
+    LNode.Binds.Text(NyxTextState('retirement-shared')).Done;
+    LNode := TNyxNode.Create(nkButton, 'successor-click');
+    LPage.Add(LNode);
+    LNode.Configure.Text('Successor command').OnClick(NyxEvent('successor-click')).Done;
+    Result.Validate;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function RunBrowserRetirementCases: Integer;
+var
+  LProbe: TBrowserRetirementProbe;
+  LExternalStore: TNyxState;
+  LAction: TBrowserRetirementAction;
+  LRevision: Integer;
+  LBefore: TNyxText;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise ENyxState.Create('Browser retirement: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+begin
+  Result := 0;
+  for LAction := braProgrammaticUnmount to braCommittedFailure do
+  begin
+    LProbe := TBrowserRetirementProbe.Create;
+    LExternalStore := nil;
+    try
+      GBrowserRetirementProbe := LProbe;
+      LProbe.Document := CreateBrowserRetirementFixture;
+      LBefore := TNyxCodec.Encode(LProbe.Document);
+      LProbe.Renderer := TNyxBrowserRenderer.Create;
+      LProbe.Host := TJSHTMLElement(document.createElement('div'));
+      document.body.appendChild(LProbe.Host);
+      LProbe.Renderer.RegisterFactory('label', @BrowserRetirementFactory,
+        @BrowserRetirementUpdate);
+      LProbe.Renderer.OnEvent := @LProbe.Event;
+
+      if LAction = braOwnedTransfer then
+      begin
+        LProbe.Renderer.Render(LProbe.Document, LProbe.Document.Pages[0], LProbe.Host);
+      end
+      else
+      begin
+        LExternalStore := LProbe.Document.State.Clone;
+        LProbe.Renderer.Render(LProbe.Document, LProbe.Document.Pages[0],
+          LProbe.Host, False, LExternalStore);
+      end;
+      LProbe.Store := LProbe.Renderer.State;
+      LProbe.OldButton := LProbe.Renderer.ElementFor('retirement-click');
+      LProbe.OldInput := TJSHTMLTextAreaElement(LProbe.Renderer.InputFor('retirement-entry'));
+      LRevision := LProbe.Store.Revision;
+      LProbe.Action := LAction;
+      LProbe.Armed := True;
+      case LAction of
+        braNone:
+          raise ENyxModel.Create('A browser retirement run requires a scenario');
+        braProgrammaticUnmount:
+          LExternalStore.SetValue(NyxTextState('retirement-shared'), 'Programmatic accepted');
+        braExternalRemount, braOwnedTransfer:
+          LProbe.OldButton.click;
+        braCommittedFailure:
+          begin
+            LProbe.OldInput.value := 'Committed before retired notification failure';
+            LProbe.OldInput.dispatchEvent(TJSEvent.new('change'));
+          end;
+      end;
+      Check((LProbe.Updates = 1) and LProbe.SawLiveElement and LProbe.SawLiveNode,
+        'entered browser updater retains its exact borrowed DOM face and Pascal node through retirement');
+      Check(LProbe.SawRevokedHooks and not LProbe.Host.contains(LProbe.OldButton) and
+        not Assigned(LProbe.OldButton.onclick) and not Assigned(LProbe.OldInput.onchange),
+        'retirement immediately revokes old DOM hooks and removes the old face from its host');
+      Check(LProbe.OldEvents = 0,
+        'retired browser command cannot emit a stale old semantic Click or Change');
+      LProbe.OldButton.click;
+      Check(LProbe.OldEvents = 0,
+        'retained detached DOM Click has no old binding authority');
+      case LAction of
+        braNone:
+          raise ENyxModel.Create('A browser retirement result requires a scenario');
+        braProgrammaticUnmount:
+          begin
+            Check(LProbe.SawBusyStore and (LProbe.Renderer.Root = nil) and
+              (LExternalStore.Revision = LRevision + 1) and
+              (LExternalStore.GetValue(NyxTextState('retirement-shared')) = 'Programmatic accepted'),
+              'programmatic browser Sync retirement preserves committed external state');
+            LExternalStore.SetValue(NyxTextState('retirement-shared'), 'After programmatic unmount');
+            Check(LProbe.Updates = 1,
+              'programmatic browser unmount removes its old subscriber immediately');
+          end;
+        braExternalRemount:
+          begin
+            Check(not LProbe.SawBusyStore and (LProbe.RevisionAtEntry = LRevision) and
+              (LProbe.Renderer.State = LExternalStore) and
+              not LExternalStore.Has('retirement-only') and
+              (LExternalStore.Revision = LRevision + 2) and
+              (LProbe.Renderer.ElementFor('successor-caption').textContent = 'Successor accepted'),
+              'no-assignment browser Click replaces the same external store and removes old-only validation');
+            LProbe.Renderer.ElementFor('successor-click').click;
+            Check((LProbe.SuccessorEvents = 1) and (LProbe.OldEvents = 0) and
+              (LProbe.Renderer.LastBindingFailure = nbfNone),
+              'browser successor Click is usable without stale semantic or diagnostic tails');
+          end;
+        braOwnedTransfer:
+          begin
+            LProbe.Store := nil;
+            Check(not LProbe.SawBusyStore and LProbe.SawExactStateTransfer and
+              LProbe.SawOwnedStateAfterSuccessor and (LProbe.Renderer.Root = nil),
+              'exact browser renderer-owned state survives successor destruction until the old call returns');
+            Check(LProbe.Renderer.LastBindingFailure = nbfNone,
+              'owned-state browser retirement leaves no stale old command error');
+          end;
+        braCommittedFailure:
+          begin
+            Check(LProbe.SawBusyStore and LProbe.RaisedNotification and
+              (LExternalStore.Revision = LRevision + 1) and
+              (LExternalStore.GetValue(NyxTextState('retirement-only')) =
+                'Committed before retired notification failure'),
+              'retired browser notification failure preserves external command commitment');
+            Check((LProbe.Renderer.State <> LExternalStore) and
+              (LProbe.Renderer.State.GetValue(NyxTextState('retirement-only')) = 'Old accepted') and
+              (LProbe.Renderer.LastBindingError = '') and
+              (LProbe.Renderer.LastBindingFailure = nbfNone),
+              'old browser notification failure cannot rewrite independent successor state or errors');
+            LProbe.Renderer.ElementFor('successor-click').click;
+            Check((LProbe.SuccessorEvents = 1) and (LProbe.OldEvents = 0),
+              'independent browser successor remains interactive after old notification failure');
+          end;
+      end;
+      Check(TNyxCodec.Encode(LProbe.Document) = LBefore,
+        'browser retirement preserves the independent authored document exactly');
+    finally
+      LProbe.Armed := False;
+      try
+        FreeAndNil(LProbe.Renderer);
+      finally
+        LExternalStore.Free;
+
+        if (LProbe.Host <> nil) and (LProbe.Host.parentNode <> nil) then
+        begin
+          LProbe.Host.parentNode.removeChild(LProbe.Host);
+        end;
+        LProbe.Document.Free;
+        GBrowserRetirementProbe := nil;
+        LProbe.Free;
+      end;
+    end;
+  end;
+end;
+
+type
+  { Interpose a real factory element's native setter with Pascal code. This
+    exercises the same synchronous callback boundary as a custom-element
+    attribute reaction, without a JavaScript fixture or framework. The probe
+    owns the host/document; Node/Store observations remain borrowed and are
+    read only inside the entered callback while its generation must retain them. }
+  TBrowserSetterRetirementProbe = class
+  public
+    Renderer: TNyxBrowserRenderer;
+    Document: TNyxDocument;
+    Host: TJSHTMLElement;
+    Element: TJSHTMLElement;
+    OriginalSetter: TJSFunction;
+    Node: TNyxNode;
+    Store: TNyxState;
+    Armed: Boolean;
+    DisposeRenderer: Boolean;
+    Calls: Integer;
+    Events: Integer;
+    SawNode: Boolean;
+    SawState: Boolean;
+    procedure SetAttribute(const AName, AValue: String);
+    procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+  end;
+
+procedure TBrowserSetterRetirementProbe.SetAttribute(
+  const AName, AValue: String);
+begin
+  OriginalSetter.call(Element, AName, AValue);
+
+  if not Armed or (AName <> 'data-variant') then
+  begin
+    Exit;
+  end;
+  Armed := False;
+  Inc(Calls);
+
+  if DisposeRenderer then
+  begin
+    FreeAndNil(Renderer);
+  end
+  else
+  begin
+    Renderer.Unmount;
+  end;
+  SawNode := (Node.ID = 'retirement-caption') and
+    (Node.Prop('hint') = 'Must not reach the retired face');
+  SawState := Store.GetValue(NyxTextState('retirement-shared')) = 'Shared accepted';
+end;
+
+procedure TBrowserSetterRetirementProbe.Event(ANode: TNyxNode;
+  const AEvent: TNyxEventInfo);
+begin
+  Inc(Events);
+end;
+
+function RunBrowserSetterRetirementCases: Integer;
+var
+  LProbe: TBrowserSetterRetirementProbe;
+  LDispose: Boolean;
+  LButton: TJSHTMLElement;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise ENyxModel.Create('Browser setter retirement: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+begin
+  Result := 0;
+  for LDispose := False to True do
+  begin
+    LProbe := TBrowserSetterRetirementProbe.Create;
+    try
+      LProbe.Document := CreateBrowserRetirementFixture;
+      LProbe.Document.Pages[0].Find('retirement-caption').SetProp('hint', 'Before');
+      LProbe.Host := TJSHTMLElement(document.createElement('div'));
+      document.body.appendChild(LProbe.Host);
+      LProbe.Renderer := TNyxBrowserRenderer.Create;
+      { Reuse the existing custom caption pair so its nested markup remains
+        valid before interposing the synchronous setter callback. }
+      LProbe.Renderer.RegisterFactory('label', @CaptionFactory, @UpdateCaption);
+      LProbe.Renderer.OnEvent := @LProbe.Event;
+      LProbe.Renderer.Render(LProbe.Document, LProbe.Document.Pages[0], LProbe.Host);
+      LProbe.Element := LProbe.Renderer.ElementFor('retirement-caption');
+      LProbe.Node := LProbe.Renderer.Root.Find('retirement-caption');
+      LProbe.Store := LProbe.Renderer.State;
+      LButton := LProbe.Renderer.ElementFor('retirement-click');
+      LProbe.OriginalSetter := TJSFunction(TJSObject(LProbe.Element)['setAttribute']);
+      TJSObject(LProbe.Element)['setAttribute'] := JSValue(@LProbe.SetAttribute);
+      LProbe.Node.SetProp('hint', 'Must not reach the retired face');
+      LProbe.DisposeRenderer := LDispose;
+      LProbe.Armed := True;
+      LButton.click;
+      Check((LProbe.Calls = 1) and LProbe.SawNode and LProbe.SawState,
+        'entered DOM setter retains its exact node and owned state through retirement');
+      Check(LProbe.Element.title = 'Before',
+        'Sync stops before the next DOM setter after the reaction retires its view');
+      Check((LProbe.Events = 0) and not Assigned(LButton.onclick) and
+        not LProbe.Host.contains(LButton),
+        'retired setter command cannot deliver semantic events or leave active DOM hooks');
+
+      if LDispose then
+      begin
+        Check(LProbe.Renderer = nil, 'a DOM setter can dispose the actual renderer');
+      end
+      else
+      begin
+        Check((LProbe.Renderer.Root = nil) and
+          (LProbe.Renderer.LastBindingFailure = nbfNone),
+          'normal setter unmount cannot fabricate a binding diagnostic');
+      end;
+    finally
+      LProbe.Armed := False;
+
+      if LProbe.Element <> nil then
+      begin
+        TJSObject(LProbe.Element)['setAttribute'] := LProbe.OriginalSetter;
+      end;
+      LProbe.Renderer.Free;
+      LProbe.Document.Free;
+
+      if LProbe.Host <> nil then
+      begin
+        LProbe.Host.remove;
+      end;
+      LProbe.Free;
+    end;
+  end;
+end;
+
 var
   LJourney: TBrowserBindingJourney;
   LCount: Integer;
@@ -413,6 +863,8 @@ begin
   try
     try
       LCount := RunNyxBindingTests + LJourney.Run + LJourney.CustomJourney;
+      Inc(LCount, RunBrowserRetirementCases);
+      Inc(LCount, RunBrowserSetterRetirementCases);
       document.body.setAttribute('data-binding-tests', 'passed');
       document.body.setAttribute('data-binding-checks', IntToStr(LCount));
     except

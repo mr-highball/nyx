@@ -37,6 +37,8 @@ type
   { Borrowed admission runs while accepted indices/panels are unchanged.
     False refuses the proposal; the receiver may retire the host. }
   TNyxBrowserTabAdmission = function(const AChange: TNyxTabTransition): Boolean of object;
+  { Renderer-owned tab projection with terminal input retirement separate from
+    final state destruction. Entered view leases keep its borrowed nodes alive. }
   TNyxBrowserTabHost = class
   private
     FRoot: TJSHTMLElement;
@@ -63,6 +65,9 @@ type
       root. It creates only adapter chrome; caller attaches retained panels. }
     constructor Create(ANode: TNyxNode; ARoot: TJSHTMLElement);
     destructor Destroy; override;
+    { Terminal input retirement without destroying state used by a callback
+      already on the stack. The owning view releases memory after that return. }
+    procedure Disconnect;
     procedure Attach(AIndex: Integer; APanel: TJSHTMLElement);
     procedure Enabled(AValue: Boolean);
     { Apply an already admitted model value without emitting an input event. }
@@ -136,9 +141,17 @@ begin
 end;
 
 destructor TNyxBrowserTabHost.Destroy;
+begin
+  Disconnect;
+  FState.Free;
+  inherited Destroy;
+end;
+
+procedure TNyxBrowserTabHost.Disconnect;
 var
   LIndex: Integer;
 begin
+  FEnabled := False;
 
   if FLifetime <> nil then
   begin
@@ -156,8 +169,6 @@ begin
       FHeaders[LIndex].removeEventListener('keydown', @KeyDown);
     end;
   end;
-  FState.Free;
-  inherited Destroy;
 end;
 
 function TNyxBrowserTabHost.HeaderIndex(AEvent: TJSEvent): Integer;

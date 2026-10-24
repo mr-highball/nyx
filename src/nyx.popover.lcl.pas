@@ -363,7 +363,12 @@ begin
       FTargets.Invoker.SetFocus;
     end;
   except
-    Conceal(True);
+    try
+      Conceal(True);
+    except
+      { Keep the original platform/focus error. Shared Open revokes admission
+        and attempts idempotent fallback cleanup even when this cleanup fails. }
+    end;
     raise;
   end;
 end;

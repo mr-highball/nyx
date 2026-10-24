@@ -49,12 +49,19 @@ implementation
 
 uses
   SysUtils, nyx.text, nyx.model, nyx.root.types, nyx.events, nyx.popover.types,
-  nyx.collections, nyx.collections.query.editor;
+  nyx.popover, nyx.collections, nyx.collections.mount,
+  nyx.collections.arrangement.workbench, nyx.collections.query.editor;
 
 type
-  { Retained by forms as a flags-only weak lifetime lease. This factory never
-    retains a form or renderer, so its small managed lease cannot form a cycle. }
-  TLCLQueryFactory = class(TInterfacedObject, INyxQueryFormPresenterFactory)
+  { Retained by forms as a flags-only weak lifetime lease. Optional arranged
+    input owns only independent readonly facts, never its mount. Configure it
+    before the first form; existing legacy forms cannot be retrofitted safely.
+    This factory retains no form or renderer and creates no ownership cycle. }
+  TLCLQueryFactory = class(TInterfacedObject, INyxQueryFormPresenterFactory,
+    INyxCollectionQueryInputFactory)
+  private
+    FInput: INyxCollectionInputLifetime;
+    FCreateStarted: Boolean;
   public
     Active: Boolean;
     Anchor: TWinControl;
@@ -63,21 +70,25 @@ type
     destructor Destroy; override;
     function CreateForm(AColumn: Integer; ADocument: TNyxDocument;
       const ARoot: TNyxRootRef): INyxQueryFormPresenter;
+    procedure ConfigureInput(const AInput: INyxCollectionInputLifetime);
     procedure Revoke;
   end;
 
   { Captures the REAL realized form, whose existing live binding owner mirrors
     accepted physical text/select/checkbox changes. Authored Content is a clone
-    and must never be mistaken for the user's current draft. }
+    and must never be mistaken for the user's current draft. Cached Events may
+    decorate generation capture, but the exact native Presentation stays intact;
+    the host never retains this form or its forwarding event surface. }
   TLCLQueryForm = class(TInterfacedObject, INyxQueryFormPresenter, INyxLCLQueryFormPresenter)
   private
     FTarget: TLCLQueryFactory;
     FLease: INyxQueryFormPresenterFactory;
     FHost: INyxLCLPopover;
+    FEvents: INyxEvents;
     FConnected: Boolean;
   public
     constructor Create(ATarget: TLCLQueryFactory; ADocument: TNyxDocument;
-      const ARoot: TNyxRootRef);
+      const ARoot: TNyxRootRef; const AInput: INyxCollectionInputLifetime);
     destructor Destroy; override;
     function GetEvents: INyxEvents;
     function GetConnected: Boolean;
@@ -115,28 +126,95 @@ begin
   Active := False;
   Anchor := nil;
   Theme := nil;
+  FInput := nil;
+end;
+
+procedure TLCLQueryFactory.ConfigureInput(
+  const AInput: INyxCollectionInputLifetime);
+var
+  LInput: INyxCollectionInputLifetime;
+begin
+  LInput := AInput;
+
+  if not Active or (LInput = nil) then
+  begin
+    raise ENyxCollection.Create('A native query factory requires its live exact input lifetime');
+  end;
+
+  if FInput <> nil then
+  begin
+
+    if FInput <> LInput then
+    begin
+      raise ENyxCollection.Create('A native query factory cannot change its input owner');
+    end;
+    Exit;
+  end;
+
+  if FCreateStarted then
+  begin
+    raise ENyxCollection.Create('Configure native query input before creating any form');
+  end;
+  FInput := LInput;
 end;
 
 function TLCLQueryFactory.CreateForm(AColumn: Integer; ADocument: TNyxDocument;
   const ARoot: TNyxRootRef): INyxQueryFormPresenter;
+var
+  LKeep: INyxQueryFormPresenterFactory;
+  LInput: INyxCollectionInputLifetime;
 begin
+  LKeep := Self;
+  LInput := FInput;
 
   if not Active or (Anchor = nil) or (AColumn < -1) then
   begin
     raise ENyxCollection.Create('The native table query anchor has retired');
   end;
-  Result := TLCLQueryForm.Create(Self, ADocument, ARoot);
+  { Snapshot input before the host constructor can call target/theme code.
+    A reentrant ConfigureInput must never bless an already-entered legacy form. }
+  FCreateStarted := True;
+  Result := TLCLQueryForm.Create(Self, ADocument, ARoot, LInput);
 end;
 
 constructor TLCLQueryForm.Create(ATarget: TLCLQueryFactory; ADocument: TNyxDocument;
-  const ARoot: TNyxRootRef);
+  const ARoot: TNyxRootRef; const AInput: INyxCollectionInputLifetime);
+var
+  LInput: INyxCollectionInputLifetime;
+  LHost: INyxLCLPopover;
+  LEvents: INyxEvents;
+  LAdmission: INyxPopoverOpenAdmission;
+  LAnchor: TWinControl;
 begin
   inherited Create;
+  LInput := AInput;
   FTarget := ATarget;
   FLease := ATarget;
+  LAnchor := ATarget.Anchor;
   { The existing host clones the document during construction. Its owned state,
     controls, focus recovery and event generation share normal Nyx lifetimes. }
-  FHost := NewNyxLCLPopover(ATarget.Anchor, ADocument, ARoot, ATarget.Theme);
+  LHost := NewNyxLCLPopover(LAnchor, ADocument, ARoot, ATarget.Theme);
+  LEvents := LHost.Events;
+
+  if LInput <> nil then
+  begin
+
+    if not Supports(LHost, INyxPopoverOpenAdmission, LAdmission) then
+    begin
+      raise ENyxCollection.Create('The native query presentation has no open-lifetime admission');
+    end;
+    LEvents := NewNyxArrangementQueryEvents(LEvents, LInput, LAdmission);
+  end;
+
+  if not ATarget.Active or (ATarget.Anchor <> LAnchor) or
+    (ATarget.FInput <> LInput) then
+  begin
+    raise ENyxCollection.Create('The native query factory retired during form construction');
+  end;
+  { These assignments publish only the exact original local construction.
+    Observation is available before Show; generation capture remains closed. }
+  FHost := LHost;
+  FEvents := LEvents;
   FConnected := True;
 end;
 
@@ -148,7 +226,8 @@ end;
 
 function TLCLQueryForm.GetConnected: Boolean;
 begin
-  Result := FConnected and FTarget.Active and (FHost <> nil);
+  Result := FConnected and (FTarget <> nil) and FTarget.Active and
+    (FHost <> nil) and (FEvents <> nil);
 end;
 
 function TLCLQueryForm.GetOpen: Boolean;
@@ -167,7 +246,7 @@ begin
 
   if GetConnected then
   begin
-    Result := FHost.Events;
+    Result := FEvents;
   end;
 end;
 
@@ -272,19 +351,23 @@ end;
 procedure TLCLQueryForm.Disconnect;
 var
   LHost: INyxLCLPopover;
+  LEvents: INyxEvents;
+  LFactory: INyxQueryFormPresenterFactory;
 begin
   FConnected := False;
   LHost := FHost;
+  LEvents := FEvents;
+  LFactory := FLease;
   FHost := nil;
-  try
+  FEvents := nil;
+  FTarget := nil;
+  FLease := nil;
+  { Reentrant Close observes a fully disconnected receiver. Local leases keep
+    the exact original forwarding/host/factory owners until cleanup unwinds. }
 
-    if LHost <> nil then
-    begin
-      LHost.Close;
-    end;
-  finally
-    FTarget := nil;
-    FLease := nil;
+  if LHost <> nil then
+  begin
+    LHost.Close;
   end;
 end;
 

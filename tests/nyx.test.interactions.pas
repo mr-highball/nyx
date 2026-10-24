@@ -36,8 +36,31 @@ implementation
 uses
   SysUtils, nyx.text, nyx.types, nyx.controls, nyx.callbacks, nyx.schema, nyx.contract,
   nyx.codec, nyx.source, nyx.studio.session, nyx.state, nyx.binding,
-  nyx.behavior, nyx.composition, nyx.interaction, nyx.catalog,
+  nyx.behavior, nyx.composition, nyx.interaction, nyx.interaction.policy, nyx.catalog,
   nyx.collections, nyx.collections.view.types;
+
+type
+  { Presentation-only reads must not evaluate unrelated runtime command gates.
+    This owner-free policy refuses such reads so the visibility test cannot
+    pass merely because its enabled/read-only answers happened to be harmless. }
+  TVisibilityCommandPolicy = class(TInterfacedObject, INyxRuntimeEnabledPolicy,
+    INyxRuntimeReadOnlyPolicy)
+  public
+    function GetAllowed: Boolean;
+    function GetReadOnly: Boolean;
+  end;
+
+function TVisibilityCommandPolicy.GetAllowed: Boolean;
+begin
+  Result := False;
+  raise ENyxModel.Create('Visibility must not evaluate an enabled command gate');
+end;
+
+function TVisibilityCommandPolicy.GetReadOnly: Boolean;
+begin
+  Result := False;
+  raise ENyxModel.Create('Visibility must not evaluate a read-only command gate');
+end;
 
 function CreateNyxInteractionFixture: TNyxDocument;
 var
@@ -368,6 +391,106 @@ begin
   end;
 end;
 
+function RunVisibilityTests: Integer;
+var
+  LDocument: TNyxDocument;
+  LPage: INyxPage;
+  LOuter: INyxDisclosure;
+  LInner: INyxDisclosure;
+  LRoot: TNyxNode;
+  LOuterRoot: TNyxNode;
+  LInnerRoot: TNyxNode;
+  LMemo: TNyxNode;
+  LMask: Integer;
+  LScopeVisible: Boolean;
+  LOuterOpen: Boolean;
+  LInnerOpen: Boolean;
+  LMemoVisible: Boolean;
+  LExpected: Boolean;
+  LRejected: Boolean;
+  LEnabled: INyxRuntimeEnabledPolicy;
+  LReadOnly: INyxRuntimeReadOnlyPolicy;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise ENyxModel.Create('Interaction visibility: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+begin
+  Result := 0;
+  LDocument := TNyxDocument.Create;
+  LRoot := nil;
+  try
+    LPage := NewNyxPage('visibility');
+    LDocument.AddPage(LPage);
+    LOuter := NewNyxDisclosure('outer');
+    LInner := NewNyxDisclosure('inner');
+    LInner.BodyColumn.Add(NewNyxMemo('nested-memo'));
+    LOuter.BodyColumn.Add(LInner);
+    LPage.Add(LOuter);
+    LRoot := RealizeNyxView(LDocument, LPage.Node);
+    LOuterRoot := LRoot.Find('outer');
+    LInnerRoot := LRoot.Find('inner');
+    LMemo := LRoot.Find('nested-memo');
+    for LMask := 0 to 31 do
+    begin
+      LScopeVisible := (LMask and 1) <> 0;
+      LOuterOpen := (LMask and 2) <> 0;
+      LInnerOpen := (LMask and 4) <> 0;
+      LMemoVisible := (LMask and 8) <> 0;
+      LRoot.Configure.Visible(LScopeVisible).Enabled((LMask and 16) = 0)
+        .ReadOnly((LMask and 16) <> 0).Done;
+      LOuterRoot.Configure.Value(LOuterOpen).Done;
+      LInnerRoot.Configure.Value(LInnerOpen).Done;
+      LMemo.Configure.Visible(LMemoVisible).Done;
+      LExpected := LScopeVisible and LOuterOpen and LInnerOpen and LMemoVisible;
+      Check(NyxInteractionVisible(LMemo) = LExpected,
+        'nested disclosure and ancestor visibility obey the current state');
+      Check(NyxInteractionVisible(LOuterRoot.Part(NyxPart('header'))) = LScopeVisible,
+        'closing a disclosure never hides its own header');
+      Check(NyxInteractionVisible(LInnerRoot.Part(NyxPart('header'))) =
+        (LScopeVisible and LOuterOpen),
+        'a closed outer disclosure hides an inner header');
+      Check(NyxInteractionVisible(LMemo) = NyxInteractionPolicy(LMemo).Visible,
+        'presentation and complete interaction policies agree on visibility');
+    end;
+    LRoot.Configure.Visible(True).Done;
+    LOuterRoot.Configure.Value(True).Done;
+    LInnerRoot.Configure.Value(True).Done;
+    LMemo.Configure.Visible(True).Done;
+    LEnabled := TVisibilityCommandPolicy.Create;
+    Check(Supports(LEnabled, INyxRuntimeReadOnlyPolicy, LReadOnly),
+      'the probe exposes both runtime command constraints');
+    LRoot.AttachEnabledPolicy(LEnabled);
+    LRoot.AttachReadOnlyPolicy(LReadOnly);
+    try
+      Check(NyxInteractionVisible(LMemo),
+        'geometry visibility reads no enabled/read-only runtime gate');
+    finally
+      LRoot.DetachReadOnlyPolicy(LReadOnly);
+      LRoot.DetachEnabledPolicy(LEnabled);
+    end;
+    LRejected := False;
+    try
+      NyxInteractionVisible(nil);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'nil does not silently become a visible tree');
+  finally
+    LRoot.Free;
+    LDocument.Free;
+  end;
+end;
+
 function RunNyxInteractionTests: Integer;
 var
   LDocument: TNyxDocument;
@@ -394,7 +517,7 @@ var
   end;
 
 begin
-  Result := RunInteractionPolicyTests + RunCapabilitySchemaTests;
+  Result := RunInteractionPolicyTests + RunCapabilitySchemaTests + RunVisibilityTests;
   LDocument := CreateNyxInteractionFixture;
   LWorkspace := TNyxSourceWorkspace.Create;
   LSession := TNyxStudioSession.Create;

@@ -67,10 +67,94 @@ function DecodeNyxJSON(const ASource: TNyxText): TJSONData;
 function EncodeNyxJSONString(const AText: TNyxText;
   AStrict: Boolean = False): TNyxText;
 
+{ Admit one text value without allocating its quoted representation or a JSON
+  tree. Return the exact UTF-8 byte length of EncodeNyxJSONString, including
+  quotes and optional solidus escapes. Malformed UTF-8/UTF-16 and a quoted value
+  beyond NyxMaximumJSONBytes raise ENyxJSON. Control characters, NUL, empty names
+  and Unicode normalization retain their original meaning. This synchronous
+  query borrows the text only; it publishes no cache or mutable JSON value. }
+function NyxJSONStringByteLength(const AText: TNyxText;
+  AStrict: Boolean = False): Integer;
+
 implementation
 
 uses
   nyx.state;
+
+function NyxJSONStringByteLength(const AText: TNyxText;
+  AStrict: Boolean): Integer;
+var
+  LIndex: Integer;
+  LScalar: Integer;
+  LBytes: Integer;
+begin
+  Result := 2;
+
+  if Length(AText) > NyxMaximumJSONBytes - Result then
+  begin
+    raise ENyxJSON.Create('JSON string exceeds 4 MiB UTF-8 input budget');
+  end;
+  LIndex := 1;
+  while LIndex <= Length(AText) do
+  begin
+    LScalar := Ord(AText[LIndex]);
+
+    if LScalar <= $7f then
+    begin
+      Inc(LIndex);
+      case LScalar of
+        8, 9, 10, 12, 13, 34, 92:
+          begin
+            LBytes := 2;
+          end;
+        0..7, 11, 14..31:
+          begin
+            LBytes := 6;
+          end;
+        47:
+          begin
+            LBytes := 1;
+
+            if AStrict then
+            begin
+              LBytes := 2;
+            end;
+          end;
+        else
+          begin
+            LBytes := 1;
+          end;
+      end;
+    end
+    else
+    begin
+
+      if not NyxNextScalar(AText, LIndex, LScalar) then
+      begin
+        raise ENyxJSON.Create('JSON string contains malformed Unicode');
+      end;
+
+      if LScalar <= $7ff then
+      begin
+        LBytes := 2;
+      end
+      else if LScalar <= $ffff then
+      begin
+        LBytes := 3;
+      end
+      else
+      begin
+        LBytes := 4;
+      end;
+    end;
+
+    if LBytes > NyxMaximumJSONBytes - Result then
+    begin
+      raise ENyxJSON.Create('JSON string exceeds 4 MiB UTF-8 input budget');
+    end;
+    Inc(Result, LBytes);
+  end;
+end;
 
 type
   {$ifdef PAS2JS}

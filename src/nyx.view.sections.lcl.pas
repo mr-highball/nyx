@@ -34,6 +34,9 @@ type
     the candidate. Its receiver must outlive the section and pending handles. }
   TNyxLCLSectionConfigure = procedure(ARenderer: TNyxLCLRenderer) of object;
 
+  { Managed native section owner. Its accepted renderer is a borrowed lookup
+    projection, while the caller's slot/theme and configurator receiver remain
+    borrowed for the complete lifetime of this owner and pending changes. }
   INyxLCLViewSection = interface(INyxViewSection)
     ['{A949C907-AC0B-4B4F-883C-476746278879}']
     { Borrow current renderer for control lookup/event subscription. Do not
@@ -44,8 +47,10 @@ type
     property Renderer: TNyxLCLRenderer read GetRenderer;
   end;
 
-{ Host is an empty dedicated child of a live native parent. Its parent must also
-  outlive section/change handles because hidden parking hosts are siblings.
+{ Host is an empty dedicated child of a live native parent. It and its parent
+  outlive section/change handles. Private owned presentation planes remain under
+  this stable slot through preparation, preview and rollback; only visibility
+  changes, so accepted and candidate descendant HWNDs are never reparented.
   Observer is managed; host/configurator receivers remain explicitly borrowed.
   A nonnil theme is borrowed and must outlive the section and pending handles;
   ordinary renderer admission snapshots it into each prepared view.
@@ -61,11 +66,40 @@ uses
   SysUtils, Forms, ExtCtrls, nyx.editing, nyx.editing.lcl, nyx.schema;
 
 type
+  { Target aliases stay inside this native adapter and its shared state machine. }
   TSectionHost = TWinControl;
+  { Focus is borrowed only while the accepted renderer remains owned. }
   TSectionFocus = TWinControl;
+  { The slot's original parent is an exact publication-allocation fence. }
   TSectionParent = TWinControl;
+  { Every plane contains an ordinary independently owned native renderer. }
   TSectionRenderer = TNyxLCLRenderer;
+  { A caller-owned configurator must outlive all prepared publications. }
   TSectionConfigure = TNyxLCLSectionConfigure;
+  { Private recognized child of one stable slot. The marker borrows its exact
+    section, whose publication leases outlive every pending plane. The section
+    owns its accepted plane; a publication owns only its unaccepted candidate or
+    the previous plane transferred at commit. No reverse interface cycle exists. }
+  TSectionPlane = class(TPanel)
+  private
+    FSlot: TWinControl;
+    FSection: TObject;
+  public
+    constructor CreateFor(ASlot: TWinControl; ASection: TObject);
+  end;
+
+constructor TSectionPlane.CreateFor(ASlot: TWinControl; ASection: TObject);
+begin
+  inherited Create(nil);
+  FSlot := ASlot;
+  FSection := ASection;
+  Visible := False;
+  BevelOuter := bvNone;
+  Font.Assign(ASlot.Font);
+  SetBounds(0, 0, ASlot.ClientWidth, ASlot.ClientHeight);
+  Anchors := [akLeft, akTop, akRight, akBottom];
+  Parent := ASlot;
+end;
 
 function SectionParent(AHost: TSectionHost): TSectionParent;
 begin
@@ -87,22 +121,9 @@ begin
   Result := (AHost <> nil) and (AHost.Parent <> nil) and (AHost.ControlCount = 0);
 end;
 
-function NewSectionParking(AHost: TSectionHost): TSectionHost;
-var
-  LPanel: TPanel;
+function NewSectionPlane(AHost: TSectionHost; ASection: TObject): TSectionHost;
 begin
-  LPanel := TPanel.Create(nil);
-  try
-    LPanel.Visible := False;
-    LPanel.BevelOuter := bvNone;
-    LPanel.Parent := AHost.Parent;
-    LPanel.Font.Assign(AHost.Font);
-    LPanel.SetBounds(AHost.Left, AHost.Top, AHost.ClientWidth, AHost.ClientHeight);
-    Result := LPanel;
-  except
-    LPanel.Free;
-    raise;
-  end;
+  Result := TSectionPlane.CreateFor(AHost, ASection);
 end;
 
 procedure FreeSectionParking(var AHost: TSectionHost);
@@ -110,9 +131,41 @@ begin
   FreeAndNil(AHost);
 end;
 
-function SectionPlacementMatches(AHost: TSectionHost; ARenderer: TSectionRenderer): Boolean;
+function SectionPlaneMatches(APlane, AHost: TSectionHost;
+  ASection: TObject): Boolean;
+begin
+  Result := (APlane is TSectionPlane) and
+    (TSectionPlane(APlane).FSlot = AHost) and
+    (TSectionPlane(APlane).FSection = ASection) and
+    (APlane.Parent = AHost) and (APlane.Left = 0) and (APlane.Top = 0) and
+    (APlane.Width = AHost.ClientWidth) and (APlane.Height = AHost.ClientHeight);
+end;
+
+function SectionRendererMatches(APlane: TSectionHost;
+  ARenderer: TSectionRenderer): Boolean;
 var
   LControl: TControl;
+begin
+  Result := False;
+
+  if (APlane = nil) or (ARenderer = nil) or (ARenderer.Root = nil) then
+  begin
+    Exit;
+  end;
+  ARenderer.Events.Scheduler.RequireUI;
+  LControl := ARenderer.ControlFor(ARenderer.Root.ID);
+  Result := (LControl.Parent <> nil) and (LControl.Parent.Parent = APlane) and
+    (APlane.ControlCount = 1);
+end;
+
+function SectionPlacementMatches(AHost: TSectionHost;
+  ARenderer: TSectionRenderer; ASection: TObject; ACurrent: TSectionHost;
+  APreview: TSectionHost = nil): Boolean;
+var
+  LIndex: Integer;
+  LPlane: TSectionHost;
+  LCurrentFound: Boolean;
+  LPreviewFound: Boolean;
 begin
   Result := False;
 
@@ -120,15 +173,48 @@ begin
   begin
     Exit;
   end;
-
-  if ARenderer = nil then
+  LCurrentFound := ACurrent = nil;
+  LPreviewFound := APreview = nil;
+  for LIndex := 0 to AHost.ControlCount - 1 do
   begin
-    Exit(AHost.ControlCount = 0);
+
+    if not (AHost.Controls[LIndex] is TSectionPlane) then
+    begin
+      Exit; { Never ignore arbitrary caller-owned children. }
+    end;
+    LPlane := TSectionHost(AHost.Controls[LIndex]);
+
+    if not SectionPlaneMatches(LPlane, AHost, ASection) then
+    begin
+      Exit;
+    end;
+
+    if LPlane = ACurrent then
+    begin
+      LCurrentFound := True;
+
+      if LPlane.Visible <> (APreview = nil) then
+      begin
+        Exit;
+      end;
+    end
+    else if LPlane = APreview then
+    begin
+      LPreviewFound := True;
+
+      if not LPlane.Visible then
+      begin
+        Exit;
+      end;
+    end
+    else if LPlane.Visible then
+    begin
+      Exit; { Only this exact preview may expose an unaccepted candidate. }
+    end;
   end;
-  ARenderer.Events.Scheduler.RequireUI;
-  LControl := ARenderer.ControlFor(ARenderer.Root.ID);
-  Result := (LControl.Parent <> nil) and (LControl.Parent.Parent = AHost) and
-    (AHost.ControlCount = 1);
+  Result := LCurrentFound and LPreviewFound and
+    (((ARenderer = nil) and (ACurrent = nil)) or
+      SectionRendererMatches(ACurrent, ARenderer));
 end;
 
 procedure CaptureSectionFocus(AHost: TSectionHost; out AFocus: TSectionFocus;
@@ -149,20 +235,6 @@ begin
       Exit;
     end;
     LParent := LParent.Parent;
-  end;
-end;
-
-procedure RestoreSectionFocus(AFocus: TSectionFocus; const ASelection: TNyxTextSelection);
-begin
-
-  if (AFocus <> nil) and AFocus.CanFocus then
-  begin
-    AFocus.SetFocus;
-
-    if ASelection.Defined then
-    begin
-      SelectNyxLCLText(AFocus, ASelection);
-    end;
   end;
 end;
 

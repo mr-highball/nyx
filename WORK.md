@@ -2,6 +2,1641 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Column arrangement W1 — 2026-10-22
+
+### Current checkpoint — extension admission repair and cell context actions
+
+The previous goal turn made progress by removing the accumulated source-scope
+approval restrictions. Nyx-owned library implementations, base classes and public
+contracts are ordinary authorized work. The current continuation has new actual
+browser evidence and a concrete native performance prerequisite; no original
+criterion, W1/W2 packet or full goal is complete.
+
+The unchanged own08 ordinary browser journey eventually passes832 checks at
+measured1280x900, with an empty terminal warning/error log. Its complete13541-unit
+accepted project/source packet is saved. Earlier observation timeouts did not
+stop that application. Compact390x900 instead produces an actual failure at
+stage18/check318: Properties is queried before compact Inspector publication.
+Both terminal outcomes, the desktop packet and screenshots are retained under
+ignored build/qualification/studio-layout-own-08/browser. The failure remains;
+LayoutStep now waits on the existing public AwaitStudio fence immediately after
+its Inspector action. It preserves every original assertion and completion bound.
+This repair still requires browser execution.
+
+The original native own07 and process-local trace-depth own08 both hit the same
+900s full-journey budget, at stage17/check308 and stage18/check342 respectively.
+Their actual processes are joined, without functional passes or complete heaps.
+All1882 original own07 source pins remain fixed. Compact native and independently
+compiled own companions were not attempted by those first-failure wrappers.
+The visibility helper meanwhile passes381 shared checks on each actual target;
+the native disclosure control consumer passes30 interaction/34 complete-lifetime
+checks with a clean heap. These focused results do not close the full journey.
+
+A bounded sample of that exact checked native own08 executable now identifies
+layout visibility traversing NyxExtension -> NyxData(text) -> JSON parsing and
+allocation. Earlier GDB interrupt/fixture-path failures remain in ignored
+studio-stack-sample-01/02; sample03 captures the actual main-thread stack through
+a temporary Pascal DebugBreakProcess bridge and joins its exact inferior. This
+changes the next action from another equivalent full run to repairing name
+admission. NyxJSONStringByteLength now validates exact UTF-8/UTF-16 and counts
+the quoted wire budget without allocating a JSON string/tree. NyxExtension uses
+that admission and keeps the original name. The independent oracle fixture still
+  uses unchanged NyxData(name).AsText, covering controls/NUL/normalization,
+malformed Unicode, strict solidus escaping and the full4MiB boundary. It passes
+1918 native checks with a complete clean heap and1914 actual browser checks
+with an empty warning/error log. The count difference is the target-specific
+malformed UTF-8 versus UTF-16 corpus. Independent source review finds no mismatch.
+The fresh own09 native disclosure consumer also passes30/34 checks with a clean
+heap. Its unchanged full900s native Studio journey is currently live against a
+new fixed1883-file snapshot, while the compact browser repair is being observed.
+
+Lil' Scooty's managed accepted-cell Inspect/Copy actions now pass99 actual native
+checks with a complete clean heap and zero owned compiler warnings. Browser13
+compiles with zero owned/seven installed RTL warnings; actual execution remains
+required. Real nested contexts establish later accepted intent, while closing
+an inspector in a legacy Copy callback prevents queued host entry. Earlier
+09/11/12 failures remain: compound menu IDs were missing their required named
+parts. Pure command04 has70 native checks and a clean heap; its actual browser
+consumer now passes70 actual browser checks with an empty warning/error log.
+Browser13 desktop instead exposes an actual managed-interface lifetime fault
+after nested dispatch. Corrected14 queries optional interfaces into local owning
+references before assigning fields, avoiding the emitted constructor's duplicate
+field release. It preserves all13 assertions and adds retained-facade retirement
+checks; actual browser14 passes116 checks at measured1280x720 with an empty log.
+Its native UI and compact browser checks remain pending. The first14 receipt's
+phone filename does not establish a phone viewport: its measured dimensions are
+1280x720 and the corrected desktop receipt states that limit explicitly.
+These use injected clipboard authority. Managed
+cancellation cannot undo a Clipboard.write already entered at the OS/browser
+boundary; physical clipboard ordering and hardware input remain unqualified.
+
+All Root debugger jobs and preview host37 are joined; its loopback listener is
+absent. Both completed own08 tabs are closed and the viewport override resets.
+No LAN/Studio service or installed MCP configuration changed. Root owns the
+extension-admission repair, compact fixture fence and full W1 qualification;
+Lil' Scooty reviews those changes and prepares the next W2 representation/export
+prerequisite. Export preparation is saved privately and excluded from the current
+context repair. The same direct-field optional-interface pattern is also found
+in the existing event-scope constructor and remains a concrete follow-up.
+Actual concurrent source readers still coordinate stable snapshots.
+
+### Previous checkpoint — resource isolation qualified; full Studio performance open
+
+The previous goal turn made progress: resource isolation and immutable copy
+production qualified on both targets. The current continuation also qualifies
+the mounted copy-command lifecycle with58 native and58 actual browser checks,
+then target copy-input controls with51 native and39 actual browser checks at
+desktop and compact widths.
+AGENTS explicitly authorizes library, base-class, interface and public-contract
+changes without renewed file approval. Assignments coordinate concurrent work.
+
+The ordinary resource controller now synchronizes the actual sections containing
+its two resource faces and Open action, rather than every Studio section. Native08
+passes85 checks with a complete clean heap; browser09 passes78 at actual1280x900
+and390x900, with empty terminal warning/error logs. Both browser checkpoints are
+actually captured, visually inspected and acknowledged through their visible
+Continue action; the desktop image is retained. Compact image bytes were local
+to the observer loop, so its capture is visible in the tool record rather than a
+saved image file. Original assertions and the30s capture budget remain unchanged.
+The tests exercise actual dual-list binding, selection/filter/reset, physical Open
+enablement and an unrelated creator/control/draft/accepted-value conjunction.
+The numeric draft precondition proves physical12.75 versus accepted10 before the
+resource actions. These results qualify the exercised section behavior, not the
+full application, visual quality or a latency budget.
+
+Preserve the earlier native07 failure after83 checks with a clean heap: ordinary
+text Change had already admitted the supposed unfinished baseline. The corrected
+numeric precondition did not weaken the final preservation assertion. Earlier
+browser capture-acknowledgment timeouts remain failures; observation deadlines
+were never used as functional outcomes. Old own04 tab69 and section09 tab73 are
+absent on the next authoritative browser inventory, without a terminal outcome.
+The unchanged section09 desktop retry and compact rerun then produce the actual
+78/78 results above. Completed test tabs close and the viewport override resets;
+only the user's original two tabs remain.
+
+Full ordinary Studio own04 previously reaches stage12/check274 before its900s
+native deadline. Own05, containing the qualified resource repair, reaches
+stage13/check288 before the same900s deadline. Both exact native processes are
+joined, without functional passes or complete heaps;390 and their independently
+compiled own-export companions remain unattempted. Own05 compiles native,
+browser and source-worker consumers with zero owned warnings. Its compilers use
+a verified1882-file private source snapshot, allowing disjoint working-library
+integration to proceed. Failed artifacts and original assertions are retained.
+Reassessment after these two full-run failures changes the next action: one
+bounded current-source native profile must identify the dominating refresh phase
+before another full run. Old profile04 contains the former MoveHost mechanism
+and cannot establish current stable-plane costs. Profile06 uses the exact own05
+snapshot, existing clocks, full rebuild and a300s diagnostic bound. Its full
+compiler completes with zero warnings; the actual application then reaches
+stage1/check133 before its diagnostic deadline. Exec22364 and its process family
+are joined, without a functional pass or complete heap. Synchronous profile
+output also contaminates later phase timings. A byte-identical diagnostic with
+every active binary/log/heap/output path on the local workspace drive reaches
+stage3/check185 at the same300s deadline. Exec85120 is joined and its exact
+application is absent; no functional pass or complete heap is claimed. The local
+run consumes281.5 CPU seconds during an observed287.6 elapsed seconds before
+termination, so moving active I/O does not resolve the remaining CPU work. The
+different execution prefixes preclude comparing whole-run phase averages as a
+performance benchmark. Neither diagnostic grants full-journey acceptance.
+The original fixed1882-file source snapshot is also copied and byte-verified in
+local ignored build output for future compiler runs; helper working sources are
+separate and cannot be qualified by that older snapshot.
+
+The managed clipboard foundation retains native portable53/native-adapter36
+clean-heap checks and actual browser portable53/adapter56 with empty logs. They
+use injected authority, not real OS clipboard writes. The new immutable
+collection-copy producer05 passes46 native clean-heap checks and46 actual browser
+checks, also with empty warning/error logs. It copies exact accepted cells or
+explicitly selected source/page rows, with typed provenance and bounded TSV.
+Producer02/04 browser retirement failures and native03's failed candidate remain:
+fluent self returns retained the actual view/store in compiler-generated
+procedure-wide temporaries. Bounded fixture setup helpers release those owning
+returns before the unchanged real subscription-retirement conjunction. No
+product retention defect was inferred from the mistaken fixture lifetimes.
+The producer API, ownership and serialization are independently source-reviewed;
+its public usage is documented in collection-views.md.
+
+Mounted copy-command03 now passes58 native checks with a complete clean heap
+and58 actual browser checks with empty warning/error logs. The optional mount
+facet preserves earlier interfaces and captures immutable accepted data before
+canonical callbacks. Original input/epoch/source/view/selection/column guards,
+single-use completion, nested newer copies, disable/re-enable and retirement
+refuse stale authority. These are command/base lifecycle results.
+
+Copy-controls03 then exercises the actual renderer/mount and canonical key route:
+native51 checks pass with a complete clean heap, and browser39 checks pass at
+measured1280x720 and390x900 with empty warning/error logs. All566 source pins
+remain exact after execution. The fixture covers accepted Unicode/NUL/newlines,
+callback consumption/mutation/disable-ABA/nested copy/retirement, explicit filtered
+page versus selected source data and active-editor draft isolation. Native paired
+messages use a no-effect fallback sentinel; browser keys are synthetic DOM events.
+These results do not establish hardware input, OS editor shortcuts, system
+clipboard effects, visual quality or the remaining full W2 workflows.
+
+Lil' Scooty owns the new copy-command companions and necessary collection mount/
+browser/LCL/renderer input seams. The staged/ancestry input gate now applies to
+every table, including tables without authored arrangement; ordinary direct
+ready mounts retain their behavior. Current native target01 and corrected browser
+target02 consumers compile; the first browser target attempt retained missing
+Studio search paths as a harness failure. Copy-controls01/02 fixture compiler
+failures remain alongside the corrected03 results;03 has zero owned compiler
+warnings. The next W2 prerequisite is managed cell Inspect/Copy context actions
+with launch-time provenance and no mount/menu/prepared-command reference cycle.
+Lil' Scooty owns that disjoint public-library integration. No Root native UI
+reader remains, so the earlier focus/timing coordination pause has ended.
+Root owns resource/section consumers and full Studio qualification; neither
+assignment is a source permission gate. Preview host33 is identity-verified
+stopped/joined and port19133 has no listener. Preview host34 is also stopped/joined,
+with no listener on19134. Host35 is also identity-verified stopped/joined;19135 has
+no listener. Completed command/control test tabs are closed and temporary viewport
+overrides reset; only the original user tabs remain. No LAN/Studio service changes
+occur.
+Task03's current description is consolidated around these outcomes; its original
+seven acceptance criteria, pull checklists and two blockers remain intact.
+W1, W2, all original task criteria and the full goal remain open without credit.
+
+### Earlier qualification cohorts
+
+The previous goal turn made progress: actual native Studio section recovery74
+and source-import193 checks completed with clean heaps; unchanged own-export
+compilation exposed the missing-import defect and lower cleanup reached its
+retained failing heap. This continuation also executes the same193 source/import
+checks in the browser, with an empty terminal warning/error read and zero owned/
+seven installed RTL compiler warnings. That pure consumer does not establish a
+measured viewport, physical table interaction or full generated-app acceptance.
+
+AGENTS.md explicitly authorizes changes to Nyx-owned library implementations,
+base classes and public interfaces without renewed file-by-file approval. Source
+inventories and assignments coordinate actual concurrent readers; historical
+scope restrictions do not make library code immutable or require workarounds.
+
+Native section compilation02 completes all eight unit/program targets with zero
+warnings. The ordinary Studio section recovery consumer then passes all74 checks
+with a complete clean heap, including the added actual HWND/parent continuity,
+focused draft and grouped rollback checks. Its native capture is visually
+inspected. That executed fixture is A3145466; subsequent harness changes only add
+an ordinary browser button for the unchanged capture acknowledgment checkpoint.
+
+The lower native fixture02 fails a new scalar-selection predicate because its
+expected direction defaults to None while native capture explicitly reports
+Unknown. Correcting that native expectation retains the handle/focus/range
+predicates. Fresh native03 compiles and reaches all87 original/expanded section
+checks, but its final heap reports294 unfreed blocks/32559bytes. This is a failed
+qualification despite the terminal assertion count. The deliberate cleanup
+exceptions now reached by the test expose FPC destructor exception semantics;
+Lil' Scooty is reviewing an honest explicit-cleanup boundary. All actual native
+compiler/runtime readers are joined, and no source freeze remains from them.
+
+The existing full ordinary Studio browser own03 journey passes832 checks at
+1280px through its original query/event/file stages and added layout stages.
+Its terminal warning/error read is empty and its exact accepted Save/Open packet
+is retained. Independent compilation of that packet's unchanged F0F44F98 source
+then fails: layout expressions have no owning arrangement import. The repair
+adds that namespace to the existing custom-frame import reconciliation whitelist.
+The maintained sizing consumer adds handwritten-frame promotion, exact Unicode
+helper/import preservation, table-only/column-only first use, reset, duplicate
+avoidance and paired recovery checks. Native execution passes193 with a clean
+heap and zero compiler warnings; the corrected full own-app/export/generated
+companion journeys remain required. The old failed export remains unchanged.
+
+Browser focused compilation03 catches an incompatible capture-button callback
+argument before execution. Both fixtures now use the platform's mouse-event
+type. Focused Studio browser04 then catches a native-only AcquireExceptionObject
+call in the shared new retirement path. Native unit compilation04 is intentionally
+stopped and joined for that concrete portable-source defect before repair; it
+grants no compile/runtime acceptance. Lil' Scooty owns the portable shared
+section retirement and multi-member cleanup regressions. Root implements and
+receives independent review of the browser renderer's nonthrowing final cleanup;
+explicit Unmount remains fallible. Both-target cleanup qualification is pending.
+
+The old full-Studio compact cohort is explicitly abandoned because the same
+producer's wide export has the verified missing-import defect. Its bounded DOM,
+capture and Close observations expire; subsequent inventory still lists the
+original tab, so it is not claimed stopped or closed. Its obsolete-code outcome
+receives no further qualification credit. The exact old loopback host is stopped
+and joined, its listener is absent and the temporary viewport override is reset.
+The wide832 result and unchanged failed export remain retained. The focused193
+browser tab closes successfully. W1/W2 and all original task criteria remain open.
+The current prerequisite is both-target cleanup repair, fresh focused checks and
+the corrected complete Studio own-app/export/generated-companion journey.
+
+### Studio layout policies — authored defaults and admission
+
+The previous goal turn made progress by making library/public API change
+authority explicit in AGENTS.md; historical file-scope gates stay superseded.
+Actual browser workbench29 passes at both widths, and checked native unit-cache
+reuse advances the full Studio consumer.
+Full semantic journey04 remains qualified at241 native/browser checks, with zero
+owned warnings and a clean native heap.
+The current work is actual full-Studio own-app qualification under Lil' Scooty
+and enlarged table-workbench qualification under Root. Root's native25 run stops
+at the existing GetCursorPos assertion before physical launcher input, with a
+clean heap; desktop interactivity is an external condition, not a passing native
+journey. Browser25/27 expose fixture allocation errors before the new pin-scroll
+proof: the height-constrained TABLE owns scrolling, and its vertical scrollbar
+reduces a360-pixel border box to345 usable pixels, below the346 pin/center budget.
+Those exact failures and original assertions are retained. The corrected fixture
+borrows the real scroll owner and budgets360 client pixels using measured chrome.
+Native29 compiles in4.3s with zero warnings; browser29 compiles in6.9s with zero
+owned/seven installed RTL warnings. Actual browser29 passes1238 compact/1240 wide
+checks, including genuine middle displacement with both pins fixed, pinned F2
+drafts and focused filter/order/full-replacement handoff. Both terminal console
+reads are empty for this cohort. The exact source pins and fixture are retained;
+this is browser input evidence, not native or physical-device parity. Tab53 is
+closed, viewport reset, exact host30 stopped/joined and listener19130 absent.
+A read-only Pascal cursor diagnostic confirms Win32 error5 on GetCursorPos;
+it changes no cursor, window, desktop or input. Native29 runtime remains pending.
+Root and helper coordinate shared source readers and independent input surfaces.
+The additive A4384937 fixture30 preserves every29 line and adds accepted pinned
+Name Unicode and Score integer edits/restores through resident browser inputs
+and the native editor Return route. Both consumers compile with zero owned
+warnings. Actual browser30 passes1375 compact/1377 wide checks: every accepted
+edit has one exact typed Store/data-View update and revision, preserving peer,
+query, arrangement and authored source. These positive commits occur after the
+earlier constrained-scroll scope restores geometry; the earlier stage separately
+proves real middle displacement and pinned editor drafts. Both30 terminal log
+reads include the unexplained in-app MutationObserver error, so no clean-console
+claim is made. Source pins match; tab54/host31 are closed/stopped/joined, viewport
+reset and listener19131 absent. Native positive-commit execution remains pending.
+The current Studio packet has typed intents, an independent inspector, named
+semantic mutations, bounded opt-in reads and strict v8 discovery.
+Root added same-owner agent/history/pending regressions and extended the existing
+full-Studio journey before its unchanged Save/Open/generated-companion stages.
+
+First native qualification (`studio-layout-native-01`) passes discovery160 and
+pending-presentation284 with clean heaps. The semantic journey then FAILS on the
+actual reusable table override with `Column arrangement requires a table
+projection`, also with a clean heap. It is not accepted. The first two browser
+consumers compile only; browser01 has no executed qualification. Those readers
+are joined; artifacts/failure evidence remain in the existing local packet.
+
+Root has repaired the actual library admission boundary in collections.view,
+model and composition: raw reusable/part descriptors retain full data/schema/
+query admission without being guessed to be Lists. After references and cycles
+pass, private nonrecursive expansions validate their real primitive using the
+already materialized defaults. A pure projection guard also checks the actual
+selected content/viewport recipe without reloading resource data. The same
+strict table/typeahead/tree-paging/hierarchy checks remain required. No descriptor
+kind rewrite, policy-based Table guess or test narrowing is used. Independent
+review passes the corrected source and the maintained sizing fixture adds real
+same-document reusable-part and alternate-viewport regressions. An intermediate
+browser02 compile caught nonexistent content-rule members; that failed evidence
+is retained, the obsolete owned native02 compile is stopped/joined, and those
+reads are removed from the corrected source.
+
+Corrected native03 passes semantic109, sizing/admission176, discovery160 and
+pending-inspector284, all with clean heaps. Actual in-app browser03 passes
+semantic109, sizing176 and pending284. The semantic native/browser compilers
+report one owned warning: the older exhaustive command helper has no payload
+branch for the four appended layout actions. Those focused query-only runs do
+not execute that older helper, so its warning is not dismissed as covered.
+The other native builds have zero warnings; each browser build also has seven
+installed RTL warnings. All03 readers are joined; tab49 is closed, its viewport
+override reset, and exact loopback host25 stopped/joined with listener0.
+
+Root supplied valid typed payload/baseline branches for all four actions. The
+FULL existing semantic journey in native/browser04, without the query-only
+define, now passes241 on each target. Native has zero compiler warnings and a
+clean heap; browser has zero owned/seven installed RTL warnings and no terminal
+console errors in that test tab. The exact sources remain unchanged through
+both checks. Both readers are joined; tab50/host26 are closed/stopped/joined,
+the viewport is reset and listener19126 is absent. This executes the exhaustive
+ordinary-intent helper and its original large-domain/source assertions; it is
+not an empty warning-suppression fallback. The policy unit also receives missing
+per-type purpose comments and one-field-per-line declarations, with unchanged field order.
+The Studio journey's final saved policy now retains its earlier nondefault feature
+mask so its future generated companion can exercise that exact authored choice.
+
+Lil' Scooty completed the additional model/composition sizing regression and
+the middle-scroll/BOTH-pin and focused draft filter/order/replacement assertions
+in the maintained table workbench (897370CD). Root reviewed geometry, editor/
+identity, scalar-caret and restoration paths. The corrected AFC4F9B9 fixture29
+now has the actual browser evidence above; earlier C0A10E28 and failed25/27
+cohorts retain their exact historical identities. The additive SAME-owner
+positive-commit fixture30 now has the browser proof above. Its native Return
+producer still requires executed qualification; prior native cohorts do not
+silently gain these new assertions.
+
+Lil' Scooty owns actual full-Studio input, Save/Open and own generated-native
+application qualification via the existing query-authoring target. Own01/02 are
+joined after their300/900s compiler budgets; their advancing compiler output and
+failure evidence remain retained. The build script separates compiler headroom
+(default1800s) from runtime checks and drains joined process logs before hashing.
+Explicit compatible native unit caches retain ordinary source/dependency checks,
+all safety flags and fresh outputs; empty cache options retain the cold rebuild.
+The exact newly emitted companion source precedes caches. Root and helper source
+review and PowerShell parsing pass; actual own03 cache reuse compiles the ordinary
+native Studio consumer in7.4s with zero warnings. Its matching browser consumer
+and source worker compile. Its actual native1280 journey reaches stage7/check236
+before the900s runtime deadline, with no assertion failure but no terminal PASS.
+Own03 is joined; all713 read-closure source pins match, partial heap and exact
+timeout evidence remain retained. Native390/export/generated stages were not
+reached. No automatic larger-budget rerun is substituted for investigating cost.
+
+Root's existing-macro phase measurements01, the same source with only heap
+tracing omitted, and detailed renderer02 are all joined after their deliberate
+120s diagnostic bounds. They preserve the original assertions and prove no full
+acceptance or clean heap. First shell paints take14.4s with tracing and10.9s
+without; subsequent paints remain costly. This comparison is diagnostic, not a
+release benchmark, and shows tracing is not the sole cost. Detailed02 localizes
+17–23s to shell publication, with much smaller individual layout passes. Native
+section diagnostics03/04 are also joined with all713 source pins unchanged.
+Document/input copying is small; three publications spend9.3–10.4s in old/new
+MoveHost, compared with0.17–0.27s destroying the old renderer. Installed LCL
+SetParent removes the old parent and destroys allocated handles, explaining why
+moving intact Pascal control objects still recreates the native handle cohort.
+This is the measured product-repair direction, not a reason to drop admission,
+final updater Sync, input capture or rollback. Lil' Scooty now owns reversible
+same-parent native section staging/activation in view.sections.lcl/adapter and
+necessary renderer support, with focused existing section regressions. Root
+coordinates review/qualification; no native source reader remains live. The build
+script now forces a real profile rebuild even with explicit caches, because
+normal source checks do not certify a previous unit's define history; ordinary
+cold/cached behavior is unchanged. Root reviewed the narrow change and AST parse
+passes. The ordinary full Studio browser consumer from own03 is independently
+running at1280; its exact existing wrapper/worker/runtime are staged and a
+temporary loopback host is live. Initial navigation observation expired, but
+the same tab subsequently loaded and reported stage1/check131. Later DOM reads
+intermittently time out; no failure/PASS is inferred and no duplicate run is
+started. The same actual browser run has since advanced to stage7/check234,
+with336 polls and190 posts/seven commits. Host identity/listener are verified
+live; a later AX observation timed out and reset the automation kernel, not the
+page. Rebind the same tab rather than restarting this advancing regression.
+Root owns that observing handle and later compact/own-generated checks.
+The native repair also includes the grid's focus-exit validation guard, so
+visibility transitions cannot accept or discard an unfinished legacy cell edit.
+Root independently adds real allocated native-window and parent continuity
+assertions to the existing Studio section consumer, covering factory refusal,
+grouped rollback, retained Chrome, complete-frame and embedding-host refusal.
+All earlier assertions remain; this addition is source-reviewed only while
+Lil' Scooty finishes the native implementation and lower-level regressions.
+The first source-ready repair also adds guarded rollback focus/caret restoration
+and real legacy/arranged grid draft checks. Root review found and closed the
+initial unguarded focus-recovery tail in source. Independent cleanup review then
+found reentrant Close could free the accepted plane during renderer destruction,
+and a candidate cleanup exception could strand its plane in the stable slot.
+Root intentionally stopped and joined native compile01 for these concrete source
+defects; it is exit1 with no runtime or acceptance, not a timeout-triggered retry.
+Browser compile01 failed an orchestration preflight before reading source; its
+native manifest was still being written. Those records remain retained.
+Lil' Scooty is repairing native retirement with busy/exact-local detachment and
+all-attempt cleanup before the fresh02 consumers. No source reader remains live.
+The original browser Studio tab subsequently reached stage11/check267,466 polls
+and268 posts/ten commits. Later observation calls time out while inventory still
+lists that exact tab; it remains preserved, without a duplicate test run.
+Cleanup repair02 is now implemented: explicit Close leases its owner, final
+destruction rejects resurrection, and both paths detach exact renderer/plane
+duties before callbacks. Native publication cleanup attempts every exact owned
+release while keeping the owner alive and preserving the first Exception.
+The real factory fixture adds explicit/final Close reentry plus two independent
+cleanup failures during candidate Cancel. Root reviewed the final snapshot.
+Both browser section consumers02 compile with zero owned/seven installed RTL
+warnings each; their readers joined with unchanged source pins. Native02 is
+currently compiling the same snapshot through explicit grid/renderer/section
+units and existing Studio consumers. Root owns its live job; no runtime pass is
+claimed. The missing visible capture acknowledgment in the old browser fixtures
+will be added in Pascal after these readers join, keeping their original capture
+checkpoint and time bound. The existing helper is meanwhile implementing the
+unwired W2 portable clipboard prerequisite in new files only; existing frozen
+W1 sources remain unchanged, and actual W1 failures take priority.
+Full W1/W2 and all seven original criteria stay open; compile evidence does not
+accept interaction.
+
+### Manager operations — expanded interaction qualification
+
+The previous goal turn made progress by removing the remaining library-edit
+restrictions from durable guidance. This turn implements and qualifies native
+Escape cancellation through the original input epoch and resize request. The
+same workbench adds real native cancel/original-release/fresh-drag input and
+browser separator-key cases, preserving all earlier assertions.
+
+Native qualification 21 passes 1232 checks at 1280 px and 1234 at 390 px, plus
+243 activation checks at each width and 127 popup-lifetime checks, all with clean
+heaps and zero compiler warnings. Browser qualification 24 passes 1151/1149
+actual wide/compact checks with zero owned/seven installed RTL warnings. Fixture
+C0A10E28 is the same on both targets; native grid5336709D/selection2FBD6758 and
+browser54C0B843 have independent source review. The local packet's
+column-manager-qualification-21-24.json records the exact source/results. All
+compiler/runtime/host sessions are joined, temporary tabs44–48 are closed and
+the exact loopback listeners are gone. No physical-device/AT or clean-console
+claim follows from these checks.
+
+Browser21 failed the unchanged rapid Home/Enter -> End/Enter assertion at BOTH
+widths. Diagnostic22 proved that a delayed ResizeObserver notification canceled
+the newer width300 request despite original Context=True and Geometry=True.
+RowBoundsChanged now retains the original proposal leases and cancels only an
+actual action-appropriate mismatch while both original slots still match. Fit
+uses its existing context/metric/final fence, not uninitialized drag geometry.
+All diagnostic code is removed; failures remain. Browser23 compiled only; its
+host was stopped before loading while review corrected that Fit distinction.
+
+The next product packet is now implementing Studio authored layout policies through the existing
+intent/inspector/semantic collection owners, including strict v8 discovery,
+raw absent versus explicit defaults, ordinary inheritance/masks, paired history
+and incomplete numeric drafts. Lil' Scooty owns collectionintent, collections,
+collectionedits/schema, agents.collections, session.collections and sourcejobs
+capture routing. Root owns view-state plus browser/LCL draft retention and the
+maintained agent/schema/Studio/generated-source tests. These are disjoint editing
+assignments, not file restrictions. Full W1 also still needs actual middle-scroll
+proof with BOTH editable pins and a draft through filter/order/replacement.
+W2 and the original seven criteria remain open.
+Root's independent LayoutEditorDraft capture/copy/restore/project-clear paths
+are source-ready in view/browser/LCL; the maintained MCP discovery fixture now
+adds v8/raw-layout admission and strict-selector checks while retaining earlier
+version assertions. These Studio additions are not compiled or executed yet.
+Lil' Scooty is implementing the corresponding typed intent/inspector/semantic
+owners. Join the source-ready handshake, review the combined snapshot and extend
+the maintained agent/full-Studio/generated-companion journeys before claiming
+that authoring packet accepted.
+
+The cancellation review covers Nyx's ordinary non-XOR LCL grid. Arbitrary host
+customization of LCL's private XOR sizing state has no qualification evidence.
+
+Previous qualification 20 covers W1 native editing through geometry changes: the observed
+in-show refresh is repaired and the unchanged compact/wide consumer plus relevant
+activation/lifetime/browser checks pass. The remaining W1 finish line stays open.
+The same workbench keeps all earlier assertions.
+The real manager now has a heading, a visible Close button as safe initial focus,
+and recovery resets after the fields. Close queues through the existing original
+main/form admission and keeps unfinished input. Contextual action rows use the
+normal 520 px window; compact windows stack them. Added private/public bridge
+types have their own purpose comments, including borrowed platform ownership.
+
+The expanded browser journey passes 1082 checks at actual 1280 px and 1080 at
+390 px, including real Set width/default/Fit, complete order, both pin edges,
+unpinning, compact pin suspension, fresh editing, Close/draft retention and prior
+callback/data/source/peer invariants. Qualified fixture CD3AF01B and browser build20
+are recorded in column-manager-actions-browser-results-20.json in the existing
+local qualification packet. Browser compilation retains zero owned/seven RTL
+warnings; the unexplained in-app MutationObserver error remains a caveat.
+
+Actual CUA pointer input also changes Name from 160 to 200 px at wide allocation
+and 160 to 190 px at compact allocation, leaving the peer at 160. Real compact
+keys preview 191 then Escape restores 190; Home/Enter accepts 50 and End/Enter
+accepts 300. Explicit manager Reload confirms the accepted width. These manual
+observations are separate from automated counts and physical-device/AT claims.
+Qualification 20 also checks the immediate stale-status explanation on reopening
+a preserved form after external resize, without replacing unfinished input.
+
+Qualification 20 passes 1184 native table checks at 1280 px and 1186 at 390 px,
+the focused 243 activation checks at both widths and 127 popup lifetime checks,
+with clean heaps. This includes the previously failing compact fresh-F2 draft
+and cursor-restoration assertions, without changing their inputs or predicates.
+All three native builds have
+zero warnings; the browser build retains seven installed RTL warnings and none
+in owned sources. The same consumer now checks an immediate stale-form warning
+on reopen while preserving the exact unfinished Score draft and explicit Reload.
+
+The retained native failures exposed two distinct issues. Product code now parks
+button-focus drafts in existing dormant storage, covers pointer/programmatic
+setup as well as SetFocus, and suppresses internal update Click. It retains the
+original input/epoch, view/map/mutation and intention serials across preparation.
+Separately, the fixture's repeated fake WM clicks did not move the actual screen
+cursor. Installed Win32/LCL double-click classification therefore skipped Click
+on the late press. The same fixture now supplies matching real cursor/client
+positions and distinct valid hit points, then restores the caller cursor. Every
+original assertion and WM down/up path remains. Diagnostic source blocks are
+removed; failed artifacts and clean heaps remain in the local packet.
+
+Root owns shared/native implementation and qualification; Lil' Scooty owns the
+same maintained fixture and the next pointer/key/Escape cases. Qualification 20
+used a frozen reviewed source snapshot; no browser input overlapped native runs.
+All readers and the exact loopback host are joined, tabs 42/43 are closed and its
+listener is 0. The source refinement sampling stale status AFTER Show is now
+included in native/browser 20; retained actions still use their original baseline.
+Actual native pointer cancellation on Escape is the next discovered W1 gap.
+Native diagnostics 15/16 compile without warnings and
+execute the same compact assertion with clean heaps, retaining failures. They
+prove F2 starts with mode=False at correct Name/f coordinates, then shows Fox
+instead of the draft. The final public restoration imports exact Name/f text as
+Editing=False/dormant1. Its fresh-show observer sees dormant1, Ready=True,
+Updating=False and no suspension/composition, but exits before the canonical
+item/matching branch; a later Updating=True show cannot promote it. This rules
+out both a lost import and the proposed already-active-F2 explanation.
+
+Diagnostics 17/18 prove all actual LCL visibility, enablement, handle, focus and
+edit-permission checks pass. Diagnostic 19 captures the cause: GridResized invokes
+SizeGridColumns -> whole Refresh -> RenderArrangedGrid -> CaptureColumnEditor
+INSIDE the first actual DoEditorShow, hiding it before dormant promotion. Native
+heaps remain clean. No missing focus turn or broader focus redesign is inferred.
+The qualified repair coalesces geometry separately from stale cell maps, through
+the existing idle/refresh queue. It lets original input/draft promotion finish,
+then waits for all native frames, validation, composition and sizing to end
+before reflow. Successful layout or retirement consumes the flag; no new timer,
+position barrier or callback queue is introduced. Independent source review at
+native 814DDD1B/grid 4D276B3A is followed by actual qualification 20 on those same
+product sources and fixture CD3AF01B. All 15–19 readers are joined and temporary traces,
+including the diagnostic EditorHide override/private field, are removed.
+The next active batch implements native Escape cancellation and extends THIS
+consumer with cancelled/fresh real native drags and browser separator keys.
+Root owns native mount/grid/selection source, documentation and qualification;
+helper owns only tests/nyx_table_query_controls.lpr and has an actual edit task.
+After external resize it must explicitly Reload the retained stale manager before
+resetting it. All earlier draft/data/query/peer/source assertions remain required.
+W1/W2/full acceptance stay open; no user input or approval is missing.
+
+### Visible column manager and canonical activation qualified — 2026-10-23
+
+The user authorizes necessary library/base-class/interface and consumer changes.
+Assignments coordinate concurrent edits; they do not make contracts immutable or
+require renewed file-scope permission.
+
+The maintained table journey now passes 981 native checks at each 1280/390 px
+allocation with clean heaps, and 936 browser checks at each actual 1280/390 px
+iframe width. Native build06 and browser build09 use the same fixture source,
+pinned in column-manager-canonical-source-pins-06.json in the existing local
+binding-retirement qualification packet. Native compilation has zero warnings;
+browser compilation has zero owned and seven installed RTL warnings.
+
+The persistent Columns launcher opens a real Nyx compound through public optional
+mount/presenter contracts and the original view-owned preferences. The journey
+exercises hide/show, all-hidden recovery, raw popup Close/reopen, default reset,
+stale-form refusal and explicit Reload, disable/re-enable, exact unfinished numeric
+form input, and unrelated Unicode cell text. Hidden cell text is dormant: revealing
+it neither commits nor claims editing/focus authority, and fresh native F2 resumes
+the compatible draft. Accepted rows, query, independent peer and authored source
+remain unchanged.
+
+Canonical activation checks exercise real scalar action, semantic callback and
+legacy Click delivery through Click, Enter and held Space, including cancellation
+after blur, disable and suspension. Browser checks additionally cover consumed
+KeyUp, Escape, prevented DOM Click, two Clicks followed by DoubleClick, and callback
+Unmount without stale default/legacy tails. These are Win32-message and DOM-event
+harness checks; physical hardware, IME and assistive technology remain separate.
+
+The preceding manager cohort also passes 243 focused native activation checks at
+both widths and 127 shared lifetime checks with clean heaps. Matching focused
+browser activation passes 378 at both widths; the expanded shared lifetime
+consumer passes 127 at both actual widths. Scheduler results remain the earlier
+78 native/52 browser checks; no unchanged scheduler rerun or new credit is claimed.
+Some in-app tabs still report an unexplained MutationObserver non-Node error;
+no clean-console claim is made. Failure logs are retained: the original hidden
+draft loss, fixture callback spelling/bitmap namespace errors, nil application
+teardown and design/runtime subscription mismatch are distinct from passing runs.
+
+Actual browser manual review of this same owner at wide/compact widths shows
+bounded popup width and internal scrolling. Native GetFormImage captures retain
+the actual manager controls. Heading hierarchy, initial focus on Restore all
+defaults, and table naming inherited from the launcher caption still need polish;
+these observations do not establish complete accessibility or visual acceptance.
+All current regression/review tabs are closed, the temporary loopback host is
+stopped with no listener, and actual compiler/runtime/host sessions are joined.
+
+Lil' Scooty now owns the next additions to tests/nyx_table_query_controls.lpr:
+real manager width/default/Fit, order, both-edge pins and compact overflow in this
+same journey, plus the concrete internal cursor-restore Click/draft regression.
+Root owns necessary adapter repairs and qualification. The latter is a
+source-derived candidate, not an observed runtime failure. Remove the fixture's
+private E-drive assumption while retaining a portable evidence-output assertion.
+W1/W2, full resize/input/accessibility/parity and the full goal remain open.
+
+### Earlier arrangement and retirement checkpoints
+Current result on 2026-10-23: shared terminal `TNyxLiveBindings.Retire` is
+implemented. The maintained portable suite passes 85 native checks with a clean
+heap, including 21 new retirement checks. The existing browser binding journey
+passes 133 checks at both actual 1280 and 390 px frame widths. The immutable
+`INyxColumnFitMeasurement` and nine counted-sample lifetime checks are included
+in 153 sizing/source checks, passing natively with a clean heap and in the
+browser at both widths. These totals overlap existing coverage; they do not
+accept W1 or prove callback-driven renderer disposal.
+
+Real compilation exposed unsupported COM-interface record members in both the
+new measurement and browser remount draft storage. Measurement now uses a
+specialized immutable interface; browser transfer facts use managed class leases
+with typed borrowed views. Independent helper review covers both repairs.
+Missing browser DOM-factory forward/focus bridge and explicit collection imports
+were repaired; obsolete exhaustive-case warnings retain invalid-family refusal
+through ordinal guards. Initial failing builds are retained beside successful
+runs. The two final browser compiles have only seven unchanged upstream Classes
+warnings each; the native portable/sizing and maintained LCL consumer compiles
+have no warnings. Full maintained LCL table interaction runs now pass 819 checks
+at both 1280 and 390 px with clean heaps. They exposed and repaired undefined
+initial selection lookup. The separate new arrangement fixture now uses actual
+reusable owners for independent instance stores, preserving its independence
+assertion and the original accepted query journey. Browser table runs pass 748
+checks at both widths against that same fixture. Static interface arrays in the
+new fixture were changed to two allocated managed slots for pas2js. Full W1
+input/manager/lifetime remains open.
+
+The minimal `INyxBindingOwnedState` holder now passes 11 native checks with a
+clean heap and 11 actual browser checks, with no warnings in either compile.
+It shares one actual owned state across entered/successor leases and frees it
+once after the final release. A native UTF-8 comparison warning in its first
+test build was repaired with an explicit portable text literal; failure/warning
+logs remain. Root still must consume this holder in renderer generations.
+
+The temporary loopback host and its test tab are stopped/closed. Local evidence
+is in the existing qualification packet's `binding-retirement-validation-20261022`
+child, including compiler/run logs and observed browser result JSON. Next source
+work is actual generation-owned renderer teardown and the Fit-only Click route.
+Lil' Scooty handed off additive native and browser renderer-lifetime regressions
+in `tests/nyx.test.binding.lcl.pas` and `tests/nyx_binding_browser_tests.lpr`.
+Those additions remain uncompiled/unexecuted until root's generation integration;
+the passing 133-check browser artifact retains its earlier exact source identity.
+
+On 2026-10-22 the user explicitly removed file-scope approval restrictions and
+confirmed permission to change the library. AGENTS.md is now durable project
+guidance, not a chronological scope journal. Its previous contents are archived
+with the existing local evidence packet. Root21/five-doc caps, proposed-file
+approval requests and the source-scope blocked audit are historical and
+superseded. The same applies to the proposed popover prerequisite: it needs
+implementation and validation, not another file-scope answer. Historical records
+below retain their evidence but do not reimpose those permission gates.
+
+Current deliverable: terminal retirement of entered live bindings, followed by
+generation-owned renderer lifetimes and the actual Fit-only Click route. This
+continues W1's original controls/lifetime criteria. No original criterion or
+completion credit is claimed from this prerequisite alone.
+
+The shared binding, sizing, state-holder and next native/browser test changes
+have been handed off. Scooty owns browser generation integration in
+`src/nyx.render.browser.pas` and its browser regression consumer. Lil' Scooty
+owns matching native integration in `src/nyx.render.lcl.pas` and
+`tests/nyx.test.binding.lcl.pas`. Shared-unit changes are coordinated directly;
+both agents review the opposite renderer when source is ready.
+These are disjoint editing assignments, not user permission boundaries. Root
+coordinates stable source snapshots for tests. Live compiler/runtime handles
+are recorded in private current state while running. Necessary prerequisites may be
+added through ordinary ownership coordination without another user approval.
+
+A real `LiveBindings.Dispatch(ntClick)` executes authored actions/state work.
+Entered commands can outlive renderer retirement. The reviewed design retains
+that behavior: `Retire` immediately revokes weak resource authority, Sync
+receivers and the exact state subscription, while generation owners retain
+entered coordinator/root/owned-state memory until calls unwind. Same-store
+replacement must not retain an obsolete validation subscription. Preserve raw
+Create/Activate/Free and committed-notification semantics. Guard entered Sync,
+helper, finally and diagnostic tails; do not replace authored Click with Signal.
+
+The existing EE75/8FA design and native ownership/frame addenda remain relevant
+technical evidence. Portable regressions must cover terminal/idempotent Retire,
+activation refusal, no-assignment OnSync retirement and same-store replacement.
+Renderer qualification must also prove validator/notification/updater retirement,
+owned-state transfer, no stale UI tails and ordinary semantic/legacy Click once.
+Native Sync must use its existing physical frame, and cleanup must detach old
+resources before reentrant callouts. Real browser/native wide/compact input,
+drafts, IME, accessibility, manager integration and every original W1 finish line
+remain open. Preserve existing assertions and retained failures.
+
+#### Native and owned-state transfer evidence
+
+Read-only root/helper review and independent source-map addendum4F85297A now
+change two concrete parts of the pending implementation plan, preserving the
+original EE75/8FA proposal/review. At native6D162D8D, programmatic Sync never enters its
+existing `INyxNativeGestureFrame`. A property setter/updater can retire the view
+while Clear sees no physical dispatch and immediately destroys the component
+still borrowed by that call. Reuse that exact retained frame around physical
+Sync, focus and exception tails; Leave from locals last. Its existing deferred
+panel queue is sufficient. A new frame/queue or frame-unit change is unnecessary.
+Clear must detach the original panel/frame before Visible/Enabled/Retire callouts
+to avoid nested duplicate retirement, and detach the rest of the original
+generation before cleanup can mount a successor. Old cleanup must not revisit
+new FBindings/FPanel/FState fields.
+
+Root evidence9F8BC787 also proves a cross-target state ownership counterexample.
+Native RenderFrame5153/5634/5654 and browser3469/3487 transfer the old owned State
+to the successor. Direct RenderFrame lacks the active-command refusal used by
+queued refresh. A no-assignment OnSync can therefore remount that same owned
+State and destroy the successor before the old Command returns. Merely changing
+the old bundle's ownership Boolean to borrowed is unsafe. Use a distinct managed
+holder of the actual owned State, shared by the old entered generation and the
+exact accepted successor. Capture the former canonical owner before callouts;
+fresh cloned state gets a fresh owner, external borrowed state gets none. Never
+infer a holder from raw pointer equality or retarget an old generation. This is
+private renderer ownership and requires no additional path or state ABI change.
+
+The existing shared/browser tests must include that exact remount-then-destroy
+case and verify one final State destruction after the last entered owner. Native
+validation must also prove programmatic Sync disposal defers physical controls
+through the original exact frame. Generation guards belong inside layout/image/
+canvas/focus helpers and finally/diagnostic tails, not only around the outer
+callback. Actual owned palette/cache arguments borrowed inside an entered helper
+must remain alive too, unless their use provably ends before its first callout.
+None of these inspected source facts is an executed failure or passing test.
+The same source-scope answer remains pending; all Pascal stays exact/paused.
+
+### Browser Fit input and canonical callbacks — partial source
+
+The preceding native Fit checkpoint073E4E00 is progress without execution. The
+separate three-path browser release9B6690BC advanced only browser mount/selection
+and renderer; selection stayed byte-exact. Browser-only managed Begin/Prepare/
+Complete/Retire tokens capture the original typed column/input epoch/map/model
+before the real router's first query. The same token brackets ordinary canonical
+keyboard or header double-click callbacks; direct mounts use the same sequence.
+No-subscriber and denied scoped input stay claimed, preventing later bubbling
+from capturing fresh authority after callbacks change or replace the control.
+
+One typed Resize/Fit proposal, pending slot and existing animation frame own
+publication. Bounded sample/metric preparation uses the original capture, with
+the original command fence before the nested Fit plan. Permission remains
+independent: Fit-only grips support Enter/Space/Ctrl+Shift+F and double-click,
+without taking Resize permission. Their first pointer down suppresses focus
+default so it cannot first blur/commit an editor draft. Resize hints advertise
+Fit only when permitted. Same-slot activity clocks distinguish nested Arrow,
+Move, release and publication, including width-return ABA; saturation retires
+without wrap. Canonically consumed keys preserve an earlier resize draft.
+
+Renderer integration retains original nodes before outward queries and uses
+managed locals after callbacks. Fresh guarded snapshots preserve the existing
+before/main/after KeyDown and KeyPress cycles. Canonical dispatch lifetime is
+deliberately narrower than Fit eligibility: same original View/Host/Input
+incarnation plus canonical Input.Current protects borrowed reads; data edits,
+nested same-owner input or disable may cancel Fit while remaining callbacks
+still run. Full original Ready/Epoch/layout/map/mutation/activity guards remain
+on Complete. Retain282BD255/6B942853's initial full-proof phase-truncation finding
+and its narrow repair. Retain earlier same-request activity/focus/title findings
+under browser-fit-input-before-activity-repair. None is a compiler/runtime failure.
+
+IndependentEB5989F7 passes browser6EFC0C3D/render07A1E8EF with selection
+includeD77AF1A3 exact as PARTIAL UNCOMPILED source. Root final0C1594ED retains
+static preview2849EB2F and verifies baseline1807/nonowned1789/current1813/helper3/foreign13, all
+other owned Pascal exact, method pairs8/6/8/2 and unchanged general Click/Emit/
+PointerEvent/original Keyboard tail. Nine renderer if-spacing cases predate this
+slice; no newly introduced case fails. No compiler/native/browser/host/tab ran.
+This is not a whole W1 handoff/freeze or reader admission. Fit-only role=button
+still needs canonical single-click/assistive activation in a separate source
+slice, including duplicate dblclick prevention and legacy/default-prevented
+interaction. Actual popup/main+form manager authority and complete native/browser
+wide/compact input/drafts/IME/accessibility/lifetime gates remain open. Original
+criteria/credit/core47 carry. Root21/five docs remains maximum scope; no outside
+Pascal, extra agent, LAN/config/host retry, cleanup or tool/MCP rollout follows.
+All Pascal is paused; root owns docs/checkpoint only until a separate release.
+Existing helper next read-only design stays inside the same three browser paths:
+real ntClick/action/state/legacy semantics must precede any safe Fit-only button
+activation handoff. Already-prevented same-host clicks and double-click duplicate
+activation are explicit cases; no source/reader is admitted by that assignment.
+
+### Native header and keyboard Fit source reviewed
+
+The preceding goal turn is progress: resize BCB84527/914422BB and checkpoint
+A00320C9 passed source review without execution. The separate five-path Fit
+release4219FC7A advanced only native lcl/lcl.grid/lcl.selection; browser2 stays
+exact. Private LayoutRequest/Fence types now express one typed Resize/Fit command
+slot. Original input epoch, typed field, map/mutation and one launch capture span
+callbacks through queued publication. AutoSize permission is independent of
+manual Resize. Ctrl+Shift+F honours the prior key callback without committing,
+capturing, hiding or focusing an editor. Header-edge double-click waits for its
+actual physical MouseUp. Both reuse the existing native activity/idle publisher.
+
+IndependentFB5E231C passes nativeB3EA5F79/grid08E9DB84/includeEA46FB15 as
+PARTIAL UNCOMPILED source. Installed LCL sends MouseDown(ssDouble) before its
+virtual DblClick; an owned claim precedes construction/source/user callouts.
+Irrevocable consumption is separate from cleanup ownership: a monotonic down
+clock plus stack-restored down/message-kind and double stamp/claim distinguish
+all sixteen client down/double/triple/quad messages. Old MouseDown defaults
+refuse after a nested newer down. Old claimed DblClick consumes without resetting
+newer native state or falling through to unbounded LCL auto-size. Explicit kind
+keeps ordinary/right/middle/X input independent even at numeric saturation.
+Retain those design findings and43907A67/E5D30284's pointer-callback exception
+finding: both pointer callouts now retire only their retained original intention,
+arm existing idle cleanup and rethrow, preserving a nested newer slot. Keyboard
+exceptions follow the same rule. Weak callbacks clear on outer/pane detach.
+
+Fit publishes its original-command validator BEFORE the nested sampled Fit plan,
+so command observation precedes the metric's last outward UI validation. Both
+final fences stay cached/canonical; native metric also binds command serial.
+Existing model notification owns draft capture/restore and committed failures
+never replay. RootA9FA4E3F verifies1807 baseline/nonowned1789/current1813/helper3/
+foreign13, all other owned source exact,1/7/8/13 method pairs and blank-if spacing.
+The initial pre-repair649A263A preview stays historical; no compiler ran. One
+rejected patch hunk changed no file, and a source-only oversized set expression
+became a case over installed message constants before handoff. These are static
+editing findings, not compiler/runtime failures.
+
+No full W1 source handoff/freeze/readers/compiler/native/browser/host/tab or
+original criterion/credit/core47 reset follows. Actual native key/pointer/draft/
+IME/accessibility cases and the complete both-host W1 remain open. All Pascal
+is paused; root owns documentation/checkpoint only. Existing helper next owns a
+read-only pre-canonical browser key proof proposal inside Root21. Renderer
+capture precedes mount bubbling; no later callback may manufacture a fresh
+pre-dispatch epoch/field. No global listener, new registry or API source rollout
+is released. Manager main/form authority still waits the sole pending actual
+popup-owner scope question, with three paths exact. Root21/five docs remains the
+maximum scope; helper3/foreign13 stay exact and no LAN/config/extra agent follows.
+
+### Native queued resize source reviewed
+
+The preceding goal turn is progress: mounted Fit A8FF0F4D/ECAD9A75, root302066F0
+and checkpoint5EE8B8B1 passed partial source review without execution. Root now
+changed only released lcl/lcl.grid/lcl.selection/mount. A retained native request
+copies the original canonical input epoch, accepted View, full typed field,
+layout/map/mutation, physical target/PPI and activity leases before editor/source
+callbacks. Original Columns/capture supply the model proposal. Width comes only
+from the matching actual HeaderSized release and stays within authored bounds;
+no current-state recapture revives obsolete input. A single-use private prepared
+fence checks original input, composition and complete canonical activity. Install
+records commitment; ordinary model notification owns physical refresh.
+
+Installed LCL calls the prior OnMouseUp before final ResizeColumn/HeaderSized.
+That callback can start and release a newer same-column gesture. Canonical nested
+release stamps distinguish the original tails; a mismatched older stamp cannot
+overwrite the newer request. The managed activity is retained across inherited
+MouseUp and restores the prior stamp before its final weak idle call, without a
+post-retirement Self read. Unstamped optional LCL double-click auto-size is refused
+by this resize path; it is not a bounded Fit command or keyboard alternative.
+
+Independent BCB84527 passes native85594A83/base4BFAB470/gridD6D847B1/include
+76CC57F2 as PARTIAL UNCOMPILED SOURCE. Retain initial578C51E7/94DB2EF1 findings:
+a failed newer reservation could strand an older retired slot through its serial
+gate; a queued callback pumped during FUpdating could consume the only wake.
+Cleanup now admits the exact retired slot's own serial while live work still
+requires original owner serial. Last protected RefreshTargetIdle follows BOTH
+base refresh shields, including composition-deferred early exits. Its native
+override, direct programmatic Suspend and blocked publisher arm the existing
+coalesced CellRefreshIdle. That handler waits for canonical native activity,
+then queues the same one-shot resize publisher ahead of cell suspension/IME
+blockers. It preserves real pending/queued cell work and dormant edits; no second
+queue, fake cell-pending flag, ADone=False or immediate repost loop was added.
+Flags-only retirement and final fences schedule nothing. Same-slot final cleanup
+cannot clear a newer gesture; ENyxPublicationNotification remains a committed
+notification failure, without retry/rollback/rebase.
+
+Root914422BB verifies1807 baseline/nonowned1789/current1813/helper3/foreign13,
+every other owned source exact,1/7/6 private method pairs, seven unchanged public
+mount interface blocks and blank-if spacing. No source handoff/joint W1 freeze,
+reader/compiler/native/browser/host/tab admission or original criterion/credit/
+core47 reset follows. The sole actual-popup scope question stays pending and
+its three paths exact. Main+form lifetime authority, manager launch/action/draft
+wiring, usable bounded Fit/keyboard controls and complete native/browser wide/
+compact W1 remain open. Root21/five docs remain the only source scope; helper3
+is paused. Existing helper next owns a read-only bounded header Fit input-routing
+proposal within Root21, independent of that pending popup scope. No outside path,
+LAN/config/extra agent or rollout is inferred. Private state owns exact receipts.
+
+### Mounted Fit preparation source reviewed
+
+The preceding goal turn is progress: browser1C184066/364BBED7 and checkpoint
+8D5E9F16 passed source review without execution. Root now changed only the four
+released mount/browser/lcl/lcl.grid paths. Protected virtual PrepareColumnFit
+supplies a default-refusing common seam and concrete native/browser preparations,
+without a new public mount interface or GUID. It retains exact mount, original
+launch capture, full typed field, accepted View and original canonical input
+epoch before arbitrary getters. The output is var deliberately: clearing an
+older managed metric must wait until the entered mount has its own lease.
+
+Both hosts use CaptureColumnSample and PrepareSampleAutoSize, preserving the
+private model data/page/query/layout/Notify cohort and AutoSize permission. A
+read-only dataset can still allow layout. Every QI/sample/metric/model/group
+call boundary rechecks local mutation/map/incarnation facts. Browser acquires
+actual canonical headers and already-resident same-column cells without row
+realization, scrolling, editor values or focus changes. Native uses the actual
+visible/pinned pane fonts and supported no-custom-column drawing facts; hidden
+fields use the uniform outer defaults without revealing/creating a pane.
+Actual LCL alignment determines physical padding; it is not scaled twice.
+
+Native validation activity now covers complete editor/grid/OS/lifecycle tails.
+One private frame decorator delegates the original real renderer frame while
+joining its Enter/Leave to the SAME canonical activity. Grid and editor share
+that wrapper; AttachEditReader reuses the precreated activity. Managed locals
+survive original-frame retirement and weak idle callbacks; final Fit checks use
+retained activity flags rather than a native component or external Frame getter.
+Pinned panes now copy outer TitleFont/DefaultTextStyle, preventing a hidden field
+from changing appearance on unhide. Opted-in header DisplayText shares native
+NUL-safe conversion with its actual metric. Legacy non-layout headers are unchanged.
+
+Private Validate has a terminal started latch, rechecks current UI/font metrics
+after known external generation/form validation, then uses only cached local
+facts and canonical Ready/original Epoch, with composition immediately before
+that pair. Disable/enable and suspend/resume cannot revive the original input.
+The returned nested group is model plan then Fit fence. Future host generation/
+form guards must precede it; unrelated later direct style mutation has no atomic
+typography-at-install promise. Install only records commitment. Ordinary model
+notification owns physical refresh/compatible drafts; ENyxPublicationNotification
+means committed data, never permission to retry, roll back or rebase as refusal.
+The returned measurement alone proves no commit or working GUI.
+
+IndependentA8FF0F4D passes baseFF645E04/browser694F4B5A; retain57458787's nil
+input epoch, retry/reentrant Validate and nil alternative sample findings, repaired.
+IndependentECAD9A75 passes native1967432D/grid407964DD; retainD74F286F/C117F2E4
+incomplete physical activity and hidden-style findings plus4DAF819B header-NUL
+mismatch, all repaired. Root302066F0 verifies1807 baseline/nonowned1789/current1813/
+helper3/foreign13 and every other owned source exact,8/8/6 private class method
+pairs and blank-if spacing. In-memory removal recovers prior base/browser/native
+source exactly. Grid reversal is not claimed: the5C253887 reconstruction and
+whitespace-boundary variants did not establish the old hash. A read-only helper
+named H hit PowerShell's Get-History alias before any write; its corrected task
+helper changed no source. These metadata attempts are retained/excluded from
+product/compile evidence; exact407964DD independent source review remains valid.
+
+No public/GUI Fit command or management launcher is exposed yet. No source
+handoff/joint freeze, reader/compiler/native/browser/host/tab, original criterion/
+credit or core47 change follows. Actual popup per-open owner scope remains the
+sole pending source question with its three paths exact; main+form authority,
+management UI, focused drafts and full native/browser wide/compact W1 remain open.
+Existing helper next owns a read-only prioritized native queued resize/manager
+gap inventory inside Root21. Root21/five docs remain the only source scope;
+helper3 stays paused. No extra agent/outside source/LAN/config/rollout is inferred.
+
+### Browser fit metric source reviewed
+
+The preceding goal turn is progress: native49E10F86/1583E55F and checkpoint
+8AC0CEF1 passed partial source review without execution. Current root work changes
+only controls and the already-released new arrangement.browser path. The shared
+WithNaturalWidth updates a detached result using previously copied valid bounds,
+so every arbitrary sample getter completes before the browser observes live UI.
+The prior native constructor's clamp/ceil behavior remains equivalent; both
+native metric0E76BA52 and adapterF258B745 remain byte-exact.
+
+The browser borrows the exact mounted header parts and same-column body label,
+with an optional exact owned editor used only for child identity. It copies all
+sample strings, styles and actual header child order. One offscreen ordinary
+line box measures the visible label/sort/filter composition with parent text
+rules and each child's separate typography, per-side boxes and minimum. This
+preserves whitespace boundaries and hard breaks. Body strings use their own
+profile. Existing cell/resize-grip space is counted once; CSS logical pixels are
+not multiplied by DPR/ancestor scale. Probes are inert, nonfocusable, without
+copied IDs/classes/events, and always removed in finally. No DOM/document/fontset
+or editor reference escapes in the managed result.
+
+Text-aware loaded-font checks bracket the attached measurements; there is no
+font load/listener/await or deferred publication. Matches recaptures style and
+remeasures copied strings, detecting a changed face under unchanged CSS font
+strings. Canonical hidden columns need not be shown to measure them. Generated/
+custom content, unsupported visible layouts, negative margins and relative text
+offsets refuse. Uniform horizontal default-library body typography is an explicit
+host obligation; arbitrary per-row custom paint is not claimed by one representative.
+Matches supplies UI validation only, never final model/input/event/form authority.
+
+Independent1C184066 passes browser56B0A926/common04CC1D73 as PARTIAL UNCOMPILED
+SOURCE. Retain B3D1239D's separate-header whitespace, two-nil-TABLE and unsupported
+offset/margin findings, all repaired. Retain82B7A218's table-cell-only hidden-field
+regression, repaired without changing visibility. Retain631D5404's unavailable
+pas2js DefaultFormatSettings symbol: the sole initializer repair uses installed
+FormatSettings with an explicit dot decimal separator. In-memory reversal exactly
+recovers631D. InitialD839C069 source census stays retained/historical; final root
+364BBED7 verifies1807 baseline/nonowned1789/current1813/helper3/foreign13 and every
+other owned source exact, nine fit-record/four browser methods,30 text properties
+and blank-if spacing. These findings/checks are static, not compiler/runtime failures.
+
+No mounted Fit command, source handoff/joint freeze, reader/compiler/native/browser/
+host/tab or original criterion/credit/core47 reset follows. Actual mounted surface
+acquisition, prepared publication and model/input/IME/generation/form fences,
+focused drafts and full both-host wide/compact W1 remain open. Browser being
+enabled is confirmed by the user; no new host/tab/test scope was inferred.
+The existing helper next owns read-only mounted Fit acquisition/publication design
+within Root21, identifying safe progress independent of the still-pending actual
+popup-owner source extension. Root21/five docs remain the only source scope;
+helper3 and the three unreleased popup paths remain exact/paused.
+
+### Native fit metric source reviewed
+
+The preceding goal turn is progress: model sampleB6B8AE58/D0A40DEE and
+checkpoint826FB358 passed independent partial source review without execution.
+Current root changes only controls, native adapter and the already-released new
+arrangement.lcl path. The shared detached measurement records finite natural
+logical width, ceiled/authored-bounded Width, Clamped, immutable Sample, full
+typed Field and SampleRows. Count is the measured sample, not a claim about the
+entire page. No viewport clamp or second preference/data/query owner is added.
+
+The native metric owns copied separate header/body fonts, PPI/drawing styles,
+header text and physical chrome insets before sample getters can call out. It
+uses a private one-pixel bitmap canvas and toolkit UTF-8 DrawText calculation,
+preserving SingleLine/prefix/tabs/bidi while removing soft-wrap/ellipsis for
+natural width. Font PPI is set before Assign. Already-scaled insets are added
+once and physical width becomes logical width once. The exact header font is
+TitleFont under ordinary LCL drawing; actual mount collection of these values
+is still required. No grid/editor/focus/selection is borrowed to measure text.
+Native DisplayText now delegates its unchanged NUL-to-quoted-JSON conversion to
+the same helper. Matches compares current fonts/styles/header/chrome on the UI
+thread; it supplies no final input, event, model or actual-form authority.
+
+Independent49E10F86 passes controls549D7EC1/native metric0E76BA52/native adapter
+F258B745 as PARTIAL UNCOMPILED source. Retain D352C745's SystemFont finding:
+TextRect can obtain another font through OnGetSystemFont. Current Initialize
+refuses unresolved SystemFont styles before sample getters, and witness checks
+detect toggling the flag. Rotated fonts and arbitrary owner-paint/per-cell font
+callbacks require their own resolved metric; this default library-text slice
+does not discover or qualify them. Exact in-memory repair reversal recovers
+D352; no source rewrite or compiler result was involved. The helper's first
+null metadata artifact38E0B9DE remains retained/excluded; corrected49E10F86 is
+the actual review receipt. That preparation error changed no product/source.
+
+Root1583E55F verifies1807 baseline/nonowned1789/current1812/helper3/foreign13
+and every other owned source exact, eight fit-record/four native method pairs
+and blank-if spacing. No compiler/native/browser/host/tab, joint W1 freeze or
+reader admission follows. This helper source is not a working mounted Fit UI.
+Actual mounted metric acquisition, command/model/input/IME/form fences, browser
+metrics, focused drafts and complete both-host W1 input/lifetimes remain open.
+All original criteria/credit/core47 remain exact.
+
+The existing helper next owns a read-only browser surface/style/probe/witness
+implementation blueprint; helper3 sources stay paused. Root21/five docs remain
+the only source scope. The sole popup owner question remains pending and its
+three files exact; no duplicate request/outside source or execution is inferred.
+
+### Fit current-page model sample source reviewed
+
+The preceding goal turn is progress: detached drafts140FBC7A/586AB077 and
+checkpointC88157B4 passed independent source review without execution. Current
+root work changes only released view/arrangement implementation. Optional
+Sample/Sampling interfaces preserve every old interface GUID/vtable and the
+older caller-supplied-width PrepareAutoSize contract. A canonical sample admits
+the original exact columns proof and typed AutoSize field, then copies at most
+the authored AutoSizeRows current-page item/text values. Its descriptor supplies
+the title on empty pages; hidden fields need not be made visible. CellText and
+sampling share one canonical text/Boolean/integer/number formatter.
+
+The private payload owns immutable source/page/unpaged snapshots and inert
+layout identity/serial, query intent and Notify stamp, never a live view/store/
+renderer/widget. Capture retains caller slots and entry facts before outward
+Busy/QI/proof/count/item getters and refuses changed facts after each. Measured
+preparation adopts this payload before Initialize/Writable can call out; the
+existing final readiness also checks that exact cohort with no external getter.
+Notify advances a saturating private stamp before observers. This catches paging
+policy ABA even if the final page returns to the same FUnpaged pointer. Exhaustion
+refuses new/reused samples without throwing or suppressing ordinary delivery.
+Every accepted view notification invalidates a sample, including selection-only
+notifications; stale measurement needs a fresh sample.
+
+IndependentB6B8AE58 passes exact view0F7241F0/include7061CFAD as PARTIAL,
+UNCOMPILED model source. Retain the D4A2E98D ownership finding: a caller capture
+wrapper could delegate the canonical private proof while itself retaining UI.
+After original admission, current source stores a canonical inert copy of that
+same identity/serial/spec/preferences, never recapturing a stale launch. No
+foreign facade escapes capture. RootD0A40DEE verifies1807 baseline/nonowned1789/
+current1811/helper3/foreign13 and every other owned source exact, six sample/two
+facet methods, eight unchanged baseline public interface blocks and blank-if
+spacing. These are static/source checks, not compiler/runtime tests.
+
+The sample proves the model cohort, not that a supplied width was physically
+measured. Native/browser font/DPI/chrome/text measurement, sample-only wording,
+input/IME/generation/actual-form fences, focused draft preservation, management
+hosts/launcher and complete both-host wide/compact W1 input remain required.
+No joint W1 freeze, reader, compiler/native/browser/host/tab or original criterion/
+credit/core47 reset follows. The guide clearly separates both AutoSize paths.
+
+The existing helper next owns read-only code-level native/browser font, display
+conversion, chrome and witness seams in released paths. Helper3 sources stay
+paused. The sole actual popup owner source question remains pending and its
+three files exact; no duplicate request, outside path or execution is inferred.
+
+### Detached draft preservation source reviewed
+
+The preceding goal turn is progress: browser resizeED26D1C8/DBC09C1E and
+checkpointF7869E94 passed independent partial source review without execution.
+Current root work changes only released arrangement.controls. The detached
+`TNyxColumnArrangementDraft` copies its launch observation and raw width/pin
+values with independent dirty masks. Capture verifies the exact realized Card
+within the supplied mounted root, exact launch baseline and bounded unique
+SourceID inputs. It parses no unrelated width: an unfinished `-` remains text
+across visibility/order/pin changes elsewhere, including hidden fields. No model
+interface, widget, callback, renderer or publication authority is retained.
+
+After a host-known commit, `AfterAccepted` requires exact action baseline,
+unchanged full specification, intended installed preferences and the original
+serial plus one only when preferences changed. This detects reentrant layout
+ABA, not just unequal final values. `AfterMeasuredFit` additionally requires the
+actual bounded width the host installed through PrepareAutoSize; ordinary
+AfterAccepted refuses that action's absent measurement. A committed notification
+error still needs accepted-state handling. Refusal/cancellation must retain the
+original draft and original private columns capture. These value helpers prove
+neither commit nor main/form/input lifetime; the eventual host owns those facts.
+
+Width/default/fit retire the addressed width draft; pin retires its pin draft;
+field reset clears both and all reset clears all. Visibility/order/reset-order
+preserve unrelated inputs. Values equal to the new launch display normalize
+away. The reconstruction overload refuses a different baseline and uses full
+typed fields, never old visible indexes/tokens or realized IDs, to overlay text.
+
+Independent140FBC7A passes exact controlsBADA8C81 as PARTIAL, UNCOMPILED source.
+Its earlier design3B3756F0 recorded intermediate050ABE while root edits were in
+flight; the receipt explicitly excludes that pin from source review/freeze.
+Retain the mechanical root insertion at an interface prototype, corrected before
+first independent handoff; no compiler/runtime failure or result is implied.
+Root586AB077 verifies1807 baseline/nonowned1789/current1811/helper3/foreign13,
+all other owned source exact, nine public signature multiplicities, eight draft
+methods and blank-if spacing. No compiler/native/browser/host/tab or joint W1
+freeze/admission follows. Full W1 and all original criteria/core47 remain open.
+
+The existing helper next owns read-only bounded actual-host Fit measurement
+design in the released native/browser paths; helper3 sources stay paused.
+Actual management hosts and all-hidden launcher, successful-publication/draft
+integration and main/form final guards remain required. The sole popup source
+extension question remains pending and its three files exact; no duplicate
+question, outside source or execution authority is inferred.
+
+### Browser resize source reviewed
+
+The preceding goal turn is progress: detached manager3718E7A2/B40247A5 and
+checkpoint1625A618 passed source review without execution. Current root source
+advances only the two released browser paths. Opted-in arrangement tables get
+owned header separators for pointer and keyboard input; legacy tables retain
+their previous surface. Dragging changes a bounded guide and accessible value,
+without resizing columns or replacing active cell editors. Release/Enter moves
+the same retained proposal to one pending request on the existing animation
+frame. The existing columns preparation preserves neighboring preferences and
+uses the original exact typed capture. A final prepared-group participant reads
+canonical input Ready/Epoch and cached accepted layout facts after outward
+validation; it performs no source/router/DOM callback there.
+
+Direction follows logical RTL. Geometry/font/scale/available changes, raw
+composition, suspend/disable epochs and retirement invalidate older drafts.
+Keyboard arrows, Shift steps, bounds, Enter/Escape and Tab navigation are in
+source. Capture is relinquished before deferred publication and same-slot
+ownership protects a replacement created during cleanup/notification. Trusted
+input requires real capture; synthetic events do not claim an OS pointer.
+
+IndependentED26D1C8 passes browser9C501D7E and selectionD77AF1A3 as a PARTIAL,
+UNCOMPILED source slice. Retain all three findings at first reviewed2414A8DD:
+focusin cancelled an Enter-released request despite Tab preserving it; cancellation
+left abandoned draft ARIA; capture acquisition needed actual ownership and
+reentrant/exception reconciliation. Current repairs preserve pending focus
+navigation, restore accepted values before cleanup, confirm actual capture and
+preserve a distinct newer active owner of the same physical pair. Cleanup keeps
+the primary acquisition/preview exception. These are source findings and repairs,
+not observed runtime failures or passing input tests.
+
+RootDBC09C1E verifies1807 baseline/nonowned1789/current1811/helper3/foreign13,
+all other owned sources unchanged,59 mount declarations/implementations, exact
+resize-listener add/remove pairs and blank-if spacing. No compiler, native run,
+browser/tab, host, joint W1 freeze or reader admission follows. The guide labels
+the interaction as a source preview. Management host/launcher integration,
+draft retention across accepted refresh, main/form lifecycle guards and the full
+both-host desktop/compact W1 journey remain open; W2/all original criteria and
+core47 have no closure or credit reset.
+
+The existing helper next reviews a shared management-host controller contract
+read-only within Root21; helper3 sources remain paused. The already asked popup
+source-scope extension remains pending and all three proposed files exact. No
+duplicate question, outside source path or execution authority is inferred.
+
+### Detached column manager source reviewed
+
+The preceding goal turn is progress: main-query wrapper/source audit passed
+4B9CF6EC/1BED1C59 and checkpoint1F7AC7B8 without compilation/execution. The
+existing popup scope question remains pending. Independent source work within
+Root21 now adds the ordinary management compound in arrangement.controls92AC8B71:
+all fields remain listed, including hidden fields;11 typed actions cover show/
+hide, adjacent order, width/default/fit, pin and separate field/order/all resets.
+Effective feature flags govern new overrides. Removing overrides remains legal
+after policy disable. Width restoration means authored Fixed/Flex/Content sizing,
+not necessarily automatic Content allocation. Fit requests host measurement and
+PrepareAutoSize independently of manual Resize; it supplies no fake width.
+
+Capture verifies the exact launch specification/preferences/serial baseline,
+returns detached copied preferences and full typed fields, and reads only the
+input required by the selected action. Invalid unrelated width drafts stay
+untouched. The eventual host must retain those drafts through accepted refreshes,
+retain its ORIGINAL private columns capture, and supply final input/event/actual
+form lifetime fences. No publication or active host is implemented by this slice.
+All-hidden recovery remains listed; if authored policy prohibits visibility, the
+UI explains that limit instead of manufacturing permission to unhide anything.
+
+Independent3718E7A2 passes the exact detached source. Retain the repaired width
+caption plus both source findings:26D1's full hex names overflowed model IDs;
+8331's raw ID lookup missed realized escaping/instance prefixes. Current IDs use
+bounded opaque launch tokens with full typed field metadata;96 prefix scalars
+plus the maximum current23-scalar suffix fit the128-scalar model limit. Capture
+requires bounded button ancestry to reach the supplied root, compares SourceID
+and reads inputs only inside the exact editor instance with duplicate refusal.
+Long/supplementary field names and escaped/reusable-qualified editor IDs preserve
+identity; no truncation, hash-only targeting or parsed UI index is used.
+
+RootB40247A5 audits1807 baseline/nonowned1789/current1811/helper3/foreign13 and
+all other owned Pascal unchanged from the previous partial checkpoint. Public
+signatures, six change-record methods, blank-if spacing and ID suffix arithmetic
+pass static checks. Those are not compiler/runtime tests. No joint W1 freeze,
+compiler/native/browser/tab/host, original criterion/credit or core47 reset follows.
+The guide labels construction/capture as a source preview. Actual mounting and
+management launcher, retained drafts across rebuilding, main/form popup guards,
+browser resize and the complete both-host W1 journey remain required.
+
+The existing helper's next task is read-only browser resize design within Root21,
+covering pointer/keyboard/cancel, exact typed capture, RTL/pins/overflow, IME and
+retirement/final publication. Helper3 sources stay paused. The existing popup
+source-scope request remains the sole pending question; its three proposed files
+stay baseline-exact. No new source path or execution authority is inferred.
+
+### Main query source reviewed; actual popup lifecycle scope needed
+
+The preceding goal turn is progress: exact IME source passed B622ADCA/6BA46ED3
+without execution. Current mountA3CF4E5B adds an atomic input epoch before explicit
+suspend/disable callbacks. Resume cannot revive old captures; ReadOnly remains
+independent and ordinary Refresh shielding preserves the epoch. Capture refuses
+exhaustion. New shared arrangement.workbench E0DA0E42 decorates the actual main
+router, explicitly forwarding all57 original event methods and optional ordinary
+observation. Streams, subscriptions, scheduler, policies and revision stay owned
+by the original router. Captured cancellation reads its actual scope FIRST, then
+readonly input/epoch facts and terminal local flags; it never automatically calls
+the underlying Cancel. Captured scopes own no router/mount/model/widget.
+
+Independent4B9CF6EC passes this UNCOMPILED, UNWIRED main-router slice only. Keep
+the BE350281 finding: Supports can release/retarget const caller slots; E0DA0E42
+owns exact locals before any QI. Root1BED1C59 verifies1807 baseline/nonowned1789,
+current1811 Pascal, unchanged helper3/foreign13 and all57 signatures/if spacing.
+The first signature scanner stopped at a multiline parameter semicolon; corrected
+complete declarations pass with no source repair for the scanner. No actual
+compiler/native/browser/tab/host or joint W1 freeze/admission follows.
+
+The source-backed remaining hole is real Presentation.Close inside the LAST
+underlying cancellation getter AFTER RequireFormOpen. Silent Close preserves
+router generation. A wrapper Close epoch or OnDismiss misses it; UI IsOpen inside
+a cancellation scope violates worker safety. Reordering getters also misses
+close-then-reopen. Root/helper prefer a small optional provider on the actual
+shared popover, returning a fresh independent readonly per-open lease:
+
+- Capture only while actually open/stable; publish the candidate only after
+  successful Present and final parent checks. Failed Present publishes no lease.
+- Revoke before child cleanup, conceal/focus, completion or retirement callouts.
+  Reopen allocates a new lease; old leases stay terminal without a numeric epoch.
+- Capture immutable canonical parent-open ownership. Parent closure immediately
+  blocks descendants before sequential child cleanup reaches them. Worker reads
+  use only retained canonical links/atomic flags, with no UI/model/backreference
+  or caller Cancel method.
+- Preserve real main/form routers and specialized presenter facets. Form capture
+  retains this exact actual-open lease in addition to its original router scope;
+  check it only after the last outward cancellation getter.
+
+Proposed root scope extension is ONLY `src/nyx.popover.pas` plus existing
+`tests/nyx_popover_controls.lpr` and `tests/nyx_popover_nested_controls.lpr`.
+All three are unedited and outside Root21; an applicable user override is needed.
+Add retained lease tests for silent Close, physical dismissal, reopen, parent
+closure, failed presentation and retirement without dropping assertions/waits.
+Existing owned table consumers later cover real-host closure from both main/form
+getters. Failed Present currently lacks a general conceal rollback: unavailable
+authority alone must not be claimed as physical rollback; review any necessary
+repair in the actual owner separately. No compiler/execution/LAN/config/cleanup/
+extra-agent authority is requested or inferred. Full W1, core47 and all criteria
+remain open; helper3 stays paused with read-only next-gate design only.
+
+### Current IME partial source review passed
+
+The preceding goal turn is progress: independent4BA23EED reviewed the native
+input/adoption slice, with CB22B900/313BDEBC receipts and no compilation or
+execution. Current source connects cell composition to the real native router,
+runtime origin and physical frame. Raw START is latched on the exact editor
+before the observation hook can call an outward getter; the existing observer's
+settled idle END releases that same latch. Shared continuity blocks positional
+grid defaults while the active native edit keeps receiving IME/default text.
+Painting reads the retained physical row's typed scalar and cached headers.
+
+Whole refresh first checks existing composition using cached flags only. If
+clear, a retained independent state temporarily suppresses new physical input
+through source reads and physical synchronization. Current remains available for
+controlled internal synchronization; Ready stays false until finally, and a
+retired lifetime cannot revive. This applies only to opted-in arrangement.
+Pre-Activate preparation checks terminal Retired rather than connected Current.
+Native opt-in currently refuses widgetsets outside the existing admitted Win32
+editing/IME bridge; this is not broader LCL-widgetset qualification.
+
+Browser END keeps its input busy through the next owned frame. A genuine Change
+is copied by item/typed field/accepted scalar, then applied at most once using the
+settled text and a final mutation/membership/ownership check. END alone does not
+create an edit. Deferred focus uses actual current inputs. Manual restoration
+rejects composition, and queued native restoration checks after outward readers
+and before editor/text/caret writes. Whole-refresh shielding covers rendering
+getters which could otherwise start new composition halfway through a rebuild.
+
+IndependentB622ADCA passes the exact seven-file slice. Keep the initial9F6ED96E
+findings receipt and all constructor, getter, hook ownership, raw-START and paint
+identity repairs. Root audit6BA46ED3 confirms the1807 baseline/nonowned1789,
+unchanged helper3, foreign13 and original typed wire1 contract. The first static
+method scan misclassified abstract methods and legitimate overloads; corrected
+declaration multiplicities pass without changing source to satisfy that scan.
+These are partial source facts only: no compiler,
+native/browser execution, tab or host was started; no joint W1 handoff/freeze or
+reader budget is admitted. Next is exact main/form query-generation cancellation,
+then managed forms/workbench/browser resize and the original full both-host W1
+journey. Core47 and every original criterion remain open.
+
+The existing helper's next assignment is read-only query-generation wrapper
+design. Preserve the exact underlying main/form event routers, registrations,
+scheduler, revisions, optional observation and target presenter facets. Wrap BOTH
+captured cancellation generations so their LAST external Cancelled getter is
+followed by known local input/lifetime checks and terminal local cancellation;
+never cancel the underlying router or invent a form generation. A temporary edit
+suspension also needs a non-reviving input epoch. Existing query/workbench units
+stay unmodified; root's released managed arrangement paths own any implementation.
+This plan releases no compiler, host, new source path or helper source edit.
+
+### Earlier source checkpoints
+
+The preceding goal turn is progress: independent74F515A7 accepted the readonly
+input-lifetime slice and exact FDB65364 partial source audit. This turn implements
+the native input boundary in the existing owned grid/mount/renderer paths. Both
+LCL messages and Windows input before direct Unicode/default edit handling consult
+the readonly lifetime. A small LCL string-editor descendant binds the new HWND
+before inherited initialization, including independent handle recreation. Complete
+CreateWnd/DestroyHandle/DestroyWnd and EditorShow frames preserve native tails.
+The raw-cell GM_SETBOUNDS protocol restores the original widgetset's editor bounds;
+explicit border/alignment/active-cell fill handling preserves the default editor
+presentation without copying the editing/validation protocol. Ordinary unarranged
+tables continue through inherited editor factories.
+
+The exact renderer frame reaches the mount before HandleNeeded and every edge
+pane. Entered panes retire independently of the outer panel. Terminal native
+guards stay attached through outward/deferred cleanup, retaining only readonly
+facts and frame; exact lifetime matching cannot revoke newer ownership. Failed
+second-owner attachment does not revoke the existing guard. Root also caches
+readonly lifetime facts for the capture observer's outer LCL path. Independent
+review found the full DestroyHandle tail and root repaired it; a direct LCLType
+import supplies the declared UTF8 key type. Final reviewed partial pins are
+grid031B8D47, nativeD407DD8F and rendererC0A0A5CE, not executable evidence.
+NativeD407DD8F differs from reviewedA9D51BBC only by two-space indentation of
+the new outer cleanup try body; mechanically removing it recovers exact bytes.
+An additional same-component adoption guard refuses reattachment while the old
+native input frame is still entered; otherwise an inherited LCL tail could
+continue against replacement maps. Fresh renderer candidates remain independent.
+
+No compiler/native/browser/tab/host was started. Next source remains active-cell
+IME observation and END-to-idle refusal, plus exact main/form query-generation
+cancellation. Managed forms/workbench/browser resize and the original both-host
+W1 desktop/compact input/lifetime journey still follow. No joint freeze or reader
+admission, original criterion/counter/parent credit or W1 acceptance follows;
+core47, helper3 pause, foreign13 and the existing scope/restrictions remain.
+
+The current partial source tranche removes a prospective native hook/mount
+reference cycle: hooks can retain an independent readonly input lifetime, while
+the mount alone owns its install/suspend/retire authority. Native local and
+ancestor flags are atomic; disconnect revokes before outward cleanup and every
+adapter suspension/unwind updates the same state. Existing helper independently
+reviewed the exact state slice. No compiler, application, browser tab or host has
+run. Native message hooks, IME and query-generation integration still remain;
+this partial review does not admit readers or close W1/original criteria/core47.
+
+This source batch follows [filtering/sorting02](TODO/DONE/NS-3_control-usefulness_02.md),
+accepted, committed/pushed/remote-verified as a057dc1 with every actual
+compiler/native/browser reader joined. The preceding goal turn is progress:
+copied full-render cell drafts/focus gained independent source review and an
+exact partial source audit; neither compilation nor execution was admitted.
+The current existing owner is
+[table workbench03 W1](TODO/NS-3_control-usefulness_03.md), serving its original
+criteria1/5. Keep the whole W1 finish line: real resize and keyboard alternatives,
+bounded fit-to-content, choose/reorder/show/hide/pin/unpin/default reset, editable
+Service at logical start and Status at logical end, reachable middle scroll and
+all-hidden recovery, independent peers and field/item-safe draft/rebind/lifetime
+behavior at desktop/compact sizes on native AND browser. This is not an isolated
+API acceptance. W2 and every unmet full task03 criterion remain required.
+Parent core no-closure47 carries; no credit/percentage or parent criterion closes.
+
+### Source-backed native presentation decision
+
+Installed LCL coordinates/hit-test paths are not safely replaceable by an end-pin
+override, and FixedCols alone makes data noneditable. Keep the SAME outer
+TNyxCollectionStringGrid/ControlFor contract. Its borrowed on-demand child grids
+paint editable pinned fields from the SAME view; inert geometry spacers reserve
+space but are never data fields or query/edit/selection targets. One mapping
+resolves every paint, read, key, query, focus, validation and normalization to a
+canonical typed field. Mirrored pane changes occur under the existing update
+guard, without another store/query/selection engine or duplicate callback.
+
+The outer grid is the sole vertical-scroll authority. Chain/restore its actual
+TopLeftChanged callback, synchronize exact TopRow and row/header/font/DPI/client
+geometry, and suspend goSmoothScroll only while panes are active because its
+private fractional offset cannot be mirrored by TopRow alone. Leave native
+scrollbars/borders unobstructed; pane wheel/page input addresses the main authority.
+Logical start/end follow RTL. Keep the existing path exact when layout is absent.
+Capture a single ACTIVE logical edit lease before any focus/layout/presenter
+call: stable item, typed field/family, accepted scalar, draft text and caret.
+Existing FUpdating/validation guards suspend without committing. Restore into
+the appropriate visible pane only if accepted identity/value survives; hiding
+the edited field follows the existing filter-out discard rule without EditCell.
+Separate inactive LCL editor objects may remain; never reparent a private editor.
+Nested focus and canonical outer event routing must be integrated explicitly,
+and all pane readers/hooks/weak receivers revoke before any child is freed.
+These are source-backed implementation choices, not a new runtime qualification.
+
+Browser keeps its current row window and one editor. Reorder resident DOM by the
+same canonical map; logical sticky offsets/hitboxes need opaque stacking and
+direction-aware arithmetic. Pin budgets use the actual horizontal clip viewport,
+not the possibly overflowing table width. Preserve authored/runtime pin choices;
+when the pins would consume the minimum96 logical center, visibly suspend pin
+presentation and permit ordinary reachable scrolling. Management/default reset
+remain reachable with no visible columns. Never shrink the whole UI's text.
+
+### Disjoint source release
+
+| Owner | Exact files |
+| --- | --- |
+| Helper | NEW src/nyx.collections.arrangement.pas; additive tests/nyx_column_sizing_tests.lpr and tests/nyx_table_query_controls.lpr only. |
+| Root shared/source | src/nyx.collections.view.types.pas, src/nyx.collections.view.pas, src/nyx.collections.bindings.pas, src/nyx.collections.mount.pas; NEW src/nyx.collections.arrangement.implementation.inc; src/nyx.codegen.collections.inc, src/nyx.codegen.pas, src/nyx.source.collections.inc, src/nyx.source.pas; studio/nyx.studio.collectionintent.pas preserves layout through existing reconstruction. |
+| Root native/browser | src/nyx.collections.lcl.pas, src/nyx.collections.lcl.grid.pas, src/nyx.collections.lcl.selection.inc, src/nyx.collections.browser.pas, src/nyx.collections.browser.selection.inc; src/nyx.render.lcl.pas and src/nyx.render.browser.pas. |
+| Root managed forms | NEW src/nyx.collections.arrangement.controls.pas, src/nyx.collections.arrangement.workbench.pas, src/nyx.collections.arrangement.lcl.pas, src/nyx.collections.arrangement.browser.pas. |
+| Root docs/build | AGENTS.md, WORK.md, this task03 definition, docs/collection-views.md and tools/build.ps1. |
+
+The pure unit defines TNyxColumnPin, the five-feature enum set, immutable column/
+table layout policies, four-family typed field identity and sparse typed column
+preferences plus an optional copied order prefix. Exact factory names and closed
+wire version1 are pinned in the private source contract. Column defaults are
+visible/unpinned/all features; table factory enables user commands with96 minimum
+center and64 autosize samples, bounded1..1024. A default record is absent/null;
+factory-defined empty preferences restore CURRENT authored defaults. Per-column
+overrides have explicit presence flags; no magic strings control the Pascal API.
+All vectors are bounded64 and copied on FPC/pas2js. Validate duplicate names,
+cross-vector family conflicts, invalid enum/scalar/bounds/shape before mutation.
+
+Root adds a NEW optional view facet with immutable target identity+serial capture
+and existing prepared-publication ownership, preserving every old GUID/vtable.
+Reject stale/reentrant/foreign captures and disallowed policy changes before
+publication; notify once through the same view observers. Preferences change no
+data/query/selection/document. Reorder-disabled columns retain global ordinal
+including hidden fields; removing preferences/default reset remains allowed.
+Host measurement for bounded content fit publishes width through this same facet.
+Preference transfer is separate from the unchanged exact-Spec query/page/selection
+transfer: copy only matching runtime identity/store/projection and exact typed
+fields; prune removed/changed-family fields and let new fields use current defaults.
+Strict bindingv8 is emitted only with explicit layout choices. Preserve v1–7
+bytes and generated/source round trips. ColumnLayout/TableLayout and their default
+restorers are typed fluent binding methods; full Studio configuration/semantic/
+save/history capability remains part of original criterion6, never waived by W1.
+
+This releases source only, after root/helper mechanism and API review. No compiler
+or native/browser reader is admitted now. Preserve every original assertion/wait
+and the original44BAC active-cell companion. Independent review of both source
+handoffs and a fresh joint freeze precede the fixed exact reader budget. Actual
+both-target W1 input/edit/focus/peer/lifetime and affected query/header/active-editor
+regressions are required, not compile-only or a replacement fixture. Root owns
+all handles/joins; no default whole-Studio replay without an affected boundary.
+Existing helper keeps the test/next-prerequisite queue; no extra agent or
+host/config/MCP rollout, compiler-fact probe, cleanup/restart is authorized here.
+
+### Partial source integration; no readers admitted
+
+The pure typed arrangement unit has independent source review. Authored binding
+v8, conditional Pascal imports/fluent generation and the typed source reader now
+exist, with unrelated Studio collection reconstruction preserving raw layout
+presence. The optional runtime facet captures inert target identity/serial and
+copied descriptors/preferences, prepares through existing publication ownership,
+and notifies the same view once. Auto-size has separate permission from resizing;
+hidden reorder barriers use the complete sequence. Compatible preference transfer
+is separate from the unchanged exact-Spec query/page/selection rule. These are
+source changes, not executed results or W1 acceptance.
+
+Shared observation/geometry now resolves canonical/visible maps and narrow pin
+suspension. Browser integration keeps its existing row window/canonical editor
+vectors, reorders siblings around the focused cell, maps arrows/Tab/ARIA and uses
+the surrounding horizontal clip for logical sticky pins. Independent review
+caught and repaired a transient display:none write on visible active cells.
+Native source now includes the same outer grid with borrowed editable edge panes,
+canonical field maps and one captured edit lease. Descendant focus requires both current LCL focus and exact owned
+editor identity, avoiding remembered-control false positives outside the app.
+
+Helper additions preserve the original sizing and table-query sequences and
+waits. They cover pure values/source/geometry and mounted runtime admission plus
+cloned-document preference transfer. The new table source setup explicitly
+removes list/tree-only typeahead; the combined descriptor/typeahead assertions
+remain unchanged. Counts are source-derived expectations only. Management UI,
+physical resize/pin/edit/focus/scroll/lifetime checks and both-target W1 finish
+lines remain open. No compiler, native run, browser tab or host was started.
+The private packet retains partial source/review identities; it is NOT the joint
+freeze or reader admission.
+
+### Native partial source review; draft handoff next
+
+The latest source-only slice adds actual native pane construction, canonical
+paint/edit/query/selection mapping, logical Tab/arrows and RTL edges, shared
+outer TopRow/wheel ownership, bounded measurement and smaller-client allocation
+after native scrollbar settlement. Spacers are inert geometry, never invented
+fields. Teardown suspends editors under the mount guard and revokes pane hooks,
+readers, managed validation epochs and queued receivers before child destruction.
+No native execution or parity is claimed by this source review.
+
+Independent review caught LCL-specific tails: EditorMode=False hides without
+committing, OnMouseUp precedes final column sizing, and a validator can pump
+messages or reorder its still-connected table. Explicit ResetEditor now handles
+Tab/F2/Return commit. Managed epochs return the exact entry text plus False to
+neutralize stale positional writes; managed input-depth idle wakes defer resize
+publication/draft resume until inherited native calls unwind. Idle work never
+reposts inside an active message pump. Focus restoration uses initial logical
+focus ownership, and Tab edges use the owning form's ordinary traversal. These
+guards do not promise arbitrary immediate native widget destruction safety.
+
+The helper's corrected rebind case owns a separate initial application runtime,
+real page bindings and child host. It retains that exact state through Recompose
+and full Render, proving source intent without attributing those stores to the
+preceding application's private frame. Root independently reviewed this seam and
+cleanup ordering. Sizing/table marked stripping recovers original34217CA2/12,879
+and C9F376A9/48,554 bytes exactly. EDC24D52 retains all current owned hashes,
+nonowned1807 baseline/foreign13 exact and zero missing native method definitions.
+IndependentDF970EC8 accepts the exact partial native source slices; the remaining
+handoff/forms/input gates stay explicit. This is a partial source audit, not an
+executable qualification or joint freeze.
+
+Next is a copied, optional cell-edit handoff across full renderer replacement:
+capture/suspend at the reversible physical-preview boundary, validate candidate
+store/item/typed-field/accepted scalar, restore old logical editor on refusal,
+and retire old callbacks before accepted teardown. Existing ordinary text-face
+capture does not cover grid drafts. Both hosts need that path. Then complete the
+Nyx-managed column form/workbench and browser resize UI, followed by unchanged
+affected regressions and actual W1 desktop/compact input/lifetime checks after
+joint review/freeze and a fixed reader budget. No original criterion, counter or
+parent credit closes; core47 carries. Root source remains within its21 paths;
+helper's three sources are paused, with the next handoff design read-only.
+
+### Partial full-render cell drafts; physical input gates remain
+
+The optional edit facet now captures copied physical drafts with exact runtime
+store, item and typed field/family, accepted scalar, text and Unicode scalar
+selection. Source suspension suppresses blur/default edits and physical refresh;
+its exact snapshot is a single-use resume lease. Browser capture retains dirty
+resident inputs and realizes the one active editor last. Native capture retains
+one logical editor across editable edge panes. Neither path calls EditCell to
+transfer a draft. Whole-vector validation precedes physical import.
+
+Both renderers capture at their reversible physical-preview boundary, match
+replacement content identities, import only compatible accepted cells and resume
+every suspended former mount on refusal while preserving the original exception.
+Accepted teardown retires old callbacks. Fresh focus proof follows the exact
+copied cell, host map/input, text and supported caret; a reused native editor
+pointer or any descendant of a candidate tree grants no focus authority.
+Notifications revoke cached proof before outward callbacks. A saturating mutation
+generation also detects a final external getter publishing while FUpdating
+suppresses refresh; getter results are read first and current managed facts are
+fenced last. Declaration ordering is repaired in the shared/native class source.
+
+This is source-only progress. Remaining prerequisite gates are explicit: the
+physically previewed candidate must reject direct input/selection/query/layout
+commands until accepted adoption, and an active cell IME composition must refuse
+structural suspension before any editor hide or DOM move. Existing ordinary text
+composition handling does not qualify table cells. Complete those within the
+owned source scope before the managed column workbench/forms/browser resize UI,
+joint independent review/freeze, fixed reader budget and actual both-target W1
+desktop/compact regression. No compiler, native application, browser tab or host
+was started; no original criterion, counter or completion credit closes.
+The helper's three sources and both original marked consumer byte recoveries
+remain exact; its next assignment is read-only staged-input design. Partial
+audit/review receipts in the private packet are historical source identities,
+never a joint freeze or executable result.
+
+### Staged-input foundation; native editor/query/IME integration next
+
+Typed construction now distinguishes ready mounts from staged opted-in tables
+before Activate. Input admission is separate from authored Enabled/ReadOnly and
+physical Refresh/draft import. Every renderer candidate creates one own managed
+gate before Build. Embedded SetupCanvas inherits that exact candidate gate;
+child local acceptance cannot enable input while an enclosing generation is
+pending or retired. Parent ownership is immutable and retained, with a canonical
+private node link validated once at construction. Readiness traverses flags
+iteratively without arbitrary getters, recursion or hot-path QueryInterface.
+
+Both renderers retain every mount admission port before old retirement, check
+ancestor liveness after final readiness and transfer the same gate into accepted
+ownership. Installation only changes flags before LCommitted; Clear retires only
+its own gate at entry. Default/manual and absent-layout mounts preserve their
+established path. Direct Select/SetSelection/range/all/EditCell and query-workbench
+access refuse pending input. Browser capture guards prevent pending keyboard,
+beforeinput, pointer and text defaults; canonical row/key/query handlers also
+check readiness. Native adapter entry points and queued width publication check
+the same readiness, with a separate prepared final fence after validators. A
+narrow internal restore guard permits copied native drafts before acceptance.
+
+This foundation is uncompiled partial source, not complete physical input
+isolation. Native text can bypass high-level key/mouse hooks; the exact standard
+editor needs managed WindowProc/OS message ownership and dispatch-safe deferred
+retirement. A retained query form can outlive gate retirement until mount
+Disconnect: entry/presenter IsOpen guards alone do not protect its last validator.
+The next owned-only seam delegates both main and form event generations, reading
+the exact original cancellation scope first and canonical gate last; native flags
+must become atomic for that scope's worker-safe reads. Existing query units/GUIDs
+remain unchanged. Cell IME observation must reuse existing native END-to-idle
+snapshots and refuse structural suspension before hiding/moving any editor.
+
+The helper delivered these read-only designs and reviews the current source
+foundation; its three Pascal inputs stay paused. Existing root ownership and
+all original criteria/waits remain. No compiler, native/browser application,
+host or tab was started. Joint source readiness/freeze and fixed reader budget
+still follow the complete W1 source handoff, not this partial prerequisite.
+
 ## Own saved query workbench — 2026-10-22
 
 ### Table filtering and sorting accepted

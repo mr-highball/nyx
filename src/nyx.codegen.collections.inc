@@ -157,6 +157,75 @@ begin
   end;
 end;
 
+{ Keep the new namespace conditional so an unchanged legacy document produces
+  its former import list exactly. Definitions are authored roots in their own
+  right, independently of whether an application currently instantiates them. }
+function NeedsColumnLayoutUnits(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+
+  function ContainsLayout(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.HasLayoutControls;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := ContainsLayout(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if ContainsLayout(ADocument.Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if ContainsLayout(ADocument.Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+{ Emit actual enum symbols, in a stable order, rather than making generated
+  callers reconstruct a policy from interchange strings or ordinal masks. }
+function ColumnLayoutFeatureExpression(const AFeatures: TNyxColumnLayoutFeatures): TNyxText;
+const
+  CFeatures: array[TNyxColumnLayoutFeature] of TNyxText =
+    ('nclfResize', 'nclfAutoSize', 'nclfReorder', 'nclfVisibility', 'nclfPinning');
+var
+  LFeature: TNyxColumnLayoutFeature;
+begin
+  Result := '[';
+  for LFeature := Low(TNyxColumnLayoutFeature) to High(TNyxColumnLayoutFeature) do
+  begin
+
+    if LFeature in AFeatures then
+    begin
+
+      if Length(Result) > 1 then
+      begin
+        Result := Result + ', ';
+      end;
+      Result := Result + CFeatures[LFeature];
+    end;
+  end;
+  Result := Result + ']';
+end;
+
 procedure EmitCollectionBinding(ANode: TNyxNode; ALines: TNyxStrings;
   const AIndent: TNyxText);
 const
@@ -175,6 +244,8 @@ var
   LQuery: TNyxCollectionQuery;
   LColumnPolicy: TNyxColumnQueryPolicy;
   LTablePolicy: TNyxTableQueryPolicy;
+  LColumnLayout: TNyxColumnLayoutPolicy;
+  LTableLayout: TNyxTableLayoutPolicy;
 begin
 
   if not ANode.HasCollectionView then
@@ -268,6 +339,55 @@ begin
       end;
       ALines.Add(LLine + ')');
     end;
+
+    if LColumn.HasLayoutPolicy then
+    begin
+      LColumnLayout := LColumn.LayoutPolicy;
+      LLine := AIndent + '    .ColumnLayout(NyxColumnLayout';
+
+      if not LColumnLayout.IsVisible then
+      begin
+        LLine := LLine + '.Visible(False)';
+      end;
+      case LColumnLayout.Pin of
+        ncpNone: begin end;
+        ncpStart: LLine := LLine + '.PinStart()';
+        ncpEnd: LLine := LLine + '.PinEnd()';
+      end;
+
+      if LColumnLayout.Features <> NyxColumnLayout.Features then
+      begin
+        LLine := LLine + '.AllowOnly(' + ColumnLayoutFeatureExpression(LColumnLayout.Features) + ')';
+      end;
+      ALines.Add(LLine + ')');
+    end;
+  end;
+
+  if LView.HasTableLayoutPolicy then
+  begin
+    LTableLayout := LView.TableLayoutPolicy;
+    LLine := AIndent + '    .TableLayout(NyxTableLayout';
+
+    if not LTableLayout.IsEnabled then
+    begin
+      LLine := LLine + '.Enabled(False)';
+    end;
+
+    if LTableLayout.Features <> NyxTableLayout.Features then
+    begin
+      LLine := LLine + '.AllowOnly(' + ColumnLayoutFeatureExpression(LTableLayout.Features) + ')';
+    end;
+
+    if LTableLayout.MinimumScrollableWidth <> NyxDefaultColumnScrollableWidth then
+    begin
+      LLine := LLine + '.MinimumCenter(' + TNyxText(IntToStr(LTableLayout.MinimumScrollableWidth)) + ')';
+    end;
+
+    if LTableLayout.AutoSizeRows <> NyxDefaultColumnAutoSizeRows then
+    begin
+      LLine := LLine + '.AutoSizeSample(' + TNyxText(IntToStr(LTableLayout.AutoSizeRows)) + ')';
+    end;
+    ALines.Add(LLine + ')');
   end;
 
   if LView.HasTableQueryPolicy then

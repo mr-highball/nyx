@@ -79,6 +79,13 @@ function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
   and dependencies have passed. This routine owns/retires private expansions;
   it does not return an unchecked view or grant callers a validation bypass. }
 procedure ValidateNyxCanvasDeclarations(ADocument: TNyxDocument);
+{ Complete collection target admission after model references/cycles pass.
+  ACollections is the caller's already materialized immutable default frame;
+  private expansions are always retired and never mounted. Only authored
+  reusable/part descriptors need this extra pass, whose admitted expansion path
+  must not recursively invoke document validation. }
+procedure ValidateNyxCollectionDeclarations(ADocument: TNyxDocument;
+  const ACollections: INyxCollectionDefaults);
 
 { Realize the containing page/definition so a selected part retains its owning
   contracts, sibling value sources and reusable overrides. Caller owns Result;
@@ -112,7 +119,8 @@ implementation
 
 uses
   nyx.behavior, nyx.text.index, nyx.menu.declarations, nyx.menu.types, nyx.root.types,
-  nyx.canvas.declarations, nyx.canvas.types, nyx.diagram, nyx.diagram.content;
+  nyx.canvas.declarations, nyx.canvas.types, nyx.diagram, nyx.diagram.content,
+  nyx.collections.view, nyx.collections.view.types;
 
 class function TNyxViewFrame.At(AWidth, AHeight: Double;
   APlatform: TNyxPlatform): TNyxViewFrame;
@@ -337,8 +345,125 @@ begin
   end;
 end;
 
+{ Read the composed physical contract; authored overrides never manufacture
+  their destination kind from the policy they happen to carry. }
+function RealizedCollectionProjection(ANode: TNyxNode): TNyxCollectionProjection;
+begin
+
+  if ANode.ProjectionKind = NyxKindName(nkTable) then
+  begin
+    Result := cpTable;
+  end
+  else if ANode.ProjectionKind = NyxKindName(nkTree) then
+  begin
+    Result := cpTree;
+  end
+  else if ANode.ProjectionKind = NyxKindName(nkList) then
+  begin
+    Result := cpList;
+  end
+  else
+  begin
+    raise ENyxModel.Create('Collection binding requires a realized list, table or tree on ' +
+      ANode.SourceID);
+  end;
+end;
+
+{ Actual-frame recipe selection can differ from the admitted default expansion.
+  Keep target compatibility at this boundary without reloading resource rows. }
+procedure CheckRealizedCollectionProjections(ANode: TNyxNode);
+var
+  LChild: Integer;
+begin
+
+  if ANode.HasCollectionView and ANode.CollectionView.Defined then
+  begin
+    ValidateNyxCollectionViewProjection(ANode.CollectionView, RealizedCollectionProjection(ANode));
+  end;
+  for LChild := 0 to ANode.Count - 1 do
+  begin
+    CheckRealizedCollectionProjections(ANode.Children[LChild]);
+  end;
+end;
+
 function RealizeAdmittedNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AFrame: TNyxViewFrame; const AMeasurements: INyxContainerSnapshot): TNyxNode; forward;
+
+procedure ValidateNyxCollectionDeclarations(ADocument: TNyxDocument;
+  const ACollections: INyxCollectionDefaults);
+var
+  LIndex: Integer;
+  LView: TNyxNode;
+
+  function NeedsExpansion(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+
+    if ANode.HasCollectionView and ANode.CollectionView.Defined and
+      ((ANode.ProjectionKind = NyxKindName(nkComponent)) or
+      (ANode.Kind = NyxKindName(nkSlotOverride))) then
+    begin
+      Exit(True);
+    end;
+
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if NeedsExpansion(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+  procedure CheckTarget(ANode: TNyxNode);
+  var
+    LChild: Integer;
+  begin
+
+    if ANode.HasCollectionView and ANode.CollectionView.Defined then
+    begin
+      ValidateNyxCollectionViewSnapshot(ACollections.Snapshot(ANode.CollectionView.Key),
+        ANode.CollectionView, RealizedCollectionProjection(ANode));
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      CheckTarget(ANode.Children[LChild]);
+    end;
+  end;
+
+  procedure CheckRoot(ARoot: TNyxNode);
+  begin
+
+    if not NeedsExpansion(ARoot) then
+    begin
+      Exit;
+    end;
+    LView := RealizeAdmittedNyxView(ADocument, ARoot, Default(TNyxViewFrame), nil);
+    try
+      CheckTarget(LView);
+    finally
+      LView.Free;
+    end;
+  end;
+
+begin
+
+  if (ADocument = nil) or (ACollections = nil) then
+  begin
+    raise ENyxModel.Create('Collection admission requires its document and materialized defaults');
+  end;
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+    CheckRoot(ADocument.Pages[LIndex]);
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+    CheckRoot(ADocument.Components[LIndex]);
+  end;
+end;
 
 procedure ValidateNyxCanvasDeclarations(ADocument: TNyxDocument);
 var
@@ -894,6 +1019,7 @@ begin
   try
     Result.BindPresentations(LPresentations);
     Result.BindResources(ADocument.Resources, NyxDefaultLocale, NyxDefaultLocale);
+    CheckRealizedCollectionProjections(Result);
     PrepareNyxBehavior(Result);
   except
     Result.Free;

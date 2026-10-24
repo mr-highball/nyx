@@ -5,6 +5,54 @@
 
 **Description:**
 
+Make tables useful for real service/process inspection and data-entry work.
+W1 owns column arrangement and its complete Studio/generated-application journey;
+W2 adds full-value inspection, copying, formatting, export and context actions.
+Both packets serve the original seven criteria below and remain open.
+
+Current W1 implements typed resize/Fit, visible column management, both logical
+pin edges, defaults, per-instance preferences, Studio authoring and source/history
+support. Native/browser control journeys exercise desktop and compact sizes,
+editing and filtering, cancellation, hidden-column recovery and independent
+arrangements. Their exact source identities, failures and qualification limits are
+in [WORK](../WORK.md#column-arrangement-w1--2026-10-22). They do not replace the
+remaining full ordinary Studio and independently compiled own-export evidence.
+
+The current prerequisite repairs section replacement/rollback ownership and
+unrelated resource refreshes. Native section/Studio consumers pass102/85 checks
+with complete clean heaps; browser lower-section60 and Studio78 checks pass at
+measured1280/390 widths. These focused results establish the exercised section
+behavior only. Full Studio qualification and measured performance remain open.
+
+W2 has a typed managed clipboard boundary and a portable immutable collection-copy
+producer. Exact accepted cells and explicitly selected source/page rows preserve
+Unicode, scalar families, provenance and bounded TSV serialization. The producer
+passes46 native checks with a clean heap and46 actual browser checks; target host
+seams have separate qualification. Mounted canonical copy-command lifecycle
+checks pass58 natively with a clean heap and58 in the actual browser. Actual
+target key-route consumers pass51 native checks with a clean heap and39 browser
+checks at desktop/compact widths using injected clipboard authority. Hardware
+input, actual OS clipboard behavior, inspection/format/range/export
+workflows and their complete both-target integration remain required. Existing
+file-save and managed menus remain the owners of those corresponding facilities.
+
+Later source-specific checkpoints add managed cell inspection/context actions:
+command04 passes70 native/70 browser checks, context13 passes99 native checks
+with a clean heap, and corrected context14 passes116 actual browser checks at
+1280x720. The retained browser13 failure exposed duplicate interface-field
+release from direct Supports output;14 uses local owning references instead.
+Native14 and compact browser14 still require execution. Full Studio own08 passes
+832 browser checks at1280x900, while compact Inspector publication and complete
+native performance remain open. The direct typed extension-name admission repair
+passes1918 native/1914 browser checks without changing the original JSON budgets.
+These outcomes preserve every original criterion; they do not establish full
+W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
+
+[WORK](../WORK.md) owns current assignments and validation readers. Necessary
+library, interface, adapter and prerequisite changes are authorized; assignments
+coordinate concurrent edits rather than making source files immutable. Historical
+source-review checkpoints remain evidence in WORK, not additional approval gates.
+
 Let application users arrange columns, read difficult values and act on cells
 without leaving their working context. Prioritize real debugging/inspection and
 data-entry workflows over adding isolated properties with no visible interaction.
@@ -15,10 +63,10 @@ column sizing/navigation/selection implementation earns no duplicate credit.
 Starting evidence: [typed column sizing and cell navigation](../docs/collection-views.md),
 [native grid](../src/nyx.collections.lcl.grid.pas) and
 [shared cell movement](../src/nyx.collections.grid.pas). Native mount-local width
-override retention exists for externally changed `ColWidths`; the standard Nyx
-table does not currently expose a resize handle/command. Browser drag handles,
-portable column management and the remaining workbench affordances require
-explicit review and qualification.
+override retention exists for externally changed `ColWidths`; that accepted
+baseline has no portable Nyx resize handle/command. The current partial browser
+handle source, portable column management and remaining workbench affordances
+require complete review and qualification.
 Inherited native grid copy behavior already exists; the gap is a documented,
 portable Nyx copy/range contract with the same stable identities on both targets.
 Coordinate the header surface with [filter/sort work](DONE/NS-3_control-usefulness_02.md);
@@ -67,9 +115,9 @@ source scope and actual result; completing W1 does not accept W2 or this task.
   contract. Keep inspection and selection intact on refusal; never report a
   requested download as a confirmed disk write. Reuse managed menus.
 
-These 2026-10-22 refinements make the original criteria observable; they do not
-release implementation, introduce a second history/query owner or
-claim that inherited native widget copy satisfies the portable contract.
+These 2026-10-22 refinements make the original criteria observable. Implementation
+uses the existing history/query owners, and inherited native widget copy still
+needs qualification against the portable contract.
 
 **Acceptance Criteria:**
 

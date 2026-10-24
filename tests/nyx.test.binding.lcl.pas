@@ -45,6 +45,7 @@ uses
   nyx.state,
   nyx.binding.types,
   nyx.model,
+  nyx.codec,
   nyx.widgets.lcl,
   nyx.application.lcl,
   nyx.render.lcl,
@@ -209,6 +210,361 @@ begin
   end;
 end;
 
+type
+  { The four existing public-renderer routes exercise distinct retirement
+    boundaries without replacing the original shared native binding fixture. }
+  TNativeRetirementAction = (nraNone, nraProgrammaticUnmount,
+    nraExternalRemount, nraOwnedTransfer, nraCommittedFailure);
+  { Borrowed forward link from the tracked native face to its test owner. }
+  TNativeRetirementProbe = class;
+
+  { This real custom control records destruction of the exact accepted face.
+    Its probe outlives renderer retirement and the ordinary async frame drain. }
+  TNativeRetirementCaption = class(TPanel)
+  public
+    Probe: TNativeRetirementProbe;
+    BorrowedNode: TNyxNode;
+    destructor Destroy; override;
+  end;
+
+  { The test owns renderer, document and host. An external Store is retained
+    until after every callback. For nraOwnedTransfer only, Store is a borrowed
+    observation of the renderer's OWN state: never free it from this probe.
+    The old entered generation and exact successor must share that real owner. }
+  TNativeRetirementProbe = class
+  public
+    Renderer: TNyxLCLRenderer;
+    Document: TNyxDocument;
+    Host: TForm;
+    Store: TNyxState;
+    WatchedControl: TNativeRetirementCaption;
+    Action: TNativeRetirementAction;
+    Armed: Boolean;
+    Updates: Integer;
+    Destroyed: Integer;
+    OldEvents: Integer;
+    SuccessorEvents: Integer;
+    SawBusyStore: Boolean;
+    SawExactStateTransfer: Boolean;
+    SawLiveControl: Boolean;
+    SawLiveNode: Boolean;
+    SawDestructorNode: Boolean;
+    SawOwnedStateAfterSuccessor: Boolean;
+    RaisedNotification: Boolean;
+    RevisionAtEntry: Integer;
+    procedure Update(ANode: TNyxNode; AControl: TControl);
+    procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+  end;
+
+var
+  { Existing factory callbacks are plain procedures. This temporary borrowed
+    receiver is installed only while its independent journey owns every face. }
+  GNativeRetirementProbe: TNativeRetirementProbe;
+
+destructor TNativeRetirementCaption.Destroy;
+begin
+
+  if (Probe <> nil) and (Probe.WatchedControl = Self) then
+  begin
+    { The real deferred control destructor still owns its original borrowed
+      node. The panel lease must outlive every later-created custom control. }
+    Probe.SawDestructorNode := (BorrowedNode <> nil) and
+      (BorrowedNode.ID = 'retirement-caption');
+    Inc(Probe.Destroyed);
+  end;
+  inherited Destroy;
+end;
+
+function NativeRetirementFactory(ANode: TNyxNode; AOwner: TComponent): TControl;
+var
+  LCaption: TNativeRetirementCaption;
+begin
+  LCaption := TNativeRetirementCaption.Create(AOwner);
+  LCaption.Probe := GNativeRetirementProbe;
+  LCaption.BorrowedNode := ANode;
+  LCaption.BevelOuter := bvNone;
+  Result := LCaption;
+end;
+
+procedure NativeRetirementUpdate(ANode: TNyxNode; AControl: TControl);
+begin
+  GNativeRetirementProbe.Update(ANode, AControl);
+end;
+
+procedure TNativeRetirementProbe.Update(ANode: TNyxNode; AControl: TControl);
+var
+  LText: TNyxText;
+  LAction: TNativeRetirementAction;
+begin
+  LText := ANode.Prop('text');
+  TPanel(AControl).Caption := LText;
+
+  if not Armed or (ANode.ID <> 'retirement-caption') then
+  begin
+    Exit;
+  end;
+  Armed := False;
+  Inc(Updates);
+  LAction := Action;
+  RevisionAtEntry := Store.Revision;
+  SawBusyStore := Store.Busy;
+  case LAction of
+    nraNone:
+      raise ENyxState.Create('Native retirement requires an explicit scenario');
+    nraProgrammaticUnmount:
+      Renderer.Unmount;
+    nraExternalRemount:
+      begin
+        Renderer.Unmount;
+        Renderer.Render(Document, Document.Pages[1], Host, Store);
+        { Only the successor's shared binding remains. An old subscriber would
+          reject removing its still-bound old-only key immediately here. }
+        Store.Remove(NyxTextState('retirement-only'));
+        Store.SetValue(NyxTextState('retirement-shared'), 'Successor accepted');
+      end;
+    nraOwnedTransfer:
+      begin
+        { Pass the exact currently owned state through FULL remount, without
+          first unmounting or manufacturing ownership from pointer equality. }
+        Renderer.Render(Document, Document.Pages[1], Host, Store);
+        SawExactStateTransfer := Renderer.State = Store;
+        Renderer.Unmount;
+        { Destroy the accepted successor BEFORE the old command returns. Its
+          shared state owner must still be leased by the old entered call. }
+        SawOwnedStateAfterSuccessor :=
+          (Store.GetValue(NyxTextState('retirement-only')) = 'Old accepted') and
+          (Store.Revision = RevisionAtEntry);
+      end;
+    nraCommittedFailure:
+      begin
+        { State notification is already Busy/committed. Use a separate owned
+          successor state rather than subscribing to that busy external store. }
+        Renderer.Render(Document, Document.Pages[1], Host);
+      end;
+  end;
+  { Pumping existing queued retirement while still entered must NOT destroy
+    this borrowed physical face or its node. No synthetic sleep/wait is added. }
+  Application.ProcessMessages;
+  SawLiveControl := (Destroyed = 0) and
+    (TNyxText(TPanel(AControl).Caption) = LText);
+  TPanel(AControl).Caption := LText + ' / entered callback still owns this face';
+  SawLiveNode := ANode.Prop('text') = LText;
+
+  if LAction = nraCommittedFailure then
+  begin
+    RaisedNotification := True;
+    raise ENyxState.Create('Intentional retired native notification failure');
+  end;
+end;
+
+procedure TNativeRetirementProbe.Event(ANode: TNyxNode;
+  const AEvent: TNyxEventInfo);
+begin
+
+  if (ANode.ID = 'retirement-click') or (ANode.ID = 'retirement-entry') then
+  begin
+    Inc(OldEvents);
+  end;
+
+  if ANode.ID = 'successor-click' then
+  begin
+    Inc(SuccessorEvents);
+  end;
+end;
+
+{ The seed is independent of CreateNyxBindingFixture and all old control
+  assertions. Its old-only field makes stale validation observable; its labeled
+  no-op Click enters real Command/Sync without assigning any state. }
+function CreateNativeRetirementFixture: TNyxDocument;
+var
+  LPage, LNode: TNyxNode;
+begin
+  Result := TNyxDocument.Create;
+  try
+    Result.State.SetValue(NyxTextState('retirement-only'), 'Old accepted')
+      .SetValue(NyxTextState('retirement-shared'), 'Shared accepted');
+    LPage := TNyxNode.Create(nkPage, 'retirement-page');
+    Result.AddPage(LPage);
+    LPage.Configure.Layout(nlColumn).Done;
+    LNode := TNyxNode.Create(nkLabel, 'retirement-caption');
+    LPage.Add(LNode);
+    LNode.Binds.Text(NyxTextState('retirement-shared')).Done;
+    LNode := TNyxNode.Create(nkMemo, 'retirement-entry');
+    LPage.Add(LNode);
+    LNode.Binds.Value(NyxTextState('retirement-only')).Done;
+    LNode := TNyxNode.Create(nkButton, 'retirement-click');
+    LPage.Add(LNode);
+    LNode.Configure.Text('Retirement command').OnClick(NyxEvent('retirement-click')).Done;
+    LPage := TNyxNode.Create(nkPage, 'retirement-successor');
+    Result.AddPage(LPage);
+    LPage.Configure.Layout(nlColumn).Done;
+    LNode := TNyxNode.Create(nkLabel, 'successor-caption');
+    LPage.Add(LNode);
+    LNode.Binds.Text(NyxTextState('retirement-shared')).Done;
+    LNode := TNyxNode.Create(nkButton, 'successor-click');
+    LPage.Add(LNode);
+    LNode.Configure.Text('Successor command').OnClick(NyxEvent('successor-click')).Done;
+    Result.Validate;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function RunNativeRetirementCases: Integer;
+var
+  LProbe: TNativeRetirementProbe;
+  LExternalStore: TNyxState;
+  LAction: TNativeRetirementAction;
+  LRevision: Integer;
+  LMemo: TMemo;
+  LBefore: TNyxText;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise ENyxState.Create('Native retirement: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+begin
+  Result := 0;
+  for LAction := nraProgrammaticUnmount to nraCommittedFailure do
+  begin
+    LProbe := TNativeRetirementProbe.Create;
+    LExternalStore := nil;
+    try
+      GNativeRetirementProbe := LProbe;
+      LProbe.Document := CreateNativeRetirementFixture;
+      LBefore := TNyxCodec.Encode(LProbe.Document);
+      LProbe.Renderer := TNyxLCLRenderer.Create;
+      LProbe.Host := TForm.CreateNew(nil);
+      LProbe.Host.ClientWidth := 1000;
+      LProbe.Host.ClientHeight := 800;
+      LProbe.Renderer.RegisterFactory('label', NativeRetirementFactory,
+        NativeRetirementUpdate);
+      LProbe.Renderer.OnEvent := LProbe.Event;
+
+      if LAction = nraOwnedTransfer then
+      begin
+        LProbe.Renderer.Render(LProbe.Document, LProbe.Document.Pages[0], LProbe.Host);
+      end
+      else
+      begin
+        LExternalStore := LProbe.Document.State.Clone;
+        LProbe.Renderer.Render(LProbe.Document, LProbe.Document.Pages[0],
+          LProbe.Host, LExternalStore);
+      end;
+      LProbe.Store := LProbe.Renderer.State;
+      LProbe.WatchedControl := TNativeRetirementCaption(
+        LProbe.Renderer.ControlFor('retirement-caption'));
+      LRevision := LProbe.Store.Revision;
+      LProbe.Action := LAction;
+      LProbe.Armed := True;
+      case LAction of
+        nraNone:
+          raise ENyxState.Create('Native retirement requires an explicit scenario');
+        nraProgrammaticUnmount:
+          LExternalStore.SetValue(NyxTextState('retirement-shared'), 'Programmatic accepted');
+        nraExternalRemount, nraOwnedTransfer:
+          TNyxLCLButton(LProbe.Renderer.ControlFor('retirement-click')).Click;
+        nraCommittedFailure:
+          begin
+            LMemo := TMemo(LProbe.Renderer.InputFor('retirement-entry'));
+            LMemo.Text := 'Committed before retired notification failure';
+          end;
+      end;
+      Check((LProbe.Updates = 1) and LProbe.SawLiveControl and LProbe.SawLiveNode,
+        'entered native updater retains its exact borrowed control and node through retirement');
+      Application.ProcessMessages;
+      Check(LProbe.SawDestructorNode,
+        'actual retired control destructor retains the exact borrowed node');
+      Check(LProbe.Destroyed = 1,
+        'retired native physical face is destroyed exactly once after the entered callback unwinds');
+      Check(LProbe.OldEvents = 0,
+        'retired command cannot emit its stale old semantic Click');
+      case LAction of
+        nraNone:
+          raise ENyxState.Create('Native retirement requires an explicit scenario');
+        nraProgrammaticUnmount:
+          begin
+            Check(LProbe.SawBusyStore and (LProbe.Renderer.Root = nil) and
+              (LExternalStore.Revision = LRevision + 1) and
+              (LExternalStore.GetValue(NyxTextState('retirement-shared')) = 'Programmatic accepted'),
+              'programmatic Sync retirement preserves the already committed external state');
+            LExternalStore.SetValue(NyxTextState('retirement-shared'), 'After programmatic unmount');
+            Check(LProbe.Updates = 1,
+              'programmatic unmount removes its old native subscriber immediately');
+          end;
+        nraExternalRemount:
+          begin
+            Check(not LProbe.SawBusyStore and (LProbe.RevisionAtEntry = LRevision) and
+              (LProbe.Renderer.State = LExternalStore) and
+              not LExternalStore.Has('retirement-only') and
+              (LExternalStore.Revision = LRevision + 2) and
+              (TNyxText(TPanel(LProbe.Renderer.ControlFor('successor-caption')).Caption) =
+                'Successor accepted'),
+              'no-assignment Click remounts the same external store and removes the old-only validator');
+            TNyxLCLButton(LProbe.Renderer.ControlFor('successor-click')).Click;
+            Check((LProbe.SuccessorEvents = 1) and (LProbe.OldEvents = 0) and
+              (LProbe.Renderer.LastBindingFailure = nbfNone),
+              'successor Click remains usable without stale old semantic or diagnostic tails');
+          end;
+        nraOwnedTransfer:
+          begin
+            { Store is no longer ours to read after the old command returns. }
+            LProbe.Store := nil;
+            Check(not LProbe.SawBusyStore and LProbe.SawExactStateTransfer and
+              LProbe.SawOwnedStateAfterSuccessor and (LProbe.Renderer.Root = nil),
+              'exact renderer-owned state survives successor destruction until its old entered command returns');
+            Check(LProbe.Renderer.LastBindingFailure = nbfNone,
+              'owned-state successor retirement leaves no stale old command error');
+          end;
+        nraCommittedFailure:
+          begin
+            Check(LProbe.SawBusyStore and LProbe.RaisedNotification and
+              (LExternalStore.Revision = LRevision + 1) and
+              (LExternalStore.GetValue(NyxTextState('retirement-only')) =
+                'Committed before retired notification failure'),
+              'retired notification failure preserves the external command commitment without rollback');
+            Check((LProbe.Renderer.State <> LExternalStore) and
+              (LProbe.Renderer.State.GetValue(NyxTextState('retirement-only')) = 'Old accepted') and
+              (LProbe.Renderer.LastBindingError = '') and
+              (LProbe.Renderer.LastBindingFailure = nbfNone),
+              'old committed failure cannot overwrite independent successor state or error diagnostics: ' +
+              'same external=' + BoolToStr(LProbe.Renderer.State = LExternalStore, True) +
+              ', successor value=' + LProbe.Renderer.State.GetValue(NyxTextState('retirement-only')) +
+              ', error=' + LProbe.Renderer.LastBindingError +
+              ', failure=' + IntToStr(Ord(LProbe.Renderer.LastBindingFailure)));
+            TNyxLCLButton(LProbe.Renderer.ControlFor('successor-click')).Click;
+            Check((LProbe.SuccessorEvents = 1) and (LProbe.OldEvents = 0),
+              'independent successor remains interactive after an old notification failure');
+          end;
+      end;
+      Check(TNyxCodec.Encode(LProbe.Document) = LBefore,
+        'native retirement never mutates the independent authored defaults');
+    finally
+      LProbe.Armed := False;
+      try
+        FreeAndNil(LProbe.Renderer);
+      finally
+        try
+          Application.ProcessMessages;
+        finally
+          LExternalStore.Free;
+          LProbe.Host.Free;
+          LProbe.Document.Free;
+          GNativeRetirementProbe := nil;
+          LProbe.Free;
+        end;
+      end;
+    end;
+  end;
+end;
+
 function RunNyxNativeBindingJourney: Integer;
 var
   LDocument: TNyxDocument;
@@ -243,6 +599,7 @@ var
 
 begin
   Result := RunCustomJourney;
+  Inc(Result, RunNativeRetirementCases);
   LDocument := CreateNyxBindingFixture;
   LApplication := TNyxLCLApplication.Create;
   LProbe := TNativeBindingProbe.Create;

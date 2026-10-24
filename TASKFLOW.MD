@@ -24,6 +24,10 @@ and TODO-to-DONE moves.
   breadth, Studio depth, and release quality.
 - Planning does not create an approval boundary; continue through authorized
   implementation tasks and their prerequisites.
+- File assignments and source inventories coordinate edits; they are not user
+  permission allowlists. Root may include necessary library, Studio and test
+  prerequisites and adjust disjoint ownership without another approval. The
+  user's 2026-10-22 instruction removes historical source-scope approval gates.
 - No completion percentage or task credit is assigned before the baseline and
   acceptance evidence are assessed. `Pending assessment` is intentional and
   earns no completion credit.
@@ -42,10 +46,10 @@ changed files, remaining checks and next candidate to root; continue independent
 read-only review of that prerequisite while implementation ownership or
 qualification is pending.
 
-Root coordinates separate file ownership and admits all compiler/readers. Both
-agents pause Pascal edits while any admitted reader is live, and resume only
-after root has joined every reader and released the next scope. During a freeze,
-use useful read-only investigation or separately owned documentation work. Pull
+Root coordinates separate file ownership and stable snapshots for compiler and
+runtime checks. Pause edits that affect the snapshot being checked until its
+actual readers are joined; unrelated disjoint work may continue. These short
+freezes coordinate validation and do not add user approval gates. Pull
 from existing tasks and their prerequisites; do not manufacture busywork,
 recurring cleanup or new acceptance credit to keep an agent occupied. A concrete
 external blocker is reported with its unblock condition and return task.

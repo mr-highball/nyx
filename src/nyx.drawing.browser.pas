@@ -30,6 +30,11 @@ uses
   nyx.design.tokens, nyx.drawing, nyx.drawing.view, nyx.canvas.geometry;
 
 type
+  { A renderer supplies a weak entry receiver. Its returned local lease keeps
+    the drawing and borrowed host data alive across a provider callback; the
+    drawing stores only this method, avoiding a managed owner cycle. }
+  TNyxBrowserDrawingEnter = function: IInterface of object;
+
   { Binding-owned SVG projection. Normal Nyx DOM ownership/events remain on
     the supplied host. Configure builds a detached complete subtree, then swaps
     it; no raw markup/code enters SVG. Disconnect retires the observer before
@@ -45,11 +50,13 @@ type
     FTheme: TNyxTheme;
     FLastError: TNyxText;
     FCaption: TNyxText;
+    FEnter: TNyxBrowserDrawingEnter;
     function BuildSVG(const APlan: INyxDrawingPlan; ATheme: TNyxTheme): TJSElement;
     procedure BoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
   public
-    constructor Create(AHost: TJSHTMLElement);
+    constructor Create(AHost: TJSHTMLElement;
+      AEnter: TNyxBrowserDrawingEnter = nil);
     destructor Destroy; override;
     procedure Configure(const APlan: INyxDrawingPlan;
       const AProvider: INyxDrawingProvider; ATheme: TNyxTheme;
@@ -79,7 +86,8 @@ begin
   end;
 end;
 
-constructor TNyxBrowserDrawing.Create(AHost: TJSHTMLElement);
+constructor TNyxBrowserDrawing.Create(AHost: TJSHTMLElement;
+  AEnter: TNyxBrowserDrawingEnter);
 begin
   inherited Create;
 
@@ -88,6 +96,7 @@ begin
     raise ENyxDrawing.Create('Drawing host required');
   end;
   FHost := AHost;
+  FEnter := AEnter;
   FObserver := TJSHTMLResizeObserver.new(@BoundsChanged);
   FObserver.observe(FHost);
 end;
@@ -100,6 +109,7 @@ end;
 
 procedure TNyxBrowserDrawing.Disconnect;
 begin
+  FEnter := nil;
 
   if FObserver <> nil then
   begin
@@ -201,6 +211,9 @@ var
   LBase: INyxDrawingPlan;
   LPlan: INyxDrawingPlan;
   LSVG: TJSElement;
+  LHost: TJSHTMLElement;
+  LProvider: INyxDrawingProvider;
+  LCaption: TNyxText;
 begin
 
   if FHost = nil then
@@ -212,11 +225,31 @@ begin
   begin
     raise ENyxDrawing.Create('Drawing plan required');
   end;
-  LBase := CaptureNyxDrawingPlan(APlan);
+  LHost := FHost;
+  LProvider := AProvider;
+  LCaption := ACaption;
+  { Copy the actual borrowed palette before any foreign plan/provider getter.
+    A callback may retire the drawing, including its previous owned palette. }
   LTheme := NewNyxDocumentTheme(nil, ATheme);
   try
-    LPlan := ResolveNyxDrawing(LBase, AProvider, FHost.clientWidth, FHost.clientHeight, LTheme);
+    LBase := CaptureNyxDrawingPlan(APlan);
+
+    if FHost <> LHost then
+    begin
+      Exit;
+    end;
+    LPlan := ResolveNyxDrawing(LBase, LProvider, LHost.clientWidth, LHost.clientHeight, LTheme);
+
+    if FHost <> LHost then
+    begin
+      Exit;
+    end;
     LSVG := BuildSVG(LPlan, LTheme);
+
+    if FHost <> LHost then
+    begin
+      Exit;
+    end;
 
     if FSVG = nil then
     begin
@@ -232,11 +265,11 @@ begin
     LTheme := nil;
     FBase := LBase;
     FPlan := LPlan;
-    FProvider := AProvider;
+    FProvider := LProvider;
     FLastError := '';
-    FCaption := ACaption;
+    FCaption := LCaption;
     FHost.setAttribute('role', 'img');
-    FHost.setAttribute('aria-label', ACaption);
+    FHost.setAttribute('aria-label', LCaption);
   finally
     LTheme.Free;
   end;
@@ -244,7 +277,21 @@ end;
 
 procedure TNyxBrowserDrawing.BoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
   AObserver: TJSHTMLResizeObserver);
+var
+  LLease: IInterface;
+  LEnter: TNyxBrowserDrawingEnter;
 begin
+  LEnter := FEnter;
+
+  if Assigned(LEnter) then
+  begin
+    LLease := LEnter();
+
+    if LLease = nil then
+    begin
+      Exit;
+    end;
+  end;
 
   if (FHost = nil) or (FBase = nil) then
   begin
@@ -255,7 +302,10 @@ begin
   except
     on E: Exception do
     begin
-      FLastError := E.Message;
+      if FHost <> nil then
+      begin
+        FLastError := E.Message;
+      end;
     end;
   end;
 end;

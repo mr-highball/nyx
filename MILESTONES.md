@@ -16,6 +16,17 @@ NS-3 completion and expanded-scope weights stay Pending assessment; no percentag
 or duplicate credit is assigned. Next core packet is
 [table workbench03 W1](TODO/NS-3_control-usefulness_03.md), column arrangement.
 
+The 2026-10-18 scope addition includes an optional
+[browser-local pas2js WEB compiler](TODO/NS-5_browser-compiler_01.md) and a
+[static client-only Studio edition](TODO/NS-5_browser-compiler_07.md) suitable
+for GitHub Pages, with no required Nyx backend, account, server compiler or cloud
+storage. Existing host builds and native/LCL support remain required.
+[Reflective Studio help](TODO/NS-4_studio-reference_01.md) uses documentation
+decorators and automatic registration to feed a searchable class/member/type
+reference built entirely with Nyx controls. The eleven focused task files below
+extend M4 and feed M5; credit/weights remain pending reassessment. No existing
+criterion, counter or completion status changes from task authoring.
+
 The 2026-10-13 canvas/diagram request expands the intended destination with
 [a general infinite workspace](TODO/NS-3_canvas-workspace_01.md),
 [typed Pascal behavior programs](TODO/NS-1_canvas-behaviors_01.md) and
@@ -3434,7 +3445,11 @@ code-first contract produces equivalent browser/pas2js and native/LCL
 applications. Nyx Studio makes that contract visual without hiding it: users
 design multi-page applications and reusable components, optionally edit the
 generated Pascal in split view, and invoke a Pascal HTTP compiler service for
-fast view reloads or complete application builds.
+fast view reloads or complete application builds. An optional browser-local WEB
+compiler also supports a static client-only edition, retaining local projects
+and isolated previews without a required backend/account/compiler service/cloud
+store. Decorator-driven class/member/type help is available through Nyx controls
+in native, connected-browser and static-client Studio.
 Targets are optional during authoring and can be chosen/configured at any time
 through Studio's Nyx-built output section. Editor defaults use project content,
 without branch names or build-specific milestone text.
@@ -3455,8 +3470,8 @@ broader product outcomes remain open.
 | NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state, managed interfaces, exact clock-value/domain and portable resource prerequisites accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
 | NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated | Capability parity, responsive/theming depth, accessibility and visuals |
 | NS-3 — Exhaustive extensible component system | A broad production catalog is coherent, virtualized where needed, composable, themeable, and extendable without forking Nyx internals | 41 primitive/layout/authoring kinds and 35 compound recipes defined | Advanced behavior, virtualization, extension SDK and performance |
-| NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell, ordinary Resources workspace/picker and semantic callback workflow criterion accepted; authenticated observing edits and exact both-target applications qualified | General compiler-backed source/project import, complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
-| NS-5 — Pascal build and reload service | A hardened Pascal HTTP service builds views and complete apps, streams structured diagnostics, and reloads admitted artifacts | Local HTTP builds and bounded immutable MCP jobs evaluated | Global scheduling, caching, cancellation, persistence, reload and diagnostics |
+| NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration, deterministic generation and decorator-driven help/class reference; Studio itself is built with Nyx | Shared Nyx shell, ordinary Resources workspace/picker and semantic callback workflow criterion accepted; authenticated observing edits and exact both-target applications qualified | General compiler-backed source/project import, complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX, complete native controller and reflective Nyx-built API reference |
+| NS-5 — Pascal build and reload service | A hardened Pascal HTTP service builds views and complete apps, streams structured diagnostics and reloads admitted artifacts; optional browser-local WEB compilation supports a static client-only Studio edition while retaining host/native builds | Local HTTP builds and bounded immutable MCP jobs evaluated; browser-local compiler/static edition unqualified | Global scheduling, caching, cancellation, persistence, reload and diagnostics; qualified local WEB compiler, virtual inputs/toolchain caches, local projects, isolated preview and static browser QA |
 | NS-6 — Independent delivery quality | Clean setup, checks, examples, documentation, packaging, compatibility policy, and real-user evaluation support independent adoption | Repeatable Windows build entry point evaluated | CI/release matrix, compatibility, packaging and independent evaluation |
 
 ## Remaining scope and task ownership
@@ -3479,6 +3494,36 @@ accepted for the qualified Win32/browser targets, including complete ordinary
 Studio consumers. Broader authoring, semantic workflows, parity and preserving
 delivery retain their original outcomes. No duplicate completion allocation is
 created; credit remains pending assessment.
+
+The optional browser compiler and reflective help additions have the following
+owners. These are new open outcomes, not accepted capability or a replacement
+for the existing HTTP service, full Studio authoring or Nyx-owned editing engine.
+The upstream browser compiler announcement does not establish Nyx compatibility.
+
+| Open outcome | Task owner |
+| --- | --- |
+| Browser compiler compatibility | [NS-5_browser-compiler_01](TODO/NS-5_browser-compiler_01.md) |
+| Studio compiler provider selection | [NS-5_browser-compiler_02](TODO/NS-5_browser-compiler_02.md) |
+| Browser worker lifecycle | [NS-5_browser-compiler_03](TODO/NS-5_browser-compiler_03.md) |
+| Virtual inputs and toolchain caches | [NS-5_browser-compiler_04](TODO/NS-5_browser-compiler_04.md) |
+| Client-local projects | [NS-5_browser-compiler_05](TODO/NS-5_browser-compiler_05.md) |
+| Isolated compiled previews | [NS-5_browser-compiler_06](TODO/NS-5_browser-compiler_06.md) |
+| Static WEB qualification | [NS-5_browser-compiler_07](TODO/NS-5_browser-compiler_07.md) |
+| Portable documentation decorators | [NS-4_studio-reference_01](TODO/NS-4_studio-reference_01.md) |
+| Automatic reference registration | [NS-4_studio-reference_02](TODO/NS-4_studio-reference_02.md) |
+| Nyx-built reference lookup | [NS-4_studio-reference_03](TODO/NS-4_studio-reference_03.md) |
+| Reference completeness and compatibility | [NS-4_studio-reference_04](TODO/NS-4_studio-reference_04.md) |
+
+NS-5 owns the optional local WEB compilation/static-client qualification;
+NS-4 owns the reflective reference feature. Existing NS-6 delivery consumes
+the verified staged edition and owns any later separately authorized live
+publication/smoke evidence. Static qualification includes root/subpath asset
+resolution, HTTPS/MIME, no assumed custom headers/server routes, honest cold/warm
+offline and eviction behavior, and isolation from editor storage/authority.
+[Athena Actions](athena/docs/platforms/github-actions.md) and the
+[Pages extension](athena/templates/github-actions.md#pages-extension) define the
+future workflow conventions. No workflow, submodule or deployment changes follow
+from this task-document update.
 
 ## Next meaningful milestones
 
@@ -3521,8 +3566,8 @@ production component outcomes retain their owners.
 | M1 — First end-to-end slice | NS-1 model/catalog, NS-2 browser/LCL slice, NS-4 Studio slice, NS-5 service slice | Same document/component renders on both targets; Studio changes deterministic Pascal; view and app builds return structured results |
 | M2 — Stable authoring contract | NS-1 persistence/state/codegen, NS-2 semantic parity, NS-4 authoring | Round trips, undoable edits, code synchronization and representative interaction journeys |
 | M3 — Production component breadth | NS-1 structured state, NS-3 catalog/extension/performance, NS-2 accessibility/visual quality | Published parity matrix, component journeys, keyboard/screen-reader checks, desktop/narrow screenshots and performance fixtures |
-| M4 — Dependable Studio and service | NS-4 full project UX, NS-5 isolation/reload/diagnostics | Multi-page/reusable project journey, failure recovery, stale-build refusal and bounded compiler-service behavior |
-| M5 — Independent adoption | NS-6 toolchain, delivery and evaluation | Clean checkout builds, packaged examples, supported matrix and independent developer completion of documented journeys |
+| M4 — Dependable Studio and service | NS-4 full project UX/reference tasks, NS-5 isolation/reload/diagnostics/browser-compiler tasks | Multi-page/reusable project journey, failure recovery, stale-build refusal, bounded compiler behavior, optional backend-free WEB authoring and integrated reference lookup |
+| M5 — Independent adoption | NS-6 toolchain/delivery/evaluation consuming NS-5 static qualification and NS-4 reference QA | Clean checkout builds, packaged examples, supported matrix, independently usable static artifacts, separately authorized deployment evidence and independent developer completion of documented journeys |
 
 Current task and return path are maintained in [WORK.md](WORK.md).
 

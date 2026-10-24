@@ -70,6 +70,7 @@ uses
   nyx.popover.types,
   nyx.typeahead,
   nyx.collections.columns,
+  nyx.collections.arrangement,
   nyx.layout.constraints,
   nyx.root.types,
   nyx.containers,
@@ -4388,6 +4389,11 @@ begin
       if ADocument.HasCollectionQueryControls then
       begin
         LLines.Add('  nyx.collections.query.policy,');
+      end;
+
+      if NeedsColumnLayoutUnits(ADocument) then
+      begin
+        LLines.Add('  nyx.collections.arrangement,');
       end;
       LLines.Add('  nyx.collections.selection,');
       LLines.Add('  nyx.collections.query,');

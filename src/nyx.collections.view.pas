@@ -44,6 +44,7 @@ uses
   nyx.collections.query.view,
   nyx.collections.registry,
   nyx.collections.view.types,
+  nyx.collections.arrangement,
   nyx.collections.selection;
 
 const
@@ -51,6 +52,61 @@ const
 
 type
   INyxCollectionView = interface;
+  { One immutable, bounded observation of a table's authored descriptors and
+    host-owned preferences. It retains neither the live view nor any widget.
+    Serial is diagnostic; private identity proof also fences prepared commands,
+    so copying a serial cannot retarget a command to another table or rebind. }
+  INyxCollectionColumnsCapture = interface(IInterface)
+    ['{8D2BD642-934C-40E0-A9B4-C3760193CB60}']
+    function GetSpec: TNyxCollectionViewSpec;
+    function GetPreferences: TNyxColumnPreferences;
+    function GetSerial: Integer;
+    property Spec: TNyxCollectionViewSpec read GetSpec;
+    property Preferences: TNyxColumnPreferences read GetPreferences;
+    property Serial: Integer read GetSerial;
+  end;
+
+  { Optional per-table column arrangement; all older view GUIDs stay unchanged.
+    Commands reserve this same view and publish through its existing observers.
+    No row, selection, query, document or authored default is changed. Resets
+    remove overrides even if user commands have since been disabled. Host font
+    measurement is separate: bounded fit-to-content publishes through AutoSize,
+    which checks its own capability instead of assuming resize is also enabled. }
+  INyxCollectionColumns = interface(IInterface)
+    ['{FA1D2EC7-EAB4-408B-AC16-EFAE6331C1E2}']
+    function CaptureColumns: INyxCollectionColumnsCapture;
+    function PrepareColumns(const ACapture: INyxCollectionColumnsCapture;
+      const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
+    function PrepareAutoSize(const ACapture: INyxCollectionColumnsCapture;
+      const AField: TNyxColumnIdentity; AWidth: Integer): INyxPreparedPublication;
+    function ConfigureColumns(const APreferences: TNyxColumnPreferences): INyxCollectionColumns;
+  end;
+  { Bounded immutable text from the CURRENT table page, independent of host font
+    measurement. Count is at most the authored AutoSizeRows limit; an empty page
+    still exposes its column title. Returned descriptors/identities are values.
+    A sample retains immutable data and inert identity proofs, never a live view,
+    store, renderer or widget. Keeping it does not keep application UI alive. }
+  INyxCollectionColumnSample = interface(IInterface)
+    ['{1100E223-4C3B-408A-A264-06535915CF24}']
+    function GetColumn: TNyxCollectionColumn;
+    function GetCount: Integer;
+    function ItemAt(AIndex: Integer): TNyxItemRef;
+    function TextAt(AIndex: Integer): TNyxText;
+    property Column: TNyxCollectionColumn read GetColumn;
+    property Count: Integer read GetCount;
+  end;
+  { Optional measured-fit path. Original Columns/PrepareAutoSize remains the
+    caller-supplied-width contract with its existing ABI. This distinct facet
+    additionally proves that the sampled page/data/query/layout remained current
+    through preparation and the final publication fence. A host still owns font,
+    DPI, input/IME, event generation and actual form-open lifetime guards. }
+  INyxCollectionColumnSampling = interface(IInterface)
+    ['{2C8D0282-DB7C-47B3-8A64-B5314081EE8B}']
+    function CaptureColumnSample(const ACapture: INyxCollectionColumnsCapture;
+      const AField: TNyxColumnIdentity): INyxCollectionColumnSample;
+    function PrepareSampleAutoSize(const ASample: INyxCollectionColumnSample;
+      AWidth: Integer): INyxPreparedPublication;
+  end;
   { Optional managed runtime paging, preserving the existing view ABI. The view
     owns filtered/ordered membership and one source subscription; this capability
     introduces no renderer or reference cycle. Commands notify once through the
@@ -230,6 +286,9 @@ function NyxTreeHierarchy(const AView: INyxCollectionView): INyxTreeHierarchy;
 { Retains the optional runtime page capability. Nil/alternative views without
   that contract refuse instead of implying toolkit-specific paging behavior. }
 function NyxCollectionPages(const AView: INyxCollectionView): INyxCollectionPages;
+{ Unsupported alternatives/non-table views refuse explicitly. The optional
+  facet never manufactures a toolkit-specific column engine or data copy. }
+function NyxCollectionColumns(const AView: INyxCollectionView): INyxCollectionColumns;
 function NewNyxCollectionContext(
   const ADefaults: INyxCollectionDefaults): INyxCollectionContext; overload;
 { Resource-backed seeds resolve into independent application/instance stores at
@@ -244,6 +303,17 @@ function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
   attaching a subscription. The same dataset validator serves live views. }
 procedure ValidateNyxCollectionViewSnapshot(const ASnapshot: INyxCollectionSnapshot;
   const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
+{ Pure target-shape admission, also used after selecting a content recipe or
+  viewport presentation. It reads no dataset/resource and creates no live view;
+  authored data/schema admission remains independently required. }
+procedure ValidateNyxCollectionViewProjection(const ASpec: TNyxCollectionViewSpec;
+  AProjection: TNyxCollectionProjection);
+{ Validate authored field/query/data meaning while a reusable component or part
+  descriptor has no resolved primitive yet. Parent data is still checked for a
+  valid hierarchy. The caller must separately admit the realized target through
+  ValidateNyxCollectionViewSnapshot; this does not grant a mountable projection. }
+procedure ValidateNyxCollectionDescriptorSnapshot(const ASnapshot: INyxCollectionSnapshot;
+  const ASpec: TNyxCollectionViewSpec);
 { False for nil/unknown views or active view/store notification. This is a
   synchronous readiness observation, never a reservation or admission cache. }
 function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boolean;
@@ -258,6 +328,12 @@ function NyxCollectionQuerySession(const AView: INyxCollectionView): INyxCollect
   Nil means an alternative lacks the optional session facet/atomic source; the
   caller keeps its existing query-copy fallback. No authority is transferred. }
 function PrepareNyxCollectionQueryTransfer(const AFormer,
+  ANext: INyxCollectionView): INyxPreparedPublication;
+{ Recomposition calls this only after matching the exact runtime identity,
+  store and projection. Matching typed fields retain valid preferences; removed
+  or changed-family fields are pruned and new fields use current defaults.
+  Query/page/selection transfer retains its separate, stricter Spec equality. }
+function PrepareNyxCollectionColumnTransfer(const AFormer,
   ANext: INyxCollectionView): INyxPreparedPublication;
 
 implementation
@@ -274,6 +350,15 @@ type
   TQueryScope = class;
   TQueryOwnerLife = class;
   TQueryOwnerLease = class;
+  TColumnPreparation = class;
+  { Trusted detached recomposition preserves existing preferences when new
+    authored capabilities lock further USER changes. The public mutation facet
+    never exposes this admission path, and all typed-field/bound checks remain. }
+  IColumnTransferTarget = interface(IInterface)
+    ['{AD8B34E9-9EF9-43AA-A6C6-73FB37F67838}']
+    function PrepareColumnImport(const ACapture: INyxCollectionColumnsCapture;
+      const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
+  end;
   TViewSubscription = class(TInterfacedObject, INyxCollectionViewSubscription)
   public
     Owner: TView;
@@ -287,7 +372,8 @@ type
 
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
-    INyxCollectionQuerySession)
+    INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
+    INyxCollectionColumnSampling)
   private
     FStore: INyxCollection;
     FAtomic: INyxAtomicCollection;
@@ -295,6 +381,16 @@ type
     { Query plans have a separate reservation from source-row preparations.
       The plan retains this view; this weak slot cannot form an ownership cycle. }
     FQueryPreparation: TQueryPreparation;
+    { A plan retains its view. This weak reservation and inert capture token
+      cannot form a cycle; preferences contain only independently owned values. }
+    FColumnPreparation: TColumnPreparation;
+    FColumnIdentity: IInterface;
+    FColumnSerial: Integer;
+    { Invalidates measured page text on every accepted view notification,
+      including paging-policy ABA returning to the same unpaged snapshot.
+      Saturation disables sampling only; ordinary notifications never throw. }
+    FColumnSampleSerial: Integer;
+    FColumnPreferences: TNyxColumnPreferences;
     { Identity has no owner backlink. Intent includes accepted session metadata
       changes; equal raw assignments remain complete no-ops. }
     FQueryIdentity: IInterface;
@@ -366,6 +462,18 @@ type
     function PublicationReady: Boolean;
     function GetQuery: TNyxCollectionQuery;
     function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
+    function CaptureColumns: INyxCollectionColumnsCapture;
+    function PrepareColumns(const ACapture: INyxCollectionColumnsCapture;
+      const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
+    function PrepareAutoSize(const ACapture: INyxCollectionColumnsCapture;
+      const AField: TNyxColumnIdentity; AWidth: Integer): INyxPreparedPublication;
+    function ConfigureColumns(const APreferences: TNyxColumnPreferences): INyxCollectionColumns;
+    function CaptureColumnSample(const ACapture: INyxCollectionColumnsCapture;
+      const AField: TNyxColumnIdentity): INyxCollectionColumnSample;
+    function PrepareSampleAutoSize(const ASample: INyxCollectionColumnSample;
+      AWidth: Integer): INyxPreparedPublication;
+    function PrepareColumnImport(const ACapture: INyxCollectionColumnsCapture;
+      const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
     function CaptureQuery: INyxCollectionQueryCapture;
     function PrepareQuery(const ACapture: INyxCollectionQueryCapture;
       const AQuery: TNyxCollectionQuery): INyxPreparedPublication;
@@ -481,6 +589,99 @@ type
       alternate interface implementation. No constructor self-retention trap. }
     procedure Initialize(AOwner: TView; const ACapture: INyxCollectionQueryCapture;
       const AQuery: TNyxCollectionQuery);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+  { Private capture authority consists only of an inert target token and an
+    accepted arrangement serial. It has no owner/store/widget backreference. }
+  IColumnCaptureProof = interface(IInterface)
+    ['{301CF878-175A-48D3-817C-FC3288D34731}']
+    function ColumnIdentity: IInterface;
+    function ColumnSerial: Integer;
+  end;
+
+  { Detached inspector/command context. Returning copies prevents a pas2js
+    caller's record-array mutation from changing any later reader's snapshot. }
+  TColumnCapture = class(TInterfacedObject, INyxCollectionColumnsCapture,
+    IColumnCaptureProof)
+  private
+    FIdentity: IInterface;
+    FSerial: Integer;
+    FSpec: TNyxCollectionViewSpec;
+    FPreferences: TNyxColumnPreferences;
+  public
+    constructor Create(const AIdentity: IInterface; ASerial: Integer;
+      const ASpec: TNyxCollectionViewSpec; const APreferences: TNyxColumnPreferences);
+    function GetSpec: TNyxCollectionViewSpec;
+    function GetPreferences: TNyxColumnPreferences;
+    function GetSerial: Integer;
+    function ColumnIdentity: IInterface;
+    function ColumnSerial: Integer;
+  end;
+
+  TColumnSample = class;
+  { Unit-private canonical payload proof. The public sample exposes bounded
+    values only. Retain its interface while borrowing this exact private object;
+    alternative public sample implementations cannot invent a canonical payload. }
+  IColumnSampleProof = interface(IInterface)
+    ['{ED3844A9-FCCC-4C81-A8C4-FF75871C9635}']
+    function SampleData: TColumnSample;
+  end;
+  { A page sample owns immutable accepted snapshots for identity/lifetime and
+    copies at most the declared bounded text sample. It has no view backlink.
+    RequireCurrent reads only the supplied canonical owner's cached fields and
+    this immutable payload; it is safe in the final prepared readiness phase. }
+  TColumnSample = class(TInterfacedObject, INyxCollectionColumnSample,
+    IColumnSampleProof)
+  private
+    FIdentity: IInterface;
+    FOriginal: INyxCollectionColumnsCapture;
+    FSource, FSnapshot, FUnpaged: INyxCollectionSnapshot;
+    FPreferences: TNyxColumnPreferences;
+    FColumn: TNyxCollectionColumn;
+    FColumnSerial, FSampleSerial, FQueryIntent: Integer;
+    FItems: TNyxItemRefs;
+    FTexts: array of TNyxText;
+    procedure RequireCurrent(AOwner: TView);
+  public
+    function GetColumn: TNyxCollectionColumn;
+    function GetCount: Integer;
+    function ItemAt(AIndex: Integer): TNyxItemRef;
+    function TextAt(AIndex: Integer): TNyxText;
+    function SampleData: TColumnSample;
+  end;
+
+  { A single-use participant in the existing atomic publication coordinator.
+    Both former and candidate vectors remain leased through retirement, leaving
+    Install with nonthrowing adoption only. No detached second data view or
+    second row/selection/query engine is needed for a presentation change. }
+  TColumnPreparation = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPublicationReadiness)
+  private
+    FOwner: TView;
+    FLease: INyxCollectionView;
+    FSource, FSnapshot: INyxCollectionSnapshot;
+    FSelection: INyxCollectionSelection;
+    FBefore, FNext: TNyxColumnPreferences;
+    FSerial: Integer;
+    FChanged, FValidated, FValidationStarted: Boolean;
+    FInstalled, FNotified, FRetired: Boolean;
+    FImported: Boolean;
+    FAutoSize: TNyxColumnIdentity;
+    FSample: TColumnSample;
+    FSampleLease: INyxCollectionColumnSample;
+    procedure RequireCurrent;
+  public
+    procedure Initialize(AOwner: TView; const ACapture: INyxCollectionColumnsCapture;
+      const APreferences: TNyxColumnPreferences;
+      const AAutoSize: TNyxColumnIdentity; AImported: Boolean = False);
+    procedure InitializeSample(AOwner: TView; ASample: TColumnSample;
+      AWidth: Integer);
     destructor Destroy; override;
     procedure Validate;
     procedure CheckReady;
@@ -934,6 +1135,8 @@ end;
 
 {$include nyx.collections.query.session.implementation.inc}
 
+{$include nyx.collections.arrangement.implementation.inc}
+
 function PrepareNyxCollectionContextResources(const AContext: INyxCollectionContext;
   const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
 var
@@ -1299,6 +1502,8 @@ begin
   inherited Create;
   { Captures retain only this inert token, never the live view or its source. }
   FQueryIdentity := TInterfacedObject.Create;
+  FColumnIdentity := TInterfacedObject.Create;
+  FColumnPreferences := NyxColumnPreferences;
   ASpec.Validate;
 
   if (AStore = nil) or not ASpec.Defined then
@@ -1315,6 +1520,11 @@ begin
   if ASpec.HasTypeAhead and (AProjection = cpTable) then
   begin
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
+  end;
+
+  if ASpec.HasLayoutControls and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Column arrangement requires a table projection');
   end;
 
   if ASpec.PagingPolicy.Defined and (AProjection = cpTree) then
@@ -1415,11 +1625,37 @@ begin
   FProjection := AProjection;
 end;
 
-procedure ValidateNyxCollectionViewSnapshot(const ASnapshot: INyxCollectionSnapshot;
-  const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
+procedure ValidateNyxCollectionDescriptorSnapshot(const ASnapshot: INyxCollectionSnapshot;
+  const ASpec: TNyxCollectionViewSpec);
 var
   LValidator: TView;
   LParents: TParentIndexes;
+  LDataProjection: TNyxCollectionProjection;
+begin
+  ASpec.Validate;
+
+  if not ASpec.Defined then
+  begin
+    raise ENyxCollection.Create('Saved collection descriptor requires a binding');
+  end;
+  { This private validator chooses only the appropriate data traversal. It
+    asserts no actual control kind and creates no store or subscription. }
+  LDataProjection := cpList;
+
+  if ASpec.ParentField <> '' then
+  begin
+    LDataProjection := cpTree;
+  end;
+  LValidator := TView.CreateValidator(ASpec, LDataProjection);
+  try
+    LValidator.ValidateDataset(ASnapshot, LParents);
+  finally
+    LValidator.Free;
+  end;
+end;
+
+procedure ValidateNyxCollectionViewProjection(const ASpec: TNyxCollectionViewSpec;
+  AProjection: TNyxCollectionProjection);
 begin
   ASpec.Validate;
 
@@ -1437,25 +1673,53 @@ begin
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
   end;
 
+  if ASpec.HasLayoutControls and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Column arrangement requires a table projection');
+  end;
+
   if ASpec.PagingPolicy.Defined and (AProjection = cpTree) then
   begin
     { A flat interval could detach a child from its ancestor. Reject before
       document admission as well as before constructing either target view. }
     raise ENyxCollection.Create('Tree paging requires a hierarchy-aware policy');
   end;
-  LValidator := TView.CreateValidator(ASpec, AProjection);
-  try
-    LValidator.ValidateDataset(ASnapshot, LParents);
-  finally
-    LValidator.Free;
+
+  if (ASpec.ParentField <> '') and (AProjection <> cpTree) then
+  begin
+    raise ENyxCollection.Create('Parent fields require a tree projection');
   end;
 end;
 
+procedure ValidateNyxCollectionViewSnapshot(const ASnapshot: INyxCollectionSnapshot;
+  const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
+begin
+  ValidateNyxCollectionViewProjection(ASpec, AProjection);
+  ValidateNyxCollectionDescriptorSnapshot(ASnapshot, ASpec);
+end;
+
 procedure TView.Writable;
+var
+  LBusy: Boolean;
 begin
 
-  if FNotifying or (FQueryPreparation <> nil) or
-    ((FAtomic <> nil) and FAtomic.Busy) then
+  if FNotifying or (FPrepared <> nil) or (FQueryPreparation <> nil) or
+    (FColumnPreparation <> nil) then
+  begin
+    raise ENyxCollection.Create('Reentrant collection view mutation is not supported');
+  end;
+  LBusy := False;
+
+  if FAtomic <> nil then
+  begin
+    LBusy := FAtomic.Busy;
+  end;
+  { Busy may be implemented by another store and call trusted application code.
+    Recheck every canonical reservation AFTER it returns, so such a callback
+    cannot acquire a column plan then let an older query/selection command pass. }
+
+  if LBusy or FNotifying or (FPrepared <> nil) or
+    (FQueryPreparation <> nil) or (FColumnPreparation <> nil) then
   begin
     raise ENyxCollection.Create('Reentrant collection view mutation is not supported');
   end;
@@ -1585,6 +1849,11 @@ procedure TView.ValidateCandidate(const AData: INyxCollectionSnapshot;
 var
   LParents: TParentIndexes;
 begin
+
+  if FColumnPreparation <> nil then
+  begin
+    raise ENyxCollection.Create('Source row publication conflicts with prepared columns');
+  end;
   ValidateDataset(AData, LParents);
 end;
 
@@ -1611,9 +1880,9 @@ begin
     through admission even when application code retires its rendered host. }
   LKeepAlive := Self as INyxCollectionView;
 
-  if FQueryPreparation <> nil then
+  if (FQueryPreparation <> nil) or (FColumnPreparation <> nil) then
   begin
-    raise ENyxCollection.Create('Source row publication conflicts with a prepared query');
+    raise ENyxCollection.Create('Source row publication conflicts with a prepared view command');
   end;
   RetireCandidate;
   LCandidate := TView.CreateValidator(FSpec, FProjection);
@@ -1876,9 +2145,23 @@ begin
 end;
 
 function TView.PublicationReady: Boolean;
+var
+  LLease: INyxCollectionView;
+  LBusy: Boolean;
 begin
+  LLease := Self;
   Result := not FNotifying and (FPrepared = nil) and (FQueryPreparation = nil) and
-    (FAtomic <> nil) and not FAtomic.Busy;
+    (FColumnPreparation = nil) and
+    (FAtomic <> nil);
+
+  if Result then
+  begin
+    LBusy := FAtomic.Busy;
+    { Readiness is not a reservation. An alternate getter may acquire one;
+      report the canonical state after it returns and retain Self throughout. }
+    Result := not LBusy and not FNotifying and (FPrepared = nil) and
+      (FQueryPreparation = nil) and (FColumnPreparation = nil);
+  end;
 end;
 
 function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boolean;
@@ -2204,30 +2487,7 @@ var
 begin
   LColumn := FSpec.ColumnAt(AColumn);
   LItem := FSource.Item(AItem);
-  case LColumn.Kind of
-    nskText:
-      begin
-        Result := LItem.GetValue(NyxTextField(LColumn.FieldName));
-      end;
-    nskBoolean:
-      begin
-        Result := 'false';
-
-        if LItem.GetValue(NyxBooleanField(LColumn.FieldName)) then
-        begin
-          Result := 'true';
-        end;
-      end;
-    nskInteger:
-      begin
-        Result := IntToStr(LItem.GetValue(NyxIntegerField(LColumn.FieldName)));
-      end;
-    nskNumber:
-      begin
-        Result := TNyxStateValue.FromNumber(
-          LItem.GetValue(NyxNumberField(LColumn.FieldName))).NumberText;
-      end;
-  end;
+  Result := ColumnItemText(LItem, LColumn);
 end;
 
 procedure TView.Select(const AItem: TNyxItemRef);
@@ -2632,6 +2892,11 @@ begin
     and release a later receiver. The interface local protects our lifetime if
     a callback drops the last application's view reference. }
   LKeepAlive := Self as INyxCollectionView;
+
+  if FColumnSampleSerial < High(Integer) then
+  begin
+    Inc(FColumnSampleSerial);
+  end;
   LError := '';
   LHasError := False;
   SetLength(LSerials, Length(FTokens));

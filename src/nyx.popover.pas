@@ -104,7 +104,29 @@ type
     property LastReason: TNyxPopoverReason read GetLastReason;
   end;
 
+  { Readonly authority for ONE successful presentation. Close, dismissal,
+    retirement or loss of its original parent presentation permanently revokes
+    it; reopening creates a different token. Retained tokens own no presenter,
+    document, router or physical host. Current permits native worker reads and
+    has no application callbacks; it grants no permission to access UI there. }
+  INyxPopoverOpenLifetime = interface(IInterface)
+    ['{A9341D89-6280-45E9-9B62-792707A4770C}']
+    function GetCurrent: Boolean;
+    property Current: Boolean read GetCurrent;
+  end;
+
+  { Optional UI-thread capture, preserving the existing INyxPopover identity and
+    vtable. Closed, transitioning and retired presenters return nil. Capture the
+    actual host's token before deferring work; querying IsOpen after reopening
+    cannot establish the identity of the original presentation. }
+  INyxPopoverOpenAdmission = interface(IInterface)
+    ['{6BA2F41D-264F-4F30-9B8F-2C26F574BDDA}']
+    function GetOpenLifetime: INyxPopoverOpenLifetime;
+  end;
+
+  { Shared lifecycle owner, completed below after its weak nesting seam. }
   TNyxPopoverPresenter = class;
+  { Borrowed synchronous descendants; no element extends a presenter's life. }
   TNyxPopoverPresenters = array of TNyxPopoverPresenter;
   { Internal revocable implementation lease, following the menu lifetime seam.
     Managed holders keep this small lease alive, not its borrowed presenter.
@@ -123,8 +145,11 @@ type
   end;
 
   { Target seam. Subclasses borrow no original document or content, disconnect
-    input/timers and release renderers before inherited destruction. }
-  TNyxPopoverPresenter = class(TInterfacedObject, INyxPopover, INyxPopoverNesting)
+    input/timers and release renderers before inherited destruction. A canonical
+    owner-free token follows each successful Open, with immutable ancestry and
+    terminal revocation before physical cleanup can call application code. }
+  TNyxPopoverPresenter = class(TInterfacedObject, INyxPopover, INyxPopoverNesting,
+    INyxPopoverOpenAdmission)
   private
     FDocument: TNyxDocument;
     FContent: INyxControl;
@@ -141,6 +166,11 @@ type
     FParentOwner: IInterface;
     FChildren: array of TNyxPopoverLease;
     FChildOwners: array of IInterface;
+    FOpenLifetime: INyxPopoverOpenLifetime;
+    { Borrowed private implementation, retained only by FOpenLifetime. No token
+      holds a backreference. UI lifecycle writes use this canonical object. }
+    FOpenObject: TObject;
+    procedure RevokeOpenLifetime;
     procedure RemoveChild(ALease: TNyxPopoverLease);
     procedure DetachParent;
   protected
@@ -173,6 +203,9 @@ type
     function GetEvents: INyxEvents; virtual; abstract;
     function GetState: TNyxState;
     function GetOpen: Boolean;
+    { Nonvirtual canonical capture: ancestor admission must not call an
+      alternative override capable of replacing the nesting context. }
+    function GetOpenLifetime: INyxPopoverOpenLifetime;
     function GetLastReason: TNyxPopoverReason;
     function OnDismiss: INyxEventStream;
     function NestingLease: TNyxPopoverLease;
@@ -204,6 +237,90 @@ uses
 
 const
   CReasonField: TNyxText = 'popover-reason';
+
+type
+  { Closed presentation phases; ordinal storage is confined to the native
+    atomic boundary and never becomes a public or persisted numeric policy. }
+  TPopoverOpenPhase = (popPreparing, popActive, popRetired);
+
+  { Immutable parent proof plus one typed phase. Only the UI owner writes;
+    native retained readers perform atomic
+    loads and inspect this canonical token ancestry without touching presenters.
+    Activation cannot revive a token retired by a reentrant target callback. }
+  TPopoverOpenToken = class(TInterfacedObject, INyxPopoverOpenLifetime)
+  private
+    FParent: INyxPopoverOpenLifetime;
+    FPhase: LongInt;
+    function ReadPhase: TPopoverOpenPhase;
+  public
+    constructor Create(const AParent: INyxPopoverOpenLifetime);
+    procedure Activate;
+    procedure Revoke;
+    function GetCurrent: Boolean;
+  end;
+
+constructor TPopoverOpenToken.Create(const AParent: INyxPopoverOpenLifetime);
+begin
+  inherited Create;
+  FParent := AParent;
+  FPhase := Ord(popPreparing);
+end;
+
+function TPopoverOpenToken.ReadPhase: TPopoverOpenPhase;
+begin
+  {$ifdef PAS2JS}
+  Result := TPopoverOpenPhase(FPhase);
+  {$else}
+  Result := TPopoverOpenPhase(InterlockedCompareExchange(FPhase,
+    Ord(popPreparing), Ord(popPreparing)));
+  {$endif}
+end;
+
+procedure TPopoverOpenToken.Activate;
+begin
+  {$ifdef PAS2JS}
+
+  if TPopoverOpenPhase(FPhase) = popPreparing then
+  begin
+    FPhase := Ord(popActive);
+  end;
+  {$else}
+  InterlockedCompareExchange(FPhase, Ord(popActive), Ord(popPreparing));
+  {$endif}
+end;
+
+procedure TPopoverOpenToken.Revoke;
+begin
+  {$ifdef PAS2JS}
+  FPhase := Ord(popRetired);
+  {$else}
+  InterlockedExchange(FPhase, Ord(popRetired));
+  {$endif}
+end;
+
+function TPopoverOpenToken.GetCurrent: Boolean;
+begin
+  Result := ReadPhase = popActive;
+
+  if Result and (FParent <> nil) then
+  begin
+    Result := FParent.Current and (ReadPhase = popActive);
+  end;
+end;
+
+procedure TNyxPopoverPresenter.RevokeOpenLifetime;
+var
+  LToken: TPopoverOpenToken;
+begin
+  LToken := TPopoverOpenToken(FOpenObject);
+
+  if LToken <> nil then
+  begin
+    LToken.Revoke;
+  end;
+  FOpenObject := nil;
+  FOpenLifetime := nil;
+end;
 
 function NyxPopoverDismissReason(const AEvent: TNyxEventInfo): TNyxPopoverReason;
 var
@@ -337,7 +454,7 @@ var
 begin
   FCompletion.Scheduler.RequireUI;
 
-  if FOpen or FTransition or (FLease.Owner = nil) then
+  if FOpen or FTransition or (FLease = nil) or (FLease.Owner = nil) then
   begin
     raise ENyxModel.Create('Nesting requires a closed stable popover');
   end;
@@ -483,6 +600,9 @@ end;
 
 procedure TNyxPopoverPresenter.RetireNesting;
 begin
+  { Invalidate the complete token ancestry before descendant concealment can
+    reenter a scheduler, event receiver or retained parent admission provider. }
+  RevokeOpenLifetime;
 
   if (FLease = nil) or (FLease.Owner = nil) then
   begin
@@ -531,6 +651,22 @@ begin
   Result := FOpen;
 end;
 
+function TNyxPopoverPresenter.GetOpenLifetime: INyxPopoverOpenLifetime;
+begin
+  Result := nil;
+
+  if FOpen and not FTransition and (FLease <> nil) and
+    (FLease.Owner <> nil) then
+  begin
+    Result := FOpenLifetime;
+
+    if (Result <> nil) and not Result.Current then
+    begin
+      Result := nil;
+    end;
+  end;
+end;
+
 function TNyxPopoverPresenter.GetLastReason: TNyxPopoverReason;
 begin
   Result := FLastReason;
@@ -545,18 +681,45 @@ procedure TNyxPopoverPresenter.Open(const AOptions: TNyxPopoverOptions);
 var
   LKeepAlive: INyxPopover;
   LFocusID: TNyxText;
+  LParent: TNyxPopoverLease;
+  LParentOwner: IInterface;
+  LParentOpen: INyxPopoverOpenLifetime;
+  LToken: TPopoverOpenToken;
+  LTokenOwner: INyxPopoverOpenLifetime;
+  LPresented: Boolean;
+
+  function ContextCurrent: Boolean;
+  begin
+    Result := (FLease <> nil) and (FLease.Owner = Self) and
+      (FParentLease = LParent);
+
+    if Result and (LParent <> nil) then
+    begin
+      Result := (LParent.Owner <> nil) and (LParentOpen <> nil) and
+        LParentOpen.Current;
+    end;
+  end;
 begin
   LKeepAlive := Self;
   FCompletion.Scheduler.RequireUI;
 
-  if FOpen or FTransition then
+  if FOpen or FTransition or (FLease = nil) or (FLease.Owner = nil) then
   begin
     raise ENyxModel.Create('Popover is open or changing focus');
   end;
   AOptions.Validate;
+  LParent := FParentLease;
+  LParentOwner := FParentOwner;
+  LParentOpen := nil;
 
-  if (FParentLease <> nil) and ((FParentLease.Owner = nil) or
-    not FParentLease.Owner.IsOpen or FParentLease.Owner.FTransition) then
+  if (LParent <> nil) and (LParent.Owner <> nil) then
+  begin
+    { The nonvirtual base getter captures canonical successful-open identity.
+      Retain only the parent's inert nesting lease and owner-free token. }
+    LParentOpen := LParent.Owner.GetOpenLifetime;
+  end;
+
+  if not ContextCurrent then
   begin
     raise ENyxModel.Create('Nested popover parent is closed or retired');
   end;
@@ -567,27 +730,58 @@ begin
     LFocusID := FContent.Part(AOptions.InitialFocus).ID;
   end;
 
-  if not FMounted then
-  begin
-    PrepareContent;
-  end;
+  LToken := TPopoverOpenToken.Create(LParentOpen);
+  LTokenOwner := LToken;
+  FOpenLifetime := LTokenOwner;
+  FOpenObject := LToken;
+  LPresented := False;
   FTransition := True;
   try
-    Present(AOptions, LFocusID);
+    try
 
-    if (FParentLease <> nil) and ((FParentLease.Owner = nil) or
-      not FParentLease.Owner.IsOpen or FParentLease.Owner.FTransition) then
-    begin
-      { Focus callbacks run during Present and may close/retire an ancestor.
-        Never publish a successful child after that context was revoked. }
-      Conceal(False);
-      raise ENyxModel.Create('Nested popover parent changed while presenting');
+      if not FMounted then
+      begin
+        PrepareContent;
+      end;
+
+      if not ContextCurrent then
+      begin
+        raise ENyxModel.Create('Popover context changed while preparing');
+      end;
+      LPresented := True;
+      Present(AOptions, LFocusID);
+
+      if not ContextCurrent then
+      begin
+        raise ENyxModel.Create('Popover context changed while presenting');
+      end;
+      FMounted := True;
+      FLastReason := nprNone;
+      LToken.Activate;
+      FOpen := True;
+    except
+      LToken.Revoke;
+      RevokeOpenLifetime;
+
+      if LPresented then
+      begin
+        try
+          Conceal(False);
+        except
+          { A partial physical host still receives cleanup, but secondary
+            cleanup failure cannot replace the original presentation error. }
+        end;
+      end;
+      raise;
     end;
-    FMounted := True;
-    FLastReason := nprNone;
-    FOpen := True;
   finally
-    FTransition := False;
+    { A target callback may have retired this still-retained presenter. Keep
+      retirement terminal; an Open tail must never clear that transition fence. }
+
+    if (FLease <> nil) and (FLease.Owner <> nil) then
+    begin
+      FTransition := False;
+    end;
   end;
   LKeepAlive.GetOpen;
 end;
@@ -621,6 +815,7 @@ begin
   LEvent.SourceID := FContent.ID;
   LEvent.OriginID := FContent.ID;
   LEvent.TargetID := FContent.ID;
+  RevokeOpenLifetime;
   FOpen := False;
   FLastReason := AReason;
   FTransition := True;
@@ -633,7 +828,11 @@ begin
       Conceal(not (AReason in [nprOutsidePress, nprAnchorUnavailable]));
     end;
   finally
-    FTransition := False;
+
+    if (FLease <> nil) and (FLease.Owner <> nil) then
+    begin
+      FTransition := False;
+    end;
   end;
 
   if ANotify then

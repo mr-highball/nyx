@@ -49,6 +49,12 @@ param(
   # launched; native inputs execute and matching browser assertions are staged.
   [string]$QueryAuthoringEvidenceDirectory = 'build/query-authoring/maintained',
   [string]$QueryAuthoringPlatform,
+  # Explicit closed native unit outputs may be reused with ordinary FPC source
+  # and dependency checks. Empty retains the existing full cold rebuild; every
+  # invocation still writes fresh executables/units/logs in its NEW packet.
+  # Profile instrumentation always rebuilds: FPC's ordinary cache validity does
+  # not prove that these units were compiled with this invocation's -d defines.
+  [string[]]$QueryAuthoringNativeUnitCache = @(),
   # Diagnostic mode keeps the identical assertions/fixture but executes only
   # native1280. Full qualification still needs390 and matching browser staging.
   [switch]$QueryAuthoringDiagnostic,
@@ -57,6 +63,11 @@ param(
   [switch]$QueryAuthoringProfile,
   [ValidateRange(1, 3600)]
   [int]$QueryAuthoringTimeoutSeconds = 300,
+  # Cold full-Studio compiles can exceed the application-oriented300s default
+  # on the installed toolchain. Bound their wall time independently; neither
+  # native UI assertions nor compiler safety flags are changed by this budget.
+  [ValidateRange(1, 3600)]
+  [int]$QueryAuthoringCompilerTimeoutSeconds = 1800,
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
   # Exact semantic selection seed; policy enrichment and assertions are Pascal.
@@ -560,7 +571,32 @@ try {
     if ($nyxWorkbenchPlatform -notmatch '^[a-z0-9_]+-[a-z0-9_]+$') {
       throw 'Query workbench platform must be a compiler unit target such as i386-win32'
     }
-    $nyxWorkbenchFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+    $nyxAuthoringCachePaths = @()
+    if ($QueryAuthoringNativeUnitCache.Count -gt 0 -and $Target -ne 'query-authoring') {
+      throw 'Query-authoring unit caches apply only to that target'
+    }
+    foreach ($nyxAuthoringCache in $QueryAuthoringNativeUnitCache) {
+      if ([string]::IsNullOrWhiteSpace($nyxAuthoringCache)) {
+        throw 'Query-authoring unit cache directory must be explicit'
+      }
+      $nyxAuthoringCachePath = [IO.Path]::GetFullPath($nyxAuthoringCache)
+      if (-not (Test-Path -LiteralPath $nyxAuthoringCachePath -PathType Container)) {
+        throw ('Query-authoring unit cache directory does not exist: ' + $nyxAuthoringCachePath)
+      }
+      if ($nyxAuthoringCachePath -notin $nyxAuthoringCachePaths) {
+        $nyxAuthoringCachePaths += $nyxAuthoringCachePath
+      }
+    }
+    $nyxAuthoringFullRebuild = ($nyxAuthoringCachePaths.Count -eq 0) -or
+      ($Target -eq 'query-authoring' -and $QueryAuthoringProfile)
+    $nyxWorkbenchFlags = @('-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
+    if ($nyxAuthoringFullRebuild) {
+      $nyxWorkbenchFlags = @('-B') + $nyxWorkbenchFlags
+    }
+    # FPC otherwise finds source before the reusable PPU and recompiles it.
+    # Do not mark units release-only or disable any source/dependency check.
+    $nyxWorkbenchFlags += @($nyxAuthoringCachePaths | ForEach-Object { '-Fu' + $_ })
+    $nyxWorkbenchFlags += @(
       '-Fusrc', '-Futests', '-Fustudio', '-Fisrc', '-Fitests', '-Fistudio',
       "-Fu$nyxWorkbenchLazarus/lcl/units/$nyxWorkbenchPlatform",
       "-Fu$nyxWorkbenchLazarus/lcl/units/$nyxWorkbenchPlatform/$Widgetset",
@@ -572,6 +608,16 @@ try {
     }
     if ($Target -eq 'query-authoring') {
       $nyxWorkbenchFlags += @('-uPAS2JS')
+      # Defines affect owned units throughout the native dependency closure,
+      # including units found in explicitly supplied non-profile outputs. Keep
+      # their search paths but force fresh instrumentation rather than claiming
+      # ordinary source/dependency checks certify the previous define history.
+      [ordered]@{mode=if($QueryAuthoringProfile){'profile-rebuild'}elseif($nyxAuthoringCachePaths.Count -gt 0){'explicit-unit-cache'}else{'cold-rebuild'};
+        directories=@($nyxAuthoringCachePaths);normalSourceAndDependencyChecks=$true;
+        fullRebuild=$nyxAuthoringFullRebuild;profileInstrumentation=[bool]$QueryAuthoringProfile;
+        freshNativeOutput=$nyxWorkbenchNative;
+        compiler=$nyxLclFpc;arguments=$nyxWorkbenchFlags} | ConvertTo-Json -Depth 8 |
+        Set-Content -LiteralPath (Join-Path $nyxWorkbenchRoot 'native-unit-cache-private.json') -Encoding UTF8
       # Reuse the reviewed owned-process capture. Every direct compiler/native
       # launch has its own raw streams and identity; no server is involved.
       $output = $nyxWorkbenchRoot
@@ -580,6 +626,20 @@ try {
         ForEach-Object { $_.Name }) + @('nyx.fixture.table.query.studio.pas')
 function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
   [int]$TimeoutSeconds, [bool]$TraceHeap) {
+  function Get-ClosedProcessLogHash([string]$Path) {
+    # A killed compiler family can exit before Start-Process's redirected-file
+    # writer releases its sharing handle. Wait only for that bounded teardown,
+    # after the process has joined; never hash a still-writable partial stream.
+    $hashDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    while ($true) {
+      try {
+        return (Get-FileHash -LiteralPath $Path -Algorithm SHA256 -ErrorAction Stop).Hash
+      } catch [System.IO.IOException] {
+        if ([DateTime]::UtcNow -ge $hashDeadline) { throw }
+        Start-Sleep -Milliseconds 50
+      }
+    }
+  }
   foreach ($argument in $Arguments) {
     if ($argument -match '[\s"]') { throw 'Reviewed arguments contain no spaces or quotes' }
   }
@@ -626,20 +686,22 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
     }
   }
   $process.WaitForExit()
-  $result = [ordered]@{pid=$process.Id;executable=$Executable;
-    executableSHA256=(Get-FileHash -LiteralPath $Executable -Algorithm SHA256).Hash;
-    arguments=$Arguments;exit=$process.ExitCode;timedOut=$timedOut;
-    timeoutSeconds=$TimeoutSeconds;startedUTC=$started;finishedUTC=[DateTime]::UtcNow.ToString('o');
-    stdout=$stdout;stdoutSHA256=(Get-FileHash -LiteralPath $stdout -Algorithm SHA256).Hash;
-    stderr=$stderr;stderrSHA256=(Get-FileHash -LiteralPath $stderr -Algorithm SHA256).Hash;
-    launch=$launchPath;launchSHA256=(Get-FileHash -LiteralPath $launchPath -Algorithm SHA256).Hash}
+  $finishedPID = $process.Id
+  $finishedExit = $process.ExitCode
   $process.Dispose()
+  $result = [ordered]@{pid=$finishedPID;executable=$Executable;
+    executableSHA256=(Get-FileHash -LiteralPath $Executable -Algorithm SHA256).Hash;
+    arguments=$Arguments;exit=$finishedExit;timedOut=$timedOut;
+    timeoutSeconds=$TimeoutSeconds;startedUTC=$started;finishedUTC=[DateTime]::UtcNow.ToString('o');
+    stdout=$stdout;stdoutSHA256=(Get-ClosedProcessLogHash $stdout);
+    stderr=$stderr;stderrSHA256=(Get-ClosedProcessLogHash $stderr);
+    launch=$launchPath;launchSHA256=(Get-FileHash -LiteralPath $launchPath -Algorithm SHA256).Hash}
   if ($TraceHeap) {
     $heapText = if (Test-Path -LiteralPath $heap) { [IO.File]::ReadAllText($heap) } else { '' }
     $allocated = [regex]::Match($heapText,'(?m)^(\d+) memory blocks allocated : (\d+)\s*$')
     $freed = [regex]::Match($heapText,'(?m)^(\d+) memory blocks freed : (\d+)\s*$')
     $result.heap=$heap
-    $result.heapSHA256=if(Test-Path -LiteralPath $heap){(Get-FileHash -LiteralPath $heap).Hash}else{$null}
+    $result.heapSHA256=if(Test-Path -LiteralPath $heap){Get-ClosedProcessLogHash $heap}else{$null}
     $result.inheritedHEAPTRC=$inheritedTrace
     $result.restoredHEAPTRC=[Environment]::GetEnvironmentVariable('HEAPTRC','Process')
     $result.heapComplete=$allocated.Success -and $freed.Success -and
@@ -653,7 +715,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
 }
       function Invoke-NyxQueryAuthoringCompiler([string]$Executable,
         [string[]]$Arguments, [string]$Tag) {
-        $result = RunOwned $Executable $Arguments $Tag 300 $false
+        $result = RunOwned $Executable $Arguments $Tag $QueryAuthoringCompilerTimeoutSeconds $false
         # Fail owned warnings before any longer UI run. The freshly emitted
         # unit is owned too, although it lives outside the checkout's sources.
         $result.warnings = @((Get-Content -LiteralPath $result.stdout) +
@@ -696,6 +758,18 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
     } else {
       Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchFlags + @("tests/$nyxWorkbenchProgram.lpr"))
     }
+    if ($Target -eq 'query-workbench') {
+      # Reuse the same stable native unit cohort after the maintained journey's
+      # full build. The consumers own assertions; shell only runs/stages them.
+      $nyxWorkbenchCompanionFlags = @($nyxWorkbenchFlags | Where-Object { $_ -ne '-B' })
+      Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
+        'tests/nyx_popover_open_lifetime_tests.lpr'))
+      $nyxWorkbenchNativeActivation = $nyxWorkbenchPlatform -match '-win32$'
+      if ($nyxWorkbenchNativeActivation) {
+        Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
+          'tests/nyx_native_column_activation_controls.lpr'))
+      }
+    }
     if ($Target -eq 'query-authoring' -and -not $QueryAuthoringDiagnostic) {
       # Catch portable consumer errors before the longer native authoring runs.
       # The compiled consumer still waits for its OWN two-width reopened exports.
@@ -732,7 +806,26 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       if ($Target -ne 'query-authoring') {
         Get-Content -LiteralPath $nyxWorkbenchRunLog
         if ($nyxWorkbenchRunExit -ne 0) { throw "Actual table query controls failed at $nyxWorkbenchWidth" }
+        if ($nyxWorkbenchNativeActivation) {
+          $nyxWorkbenchActivationLog = Join-Path $nyxWorkbenchRoot (
+            'native-activation-' + $nyxWorkbenchWidth + '.log')
+          & (Join-Path $nyxWorkbenchNative ('nyx_native_column_activation_controls' +
+            $nyxWorkbenchSuffix)) $nyxWorkbenchWidth *> $nyxWorkbenchActivationLog
+          $nyxWorkbenchActivationExit = $LASTEXITCODE
+          Get-Content -LiteralPath $nyxWorkbenchActivationLog
+          if ($nyxWorkbenchActivationExit -ne 0) {
+            throw "Actual native column activation failed at $nyxWorkbenchWidth"
+          }
+        }
       }
+    }
+    if ($Target -eq 'query-workbench') {
+      $nyxWorkbenchLifetimeLog = Join-Path $nyxWorkbenchRoot 'native-open-lifetime.log'
+      & (Join-Path $nyxWorkbenchNative ('nyx_popover_open_lifetime_tests' +
+        $nyxWorkbenchSuffix)) *> $nyxWorkbenchLifetimeLog
+      $nyxWorkbenchLifetimeExit = $LASTEXITCODE
+      Get-Content -LiteralPath $nyxWorkbenchLifetimeLog
+      if ($nyxWorkbenchLifetimeExit -ne 0) { throw 'Actual popover open-lifetime checks failed' }
     }
     if ($Target -eq 'query-authoring' -and $QueryAuthoringDiagnostic) {
       Write-Host 'Native1280 diagnostic only;390 and matching browser compilation remain required.'
@@ -759,10 +852,14 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       $nyxAuthoringCompiled = Join-Path $nyxWorkbenchRoot 'compiled'
       $nyxAuthoringCompiledBrowser = Join-Path $nyxWorkbenchRoot 'compiled-browser'
       New-Item -ItemType Directory -Path $nyxAuthoringCompiled, $nyxAuthoringCompiledBrowser | Out-Null
-      $nyxAuthoringCompiledFlags = @($nyxWorkbenchFlags | Where-Object {
-        -not $_.StartsWith('-FU') -and -not $_.StartsWith('-FE') })
+      # The independently emitted source must win even if an explicit cache
+      # contains an older same-named generated fixture. Its own equality/input
+      # assertions are unchanged and every companion has fresh FE/FU outputs.
+      $nyxAuthoringCompiledFlags = @("-Fu$nyxAuthoringSource") + @($nyxWorkbenchFlags | Where-Object {
+        -not $_.StartsWith('-FU', [StringComparison]::Ordinal) -and
+        -not $_.StartsWith('-FE', [StringComparison]::Ordinal) })
       Invoke-NyxQueryAuthoringCompiler $nyxLclFpc ($nyxAuthoringCompiledFlags + @(
-        '-dNYX_COMPILED_TABLE_QUERY_STUDIO', "-Fu$nyxAuthoringSource",
+        '-dNYX_COMPILED_TABLE_QUERY_STUDIO',
         "-FU$nyxAuthoringCompiled", "-FE$nyxAuthoringCompiled",
         "tests/$nyxWorkbenchProgram.lpr")) 'compiled-native-compiler'
       Invoke-NyxQueryAuthoringCompiler $nyxPas2js ($nyxWorkbenchBrowserFlags + @(
@@ -782,6 +879,22 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
         '-Fusrc', '-Futests', '-Fustudio', '-Fisrc', '-Fitests', '-Fistudio',
         "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchProgram.lpr")
     }
+    if ($Target -eq 'query-workbench') {
+      foreach ($nyxWorkbenchCompanion in @('nyx_column_activation_controls',
+          'nyx_popover_open_lifetime_tests')) {
+        Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+          '-Fusrc', '-Futests', '-Fustudio', '-Fisrc',
+          "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchCompanion.lpr")
+        $nyxWorkbenchCompanionHTML = '<!doctype html><html lang="en"><meta charset="utf-8">' +
+          '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+          '<title>Nyx focused column checks</title><body><script src="rtl.js"></script>' +
+          '<script src="' + $nyxWorkbenchCompanion + '.js"></script>' +
+          '<script>rtl.run();</script></body></html>'
+        [IO.File]::WriteAllText((Join-Path $nyxWorkbenchBrowser (
+          $nyxWorkbenchCompanion + '.html')), $nyxWorkbenchCompanionHTML,
+          [Text.UTF8Encoding]::new($false))
+      }
+    }
     Copy-Item -LiteralPath $nyxWorkbenchRuntime -Destination (Join-Path $nyxWorkbenchBrowser 'rtl.js')
     $nyxWorkbenchHTML = @"
 <!doctype html>
@@ -790,6 +903,14 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nyx table query workbench</title>
 <style id="nyx-authoring-observer">
+body[data-query-workbench="passed"]::after {
+  content: "PASS " attr(data-query-workbench-checks) " actual table workbench checks";
+  display: block;
+}
+body[data-query-workbench="failed"]::after {
+  content: "FAIL " attr(data-query-workbench-error);
+  display: block;
+}
 /* Read-only presentation of existing copied test facts. This bounded overlay
    takes no input or layout space; a clipped value is never a terminal proof.
    The viewport label is a CSS media match, not a stored capability setting. */

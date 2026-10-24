@@ -208,6 +208,10 @@ type
     InspectorGroups: TNyxInspectorGroups;
     { Independent query input, guarded by the complete schema/binding baseline. }
     QueryEditorDraft: TNyxQueryEditorDraft;
+    { Independent layout-policy input survives shell parking without accepting
+      incomplete numbers. The form's exact owner/schema/binding baseline prevents
+      a draft from crossing projects, selections or inherited definitions. }
+    LayoutEditorDraft: TNyxMenuEditorDraft;
     { Read-only report belongs to the captured project/selection/revision. }
     QueryPreview: TNyxStudioQueryPreview;
     { Unsubmitted clock policy belongs to this project's editor presentation.

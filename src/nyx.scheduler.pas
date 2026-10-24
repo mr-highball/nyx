@@ -42,6 +42,18 @@ type
     property Cancelled: Boolean read GetCancelled;
   end;
 
+  { Optional final admission for a retained cancellation generation. CheckReady
+    reads synchronized cancellation facts only and raises when cancelled or when
+    a dependency cannot supply this guarantee. It must not invoke application
+    callbacks, query mutable UI/model objects or capture a newer generation.
+    Consumers capture this facet before validation, then use it after all
+    outward validators and immediately before noncalling publication installs.
+    This interface grants neither scheduling nor UI access. }
+  INyxCancellationReadiness = interface(IInterface)
+    ['{0CFD558C-6244-42EC-BC52-A8309815B415}']
+    procedure CheckReady;
+  end;
+
   ENyxSchedule = class(Exception);
   { A saturated native pending queue refuses the submission before adopting its
     work. Callers may defer/retry, coalesce their inputs or report overload; work
@@ -202,12 +214,16 @@ uses
   {$ENDIF}
 
 type
-  TNyxCancellationScope = class(TInterfacedObject, INyxCancellationScope)
+  { One atomic terminal flag, independent of scheduler/work ownership. Its final
+    readiness facet has exactly the same synchronized cancellation meaning. }
+  TNyxCancellationScope = class(TInterfacedObject, INyxCancellationScope,
+    INyxCancellationReadiness)
   private
     FCancelled: LongInt;
   public
     procedure Cancel;
     function GetCancelled: Boolean;
+    procedure CheckReady;
   end;
 
   TNyxExecution = class(TInterfacedObject, INyxExecution)
@@ -451,6 +467,15 @@ begin
   {$ELSE}
   Result := InterlockedCompareExchange(FCancelled, 0, 0) <> 0;
   {$ENDIF}
+end;
+
+procedure TNyxCancellationScope.CheckReady;
+begin
+
+  if GetCancelled then
+  begin
+    raise ENyxSchedule.Create('Cancellation generation is no longer ready');
+  end;
 end;
 
 function NewNyxCancellationScope: INyxCancellationScope;

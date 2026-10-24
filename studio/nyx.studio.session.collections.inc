@@ -227,7 +227,8 @@ begin
   AIntent.Validate;
 
   if (AIntent.Action in [scaQuery, scaTableQuery, scaColumnQuery,
-    scaDefaultTableQuery, scaDefaultColumnQuery]) and SourceDraftPending then
+    scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
+    scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout]) and SourceDraftPending then
   begin
     { An authored query or command-policy replacement regenerates managed Pascal.
       Refuse before any mutation while a handwritten draft is pending, matching

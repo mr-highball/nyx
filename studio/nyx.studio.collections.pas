@@ -31,7 +31,7 @@ uses
   nyx.types,
   nyx.behavior,
   nyx.model,
-  nyx.collections.query,
+  nyx.collections.query, nyx.collections.arrangement,
   nyx.studio.session,
   nyx.studio.collectionintent;
 
@@ -41,6 +41,11 @@ type
     and scalar family are independently rechecked during capture. }
   TNyxStudioQueryPolicyField = (sqpfEnabled, sqpfFiltering, sqpfSorting,
     sqpfSortMode, sqpfTextComparison, sqpfFamilyOperators);
+  { Scalar roles of the independent authored-layout form. The column index in
+    a chrome ID is transport only; capture verifies the copied typed field and
+    complete schema/binding baseline before admitting a source command. }
+  TNyxStudioLayoutPolicyField = (slpfEnabled, slpfVisible, slpfPin,
+    slpfMinimumCenter, slpfAutoSizeRows);
   { A copied presentation receipt, never design data/history. Exact command
     context prevents a later project, selection or revision from inheriting its
     report. Rows/controls/stores are not retained. Last preview describes its
@@ -97,6 +102,24 @@ function NyxStudioQueryPolicyOperatorID(AColumn: Integer;
   AComparison: TNyxQueryComparison): TNyxText;
 function NyxStudioQueryPolicyApplyID(AColumn: Integer): TNyxText;
 function NyxStudioQueryPolicyDefaultID(AColumn: Integer): TNyxText;
+
+const
+  NyxStudioLayoutEditorID = 'inspector-collection-layout';
+
+{ Stable source IDs locate ordinary inspector parts. Metadata independently
+  qualifies their exact owner, typed field and accepted schema/binding. }
+function NyxStudioLayoutPolicyFormID(AColumn: Integer): TNyxText;
+function NyxStudioLayoutPolicyFieldID(AColumn: Integer;
+  AField: TNyxStudioLayoutPolicyField): TNyxText;
+function NyxStudioLayoutPolicyFeatureID(AColumn: Integer;
+  AFeature: TNyxColumnLayoutFeature): TNyxText;
+function NyxStudioLayoutPolicyApplyID(AColumn: Integer): TNyxText;
+function NyxStudioLayoutPolicyDefaultID(AColumn: Integer): TNyxText;
+{ Capture one complete authored layout policy, never runtime preferences. The
+  mounted root is borrowed only during this call; stale/locked forms refuse. }
+function CaptureNyxStudioLayout(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture owns no accepted node/store and performs no source generation.
   Partial scalar notation stays text until the isolated session parses it.
   False means this is not the command's supported event. Invalid closed choices,
@@ -182,13 +205,25 @@ const
     'add-column', 'clear', 'inherit', 'selection', 'query',
     'column-content', 'column-fixed', 'column-flex', 'column-minimum',
     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
-    'table-query', 'column-query', 'default-table-query', 'default-column-query');
+    'table-query', 'column-query', 'default-table-query', 'default-column-query',
+    'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout');
   CQueryEditor = 'inspector-collection-query';
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
   CPolicyBaseline = 'studio-query-policy-baseline';
   CPolicyApply = 'apply';
   CPolicyDefault = 'default';
+  CLayoutColumn = 'studio-layout-policy-column';
+  CLayoutAction = 'studio-layout-policy-action';
+  CLayoutFields: array[TNyxStudioLayoutPolicyField] of TNyxText =
+    ('enabled', 'visible', 'pin', 'minimum-center', 'auto-size-rows');
+  CLayoutFeatures: array[TNyxColumnLayoutFeature] of TNyxText =
+    ('resize', 'auto-size', 'reorder', 'visibility', 'pinning');
+  CLayoutFeatureCaptions: array[TNyxColumnLayoutFeature] of TNyxText =
+    ('Allow user resizing', 'Allow Fit current page', 'Allow user reordering',
+     'Allow showing and hiding', 'Allow pinning and unpinning');
+  CLayoutPins: array[TNyxColumnPin] of TNyxText =
+    ('Unpinned', 'Start edge', 'End edge');
   CSingleSort = 'Single key';
   CMultipleSort = 'Multiple keys';
   CExactText = 'Exact text';
@@ -247,6 +282,170 @@ end;
 function NyxStudioQueryPolicyDefaultID(AColumn: Integer): TNyxText;
 begin
   Result := NyxStudioQueryPolicyFormID(AColumn) + '-default';
+end;
+
+function NyxStudioLayoutPolicyFormID(AColumn: Integer): TNyxText;
+begin
+
+  if (AColumn < -1) or (AColumn >= NyxMaximumColumnLayoutFields) then
+  begin
+    raise ENyxCollection.Create('A layout-policy form requires a bounded table or column');
+  end;
+  Result := NyxStudioLayoutEditorID + '-table';
+
+  if AColumn >= 0 then
+  begin
+    Result := NyxStudioLayoutEditorID + '-column-' + TNyxText(IntToStr(AColumn));
+  end;
+end;
+
+function NyxStudioLayoutPolicyFieldID(AColumn: Integer;
+  AField: TNyxStudioLayoutPolicyField): TNyxText;
+begin
+
+  if (Ord(AField) < Ord(Low(TNyxStudioLayoutPolicyField))) or
+    (Ord(AField) > Ord(High(TNyxStudioLayoutPolicyField))) then
+  begin
+    raise ENyxCollection.Create('Unknown layout-policy scalar role');
+  end;
+  Result := NyxStudioLayoutPolicyFormID(AColumn) + '-' + CLayoutFields[AField];
+end;
+
+function NyxStudioLayoutPolicyFeatureID(AColumn: Integer;
+  AFeature: TNyxColumnLayoutFeature): TNyxText;
+begin
+
+  if (Ord(AFeature) < Ord(Low(TNyxColumnLayoutFeature))) or
+    (Ord(AFeature) > Ord(High(TNyxColumnLayoutFeature))) then
+  begin
+    raise ENyxCollection.Create('Unknown layout-policy feature');
+  end;
+  Result := NyxStudioLayoutPolicyFormID(AColumn) + '-feature-' + CLayoutFeatures[AFeature];
+end;
+
+function NyxStudioLayoutPolicyApplyID(AColumn: Integer): TNyxText;
+begin
+  Result := NyxStudioLayoutPolicyFormID(AColumn) + '-apply';
+end;
+
+function NyxStudioLayoutPolicyDefaultID(AColumn: Integer): TNyxText;
+begin
+  Result := NyxStudioLayoutPolicyFormID(AColumn) + '-default';
+end;
+
+{ This separate card owns no runtime arrangement. Target adapters copy only
+  its unsubmitted input through the generic exact-baseline form draft contract;
+  Apply/default alone enters the existing paired source-command queue. }
+procedure AddLayoutPolicyForms(AParent: TNyxNode; const AOwner: TNyxText;
+  const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
+  ALocked: Boolean);
+var
+  LEditor: INyxCard;
+  LForm: TNyxNode;
+  LDisclosure: INyxDisclosure;
+  LTable: TNyxTableLayoutPolicy;
+  LColumn: TNyxCollectionColumn;
+  LPolicy: TNyxColumnLayoutPolicy;
+  LIndex: Integer;
+
+  procedure BeginForm(AColumn: Integer; const ATitle: TNyxText; ADeclared: Boolean);
+  var
+    LStatus: TNyxText;
+  begin
+    LForm := TNyxNode.Create(nkCard, NyxStudioLayoutPolicyFormID(AColumn));
+    LForm.Configure.Padding(8).Gap(6).Surface(True).Done;
+    LForm.SetProp(CLayoutColumn, TNyxText(IntToStr(AColumn)))
+      .SetProp(COwner, AOwner).SetProp(CKey, ASpec.Key.Name)
+      .SetProp(CPolicyBaseline, LEditor.Node.Prop(NyxMenuFormBaselineKey));
+    LForm.Add(TNyxNode.Create(nkHeading, LForm.ID + '-title').Configure.Text(ATitle).Done);
+    LStatus := 'Using Nyx defaults. Apply declares these choices explicitly.';
+
+    if ADeclared then
+    begin
+      LStatus := 'Explicit choices. Use Nyx defaults clears only this policy.';
+    end;
+    LForm.Add(TNyxNode.Create(nkLabel, LForm.ID + '-status').Configure.Text(LStatus).Done);
+
+    if AColumn < 0 then
+    begin
+      LEditor.Node.Add(LForm);
+    end
+    else
+    begin
+      LDisclosure := NewNyxDisclosure(LForm.ID + '-section').WithText(ATitle);
+      LDisclosure.Configure.Value(False).Surface(False).Done;
+      LDisclosure.BodyColumn.Node.Add(LForm);
+      LEditor.Node.Add(LDisclosure);
+    end;
+  end;
+
+  procedure Flag(AColumn: Integer; AField: TNyxStudioLayoutPolicyField;
+    const ACaption: TNyxText; AValue: Boolean);
+  begin
+    LForm.Add(TNyxNode.Create(nkCheckbox, NyxStudioLayoutPolicyFieldID(AColumn, AField))
+      .Configure.Text(ACaption).Value(AValue).Enabled(not ALocked).Done);
+  end;
+
+  procedure Features(AColumn: Integer; AFeatures: TNyxColumnLayoutFeatures);
+  var
+    LFeature: TNyxColumnLayoutFeature;
+  begin
+    for LFeature := Low(TNyxColumnLayoutFeature) to High(TNyxColumnLayoutFeature) do
+    begin
+      LForm.Add(TNyxNode.Create(nkCheckbox, NyxStudioLayoutPolicyFeatureID(AColumn, LFeature))
+        .Configure.Text(CLayoutFeatureCaptions[LFeature]).Value(LFeature in AFeatures)
+        .Enabled(not ALocked).Done);
+    end;
+  end;
+
+  procedure EndForm(AColumn: Integer);
+  begin
+    LForm.Add(TNyxNode.Create(nkButton, NyxStudioLayoutPolicyApplyID(AColumn))
+      .Configure.Text('Apply layout defaults').Enabled(not ALocked)
+      .Extension(CLayoutAction, CPolicyApply).Done);
+    LForm.Add(TNyxNode.Create(nkButton, NyxStudioLayoutPolicyDefaultID(AColumn))
+      .Configure.Text('Use Nyx defaults').Enabled(not ALocked)
+      .Extension(CLayoutAction, CPolicyDefault).Done);
+  end;
+
+begin
+  LEditor := NewNyxCard(NyxStudioLayoutEditorID);
+  LEditor.Configure.Layout(nlColumn).Gap(8).Padding(12).Compound(True).Done;
+  LEditor.Node.SetProp(NyxMenuFormOwnerKey, AOwner)
+    .SetProp(NyxMenuFormBaselineKey, NyxQueryEditorBaseline(ASchema, ASpec))
+    .SetProp(NyxMenuFormReferenceKey, '');
+  LEditor.Node.Add(TNyxNode.Create(nkHeading, NyxStudioLayoutEditorID + '-title')
+    .Configure.Text('Column arrangement defaults').Done);
+  LEditor.Node.Add(TNyxNode.Create(nkLabel, NyxStudioLayoutEditorID + '-help')
+    .Configure.Text('Author table defaults here; runtime Columns choices remain independent. ' +
+      'Disabled user controls still honor authored visibility and pins. ' +
+      'Use collection inheritance to restore a reusable binding.').Done);
+  LTable := ASpec.TableLayoutPolicy;
+  BeginForm(-1, 'Table layout controls', ASpec.HasTableLayoutPolicy);
+  Flag(-1, slpfEnabled, 'Enable user column controls', LTable.IsEnabled);
+  Features(-1, LTable.Features);
+  LForm.Add(TNyxNode.Create(nkInput, NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter))
+    .Configure.Text('Minimum scrollable center width (logical px)')
+    .Value(IntToStr(LTable.MinimumScrollableWidth)).Enabled(not ALocked).Done);
+  LForm.Add(TNyxNode.Create(nkInput, NyxStudioLayoutPolicyFieldID(-1, slpfAutoSizeRows))
+    .Configure.Text('Maximum current-page rows sampled by Fit (1..1024)')
+    .Value(IntToStr(LTable.AutoSizeRows)).Enabled(not ALocked).Done);
+  EndForm(-1);
+  for LIndex := 0 to ASpec.Count - 1 do
+  begin
+    LColumn := ASpec.ColumnAt(LIndex);
+    LPolicy := LColumn.LayoutPolicy;
+    BeginForm(LIndex, LColumn.Title + ' layout controls', LColumn.HasLayoutPolicy);
+    LForm.SetProp(CField, LColumn.FieldName).SetProp(CKind, NyxStateKindName(LColumn.Kind));
+    Flag(LIndex, slpfVisible, 'Initially visible', LPolicy.IsVisible);
+    LForm.Add(TNyxNode.Create(nkSelect, NyxStudioLayoutPolicyFieldID(LIndex, slpfPin))
+      .Configure.Text('Authored pinned edge')
+      .Items(CLayoutPins[ncpNone] + #10 + CLayoutPins[ncpStart] + #10 + CLayoutPins[ncpEnd])
+      .Value(CLayoutPins[LPolicy.Pin]).Enabled(not ALocked).Done);
+    Features(LIndex, LPolicy.Features);
+    EndForm(LIndex);
+  end;
+  AParent.Add(LEditor);
 end;
 
 { Policy controls are children of the existing query editor. Both Studio hosts
@@ -641,7 +840,8 @@ begin
       NyxStudioCollectionViewAction(APending.Collections[LPendingIndex].Intent.Action) and
       (APending.Collections[LPendingIndex].Intent.Action <> scaInherit) and
       not (APending.Collections[LPendingIndex].Intent.Action in
-        [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery]) then
+        [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
+         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout]) then
     begin
       try
         LSchema := ASession.Document.Collections.Snapshot(
@@ -778,6 +978,11 @@ begin
       AddQueryPolicyForms(LQueryEditor.Node, ASession.SelectedID, LSpec, LLocked);
     end;
     LPanel.Add(LQueryEditor);
+
+    if AProjection.ProjectionKind = NyxKindName(nkTable) then
+    begin
+      AddLayoutPolicyForms(LPanel, ASession.SelectedID, LSchema, LSpec, LLocked);
+    end;
     for LFieldIndex := 0 to LSchema.Count - 1 do
     begin
       LFound := False;
@@ -1289,6 +1494,255 @@ begin
   end;
 end;
 
+function CaptureNyxStudioLayout(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LEditor: TNyxNode;
+  LForm: TNyxNode;
+  LProjection: TNyxNode;
+  LSpec: TNyxCollectionViewSpec;
+  LSchema: TNyxCollectionSchema;
+  LColumn: TNyxCollectionColumn;
+  LColumnIndex: Integer;
+  LFieldIndex: Integer;
+  LExpectedCount: Integer;
+  LOwner: TNyxText;
+  LBaseline: TNyxText;
+  LAction: TNyxText;
+  LPinText: TNyxText;
+  LMinimum: Integer;
+  LRows: Integer;
+  LFeatures: TNyxColumnLayoutFeatures;
+  LFeature: TNyxColumnLayoutFeature;
+  LPin: TNyxColumnPin;
+  LPinFound: Boolean;
+
+  function Role(const AID: TNyxText; AKind: TNyxKind): TNyxNode;
+  begin
+    Result := LForm.Find(AID);
+
+    if (Result = nil) or (Result.Parent <> LForm) or
+      (Result.Kind <> NyxKindName(AKind)) or
+      (Result.ProjectionKind <> NyxKindName(AKind)) then
+    begin
+      raise ENyxCollection.Create('Use the current layout form and its direct typed controls');
+    end;
+  end;
+
+  function Flag(const AID: TNyxText): Boolean;
+  var
+    LValue: TNyxText;
+  begin
+    LValue := Role(AID, nkCheckbox).Prop(NyxAttributeName(atValue));
+
+    if (LValue <> 'true') and (LValue <> 'false') then
+    begin
+      raise ENyxCollection.Create('Layout Boolean choices require true or false');
+    end;
+    Result := LValue = 'true';
+  end;
+
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := (AButton <> nil) and (AButton.Prop(CLayoutAction) <> '');
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (AShellRoot = nil) or
+    (AShellRoot.Find(AButton.ID) <> AButton) or (AButton.Parent = nil) then
+  begin
+    raise ENyxCollection.Create('Use the current mounted layout-policy action');
+  end;
+  LForm := AButton.Parent;
+  LEditor := AShellRoot.Find(NyxStudioLayoutEditorID);
+
+  if (LEditor = nil) or (LEditor.Find(LForm.ID) <> LForm) or
+    (LEditor.Kind <> NyxKindName(nkCard)) or
+    (LEditor.ProjectionKind <> NyxKindName(nkCard)) or
+    (LForm.Kind <> NyxKindName(nkCard)) or
+    (LForm.ProjectionKind <> NyxKindName(nkCard)) or
+    not TryStrToInt(LForm.Prop(CLayoutColumn), LColumnIndex) or
+    (LColumnIndex < -1) or (LColumnIndex >= NyxMaximumColumnLayoutFields) then
+  begin
+    raise ENyxCollection.Create('Layout action has no current table or column form');
+  end;
+
+  if (LForm.ID <> NyxStudioLayoutPolicyFormID(LColumnIndex)) or
+    (LForm.Prop(CLayoutColumn) <> TNyxText(IntToStr(LColumnIndex))) then
+  begin
+    raise ENyxCollection.Create('Layout-policy form identity changed');
+  end;
+  LAction := AButton.Prop(CLayoutAction);
+
+  if ((LAction <> CPolicyApply) and (LAction <> CPolicyDefault)) or
+    ((LAction = CPolicyApply) and (AButton.ID <> NyxStudioLayoutPolicyApplyID(LColumnIndex))) or
+    ((LAction = CPolicyDefault) and (AButton.ID <> NyxStudioLayoutPolicyDefaultID(LColumnIndex))) then
+  begin
+    raise ENyxCollection.Create('Unknown layout-policy action');
+  end;
+  Role(NyxStudioLayoutPolicyApplyID(LColumnIndex), nkButton);
+  Role(NyxStudioLayoutPolicyDefaultID(LColumnIndex), nkButton);
+  Role(LForm.ID + '-title', nkHeading);
+  Role(LForm.ID + '-status', nkLabel);
+  LOwner := LForm.Prop(COwner);
+  LBaseline := LForm.Prop(CPolicyBaseline);
+
+  if (LOwner = '') or (ASession.SelectedID <> LOwner) or
+    (LEditor.Prop(NyxMenuFormOwnerKey) <> LOwner) or (LBaseline = '') or
+    (LEditor.Prop(NyxMenuFormBaselineKey) <> LBaseline) or
+    APending.CollectionViewLocked(LOwner) or ASession.SourceDraftPending then
+  begin
+    raise ENyxCollection.Create('Select this table again after pending edits or Pascal drafts');
+  end;
+  LProjection := ASession.SelectedProjection;
+  try
+
+    if (LProjection = nil) or (LProjection.ProjectionKind <> NyxKindName(nkTable)) or
+      not LProjection.HasCollectionView or not LProjection.CollectionView.Defined then
+    begin
+      raise ENyxCollection.Create('Layout defaults require the selected bound table');
+    end;
+    LSpec := LProjection.CollectionView;
+    LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
+
+    if (LForm.Prop(CKey) <> LSpec.Key.Name) or APending.CollectionLocked(LSpec.Key) or
+      (NyxQueryEditorBaseline(LSchema, LSpec) <> LBaseline) then
+    begin
+      raise ENyxCollection.Create('Table binding or schema changed; reopen its layout form');
+    end;
+    for LFeature := Low(TNyxColumnLayoutFeature) to High(TNyxColumnLayoutFeature) do
+    begin
+      Role(NyxStudioLayoutPolicyFeatureID(LColumnIndex, LFeature), nkCheckbox);
+    end;
+
+    if LColumnIndex < 0 then
+    begin
+      Role(NyxStudioLayoutPolicyFieldID(-1, slpfEnabled), nkCheckbox);
+      Role(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter), nkInput);
+      Role(NyxStudioLayoutPolicyFieldID(-1, slpfAutoSizeRows), nkInput);
+      LExpectedCount := 12;
+
+      if (LForm.Prop(CField) <> '') or (LForm.Prop(CKind) <> '') then
+      begin
+        raise ENyxCollection.Create('Table layout defaults cannot impersonate a column');
+      end;
+    end
+    else
+    begin
+
+      if LColumnIndex >= LSpec.Count then
+      begin
+        raise ENyxCollection.Create('Layout column no longer exists');
+      end;
+      LColumn := LSpec.ColumnAt(LColumnIndex);
+
+      if (LForm.Prop(CField) <> LColumn.FieldName) or
+        (LForm.Prop(CKind) <> NyxStateKindName(LColumn.Kind)) then
+      begin
+        raise ENyxCollection.Create('Layout column changed its typed identity');
+      end;
+      Role(NyxStudioLayoutPolicyFieldID(LColumnIndex, slpfVisible), nkCheckbox);
+      Role(NyxStudioLayoutPolicyFieldID(LColumnIndex, slpfPin), nkSelect);
+      LExpectedCount := 11;
+    end;
+
+    if LForm.Count <> LExpectedCount then
+    begin
+      raise ENyxCollection.Create('Use the exact complete layout-policy form');
+    end;
+    AEdit.Action := sdaCollection;
+    AEdit.Selection := LOwner;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Collection.Key := LSpec.Key;
+    AEdit.Collection.Projection := cpTable;
+    AEdit.Collection.LayoutBaseline := LBaseline;
+
+    if LColumnIndex < 0 then
+    begin
+      AEdit.Collection.Action := scaDefaultTableLayout;
+    end
+    else
+    begin
+      AEdit.Collection.Action := scaDefaultColumnLayout;
+      for LFieldIndex := 0 to LSchema.Count - 1 do
+      begin
+
+        if (LSchema.FieldAt(LFieldIndex).Name = LColumn.FieldName) and
+          (LSchema.FieldAt(LFieldIndex).Kind = LColumn.Kind) then
+        begin
+          AEdit.Collection.Field := TNyxStudioCollectionFieldRef.FromMetadata(
+            LSchema.FieldAt(LFieldIndex));
+          Break;
+        end;
+      end;
+
+      if not AEdit.Collection.Field.Defined then
+      begin
+        raise ENyxCollection.Create('Layout column no longer matches its schema family');
+      end;
+    end;
+
+    if LAction = CPolicyApply then
+    begin
+      LFeatures := [];
+      for LFeature := Low(TNyxColumnLayoutFeature) to High(TNyxColumnLayoutFeature) do
+      begin
+
+        if Flag(NyxStudioLayoutPolicyFeatureID(LColumnIndex, LFeature)) then
+        begin
+          Include(LFeatures, LFeature);
+        end;
+      end;
+
+      if LColumnIndex < 0 then
+      begin
+
+        if not TryNyxStateInteger(Role(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter),
+            nkInput).Prop(NyxAttributeName(atValue)), LMinimum) or
+          not TryNyxStateInteger(Role(NyxStudioLayoutPolicyFieldID(-1, slpfAutoSizeRows),
+            nkInput).Prop(NyxAttributeName(atValue)), LRows) then
+        begin
+          raise ENyxCollection.Create('Layout bounds and Fit sample require exact Integers');
+        end;
+        AEdit.Collection.Action := scaTableLayout;
+        AEdit.Collection.TableLayout := NyxTableLayout
+          .Enabled(Flag(NyxStudioLayoutPolicyFieldID(-1, slpfEnabled)))
+          .AllowOnly(LFeatures).MinimumCenter(LMinimum).AutoSizeSample(LRows);
+      end
+      else
+      begin
+        LPinText := Role(NyxStudioLayoutPolicyFieldID(LColumnIndex, slpfPin), nkSelect)
+          .Prop(NyxAttributeName(atValue));
+        LPinFound := False;
+        for LPin := Low(TNyxColumnPin) to High(TNyxColumnPin) do
+        begin
+
+          if LPinText = CLayoutPins[LPin] then
+          begin
+            LPinFound := True;
+            Break;
+          end;
+        end;
+
+        if not LPinFound then
+        begin
+          raise ENyxCollection.Create('Choose an exact authored pinned edge');
+        end;
+        AEdit.Collection.Action := scaColumnLayout;
+        AEdit.Collection.ColumnLayout := NyxColumnLayout.AllowOnly(LFeatures)
+          .Visible(Flag(NyxStudioLayoutPolicyFieldID(LColumnIndex, slpfVisible))).Pinned(LPin);
+      end;
+    end;
+    ApplyNyxStudioCollectionViewIntent(AEdit.Collection, LSpec, LSchema);
+  finally
+    LProjection.Free;
+  end;
+end;
+
 function CaptureNyxStudioQuery(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
@@ -1402,9 +1856,10 @@ begin
     raise ENyxCollection.Create('Unknown collection command');
   end;
 
-  if LAction in [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery] then
+  if LAction in [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
+    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout] then
   begin
-    raise ENyxCollection.Create('Use the current complete query-policy form');
+    raise ENyxCollection.Create('Use the current complete query or layout policy form');
   end;
 
   if ((LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection,

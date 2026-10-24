@@ -40,7 +40,9 @@ type
     property Name: TNyxText read FName;
   end;
 
+  { Closed publication phases distinguish reversible work from terminal handles. }
   TNyxViewSectionChangeState = (vcsPrepared, vcsPreviewing, vcsPublished, vcsCanceled);
+  { Prepare returns the managed handle declared after the target phase contract. }
   INyxViewSectionChange = interface;
 
   { A managed observation receiver borrows the currently published node for the
@@ -97,10 +99,22 @@ type
     property ExpectedRevision: Integer read GetExpectedRevision;
   end;
 
+  { Optional explicit cancellation cleanup. Fallible target disconnects run
+    while the publication is still retained, before its nonthrowing destructor
+    releases storage. Retirement is terminal/idempotent and never owns the
+    accepted view. Dropping a handle still cleans up, but cannot report failure
+    from a destructor. The original publication GUID/vtable stays unchanged. }
+  INyxViewSectionCandidateRetirement = interface(IInterface)
+    ['{8F7C1A45-696B-43E6-BA1C-5DB5285F60D8}']
+    procedure RetireCandidate;
+  end;
+
   { A handle leases its section/candidate until publication or Cancel/release.
     Cancel is idempotent after cancellation; during preview or after successful
     publication it raises. Published handles own only copied identity/revision.
-    Stale refusal leaves a prepared handle available for explicit cancellation. }
+    Stale refusal leaves a prepared handle available for explicit cancellation.
+    Optional explicit retirement reports cleanup errors AFTER becoming canceled;
+    implicit final release attempts cleanup through nonthrowing destructors. }
   INyxViewSectionChange = interface(IInterface)
     ['{A19260D3-5F55-4A41-9D36-02860B6A4D9F}']
     function GetReference: TNyxViewSectionRef;
@@ -129,13 +143,20 @@ function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange):
 
 implementation
 
+{$ifdef PAS2JS}
+uses JS;
+{$endif}
+
 type
+  { Forward concrete handle is exposed only through the private access port. }
   TNyxViewSectionChange = class;
+  { The coordinator accepts only canonical handles, not foreign phase facades. }
   INyxViewSectionChangeAccess = interface(IInterface)
     ['{6258781A-6966-450C-ADEC-F2B9CE419085}']
     function GetChange: TNyxViewSectionChange;
   end;
 
+  { One copied identity/revision and its exact managed target retirement duty. }
   TNyxViewSectionChange = class(TInterfacedObject, INyxViewSectionChange,
     INyxViewSectionChangeAccess)
   private
@@ -223,20 +244,62 @@ begin
 end;
 
 procedure TNyxViewSectionChange.Cancel;
+var
+  LLease: INyxViewSectionChange;
+  LPublication: INyxViewSectionPublication;
+  LRetirement: INyxViewSectionCandidateRetirement;
 begin
 
   if FState in [vcsPreviewing, vcsPublished] then
   begin
     raise ENyxModel.Create('An active/published view section change cannot be canceled');
   end;
+  { Detach this exact duty before a target cleanup can release its caller or
+    reenter cancellation. No destructor must propagate the cleanup exception. }
+  LLease := Self;
+  LPublication := FPublication;
   FState := vcsCanceled;
   FPublication := nil;
+  try
+
+    if Supports(LPublication, INyxViewSectionCandidateRetirement, LRetirement) then
+    begin
+      LRetirement.RetireCandidate;
+    end;
+  finally
+    LRetirement := nil;
+    LPublication := nil;
+  end;
 end;
 
 function NewNyxViewSectionChange(const APublication: INyxViewSectionPublication):
   INyxViewSectionChange;
 begin
   Result := TNyxViewSectionChange.Create(APublication);
+end;
+
+{ Diagnostic text is secondary to exception identity. Do not call arbitrary
+  JavaScript toString hooks while retiring a failed group; unrecognized platform
+  values get a fixed explanation and remain intact for the original rethrow. }
+function ActiveSectionFailureText{$ifdef PAS2JS}(AValue: JSValue){$endif}: TNyxText;
+begin
+  {$ifdef PAS2JS}
+
+  if isClassInstance(AValue) and (TObject(AValue) is Exception) then
+  begin
+    Result := Exception(AValue).Message;
+  end
+  else if isString(AValue) then
+  begin
+    Result := String(AValue);
+  end
+  else
+  begin
+    Result := 'JavaScript platform exception';
+  end;
+  {$else}
+  Result := Exception(ExceptObject).Message;
+  {$endif}
 end;
 
 function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange): Boolean;
@@ -248,6 +311,15 @@ var
   LChange: TNyxViewSectionChange;
   LPreviewError: TNyxText;
   LRollbackError: TNyxText;
+  LCleanupError: TNyxText;
+  LRollbackFailed: Boolean;
+  LCleanupFailed: Boolean;
+  LRetirementFailed: Boolean;
+  {$ifdef PAS2JS}
+  LRetirementFailure: JSValue;
+  {$else}
+  LRetirementFailure: Exception;
+  {$endif}
 begin
   Result := False;
   SetLength(LAccess, Length(AChanges));
@@ -293,41 +365,54 @@ begin
       LAccess[LIndex].GetChange.FPublication.Preview;
     end;
   except
-    on LException: Exception do
+    LPreviewError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
+    LRollbackError := '';
+    LCleanupError := '';
+    LRollbackFailed := False;
+    LCleanupFailed := False;
+    { Include the throwing preview: target parenting may already have changed.
+      Try every earlier rollback even if an extension violates its obligation;
+      cancel all candidates and report that additional target failure. }
+    for LIndex := LPreview downto 0 do
     begin
-      LPreviewError := LException.Message;
-      LRollbackError := '';
-      { Include the throwing preview: target parenting may already have changed.
-        Try every earlier rollback even if an extension violates its obligation;
-        cancel all candidates and report that additional target failure. }
-      for LIndex := LPreview downto 0 do
-      begin
-        try
-          LAccess[LIndex].GetChange.FPublication.Rollback;
-        except
-          on LRollbackException: Exception do
-          begin
+      try
+        LAccess[LIndex].GetChange.FPublication.Rollback;
+      except
 
-            if LRollbackError = '' then
-            begin
-              LRollbackError := LRollbackException.Message;
-            end;
-          end;
+        if not LRollbackFailed then
+        begin
+          LRollbackError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
+          LRollbackFailed := True;
         end;
       end;
-      for LIndex := 0 to High(LAccess) do
-      begin
-        LAccess[LIndex].GetChange.FState := vcsCanceled;
-        LAccess[LIndex].GetChange.FPublication := nil;
-      end;
-
-      if LRollbackError <> '' then
-      begin
-        raise ENyxModel.Create('Section preview failed: ' + LPreviewError +
-          TNyxText('; rollback also failed: ') + LRollbackError);
-      end;
-      raise;
     end;
+    for LIndex := 0 to High(LAccess) do
+    begin
+      LAccess[LIndex].GetChange.FState := vcsCanceled;
+      try
+        LAccess[LIndex].GetChange.Cancel;
+      except
+
+        if not LCleanupFailed then
+        begin
+          LCleanupError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
+          LCleanupFailed := True;
+        end;
+      end;
+    end;
+
+    if LRollbackFailed then
+    begin
+      raise ENyxModel.Create('Section preview failed: ' + LPreviewError +
+        TNyxText('; rollback also failed: ') + LRollbackError);
+    end;
+
+    if LCleanupFailed then
+    begin
+      raise ENyxModel.Create('Section preview failed: ' + LPreviewError +
+        TNyxText('; candidate retirement also failed: ') + LCleanupError);
+    end;
+    raise;
   end;
   for LIndex := 0 to High(LAccess) do
   begin
@@ -335,12 +420,46 @@ begin
     LAccess[LIndex].GetChange.FState := vcsPublished;
   end;
   { Retire after the whole group is authoritative. Publication ports contain
-    their former owners until this separate release boundary. }
+    their former owners until this separate release boundary. A supported
+    fallible disconnect must not skip any other member's exact retirement. }
+  LRetirementFailed := False;
+  {$ifdef PAS2JS}
+  LRetirementFailure := Undefined;
+  {$else}
+  LRetirementFailure := nil;
+  {$endif}
   for LIndex := 0 to High(LAccess) do
   begin
     LChange := LAccess[LIndex].GetChange;
-    LChange.FPublication.RetirePrevious;
-    LChange.FPublication := nil;
+    try
+      try
+        LChange.FPublication.RetirePrevious;
+      except
+
+        if not LRetirementFailed then
+        begin
+          {$ifdef PAS2JS}
+          LRetirementFailure := JSExceptValue;
+          {$else}
+          LRetirementFailure := Exception(AcquireExceptionObject);
+          {$endif}
+          LRetirementFailed := True;
+        end;
+      end;
+    finally
+      LChange.FPublication := nil;
+    end;
+  end;
+
+  if LRetirementFailed then
+  begin
+    {$ifdef PAS2JS}
+    asm
+      throw LRetirementFailure;
+    end;
+    {$else}
+    raise LRetirementFailure;
+    {$endif}
   end;
   Result := True;
 end;

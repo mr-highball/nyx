@@ -11,6 +11,21 @@ capabilities and an ordinary Close button.
 
 ## Authoring and ownership
 
+Each successful opening also exposes an optional `INyxPopoverOpenAdmission`.
+Its `GetOpenLifetime` returns an `INyxPopoverOpenLifetime` for that exact opening;
+it returns nil while closed, transitioning or retired. Capture the token before
+deferring work. `Current` becomes permanently false on silent Close, dismissal,
+retirement or closure of the original parent presentation. Reopening produces a
+different token, so a later `IsOpen = True` cannot revive an earlier action.
+
+Tokens own no presenter, document, event router or native/DOM control. Their
+readonly cancellation state supports native worker reads; presentation methods
+and token capture remain UI operations. Nested tokens retain the original
+parent's token, invalidating the captured family before descendant cleanup can
+call application code. A failed Present publishes no token, attempts cleanup and
+preserves the original failure if cleanup also fails. The optional facets leave
+the original `INyxPopover` GUID and vtable unchanged.
+
 Build the content with specialized controls and named parts:
 
 ```pascal

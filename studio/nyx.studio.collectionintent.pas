@@ -31,7 +31,7 @@ uses
   nyx.text, nyx.types, nyx.data, nyx.state, nyx.collections,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
   nyx.studio.authoring, nyx.collections.columns, nyx.collections.paging,
-  nyx.collections.query.policy;
+  nyx.collections.query.policy, nyx.collections.arrangement;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -42,7 +42,8 @@ type
     scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
     scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
     scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging,
-    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery);
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
+    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -104,6 +105,12 @@ type
     TableQuery: TNyxTableQueryPolicy;
     ColumnQuery: TNyxColumnQueryPolicy;
     QueryBaseline: TNyxText;
+    { Complete authored layout choices have their own exact schema/binding
+      baseline. Absence differs from an explicitly applied default policy;
+      runtime user preferences never enter this source/history proposal. }
+    TableLayout: TNyxTableLayoutPolicy;
+    ColumnLayout: TNyxColumnLayoutPolicy;
+    LayoutBaseline: TNyxText;
     procedure Validate;
     function SameIntent(const AOther: TNyxStudioCollectionIntent): Boolean;
     { Strict private descriptor. Null is not an intent. Unknown/extra members,
@@ -277,14 +284,16 @@ begin
     scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
     scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
     scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging,
-    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery];
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
+    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
 begin
   Result := AAction in [scaCreate, scaRemove, scaAddField, scaAddRow, scaRemoveRow,
     scaBind, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaQuery,
-    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery];
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
+    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout];
 end;
 
 procedure TNyxStudioCollectionIntent.Validate;
@@ -302,6 +311,16 @@ begin
     ((Action = scaColumnQuery) <> ColumnQuery.Defined) then
   begin
     raise ENyxCollection.Create('Query intent requires its own exact baseline and policy');
+  end;
+
+  if ((Action in [scaTableLayout, scaColumnLayout,
+      scaDefaultTableLayout, scaDefaultColumnLayout]) and (LayoutBaseline = '')) or
+    (not (Action in [scaTableLayout, scaColumnLayout,
+      scaDefaultTableLayout, scaDefaultColumnLayout]) and (LayoutBaseline <> '')) or
+    ((Action = scaTableLayout) <> TableLayout.Defined) or
+    ((Action = scaColumnLayout) <> ColumnLayout.Defined) then
+  begin
+    raise ENyxCollection.Create('Layout intent requires its own exact baseline and policy');
   end;
 
   if Action = scaQuery then
@@ -339,7 +358,8 @@ begin
   if (Action in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn,
     scaAddColumn, scaColumnContent, scaColumnFixed, scaColumnFlex,
     scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
-    scaColumnQuery, scaDefaultColumnQuery]) and not Field.Defined then
+    scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
+    scaDefaultColumnLayout]) and not Field.Defined then
   begin
     raise ENyxCollection.Create('Collection intent requires its exact typed field');
   end;
@@ -347,7 +367,8 @@ begin
   if Field.Defined and not (Action in [scaDefault, scaCell, scaTitle, scaMode,
     scaParent, scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
     scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
-    scaColumnQuery, scaDefaultColumnQuery]) then
+    scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
+    scaDefaultColumnLayout]) then
   begin
     raise ENyxCollection.Create('This collection intent does not use a field');
   end;
@@ -359,10 +380,11 @@ begin
 
   if (Action in [scaColumnContent, scaColumnFixed, scaColumnFlex,
     scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
-    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery]) and
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
+    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout]) and
     (Projection <> cpTable) then
   begin
-    raise ENyxCollection.Create('Column sizing/query controls require the table projection');
+    raise ENyxCollection.Create('Column sizing/query/layout controls require the table projection');
   end;
 
   if Action = scaTableQuery then
@@ -373,6 +395,16 @@ begin
   if Action = scaColumnQuery then
   begin
     ColumnQuery.Validate(Field.Kind);
+  end;
+
+  if Action = scaTableLayout then
+  begin
+    TableLayout.Validate;
+  end;
+
+  if Action = scaColumnLayout then
+  begin
+    ColumnLayout.Validate;
   end;
 
   if (Action in [scaPageSize, scaInitialPage, scaDefaultPaging]) and (Projection = cpTree) then
@@ -412,7 +444,10 @@ begin
     (QueryBaseline = AOther.QueryBaseline) and
     (Query.ToData.ToJSON = AOther.Query.ToData.ToJSON) and
     (TableQuery.ToData.ToJSON = AOther.TableQuery.ToData.ToJSON) and
-    (ColumnQuery.ToData.ToJSON = AOther.ColumnQuery.ToData.ToJSON);
+    (ColumnQuery.ToData.ToJSON = AOther.ColumnQuery.ToData.ToJSON) and
+    (LayoutBaseline = AOther.LayoutBaseline) and
+    (TableLayout.ToData.ToJSON = AOther.TableLayout.ToData.ToJSON) and
+    (ColumnLayout.ToData.ToJSON = AOther.ColumnLayout.ToData.ToJSON);
 
   if Result and Item.Defined then
   begin
@@ -468,6 +503,33 @@ begin
         begin
           raise ENyxCollection.Create('This intent has no query policy payload');
         end;
+      end;
+    end;
+    Result := NyxObject(LFields);
+  end;
+
+  if Action in [scaTableLayout, scaColumnLayout,
+    scaDefaultTableLayout, scaDefaultColumnLayout] then
+  begin
+    SetLength(LFields, 12);
+    for LIndex := 0 to 10 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[11] := NyxField('baseline', NyxData(LayoutBaseline));
+
+    if Action in [scaTableLayout, scaColumnLayout] then
+    begin
+      SetLength(LFields, 13);
+      LFields[12] := LFields[11];
+
+      if Action = scaTableLayout then
+      begin
+        LFields[11] := NyxField('tableLayout', TableLayout.ToData);
+      end
+      else
+      begin
+        LFields[11] := NyxField('columnLayout', ColumnLayout.ToData);
       end;
     end;
     Result := NyxObject(LFields);
@@ -573,6 +635,28 @@ begin
       Never append a column merely to apply a captured policy to its name. }
   end;
 
+  if AIntent.Action in [scaTableLayout, scaColumnLayout,
+    scaDefaultTableLayout, scaDefaultColumnLayout] then
+  begin
+    { This existing proof covers the complete binding and schema families; it
+      performs no runtime query or preference operation. }
+
+    if AIntent.LayoutBaseline <> NyxQueryEditorBaseline(ASchema, ASpec) then
+    begin
+      raise ENyxCollection.Create('Layout binding/schema changed; use its current inspector');
+    end;
+
+    if AIntent.Action = scaTableLayout then
+    begin
+      Exit(ASpec.TableLayout(AIntent.TableLayout));
+    end;
+
+    if AIntent.Action = scaDefaultTableLayout then
+    begin
+      Exit(ASpec.UseDefaultTableLayout);
+    end;
+  end;
+
   if AIntent.Action = scaClear then
   begin
     Exit(Default(TNyxCollectionViewSpec));
@@ -649,6 +733,14 @@ begin
     { Copy raw presence, not the resolved default: absence must remain absent
       through unrelated edits and continue to encode as the older view version. }
     Result := Result.TableQuery(ASpec.TableQueryPolicy);
+  end;
+
+  if ASpec.HasTableLayoutPolicy then
+  begin
+    { Layout defaults are authored values too. An unrelated schema/title edit
+      must preserve their explicit presence instead of resolving then saving a
+      library default which the author never chose. }
+    Result := Result.TableLayout(ASpec.TableLayoutPolicy);
   end;
 
   if (AIntent.Action <> scaParent) and (ASpec.ParentField <> '') then
@@ -782,11 +874,24 @@ begin
         width policy. Rebuilding the ordered descriptor cannot reset styling. }
       Result := Result.ColumnSizing(LSizing);
     end;
+
+    if AIntent.Field.Defined and (LColumn.FieldName = AIntent.Field.Name) and
+      (AIntent.Action = scaColumnLayout) then
+    begin
+      Result := Result.ColumnLayout(AIntent.ColumnLayout);
+    end
+    else if LColumn.HasLayoutPolicy and not
+      (AIntent.Field.Defined and (LColumn.FieldName = AIntent.Field.Name) and
+        (AIntent.Action = scaDefaultColumnLayout)) then
+    begin
+      Result := Result.ColumnLayout(LColumn.LayoutPolicy);
+    end;
   end;
 
   if (AIntent.Action in [scaTitle, scaMode, scaRemoveColumn, scaColumnContent,
     scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
-    scaColumnDefault, scaColumnQuery, scaDefaultColumnQuery]) and not LColumnFound then
+    scaColumnDefault, scaColumnQuery, scaDefaultColumnQuery,
+    scaColumnLayout, scaDefaultColumnLayout]) and not LColumnFound then
   begin
     raise ENyxCollection.Create('Collection column no longer exists');
   end;
@@ -848,14 +953,18 @@ begin
   Result.Action := TNyxStudioCollectionAction(Choice('action',
     Ord(Low(TNyxStudioCollectionAction)), Ord(High(TNyxStudioCollectionAction))));
 
-  if ((Result.Action in [scaQuery, scaTableQuery, scaColumnQuery]) and
+  if ((Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
+      scaTableLayout, scaColumnLayout]) and
       (AData.Count <> 13)) or
-    ((Result.Action in [scaDefaultTableQuery, scaDefaultColumnQuery]) and
+    ((Result.Action in [scaDefaultTableQuery, scaDefaultColumnQuery,
+      scaDefaultTableLayout, scaDefaultColumnLayout]) and
       (AData.Count <> 12)) or
     (not (Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
-      scaDefaultTableQuery, scaDefaultColumnQuery]) and (AData.Count <> 11)) then
+      scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
+      scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout]) and
+      (AData.Count <> 11)) then
   begin
-    raise ENyxCollection.Create('Query intent requires its exact extended descriptor');
+    raise ENyxCollection.Create('Policy intent requires its exact extended descriptor');
   end;
 
   if Result.Action = scaQuery then
@@ -877,6 +986,22 @@ begin
     scaDefaultTableQuery, scaDefaultColumnQuery] then
   begin
     Result.QueryBaseline := AData.Field('baseline').AsText;
+  end;
+
+  if Result.Action = scaTableLayout then
+  begin
+    Result.TableLayout := TNyxTableLayoutPolicy.FromData(AData.Field('tableLayout'));
+  end;
+
+  if Result.Action = scaColumnLayout then
+  begin
+    Result.ColumnLayout := TNyxColumnLayoutPolicy.FromData(AData.Field('columnLayout'));
+  end;
+
+  if Result.Action in [scaTableLayout, scaColumnLayout,
+    scaDefaultTableLayout, scaDefaultColumnLayout] then
+  begin
+    Result.LayoutBaseline := AData.Field('baseline').AsText;
   end;
   Result.Key := NyxCollection(AData.Field('key').AsText);
   LItem := AData.Field('item');

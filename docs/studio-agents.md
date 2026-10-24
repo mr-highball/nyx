@@ -2204,8 +2204,8 @@ never supplies an omitted collection, row or view owner.
 | `rows` | `key`; optionally 1..16 exact `fields` | Up to 20 scoped row IDs; selected cells only, with typed values or 80-scalar text previews |
 | `value` | `key`, `field`; optionally `item` **or** domain `choice` index | Exact Boolean/Integer/Double, or a text window of at most 4096 Unicode scalars |
 | `domain` | `key`, `field` | Range metadata and up to 50 indexed choice previews |
-| `bindings` | Exact authored `owner`; optional Boolean `queryControls` | Supported projection, local/cleared/effective/inherited/restorable meaning, paged columns, bounded typeahead and opt-in query-control policies |
-| `column` | `owner`, `field`, explicit `source: local/effective/restorable`; optional Boolean `queryControls` | Exact column family/mode and a title text window, with opt-in column query-control policy |
+| `bindings` | Exact authored `owner`; independent optional Booleans `queryControls`, `layoutControls` | Supported projection, local/cleared/effective/inherited/restorable meaning, paged columns, bounded typeahead and opt-in query/layout policies |
+| `column` | `owner`, `field`, explicit `source: local/effective/restorable`; independent optional Booleans `queryControls`, `layoutControls` | Exact column family/mode and a title text window, with opt-in column query/layout policies |
 | `query` | `owner`, explicit `source: local/effective/restorable` | Default eight/max twenty predicate nodes, value previews and at most eight sort keys |
 | `query-value` | `owner`, `source`, exact predicate child `path` | One exact typed value or a text window of at most 4096 Unicode scalars |
 | `preview` | `owner`, `source`, `expectedRevision`, typed `query` or null, `section` | Counts only (`summary`), eight/max twenty row IDs with optional exact field previews (`rows`), or a default 2048/max 4096-scalar Pascal window (`pascal`) |
@@ -2269,7 +2269,12 @@ owns copied proposals; it retains no mutable document, control or runtime store.
   a complete versioned `spec` from `TNyxCollectionViewSpec.ToData`. Single
   selection retains version 1; query-free multiple selection uses version 2.
   A nonempty filter/order policy uses version 3. An explicit saved typeahead
-  choice uses version 4, including selection and nullable query.
+  choice uses version 4, including selection and nullable query. Explicit sizing,
+  paging and query controls select versions 5, 6 and 7 respectively. An authored
+  table or column layout policy selects version 8 with complete nullable
+  `layoutControls` members, alongside the existing sizing/query/paging members.
+  Its envelope admits at most 64 fields and requires at least one nonnull layout
+  declaration; an all-null layout envelope belongs to an earlier version.
 - `query`: exact authored `owner`, bound `key`, expected `projection` and a
   complete typed `query` from `TNyxCollectionQuery.ToData`. Null clears only
   filtering/ordering. Columns, scope, parent mapping, selection and saved
@@ -2365,6 +2370,92 @@ typed field reference. Undefined setter policies refuse. The corresponding
 `NyxUseDefaultCollectionTableQuery`/`NyxUseDefaultCollectionColumnQuery` factories
 make reset explicit; no baseline is part of their public contract.
 
+### Authored column layout policies
+
+Set `layoutControls: true` on `bindings` or exact `column` reads to inspect
+arrangement defaults independently of `queryControls`. It is a strict Boolean
+with default false, refused on other modes. Omitted/false retains the prior
+reply shape. For example:
+
+```json
+{"mode":"bindings","owner":"services-table","offset":0,"limit":2,"layoutControls":true}
+```
+
+Each defined local/effective/restorable binding context then includes
+`layoutControls: {declared, policy}` for the table and its requested column page.
+An exact column read includes only that field's policy beside its existing title
+window. `declared: false` accompanies resolved library defaults; an explicit
+equivalent policy or empty feature array remains declared. Cleared bindings stay
+cleared, absent contexts stay null and the existing outer ownership flags retain
+their meaning. `layoutControlsSupported` reports standard table projection support,
+independently of inspectable saved metadata on a list/tree. These reads share the
+existing column windows and complete 48 KiB response budget. They contain no
+runtime widths, order overrides, selection, focused editor or mounted preferences.
+
+Named `table-layout` and `column-layout` mutations require exact `owner`, bound
+`key`, `projection: "table"` and `policy`. A column change additionally requires
+the exact `field` and scalar `kind`. Policies are complete closed version-one
+objects:
+
+- Table: `version`, Boolean `enabled`, `features`, Integer `minimumCenter`
+  (1..100000 logical pixels), Integer `autoSizeRows` (1..1024).
+- Column: `version`, Boolean `visible`, `pin` (`none`, `start` or `end`), `features`.
+- `features` is a unique array drawn from `resize`, `auto-size`, `reorder`,
+  `visibility` and `pinning`; an explicit empty array is valid.
+
+For example, group table command defaults and one family-qualified column at the
+revision returned by the preceding read:
+
+```json
+{
+  "mode": "apply",
+  "expectedRevision": 12,
+  "operationId": "service-column-defaults",
+  "changes": [{
+    "op": "table-layout",
+    "owner": "services-table",
+    "key": "services",
+    "projection": "table",
+    "policy": {"version": 1, "enabled": true,
+      "features": ["resize", "auto-size", "visibility", "pinning"],
+      "minimumCenter": 96, "autoSizeRows": 64}
+  }, {
+    "op": "column-layout",
+    "owner": "services-table",
+    "key": "services",
+    "projection": "table",
+    "field": "name",
+    "kind": "text",
+    "policy": {"version": 1, "visible": true, "pin": "start",
+      "features": ["resize", "auto-size", "visibility", "pinning"]}
+  }]
+}
+```
+
+`policy: null` removes only that policy's raw declaration; omission refuses.
+Explicit defaults remain authored. Reset preserves the independent local binding
+and peer policies; whole-binding `inherit` is the separate operation that restores
+the definition. A masked/unbound owner cannot be rebound
+by resetting a policy. Wrong field family, key/projection, unknown members and
+non-table targets refuse atomically. Disabled user commands still retain static
+authored visibility/pins. Runtime **Columns** preferences remain separate.
+
+The ordered candidate derives the exact schema/binding baseline after each prior
+change. Related layout, query, sizing or paging changes publish one design/Pascal
+pair and one Undo step; a late refusal discards the entire group. Supply
+`expectedRevision` and retain the exact operation identity for retries. Pending
+Pascal drafts refuse even when their bytes equal the accepted source. Pascal
+callers use `NyxSetCollectionTableLayout`/`NyxSetCollectionColumnLayout` and explicit
+`NyxUseDefaultCollectionTableLayout`/`NyxUseDefaultCollectionColumnLayout` factories
+from `nyx.studio.collectionedits`, with immutable policies from
+`nyx.collections.arrangement` and typed field references. No form baseline is
+needed for these named changes.
+
+The independent [Studio layout inspector](collection-views.md#authored-table-arrangement-defaults)
+uses the same candidate/history owner. These additions are current-source work;
+native/browser compilation and executed Studio qualification are pending. They
+make no installed-tool or deployment claim.
+
 Group related policies through `nyx_collections` or a `collections` group inside
 `nyx_transaction`. For example, at the revision read from `nyx_session`:
 
@@ -2405,6 +2496,8 @@ Additional fields depend on that action and are discoverable through tools/list:
 | `query` | Complete typed `query` and exact schema/binding `baseline` from the public query form |
 | `table-query`, `default-table-query` | Exact query-editor `baseline`; a complete typed `tableQuery` for set, no policy for default reset |
 | `column-query`, `default-column-query` | Exact query-editor `baseline`, `field`, `kind`; a complete typed `columnQuery` for set, no policy for default reset |
+| `table-layout`, `default-table-layout` | Exact layout-form schema/binding `baseline`; complete `tableLayout` for set, no policy for reset |
+| `column-layout`, `default-column-layout` | Exact layout-form schema/binding `baseline`, `field`, `kind`; complete `columnLayout` for set, no policy for reset |
 
 Ordinary `bind` derives columns from the current schema. Ordinary `add-column`
 adds the field's default presentation; change its title/mode in subsequent

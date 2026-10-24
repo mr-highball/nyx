@@ -37,6 +37,15 @@ Factory inputs may be released or changed afterward. Store reads and `Field`/
 value. `Copy` explicitly preserves these semantics under pas2js record behavior.
 Default values/references require construction before use.
 
+`NyxExtension` validates a name directly, preserving exact Unicode, embedded NUL
+and the existing quoted JSON byte limit. It retains only the admitted name and
+does not construct a temporary JSON tree during each lookup. The public
+`NyxJSONStringByteLength` helper in `nyx.json` performs that same text admission
+and returns its quoted UTF-8 length, including control/optional solidus escapes.
+Malformed native UTF-8, unpaired browser UTF-16 and a value above the shared
+4 MiB limit refuse before an identity is returned. Formatting and persistence
+still belong to the existing JSON boundaries.
+
 Snapshots index immediate container members once, retaining canonical JSON and
 exact decoded keys with offset/length arrays. `Count` and ordered `Key` reads do
 not decode JSON; `Field` searches those keys and `Item` addresses an exact span.

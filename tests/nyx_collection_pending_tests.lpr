@@ -29,6 +29,7 @@ program nyx_collection_pending_tests;
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.collections, nyx.collections.view.types,
   nyx.collections.query, nyx.collections.query.policy, nyx.collections.query.editor,
+  nyx.collections.arrangement,
   nyx.menu.editor, nyx.projection.refresh, nyx.studio.authoring,
   nyx.studio.projects, nyx.studio.session, nyx.studio.collections,
   nyx.studio.collectionintent, nyx.test.collection.queue
@@ -295,6 +296,195 @@ begin
   end;
 end;
 
+{ A prepared layout policy locks its accepted owner without previewing an
+  unaccepted declaration into the inspector. The generic form draft holds raw
+  numeric text and resumes only against the exact accepted schema/binding. }
+procedure LayoutPresentation(AAction: TNyxStudioCollectionAction; AInvalidDraft: Boolean);
+const
+  CColumn = 3;
+var
+  LAccepted: TNyxNode;
+  LWaiting: TNyxNode;
+  LRecovered: TNyxNode;
+  LCommitted: TNyxNode;
+  LSource: TNyxNode;
+  LSpec: TNyxCollectionViewSpec;
+  LNextSpec: TNyxCollectionViewSpec;
+  LSchema: TNyxCollectionSchema;
+  LIntent: TNyxStudioCollectionIntent;
+  LEdit: TNyxStudioDesignEdit;
+  LWait: TNyxStudioPendingDesign;
+  LDraft: TNyxMenuEditorDraft;
+  LPair: TNyxText;
+  LBaseline: TNyxText;
+  LStatus: TNyxText;
+  LValue: TNyxText;
+  LRefused: Boolean;
+
+  function Panel(const APending: TNyxStudioPendingDesign): TNyxNode;
+  var
+    LProjection: TNyxNode;
+  begin
+    LProjection := LSession.SelectedProjection;
+    Result := TNyxNode.Create(nkColumn, 'pending-layout-inspector');
+    try
+      try
+        AddNyxCollectionBindingPanel(Result, LSession, LProjection, APending);
+      except
+        Result.Free;
+        raise;
+      end;
+    finally
+      LProjection.Free;
+    end;
+  end;
+
+begin
+  LAccepted := nil;
+  LWaiting := nil;
+  LRecovered := nil;
+  LCommitted := nil;
+  LSchema := LSession.Document.Collections.Snapshot(NyxCollection('tasks')).Schema;
+  LSource := LSession.SelectedProjection;
+  try
+    LSpec := LSource.CollectionView.TableLayout(NyxTableLayout.Enabled(False))
+      .ColumnLayout(NyxColumnLayout.Visible(False).PinStart);
+  finally
+    LSource.Free;
+  end;
+  LSession.SetCollectionView(LSpec);
+  LPair := EncodeNyxProject(LSession.ProjectSnapshot);
+  LBaseline := NyxQueryEditorBaseline(LSchema, LSpec);
+  LIntent := Default(TNyxStudioCollectionIntent);
+  LIntent.Action := AAction;
+  LIntent.Key := NyxCollection('tasks');
+  LIntent.Projection := cpTable;
+  LIntent.LayoutBaseline := LBaseline;
+
+  if AAction in [scaColumnLayout, scaDefaultColumnLayout] then
+  begin
+    LIntent.Field := TNyxStudioCollectionFieldRef.Number(NyxNumberField('effort'));
+  end;
+
+  if AAction = scaTableLayout then
+  begin
+    LIntent.TableLayout := NyxTableLayout.Enabled(True).MinimumCenter(112);
+  end;
+
+  if AAction = scaColumnLayout then
+  begin
+    LIntent.ColumnLayout := NyxColumnLayout.Visible(True).PinEnd;
+  end;
+  LIntent.Validate;
+  LWait := Default(TNyxStudioPendingDesign);
+  SetLength(LWait.Collections, 1);
+  LWait.Collections[0].Owner := 'tasks-table';
+  LWait.Collections[0].Intent := LIntent;
+  try
+    LAccepted := Panel(Default(TNyxStudioPendingDesign));
+    LStatus := LAccepted.Find(NyxStudioLayoutPolicyFormID(-1) + '-status').Prop('text');
+    LValue := '128';
+
+    if AInvalidDraft then
+    begin
+      LValue := '-';
+    end;
+    LAccepted.Find(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter))
+      .Configure.Value(LValue).Done;
+    LDraft.Capture(NyxStudioLayoutEditorID, LAccepted);
+    LWaiting := Panel(LWait);
+    Check((LWaiting.Find(NyxStudioLayoutEditorID).Prop(NyxMenuFormBaselineKey) = LBaseline) and
+      (LWaiting.Find(NyxStudioLayoutPolicyFormID(-1) + '-status').Prop('text') = LStatus),
+      'all four pending layout actions keep the accepted baseline and raw-declaration status');
+    Check(LWait.CollectionViewLocked('tasks-table') and not LWait.CollectionViewLocked('unbound-table'),
+      'pending layout admission locks only the original authored owner');
+    Check((LWaiting.Find(NyxStudioLayoutPolicyApplyID(-1)).Prop('enabled') = 'false') and
+      (LWaiting.Find(NyxStudioLayoutPolicyFieldID(CColumn, slpfPin)).Prop('enabled') = 'false'),
+      'pending layout locks both table and independent column forms');
+    Check(LDraft.Restore(LWaiting) and
+      (LWaiting.Find(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter)).Prop('value') = LValue),
+      'pending presentation preserves exact valid or incomplete numeric layout text');
+    Check(CanRefreshNyxProjection(LAccepted, LWaiting),
+      'restored pending layout retains scalar projection-refresh compatibility');
+    LRefused := False;
+    try
+      CaptureNyxStudioLayout(LSession, LWaiting.Find(NyxStudioLayoutPolicyApplyID(-1)),
+        LWaiting, LWait, LEdit);
+    except
+      on LError: ENyxCollection do
+      begin
+        LRefused := Pos('pending edits', LError.Message) > 0;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(LSession.ProjectSnapshot) = LPair),
+      'pending layout capture refuses before draft admission and leaves the paired project unchanged');
+    LDraft.Capture(NyxStudioLayoutEditorID, LWaiting);
+    LRecovered := Panel(Default(TNyxStudioPendingDesign));
+    Check(LDraft.Restore(LRecovered) and
+      (LRecovered.Find(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter)).Prop('value') = LValue),
+      'retiring pending metadata restores the same accepted raw layout draft');
+    LRefused := False;
+    try
+      Check(CaptureNyxStudioLayout(LSession, LRecovered.Find(NyxStudioLayoutPolicyApplyID(-1)),
+        LRecovered, Default(TNyxStudioPendingDesign), LEdit),
+        'recovered layout form routes an ordinary typed policy edit');
+    except
+      on ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+      on EArgumentException do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused = AInvalidDraft,
+      'layout recovery admits complete numbers while retaining invalid text for correction');
+
+    if not AInvalidDraft then
+    begin
+      Check((LEdit.Collection.Action = scaTableLayout) and
+        (LEdit.Collection.TableLayout.MinimumScrollableWidth = 128),
+        'recovered layout draft produces the exact complete typed numeric policy');
+    end;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LPair,
+      'capturing a recovered layout proposal is not a paired mutation');
+    LSession.ApplyCollectionIntent(LIntent);
+    LSource := LSession.SelectedProjection;
+    try
+      LNextSpec := LSource.CollectionView;
+    finally
+      LSource.Free;
+    end;
+    Check((NyxQueryEditorBaseline(LSchema, LNextSpec) <> LBaseline) and
+      (EncodeNyxProject(LSession.ProjectSnapshot) <> LPair),
+      'ordinary layout intent admission changes the original pair and exact baseline');
+    case AAction of
+      scaTableLayout:
+        Check(LNextSpec.HasTableLayoutPolicy and LNextSpec.TableLayoutPolicy.IsEnabled,
+          'table layout setter publishes its complete declared choices');
+      scaColumnLayout:
+        Check(LNextSpec.ColumnAt(CColumn).HasLayoutPolicy and
+          (LNextSpec.ColumnAt(CColumn).LayoutPolicy.Pin = ncpEnd),
+          'column layout setter retains its exact scalar field and logical pin');
+      scaDefaultTableLayout:
+        Check(not LNextSpec.HasTableLayoutPolicy, 'table layout default removes only raw policy');
+      scaDefaultColumnLayout:
+        Check(not LNextSpec.ColumnAt(CColumn).HasLayoutPolicy,
+          'column layout default removes only the chosen raw policy');
+    else
+      Check(False, 'pending layout regression requires one of its four typed actions');
+    end;
+    LCommitted := Panel(Default(TNyxStudioPendingDesign));
+    Check(not LDraft.Restore(LCommitted), 'changed accepted layout retires an older inspector draft');
+  finally
+    LCommitted.Free;
+    LRecovered.Free;
+    LWaiting.Free;
+    LAccepted.Free;
+  end;
+end;
+
 begin
   LSession := nil;
   try
@@ -329,6 +519,14 @@ begin
     PolicyPresentation(scaDefaultTableQuery, True);
     PolicyPresentation(scaDefaultColumnQuery, False);
     PolicyPresentation(scaDefaultColumnQuery, True);
+    LayoutPresentation(scaTableLayout, False);
+    LayoutPresentation(scaTableLayout, True);
+    LayoutPresentation(scaColumnLayout, False);
+    LayoutPresentation(scaColumnLayout, True);
+    LayoutPresentation(scaDefaultTableLayout, False);
+    LayoutPresentation(scaDefaultTableLayout, True);
+    LayoutPresentation(scaDefaultColumnLayout, False);
+    LayoutPresentation(scaDefaultColumnLayout, True);
     {$ifdef PAS2JS}
     document.body.setAttribute('data-collection-pending', 'passed');
     document.body.setAttribute('data-collection-checks', IntToStr(LChecks));

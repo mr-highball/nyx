@@ -47,6 +47,7 @@ uses
   nyx.collections.selection, nyx.collections.query, nyx.collections.query.editor,
   { BEGIN QUERY_CONTROL_READ_IMPORT }
   nyx.collections.query.policy,
+  nyx.collections.arrangement,
   { END QUERY_CONTROL_READ_IMPORT }
   { BEGIN QUERY_POLICY_EDIT_IMPORTS }
   nyx.collections.columns, nyx.collections.paging,
@@ -642,6 +643,264 @@ var
       (LBeforeState.Field('view').AsText = LAfterState.Field('view').AsText), AReason);
   end;
 
+  { Continue on the same agent, table, query and reusable owners. Layout edits
+    must compose with the accepted authoring state, not pass on a store-only
+    substitute that omits ordinary source/history and pending-draft admission. }
+  procedure LayoutCases;
+  var
+    LBinding: TNyxDataValue;
+    LAbsent: TNyxDataValue;
+    LFalse: TNyxDataValue;
+    LStale: TNyxDataValue;
+    LLayoutTable: TNyxTableLayoutPolicy;
+    LLayoutColumn: TNyxColumnLayoutPolicy;
+    LLayoutBefore: TNyxText;
+    LLayoutAfter: TNyxText;
+    LDefinitionBefore: TNyxText;
+    LSiblingBefore: TNyxText;
+    LListBefore: TNyxText;
+    LBeforeQuery: TNyxText;
+    LBeforePaging: TNyxText;
+    LBeforeColumnQuery: TNyxText;
+    LLayoutRevision: Integer;
+    LLayoutSpec: TNyxCollectionViewSpec;
+    LLayoutIntent: TNyxStudioCollectionIntent;
+
+    function LayoutBinding(const AOwner: TNyxText): TNyxDataValue;
+    begin
+      Result := Read('bindings', [NyxField('owner', NyxData(AOwner)),
+        NyxField('layoutControls', NyxData(True)), NyxField('limit', NyxData(4))]);
+    end;
+
+    function TableLayoutEdit(const AOwner: TNyxText;
+      const APolicy: TNyxTableLayoutPolicy; ADefault: Boolean): TNyxCollectionChange;
+    var
+      LOwner: TNyxDataValue;
+      LOwnerKey: TNyxCollectionRef;
+    begin
+      LOwner := LayoutBinding(AOwner);
+      LOwnerKey := NyxCollection(LOwner.Field('effective').Field('key').AsText);
+
+      if ADefault then
+      begin
+        Exit(NyxUseDefaultCollectionTableLayout(NyxBindingOwner(AOwner), LOwnerKey, cpTable));
+      end;
+      Result := NyxSetCollectionTableLayout(NyxBindingOwner(AOwner), LOwnerKey, cpTable, APolicy);
+    end;
+
+    function ColumnLayoutEdit(const AOwner: TNyxText; const AField: TNyxText;
+      const APolicy: TNyxColumnLayoutPolicy; ADefault: Boolean): TNyxCollectionChange;
+    var
+      LOwner: TNyxDataValue;
+      LColumn: TNyxDataValue;
+      LOwnerKey: TNyxCollectionRef;
+      LTypedField: TNyxStudioCollectionFieldRef;
+    begin
+      LOwner := LayoutBinding(AOwner);
+      LOwnerKey := NyxCollection(LOwner.Field('effective').Field('key').AsText);
+      LColumn := Read('column', [NyxField('owner', NyxData(AOwner)),
+        NyxField('source', NyxData('effective')), NyxField('field', NyxData(AField)),
+        NyxField('layoutControls', NyxData(True))]);
+      LTypedField := FieldReference(LColumn);
+
+      if ADefault then
+      begin
+        Exit(NyxUseDefaultCollectionColumnLayout(NyxBindingOwner(AOwner), LOwnerKey,
+          cpTable, LTypedField));
+      end;
+      Result := NyxSetCollectionColumnLayout(NyxBindingOwner(AOwner), LOwnerKey,
+        cpTable, LTypedField, APolicy);
+    end;
+
+  begin
+    LAbsent := Read('bindings', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('limit', NyxData(4))]);
+    LFalse := Read('bindings', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('limit', NyxData(4)), NyxField('layoutControls', NyxData(False))]);
+    Check((LAbsent.ToJSON = LFalse.ToJSON) and
+      not NyxAgentHas(LAbsent, 'layoutControlsSupported') and
+      not NyxAgentHas(LAbsent.Field('local'), 'layoutControls'),
+      'omitted and false layout selectors preserve the exact bounded legacy reply');
+    LBinding := LayoutBinding('tasks-table');
+    Check(LBinding.Field('layoutControlsSupported').AsBoolean and
+      not LBinding.Field('local').Field('layoutControls').Field('declared').AsBoolean and
+      (LBinding.Field('effective').Field('layoutControls').Field('policy').ToJSON =
+        NyxTableLayout.ToData.ToJSON),
+      'layout discovery separates an absent authored table policy from resolved library defaults');
+    LLayoutBefore := PairOracle;
+    LLayoutRevision := LRevision;
+    Apply('layout-author-explicit-default', [TableLayoutEdit('tasks-table', NyxTableLayout, False),
+      ColumnLayoutEdit('tasks-table', 'caption', NyxColumnLayout, False)]);
+    LLayoutAfter := PairOracle;
+    LBinding := LayoutBinding('tasks-table');
+    Check((LRevision = LLayoutRevision + 1) and
+      LBinding.Field('local').Field('layoutControls').Field('declared').AsBoolean and
+      LBinding.Field('local').Field('columns').Item(0).Field('layoutControls')
+        .Field('declared').AsBoolean,
+      'one named layout group admits explicit default objects as real authored declarations');
+    History('undo', 'layout-author-undo-default');
+    Check(PairOracle = LLayoutBefore, 'one layout Undo restores the exact design/source pair');
+    History('redo', 'layout-author-redo-default');
+    Check(PairOracle = LLayoutAfter, 'one layout Redo restores the exact explicit declarations');
+
+    LEditor := LAgent.PreviewPair(LRevision, 'home');
+    LDocument := TNyxCodec.Decode(LEditor.Design);
+    try
+      LLayoutSpec := LDocument.Find('tasks-table').CollectionView;
+      LBeforeQuery := LLayoutSpec.QueryPolicy.ToData.ToJSON;
+      LBeforePaging := LLayoutSpec.PagingPolicy.ToData.ToJSON;
+      LBeforeColumnQuery := LLayoutSpec.ColumnAt(0).QueryPolicy.ToData.ToJSON;
+    finally
+      LDocument.Free;
+    end;
+    LLayoutTable := NyxTableLayout.Enabled(True).MinimumCenter(112).AutoSizeSample(16)
+      .AllowOnly([nclfResize, nclfAutoSize, nclfPinning]);
+    LLayoutColumn := NyxColumnLayout.PinStart.AllowOnly([nclfResize, nclfPinning]);
+    Apply('layout-author-complete-group', [TableLayoutEdit('tasks-table', LLayoutTable, False),
+      ColumnLayoutEdit('tasks-table', 'caption', LLayoutColumn, False),
+      ColumnLayoutEdit('tasks-table', 'priority', NyxColumnLayout.Visible(False).PinEnd, False),
+      ColumnLayoutEdit('tasks-table', 'done', NyxColumnLayout.AllowOnly([]), False)]);
+    LEditor := LAgent.PreviewPair(LRevision, 'home');
+    LDocument := TNyxCodec.Decode(LEditor.Design);
+    try
+      LLayoutSpec := LDocument.Find('tasks-table').CollectionView;
+      Check((LLayoutSpec.TableLayoutPolicy.ToData.ToJSON = LLayoutTable.ToData.ToJSON) and
+        (LLayoutSpec.ColumnAt(0).LayoutPolicy.ToData.ToJSON = LLayoutColumn.ToData.ToJSON) and
+        not LLayoutSpec.ColumnAt(1).LayoutPolicy.IsVisible and
+        (LLayoutSpec.ColumnAt(1).LayoutPolicy.Pin = ncpEnd) and
+        LLayoutSpec.ColumnAt(2).HasLayoutPolicy and
+        (LLayoutSpec.ColumnAt(2).LayoutPolicy.Features = []),
+        'typed layout edits retain logical pins, hidden columns and an explicit empty feature set');
+      Check((LLayoutSpec.QueryPolicy.ToData.ToJSON = LBeforeQuery) and
+        (LLayoutSpec.PagingPolicy.ToData.ToJSON = LBeforePaging) and
+        (LLayoutSpec.ColumnAt(0).QueryPolicy.ToData.ToJSON = LBeforeColumnQuery) and
+        (Pos('CollectionWorkshopNote', LEditor.Source) > 0) and
+        (Pos('TableLayout(', LEditor.Source) > 0),
+        'layout authoring preserves query, paging, typed column behavior and handwritten source');
+    finally
+      LDocument.Free;
+    end;
+    Apply('layout-author-default-table', [TableLayoutEdit('tasks-table',
+      Default(TNyxTableLayoutPolicy), True)]);
+    LBinding := LayoutBinding('tasks-table');
+    Check(not LBinding.Field('local').Field('layoutControls').Field('declared').AsBoolean and
+      LBinding.Field('local').Field('columns').Item(0).Field('layoutControls')
+        .Field('declared').AsBoolean and not LBinding.Field('inherited').AsBoolean,
+      'table policy reset withdraws only its raw declaration and keeps column choices/local ownership');
+    Apply('layout-author-default-column', [ColumnLayoutEdit('tasks-table', 'caption',
+      Default(TNyxColumnLayoutPolicy), True)]);
+    LBinding := LayoutBinding('tasks-table');
+    Check(not LBinding.Field('local').Field('columns').Item(0).Field('layoutControls')
+      .Field('declared').AsBoolean and
+      LBinding.Field('local').Field('columns').Item(1).Field('layoutControls').Field('declared').AsBoolean,
+      'column policy reset preserves another typed column declaration');
+    LLayoutRevision := LRevision;
+    LLayoutBefore := PairOracle;
+    Apply('layout-author-noop-default', [TableLayoutEdit('tasks-table',
+      Default(TNyxTableLayoutPolicy), True)]);
+    Check((LRevision = LLayoutRevision) and (PairOracle = LLayoutBefore),
+      'an already-absent layout reset creates no publication');
+
+    LDefinitionBefore := LayoutBinding('definition-policy-table').Field('local').ToJSON;
+    LSiblingBefore := LayoutBinding('second-policy-table').Field('effective').ToJSON;
+    LListBefore := LayoutBinding('tasks-list').Field('local').ToJSON;
+    Apply('layout-author-local-reusable', [TableLayoutEdit('first-policy-table',
+      LLayoutTable, False), ColumnLayoutEdit('first-policy-table', 'caption', LLayoutColumn, False)]);
+    LBinding := LayoutBinding('first-policy-table');
+    Check(not LBinding.Field('inherited').AsBoolean and
+      LBinding.Field('local').Field('layoutControls').Field('declared').AsBoolean and
+      (LayoutBinding('definition-policy-table').Field('local').ToJSON = LDefinitionBefore) and
+      (LayoutBinding('second-policy-table').Field('effective').ToJSON = LSiblingBefore) and
+      (LayoutBinding('tasks-list').Field('local').ToJSON = LListBefore),
+      'local reusable layout edits preserve their definition, sibling and non-table metadata');
+    Apply('layout-author-default-reusable', [TableLayoutEdit('first-policy-table',
+      Default(TNyxTableLayoutPolicy), True), ColumnLayoutEdit('first-policy-table', 'caption',
+      Default(TNyxColumnLayoutPolicy), True)]);
+    LBinding := LayoutBinding('first-policy-table');
+    Check(not LBinding.Field('inherited').AsBoolean and
+      not LBinding.Field('local').Field('layoutControls').Field('declared').AsBoolean,
+      'use-default layout policy does not silently restore whole-binding inheritance');
+    LLayoutIntent := Default(TNyxStudioCollectionIntent);
+    LLayoutIntent.Action := scaClear;
+    LLayoutIntent.Key := NyxCollection(LBinding.Field('effective').Field('key').AsText);
+    LLayoutIntent.Projection := cpTable;
+    Apply('layout-author-reusable-mask', [
+      NyxCollectionIntentChange(NyxBindingOwner('first-policy-table'), LLayoutIntent)]);
+    LBinding := LayoutBinding('first-policy-table');
+    Check(LBinding.Field('local').Field('cleared').AsBoolean and
+      LBinding.Field('effective').Field('cleared').AsBoolean and
+      (LBinding.Field('restorable').Field('layoutControls').Field('policy').ToJSON =
+        LayoutBinding('definition-policy-table').Field('effective')
+          .Field('layoutControls').Field('policy').ToJSON),
+      'a reusable clear mask retains the actual inherited layout as restorable context');
+    Refuses('nyx_collections', Arguments('layout-author-mask-default', [
+      NyxUseDefaultCollectionTableLayout(NyxBindingOwner('first-policy-table'),
+        LLayoutIntent.Key, cpTable)]),
+      'a masked reusable table cannot acquire a default policy as an implicit rebind');
+    LLayoutIntent.Action := scaInherit;
+    Apply('layout-author-explicit-inherit', [
+      NyxCollectionIntentChange(NyxBindingOwner('first-policy-table'), LLayoutIntent)]);
+    LBinding := LayoutBinding('first-policy-table');
+    Check(LBinding.Field('inherited').AsBoolean and (LBinding.Field('local').Kind = ndNull) and
+      (LayoutBinding('definition-policy-table').Field('local').ToJSON = LDefinitionBefore) and
+      (LayoutBinding('second-policy-table').Field('effective').ToJSON = LSiblingBefore),
+      'explicit whole-binding inheritance restores the reusable owner without changing its peers');
+
+    LStale := Arguments('layout-author-stale-revision', [TableLayoutEdit('tasks-table',
+      NyxTableLayout, False)]);
+    Apply('layout-author-after-stale-read', [ColumnLayoutEdit('tasks-table', 'caption',
+      LLayoutColumn, False)]);
+    Refuses('nyx_collections', LStale, 'stale layout revisions preserve design, source and history');
+    Refuses('nyx_collections', Arguments('layout-author-late-field', [
+      TableLayoutEdit('tasks-table', LLayoutTable, False),
+      NyxSetCollectionColumnLayout(NyxBindingOwner('tasks-table'), LKey, cpTable,
+        TNyxStudioCollectionFieldRef.Text(NyxTextField('missing')), NyxColumnLayout)]),
+      'a late missing layout field rolls back earlier valid changes');
+    Refuses('nyx_collections', Arguments('layout-author-wrong-family', [
+      NyxSetCollectionColumnLayout(NyxBindingOwner('tasks-table'), LKey, cpTable,
+        TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('caption')), NyxColumnLayout)]),
+      'layout names do not substitute for the exact scalar field family');
+    Refuses('nyx_collections', Arguments('layout-author-wrong-key', [
+      NyxSetCollectionTableLayout(NyxBindingOwner('tasks-table'), NyxCollection('wrong-key'),
+        cpTable, NyxTableLayout)]), 'layout changes require the original current binding key');
+    Refuses('nyx_collections', Arguments('layout-author-nontable', [
+      NyxSetCollectionTableLayout(NyxBindingOwner('tasks-list'), LKey, cpTable, NyxTableLayout)]),
+      'inspectable list layout metadata does not grant table authoring');
+
+    LEditor := LAgent.PreviewPair(LRevision, 'home');
+    LEditor.Pending := True;
+    LEditor.DraftBase := LEditor.Source;
+    LEditor.Draft := LEditor.Source;
+    LAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('project', NyxData(EncodeNyxProject(LEditor))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    RefreshRevision;
+    Refuses('nyx_collections', Arguments('layout-author-pending-table', [
+      TableLayoutEdit('tasks-table', NyxTableLayout, False)]),
+      'equal-byte pending Pascal refuses a layout table set', 'pending Pascal draft');
+    Refuses('nyx_collections', Arguments('layout-author-pending-column', [
+      ColumnLayoutEdit('tasks-table', 'caption', NyxColumnLayout, False)]),
+      'equal-byte pending Pascal refuses a layout column set', 'pending Pascal draft');
+    Refuses('nyx_collections', Arguments('layout-author-pending-default-table', [
+      TableLayoutEdit('tasks-table', Default(TNyxTableLayoutPolicy), True)]),
+      'equal-byte pending Pascal refuses a layout table reset', 'pending Pascal draft');
+    Refuses('nyx_collections', Arguments('layout-author-pending-default-column', [
+      ColumnLayoutEdit('tasks-table', 'caption', Default(TNyxColumnLayoutPolicy), True)]),
+      'equal-byte pending Pascal refuses a layout column reset', 'pending Pascal draft');
+    LEditor.Pending := False;
+    LEditor.Draft := '';
+    LEditor.DraftBase := '';
+    LAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('project', NyxData(EncodeNyxProject(LEditor))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    RefreshRevision;
+    Apply('layout-author-after-resolution', [TableLayoutEdit('tasks-table', LLayoutTable, False)]);
+    Check(LayoutBinding('tasks-table').Field('local').Field('layoutControls').Field('declared').AsBoolean,
+      'the original layout command succeeds after deliberate pending-source resolution');
+  end;
+
 begin
   Result := 0;
   LSeed := CreateNyxAgentCollectionSeed;
@@ -924,6 +1183,7 @@ begin
     Apply('policy-author-after-resolution', [TableEdit('tasks-table', NyxTableQuery, False)]);
     Check(Binding('tasks-table').Field('local').Field('queryControls').Field('declared').AsBoolean,
       'the same named command can publish after deliberate editor draft resolution');
+    LayoutCases;
   finally
     LAgent.Free;
   end;
@@ -1173,6 +1433,36 @@ var
             if LAction = scaColumnQuery then
             begin
               LIntent.ColumnQuery := NyxColumnQuery.Operators([nqcEqual]);
+            end;
+          end;
+        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout:
+          begin
+            { Layout commands carry their own complete binding/schema baseline;
+              they must not borrow the independent query editor's draft proof. }
+            LActionDocument := TNyxCodec.Decode(LCurrent.Design);
+            try
+              LIntent.LayoutBaseline := NyxQueryEditorBaseline(
+                LActionDocument.Collections.Snapshot(LKey).Schema,
+                LActionDocument.Find('tasks-table').CollectionView);
+            finally
+              LActionDocument.Free;
+            end;
+
+            if LAction in [scaColumnLayout, scaDefaultColumnLayout] then
+            begin
+              LIntent.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('caption'));
+            end;
+
+            if LAction = scaTableLayout then
+            begin
+              LIntent.TableLayout := NyxTableLayout.MinimumCenter(112).AutoSizeSample(32)
+                .AllowOnly([nclfResize, nclfAutoSize, nclfPinning]);
+            end;
+
+            if LAction = scaColumnLayout then
+            begin
+              LIntent.ColumnLayout := NyxColumnLayout.PinEnd
+                .AllowOnly([nclfResize, nclfPinning]);
             end;
           end;
         { END CURRENT_INTENT_PAYLOADS }

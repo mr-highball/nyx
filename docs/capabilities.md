@@ -95,6 +95,13 @@ or text-admission callbacks. Selectors without a standard read-only widget mode
 have basic support: they restore refused drafts rather than presenting a native
 read-only mode. Text entry uses the actual widget's read-only mode.
 
+`NyxInteractionVisible(Control)` is the presentation-only query from
+`nyx.interaction`. It follows the current visible ancestor and disclosure-body
+path without evaluating enabled or read-only runtime command constraints.
+Native measurement uses this query during layout; actual input continues to
+check the complete interaction policy. Neither query retains a node or caches
+its answer across changes, and both require a live non-nil node.
+
 ## Inspecting support
 
 Studio's Properties tab places capability descriptions on the actual field's

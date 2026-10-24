@@ -54,8 +54,10 @@ type
   TNyxBindingValueSync = function(ANode: TNyxNode): Boolean of object;
 
   { A live view borrows its realized root and runtime store. Neither may be
-    freed before this coordinator. Activate owns one subscription token; destroy
-    disconnects it before the renderer frees controls/model/state.
+    freed before this coordinator. Activate owns one subscription token; Retire
+    disconnects its authority before the renderer frees controls/model/state.
+    Retirement is terminal, not ownership: an entered call still requires this
+    coordinator and its borrowed root/store to stay alive until it returns.
 
     Construction projects and admits the initial snapshot before target controls
     are built. Activate is separate so a failed factory can discard a candidate
@@ -76,6 +78,9 @@ type
     FCommandProjected: Boolean;
     FResourcePort: IInterface; { managed revocable weak receiver, never owns this view }
     FResourcePreparation: TObject; { weak; one single-use stage }
+    function GetRetired: Boolean;
+    procedure SetOnSync(AValue: TNyxBindingSync);
+    procedure SetOnValueSync(AValue: TNyxBindingValueSync);
     function GetRefreshReady: Boolean;
     function GetCommandActive: Boolean;
     function GetResourcePublicationBusy: Boolean;
@@ -93,6 +98,13 @@ type
     constructor Create(ARoot: TNyxNode; AState: TNyxState);
     destructor Destroy; override;
     procedure Activate;
+    { Terminal, idempotent UI-thread authority retirement. Revoke prepared
+      resource receivers and both target callbacks before removing the exact
+      state subscription. An already-entered command may still finish or report
+      committed notification failure; this method neither rolls it back nor
+      owns/defer-frees its coordinator, root or store. Activate and reassignment
+      of either target callback cannot revive it; clearing callbacks stays legal. }
+    procedure Retire;
     { UI-thread resource/locale reload. All selectors and concrete properties
       validate on an independent candidate before existing controls synchronize.
       Invalid data retains accepted values/context. A sync exception follows
@@ -150,11 +162,11 @@ type
     procedure ValidateResourceReload(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     property HasBindings: Boolean read GetHasBindings;
-    property OnSync: TNyxBindingSync read FOnSync write FOnSync;
+    property OnSync: TNyxBindingSync read FOnSync write SetOnSync;
     { Opt in to exact field synchronization without replacing the legacy full
       callback contract. Other property effects, state bindings or unsupported
       target controls always use OnSync. Neither callback owns its receiver. }
-    property OnValueSync: TNyxBindingValueSync read FOnValueSync write FOnValueSync;
+    property OnValueSync: TNyxBindingValueSync read FOnValueSync write SetOnValueSync;
   end;
 
 { Shared projection/admission for renderers, application validators and tests.
@@ -930,13 +942,26 @@ end;
 
 destructor TNyxLiveBindings.Destroy;
 begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TNyxLiveBindings.Retire;
+var
+  LSubscription: TNyxStateSubscription;
+begin
+  { The private port is also the terminal marker for an unactivated candidate.
+    Detach the field before freeing the token so no cleanup can revive authority. }
 
   if FResourcePort <> nil then
   begin
     (FResourcePort as IBindingResourcePort).Revoke;
   end;
-  FSubscription.Free;
-  inherited Destroy;
+  FOnSync := nil;
+  FOnValueSync := nil;
+  LSubscription := FSubscription;
+  FSubscription := nil;
+  LSubscription.Free;
 end;
 
 function TNyxLiveBindings.PrepareResourceReload(const AResources: INyxResources;
@@ -984,11 +1009,42 @@ end;
 procedure TNyxLiveBindings.Activate;
 begin
 
+  if GetRetired then
+  begin
+    raise ENyxState.Create('Retired live bindings cannot be activated');
+  end;
+
   if FSubscription <> nil then
   begin
     raise ENyxState.Create('Live bindings are already activated');
   end;
   FSubscription := FState.Subscribe(StateChanged, ValidateCandidate);
+end;
+
+function TNyxLiveBindings.GetRetired: Boolean;
+begin
+  Result := (FResourcePort = nil) or
+    ((FResourcePort as IBindingResourcePort).Owner <> Self);
+end;
+
+procedure TNyxLiveBindings.SetOnSync(AValue: TNyxBindingSync);
+begin
+
+  if Assigned(AValue) and GetRetired then
+  begin
+    raise ENyxState.Create('Retired live bindings cannot acquire a target callback');
+  end;
+  FOnSync := AValue;
+end;
+
+procedure TNyxLiveBindings.SetOnValueSync(AValue: TNyxBindingValueSync);
+begin
+
+  if Assigned(AValue) and GetRetired then
+  begin
+    raise ENyxState.Create('Retired live bindings cannot acquire a value callback');
+  end;
+  FOnValueSync := AValue;
 end;
 
 function TNyxLiveBindings.GetRefreshReady: Boolean;
@@ -1103,7 +1159,7 @@ end;
 procedure TNyxLiveBindings.Synchronize;
 begin
 
-  if Assigned(FOnSync) then
+  if not GetRetired and Assigned(FOnSync) then
   begin
     FOnSync;
   end;
@@ -1325,7 +1381,8 @@ begin
         consumes the complete admitted field immediately; all other updates
         retain full synchronization and its notification failure semantics. }
 
-      if not LValueOnly or not FOnValueSync(FRoot.Find(ANode.ID)) then
+      if not LValueOnly or GetRetired or not Assigned(FOnValueSync) or
+        not FOnValueSync(FRoot.Find(ANode.ID)) then
       begin
         Synchronize;
       end;

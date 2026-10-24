@@ -2470,7 +2470,8 @@ begin
       LOrigin := LSource.Find(AEvent.OriginID);
 
       if (LOrigin <> nil) and
-        (CaptureNyxStudioQuery(FSession, LOrigin, AShellRoot, PendingDesign, LEdit) or
+        (CaptureNyxStudioLayout(FSession, LOrigin, AShellRoot, PendingDesign, LEdit) or
+        CaptureNyxStudioQuery(FSession, LOrigin, AShellRoot, PendingDesign, LEdit) or
         CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxSelectionInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxKanbanInspector(FSession, LOrigin, AShellRoot, LEdit) or
@@ -2552,6 +2553,12 @@ begin
     if RouteNyxCanvasPrecisionGuide(ANode, AShellRoot) then
     begin
       Notify(nssIdle, 'Guide fields loaded');
+      Exit(True);
+    end;
+
+    if CaptureNyxStudioLayout(FSession, ANode, AShellRoot, PendingDesign, LEdit) then
+    begin
+      Edit(LEdit);
       Exit(True);
     end;
 

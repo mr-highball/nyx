@@ -52,6 +52,8 @@ uses
   nyx.codegen,
   nyx.schema,
   nyx.test.contract,
+  nyx.publication,
+  nyx.resources,
   nyx.studio.session;
 
 function CreateNyxBindingFixture: TNyxDocument;
@@ -685,6 +687,503 @@ begin
   end;
 end;
 
+type
+  { These probes retire authority, never raw owners, inside an entered command.
+    Each test keeps the coordinator, realized roots and store until it unwinds.
+    Successor owns only its subscription; the test owns its raw coordinator. }
+  TBindingRetirementProbe = class
+  public
+    Live: TNyxLiveBindings;
+    Successor: TNyxLiveBindings;
+    SuccessorRoot: TNyxNode;
+    Store: TNyxState;
+    ReplaceOnSync: Boolean;
+    RetireOnSync: Boolean;
+    RetireOnValueSync: Boolean;
+    RetireOnValidate: Boolean;
+    RejectValidation: Boolean;
+    FailNotification: Boolean;
+    Calls: Integer;
+    ValueCalls: Integer;
+    SuccessorCalls: Integer;
+    ValidatorCalls: Integer;
+    ObserverCalls: Integer;
+    SawEnteredCommand: Boolean;
+    SawIdleStore: Boolean;
+    SawBusyStore: Boolean;
+    RejectedSyncRevival: Boolean;
+    RejectedValueRevival: Boolean;
+    EntryRevision: Integer;
+    procedure AttemptCallbackRevival;
+    procedure Sync;
+    function ValueSync(ANode: TNyxNode): Boolean;
+    procedure SuccessorSync;
+    procedure Validate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
+    procedure Observe(AState: TNyxState; AChanges: TNyxStateChanges);
+  end;
+
+procedure TBindingRetirementProbe.AttemptCallbackRevival;
+begin
+  { Reassignment is attempted before this entered callback/command returns. }
+  try
+    Live.OnSync := Sync;
+  except
+    on LException: ENyxState do
+    begin
+      RejectedSyncRevival := Pos('cannot acquire a target callback',
+        LException.Message) > 0;
+    end;
+  end;
+  try
+    Live.OnValueSync := ValueSync;
+  except
+    on LException: ENyxState do
+    begin
+      RejectedValueRevival := Pos('cannot acquire a value callback',
+        LException.Message) > 0;
+    end;
+  end;
+  Live.OnSync := nil;
+  Live.OnValueSync := nil;
+end;
+
+procedure TBindingRetirementProbe.Sync;
+begin
+  Inc(Calls);
+  SawEnteredCommand := Live.CommandActive;
+  SawIdleStore := not Store.Busy;
+  EntryRevision := Store.Revision;
+
+  if RetireOnSync or ReplaceOnSync then
+  begin
+    RetireOnSync := False;
+    Live.Retire;
+    Live.Retire;
+    AttemptCallbackRevival;
+  end;
+
+  if ReplaceOnSync then
+  begin
+    ReplaceOnSync := False;
+    Successor := TNyxLiveBindings.Create(SuccessorRoot, Store);
+    Successor.OnSync := SuccessorSync;
+    Successor.Activate;
+    { The old validator would reject removal of its still-bound key. No-op
+      Apply has returned idle, so this is a legitimate same-store successor. }
+    Store.Remove(NyxTextState('retiring-only'));
+    Store.SetValue(NyxTextState('shared'), 'Successor accepted / 🌙');
+  end;
+end;
+
+function TBindingRetirementProbe.ValueSync(ANode: TNyxNode): Boolean;
+begin
+  Inc(ValueCalls);
+  Result := True;
+
+  if RetireOnValueSync then
+  begin
+    RetireOnValueSync := False;
+    SawEnteredCommand := Live.CommandActive;
+    SawIdleStore := not Store.Busy;
+    Live.Retire;
+    AttemptCallbackRevival;
+    { Request the ordinary fallback after retiring its receiver authority. }
+    Result := False;
+  end;
+end;
+
+procedure TBindingRetirementProbe.SuccessorSync;
+begin
+  Inc(SuccessorCalls);
+
+  if SuccessorRoot.Find('replacement-entry').Prop('value') <>
+    Store.GetValue(NyxTextState('shared')) then
+  begin
+    raise ENyxState.Create('Retirement successor sees an incomplete projection');
+  end;
+end;
+
+procedure TBindingRetirementProbe.Validate(ACandidate: TNyxState;
+  AChanges: TNyxStateChanges);
+begin
+  Inc(ValidatorCalls);
+
+  if RejectValidation then
+  begin
+    raise ENyxState.Create('Intentional retirement fixture validation refusal');
+  end;
+
+  if RetireOnValidate then
+  begin
+    RetireOnValidate := False;
+    SawBusyStore := Store.Busy;
+    Live.Retire;
+    Live.Retire;
+  end;
+end;
+
+procedure TBindingRetirementProbe.Observe(AState: TNyxState;
+  AChanges: TNyxStateChanges);
+begin
+  Inc(ObserverCalls);
+
+  if FailNotification then
+  begin
+    raise ENyxState.Create('Intentional retirement fixture notification failure');
+  end;
+end;
+
+{ Independent authored seed: the replacement deliberately omits the old-only
+  binding. The shared public fixture and its existing journey stay unchanged. }
+function CreateBindingRetirementFixture: TNyxDocument;
+var
+  LPage: INyxPage;
+begin
+  Result := TNyxDocument.Create;
+  try
+    Result.State.SetValue(NyxTextState('retiring-only'), 'Old accepted')
+      .SetValue(NyxTextState('shared'), 'Shared accepted');
+    LPage := NewNyxPage('retiring-page');
+    Result.AddPage(LPage);
+    LPage.Node.Add(NewNyxInput('retiring-entry'));
+    LPage.Node.Find('retiring-entry').Binds.Value(NyxTextState('retiring-only')).Done;
+    LPage := NewNyxPage('replacement-page');
+    Result.AddPage(LPage);
+    LPage.Node.Add(NewNyxInput('replacement-entry'));
+    LPage.Node.Find('replacement-entry').Binds.Value(NyxTextState('shared')).Done;
+    Result.Validate;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function RunBindingIdleRetirementTests: Integer;
+var
+  LDocument: TNyxDocument;
+  LRoot: TNyxNode;
+  LSuccessorRoot: TNyxNode;
+  LStore: TNyxState;
+  LLive: TNyxLiveBindings;
+  LUnused: TNyxLiveBindings;
+  LProbe: TBindingRetirementProbe;
+  LDispatch: TNyxDispatch;
+  LRejected: Boolean;
+  LRevision: Integer;
+begin
+  Result := 0;
+  LDocument := CreateBindingRetirementFixture;
+  LRoot := nil;
+  LSuccessorRoot := nil;
+  LStore := nil;
+  LLive := nil;
+  LUnused := nil;
+  LProbe := TBindingRetirementProbe.Create;
+  try
+    LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
+    LSuccessorRoot := RealizeNyxView(LDocument, LDocument.Pages[1]);
+    LStore := LDocument.State.Clone;
+    LUnused := TNyxLiveBindings.Create(LRoot, LStore);
+    LUnused.Retire;
+    LUnused.Retire;
+    LRejected := False;
+    try
+      LUnused.Activate;
+    except
+      on LException: ENyxState do
+      begin
+        LRejected := Pos('Retired live bindings', LException.Message) > 0;
+      end;
+    end;
+    Check(LRejected and not LUnused.RefreshReady and
+      (LStore.GetValue(NyxTextState('retiring-only')) = 'Old accepted'),
+      'retirement before Activate is terminal and preserves borrowed owners', Result);
+    FreeAndNil(LUnused);
+    LLive := TNyxLiveBindings.Create(LRoot, LStore);
+    LProbe.Live := LLive;
+    LProbe.Store := LStore;
+    LProbe.SuccessorRoot := LSuccessorRoot;
+    LProbe.ReplaceOnSync := True;
+    LLive.OnSync := LProbe.Sync;
+    LLive.OnValueSync := LProbe.ValueSync;
+    LLive.Activate;
+    LRevision := LStore.Revision;
+    LDispatch := LLive.Dispatch(LRoot.Find('retiring-entry'), ntClick);
+    Check(LProbe.SawEnteredCommand and LProbe.SawIdleStore and
+      (LProbe.EntryRevision = LRevision),
+      'no-assignment OnSync can retire while its command remains entered and store idle', Result);
+    Check((LProbe.Calls = 1) and (LProbe.ValueCalls = 0) and
+      not Assigned(LLive.OnSync) and not Assigned(LLive.OnValueSync) and
+      not LLive.RefreshReady and not LLive.CommandActive,
+      'retirement clears both callbacks and lets the retained entered command finish', Result);
+    Check(LProbe.RejectedSyncRevival and LProbe.RejectedValueRevival,
+      'neither callback can be reassigned during the retired entered command', Result);
+    Check((LProbe.Successor <> nil) and LProbe.Successor.RefreshReady and
+      not LStore.Has('retiring-only') and (LProbe.SuccessorCalls = 2) and
+      (LStore.Revision = LRevision + 2),
+      'same-store successor immediately replaces old validation and receives only its own changes', Result);
+    Check((LDispatch.Source = LRoot.Find('retiring-entry')) and
+      (LDispatch.Target = LRoot.Find('retiring-entry')) and
+      (LRoot.Find('retiring-entry').Prop('value') = 'Old accepted') and
+      (LDocument.State.GetValue(NyxTextState('retiring-only')) = 'Old accepted'),
+      'Retire leaves returned borrowed identities and the independent authored seed intact', Result);
+    LRejected := False;
+    try
+      LLive.Activate;
+    except
+      on LException: ENyxState do
+      begin
+        LRejected := Pos('Retired live bindings', LException.Message) > 0;
+      end;
+    end;
+    Check(LRejected, 'activated retirement cannot be revived by Activate', Result);
+    LRejected := False;
+    try
+      LLive.Dispatch(LRoot.Find('retiring-entry'), ntClick);
+    except
+      on LException: ENyxState do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LProbe.Calls = 1),
+      'retired command refuses before reading a removed old binding', Result);
+    LLive.Retire;
+    LStore.SetValue(NyxTextState('shared'), 'Still only the successor');
+    Check((LProbe.Calls = 1) and (LProbe.SuccessorCalls = 3) and
+      (LSuccessorRoot.Find('replacement-entry').Prop('value') = 'Still only the successor'),
+      'repeated retirement neither disconnects nor synchronizes the successor', Result);
+  finally
+    LUnused.Free;
+    LLive.Free;
+    LProbe.Successor.Free;
+    LStore.Free;
+    LSuccessorRoot.Free;
+    LRoot.Free;
+    LProbe.Free;
+    LDocument.Free;
+  end;
+end;
+
+function RunBindingEnteredRetirementTests: Integer;
+var
+  LDocument: TNyxDocument;
+  LRoot: TNyxNode;
+  LStore: TNyxState;
+  LLive: TNyxLiveBindings;
+  LToken: TNyxStateSubscription;
+  LProbe: TBindingRetirementProbe;
+  LRevision: Integer;
+  LRejected: Boolean;
+begin
+  Result := 0;
+  LDocument := CreateBindingRetirementFixture;
+  LRoot := nil;
+  LStore := nil;
+  LLive := nil;
+  LToken := nil;
+  LProbe := TBindingRetirementProbe.Create;
+  try
+    LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
+    LStore := LDocument.State.Clone;
+    LLive := TNyxLiveBindings.Create(LRoot, LStore);
+    LProbe.Live := LLive;
+    LProbe.Store := LStore;
+    LLive.OnSync := LProbe.Sync;
+    LLive.OnValueSync := LProbe.ValueSync;
+    LLive.Activate;
+    LToken := LStore.Subscribe(LProbe.Observe, LProbe.Validate);
+    LRevision := LStore.Revision;
+    LProbe.RejectValidation := True;
+    LRejected := False;
+    try
+      LLive.Edit(LRoot.Find('retiring-entry'), 'Rejected');
+    except
+      on LException: ENyxState do
+      begin
+        LRejected := Pos('Intentional retirement fixture validation refusal',
+          LException.Message) > 0;
+      end;
+    end;
+    Check(LRejected and (LStore.Revision = LRevision) and
+      (LRoot.Find('retiring-entry').Prop('value') = 'Old accepted') and
+      (LProbe.Calls = 0) and (LProbe.ObserverCalls = 0) and LLive.RefreshReady,
+      'ordinary validation refusal still preserves projection, revision and live authority', Result);
+    LProbe.RejectValidation := False;
+    LProbe.RetireOnValidate := True;
+    LLive.Edit(LRoot.Find('retiring-entry'), 'Admitted while retiring');
+    Check(LProbe.SawBusyStore and (LStore.Revision = LRevision + 1) and
+      (LStore.GetValue(NyxTextState('retiring-only')) = 'Admitted while retiring') and
+      (LRoot.Find('retiring-entry').Prop('value') = 'Admitted while retiring'),
+      'disconnecting during validation preserves the admitted command and its retained projection', Result);
+    Check((LProbe.Calls = 0) and (LProbe.ValueCalls = 0) and
+      (LProbe.ObserverCalls = 1) and not LLive.CommandActive and
+      not Assigned(LLive.OnSync) and not Assigned(LLive.OnValueSync),
+      'removed old observer is skipped and neither revoked target callback runs', Result);
+    FreeAndNil(LToken);
+    FreeAndNil(LLive);
+    LLive := TNyxLiveBindings.Create(LRoot, LStore);
+    LProbe.Live := LLive;
+    LLive.OnSync := LProbe.Sync;
+    LLive.OnValueSync := LProbe.ValueSync;
+    LProbe.RetireOnSync := True;
+    LProbe.FailNotification := True;
+    LLive.Activate;
+    LToken := LStore.Subscribe(LProbe.Observe, LProbe.Validate);
+    LRevision := LStore.Revision;
+    LRejected := False;
+    try
+      LLive.Edit(LRoot.Find('retiring-entry'), 'Committed before notification failure');
+    except
+      on LException: ENyxStateNotification do
+      begin
+        LRejected := Pos('Intentional retirement fixture notification failure',
+          LException.Message) > 0;
+      end;
+    end;
+    Check(LRejected and (LStore.Revision = LRevision + 1) and
+      (LStore.GetValue(NyxTextState('retiring-only')) = 'Committed before notification failure') and
+      (LRoot.Find('retiring-entry').Prop('value') = 'Committed before notification failure'),
+      'retiring OnSync plus later notification failure retains committed state and projection', Result);
+    Check((LProbe.Calls = 1) and not LProbe.SawIdleStore and
+      LProbe.SawEnteredCommand and not LLive.CommandActive and not LLive.RefreshReady,
+      'committed failure unwinds the retained command without reviving retired authority', Result);
+    LProbe.FailNotification := False;
+    LLive.Retire;
+    LStore.SetValue(NyxTextState('retiring-only'), 'External committed successor value');
+    Check((LProbe.Calls = 1) and (LProbe.ValueCalls = 0) and
+      (LProbe.ObserverCalls = 3) and
+      (LRoot.Find('retiring-entry').Prop('value') = 'Committed before notification failure'),
+      'later writes do not touch retired projection while independent subscribers remain connected', Result);
+  finally
+    LToken.Free;
+    LLive.Free;
+    LStore.Free;
+    LRoot.Free;
+    LProbe.Free;
+    LDocument.Free;
+  end;
+end;
+
+function RunBindingValueRetirementTests: Integer;
+var
+  LDocument: TNyxDocument;
+  LRoot: TNyxNode;
+  LStore: TNyxState;
+  LLive: TNyxLiveBindings;
+  LProbe: TBindingRetirementProbe;
+  LRevision: Integer;
+begin
+  Result := 0;
+  LDocument := TNyxDocument.Create;
+  LRoot := nil;
+  LStore := nil;
+  LLive := nil;
+  LProbe := TBindingRetirementProbe.Create;
+  try
+    LDocument.AddPage(NewNyxPage('retiring-value-page'));
+    LDocument.Pages[0].Add(NewNyxInput('unbound-entry').Configure.Value('Old unbound').Done);
+    LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
+    LStore := LDocument.State.Clone;
+    LLive := TNyxLiveBindings.Create(LRoot, LStore);
+    LProbe.Live := LLive;
+    LProbe.Store := LStore;
+    LProbe.RetireOnValueSync := True;
+    LLive.OnSync := LProbe.Sync;
+    LLive.OnValueSync := LProbe.ValueSync;
+    LLive.Activate;
+    LRevision := LStore.Revision;
+    LLive.Edit(LRoot.Find('unbound-entry'), 'Accepted unbound retirement');
+    Check(LProbe.SawEnteredCommand and LProbe.SawIdleStore and
+      (LProbe.ValueCalls = 1) and (LProbe.Calls = 0) and
+      LProbe.RejectedSyncRevival and LProbe.RejectedValueRevival,
+      'retiring value-only notification cannot revive either callback or run its requested full fallback', Result);
+    Check((LRoot.Find('unbound-entry').Prop('value') = 'Accepted unbound retirement') and
+      (LStore.Revision = LRevision) and not LLive.CommandActive and not LLive.RefreshReady and
+      not Assigned(LLive.OnSync) and not Assigned(LLive.OnValueSync),
+      'value-only retirement preserves admitted projection and unwinds without a state assignment', Result);
+  finally
+    LLive.Free;
+    LStore.Free;
+    LRoot.Free;
+    LProbe.Free;
+    LDocument.Free;
+  end;
+end;
+
+function RunBindingResourceRetirementTests: Integer;
+var
+  LDocument: TNyxDocument;
+  LRoot: TNyxNode;
+  LStore: TNyxState;
+  LLive: TNyxLiveBindings;
+  LPrepared: INyxPreparedPublication;
+  LProbe: TBindingRetirementProbe;
+  LRevision: Integer;
+  LRejected: Boolean;
+begin
+  Result := 0;
+  LDocument := CreateBindingRetirementFixture;
+  LRoot := nil;
+  LStore := nil;
+  LLive := nil;
+  LProbe := TBindingRetirementProbe.Create;
+  try
+    LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
+    LStore := LDocument.State.Clone;
+    LLive := TNyxLiveBindings.Create(LRoot, LStore);
+    LProbe.Live := LLive;
+    LProbe.Store := LStore;
+    LLive.OnSync := LProbe.Sync;
+    LLive.OnValueSync := LProbe.ValueSync;
+    LLive.Activate;
+    LRevision := LStore.Revision;
+    LPrepared := LLive.PrepareResourcePublication(LDocument.Resources,
+      Default(TNyxLocaleRef), Default(TNyxLocaleRef));
+    Check((LPrepared <> nil) and LLive.ResourcePublicationBusy,
+      'a valid resource preparation exists before logical retirement', Result);
+    LLive.Retire;
+    LLive.Retire;
+    LRejected := False;
+    try
+      LPrepared.Validate;
+    except
+      on LException: ENyxState do
+      begin
+        LRejected := Pos('retired', LException.Message) > 0;
+      end;
+    end;
+    Check(LRejected and not Assigned(LLive.OnSync) and not Assigned(LLive.OnValueSync),
+      'retirement revokes the retained resource receiver and both target callbacks', Result);
+    LPrepared.Retire;
+    LPrepared := nil;
+    LRejected := False;
+    try
+      LPrepared := LLive.PrepareResourcePublication(LDocument.Resources,
+        Default(TNyxLocaleRef), Default(TNyxLocaleRef));
+    except
+      on LException: ENyxState do
+      begin
+        LRejected := Pos('active idle bindings', LException.Message) > 0;
+      end;
+    end;
+    Check(LRejected and (LPrepared = nil) and (LStore.Revision = LRevision) and
+      (LRoot.Find('retiring-entry').Prop('value') = 'Old accepted') and (LProbe.Calls = 0),
+      'retired resource admission refuses without changing accepted data or notifying', Result);
+    LStore.SetValue(NyxTextState('retiring-only'), 'After abandoned preparation');
+    Check((LProbe.Calls = 0) and
+      (LRoot.Find('retiring-entry').Prop('value') = 'Old accepted'),
+      'retiring the abandoned preparation releases its hold without restoring the old subscription', Result);
+  finally
+    LPrepared := nil;
+    LLive.Free;
+    LStore.Free;
+    LRoot.Free;
+    LProbe.Free;
+    LDocument.Free;
+  end;
+end;
+
 function RunNyxBindingTests: Integer;
 var
   LDocument: TNyxDocument;
@@ -701,6 +1200,8 @@ var
   LSource: TNyxText;
 begin
   Result := RunMetadataTests + RunReusableBindingTests + RunProjectionTests + RunValuePlanTests;
+  Inc(Result, RunBindingIdleRetirementTests + RunBindingEnteredRetirementTests +
+    RunBindingValueRetirementTests + RunBindingResourceRetirementTests);
   LDocument := CreateNyxBindingFixture;
   try
     LCopy := TNyxCodec.Decode(TNyxCodec.Encode(LDocument));

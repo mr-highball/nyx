@@ -30,6 +30,7 @@ uses nyx.text, nyx.model, nyx.behavior, nyx.events, nyx.publication,
   nyx.collections.mount, nyx.studio.session, nyx.studio.section.views;
 
 type
+  { Resource navigation is an editor intent, never an automatic file mutation. }
   TNyxStudioResourceBrowseIntent = (rbiNone, rbiWorkspace, rbiOpen);
 
   { One runtime metadata catalog serves both ordinary public Nyx list faces.
@@ -48,6 +49,10 @@ type
     FSelectionLease: INyxEventCallback;
     FSelectionTokens: array of INyxEventSubscription;
     procedure SyncActions(AViews: TNyxStudioSectionViews);
+    { Synchronize each currently mounted resource face's owning section once.
+      Other sections have no changed resource controls and keep their drafts,
+      creator updaters and layout work untouched. }
+    procedure SyncMounted(AViews: TNyxStudioSectionViews);
   public
     constructor Create;
     destructor Destroy; override;
@@ -80,7 +85,8 @@ const
 
 implementation
 
-uses nyx.resources, nyx.collections, nyx.binding.types, nyx.types, nyx.scheduler;
+uses nyx.resources, nyx.collections, nyx.binding.types, nyx.types, nyx.scheduler,
+  nyx.studio.sections;
 
 type
   { Typed collection events are authoritative. The legacy renderer callback
@@ -106,7 +112,7 @@ begin
   if (Owner <> nil) and (Views <> nil) and (AEvent.Trigger = ntSelectionChange) then
   begin
     Owner.SyncActions(Views);
-    Views.Sync;
+    Owner.SyncMounted(Views);
   end;
 end;
 
@@ -244,7 +250,52 @@ begin
     end;
   end;
   SyncActions(AViews);
-  AViews.Sync;
+  SyncMounted(AViews);
+end;
+
+procedure TNyxStudioResourceBrowser.SyncMounted(AViews: TNyxStudioSectionViews);
+var
+  LSections: TNyxStudioSectionSet;
+  LSection: TNyxStudioSection;
+  LIndex: Integer;
+  LView: TNyxStudioSectionRenderer;
+begin
+
+  if (AViews = nil) or (AViews.Root = nil) then
+  begin
+    Exit;
+  end;
+  LSections := [];
+  for LIndex := 0 to High(CEditors) do
+  begin
+
+    if AViews.Root.SectionFor(CEditors[LIndex], LSection) then
+    begin
+      Include(LSections, LSection);
+    end;
+  end;
+  { A custom shell may place the explicit Open action outside its browser
+    compound. Include its actual owner rather than assuming a stock role. }
+
+  if AViews.Root.SectionFor(NyxResourceBrowserActionID(
+    NyxStudioResourceBrowserID, rbaOpen), LSection) then
+  begin
+    Include(LSections, LSection);
+  end;
+  for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+  begin
+
+    if not (LSection in LSections) then
+    begin
+      Continue;
+    end;
+    LView := AViews.SectionView(LSection);
+
+    if LView <> nil then
+    begin
+      LView.Sync;
+    end;
+  end;
 end;
 
 procedure TNyxStudioResourceBrowser.SyncActions(AViews: TNyxStudioSectionViews);
@@ -321,7 +372,7 @@ begin
       (AEvent.Trigger = ntSelectionChange) then
     begin
       SyncActions(AViews);
-      AViews.Sync;
+      SyncMounted(AViews);
       Exit(True);
     end;
 
@@ -380,7 +431,7 @@ begin
       end;
     end;
     SyncActions(AViews);
-    AViews.Sync;
+    SyncMounted(AViews);
     Exit(True);
   end;
 end;

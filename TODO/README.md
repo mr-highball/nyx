@@ -12,8 +12,35 @@ counts, original producer reuse and qualification limits. Full component/parity/
 performance goals and completion-credit assessment remain open.
 Next core work is [table workbench03 W1](NS-3_control-usefulness_03.md):
 usable resize, keyboard alternatives, reorder/show-hide/reset and editable pins
-at both logical edges. Source design is read-only until a separate ownership split;
-this is not a host/config or rollout release.
+at both logical edges. Coordinate concurrent edits and validation snapshots through
+WORK.md; necessary library changes are authorized. This is not a host/config or
+rollout release.
+
+The 2026-10-18 request adds an optional client-side pas2js compiler for WEB and
+a static client-only Studio edition suitable for GitHub Pages. It must require
+no Nyx backend, account, server compiler or cloud storage for local authoring;
+existing host builds and native/LCL support remain available. The seven
+[browser compiler tasks](NS-5_browser-compiler_01.md) below own compatibility,
+provider selection, workers, virtual inputs/caches, local projects, isolated
+previews and real browser/static delivery qualification. The
+[upstream example](https://lists.freepascal.org/pipermail/fpc-pascal/2025-August/062972.html)
+is capability evidence only; Nyx compatibility is an open gate.
+
+The same request adds [reflective Studio help](NS-4_studio-reference_01.md)
+through documentation decorators, automatic registration, a searchable class/
+control/member/type reference built entirely with Nyx controls, and completeness/
+compatibility checks. Decorators are ordinary supported Pascal contracts; no
+language-level annotation or reflection capability is assumed. Existing component
+help, catalogs and schemas are the starting point.
+
+These are open scope additions with pending credit assessment. They do not close
+or replace original authoring/service/delivery acceptance or change current work
+counters. Implementation and necessary prerequisites are authorized by the user;
+publishing and deployment retain their applicable external-action boundaries.
+Athena's [Actions/Pages guidance](../athena/docs/platforms/github-actions.md) and
+[Pages template](../athena/templates/github-actions.md#pages-extension) govern the
+future static artifact and deployment path. The current editing-engine work and
+its return path remain recorded in WORK.md.
 
 The user-selected fresh [Nyx-owned Pascal engine](../docs/pascal-projects.md#nyx-owned-pascal-analysis)
 now has lossless lexical and recoverable declaration/scope primitives. Original
@@ -1900,6 +1927,10 @@ blockers rather than filename order.
 | NS-3 | [Extension and performance](NS-3_extension-performance_01.md) | Custom components, virtualization and budgets | Pending assessment |
 | NS-4 | [Studio vertical slice](NS-4_studio-slice_01.md) | Canvas, tree, inspector and split generated code | Pending assessment |
 | NS-4 | [Studio authoring system](NS-4_studio-authoring_01.md) | Multi-page/reusable workflows, history and project UX | Pending assessment |
+| NS-4 | [Portable documentation decorators](NS-4_studio-reference_01.md) | Typed source metadata with verified native/pas2js capabilities | Pending assessment |
+| NS-4 | [Automatic reference registration](NS-4_studio-reference_02.md) | One decorated source and deterministic discovery | Pending assessment |
+| NS-4 | [Nyx-built reference lookup](NS-4_studio-reference_03.md) | Searchable classes/members/types and contextual help | Pending assessment |
+| NS-4 | [Reference completeness and compatibility](NS-4_studio-reference_04.md) | Registration/link/API coverage and static-mode QA | Pending assessment |
 | NS-4 | [Semantic agent operation](DONE/NS-4_agent-tools_01.md) | Accepted local MCP tools, revision-aware transactions and observing Studio views | Pending assessment |
 | NS-4 | [Primary semantic workflows](NS-4_agent-workflows_01.md) | Callback criterion accepted; general source/project import and broader protected agent journeys remain open | Pending assessment |
 | NS-2 | [Resizable views and platform configuration](DONE/NS-2_split-platform_01.md) | Accepted public split panes, mobile Studio resizing and typed platform overrides | Pending assessment |
@@ -1907,8 +1938,23 @@ blockers rather than filename order.
 | NS-5 | [Compiler service slice](NS-5_compile-service_01.md) | Pascal HTTP view/application builds | Pending assessment |
 | NS-5 | [Owned constructor storage](DONE/NS-5_projection-storage_01.md) | Accepted fresh native invocation retention, capacity admission and intact browser worker packages | Pending assessment |
 | NS-5 | [Service hardening and reload](NS-5_service-reload_01.md) | Isolation, caching, cancellation and reload | Pending assessment |
+| NS-5 | [Browser compiler compatibility](NS-5_browser-compiler_01.md) | Real Nyx probe, matched versions and redistribution | Pending assessment |
+| NS-5 | [Studio compiler provider selection](NS-5_browser-compiler_02.md) | Optional local WEB backend with host/native support | Pending assessment |
+| NS-5 | [Browser worker lifecycle](NS-5_browser-compiler_03.md) | Cancellation, limits, stale replies and diagnostics | Pending assessment |
+| NS-5 | [Virtual inputs and toolchain caches](NS-5_browser-compiler_04.md) | Units/includes/resources and versioned static packages | Pending assessment |
+| NS-5 | [Client-local projects](NS-5_browser-compiler_05.md) | Durable local recovery and portable import/export | Pending assessment |
+| NS-5 | [Isolated compiled previews](NS-5_browser-compiler_06.md) | No editor storage/authority and trusted messages | Pending assessment |
+| NS-5 | [Static WEB qualification](NS-5_browser-compiler_07.md) | Real browser QA, Pages-equivalent artifacts and host/native regressions | Pending assessment |
 | NS-6 | [Toolchain and delivery](NS-6_delivery_01.md) | Clean builds, CI, packaging and compatibility | Pending assessment |
 | NS-6 | [Guides and evaluation](NS-6_adoption_01.md) | Examples, reference and independent use | Pending assessment |
+
+Browser compiler prerequisites follow 01 -> 02 -> 03 -> 04, then local
+project storage (05) and preview isolation (06), followed by full static
+qualification (07). Reference work follows 01 -> 02 -> 03 -> 04; final reference
+static-mode acceptance consumes browser compiler 07. Each task's Blockers section
+is authoritative; the reference UI does not depend on full language-engine
+completion or block browser compiler delivery. Actual publication requires a
+later separately authorized deployment and smoke check under the delivery owner.
 
 The M1 chain begins with model and catalog. Persistence enables deterministic
 generation; renderers consume model/catalog; Studio consumes model/catalog and
@@ -3043,8 +3089,9 @@ cancellation and target context feed ordinary editor adoption. Resolver12 is the
 aggregate acceptance gate. Reference05/06 and real library closure feed07, then
 08 -> 09 returns to the **existing** Reference03 browsing and Reference04
 coverage/static-QA tasks. API help does not depend on completing every editing
-resolver task. No new probe, source capture, host/configuration retry, compiler
-batch, deployment or implementation is authorized by this planning handoff.
+resolver task. This planning handoff records dependencies; implementation,
+source inspection and local validation follow the authorization in AGENTS.md.
+Deployment retains its applicable external-action boundary.
 
 Reference10 is a separate architectural/proof reassessment; it cannot silently
 replace the unchanged whole-source resolver/package acceptance. Resolver13/14

@@ -55,6 +55,13 @@ type
   alive during this synchronous read. No authored defaults are changed. }
 function NyxInteractionPolicy(ANode: TNyxNode): TNyxInteractionPolicy;
 
+{ Inspect presentation visibility without evaluating enabled/read-only command
+  constraints. Layout needs only the visible ancestor/disclosure path; querying
+  every command policy on every intrinsic-size traversal adds unrelated work.
+  This synchronous read borrows the live tree, retains nothing and caches no
+  result across changes. Nil is refused just as for the complete policy. }
+function NyxInteractionVisible(ANode: TNyxNode): Boolean;
+
 implementation
 
 uses nyx.types, nyx.disclosure;
@@ -67,6 +74,33 @@ end;
 function TNyxInteractionPolicy.GetCanEditValue: Boolean;
 begin
   Result := GetCanIssueCommand and not FReadOnly;
+end;
+
+function NyxInteractionVisible(ANode: TNyxNode): Boolean;
+var
+  LAncestor: TNyxNode;
+begin
+
+  if ANode = nil then
+  begin
+    raise ENyxModel.Create('Interaction visibility requires a live node');
+  end;
+
+  if not NyxDisclosurePathVisible(ANode) then
+  begin
+    Exit(False);
+  end;
+  LAncestor := ANode;
+  while LAncestor <> nil do
+  begin
+
+    if LAncestor.Prop(NyxAttributeName(atVisible), 'true') = 'false' then
+    begin
+      Exit(False);
+    end;
+    LAncestor := LAncestor.Parent;
+  end;
+  Result := True;
 end;
 
 function NyxInteractionPolicy(ANode: TNyxNode): TNyxInteractionPolicy;

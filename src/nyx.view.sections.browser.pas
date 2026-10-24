@@ -34,6 +34,9 @@ type
     schedule work or subscribe directly to unpublished candidate events. }
   TNyxBrowserSectionConfigure = procedure(ARenderer: TNyxBrowserRenderer) of object;
 
+  { Managed publication owner for an attached browser section. The renderer
+    projection is borrowed; retaining this interface does not transfer ownership
+    of the caller's DOM slot or authorize direct renderer replacement. }
   INyxBrowserViewSection = interface(INyxViewSection)
     ['{E5C4D781-3777-40FA-A47B-87158D7648FD}']
     { Borrow current renderer for element lookup/event subscription. Its target
@@ -55,13 +58,19 @@ function NewNyxBrowserViewSection(const AReference: TNyxViewSectionRef;
 implementation
 
 uses
-  SysUtils, nyx.editing, nyx.editing.browser, nyx.schema;
+  SysUtils, JS, nyx.editing, nyx.editing.browser, nyx.schema;
 
 type
+  { DOM hosts are borrowed from the caller or explicitly owned parking nodes;
+    the shared state machine keeps those two lifetimes separate. }
   TSectionHost = TJSHTMLElement;
+  { Focus is borrowed only while its accepted renderer and element remain live. }
   TSectionFocus = TJSHTMLElement;
+  { Exact parent identity fences publication against external DOM relocation. }
   TSectionParent = TJSNode;
+  { Ordinary Nyx browser renderer owned by its section or pending publication. }
   TSectionRenderer = TNyxBrowserRenderer;
+  { Borrowed factory configurator; its receiver outlives every pending change. }
   TSectionConfigure = TNyxBrowserSectionConfigure;
 
 function SectionParent(AHost: TSectionHost): TSectionParent;

@@ -179,6 +179,10 @@ procedure InstallNyxCoordinatorMounts(const AMounts: TNyxCoordinatorMounts);
 procedure NotifyNyxCoordinatorMounts(const AMounts: TNyxCoordinatorMounts);
 procedure RetireNyxCoordinatorMounts(const AMounts: TNyxCoordinatorMounts);
 procedure RevokeNyxCoordinatorMounts(const AMounts: TNyxCoordinatorMounts);
+{ Detach the caller vector and revoke every scope before fallible disconnects.
+  Every participant receives its cleanup attempt. The first Pascal failure,
+  including an empty diagnostic, reports through ENyxCoordinator afterward;
+  browser platform throws retain their exact original value and identity. }
 procedure DisconnectNyxCoordinatorMounts(var AMounts: TNyxCoordinatorMounts);
 function FindNyxCoordinatorMount(const AMounts: TNyxCoordinatorMounts;
   const AIDs: TNyxCoordinatorMountIDs; const AID: TNyxText): INyxCoordinatorBinding;
@@ -191,9 +195,21 @@ implementation
 
 uses
   nyx.controls, nyx.binding.types, nyx.collections.view, nyx.collections,
-  nyx.interaction.policy, nyx.publication, nyx.coordinators.internal;
+  nyx.interaction.policy, nyx.publication, nyx.coordinators.internal
+  {$ifdef PAS2JS}, JS{$endif};
 
 type
+  { One explicit cleanup result owns the first copied Pascal diagnostic or raw
+    browser throw. Captured is independent of empty text/null/undefined, so a
+    later duty cannot replace an earlier failure merely because it has no text. }
+  TCoordinatorFailure = record
+    Captured: Boolean;
+    Message: TNyxText;
+    {$ifdef PAS2JS}
+    Value: JSValue;
+    IsRaw: Boolean;
+    {$endif}
+  end;
   { Parallel arrays own values and interfaces without pas2js record limitations. }
   TCoordinatorRegistry = class(TInterfacedObject, INyxCoordinatorRegistry)
   private
@@ -368,6 +384,61 @@ type
     procedure Retire;
     function Enrich(const AEvent: TNyxEventInfo): TNyxEventInfo;
   end;
+
+{ Call from the active catch before attempting the next independent duty.
+  Pascal layers deliberately copy their established normalized diagnostic;
+  browser bridges retain arbitrary original values without string conversion. }
+procedure CaptureCoordinatorFailure(var AFailure: TCoordinatorFailure;
+  {$ifdef PAS2JS}AValue: JSValue{$else}const AMessage: TNyxText{$endif});
+begin
+
+  if AFailure.Captured then
+  begin
+    Exit;
+  end;
+  AFailure.Captured := True;
+  {$ifdef PAS2JS}
+  AFailure.Value := AValue;
+  AFailure.IsRaw := not (isClassInstance(AValue) and
+    (TObject(AValue) is Exception));
+
+  if not AFailure.IsRaw then
+  begin
+    AFailure.Message := TNyxText(Exception(AValue).Message);
+  end;
+  {$else}
+  AFailure.Message := AMessage;
+  {$endif}
+end;
+
+{ Preserve the existing per-layer Pascal prefix while raw browser failures keep
+  their original identity. Every caller finishes all cleanup before reporting. }
+procedure RaiseCoordinatorFailure(const AFailure: TCoordinatorFailure;
+  const APrefix: TNyxText);
+{$ifdef PAS2JS}
+var
+  LValue: JSValue;
+{$endif}
+begin
+
+  if not AFailure.Captured then
+  begin
+    Exit;
+  end;
+  {$ifdef PAS2JS}
+
+  if AFailure.IsRaw then
+  begin
+    { pas2js inserts rtl.getObject for an Exception cast, coercing primitive
+      throws (notably undefined) to null. This boundary preserves the raw value. }
+    LValue := AFailure.Value;
+    asm
+      throw LValue;
+    end;
+  end;
+  {$endif}
+  raise ENyxCoordinator.Create(APrefix + AFailure.Message);
+end;
 
 function NewNyxCoordinatorRegistry: INyxCoordinatorRegistry;
 begin
@@ -1113,24 +1184,39 @@ procedure TCoordinatorScope.Cleanup;
 var
   LIndex: Integer;
   LRole: TCoordinatorRole;
-  LFailure: TNyxText;
+  LRoles: array of TCoordinatorRole;
+  LFailure: TCoordinatorFailure;
 begin
-  Revoke;
 
   if FCleaned then
   begin
     Exit;
   end;
   FCleaned := True;
-  LFailure := '';
-
-  for LIndex := 0 to High(FRoles) do
+  Revoke;
+  { The port is already inert. Detach exact role ownership before a token can
+    call application cleanup; reentrant retirement cannot revisit these roles. }
+  LRoles := FRoles;
+  FRoles := nil;
+  LFailure := Default(TCoordinatorFailure);
+  for LIndex := 0 to High(LRoles) do
   begin
-    LRole := FRoles[LIndex];
+    LRole := LRoles[LIndex];
 
     if LRole.TextReservation <> nil then
     begin
-      LRole.Node.ReleaseRuntimeText(LRole.TextReservation);
+      try
+        LRole.Node.ReleaseRuntimeText(LRole.TextReservation);
+      except
+        {$ifdef PAS2JS}
+        CaptureCoordinatorFailure(LFailure, JSExceptValue);
+        {$else}
+        on E: Exception do
+        begin
+          CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
+        end;
+        {$endif}
+      end;
     end;
 
     if LRole.Token <> nil then
@@ -1138,10 +1224,14 @@ begin
       try
         LRole.Token.Disconnect;
       except
+        {$ifdef PAS2JS}
+        CaptureCoordinatorFailure(LFailure, JSExceptValue);
+        {$else}
         on E: Exception do
         begin
-          LFailure := TNyxText(E.Message);
+          CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
         end;
+        {$endif}
       end;
     end;
 
@@ -1150,18 +1240,22 @@ begin
       try
         LRole.Node.DetachEnabledPolicy(LRole.Policy);
       except
+        {$ifdef PAS2JS}
+        CaptureCoordinatorFailure(LFailure, JSExceptValue);
+        {$else}
         on E: Exception do
         begin
-          LFailure := TNyxText(E.Message);
+          CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
         end;
+        {$endif}
       end;
     end;
   end;
-  for LIndex := 0 to High(FRoles) do
+  for LIndex := 0 to High(LRoles) do
   begin
-    FRoles[LIndex].Free;
+    LRoles[LIndex].Free;
   end;
-  FRoles := nil;
+  LRoles := nil;
   FRootNode := nil;
   FRoot := nil;
   FTreeNode := nil;
@@ -1172,11 +1266,7 @@ begin
   FTarget := nil;
   FCallback := nil;
   FPort := nil;
-
-  if LFailure <> '' then
-  begin
-    raise ENyxCoordinator.Create('Coordinator scope retired; cleanup failed: ' + LFailure);
-  end;
+  RaiseCoordinatorFailure(LFailure, 'Coordinator scope retired; cleanup failed: ');
 end;
 
 procedure TCoordinatorScope.Disconnect;
@@ -1254,7 +1344,7 @@ var
   LChild: INyxPreparedCoordinator;
   LProjection: INyxCoordinatorProjection;
   LScope: TCoordinatorScope;
-  LFailure: TNyxText;
+  LFailure: TCoordinatorFailure;
 begin
 
   if FCleaned then
@@ -1265,7 +1355,7 @@ begin
   LChild := FChild;
   LProjection := FProjection;
   LScope := FScope;
-  LFailure := '';
+  LFailure := Default(TCoordinatorFailure);
 
   if LScope <> nil then
   begin
@@ -1277,18 +1367,26 @@ begin
     try
       LChild.Revoke;
     except
+      {$ifdef PAS2JS}
+      CaptureCoordinatorFailure(LFailure, JSExceptValue);
+      {$else}
       on E: Exception do
       begin
-        LFailure := TNyxText(E.Message);
+        CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
       end;
+      {$endif}
     end;
     try
       LChild.Disconnect;
     except
+      {$ifdef PAS2JS}
+      CaptureCoordinatorFailure(LFailure, JSExceptValue);
+      {$else}
       on E: Exception do
       begin
-        LFailure := TNyxText(E.Message);
+        CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
       end;
+      {$endif}
     end;
 
     if not FInstalled or (FNotified and not FNotifying) then
@@ -1296,10 +1394,14 @@ begin
       try
         LChild.Retire;
       except
+        {$ifdef PAS2JS}
+        CaptureCoordinatorFailure(LFailure, JSExceptValue);
+        {$else}
         on E: Exception do
         begin
-          LFailure := TNyxText(E.Message);
+          CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
         end;
+        {$endif}
       end;
     end;
   end;
@@ -1309,10 +1411,14 @@ begin
     try
       LScope.Cleanup;
     except
+      {$ifdef PAS2JS}
+      CaptureCoordinatorFailure(LFailure, JSExceptValue);
+      {$else}
       on E: Exception do
       begin
-        LFailure := TNyxText(E.Message);
+        CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
       end;
+      {$endif}
     end;
   end;
   FScope := nil;
@@ -1325,10 +1431,7 @@ begin
     FChild := nil;
   end;
 
-  if LFailure <> '' then
-  begin
-    raise ENyxCoordinator.Create('Coordinator disconnected; cleanup failed: ' + LFailure);
-  end;
+  RaiseCoordinatorFailure(LFailure, 'Coordinator disconnected; cleanup failed: ');
 end;
 
 procedure TCoordinatorMount.Disconnect;
@@ -1856,11 +1959,11 @@ procedure DisconnectNyxCoordinatorMounts(var AMounts: TNyxCoordinatorMounts);
 var
   LMounts: TNyxCoordinatorMounts;
   LIndex: Integer;
-  LFailure: TNyxText;
+  LFailure: TCoordinatorFailure;
 begin
   LMounts := AMounts;
   AMounts := nil;
-  LFailure := '';
+  LFailure := Default(TCoordinatorFailure);
   { Revoke every scope before invoking the first arbitrary cleanup. }
   RevokeNyxCoordinatorMounts(LMounts);
   for LIndex := 0 to High(LMounts) do
@@ -1872,22 +1975,18 @@ begin
         LMounts[LIndex].Disconnect;
       end;
     except
+      {$ifdef PAS2JS}
+      CaptureCoordinatorFailure(LFailure, JSExceptValue);
+      {$else}
       on E: Exception do
       begin
-
-        if LFailure = '' then
-        begin
-          LFailure := TNyxText(E.Message);
-        end;
+        CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
       end;
+      {$endif}
     end;
   end;
   RetireNyxCoordinatorMounts(LMounts);
-
-  if LFailure <> '' then
-  begin
-    raise ENyxCoordinator.Create('Coordinator vector retired; cleanup failed: ' + LFailure);
-  end;
+  RaiseCoordinatorFailure(LFailure, 'Coordinator vector retired; cleanup failed: ');
 end;
 
 function EnrichNyxCoordinatorEvent(const AMounts: TNyxCoordinatorMounts;

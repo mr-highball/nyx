@@ -76,6 +76,9 @@ type
     constructor Create(ANode: TNyxNode; AHost, AFirst, ASecond: TJSHTMLElement;
       ADesignMode: Boolean);
     destructor Destroy; override;
+    { Revoke observers, input and the borrowed receiver immediately. The owner
+      may retain this behavior until an already-entered callback returns. }
+    procedure Disconnect;
     procedure Update;
     property Node: TNyxNode read FNode;
     property State: TNyxSplitState read FState;
@@ -160,6 +163,18 @@ end;
 
 destructor TNyxBrowserSplit.Destroy;
 begin
+  Disconnect;
+  FState.Free;
+  inherited Destroy;
+end;
+
+procedure TNyxBrowserSplit.Disconnect;
+begin
+
+  if FClosed then
+  begin
+    Exit;
+  end;
   FClosed := True;
   FOnChanged := nil;
 
@@ -187,8 +202,6 @@ begin
     FDivider.onclick := nil;
     ReleaseCapture;
   end;
-  FState.Free;
-  inherited Destroy;
 end;
 
 procedure TNyxBrowserSplit.BoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;

@@ -372,17 +372,26 @@ type
     function Cancelled: Boolean;
   end;
 
-  TNyxEventScope = class(TInterfacedObject, INyxEventScope, INyxCancellationScope)
+  { Immutable cancellation ancestry plus an atomic local flag. Ordinary reads
+    preserve existing delivery-scope semantics; final admission uses separately
+    captured flags-only readiness facets and refuses uncertified dependencies.
+    No router, subscription, model or physical control is retained here. }
+  TNyxEventScope = class(TInterfacedObject, INyxEventScope, INyxCancellationScope,
+    INyxCancellationReadiness)
   private
     FCancelled: LongInt;
     FParent: INyxEventScope;
     FDelivery: INyxCancellationScope;
+    FParentReady: INyxCancellationReadiness;
+    FDeliveryReady: INyxCancellationReadiness;
+    function OwnCancelled: Boolean;
   public
     constructor Create(const AParent: INyxEventScope = nil;
       const ADelivery: INyxCancellationScope = nil);
     procedure Cancel;
     function Cancelled: Boolean;
     function GetCancelled: Boolean;
+    procedure CheckReady;
   end;
 
   INyxInputDecision = interface(IInterface)
@@ -968,6 +977,16 @@ begin
   inherited Create;
   FParent := AParent;
   FDelivery := ADelivery;
+
+  if FParent <> nil then
+  begin
+    Supports(FParent, INyxCancellationReadiness, FParentReady);
+  end;
+
+  if FDelivery <> nil then
+  begin
+    Supports(FDelivery, INyxCancellationReadiness, FDeliveryReady);
+  end;
 end;
 
 procedure TNyxEventScope.Cancel;
@@ -1008,15 +1027,53 @@ begin
   end;
 end;
 
-function TNyxEventScope.Cancelled: Boolean;
+function TNyxEventScope.OwnCancelled: Boolean;
 begin
   {$IFDEF PAS2JS}
   Result := FCancelled <> 0;
   {$ELSE}
   Result := InterlockedCompareExchange(FCancelled, 0, 0) <> 0;
   {$ENDIF}
-  Result := Result or ((FParent <> nil) and FParent.Cancelled) or
+end;
+
+function TNyxEventScope.Cancelled: Boolean;
+begin
+  Result := OwnCancelled or ((FParent <> nil) and FParent.Cancelled) or
     ((FDelivery <> nil) and FDelivery.Cancelled);
+end;
+
+procedure TNyxEventScope.CheckReady;
+begin
+
+  if OwnCancelled then
+  begin
+    raise ENyxSchedule.Create('Event generation is no longer ready');
+  end;
+
+  if FParent <> nil then
+  begin
+
+    if FParentReady = nil then
+    begin
+      raise ENyxSchedule.Create('Parent event generation has no final readiness contract');
+    end;
+    FParentReady.CheckReady;
+  end;
+
+  if FDelivery <> nil then
+  begin
+
+    if FDeliveryReady = nil then
+    begin
+      raise ENyxSchedule.Create('Delivery generation has no final readiness contract');
+    end;
+    FDeliveryReady.CheckReady;
+  end;
+
+  if OwnCancelled then
+  begin
+    raise ENyxSchedule.Create('Event generation changed during final admission');
+  end;
 end;
 
 constructor TNyxEventExecution.Create(const AExecution: INyxExecution;

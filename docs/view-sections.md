@@ -41,22 +41,29 @@ Unicode and NUL raise. A default reference is undefined.
 
 ## Publication and refusal
 
-`Prepare` synchronously renders an independent candidate in a private parking
+`Prepare` synchronously renders an independent candidate in a private target
 host. Ordinary renderer admission copies the source tree and validates its
 document/schema/recipes/defaults. The caller may release the source document
 after preparation. The candidate has its own realization, event router and
 collection scope. The current section still supplies all live lookups.
 
 `PublishNyxViewSections` validates every handle and checks every section before
-moving controls. Nil, foreign, already published/canceled or duplicate section
+changing physical presentation. Nil, foreign, already published/canceled or duplicate section
 objects/names raise. A stale section revision, changed schema revision, changed
 parent/client allocation, occupied host or busy renderer returns `False` before
 placement changes. That refusal leaves handles prepared for explicit cancellation.
 An empty group returns `True` without changes.
 
-Physical preview moves accepted controls into rollback hosts and candidates into
-the real hosts. A failing preview triggers reverse rollback, including the member
-which partly moved before raising. Every member is canceled; the exception
+Browser preview moves accepted controls into rollback hosts and candidates into
+the real hosts. Native preview uses private presentation planes beneath the same
+stable host: the accepted plane is hidden and the prepared plane is shown.
+Neither native subtree changes parent, preserving its allocated window handles.
+The renderer guards focus and grid validation during these transitions so hiding
+an editor cannot accept its unfinished draft. Final ordinary synchronization and
+registered updater validation still run before publication.
+
+A failing preview triggers reverse rollback, including the member whose physical
+transition partly completed before raising. Every member is canceled; the exception
 propagates. Rollback attempts every member even if an extension's rollback itself
 fails, and reports that additional failure. An extension that cannot restore its
 target cannot promise atomic physical rollback.
@@ -68,20 +75,37 @@ receive fresh views; their old collection mounts disconnect and event
 registrations retire. Revisions belong to **view publication** and do not stand
 in for document/MCP revisions, paired Pascal history or Undo.
 
+Retirement can fail after the new group has already become authoritative. Every
+member's former view still receives its retirement attempt before the first
+cleanup error is reported. That error does not undo the accepted publication;
+inspect the current section revisions before deciding on a subsequent change.
+
 ## Lifetimes and dispatch
 
 Hosts and their parents are borrowed. They must outlive section references and
-every outstanding prepared change because staging and rollback hosts are siblings.
-The browser host is attached and initially empty. The LCL host is an initially
-empty child of a live parent. Foreign children refuse replacement instead of being
-erased. Use an application host layer to arrange these sections.
+every outstanding prepared change. The browser host is attached and initially
+empty; its staging and rollback hosts are siblings. The LCL host is an initially
+empty child of a live parent; its private native planes remain children of that
+host until retirement. Each pending native proposal owns its own hidden plane,
+and the section owns the accepted plane. Multiple prepared proposals can coexist;
+publishing one makes the others stale through the ordinary section revision.
+Only planes belonging to that exact section are recognized. Foreign children
+refuse replacement instead of being erased. Use an application host layer to
+arrange these sections.
 
 A prepared handle leases its section. Canceling or dropping its last reference
-releases the unpublished candidate and parking hosts. `Cancel` is idempotent
+releases only its unpublished candidate and private target hosts. `Cancel` is idempotent
 after cancellation; it raises during preview and after publication. A published
 handle keeps only copied identity/revision information. `Close` retires the
 accepted view and advances its revision, making other proposals stale. Cancel or
 release those proposals before destroying the borrowed hosts.
+
+Explicit `Cancel` becomes terminal before invoking fallible candidate cleanup.
+A reported cleanup error leaves that handle canceled, so retrying `Cancel`
+cannot repeat its former ownership duty. `Cancel`, `Close` and postpublication
+retirement report supported disconnect failures after attempting independent
+cleanup. Dropping the final reference also attempts retirement, but destructors
+must not raise; use an explicit operation when the caller needs its diagnostic.
 
 A nonnil `TNyxState` passed to `Prepare` is caller-owned and must outlive both
 prepared and accepted views which borrow it. Nil creates an independent store
@@ -95,6 +119,12 @@ scheduler. Readiness includes collection selection/query notifications as well
 as store publication. Custom collection views must implement the optional
 `INyxCollectionViewPublication` readiness capability; unknown views refuse
 retirement. The existing `INyxCollectionView` interface remains unchanged.
+
+Native collection-grid factories used in a section currently need
+`TNyxCollectionStringGrid` or a subclass. Its counted presentation guard prevents
+LCL focus-exit validation from accepting or resetting an unfinished cell draft.
+A custom raw `TStringGrid` lacks that guard and refuses native activation; an
+independent data-view readiness capability alone does not supply it.
 
 `INyxViewSectionObserver` is managed and receives only exact nodes in the
 currently accepted view. A candidate with matching textual IDs cannot impersonate
@@ -122,6 +152,13 @@ only: no allocation, target work, callbacks or exceptions. `RetirePrevious`
 disconnects former owners after the entire group publishes. Destructors must not
 raise. Run all phases synchronously on the owning UI thread without pumping it.
 
+The optional `INyxViewSectionCandidateRetirement` facet supplies terminal,
+idempotent `RetireCandidate` cleanup while the publication port is still alive.
+It leaves the original publication GUID and vtable unchanged. Implement it when
+cancellation has fallible disconnect work to report; release raw objects only
+after that explicit work, through nonthrowing destructors. A control or observer
+destructor must not be used as a fallible retirement callback.
+
 ## Qualification and remaining integration
 
 Run `tools/build.ps1 -Target view-sections` to compile and execute the checked
@@ -129,7 +166,10 @@ Win32 consumer and stage pas2js/HTML/matched RTL artifacts. This command starts 
 HTTP listener. Serve the exact staged closure through an admitted existing host
 and execute `view-sections.html` with the maintained Pascal browser-pipe driver,
 using `data-test-result` as the terminal marker. The fixture pauses for a live
-capture checkpoint before retiring its views.
+capture checkpoint before retiring its views. Observe that checkpoint, capture
+the live presentation, then click the fixture's **Continue after capture** button.
+That ordinary Pascal harness action acknowledges the existing checkpoint; it
+does not replace the recovery assertions or their capture time bound.
 
 The maintained consumer exercises actual controls, typed table edits, independent
 Unicode drafts, factory/second-preview failure, grouped rollback, stale/duplicate

@@ -2238,6 +2238,7 @@ begin
   FState.ExpressionEditorDraft.Clear;
   FState.TabPagesDraft.Clear;
   FState.QueryEditorDraft.Clear;
+  FState.LayoutEditorDraft.Clear;
   FState.TimeDomainEditorDraft.Clear;
   FState.ContentEditorDraft.Clear;
   FState.ThemeEditorDraft.Clear;
@@ -2704,6 +2705,8 @@ begin
         FShellView.RootFor(NyxInspectorGroupID(LGroup)));
     end;
     FState.QueryEditorDraft.Capture('inspector-collection-query', FShellView.RootFor('inspector-collection-query'));
+    FState.LayoutEditorDraft.Capture(NyxStudioLayoutEditorID,
+      FShellView.RootFor(NyxStudioLayoutEditorID));
     FState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellView.RootFor('inspector-time-domain'));
     FState.ContentEditorDraft.Capture('inspector-content', FShellView.RootFor('inspector-content'));
     FState.ThemeEditorDraft.Capture('studio-theme-editor', FShellView.RootFor('studio-theme-editor'));
@@ -2804,6 +2807,7 @@ begin
   FState.ExpressionEditorDraft.Restore(Result.Pages[0]);
   FState.TabPagesDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
+  FState.LayoutEditorDraft.Restore(Result.Pages[0]);
   RestoreNyxStudioQueryPreview(FState.QueryPreview, FSession, Result.Pages[0]);
   RetireStaleQueryPreview;
   FState.TimeDomainEditorDraft.Restore(Result.Pages[0]);

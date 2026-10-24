@@ -30,7 +30,10 @@ uses
   nyx.theme, nyx.behavior, nyx.events, nyx.scheduler, nyx.content.mount,
   nyx.studio.session,
   nyx.studio.view, nyx.studio.sections, nyx.studio.section.views,
-  nyx.content, nyx.presentations
+  nyx.content, nyx.presentations, nyx.resources, nyx.resources.browser,
+  nyx.resources.editor,
+  nyx.collections, nyx.collections.view, nyx.collections.mount,
+  nyx.studio.resource.browser
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser{$endif};
 
 type
@@ -64,6 +67,7 @@ var
   GProjectPreviewed: Boolean;
   GFailInsertion: Boolean;
   GInsertionRefusals: Integer;
+  GInspectorUpdates: Integer;
   {$ifdef PAS2JS}
   { Borrowed only during the one embedding-host refusal. Restore the original
     method before clearing these handles; no production object retains them. }
@@ -163,6 +167,11 @@ end;
 
 procedure UpdateBadge(ANode: TNyxNode; AFace: TNyxStudioSectionControl);
 begin
+
+  if ANode.ID = 'recovery-inspector-badge' then
+  begin
+    Inc(GInspectorUpdates);
+  end;
 
   if GFailPreview and LiveFace(AFace) then
   begin
@@ -264,6 +273,19 @@ begin
     begin
       AResolve(True);
     end, 15);
+end;
+
+function ContinueCapture(AEvent: TJSMouseEvent): Boolean;
+begin
+  { The harness exposes an ordinary action for the observer to acknowledge an
+    actual capture. It cannot acknowledge a different checkpoint or bypass any
+    recovery assertion, and is detached when this checkpoint finishes. }
+
+  if document.body.getAttribute('data-capture-checkpoint') = 'studio-recovery-live' then
+  begin
+    document.body.setAttribute('data-capture-observed', 'studio-recovery-live');
+  end;
+  Result := True;
 end;
 {$endif}
 
@@ -508,6 +530,112 @@ begin
   end;
 end;
 
+{ The real metadata browser mounts both public list faces and updates their
+  selected-action state. Its synchronization must not run an unrelated creator
+  updater or disturb a physical Inspector draft. No renderer/mock Sync bypasses
+  the ordinary section facade or the collection selection owner. }
+procedure ResourceSynchronizationCases(ASession: TNyxStudioSession;
+  ATheme: TNyxTheme; AHost: TNyxStudioSectionHost);
+  {$ifdef PAS2JS}async;{$endif}
+var
+  LViews: TNyxStudioSectionViews;
+  LBrowser: TNyxStudioResourceBrowser;
+  LScenario: TScenario;
+  LLease: INyxEventCallback;
+  LDocument: TNyxDocument;
+  LInputSpec: INyxInput;
+  LState: TNyxResourceBrowserState;
+  LIntent: TNyxStudioResourceBrowseIntent;
+  LSelection: TNyxResourceEditorSelection;
+  LFirst: INyxCollectionMount;
+  LSecond: INyxCollectionMount;
+  LInput: TNyxStudioSectionControl;
+  LAction: TNyxStudioSectionControl;
+  LNode: TNyxNode;
+  LEvent: TNyxEventInfo;
+  LBefore: Integer;
+begin
+  LScenario := TScenario.Create;
+  LLease := LScenario;
+  LViews := TNyxStudioSectionViews.Create(ATheme, nscEditorOwnedHierarchy,
+    {$ifdef PAS2JS}@{$endif}LScenario.Configure);
+  LScenario.Views := LViews;
+  LBrowser := TNyxStudioResourceBrowser.Create;
+  LDocument := nil;
+  try
+    ASession.Document.Resources.Define(NyxResourceRef('scope-note'),
+      NyxTextResource(TNyxText('A complete resource / 🌙')));
+    LState := NyxResourceBrowserState;
+    LDocument := Shell(ASession);
+    { Ordinary native text input admits its value on Change. A contracted
+      numeric input deliberately defers admission until editing completes, so
+      this fixture establishes a real unfinished physical draft first. }
+    LInputSpec := NewNyxInput('scope-inspector-draft');
+    LInputSpec.Configure.Text('Independent draft').InputType(niNumber).Value(10.0).Done;
+    LInputSpec.Contract.Value(NyxNumberDomain.Range(0, 100));
+    LDocument.Find('studio-right').Add(LInputSpec);
+    LInputSpec := nil;
+    LDocument.Pages[0].Add(NewNyxColumn('studio-resources').Add(
+      NewNyxResourceBrowser(NyxStudioResourceBrowserID, LState)));
+    LViews.Render(LDocument, LDocument.Pages[0], AHost);
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    LInput := LViews.InputFor('scope-inspector-draft');
+    Draft(LInput, '12.75');
+    Check((InputText(LInput) = '12.75') and
+      (LViews.Root.Find('scope-inspector-draft').Prop('value') = '10'),
+      'resource isolation starts with a genuinely unaccepted physical numeric draft');
+    LBefore := GInspectorUpdates;
+    LBrowser.Mount(LViews, LBrowser.Prepare(ASession), LState, NyxNewResourceSelection);
+    Check(GInspectorUpdates = LBefore,
+      'resource mounting does not synchronize the unrelated Inspector creator');
+    LFirst := LViews.CollectionMount(NyxResourceBrowserListID(NyxStudioResourcePickerID));
+    LSecond := LViews.CollectionMount(NyxResourceBrowserListID(NyxStudioResourceBrowserID));
+    Check(LFirst.Connected and LSecond.Connected and
+      (LFirst.View = LSecond.View) and (LFirst.View.Snapshot.Count = 1),
+      'both actual resource faces mount the same complete metadata view');
+    LAction := LViews.ControlFor(NyxResourceBrowserActionID(NyxStudioResourceBrowserID, rbaOpen));
+    Check({$ifdef PAS2JS}TJSHTMLButtonElement(LAction).disabled{$else}not LAction.Enabled{$endif},
+      'the mounted Open action is physically disabled without a selected resource');
+    LFirst.View.Select(LFirst.View.Snapshot.ItemAt(0).Ref);
+    Check({$ifdef PAS2JS}not TJSHTMLButtonElement(LAction).disabled{$else}LAction.Enabled{$endif},
+      'ordinary metadata selection physically enables the resource Open action');
+    Check(GInspectorUpdates = LBefore,
+      'resource selection synchronizes its own action without visiting Inspector');
+    LFirst.View.ClearSelection;
+    Check({$ifdef PAS2JS}TJSHTMLButtonElement(LAction).disabled{$else}not LAction.Enabled{$endif},
+      'clearing ordinary resource selection physically disables Open again');
+    LNode := LViews.Root.Find(NyxResourceBrowserFieldID(NyxStudioResourcePickerID, rbfSearch));
+    LNode.Configure.Value('No resource has this name').Done;
+    LEvent := Default(TNyxEventInfo);
+    LEvent.Trigger := ntChange;
+    Check(LBrowser.Handle(LNode, LEvent, LViews, ASession, LState, LIntent, LSelection) and
+      (LFirst.View.Snapshot.Count = 0) and (LSecond.View.Snapshot.Count = 0),
+      'resource filtering updates both actual mounted lists through the public controller');
+    Check(InputText(LViews.InputFor(NyxResourceBrowserFieldID(
+      NyxStudioResourceBrowserID, rbfSearch))) = 'No resource has this name',
+      'the companion resource search face receives the shared filter proposal');
+    LNode := LViews.Root.Find(NyxResourceBrowserActionID(NyxStudioResourceBrowserID, rbaReset));
+    LEvent.Trigger := ntClick;
+    Check(LBrowser.Handle(LNode, LEvent, LViews, ASession, LState, LIntent, LSelection) and
+      (LFirst.View.Snapshot.Count = 1) and (LSecond.View.Snapshot.Count = 1),
+      'the actual resource Reset action restores both mounted results');
+    Check((GInspectorUpdates = LBefore) and
+      (LViews.InputFor('scope-inspector-draft') = LInput) and
+      (InputText(LInput) = '12.75') and
+      (LViews.Root.Find('scope-inspector-draft').Prop('value') = '10'),
+      'resource mount selection filter and reset leave unrelated updater draft and accepted value untouched');
+  finally
+    LFirst := nil;
+    LSecond := nil;
+    LBrowser.Free;
+    LScenario.Views := nil;
+    LViews.Free;
+    LLease := nil;
+    LInputSpec := nil;
+    LDocument.Free;
+  end;
+end;
+
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LSession: TNyxStudioSession;
@@ -535,11 +663,16 @@ var
   LRootsRetained: Boolean;
   {$ifdef PAS2JS}
   LStarted: Double;
+  LContinue: TJSHTMLElement;
   LHost: TJSHTMLElement;
   LStyle: TJSHTMLElement;
   {$else}
   LWindow: TForm;
   LHost: TPanel;
+  LInputHandle: PtrUInt;
+  LTitleHandle: PtrUInt;
+  LInputParent: TWinControl;
+  LTitleParent: TWinControl;
   {$endif}
 begin
   LSession := TNyxStudioSession.Create;
@@ -596,6 +729,15 @@ begin
     TCustomEdit(LTitle).SetFocus;
     TCustomEdit(LTitle).SelStart := 2;
     TCustomEdit(LTitle).SelLength := 5;
+    { Object identity alone cannot detect LCL destroying and recreating an
+      allocated window during a parent move. Keep the real accepted handles
+      and their parents through refusal and grouped rollback as well. }
+    Check(TWinControl(LInput).HandleAllocated and TWinControl(LTitle).HandleAllocated,
+      'accepted Studio inputs have live native windows before preparation');
+    LInputHandle := PtrUInt(TWinControl(LInput).Handle);
+    LTitleHandle := PtrUInt(TWinControl(LTitle).Handle);
+    LInputParent := LInput.Parent;
+    LTitleParent := LTitle.Parent;
     {$endif}
     Check(LViews.SectionView(nssChrome).CaptureInteraction(LBeforeInputs),
       'idle renderer exposes copied continuity without borrowing its controls');
@@ -662,6 +804,11 @@ begin
     Check((Screen.ActiveControl = LTitle) and (TCustomEdit(LTitle).SelStart = 2) and
       (TCustomEdit(LTitle).SelLength = 5) and (InputText(LTitle) = LTitleText),
       'preparation rollback preserves focused text/range');
+    Check(TWinControl(LInput).HandleAllocated and TWinControl(LTitle).HandleAllocated and
+      (PtrUInt(TWinControl(LInput).Handle) = LInputHandle) and
+      (PtrUInt(TWinControl(LTitle).Handle) = LTitleHandle) and
+      (LInput.Parent = LInputParent) and (LTitle.Parent = LTitleParent),
+      'preparation refusal retains allocated input windows under their original parents');
     {$endif}
     Click(LAction);
     Check(LToken.Active and (LScenario.Clicks = 1),
@@ -706,6 +853,11 @@ begin
     Check((Screen.ActiveControl = LTitle) and (TCustomEdit(LTitle).SelStart = 2) and
       (TCustomEdit(LTitle).SelLength = 5) and (InputText(LTitle) = LTitleText),
       'grouped rollback preserves focused text/range');
+    Check(TWinControl(LInput).HandleAllocated and TWinControl(LTitle).HandleAllocated and
+      (PtrUInt(TWinControl(LInput).Handle) = LInputHandle) and
+      (PtrUInt(TWinControl(LTitle).Handle) = LTitleHandle) and
+      (LInput.Parent = LInputParent) and (LTitle.Parent = LTitleParent),
+      'grouped physical rollback preserves native input handles and their parents');
     {$endif}
     Check(LViews.Root.Find('recovery-project-badge') = nil,
       'refused candidate extension never joins the mounted lookup forest');
@@ -731,6 +883,10 @@ begin
     {$else}
     Check(TCustomEdit(LViews.InputFor('project-title')).Font.Height = -LTheme.FontSize,
       'replacement Project input has its physical themed font');
+    Check(TWinControl(LInput).HandleAllocated and
+      (PtrUInt(TWinControl(LInput).Handle) = LInputHandle) and
+      (LInput.Parent = LInputParent),
+      'successful other-section publication retains the Chrome input native window');
     {$endif}
     Click(LAction);
     Check(LToken.Active and (LScenario.Clicks = 3), 'retained callback survives successful group');
@@ -753,6 +909,14 @@ begin
     TCustomEdit(LTitle).SelLength := 5;
     {$endif}
     {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    {$ifndef PAS2JS}
+    { Project was intentionally replaced above. Capture that newly accepted
+      title before testing refusal of the complete containing frame. }
+    Check(TWinControl(LTitle).HandleAllocated,
+      'replacement Project title has its accepted native window');
+    LTitleHandle := PtrUInt(TWinControl(LTitle).Handle);
+    LTitleParent := LTitle.Parent;
+    {$endif}
     LFull := LNext.Clone;
     { The ordinary string field admits input to its private model immediately;
       the numeric domain above defers admission. Forward the accepted string
@@ -798,6 +962,11 @@ begin
     Check(TCustomEdit(LTitle).Focused and (TCustomEdit(LTitle).SelStart = 2) and
       (TCustomEdit(LTitle).SelLength = 5),
       'complete refusal recovers physical focus and range');
+    Check(TWinControl(LInput).HandleAllocated and TWinControl(LTitle).HandleAllocated and
+      (PtrUInt(TWinControl(LInput).Handle) = LInputHandle) and
+      (PtrUInt(TWinControl(LTitle).Handle) = LTitleHandle) and
+      (LInput.Parent = LInputParent) and (LTitle.Parent = LTitleParent),
+      'complete-frame factory refusal retains accepted native windows and parents');
     {$endif}
     { Refuse at the embedding host boundary, earlier than any component
       factory. This covers locally owned allocation as well as frame recovery. }
@@ -852,6 +1021,11 @@ begin
     Check(TCustomEdit(LTitle).Focused and (InputText(LTitle) = LTitleText) and
       (TCustomEdit(LTitle).SelStart = 2) and (TCustomEdit(LTitle).SelLength = 5),
       'host refusal preserves physical Unicode text, focus and range');
+    Check(TWinControl(LInput).HandleAllocated and TWinControl(LTitle).HandleAllocated and
+      (PtrUInt(TWinControl(LInput).Handle) = LInputHandle) and
+      (PtrUInt(TWinControl(LTitle).Handle) = LTitleHandle) and
+      (LInput.Parent = LInputParent) and (LTitle.Parent = LTitleParent),
+      'embedding-host refusal retains accepted native windows and parents');
     {$endif}
     LViews.Render(LFull, LFull.Pages[0], LHost, False, nil,
       [nssChrome, nssProject, nssInspector]);
@@ -895,14 +1069,30 @@ begin
     {$ifdef PAS2JS}
     document.body.setAttribute('data-capture-checkpoint', 'studio-recovery-live');
     LStarted := window.performance.now;
-    repeat
-      await(TJSPromise.resolve(TJSPromise.new(@Pause)));
+    LContinue := TJSHTMLElement(document.createElement('button'));
+    LContinue.id := 'studio-recovery-capture-continue';
+    LContinue.setAttribute('type', 'button');
+    LContinue.className := 'nyx-button';
+    LContinue.textContent := 'Continue after capture';
+    LContinue.style.setProperty('position', 'fixed');
+    LContinue.style.setProperty('right', '12px');
+    LContinue.style.setProperty('bottom', '12px');
+    LContinue.style.setProperty('z-index', '1000');
+    LContinue.onclick := @ContinueCapture;
+    document.body.appendChild(LContinue);
+    try
+      repeat
+        await(TJSPromise.resolve(TJSPromise.new(@Pause)));
 
-      if window.performance.now - LStarted > 30000 then
-      begin
-        raise ENyxModel.Create('Studio recovery capture acknowledgment timed out');
-      end;
-    until document.body.getAttribute('data-capture-observed') = 'studio-recovery-live';
+        if window.performance.now - LStarted > 30000 then
+        begin
+          raise ENyxModel.Create('Studio recovery capture acknowledgment timed out');
+        end;
+      until document.body.getAttribute('data-capture-observed') = 'studio-recovery-live';
+    finally
+      LContinue.onclick := nil;
+      LContinue.remove;
+    end;
     {$else}
     Application.ProcessMessages;
 
@@ -917,6 +1107,8 @@ begin
     Check(not LToken.Active, 'facade retirement revokes the retained event token');
     {$ifdef PAS2JS}await(StaticMembershipCases(LSession, LTheme, LHost));
     {$else}StaticMembershipCases(LSession, LTheme, LHost);{$endif}
+    {$ifdef PAS2JS}await(ResourceSynchronizationCases(LSession, LTheme, LHost));
+    {$else}ResourceSynchronizationCases(LSession, LTheme, LHost);{$endif}
     WriteLn('PASS ', GChecks, ' actual Studio section recovery checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-section-checks', IntToStr(GChecks));

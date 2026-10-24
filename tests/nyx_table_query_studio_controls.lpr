@@ -30,6 +30,7 @@ uses
   nyx.studio.browser, nyx.studio.agents, nyx.studio.exchange, nyx.test.editor.exchange,{$else}
   Interfaces, Classes, Forms, Controls, StdCtrls, Grids, LCLType, Types,
   nyx.render.lcl, nyx.application.lcl, nyx.collections.query.lcl,
+  nyx.collections.lcl.grid,
   nyx.studio.lcl, nyx.studio.projectstore, nyx.files.lcl,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.data, nyx.state,
   nyx.behavior, nyx.callbacks, nyx.events, nyx.scheduler, nyx.schema,
@@ -38,6 +39,7 @@ uses
   nyx.collections.columns, nyx.collections.paging, nyx.collections.query,
   nyx.collections.query.editor, nyx.collections.query.policy, nyx.collections.view,
   nyx.collections.mount, nyx.collections.query.controls, nyx.studio.section.views,
+  nyx.collections.arrangement,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.view, nyx.studio.collections, nyx.studio.collectionintent,
   nyx.studio.collectionedits, nyx.studio.stateedits, nyx.studio.authoring,
@@ -106,6 +108,11 @@ type
     FFailure: TFailureObserver;
     {$endif}
     FStage: Integer;
+    { Layout authoring extends this same Studio journey before its existing
+      Save/Open and compiled-companion stages; the original query stages stay. }
+    FLayoutStage: Integer;
+    FLayoutFinished: Boolean;
+    FLayoutInitial: TNyxCollectionViewSpec;
     FBefore, FAfter, FDefinition, FSibling, FDefaults: TNyxText;
     { Copied descriptive handler/registration names outlive source admission and
       model replacement. They are checked against typed authored snapshots. }
@@ -120,6 +127,8 @@ type
     procedure Change(const AID, AValue: TNyxText);
     procedure Click(const AID: TNyxText);
     procedure Expand(AColumn: Integer);
+    procedure ExpandLayout(AColumn: Integer);
+    function LayoutStep: Boolean; {$ifdef PAS2JS}async;{$endif}
     function Pair: TNyxText;
     { Return a real section root rather than passing the native lookup forest
       to a compound capture that requires an actual owned model tree. }
@@ -644,7 +653,7 @@ begin
       (LProperties.Field('op').Field('const').AsText = 'bind') then
     begin
       LData := LProperties.Field('spec').Field('oneOf');
-      Check(LData.Count = 7, 'semantic discovery retains six former versions plus v7');
+      Check(LData.Count = 8, 'semantic discovery retains all former versions plus authored layout v8');
       LVersion := LData.Item(6);
       Check((LVersion.Field('properties').Field('version').Field('const').AsInteger = 7) and
         (LVersion.Field('required').Count = 10) and
@@ -1124,6 +1133,22 @@ begin
   end;
 end;
 
+procedure TReview.ExpandLayout(AColumn: Integer);
+var
+  LSection: TNyxNode;
+  LHeader: TNyxNode;
+begin
+  LSection := Root.Find(NyxStudioLayoutPolicyFormID(AColumn) + '-section');
+  Check((LSection <> nil) and NyxIsDisclosure(LSection),
+    'column layout uses an independent ordinary disclosure');
+
+  if not NyxDisclosureExpanded(LSection) then
+  begin
+    LHeader := LSection.Part(NyxPart('header'));
+    Click(LHeader.ID);
+  end;
+end;
+
 procedure TReview.History; {$ifdef PAS2JS}async;{$endif}
 begin
   FAfter := Pair;
@@ -1260,13 +1285,188 @@ begin
   LBefore := Pair;
   LRefused := False;
   try
-    CaptureNyxStudioQuery(FSession, Root.Find(AID), Root,
-      FCommands.PendingDesign, LEdit);
+    if not CaptureNyxStudioLayout(FSession, Root.Find(AID), Root,
+      FCommands.PendingDesign, LEdit) then
+    begin
+      CaptureNyxStudioQuery(FSession, Root.Find(AID), Root,
+        FCommands.PendingDesign, LEdit);
+    end;
   except
     on E: ENyxCollection do LRefused := True;
     on E: EArgumentException do LRefused := True;
   end;
   Check(LRefused and (Pair = LBefore), 'invalid policy draft refuses without changing the accepted pair');
+end;
+
+{ Physical inspector input precedes this journey's original Save/Open/export.
+  Its generated companion therefore consumes these exact accepted policies,
+  with the existing query callbacks, handwritten Pascal and independent peer. }
+function TReview.LayoutStep: Boolean; {$ifdef PAS2JS}async;{$endif}
+var
+  LFeature: TNyxColumnLayoutFeature;
+  LIndex: Integer;
+begin
+  Result := False;
+  case FLayoutStage of
+    0:
+      begin
+        Inspector;
+        {$ifdef PAS2JS}
+        { Compact panel selection publishes asynchronously. Wait for the
+          ordinary Studio fence before resolving its fresh Properties action;
+          native Inspector already pumps Ready through Click. }
+        await(AwaitStudio);
+        {$endif}
+        Click(NyxInspectorPropertiesID);
+      end;
+    1:
+      begin
+        Check(Root.Find(NyxStudioLayoutEditorID) <> nil,
+          'bound table exposes its independent layout-policy inspector');
+        FLayoutInitial := Spec;
+        FBefore := Pair;
+        Change(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter), '-');
+        {$ifdef PAS2JS}await(Refresh);{$else}
+        Click(NyxInspectorEventsID);
+        Click(NyxInspectorPropertiesID);
+        {$endif}
+        Check((Root.Find(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter))
+          .Prop(NyxAttributeName(atValue)) = '-') and (Pair = FBefore),
+          'independent layout draft preserves incomplete numeric text through inspector replacement');
+        CaptureRefused(NyxStudioLayoutPolicyApplyID(-1));
+        Change(NyxStudioLayoutPolicyFieldID(-1, slpfEnabled), 'true');
+        Change(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter), '112');
+        Change(NyxStudioLayoutPolicyFieldID(-1, slpfAutoSizeRows), '32');
+        for LFeature := Low(TNyxColumnLayoutFeature) to High(TNyxColumnLayoutFeature) do
+        begin
+          Change(NyxStudioLayoutPolicyFeatureID(-1, LFeature),
+            LowerCase(BoolToStr(LFeature in [nclfResize, nclfAutoSize, nclfPinning], True)));
+        end;
+        Check(Pair = FBefore, 'layout field changes remain draft until whole-policy Apply');
+        Click(NyxStudioLayoutPolicyApplyID(-1));
+      end;
+    2:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.HasTableLayoutPolicy and
+          Spec.TableLayoutPolicy.IsEnabled and
+          (Spec.TableLayoutPolicy.MinimumScrollableWidth = 112) and
+          (Spec.TableLayoutPolicy.AutoSizeRows = 32) and
+          (Spec.TableLayoutPolicy.Features = [nclfResize, nclfAutoSize, nclfPinning]),
+          'ordinary layout Apply admits the complete typed table policy: ' + FCommands.Message);
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Inspector;
+        Click(NyxInspectorPropertiesID);
+      end;
+    3:
+      begin
+        ExpandLayout(0);
+        FBefore := Pair;
+        Change(NyxStudioLayoutPolicyFieldID(0, slpfVisible), 'true');
+        Change(NyxStudioLayoutPolicyFieldID(0, slpfPin), 'Start edge');
+        Click(NyxStudioLayoutPolicyApplyID(0));
+      end;
+    4:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.ColumnAt(0).HasLayoutPolicy and
+          Spec.ColumnAt(0).LayoutPolicy.IsVisible and (Spec.ColumnAt(0).LayoutPolicy.Pin = ncpStart),
+          'ordinary column layout Apply retains a logical start pin');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Inspector;
+        Click(NyxInspectorPropertiesID);
+      end;
+    5:
+      begin
+        ExpandLayout(0);
+        FBefore := Pair;
+        Click(NyxStudioLayoutPolicyDefaultID(0));
+      end;
+    6:
+      begin
+        Check((FCommands.State = nssApplied) and not Spec.ColumnAt(0).HasLayoutPolicy and
+          Spec.HasTableLayoutPolicy and FSession.Selected.HasCollectionView,
+          'Use Nyx defaults withdraws only the column declaration and keeps local table ownership');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Inspector;
+        Click(NyxInspectorPropertiesID);
+      end;
+    7:
+      begin
+        ExpandLayout(0);
+        Change(NyxStudioLayoutPolicyFieldID(0, slpfPin), 'Start edge');
+        Click(NyxStudioLayoutPolicyApplyID(0));
+      end;
+    8:
+      begin
+        Check(Spec.ColumnAt(0).LayoutPolicy.Pin = ncpStart,
+          'a fresh inspector command can restore the authored start pin');
+        ExpandLayout(1);
+        FBefore := Pair;
+        Change(NyxStudioLayoutPolicyFieldID(1, slpfVisible), 'true');
+        Change(NyxStudioLayoutPolicyFieldID(1, slpfPin), 'End edge');
+        Click(NyxStudioLayoutPolicyApplyID(1));
+      end;
+    9:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.ColumnAt(1).HasLayoutPolicy and
+          (Spec.ColumnAt(0).LayoutPolicy.Pin = ncpStart) and
+          (Spec.ColumnAt(1).LayoutPolicy.Pin = ncpEnd),
+          'independent column forms author both logical pinned edges');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Inspector;
+        Click(NyxInspectorPropertiesID);
+      end;
+    10:
+      begin
+        FBefore := Pair;
+        Click(NyxStudioLayoutPolicyDefaultID(-1));
+      end;
+    11:
+      begin
+        Check((FCommands.State = nssApplied) and not Spec.HasTableLayoutPolicy and
+          Spec.ColumnAt(0).HasLayoutPolicy and Spec.ColumnAt(1).HasLayoutPolicy,
+          'table defaults preserve the two independently authored column policies');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Inspector;
+        Click(NyxInspectorPropertiesID);
+      end;
+    12:
+      begin
+        FBefore := Pair;
+        Change(NyxStudioLayoutPolicyFieldID(-1, slpfEnabled), 'true');
+        Change(NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter), '112');
+        Change(NyxStudioLayoutPolicyFieldID(-1, slpfAutoSizeRows), '32');
+        for LFeature := Low(TNyxColumnLayoutFeature) to High(TNyxColumnLayoutFeature) do
+        begin
+          Change(NyxStudioLayoutPolicyFeatureID(-1, LFeature),
+            LowerCase(BoolToStr(LFeature in [nclfResize, nclfAutoSize, nclfPinning], True)));
+        end;
+        Click(NyxStudioLayoutPolicyApplyID(-1));
+      end;
+    13:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.HasTableLayoutPolicy and
+          Spec.TableLayoutPolicy.IsEnabled and
+          (Spec.TableLayoutPolicy.MinimumScrollableWidth = 112) and
+          (Spec.TableLayoutPolicy.AutoSizeRows = 32) and
+          (Spec.TableLayoutPolicy.Features = [nclfResize, nclfAutoSize, nclfPinning]),
+          'the exact saved project keeps enabled authored column management and its feature mask');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Check((Spec.QueryPolicy.ToData.ToJSON = FLayoutInitial.QueryPolicy.ToData.ToJSON) and
+          (Spec.TableQueryPolicy.ToData.ToJSON = FLayoutInitial.TableQueryPolicy.ToData.ToJSON) and
+          (Spec.PagingPolicy.ToData.ToJSON = FLayoutInitial.PagingPolicy.ToData.ToJSON),
+          'layout policy admission preserves the complete accepted query and paging choices');
+        for LIndex := 0 to Spec.Count - 1 do
+        begin
+          Check(Spec.ColumnAt(LIndex).QueryPolicy.ToData.ToJSON =
+            FLayoutInitial.ColumnAt(LIndex).QueryPolicy.ToData.ToJSON,
+            'layout defaults preserve every scalar column query policy');
+        end;
+        CheckSavedEvents;
+        Isolated;
+        Result := True;
+      end;
+  end;
+  Inc(FLayoutStage);
 end;
 
 function TReview.Step: Boolean; {$ifdef PAS2JS}async;{$endif}
@@ -1307,6 +1507,16 @@ begin
     Exit;
   end;
   {$endif}
+  { Keep the original twenty-six query/event/file stages intact. Layout input
+    finishes before their existing Save/Open captures the actual whole pair. }
+
+  if (FStage = 18) and not FLayoutFinished then
+  begin
+    {$ifdef PAS2JS}FLayoutFinished := await(LayoutStep);{$else}
+    FLayoutFinished := LayoutStep;
+    {$endif}
+    Exit;
+  end;
   Trace('step:before', FStage);
   case FStage of
     0:
@@ -1637,6 +1847,9 @@ type
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
   {$endif}
+  { Own a reopened or compiled document and its actual target application.
+    Each physical helper resolves the current typed column's borrowed face;
+    neither pinned panes nor a toolbar may lend it an old physical coordinate. }
   TApplicationReview = class
   private
     FDocument: TNyxDocument;
@@ -1664,6 +1877,9 @@ type
     procedure KeyboardOpen(AIndex, AColumn: Integer);
     procedure Visible(AIndex: Integer; const AIDs: array of TNyxText);
     function HeaderText(AIndex, AColumn: Integer): TNyxText;
+    {$ifndef PAS2JS}
+    function NativeColumnGrid(AIndex, AColumn: Integer; out APhysical: Integer): TStringGrid;
+    {$endif}
     procedure OpenFilter(AIndex, AColumn: Integer);
     procedure AddCondition(AIndex: Integer);
     procedure Apply(AIndex: Integer);
@@ -1973,6 +2189,62 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+function TApplicationReview.NativeColumnGrid(AIndex, AColumn: Integer;
+  out APhysical: Integer): TStringGrid;
+var
+  LOuter: TStringGrid;
+  LCandidate: TStringGrid;
+  LTitle: TNyxText;
+  LChild: Integer;
+
+  function FindIn(AGrid: TStringGrid): Boolean;
+  var
+    LPhysical: Integer;
+  begin
+    Result := False;
+    for LPhysical := 0 to AGrid.ColCount - 1 do
+    begin
+
+      if (AGrid.ColWidths[LPhysical] > 0) and
+        (Pos(LTitle, TNyxText(AGrid.Cells[LPhysical, 0])) = 1) then
+      begin
+        APhysical := LPhysical;
+        Result := True;
+        Exit;
+      end;
+    end;
+  end;
+
+begin
+  Result := nil;
+  APhysical := -1;
+  LOuter := TStringGrid(FApp.View.ControlFor(TableID(AIndex)));
+  LTitle := FViews[AIndex].Spec.ColumnAt(AColumn).Title;
+  Check((LOuter <> nil) and (LTitle <> ''),
+    'typed application column has an actual native table and authored title');
+
+  if FindIn(LOuter) then
+  begin
+    Exit(LOuter);
+  end;
+  for LChild := 0 to LOuter.ControlCount - 1 do
+  begin
+
+    if (LOuter.Controls[LChild] is TStringGrid) and LOuter.Controls[LChild].Visible then
+    begin
+      LCandidate := TStringGrid(LOuter.Controls[LChild]);
+
+      if FindIn(LCandidate) then
+      begin
+        Exit(LCandidate);
+      end;
+    end;
+  end;
+  Check(False, 'typed application column keeps a current center or pinned native face');
+end;
+{$endif}
+
 procedure TApplicationReview.Header(AIndex, AColumn: Integer; AFilter: Boolean; AAppend: Boolean);
 {$ifdef PAS2JS}
 var
@@ -1983,6 +2255,7 @@ var
 var
   LGrid: TStringGrid;
   LBounds: TRect;
+  LPhysical: Integer;
   LX: Integer;
   LShift: TShiftState;
 {$endif}
@@ -2004,8 +2277,8 @@ begin
   LOptions['shiftKey'] := AAppend;
   LButton.dispatchEvent(TPhysicalMouse.new('click', LOptions));
   {$else}
-  LGrid := TStringGrid(FApp.View.ControlFor(TableID(AIndex)));
-  LBounds := LGrid.CellRect(AColumn, 0);
+  LGrid := NativeColumnGrid(AIndex, AColumn, LPhysical);
+  LBounds := TNyxCollectionStringGrid(LGrid).ColumnHeaderRect(LPhysical);
   LX := LBounds.Left + 12;
 
   if AFilter then
@@ -2035,6 +2308,7 @@ var
 {$else}
 var
   LGrid: TStringGrid;
+  LPhysical: Integer;
   LKey: Word;
 {$endif}
 begin
@@ -2051,8 +2325,8 @@ begin
   LOptions['cancelable'] := True;
   LButton.dispatchEvent(TPhysicalKey.new('keydown', LOptions));
   {$else}
-  LGrid := TStringGrid(FApp.View.ControlFor(TableID(AIndex)));
-  LGrid.Col := AColumn;
+  LGrid := NativeColumnGrid(AIndex, AColumn, LPhysical);
+  LGrid.Col := LPhysical;
   LGrid.SetFocus;
   LKey := VK_DOWN;
   Check(Assigned(LGrid.OnKeyDown), 'native table owns its actual key handler');
@@ -2067,18 +2341,21 @@ procedure TApplicationReview.Visible(AIndex: Integer; const AIDs: array of TNyxT
 var
   LIndex: Integer;
   {$ifdef PAS2JS}LRows: TJSNodeList;
-  {$else}LGrid: TStringGrid;{$endif}
+  {$else}
+  LGrid: TStringGrid;
+  LPhysical: Integer;
+  {$endif}
 begin
   Check(FViews[AIndex].Snapshot.Count = Length(AIDs), 'query has expected page membership');
   {$ifdef PAS2JS}
   LRows := FApp.View.ElementFor(TableID(AIndex)).querySelectorAll('[data-nyx-item]');
   Check(LRows.length = Length(AIDs), 'actual browser rows follow accepted page membership');
   {$else}
-  LGrid := TStringGrid(FApp.View.ControlFor(TableID(AIndex)));
+  LGrid := NativeColumnGrid(AIndex, 0, LPhysical);
 
   if Length(AIDs) = 0 then
   begin
-    Check((LGrid.RowCount = 2) and (LGrid.Cells[0, 1] = ''),
+    Check((LGrid.RowCount = 2) and (LGrid.Cells[LPhysical, 1] = ''),
       'empty native table retains the required blank widget row, with no data identity');
   end
   else
@@ -2093,19 +2370,25 @@ begin
     Check(TJSHTMLElement(LRows[LIndex]).getAttribute('data-nyx-item') = AIDs[LIndex],
       'actual browser row identity matches admitted query');
     {$else}
-    Check(LGrid.Cells[0, LIndex + 1] = FViews[AIndex].CellText(NyxItem(People, AIDs[LIndex]), 0),
+    Check(LGrid.Cells[LPhysical, LIndex + 1] = FViews[AIndex].CellText(NyxItem(People, AIDs[LIndex]), 0),
       'physical native cell follows accepted typed ordering');
     {$endif}
   end;
 end;
 
 function TApplicationReview.HeaderText(AIndex, AColumn: Integer): TNyxText;
+{$ifndef PAS2JS}
+var
+  LGrid: TStringGrid;
+  LPhysical: Integer;
+{$endif}
 begin
   {$ifdef PAS2JS}
   Result := TJSHTMLElement(FApp.View.ElementFor(TableID(AIndex)).querySelector(
     '[data-nyx-query-sort="' + IntToStr(AColumn) + '"]')).textContent;
   {$else}
-  Result := TStringGrid(FApp.View.ControlFor(TableID(AIndex))).Cells[AColumn, 0];
+  LGrid := NativeColumnGrid(AIndex, AColumn, LPhysical);
+  Result := LGrid.Cells[LPhysical, 0];
   {$endif}
 end;
 
