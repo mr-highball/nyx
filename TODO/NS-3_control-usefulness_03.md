@@ -190,6 +190,19 @@ section checks with a clean heap and12 focused browser checks at each width;
 its full browser capture acknowledgment is not yet qualified. The full own13
 native Studio journey still times out at900s, stage14/check293.
 
+The authored workbench policy now passes 171 pure checks per actual target;
+source/generation passes 37 and independently compiled emitted code passes 38,
+with clean native heaps and empty browser logs. Runtime05 compiles both targets
+and executes authored empty/row-only accepted/draft inspection, visible missing
+clipboard diagnostics and original-input retirement before the new range-only
+menu transfer exposes its remaining cell-permission guard. Physical range copy
+succeeds independently; the managed original-action transfer is being repaired.
+These retained failures grant no complete control-suite or criterion acceptance.
+Studio forms/intents/history/semantic operations and application-service adoption
+remain required. Full own14 native Studio still times out at its unchanged 900s
+bound, stage18/check317; all 2286 fixed inputs reverify unchanged. WORK owns the
+current assignments and exact qualification; all seven criteria remain open.
+
 The explicit cell-range capture/selection prerequisite passes46 native checks
 with a complete clean heap and46 actual browser checks, logs empty. It retains
 directional typed endpoints, actual filtered-page/visible-field order and exact

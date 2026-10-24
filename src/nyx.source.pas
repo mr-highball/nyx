@@ -762,6 +762,7 @@ uses
   nyx.typeahead,
   nyx.collections.columns,
   nyx.collections.arrangement,
+  nyx.collections.workbench.policy,
   nyx.formatting,
   nyx.collections.query.policy,
   nyx.collections.query.controls,
@@ -837,7 +838,8 @@ type
   TTokens = array of TToken;
 
   { Closed literal-reader value families preserve Pascal argument types during
-    admission. A textual number or enum name never substitutes for its family. }
+    admission. A textual number or enum name never substitutes for its family.
+    Workbench permissions and presentation choices remain separate families. }
   TValueKind = (vkText, vkInteger, vkNumber, vkBoolean, vkKind, vkAttribute,
     vkLayout, vkVariant, vkAction, vkOverride, vkInput, vkPart, vkEvent,
     vkComponent, vkStyle, vkCustomKind, vkStateRef, vkBindingProperty,
@@ -897,10 +899,13 @@ type
     vkDateRangeOptions, vkMasterDetailOptions, vkMasterDetailIntent,
     vkButtonPresentation, vkGlyphCell, vkButtonContent, vkButtonDensity,
     vkButtonAlignment, vkButtonWeight, vkGlyphTone,
-    vkValueFormat, vkFormatLocale, vkFormatterRef, vkFormatDateOrder);
+    vkValueFormat, vkFormatLocale, vkFormatterRef, vkFormatDateOrder,
+    vkTableWorkbenchPolicy, vkWorkbenchCopyAction, vkWorkbenchCopyFields,
+    vkWorkbenchLineEnding);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
-    handles and runtime permissions never enter these literal source values. }
+    handles and service authority never enter these literal source values.
+    Workbench choices retain only the pure authored permission policy. }
   TValue = record
     Kind: TValueKind;
     DiagramVertex: TNyxDiagramVertex;
@@ -969,6 +974,7 @@ type
     ValueFormat: TNyxValueFormat;
     FormatLocale: TNyxFormatLocale;
     TableLayoutPolicy: TNyxTableLayoutPolicy;
+    TableWorkbenchPolicy: TNyxTableWorkbenchPolicy;
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
@@ -1726,6 +1732,14 @@ begin
   RegisterEnum(vkColumnPin, Ord(ncpNone), 'ncpNone');
   RegisterEnum(vkColumnPin, Ord(ncpStart), 'ncpStart');
   RegisterEnum(vkColumnPin, Ord(ncpEnd), 'ncpEnd');
+  RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaCell), 'nwcaCell');
+  RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaSelectedSource), 'nwcaSelectedSource');
+  RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaSelectedPage), 'nwcaSelectedPage');
+  RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaCellRange), 'nwcaCellRange');
+  RegisterEnum(vkWorkbenchCopyFields, Ord(nwcfVisiblePresentation), 'nwcfVisiblePresentation');
+  RegisterEnum(vkWorkbenchCopyFields, Ord(nwcfAllArrangement), 'nwcfAllArrangement');
+  RegisterEnum(vkWorkbenchLineEnding, Ord(nwleLF), 'nwleLF');
+  RegisterEnum(vkWorkbenchLineEnding, Ord(nwleCRLF), 'nwleCRLF');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoYearMonthDay), 'nfdoYearMonthDay');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoDayMonthYear), 'nfdoDayMonthYear');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoMonthDayYear), 'nfdoMonthDayYear');
@@ -3763,7 +3777,7 @@ begin
           (LName = 'nyxintegerfield') or (LName = 'nyxnumberfield') or
           (LName = 'nyxnodomain') or (LName = 'tnyxstatevalue') or
           (LName = 'nyxcollectionview') or (LName = 'nyxcolumnlayout') or
-          (LName = 'nyxtablelayout') then
+          (LName = 'nyxtablelayout') or (LName = 'nyxtableworkbench') then
         begin
           Exit(CollectionConstructor(LName));
         end;
@@ -6742,6 +6756,7 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.arrangement') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.workbench.policy') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.formatting') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.resources') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or

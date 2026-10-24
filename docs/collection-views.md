@@ -1102,6 +1102,62 @@ and selected-row menu choices remain required. These results do not establish re
 OS clipboard effects, native qualification at two widths or complete workbench
 acceptance.
 
+## Saving table workbench action choices
+
+`nyx.collections.workbench.policy` supplies a pure authored policy. Apply it to
+the existing typed table binding; clipboard services and live input state belong
+to the application, separately from this saved value.
+
+```pascal
+LTasksTable.Binds.Collection(
+  NyxCollectionView(NyxCollection('tasks'))
+    .Column(NyxTextField('title'), 'Task', cmEditable)
+    .TableWorkbench(NyxTableWorkbench
+      .RangeSelection(True)
+      .AllowCopy([nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange])
+      .CopyFields(nwcfAllArrangement)
+      .Headers(False)
+      .LineEnding(nwleCRLF)
+      .FocusedDraft(True)));
+```
+
+Declare `LTasksTable: INyxTable`; import `nyx.controls`, `nyx.collections`,
+`nyx.collections.view.types` and `nyx.collections.workbench.policy`. The four
+copy flags permit accepted-cell, selected-source-row, selected-current-page-row
+and selected-cell-range transfers respectively. Range selection and deliberate
+focused-draft context are independent opt-ins: permission to copy a range does
+not enable selection, and an empty copy set does not disable readonly inspection.
+This describes the authored choices; target/menu adoption has its own runtime
+qualification.
+
+`NyxTableWorkbench` defaults to range and focused-draft opt-ins off, the first
+three copy flags on, `nwcfVisiblePresentation`, headers on and `nwleLF`.
+`nwcfAllArrangement` includes every authored arrangement field, including hidden
+columns; it does not add schema-only fields absent from that arrangement. LF or
+CRLF controls TSV row separators, preserving embedded cell line endings and
+ordinary RAW cell text. These choices never select a clipboard host or save
+runtime work limits, promises, selections, drafts, receipts or machine paths.
+
+Absence preserves the existing unconfigured table behavior.
+`.TableWorkbench(NyxTableWorkbench)` records explicit default presence;
+`.UseDefaultTableWorkbench` removes only that policy, retaining the collection
+binding, column layout/format/query policies and reusable peers. A local binding
+with its policy reset remains local. `Binds.ClearCollection` records a whole
+unbound mask; `Binds.InheritCollection` restores the reusable definition instead.
+The policy is table-only once its actual projection is resolved.
+
+Bindings with a workbench declaration use descriptor version10. Removing it
+preserves the applicable earlier descriptor bytes, including versions1–9.
+Generation emits typed fluent calls and adds the pure policy unit only when
+needed. Source synchronization preserves handwritten prefixes, suffixes,
+comments and imports; resetting a policy does not remove an existing import
+that handwritten code may still use. The confined source reader round-trips
+the closed enum/Boolean families, explicit defaults, empty permission sets,
+local reusable bindings and masks without executing host callbacks.
+The maintained `query-workbench` build includes the pure policy/source consumers
+and independently compiles this run's exact emitted companion on both targets;
+browser execution remains a separate check.
+
 ## Exporting captured table results
 
 `nyx.collections.export` prepares immutable RAW TSV from an actual

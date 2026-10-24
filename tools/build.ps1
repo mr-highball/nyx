@@ -619,25 +619,6 @@ try {
     if ($Target -eq 'query-authoring' -and $QueryAuthoringProfile) {
       $nyxWorkbenchFlags += @('-dNYX_STUDIO_PROFILE', '-dNYX_LCL_LAYOUT_PROFILE')
     }
-    if ($Target -eq 'query-authoring') {
-      $nyxWorkbenchFlags += @('-uPAS2JS')
-      # Defines affect owned units throughout the native dependency closure,
-      # including units found in explicitly supplied non-profile outputs. Keep
-      # their search paths but force fresh instrumentation rather than claiming
-      # ordinary source/dependency checks certify the previous define history.
-      [ordered]@{mode=if($QueryAuthoringProfile){'profile-rebuild'}elseif($QueryAuthoringOptimize){'optimized-rebuild'}elseif($nyxAuthoringCachePaths.Count -gt 0){'explicit-unit-cache'}else{'cold-rebuild'};
-        directories=@($nyxAuthoringCachePaths);normalSourceAndDependencyChecks=$true;
-        fullRebuild=$nyxAuthoringFullRebuild;profileInstrumentation=[bool]$QueryAuthoringProfile;
-        optimizedCheckedBuild=[bool]$QueryAuthoringOptimize;
-        freshNativeOutput=$nyxWorkbenchNative;
-        compiler=$nyxLclFpc;arguments=$nyxWorkbenchFlags} | ConvertTo-Json -Depth 8 |
-        Set-Content -LiteralPath (Join-Path $nyxWorkbenchRoot 'native-unit-cache-private.json') -Encoding UTF8
-      # Reuse the reviewed owned-process capture. Every direct compiler/native
-      # launch has its own raw streams and identity; no server is involved.
-      $output = $nyxWorkbenchRoot
-      $nyxAuthoringUnitNames = @(Get-ChildItem -LiteralPath @('src', 'studio', 'tests', 'tools') `
-        -Recurse -File | Where-Object { $_.Extension -in @('.pas', '.pp', '.inc', '.lpr', '.dpr') } | `
-        ForEach-Object { $_.Name }) + @('nyx.fixture.table.query.studio.pas')
 function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
   [int]$TimeoutSeconds, [bool]$TraceHeap) {
   function Get-ClosedProcessLogHash([string]$Path) {
@@ -727,6 +708,25 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
   }
   return $result
 }
+    if ($Target -eq 'query-authoring') {
+      $nyxWorkbenchFlags += @('-uPAS2JS')
+      # Defines affect owned units throughout the native dependency closure,
+      # including units found in explicitly supplied non-profile outputs. Keep
+      # their search paths but force fresh instrumentation rather than claiming
+      # ordinary source/dependency checks certify the previous define history.
+      [ordered]@{mode=if($QueryAuthoringProfile){'profile-rebuild'}elseif($QueryAuthoringOptimize){'optimized-rebuild'}elseif($nyxAuthoringCachePaths.Count -gt 0){'explicit-unit-cache'}else{'cold-rebuild'};
+        directories=@($nyxAuthoringCachePaths);normalSourceAndDependencyChecks=$true;
+        fullRebuild=$nyxAuthoringFullRebuild;profileInstrumentation=[bool]$QueryAuthoringProfile;
+        optimizedCheckedBuild=[bool]$QueryAuthoringOptimize;
+        freshNativeOutput=$nyxWorkbenchNative;
+        compiler=$nyxLclFpc;arguments=$nyxWorkbenchFlags} | ConvertTo-Json -Depth 8 |
+        Set-Content -LiteralPath (Join-Path $nyxWorkbenchRoot 'native-unit-cache-private.json') -Encoding UTF8
+      # Reuse the reviewed owned-process capture. Every direct compiler/native
+      # launch has its own raw streams and identity; no server is involved.
+      $output = $nyxWorkbenchRoot
+      $nyxAuthoringUnitNames = @(Get-ChildItem -LiteralPath @('src', 'studio', 'tests', 'tools') `
+        -Recurse -File | Where-Object { $_.Extension -in @('.pas', '.pp', '.inc', '.lpr', '.dpr') } | `
+        ForEach-Object { $_.Name }) + @('nyx.fixture.table.query.studio.pas')
       function Invoke-NyxQueryAuthoringCompiler([string]$Executable,
         [string[]]$Arguments, [string]$Tag) {
         $result = RunOwned $Executable $Arguments $Tag $QueryAuthoringCompilerTimeoutSeconds $false
@@ -773,6 +773,108 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchFlags + @("tests/$nyxWorkbenchProgram.lpr"))
     }
     if ($Target -eq 'query-workbench') {
+      # Pure saved-policy/source consumers have separate checked outputs. The
+      # source consumer emits this run's exact unit before its independent
+      # companion is compiled; neither target searches an old generated cache.
+      function Invoke-NyxWorkbenchPolicyChecks {
+        $nyxPolicyRoot = Join-Path $nyxWorkbenchRoot 'policy-source'
+        $nyxPolicyGenerated = Join-Path $nyxPolicyRoot 'generated'
+        New-Item -ItemType Directory -Path $nyxPolicyGenerated | Out-Null
+        $nyxPolicyPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+        $nyxPolicyRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+        $nyxPolicySuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
+        $nyxPolicyOwnedNames = @(Get-ChildItem -LiteralPath @('src', 'tests') `
+          -Recurse -File | Where-Object { $_.Extension -in @('.pas', '.pp', '.inc', '.lpr') } |
+          ForEach-Object { $_.Name }) + @('nyx.generated.view.pas')
+        foreach ($nyxPolicyConsumer in @('policy', 'source', 'compiled')) {
+          $nyxPolicyProgram = 'nyx_collection_workbench_source_tests'
+          $nyxPolicyPass = '(?m)^PASS \d+ typed workbench source checks; no runtime service wiring\s*$'
+
+          if ($nyxPolicyConsumer -eq 'policy') {
+            $nyxPolicyProgram = 'nyx_collection_workbench_policy_tests'
+            $nyxPolicyPass = '(?m)^PASS \d+ pure table workbench policy checks; no runtime service wiring\s*$'
+          }
+          foreach ($nyxPolicyTarget in @('native', 'browser')) {
+            $output = Join-Path $nyxPolicyRoot ($nyxPolicyConsumer + '-' + $nyxPolicyTarget)
+            New-Item -ItemType Directory -Path $output | Out-Null
+            $nyxPolicyExtra = @()
+
+            if ($nyxPolicyConsumer -eq 'compiled') {
+              $nyxPolicyExtra = @('-dNYX_COMPILED_WORKBENCH', "-Fu$nyxPolicyGenerated")
+            }
+
+            if ($nyxPolicyTarget -eq 'native') {
+              $nyxPolicyCompiler = $nyxLclFpc
+              $nyxPolicyArgs = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+                '-uPAS2JS') + $nyxPolicyExtra + @('-Fusrc', '-Futests', '-Fisrc',
+                "-FU$output", "-FE$output", "tests/$nyxPolicyProgram.lpr")
+            } else {
+              $nyxPolicyCompiler = $nyxPolicyPas2js
+              $nyxPolicyArgs = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js') +
+                $nyxPolicyExtra + @('-Fusrc', '-Futests', '-Fisrc',
+                "-FE$output", "tests/$nyxPolicyProgram.lpr")
+            }
+            $nyxPolicyResult = RunOwned $nyxPolicyCompiler $nyxPolicyArgs 'compiler' 900 $false
+            $nyxPolicyWarnings = @((Get-Content -LiteralPath $nyxPolicyResult.stdout) +
+              (Get-Content -LiteralPath $nyxPolicyResult.stderr) | Where-Object { $_ -match 'Warning:' })
+            $nyxPolicyResult.ownedWarnings = @($nyxPolicyWarnings | Where-Object {
+              if ($_ -match '^(.+?)\(\d+,\d+\)\s+Warning:') {
+                [IO.Path]::GetFileName($Matches[1]) -in $nyxPolicyOwnedNames
+              } else { $true }
+            })
+            $nyxPolicyResult | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath `
+              (Join-Path $output 'compiler-process-private.json') -Encoding UTF8
+            Get-Content -LiteralPath $nyxPolicyResult.stdout | ForEach-Object { Write-Host $_ }
+            Get-Content -LiteralPath $nyxPolicyResult.stderr | ForEach-Object { Write-Host $_ }
+
+            if ($nyxPolicyResult.exit -ne 0 -or $nyxPolicyResult.timedOut -or
+                $nyxPolicyResult.ownedWarnings.Count -ne 0) {
+              throw ('Workbench policy/source compiler failed: ' + $nyxPolicyConsumer + '-' + $nyxPolicyTarget)
+            }
+
+            if ($nyxPolicyTarget -eq 'native') {
+              $nyxPolicyRunArgs = @()
+
+              if ($nyxPolicyConsumer -eq 'source') {
+                $nyxPolicyRunArgs = @($nyxPolicyGenerated)
+              }
+              $nyxPolicyResult = RunOwned (Join-Path $output ($nyxPolicyProgram + $nyxPolicySuffix)) `
+                $nyxPolicyRunArgs 'runtime' 180 $true
+              $nyxPolicyResult.functionalPass = [IO.File]::ReadAllText($nyxPolicyResult.stdout) -match $nyxPolicyPass
+              $nyxPolicyResult | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath `
+                (Join-Path $output 'runtime-process-private.json') -Encoding UTF8
+              Get-Content -LiteralPath $nyxPolicyResult.stdout | ForEach-Object { Write-Host $_ }
+              Get-Content -LiteralPath $nyxPolicyResult.stderr | ForEach-Object { Write-Host $_ }
+
+              if ($nyxPolicyResult.exit -ne 0 -or $nyxPolicyResult.timedOut -or
+                  -not $nyxPolicyResult.functionalPass -or -not $nyxPolicyResult.heapComplete) {
+                throw ('Workbench policy/source checks lack a complete clean pass: ' + $nyxPolicyConsumer)
+              }
+
+              if ($nyxPolicyConsumer -eq 'source') {
+                Get-FileHash -LiteralPath (Join-Path $nyxPolicyGenerated 'nyx.generated.view.pas') |
+                  Select-Object Path, Hash | ConvertTo-Json | Set-Content -LiteralPath `
+                    (Join-Path $nyxPolicyRoot 'emitted-source-private.json') -Encoding UTF8
+              }
+            } else {
+              Copy-Item -LiteralPath $nyxPolicyRuntime -Destination (Join-Path $output 'rtl.js')
+              $nyxPolicyHTML = '<!doctype html><html lang="en"><meta charset="utf-8">' +
+                '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+                '<title>Nyx typed workbench policy/source checks</title><body><script src="rtl.js"></script>' +
+                '<script src="' + $nyxPolicyProgram + '.js"></script><script>rtl.run();</script></body></html>'
+              [IO.File]::WriteAllText((Join-Path $output 'index.html'), $nyxPolicyHTML,
+                [Text.UTF8Encoding]::new($false))
+            }
+          }
+        }
+        $nyxPolicyEmitted = Get-Content -LiteralPath (Join-Path $nyxPolicyRoot 'emitted-source-private.json') -Raw |
+          ConvertFrom-Json
+
+        if ((Get-FileHash -LiteralPath $nyxPolicyEmitted.Path).Hash -ne $nyxPolicyEmitted.Hash) {
+          throw 'The emitted workbench source changed during independent compilation'
+        }
+      }
+      Invoke-NyxWorkbenchPolicyChecks
       # Reuse the same stable native unit cohort after the maintained journey's
       # full build. The consumers own assertions; shell only runs/stages them.
       $nyxWorkbenchCompanionFlags = @($nyxWorkbenchFlags | Where-Object { $_ -ne '-B' })

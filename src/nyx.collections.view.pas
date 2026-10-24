@@ -1581,6 +1581,11 @@ begin
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
   end;
 
+  if ASpec.HasTableWorkbenchPolicy and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Authored workbench actions require a table projection');
+  end;
+
   if ASpec.HasLayoutControls and (AProjection <> cpTable) then
   begin
     raise ENyxCollection.Create('Column arrangement requires a table projection');
@@ -1735,6 +1740,11 @@ begin
     { Shared document admission runs before target mounts are created. Reject
       an unsupported authored policy here as well as in live view construction. }
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
+  end;
+
+  if ASpec.HasTableWorkbenchPolicy and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Authored workbench actions require a table projection');
   end;
 
   if ASpec.HasLayoutControls and (AProjection <> cpTable) then

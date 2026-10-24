@@ -4,15 +4,46 @@
 
 ## Column arrangement W1 — 2026-10-22
 
-### Current checkpoint — managed cell actions and exact compiled applications
+### Current checkpoint — authored workbench policies and runtime integration
 
-This continuation makes concrete progress through actual compact Studio/export
-results, a reusable atomic resource-import capability and ownership repairs.
-The current committed source guidance explicitly authorizes library changes;
-the latest user direction confirms that authority rather than adding a new gate.
-Library implementations, base classes and public contracts
-are ordinary authorized development. All original task03 criteria, W1/W2 and the
-full goal remain open.
+The last authority-only turn verified existing committed guidance; it was not
+new product progress. This continuation implements and executes authored table
+workbench behavior. Library implementations, base classes, interfaces and public
+contracts remain authorized development sources. All seven original task03
+criteria, W1/W2 and the full goal remain open; no user input is needed.
+
+The pure saved policy passes 171 checks on each actual target. Typed generation
+and source reading pass 37 checks per target; independently compiling the exact
+emitted application passes 38 per target. Native heaps are complete and clean,
+and browser warning/error logs are empty. Legacy absent-policy output remains
+byte-identical to the earlier generator. The maintained build's extracted pure
+stage executes its six fresh compilers and three complete clean native runs.
+These establish saved/source behavior, not Studio or runtime acceptance.
+
+Root's runtime services and ordinary browser/LCL renderer adoption compile on
+both targets. Real authored controls retain the earlier cases and expose new
+integration gaps: runtime03 correctly reports Unavailable but lacks a visible
+RAW failure surface; runtime04 repairs that surface but reveals target draft
+capture still depending on copy permission. The repaired adapters in runtime05
+execute empty and row-only RAW/draft inspection successfully before failing the
+new range-only menu transfer. Its physical selected-cells Ctrl+C succeeds; the
+managed captured-write port still incorrectly requires cell-copy permission.
+Native runtime05 exits with a complete 11973348/11973348 clean heap. The actual
+1280x900 browser fails the same assertion at check 846, with empty logs. Earlier
+fixture setup/result/display-oracle mistakes and all actual failures remain
+retained under ignored build/qualification/workbench-runtime-01 through -05.
+No full control-suite pass is claimed from these incomplete runs.
+
+Lil' Scooty owns the detached selected-row cohort and optional action-transfer
+contracts in the existing command/context/view/arrangement files. Its stable
+inspection01 predecessor passes 177 checks on each actual target, with a clean
+native heap and empty browser logs. Root owns renderer/runtime services, the
+browser/LCL draft-capture adapters and actual-control consumer. Runtime05's
+private snapshot allows those disjoint edits without changing running inputs.
+Next qualify the correct original-action transfer through that same actual
+suite at both browser widths, then integrate Studio intent/forms, history,
+semantic operations and application services. Export-service ordering, pointer
+gestures, OS effects and the complete user workbench remain required.
 
 The latest managed selected-cells menu qualifies through corrected menu04:
 actual native670 checks have a complete9803936/9803936 clean heap, and actual
@@ -41,14 +72,14 @@ failure;02 compiles on both targets with zero owned warnings. The browser's seve
 installed classes.pas warnings remain distinct. This targeted repair is not a
 whole-editor performance result.
 
-The original full own13 native1280 Studio journey independently times out after
-900s at stage14/check293; its actual process and executor are joined, all2284
-source pins are unchanged and no complete heap or functional pass is claimed.
-Full390 and that native producer's own generated applications were not launched.
-Equivalent full timed reruns remain unwarranted without a concrete repair.
-Root continues the Inspector prerequisite above; Lil' Scooty next owns the pure
-saved table-workbench action policy and descriptor integration under original
-criterion six. Clipboard hosts and other runtime authority stay out of designs.
+The subsequent full own14 native1280 Studio journey still times out after the
+unchanged 900s at stage18/check317. Its process and executor are joined and all
+2286 fixed source pins reverify unchanged. No complete heap or functional pass
+is claimed; full390 and its own generated applications were not launched.
+Original own13's 900s/stage14/check293 failure remains evidence. Equivalent full
+timed reruns are unwarranted without a concrete performance repair. Existing
+instrumented boundaries are the next diagnostic path; targeted form retention
+does not establish comfortable whole-editor latency.
 
 The new optional INyxResourceCatalogImport preserves the original catalog ABI
 and destination identity. It snapshots/adopts private immutable admitted entries,

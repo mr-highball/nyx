@@ -80,10 +80,130 @@ var
   LDomain: TNyxValueDomain;
   LMode: TNyxCollectionCellMode;
   LFeatures: TNyxColumnLayoutFeatures;
+  LCopyActions: TNyxWorkbenchCopyActions;
   LFeature: TValue;
   LInteger: Integer;
 begin
   Result := Default(TValue);
+
+  if SameText(AName, 'NyxTableWorkbench') then
+  begin
+
+    if At('(') then
+    begin
+      LArgs := Arguments;
+
+      if Length(LArgs) <> 0 then
+      begin
+        Fail('NyxTableWorkbench takes no factory arguments');
+      end;
+    end;
+    Result.Kind := vkTableWorkbenchPolicy;
+    Result.TableWorkbenchPolicy := NyxTableWorkbench;
+    while At('.') do
+    begin
+      Expect('.');
+
+      if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) then
+      begin
+        Fail('Expected a typed table workbench method');
+      end;
+      LMethod := FTokens[FCursor].Text;
+      Inc(FCursor);
+
+      if SameText(LMethod, 'AllowCopy') then
+      begin
+        Expect('(');
+        Expect('[');
+        LCopyActions := [];
+        while not At(']') do
+        begin
+          LFeature := Expression;
+
+          if (LFeature.Kind <> vkWorkbenchCopyAction) or
+            (LFeature.Ordinal < Ord(Low(TNyxWorkbenchCopyAction))) or
+            (LFeature.Ordinal > Ord(High(TNyxWorkbenchCopyAction))) then
+          begin
+            Fail('AllowCopy requires typed workbench-copy action symbols');
+          end;
+
+          if TNyxWorkbenchCopyAction(LFeature.Ordinal) in LCopyActions then
+          begin
+            Fail('Duplicate workbench copy action');
+          end;
+          Include(LCopyActions, TNyxWorkbenchCopyAction(LFeature.Ordinal));
+
+          if not At(']') then
+          begin
+            Expect(',');
+
+            if At(']') then
+            begin
+              Fail('A workbench copy action must follow the comma');
+            end;
+          end;
+        end;
+        Expect(']');
+        Expect(')');
+        Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.AllowCopy(LCopyActions);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'Copy') and not At('(') then
+      begin
+        LArgs := nil;
+      end
+      else
+      begin
+        LArgs := Arguments;
+      end;
+
+      if SameText(LMethod, 'Copy') and (Length(LArgs) = 0) then
+      begin
+        Continue;
+      end;
+
+      if (Length(LArgs) = 1) and (LArgs[0].Kind = vkBoolean) then
+      begin
+
+        if SameText(LMethod, 'RangeSelection') then
+        begin
+          Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.RangeSelection(LArgs[0].Ordinal <> 0);
+          Continue;
+        end;
+
+        if SameText(LMethod, 'Headers') then
+        begin
+          Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.Headers(LArgs[0].Ordinal <> 0);
+          Continue;
+        end;
+
+        if SameText(LMethod, 'FocusedDraft') then
+        begin
+          Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.FocusedDraft(LArgs[0].Ordinal <> 0);
+          Continue;
+        end;
+      end;
+
+      if SameText(LMethod, 'CopyFields') and (Length(LArgs) = 1) and
+        (LArgs[0].Kind = vkWorkbenchCopyFields) then
+      begin
+        Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.CopyFields(
+          TNyxWorkbenchCopyFields(LArgs[0].Ordinal));
+        Continue;
+      end;
+
+      if SameText(LMethod, 'LineEnding') and (Length(LArgs) = 1) and
+        (LArgs[0].Kind = vkWorkbenchLineEnding) then
+      begin
+        Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.LineEnding(
+          TNyxWorkbenchLineEnding(LArgs[0].Ordinal));
+        Continue;
+      end;
+      Fail('Unsupported or ill-typed table workbench method');
+    end;
+    Exit;
+  end;
 
   if SameText(AName, 'NyxColumnLayout') or SameText(AName, 'NyxTableLayout') then
   begin
@@ -276,6 +396,7 @@ begin
         SameText(LMethod, 'UseDefaultColumnLayout') or
         SameText(LMethod, 'UseDefaultColumnFormat') or
         SameText(LMethod, 'UseDefaultTableLayout') or
+        SameText(LMethod, 'UseDefaultTableWorkbench') or
         SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
       begin
         LArgs := nil;
@@ -370,6 +491,28 @@ begin
           Fail('UseDefaultColumnFormat takes no arguments');
         end;
         Result.CollectionView := Result.CollectionView.UseDefaultColumnFormat;
+        Continue;
+      end;
+
+      if SameText(LMethod, 'TableWorkbench') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkTableWorkbenchPolicy) then
+        begin
+          Fail('TableWorkbench requires a typed NyxTableWorkbench policy');
+        end;
+        Result.CollectionView := Result.CollectionView.TableWorkbench(LArgs[0].TableWorkbenchPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultTableWorkbench') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('Restoring table workbench defaults takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultTableWorkbench;
         Continue;
       end;
 

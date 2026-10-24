@@ -240,6 +240,74 @@ begin
   Result := False;
 end;
 
+{ Authored definitions and local reusable overrides need their owning namespace
+  even without an instantiated table. Absence must preserve old import bytes. }
+function NeedsWorkbenchPolicyUnits(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+
+  function ContainsPolicy(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.HasTableWorkbenchPolicy;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := ContainsPolicy(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if ContainsPolicy(ADocument.Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if ContainsPolicy(ADocument.Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+{ Saved closed permissions become public Pascal symbols, never numeric masks
+  or an untyped interchange expression. Order is stable, including empty sets. }
+function WorkbenchCopyExpression(AActions: TNyxWorkbenchCopyActions): TNyxText;
+const
+  CNames: array[TNyxWorkbenchCopyAction] of TNyxText =
+    ('nwcaCell', 'nwcaSelectedSource', 'nwcaSelectedPage', 'nwcaCellRange');
+var
+  LAction: TNyxWorkbenchCopyAction;
+begin
+  Result := '[';
+  for LAction := Low(TNyxWorkbenchCopyAction) to High(TNyxWorkbenchCopyAction) do
+  begin
+
+    if LAction in AActions then
+    begin
+
+      if Length(Result) > 1 then
+      begin
+        Result := Result + ', ';
+      end;
+      Result := Result + CNames[LAction];
+    end;
+  end;
+  Result := Result + ']';
+end;
+
 { Emit actual enum symbols, in a stable order, rather than making generated
   callers reconstruct a policy from interchange strings or ordinal masks. }
 function ColumnLayoutFeatureExpression(const AFeatures: TNyxColumnLayoutFeatures): TNyxText;
@@ -290,6 +358,7 @@ var
   LTablePolicy: TNyxTableQueryPolicy;
   LColumnLayout: TNyxColumnLayoutPolicy;
   LTableLayout: TNyxTableLayoutPolicy;
+  LWorkbench: TNyxTableWorkbenchPolicy;
   LFormat: TNyxValueFormat;
 begin
 
@@ -460,6 +529,43 @@ begin
       LLine := LLine + '.AutoSizeSample(' + TNyxText(IntToStr(LTableLayout.AutoSizeRows)) + ')';
     end;
     ALines.Add(LLine + ')');
+  end;
+
+  if LView.HasTableWorkbenchPolicy then
+  begin
+    LWorkbench := LView.TableWorkbenchPolicy;
+    ALines.Add(AIndent + '    .TableWorkbench(NyxTableWorkbench');
+
+    if LWorkbench.RangeSelectionEnabled then
+    begin
+      ALines.Add(AIndent + '      .RangeSelection(True)');
+    end;
+
+    if LWorkbench.CopyActions <> NyxTableWorkbench.CopyActions then
+    begin
+      ALines.Add(AIndent + '      .AllowCopy(' + WorkbenchCopyExpression(LWorkbench.CopyActions) + ')');
+    end;
+
+    if LWorkbench.FieldChoice = nwcfAllArrangement then
+    begin
+      ALines.Add(AIndent + '      .CopyFields(nwcfAllArrangement)');
+    end;
+
+    if not LWorkbench.IncludeHeaders then
+    begin
+      ALines.Add(AIndent + '      .Headers(False)');
+    end;
+
+    if LWorkbench.Lines = nwleCRLF then
+    begin
+      ALines.Add(AIndent + '      .LineEnding(nwleCRLF)');
+    end;
+
+    if LWorkbench.HasFocusedDraft then
+    begin
+      ALines.Add(AIndent + '      .FocusedDraft(True)');
+    end;
+    ALines[ALines.Count - 1] := ALines[ALines.Count - 1] + ')';
   end;
 
   if LView.HasTableQueryPolicy then

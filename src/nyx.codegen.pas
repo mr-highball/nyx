@@ -71,6 +71,7 @@ uses
   nyx.typeahead,
   nyx.collections.columns,
   nyx.collections.arrangement,
+  nyx.collections.workbench.policy,
   nyx.formatting,
   nyx.layout.constraints,
   nyx.root.types,
@@ -4395,6 +4396,11 @@ begin
       if NeedsColumnLayoutUnits(ADocument) then
       begin
         LLines.Add('  nyx.collections.arrangement,');
+      end;
+
+      if NeedsWorkbenchPolicyUnits(ADocument) then
+      begin
+        LLines.Add('  nyx.collections.workbench.policy,');
       end;
 
       if NeedsColumnFormatUnits(ADocument) then
