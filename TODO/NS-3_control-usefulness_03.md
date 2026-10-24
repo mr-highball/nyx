@@ -131,6 +131,15 @@ library, interface, adapter and prerequisite changes are authorized; assignments
 coordinate concurrent edits rather than making source files immutable. Historical
 source-review checkpoints remain evidence in WORK, not additional approval gates.
 
+The new per-execution scheduler scope prerequisite passes37 native checks with a
+complete clean heap and33 actual browser checks, logs empty. Real PostUI children
+and grandchildren retain admission through work finalizers, independently of
+terminal parent tickets. A native worker barrier, foreign parent getter reentry
+and exact pause-result alias regression qualify those boundaries; unchanged
+scheduler checks pass87 native/61 browser. Event-generation attachment and actual
+renderer/Studio preview adoption are still required before this can address the
+whole native Inspector refresh cost.
+
 Let application users arrange columns, read difficult values and act on cells
 without leaving their working context. Prioritize real debugging/inspection and
 data-entry workflows over adding isolated properties with no visible interaction.

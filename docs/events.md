@@ -263,6 +263,36 @@ Shutdown cancels outstanding work without blocking the UI on running workers.
 The first UI submission initializes older FPC threading before ForceQueue so the
 deferred contract holds even in a previously single-threaded host.
 
+The optional `INyxExecutionWorkScope` separates related-work admission from a
+parent ticket's terminal status. An execution may expose an independent
+`INyxWorkScope`; the built-in scheduler captures that domain from an explicit
+PostUI parent and propagates it to the child. Grandchildren join the same domain
+even after their original parent succeeds. `INyxSchedulerWorkScopes` advertises
+this guarantee for alternative schedulers without changing `INyxScheduler`.
+
+`NewNyxWorkScope` creates an independent, synchronized admission domain. Acquire
+returns one counted lease. TryPause admits an exclusive guard only while no work
+is retained; it refuses busy domains without cancelling their jobs. A retained
+pause blocks new admission until retirement. Close is terminal and invalidates
+pause readiness while allowing previously admitted work to retire. Scopes retain
+only counters/flags, with no scheduler, callback, execution or UI ownership.
+Completed execution references therefore do not keep a scope busy.
+
+A real scheduler courier retains its lease through execution, cancellation and
+owned-work finalization. Enqueue failure and shutdown cleanup also retire that
+lease. Original parent getter callouts cannot bypass final scheduler admission;
+ticket pruning retains its original vector across nested submissions or shutdown.
+Pause factories decide admission before publishing a result, so FPC's hidden
+interface-result alias cannot retire the caller's old guard prematurely.
+
+The scoped scheduler consumer passes 37 native checks with a clean heap and 33
+actual browser checks with empty logs; four native checks use a concurrent worker
+barrier. Unchanged scheduler/registration checks pass 87 native and 61 browser.
+The maintained `scheduler-pool` target runs/stages the new consumer. Automatic
+event-generation scope attachment and retained renderer/Studio preview adoption
+remain separate integration work; the existing router's invocation-only preview
+proof does not yet establish descendant-work quiescence.
+
 Native asynchronous/threaded work now shares a lazily started, bounded pool per
 scheduler. Configure it with copied Pascal values, independently of the document:
 

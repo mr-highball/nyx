@@ -531,6 +531,51 @@ helper packet is the explicit cell-range producer and real interaction; Root
 continues caller-descendant admission before physical retained-form adoption.
 No LAN/Studio service or MCP configuration changes are involved.
 
+The draft and notification repairs are committed/pushed as61fa25f and2ad183b;
+the remote hello-nyx head is verified exactly after each push. This continuation
+then implements independent scheduler work domains for the remaining descendant
+admission prerequisite. Explicit parent scopes propagate through real PostUI
+children/grandchildren; courier admission survives execution, cancellation,
+enqueue cleanup and owned-work finalizers. Completed execution leases hold only
+the domain, without keeping its work count busy. Native count/pause/closure share
+one lock, with no application callout or managed release under that lock.
+
+Independent helper review finds a real adjacent pruning defect: a retained
+ticket's foreign Parent.Cancelled getter can close or submit into the scheduler.
+Prune now owns the original vector, prevents recursive pruning and preserves
+nested append/close outcomes; final admission follows those callouts. Actual
+foreign-parent regressions exercise both shutdown and a nested deferred job.
+Root additionally repairs same-destination pause-result aliasing: the factory
+must decide while the caller's existing guard is still retained, then publish
+its result after unlocking. Replacing only the final work-scope include with
+the prior02 version fails that exact new assertion with a clean149/149 heap.
+
+Final scheduler-scope03 passes37 native checks with a complete284/284 clean heap
+and33 actual browser checks, logs empty. Its four extra native checks use a real
+worker barrier. The unchanged scheduler/registration consumer passes87 native
+with a complete1177/1177 clean heap and61 browser checks, logs empty, against the
+final03 scheduler. The earlier02 full native dependency build takes385.7s;
+its joined closed cache supports03's fresh current-scheduler consumer compilation.
+Initial01 regression staging refused a missing fixture path before compilation;
+that failure stays retained. Both final compilers have zero owned warnings.
+These results are work-domain admission, not automatic router attachment or
+physical retained-form/Inspector acceptance. No whole-editor speedup is claimed.
+
+All five fixed scope source pins remain exact; four current inputs remain
+byte-identical, while the fixture drops only an extra blank line at EOF for the
+Git whitespace check. Its compiled original and exact token-equivalent delta
+are retained separately. Twelve original/staged
+browser artifact pairs, including the helper's separate range07 consumer, remain
+exact. Exact temporary host53712 is stopped, wrapper65418 joins0, port19152 has
+no listener and tab117 is closed. Scope compiler/runtime wrappers48298/25422,
+full regression63694 and final regression45371 are joined; no Root compiler,
+runtime or browser host remains. The maintained scheduler-pool target now runs
+the new native consumer and stages its browser program/launcher; orchestration
+parses without errors. Independent final scope review finds no additional
+concrete defect. Next Root work attaches these domains to actual event
+generations, then integrates the existing reversible form port into renderers
+and Studio. All original task criteria and native performance remain open.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

@@ -4108,7 +4108,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     $nyxPoolFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxPoolNative", "-FE$nyxPoolNative")
     foreach ($nyxPoolProgram in @('nyx_scheduler_pool_tests', 'nyx_scheduler_tests',
-      'nyx_interaction_tests')) {
+      'nyx_scheduler_work_scope_tests', 'nyx_interaction_tests')) {
       Invoke-NyxCompiler $nyxFpc ($nyxPoolFlags + @("tests/$nyxPoolProgram.lpr"))
       & (Join-Path $nyxPoolNative ($nyxPoolProgram + '.exe')) `
         (Join-Path $nyxPoolNative 'nyx.interaction.generated.pas')
@@ -4134,6 +4134,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxPoolProgram in @('tests/nyx_scheduler_tests.lpr',
+      'tests/nyx_scheduler_work_scope_tests.lpr',
       'tests/nyx_interaction_tests.lpr', 'tests/nyx_interaction_controls_tests.lpr',
       'studio/nyx_studio.lpr', 'studio/nyx_source_worker.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
@@ -4141,7 +4142,8 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         '-dNYX_COMPILED_INTERACTIONS', $nyxPoolProgram)
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPoolWeb 'rtl.js')
-    foreach ($nyxPoolHost in @('scheduler.html', 'interactions.html', 'interaction-controls.html')) {
+    foreach ($nyxPoolHost in @('scheduler.html', 'scheduler-work-scope.html',
+      'interactions.html', 'interaction-controls.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxPoolHost)) `
         -Destination $nyxPoolWeb
     }

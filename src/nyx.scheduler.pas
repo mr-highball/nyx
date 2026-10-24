@@ -54,6 +54,37 @@ type
     procedure CheckReady;
   end;
 
+  { One admitted work item retains its scope without owning a scheduler, work
+    callback or UI. Retire is idempotent and releases its count; the scheduler
+    calls it only after execution/skipping AND release of the owned work. }
+  INyxWorkLease = interface(IInterface)
+    ['{90AF406F-7633-4A34-ACF1-FDD8A23B52BB}']
+    procedure Retire;
+  end;
+
+  { Exclusive reversible pause of an idle work scope. While retained, no new
+    work may enter that scope. CheckReady reads synchronized flags only; Close
+    invalidates readiness without revoking this guard's safe retirement. No UI,
+    cancellation, callback or event-loop pumping occurs during these operations. }
+  INyxWorkPause = interface(IInterface)
+    ['{E2822967-E9D1-475F-88F9-E635FA5538AB}']
+    procedure CheckReady;
+    procedure Retire;
+  end;
+
+  { Independent admission domain for related scheduled work, including child
+    work after its original callback completes. Acquire refuses paused/closed
+    scopes; TryPause returns nil while work is retained, without cancelling it.
+    Close is terminal and does not revoke existing leases or stop running work.
+    Native methods are synchronized; browser methods use the host event loop.
+    A scope owns only counters/flags, never executions, callbacks or controls. }
+  INyxWorkScope = interface(IInterface)
+    ['{497D2868-3C27-47F4-93AB-52F6817A4CFA}']
+    function Acquire: INyxWorkLease;
+    function TryPause: INyxWorkPause;
+    procedure Close;
+  end;
+
   ENyxSchedule = class(Exception);
   { A saturated native pending queue refuses the submission before adopting its
     work. Callers may defer/retry, coalesce their inputs or report overload; work
@@ -125,6 +156,25 @@ type
     property Cancelled: Boolean read GetCancelled;
     property Status: TNyxExecutionStatus read GetStatus;
     property Failure: TNyxText read GetFailure;
+  end;
+
+  { Optional immutable work ancestry, separate from terminal execution status
+    and cancellation. PostUI captures this scope from its explicit Parent and
+    passes it to the child, so grandchildren join the same admission domain.
+    Nil denotes ordinary unscoped work. The facet owns no scheduler or UI. }
+  INyxExecutionWorkScope = interface(IInterface)
+    ['{B29386BF-15C6-4A64-8D51-030C116DA613}']
+    function GetWorkScope: INyxWorkScope;
+    property WorkScope: INyxWorkScope read GetWorkScope;
+  end;
+
+  { Optional scheduler guarantee: PostUI reserves an explicit parent's work
+    scope before adopting/queueing its work, propagates the same scope to its
+    execution, and releases admission after work retirement on every outcome.
+    Alternative schedulers advertise this marker only if they meet that rule.
+    It grants no worker, UI or whole-scheduler quiescence capability. }
+  INyxSchedulerWorkScopes = interface(IInterface)
+    ['{6E47F577-4627-49BE-8408-EAF494E9C72D}']
   end;
 
   { Work is retained until it returns or is skipped. Worker work must own its
@@ -202,6 +252,9 @@ function NewNyxScheduler(const AOptions: TNyxSchedulerOptions): INyxScheduler; o
 function NewNyxFailedExecution(const AFailure: TNyxText): INyxExecution;
 { Independent cancellation generation. Dropping a lease does not cancel it. }
 function NewNyxCancellationScope: INyxCancellationScope;
+{ A fresh independent work domain. A retained pause is reversible; Close is
+  permanent. Destroying a lease/guard retires it without application callbacks. }
+function NewNyxWorkScope: INyxWorkScope;
 
 implementation
 
@@ -226,38 +279,49 @@ type
     procedure CheckReady;
   end;
 
-  TNyxExecution = class(TInterfacedObject, INyxExecution)
+  { Synchronized ticket retains cancellation ancestry and an immutable optional
+    work domain. The courier, not this terminal ticket, owns admission; retaining
+    completed tickets therefore cannot keep an otherwise idle scope busy. }
+  TNyxExecution = class(TInterfacedObject, INyxExecution, INyxExecutionWorkScope)
   private
     FCancelled: Boolean;
     FStatus: TNyxExecutionStatus;
     FFailure: TNyxText;
     FParent: INyxExecution;
+    FWorkScope: INyxWorkScope;
     {$IFNDEF PAS2JS}
     FLock: TRTLCriticalSection;
     {$ENDIF}
     procedure Lock;
     procedure Unlock;
   public
-    constructor Create(const AParent: INyxExecution);
+    constructor Create(const AParent: INyxExecution;
+      const AWorkScope: INyxWorkScope = nil);
     destructor Destroy; override;
     procedure Cancel;
     function GetCancelled: Boolean;
     function GetStatus: TNyxExecutionStatus;
     function GetFailure: TNyxText;
+    function GetWorkScope: INyxWorkScope;
     function Start: Boolean;
     procedure Complete(const AFailure: TNyxText);
   end;
 
   { A courier owns every input. Immediate/worker delivery releases it after Run;
     a native deferred UI entry instead owns it until delivery or retirement.
-    Browser timers retain the existing self-releasing delivery boundary. }
+    Browser timers retain the existing self-releasing delivery boundary. Its
+    optional admission lease survives work finalizers and retires even when
+    delivery fails or the native queue discards a cancelled pending entry. }
   TNyxCourier = class
   private
     FWork: INyxWork;
     FExecution: INyxExecution;
     FState: TNyxExecution;
+    FWorkLease: INyxWorkLease;
   public
-    constructor Create(const AWork: INyxWork; AState: TNyxExecution);
+    constructor Create(const AWork: INyxWork; AState: TNyxExecution;
+      const AWorkLease: INyxWorkLease);
+    destructor Destroy; override;
     procedure Run;
     procedure Deliver;
   end;
@@ -373,10 +437,16 @@ type
   end;
   {$ENDIF}
 
+  { UI-owned dispatcher retains couriers independently of worker/UI entries.
+    Explicit parent work scopes are admitted per submission, without pausing
+    unrelated work or adding a scheduler-to-work ownership cycle. }
   TNyxScheduler = class(TInterfacedObject, INyxScheduler, INyxSchedulerMonitor,
-    INyxSchedulerTurns, INyxSchedulerDelays)
+    INyxSchedulerTurns, INyxSchedulerDelays, INyxSchedulerWorkScopes)
   private
     FClosed: Boolean;
+    { Status getters may reenter through a foreign parent execution. A nested
+      submission skips pruning; its appended tickets must survive the outer pass. }
+    FPruning: Boolean;
     {$IFNDEF PAS2JS}
     FOptions: TNyxSchedulerOptions;
     FPool: INyxWorkerQueue;
@@ -412,6 +482,8 @@ type
     procedure Submit;
   end;
   {$ENDIF}
+
+{$I nyx.scheduler.work.inc}
 
 class function TNyxSchedulerOptions.Defaults: TNyxSchedulerOptions;
 begin
@@ -483,7 +555,8 @@ begin
   Result := TNyxCancellationScope.Create;
 end;
 
-constructor TNyxExecution.Create(const AParent: INyxExecution);
+constructor TNyxExecution.Create(const AParent: INyxExecution;
+  const AWorkScope: INyxWorkScope);
 begin
   inherited Create;
   {$IFNDEF PAS2JS}
@@ -491,6 +564,12 @@ begin
   {$ENDIF}
   FStatus := nesPending;
   FParent := AParent;
+  FWorkScope := AWorkScope;
+end;
+
+function TNyxExecution.GetWorkScope: INyxWorkScope;
+begin
+  Result := FWorkScope;
 end;
 
 destructor TNyxExecution.Destroy;
@@ -618,12 +697,26 @@ begin
   end;
 end;
 
-constructor TNyxCourier.Create(const AWork: INyxWork; AState: TNyxExecution);
+constructor TNyxCourier.Create(const AWork: INyxWork; AState: TNyxExecution;
+  const AWorkLease: INyxWorkLease);
 begin
   inherited Create;
   FWork := AWork;
   FState := AState;
   FExecution := AState;
+  FWorkLease := AWorkLease;
+end;
+
+destructor TNyxCourier.Destroy;
+begin
+  try
+    { A work finalizer may submit another child. Keep this courier admitted
+      through that callout, including the skipped/failed enqueue paths. }
+    FWork := nil;
+  finally
+    FWorkLease := nil;
+    inherited Destroy;
+  end;
 end;
 
 procedure TNyxCourier.Run;
@@ -968,18 +1061,40 @@ procedure TNyxScheduler.Prune;
 var
   LIndex: Integer;
   LCount: Integer;
+  LOriginal: array of INyxExecution;
+  LPending: array of INyxExecution;
 begin
-  LCount := 0;
-  for LIndex := 0 to Length(FExecutions) - 1 do
-  begin
 
-    if FExecutions[LIndex].Status in [nesPending, nesRunning] then
-    begin
-      FExecutions[LCount] := FExecutions[LIndex];
-      Inc(LCount);
-    end;
+  if FPruning then
+  begin
+    Exit;
   end;
-  SetLength(FExecutions, LCount);
+  FPruning := True;
+  try
+    LOriginal := FExecutions;
+    SetLength(LPending, Length(LOriginal));
+    LCount := 0;
+    for LIndex := 0 to High(LOriginal) do
+    begin
+
+      if LOriginal[LIndex].Status in [nesPending, nesRunning] then
+      begin
+        LPending[LCount] := LOriginal[LIndex];
+        Inc(LCount);
+      end;
+    end;
+    { A nested submission only appends while FPruning is set; terminal Close
+      can only clear the vector. Do not overwrite either change with this older
+      candidate. Original local leases also prevent finalizers during adoption. }
+
+    if not FClosed and (Length(FExecutions) = Length(LOriginal)) then
+    begin
+      SetLength(LPending, LCount);
+      FExecutions := LPending;
+    end;
+  finally
+    FPruning := False;
+  end;
 end;
 
 function TNyxScheduler.Submit(const AWork: INyxWork;
@@ -994,23 +1109,48 @@ var
   LState: TNyxExecution;
   LCourier: TNyxCourier;
   LImmediate: TNyxCourier;
+  LSchedulerLease: INyxScheduler;
+  LWork: INyxWork;
+  LParent: INyxExecution;
+  LParentScope: INyxExecutionWorkScope;
+  LWorkScope: INyxWorkScope;
+  LWorkLease: INyxWorkLease;
   {$IFNDEF PAS2JS}
   LUIQueue: INyxNativeUIQueue;
   LUIEntry: INyxNativeUIEntry;
   {$ENDIF}
 begin
+  LSchedulerLease := Self;
+  LWork := AWork;
+  LParent := AParent;
   Admit(APolicy);
 
-  if AWork = nil then
+  if LWork = nil then
   begin
     raise ENyxSchedule.Create('Scheduled work is required');
   end;
+  { Scope discovery is an extension callout. Capture original inputs first;
+    final scheduler admission follows discovery/acquisition, before adoption. }
+
+  if Supports(LParent, INyxExecutionWorkScope, LParentScope) then
+  begin
+    LWorkScope := LParentScope.WorkScope;
+  end;
+
+  if LWorkScope <> nil then
+  begin
+    LWorkLease := LWorkScope.Acquire;
+  end;
+  Admit(APolicy);
   Prune;
-  LState := TNyxExecution.Create(AParent);
+  Admit(APolicy);
+  LState := TNyxExecution.Create(LParent, LWorkScope);
   Result := LState;
   SetLength(FExecutions, Length(FExecutions) + 1);
   FExecutions[High(FExecutions)] := Result;
-  LCourier := TNyxCourier.Create(AWork, LState);
+  LCourier := TNyxCourier.Create(LWork, LState, LWorkLease);
+  LWorkLease := nil;
+  LWork := nil;
   try
 
     if APolicy = neSequential then
