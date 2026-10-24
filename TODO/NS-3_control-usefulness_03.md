@@ -140,6 +140,16 @@ scheduler checks pass87 native/61 browser. Event-generation attachment and actua
 renderer/Studio preview adoption are still required before this can address the
 whole native Inspector refresh cost.
 
+Event-generation attachment now qualifies through the real scheduler: completed
+and pruned callback invocations cannot hide queued descendant work. Preview
+refusal preserves that work; an admitted preview blocks retained old-context
+posts until rollback, while installation permanently closes the old domain.
+Unsupported scheduler hosts refuse the optional path. Context04 passes56 native/
+112 browser checks and scope04 passes53 native/49 browser checks; existing87/61
+scheduler and58-per-target observation checks remain passing, with clean native
+heaps and empty browser logs. Actual renderer/form/Studio adoption and complete
+native performance remain required; these outcomes do not close W1 or W2.
+
 The explicit cell-range capture/selection prerequisite passes46 native checks
 with a complete clean heap and46 actual browser checks, logs empty. It retains
 directional typed endpoints, actual filtered-page/visible-field order and exact

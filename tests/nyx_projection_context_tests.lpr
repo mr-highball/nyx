@@ -32,12 +32,15 @@ type
   { Deterministic UI ticket owns no callback or router. Its state stays terminal
     after execution; cancellation is observable independently of callback entry.
     An injected Pascal failure is owned until raised; raw platform values are
-    retained only for explicit browser notification-failure qualification. }
-  TTicket = class(TInterfacedObject, INyxExecution)
+    retained only for explicit browser notification-failure qualification.
+    Deferred children retain immutable parent cancellation and work ancestry. }
+  TTicket = class(TInterfacedObject, INyxExecution, INyxExecutionWorkScope)
   public
     State: TNyxExecutionStatus;
     CancelCalls: Integer;
     Failure: Exception;
+    Parent: INyxExecution;
+    WorkScope: INyxWorkScope;
     {$ifdef PAS2JS}
     RaiseRaw: Boolean;
     RawFailure: JSValue;
@@ -47,16 +50,21 @@ type
     function GetCancelled: Boolean;
     function GetStatus: TNyxExecutionStatus;
     function GetFailure: TNyxText;
+    function GetWorkScope: INyxWorkScope;
   end;
 
   { The queue retains real router-produced INyxWork until an explicit drain.
     This fixture exercises queued delivery without timers, threads or UI hosts;
-    sequential work still executes synchronously inside ordinary DispatchCore. }
-  TQueue = class(TInterfacedObject, INyxScheduler)
+    sequential work still executes synchronously inside ordinary DispatchCore.
+    Its optional scope guarantee counts explicit PostUI children and propagates
+    parent ancestry; leases retire after the owned work is released. }
+  TQueue = class(TInterfacedObject, INyxScheduler, INyxSchedulerWorkScopes)
   private
     FWork: array of INyxWork;
     FTickets: TNyxExecutions;
     FStates: array of TTicket;
+    FWorkLeases: array of INyxWorkLease;
+    FClosed: Boolean;
   public
     PreviewOnUI: INyxEventViewPreview;
     RetireOnUI: INyxPreparedPublication;
@@ -70,6 +78,22 @@ type
       const AParent: INyxExecution = nil): INyxExecution;
     procedure Shutdown;
     procedure Drain;
+  end;
+
+  { Legacy scheduler facade deliberately advertises no parent-scope guarantee.
+    Ordinary event dispatch remains supported, but reversible preview must
+    refuse rather than assume that its hidden adapter tracks descendants. }
+  TUncertifiedQueue = class(TInterfacedObject, INyxScheduler)
+  public
+    Inner: INyxScheduler;
+    function GetCapabilities: TNyxSchedulerCapabilities;
+    procedure RequireUI;
+    procedure Admit(APolicy: TNyxExecutionPolicy);
+    function Submit(const AWork: INyxWork;
+      APolicy: TNyxExecutionPolicy): INyxExecution;
+    function PostUI(const AWork: INyxWork;
+      const AParent: INyxExecution = nil): INyxExecution;
+    procedure Shutdown;
   end;
 
   { Ordinary callback records actual entry and can attempt preview from inside
@@ -233,12 +257,22 @@ end;
 
 function TTicket.GetCancelled: Boolean;
 begin
-  Result := State = nesCancelled;
+  Result := (State = nesCancelled) or ((Parent <> nil) and Parent.Cancelled);
 end;
 
 function TTicket.GetStatus: TNyxExecutionStatus;
 begin
   Result := State;
+
+  if (Result = nesPending) and GetCancelled then
+  begin
+    Result := nesCancelled;
+  end;
+end;
+
+function TTicket.GetWorkScope: INyxWorkScope;
+begin
+  Result := WorkScope;
 end;
 
 function TTicket.GetFailure: TNyxText;
@@ -275,6 +309,11 @@ end;
 procedure TQueue.Admit(APolicy: TNyxExecutionPolicy);
 begin
 
+  if FClosed then
+  begin
+    raise ENyxSchedule.Create('The fixture queue is closed');
+  end;
+
   if APolicy = neThreaded then
   begin
     raise ENyxSchedule.Create('The fixture queue has no worker capability');
@@ -295,6 +334,7 @@ begin
   SetLength(FTickets, LCount + 1);
   SetLength(FStates, LCount + 1);
   SetLength(FWork, LCount + 1);
+  SetLength(FWorkLeases, LCount + 1);
   FTickets[LCount] := Result;
   FStates[LCount] := LState;
 
@@ -316,19 +356,49 @@ end;
 
 function TQueue.PostUI(const AWork: INyxWork;
   const AParent: INyxExecution): INyxExecution;
+var
+  LSelf: INyxScheduler;
+  LParent: INyxExecution;
+  LWork: INyxWork;
+  LContext: INyxExecutionWorkScope;
+  LScope: INyxWorkScope;
+  LLease: INyxWorkLease;
+  LTicket: INyxExecution;
+  LIndex: Integer;
 begin
-  Result := Submit(AWork, neUIQueue);
+  LSelf := Self;
+  LParent := AParent;
+  LWork := AWork;
+
+  if Supports(LParent, INyxExecutionWorkScope, LContext) then
+  begin
+    LScope := LContext.WorkScope;
+  end;
+
+  if LScope <> nil then
+  begin
+    LLease := LScope.Acquire;
+  end;
+  Admit(neUIQueue);
+  LIndex := Length(FTickets);
+  LTicket := Submit(LWork, neUIQueue);
+  FStates[LIndex].Parent := LParent;
+  FStates[LIndex].WorkScope := LScope;
+  FWorkLeases[LIndex] := LLease;
+  Result := LTicket;
 end;
 
 procedure TQueue.Shutdown;
 var
   LIndex: Integer;
 begin
+  FClosed := True;
   for LIndex := 0 to High(FTickets) do
   begin
     FTickets[LIndex].Cancel;
   end;
   FWork := nil;
+  FWorkLeases := nil;
   PreviewOnUI := nil;
   RetireOnUI := nil;
 end;
@@ -337,21 +407,29 @@ procedure TQueue.Drain;
 var
   LIndex: Integer;
   LWork: INyxWork;
+  LLease: INyxWorkLease;
 begin
   for LIndex := 0 to High(FWork) do
   begin
     LWork := FWork[LIndex];
     FWork[LIndex] := nil;
+    LLease := FWorkLeases[LIndex];
+    FWorkLeases[LIndex] := nil;
+    try
 
-    if (LWork <> nil) and not FTickets[LIndex].Cancelled then
-    begin
-      FStates[LIndex].State := nesRunning;
-      LWork.Execute(FTickets[LIndex]);
-
-      if not FTickets[LIndex].Cancelled then
+      if (LWork <> nil) and not FTickets[LIndex].Cancelled then
       begin
-        FStates[LIndex].State := nesSucceeded;
+        FStates[LIndex].State := nesRunning;
+        LWork.Execute(FTickets[LIndex]);
+
+        if not FTickets[LIndex].Cancelled then
+        begin
+          FStates[LIndex].State := nesSucceeded;
+        end;
       end;
+    finally
+      LWork := nil;
+      LLease := nil;
     end;
   end;
 end;
@@ -365,6 +443,38 @@ begin
   begin
     EnteredRefusal := not Preview.TryBeginPreview;
   end;
+end;
+
+function TUncertifiedQueue.GetCapabilities: TNyxSchedulerCapabilities;
+begin
+  Result := Inner.Capabilities;
+end;
+
+procedure TUncertifiedQueue.RequireUI;
+begin
+  Inner.RequireUI;
+end;
+
+procedure TUncertifiedQueue.Admit(APolicy: TNyxExecutionPolicy);
+begin
+  Inner.Admit(APolicy);
+end;
+
+function TUncertifiedQueue.Submit(const AWork: INyxWork;
+  APolicy: TNyxExecutionPolicy): INyxExecution;
+begin
+  Result := Inner.Submit(AWork, APolicy);
+end;
+
+function TUncertifiedQueue.PostUI(const AWork: INyxWork;
+  const AParent: INyxExecution): INyxExecution;
+begin
+  Result := Inner.PostUI(AWork, AParent);
+end;
+
+procedure TUncertifiedQueue.Shutdown;
+begin
+  Inner.Shutdown;
 end;
 
 destructor TTarget.Destroy;
@@ -556,6 +666,50 @@ end;
 procedure TSection.RetireCandidate;
 begin
   Inc(Retirements);
+end;
+
+procedure UnsupportedSchedulerCase;
+var
+  LScheduler: INyxScheduler;
+  LFacade: TUncertifiedQueue;
+  LEvents: INyxEvents;
+  LPreparation: INyxEventViewPreparation;
+  LPlan: INyxPreparedEventView;
+  LPreview: INyxEventViewPreview;
+  LGeneration: INyxCancellationScope;
+  LCallback: TCallback;
+  LCallbackLease: INyxEventCallback;
+  LToken: INyxEventSubscription;
+begin
+  LFacade := TUncertifiedQueue.Create;
+  LScheduler := LFacade;
+  LFacade.Inner := TQueue.Create;
+  LEvents := NewNyxEvents(LScheduler);
+  try
+    LCallback := TCallback.Create;
+    LCallbackLease := LCallback;
+    LToken := LEvents.On(NyxControlEvents('button'), ntClick).Subscribe(LCallbackLease);
+    Click(LEvents);
+    LGeneration := NyxEventGeneration(LEvents);
+    Supports(LEvents, INyxEventViewPreparation, LPreparation);
+    LPlan := LPreparation.PrepareView;
+    LPlan.Validate;
+    Supports(LPlan, INyxEventViewPreview, LPreview);
+    Check(not LPreview.TryBeginPreview and not LGeneration.Cancelled,
+      'scheduler without advertised descendant admission refuses idle preview without cancelling');
+    LPlan.Retire;
+    Click(LEvents);
+    Check((LCallback.Calls = 2) and not LGeneration.Cancelled,
+      'unsupported preview leaves ordinary legacy-scheduler event dispatch usable');
+  finally
+
+    if LPlan <> nil then
+    begin
+      LPlan.Retire;
+    end;
+    LEvents.Close;
+    LScheduler.Shutdown;
+  end;
 end;
 
 procedure EventPreviewCases;
@@ -1228,6 +1382,7 @@ end;
 
 begin
   try
+    UnsupportedSchedulerCase;
     EventPreviewCases;
     CoupledCases;
     PostPreviewFenceCase;

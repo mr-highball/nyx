@@ -326,8 +326,12 @@ type
     Pending/running old tickets or an entered dispatch return False WITHOUT
     cancelling, consuming or replaying them. Once admitted, this exact plan
     refuses new router dispatch until Install or uninstalled Retire. This is
-    not a pause/resume facility for running workers. Existing view preparation
-    remains unchanged unless this facet is explicitly requested. }
+    not a pause/resume facility for running workers. The scheduler must advertise
+    parent work-scope propagation: pending/running descendant couriers also refuse
+    preview, even after their original invocation is terminal or pruned. An idle
+    admitted preview blocks submissions through retained old contexts until
+    rollback finishes; installation closes that old domain permanently. Existing
+    view preparation remains unchanged unless this facet is explicitly requested. }
   INyxEventViewPreview = interface(IInterface)
     ['{00EF10A1-3D03-436A-9649-9A6BF7A1C7EF}']
     function TryBeginPreview: Boolean;
@@ -378,18 +382,25 @@ uses
 {$ENDIF}
 
 type
+  { Private router implementation is retained by its public owning facets;
+    prepared plans borrow it only alongside an independent router lease. }
   TNyxEvents = class;
 
+  { Private event cancellation ancestry carries an optional immutable work
+    domain. Only view roots own/close a domain; guarded delivery shares it. }
   INyxEventScope = interface(IInterface)
     ['{739BC309-7893-48E3-9600-001002000005}']
     procedure Cancel;
     function Cancelled: Boolean;
+    function GetWorkScope: INyxWorkScope;
   end;
 
   { Immutable cancellation ancestry plus an atomic local flag. Ordinary reads
     preserve existing delivery-scope semantics; final admission uses separately
     captured flags-only readiness facets and refuses uncertified dependencies.
-    No router, subscription, model or physical control is retained here. }
+    A view root additionally owns its independent work domain; descendants
+    inherit it and registration-only scopes need none. No router, subscription,
+    model or physical control is retained here. }
   TNyxEventScope = class(TInterfacedObject, INyxEventScope, INyxCancellationScope,
     INyxCancellationReadiness)
   private
@@ -398,13 +409,17 @@ type
     FDelivery: INyxCancellationScope;
     FParentReady: INyxCancellationReadiness;
     FDeliveryReady: INyxCancellationReadiness;
+    FWorkScope: INyxWorkScope;
+    FOwnsWorkScope: Boolean;
     function OwnCancelled: Boolean;
   public
     constructor Create(const AParent: INyxEventScope = nil;
-      const ADelivery: INyxCancellationScope = nil);
+      const ADelivery: INyxCancellationScope = nil;
+      const AWorkScope: INyxWorkScope = nil);
     procedure Cancel;
     function Cancelled: Boolean;
     function GetCancelled: Boolean;
+    function GetWorkScope: INyxWorkScope;
     procedure CheckReady;
   end;
 
@@ -422,9 +437,11 @@ type
   end;
 
   { Cancellation linked before entry, including a synchronous callback that
-    cancels itself or navigates before Submit has returned its execution token. }
+    cancels itself or navigates before Submit has returned its execution token.
+    Explicit PostUI descendants inherit the original view's work domain through
+    this context even after the invocation's underlying ticket is terminal. }
   TNyxEventExecution = class(TInterfacedObject, INyxExecution, INyxEventResponse,
-    INyxGestureResponse)
+    INyxGestureResponse, INyxExecutionWorkScope)
   private
     FExecution: INyxExecution;
     FScope: INyxEventScope;
@@ -442,6 +459,7 @@ type
     function GetCancelled: Boolean;
     function GetStatus: TNyxExecutionStatus;
     function GetFailure: TNyxText;
+    function GetWorkScope: INyxWorkScope;
     procedure Consume;
     function GetCanConsume: Boolean;
     function GetConsumed: Boolean;
@@ -991,7 +1009,7 @@ begin
 end;
 
 constructor TNyxEventScope.Create(const AParent: INyxEventScope;
-  const ADelivery: INyxCancellationScope);
+  const ADelivery: INyxCancellationScope; const AWorkScope: INyxWorkScope);
 var
   LParentReady: INyxCancellationReadiness;
   LDeliveryReady: INyxCancellationReadiness;
@@ -999,6 +1017,13 @@ begin
   inherited Create;
   FParent := AParent;
   FDelivery := ADelivery;
+  FWorkScope := AWorkScope;
+  FOwnsWorkScope := AWorkScope <> nil;
+
+  if (FWorkScope = nil) and (FParent <> nil) then
+  begin
+    FWorkScope := FParent.GetWorkScope;
+  end;
 
   if FParent <> nil then
   begin
@@ -1023,6 +1048,18 @@ begin
   {$ELSE}
   InterlockedExchange(FCancelled, 1);
   {$ENDIF}
+
+  if FOwnsWorkScope then
+  begin
+    { View roots are constructed only with canonical, callback-free domains.
+      Registration/delivery cancellation must never close a peer's domain. }
+    FWorkScope.Close;
+  end;
+end;
+
+function TNyxEventScope.GetWorkScope: INyxWorkScope;
+begin
+  Result := FWorkScope;
 end;
 
 function TNyxEventScope.GetCancelled: Boolean;
@@ -1245,6 +1282,11 @@ end;
 function TNyxEventExecution.GetFailure: TNyxText;
 begin
   Result := FExecution.Failure;
+end;
+
+function TNyxEventExecution.GetWorkScope: INyxWorkScope;
+begin
+  Result := FScope.GetWorkScope;
 end;
 
 function PendingTickets(const AExecutions: TNyxExecutions): TNyxExecutions;
@@ -1482,7 +1524,7 @@ end;
 constructor TNyxEvents.Create(const AScheduler: INyxScheduler);
 begin
   inherited Create;
-  FScope := TNyxEventScope.Create;
+  FScope := TNyxEventScope.Create(nil, nil, NewNyxWorkScope);
   FScheduler := AScheduler;
 
   if FScheduler = nil then
@@ -2161,7 +2203,7 @@ var
   LIndex: Integer;
 begin
   FScope.Cancel;
-  FScope := TNyxEventScope.Create;
+  FScope := TNyxEventScope.Create(nil, nil, NewNyxWorkScope);
 
   if FViewRevision = High(Integer) then
   begin

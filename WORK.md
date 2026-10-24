@@ -601,6 +601,38 @@ keyboard input, same-slot copy and real OS effects remain open. The helper now
 implements those command/target prerequisites in disjoint files while Root
 continues event-generation attachment and actual retained-form adoption.
 
+Actual event generations now own independent scheduler work domains. Delivery
+contexts share their original domain, while registration cancellation cannot
+close peers. Preview first checks original invocation tickets, then atomically
+pauses the idle descendant domain. Completed/pruned parents with queued children
+or grandchildren refuse preview without cancellation; retained old contexts
+cannot submit during the admitted preview. Rollback resumes that domain and
+installation closes it permanently. Unrelated domains remain usable. Schedulers
+without the explicit propagation guarantee refuse this optional preview path.
+
+The fixed event-work-scope04 snapshot passes56 native context checks with a
+complete797/797 clean heap and112 actual browser checks; the real scoped
+scheduler consumer passes53 native with a complete442/442 clean heap and49
+browser checks. Existing scheduler/registration87 native/61 browser and event
+observation58 per target also pass, with complete1187/1187 and1255/1255 native
+heaps. Browser warning/error logs are empty and native compilers emit no warnings.
+The differing scope counts retain the four real native worker-barrier assertions.
+All581 copied source pins and12 original/staged browser artifact pairs reverify
+unchanged after execution. Independent helper review finds no further concrete
+defect in the domain, preview or constructor ownership paths.
+
+The actual03 browser failure remains retained: passing the successor cancellation
+field directly as Supports' output allowed duplicate pas2js release and premature
+scope disposal. The constructor now queries an owning local before assigning the
+field;04 executes the unchanged failing journey successfully. Earlier01 stale-PPU
+compiler failure and02 missing snapshot prerequisite also remain evidence, not
+runtime passes. Compiler/runtime wrapper46787 joins0. Exact temporary hosts48164
+and53932 are stopped and their wrappers joined; test tab119 is closed. No LAN,
+Studio service or MCP configuration is changed. These results qualify the event
+preview boundary, not actual retained-form/Inspector integration or whole-editor
+performance. Root next integrates that boundary into real renderers and Studio;
+Lil' Scooty qualifies mounted ranges before their keyboard/discovery packet.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

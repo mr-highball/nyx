@@ -24,7 +24,9 @@ type
   { Single reserved successor generation and its staged registrations. Router,
     scopes, subscriptions and execution vectors are managed leases. The weak
     router reservation never owns this plan, and no model or renderer is held.
-    Old leases survive Install; cancellation/destruction belongs to later phases. }
+    Old leases survive Install; cancellation/destruction belongs to later phases.
+    Its work-domain pause prevents retained old callback contexts from submitting
+    children during reversible target mutation, independently of ticket pruning. }
   TPreparedEventView = class(TInterfacedObject, INyxPreparedPublication,
     INyxPreparedEventView, INyxPublicationReadiness, INyxEventViewPreview)
   private
@@ -38,6 +40,7 @@ type
     FTokens: array of INyxEventSubscription;
     FEntries: array of TNyxSubscription;
     FExecutions: TNyxExecutions;
+    FWorkPause: INyxWorkPause;
     FPreparing: Boolean;
     FSealed: Boolean;
     FValidated: Boolean;
@@ -71,6 +74,8 @@ type
   end;
 
 constructor TPreparedEventView.Create(ARouter: TNyxEvents);
+var
+  LGeneration: INyxCancellationScope;
 begin
   inherited Create;
   FRouterLease := ARouter;
@@ -83,12 +88,16 @@ begin
   begin
     FNextRevision := FRevision + 1;
   end;
-  FNextScope := TNyxEventScope.Create;
+  FNextScope := TNyxEventScope.Create(nil, nil, NewNyxWorkScope);
 
-  if not Supports(FNextScope, INyxCancellationScope, FGeneration) then
+  { Query into an owning local before publishing the field. A managed field as
+    Supports' out parameter may receive two pas2js releases at scope exit,
+    disposing the successor while the router still retains its other facet. }
+  if not Supports(FNextScope, INyxCancellationScope, LGeneration) then
   begin
     raise ENyxSchedule.Create('Prepared event generation has no cancellation capability');
   end;
+  FGeneration := LGeneration;
 end;
 
 destructor TPreparedEventView.Destroy;
@@ -288,6 +297,11 @@ begin
   begin
     raise ENyxSchedule.Create('Prepared event preview ownership changed');
   end;
+
+  if FPreviewStarted then
+  begin
+    FWorkPause.CheckReady;
+  end;
   for LIndex := 0 to High(FEntries) do
   begin
 
@@ -317,6 +331,10 @@ var
   LLease: INyxPreparedEventView;
   LIndex: Integer;
   LStatus: TNyxExecutionStatus;
+  LScheduler: INyxScheduler;
+  LCapability: INyxSchedulerWorkScopes;
+  LWorkScope: INyxWorkScope;
+  LWorkPause: INyxWorkPause;
 begin
   LLease := Self;
   Result := False;
@@ -338,6 +356,13 @@ begin
   end;
   FEnteringPreview := True;
   try
+    LScheduler := FRouter.FScheduler;
+
+    if not Supports(LScheduler, INyxSchedulerWorkScopes, LCapability) then
+    begin
+      Exit;
+    end;
+    CheckReady;
     for LIndex := 0 to High(FExecutions) do
     begin
       { A scheduler's status getter is an extension callout. An entered
@@ -351,6 +376,21 @@ begin
         Exit;
       end;
     end;
+    LWorkScope := FPreviousScope.GetWorkScope;
+
+    if LWorkScope = nil then
+    begin
+      Exit;
+    end;
+    { Root invocation status was checked BEFORE pausing: refusing a running
+      worker must not transiently block that worker's legitimate child post.
+      Count/pause admission is atomic against concurrent descendant submission. }
+    LWorkPause := LWorkScope.TryPause;
+
+    if LWorkPause = nil then
+    begin
+      Exit;
+    end;
     CheckReady;
 
     if FRouter.FDispatchDepth <> 0 then
@@ -358,8 +398,10 @@ begin
       Exit;
     end;
     { No callback, scheduler operation or managed release separates these
-      final checks from the exact router flag. Existing work is terminal;
-      dispatch cannot introduce another callback until this plan retires. }
+      final checks from the exact router flag. Existing invocation work is
+      terminal and its descendants are idle; their domain stays paused until
+      rollback has completed or successful installation closes it permanently. }
+    FWorkPause := LWorkPause;
     FRouter.FPreviewingView := True;
     FPreviewStarted := True;
     Result := True;
@@ -491,6 +533,12 @@ begin
   begin
     FRouter.FPreviewingView := False;
     FRouter.FPreparedView := nil;
+  end;
+
+  if FWorkPause <> nil then
+  begin
+    FWorkPause.Retire;
+    FWorkPause := nil;
   end;
 
   if FInstalled then

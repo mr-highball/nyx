@@ -16,6 +16,11 @@ library code or a public API. Prior assignments, source inventories and review
 records do not make any Nyx-owned file immutable or require a workaround in
 place of a necessary library change.
 
+When a capability belongs in the reusable library, implement it in the library
+and its target adapters. Do not confine necessary changes to Studio, tests or
+helper units because an earlier task listed only those files. Existing classes
+and interfaces are implementation starting points, not fixed boundaries.
+
 File assignments, source inventories, review checkpoints and planned task scopes
 coordinate concurrent work; they are not permission allowlists. Root may adjust
 assignments and include necessary prerequisite files without another user

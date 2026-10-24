@@ -24,7 +24,8 @@ program nyx_scheduler_work_scope_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.scheduler
+  SysUtils, nyx.text, nyx.scheduler, nyx.types, nyx.data, nyx.behavior,
+  nyx.events, nyx.publication
   {$ifdef PAS2JS}, JS, Web{$else}, Classes, SyncObjs{$endif};
 
 type
@@ -71,6 +72,21 @@ type
     Fail: Boolean;
     destructor Destroy; override;
     procedure Execute(const AExecution: INyxExecution);
+  end;
+
+  { Actual event callback posts one owned child using its original event
+    context. It retains no router; tests retain the earlier context separately
+    while subsequent dispatch lets the router prune terminal invocation tickets. }
+  TPostingCallback = class(TNyxEventCallback)
+  public
+    Scheduler: INyxScheduler;
+    Context: INyxExecution;
+    Child: INyxExecution;
+    Work: TWork;
+    WorkLease: INyxWork;
+    Calls: Integer;
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
   end;
 
   {$ifndef PAS2JS}
@@ -201,6 +217,29 @@ begin
   if Fail then
   begin
     raise ENyxSchedule.Create('Expected child failure');
+  end;
+end;
+
+procedure TPostingCallback.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+var
+  LContext: INyxExecutionWorkScope;
+  LWork: TWork;
+  LLease: INyxWork;
+begin
+  Inc(Calls);
+  Context := AExecution;
+  LWork := Work;
+  LLease := WorkLease;
+  Work := nil;
+  WorkLease := nil;
+
+  if LWork <> nil then
+  begin
+    Check(Supports(AExecution, INyxExecutionWorkScope, LContext),
+      'real event callback exposes its original work domain');
+    LWork.Scope := LContext.WorkScope;
+    Child := Scheduler.PostUI(LLease, AExecution);
   end;
 end;
 
@@ -572,6 +611,194 @@ begin
   end;
 end;
 
+{ Real router plus real platform deferred scheduler. This is independent of the
+  deterministic context fixture's injected tickets and notification failures. }
+procedure EventScopeCases; {$ifdef PAS2JS}async;{$endif}
+var
+  LScheduler: INyxScheduler;
+  LEvents: INyxEvents;
+  LPreparation: INyxEventViewPreparation;
+  LPlan: INyxPreparedEventView;
+  LPublication: INyxPreparedPublication;
+  LPreview: INyxEventViewPreview;
+  LCallback: TPostingCallback;
+  LCallbackLease: INyxEventCallback;
+  LToken: INyxEventSubscription;
+  LTrace: TTrace;
+  LTraceLease: IInterface;
+  LWork: TWork;
+  LWorkLease: INyxWork;
+  LContext: INyxExecution;
+  LScoped: INyxExecutionWorkScope;
+  LOldScope: INyxWorkScope;
+  LNewScope: INyxWorkScope;
+  LGeneration: INyxCancellationScope;
+  LChild: INyxExecution;
+  LIndependent: INyxExecution;
+  LIndependentParent: TParent;
+  LIndependentParentLease: INyxExecution;
+  LEvent: TNyxEventInfo;
+  LTickets: TNyxExecutions;
+  LIndex: Integer;
+  LRefused: Boolean;
+
+  procedure Prepare(const AScope: INyxWorkScope);
+  begin
+    LWork := TWork.Create;
+    LWorkLease := LWork;
+    LWork.Trace := LTrace;
+    LWork.TraceLease := LTraceLease;
+    LWork.Scope := AScope;
+  end;
+
+begin
+  LScheduler := NewNyxScheduler;
+  LEvents := NewNyxEvents(LScheduler);
+  LTrace := TTrace.Create;
+  LTraceLease := LTrace;
+  LCallback := TPostingCallback.Create;
+  LCallbackLease := LCallback;
+  LCallback.Scheduler := LScheduler;
+  LCallback.Work := TWork.Create;
+  LCallback.WorkLease := LCallback.Work;
+  LCallback.Work.Trace := LTrace;
+  LCallback.Work.TraceLease := LTraceLease;
+  LCallback.Work.Spawn := True;
+  LCallback.Work.Scheduler := LScheduler;
+  LToken := LEvents.On(NyxControlEvents('scoped-button'), ntClick).Subscribe(LCallbackLease);
+  LEvent := Default(TNyxEventInfo);
+  LEvent.Trigger := ntClick;
+  LEvent.Name := NyxEvent('click');
+  LEvent.OriginID := 'scoped-button';
+  LEvent.SourceID := 'scoped-button';
+  LEvent.TargetID := 'scoped-button';
+  LEvent.Value := NyxNull;
+  LEvent.Details := NyxNull;
+  try
+    LTickets := LEvents.Dispatch(LEvent, 'scoped-button', 'scoped-button');
+    LContext := LCallback.Context;
+    Check((Length(LTickets) = 1) and (LTickets[0].Status = nesSucceeded) and
+      (LCallback.Child.Status = nesPending), 'real completed invocation retains a pending explicit child');
+    Check(Supports(LContext, INyxExecutionWorkScope, LScoped),
+      'retained real event context keeps its original work-domain facet');
+    LOldScope := LScoped.WorkScope;
+    LGeneration := NyxEventGeneration(LEvents);
+    LEvents.Dispatch(LEvent, 'scoped-button', 'scoped-button');
+    Check((LCallback.Calls = 2) and (LTrace.Entries = 0),
+      'another real dispatch may prune terminal invocations without entering their child');
+    Supports(LEvents, INyxEventViewPreparation, LPreparation);
+    LPlan := LPreparation.PrepareView;
+    LPlan.Validate;
+    Supports(LPlan, INyxEventViewPreview, LPreview);
+    Check(not LPreview.TryBeginPreview and not LGeneration.Cancelled and
+      (LCallback.Child.Status = nesPending), 'pending descendant refuses preview without cancellation after root pruning');
+    for LIndex := 1 to 200 do
+    begin
+      {$ifdef PAS2JS}await(Tick);{$else}CheckSynchronize(10);{$endif}
+
+      if LTrace.Finalizers = 2 then
+      begin
+        Break;
+      end;
+    end;
+    Check((LTrace.Entries = 2) and (LTrace.Finalizers = 2) and
+      (LTrace.Propagated = 2) and (LTrace.BusyWhileFinalizing = 2),
+      'real event child and grandchild retain original admission through their finalizers');
+    Check(LPreview.TryBeginPreview and not LGeneration.Cancelled,
+      'the same prepared preview admits only after every descendant courier retires');
+    Prepare(LOldScope);
+    LRefused := False;
+    try
+      LChild := LScheduler.PostUI(LWorkLease, LContext);
+    except
+      on E: ENyxSchedule do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LTrace.Entries = 2),
+      'retained old callback context cannot introduce a child during reversible preview');
+    LIndependentParent := TParent.Create;
+    LIndependentParentLease := LIndependentParent;
+    LIndependentParent.Scope := NewNyxWorkScope;
+    LWork.Scope := LIndependentParent.Scope;
+    LIndependent := LScheduler.PostUI(LWorkLease, LIndependentParentLease);
+    LWorkLease := nil;
+    Check(LIndependent.Status = nesPending, 'unrelated work domain remains usable during the event preview');
+    LPlan.Retire;
+    LPreview := nil;
+    LPlan := nil;
+    Prepare(LOldScope);
+    LChild := LScheduler.PostUI(LWorkLease, LContext);
+    LWorkLease := nil;
+    Check((LChild.Status = nesPending) and not LGeneration.Cancelled,
+      'completed rollback releases the same old context for later legitimate child work');
+    for LIndex := 1 to 200 do
+    begin
+      {$ifdef PAS2JS}await(Tick);{$else}CheckSynchronize(10);{$endif}
+
+      if (LChild.Status = nesSucceeded) and (LIndependent.Status = nesSucceeded) then
+      begin
+        Break;
+      end;
+    end;
+    Check((LTrace.Entries = 4) and (LChild.Status = nesSucceeded),
+      'restored old-context and unrelated children each run once after rollback');
+    LPlan := LPreparation.PrepareView;
+    LPlan.Validate;
+    Supports(LPlan, INyxEventViewPreview, LPreview);
+    Check(LPreview.TryBeginPreview, 'idle original event domain admits committed successor preview');
+    Supports(LPlan, INyxPreparedPublication, LPublication);
+    LPublication.Install;
+    LPublication.Notify;
+    LPublication.Retire;
+    Check(LGeneration.Cancelled and LContext.Cancelled,
+      'successor installation cancels the old event generation and retained context');
+    Prepare(LOldScope);
+    LRefused := False;
+    try
+      LChild := LScheduler.PostUI(LWorkLease, LContext);
+    except
+      on E: ENyxSchedule do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'closed original domain cannot admit child work after committed view replacement');
+    LWorkLease := nil;
+    LEvents.Dispatch(LEvent, 'scoped-button', 'scoped-button');
+    Supports(LCallback.Context, INyxExecutionWorkScope, LScoped);
+    LNewScope := LScoped.WorkScope;
+    Check((LNewScope <> LOldScope) and (LCallback.Calls = 3),
+      'successor callbacks receive an independent live work domain');
+    Prepare(LNewScope);
+    LChild := LScheduler.PostUI(LWorkLease, LCallback.Context);
+    LWorkLease := nil;
+    for LIndex := 1 to 200 do
+    begin
+      {$ifdef PAS2JS}await(Tick);{$else}CheckSynchronize(10);{$endif}
+
+      if LChild.Status = nesSucceeded then
+      begin
+        Break;
+      end;
+    end;
+    Check((LChild.Status = nesSucceeded) and (LTrace.Entries = 5),
+      'new-generation child work executes through the same real scheduler');
+  finally
+    LCallback.WorkLease := nil;
+    LCallback.Work := nil;
+    LWorkLease := nil;
+
+    if LPlan <> nil then
+    begin
+      LPlan.Retire;
+    end;
+    LEvents.Close;
+    LScheduler.Shutdown;
+  end;
+end;
+
 {$ifndef PAS2JS}
 procedure NativeThreadCase;
 var
@@ -609,9 +836,11 @@ begin
     {$ifdef PAS2JS}
     await(SchedulerCases);
     await(PruneReentryCases);
+    await(EventScopeCases);
     {$else}
     SchedulerCases;
     PruneReentryCases;
+    EventScopeCases;
     NativeThreadCase;
     {$endif}
     {$ifdef PAS2JS}
