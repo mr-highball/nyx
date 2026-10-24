@@ -338,9 +338,10 @@ inert identity proofs, so they do not keep a view or its store alive. Stale,
 foreign or competing captures refuse before publication. Existing view
 interfaces retain their signatures.
 
-Current view admission and target activation require authored presentation
-presence. Runtime-only overrides on an otherwise absent table still need the
-contract/activation extension and reset behavior tracked in the workbench task.
+Runtime preferences can activate presentation on a table without authored
+presentation defaults. Reset removes that runtime override without inventing a
+saved declaration. Native/browser activation and reset have focused control
+checks; full Studio integration remains tracked in the workbench task.
 
 Studio's **Table defaults** includes collapsed **Body row spacing** and per-column
 **Text layout** sections. Apply captures one typed policy through the ordinary
@@ -374,6 +375,59 @@ visual qualification, complete arrangement absence, mounted Inspector input and
 full Studio/native performance remain open under
 [the table workbench task](../TODO/NS-3_control-usefulness_03.md). This source
 contract alone does not establish those interaction or parity outcomes.
+
+## Logical column alignment
+
+Import `nyx.collections.alignment` to set either alignment axis independently:
+
+```pascal
+LServicesTable.Binds.Collection(
+  NyxCollectionView(NyxCollection('services'))
+    .Column(NyxTextField('name'), 'Service')
+      .ColumnAlignment(NyxColumnAlignment.Horizontal(nchaStart))
+    .Column(NyxIntegerField('workers'), 'Workers')
+      .ColumnAlignment(NyxColumnAlignment.Horizontal(nchaEnd)
+        .Vertical(ncvaMiddle)));
+```
+
+Horizontal choices are logical Start, Center and End; vertical choices are Top,
+Middle and Bottom. Start/End follow the host's text direction. Alignment affects
+the presentation of values and editors, never their stored scalar families,
+formatting, copy representation or selection identity. An omitted axis preserves
+the host's existing behavior. Nyx does not infer alignment from a value's type.
+
+`UseDefaultHorizontal` and `UseDefaultVertical` remove one axis from a policy;
+`UseDefaultColumnAlignment` removes the current column's authored alignment.
+Overlay combines only declared axes. Resetting alignment preserves text overflow,
+row density, formatting, query settings and table arrangement. A descriptor uses
+version12 only while an alignment is present; clearing all alignments restores
+the earlier applicable descriptor version. Older versions retain their exact
+alignment-free shape. Generated Pascal uses the same typed fluent contract.
+
+The existing `INyxCollectionTablePresentation` facet also prepares field/family
+keyed runtime alignments through `WithAlignment` and `WithoutAlignment`.
+Applications persist these preferences separately from the saved design.
+Preparation and publication share the existing column serial and detached
+capture ownership; no second controller or publication owner is introduced.
+
+Studio's collapsed per-column **Alignment** form offers independent horizontal
+and vertical choices, Apply and Use defaults. Capture validates the mounted form,
+column identity, scalar family and binding baseline before submitting the usual
+paired source/history edit. A reset ignores unfinished draft choices and clears
+only alignment.
+
+For bounded semantic inspection, request `alignmentControls: true` from
+`nyx_collections` on a binding or exact column. The response distinguishes support,
+declaration and policy. Omitted/false keeps the former response shape. Use
+`NyxSetCollectionColumnAlignment` or `NyxUseDefaultCollectionColumnAlignment` in a
+typed patch, or the semantic `column-alignment` operation with a complete policy
+or `null` reset. Groups use the same revision, retry, atomic admission and Undo
+path as other collection edits.
+
+Value/view, source/generated-application, target controls and Studio/MCP
+authoring checks qualify different boundaries. Current evidence and remaining
+native focus/paint, mounted Inspector and full Studio requirements remain in
+[WORK.md](../WORK.md); this contract does not imply full target acceptance.
 
 ## Authored table arrangement defaults
 

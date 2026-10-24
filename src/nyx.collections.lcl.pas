@@ -33,6 +33,7 @@ uses
   nyx.events, nyx.text, nyx.observation,
   nyx.collections.view,
   nyx.collections.presentation,
+  nyx.collections.alignment,
   nyx.collections.mount,
   nyx.collections.clipboard.actions, nyx.collections.draft,
   nyx.collections.lcl.grid;
@@ -251,6 +252,8 @@ type
       out APresentation: TNyxValuePresentation): TNyxText;
     function TextLayout(AColumn, ARow: Integer;
       out ALayout: TNyxTableTextLayout): Boolean;
+    function Alignment(AColumn, ARow: Integer;
+      out APolicy: TNyxColumnAlignmentPolicy): Boolean;
     function Editable(AColumn, ARow: Integer): Boolean;
     function RangeSelected(AColumn, ARow: Integer): Boolean;
     procedure Revoke;
@@ -420,6 +423,9 @@ type
     FTextLayoutTotal: Integer;
     FTextLayoutRows: array of Integer;
     FTextLayoutApplying: Boolean;
+    { The exact paint/top-left hooks are admitted once, including a first
+      runtime-only activation after the original table has already mounted. }
+    FTextLayoutAttached: Boolean;
     FPreviousDefaultRowHeight: Integer;
     FTextMeasureCanvas: TCanvas;
     function MeasurePresentationText(const AText: TNyxText): Double;
@@ -428,6 +434,10 @@ type
       out ALayout: TNyxTableTextLayout): Boolean;
     function GridTextLayout(AColumn, ARow: Integer;
       out ALayout: TNyxTableTextLayout): Boolean;
+    function CanonicalAlignment(AColumn, ARow: Integer;
+      out APolicy: TNyxColumnAlignmentPolicy): Boolean;
+    function GridAlignment(AColumn, ARow: Integer;
+      out APolicy: TNyxColumnAlignmentPolicy): Boolean;
   private
     { Exact copied page bounds/field bits drive paint without querying a live
       store/view or a snapshot row from the native DrawCell callback. }
@@ -658,6 +668,7 @@ type
     function EditText(const AItem: TNyxItemRef; AColumn: Integer;
       const AValue: TNyxText): TNyxText;
   protected
+    procedure PrepareTablePresentation; override;
     procedure RenderCellRange; override;
     function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
     function CellRangeAvailable: Boolean; override;
@@ -2074,6 +2085,7 @@ var
   LGrid: TStringGrid;
   LPhysical: Integer;
   LCurrent, LExpected: TOnPrepareCanvasEvent;
+  LAlignment: TNyxColumnAlignmentPolicy;
 
   procedure ResolveStyle(var AStyle: TTextStyle);
   begin
@@ -2137,6 +2149,31 @@ begin
   Result.HeaderText := CanonicalText(AColumn, 0);
   ResolveStyle(Result.HeaderStyle);
   ResolveStyle(Result.BodyStyle);
+
+  if FHasTablePresentation and (AColumn >= 0) and
+    (AColumn < FTablePresentation.Count) then
+  begin
+    LAlignment := FTablePresentation.AlignmentAt(AColumn);
+
+    if LAlignment.HasHorizontal then
+    begin
+      case ResolveNyxColumnHorizontalAlignment(LAlignment.HorizontalAlignment,
+        LGrid.UseRightToLeftAlignment) of
+        ncpaLeft: Result.BodyStyle.Alignment := taLeftJustify;
+        ncpaCenter: Result.BodyStyle.Alignment := taCenter;
+        ncpaRight: Result.BodyStyle.Alignment := taRightJustify;
+      end;
+    end;
+
+    if LAlignment.HasVertical then
+    begin
+      case LAlignment.VerticalAlignment of
+        ncvaTop: Result.BodyStyle.Layout := tlTop;
+        ncvaMiddle: Result.BodyStyle.Layout := tlCenter;
+        ncvaBottom: Result.BodyStyle.Layout := tlBottom;
+      end;
+    end;
+  end;
 
   if FQueries <> nil then
   begin
@@ -2561,6 +2598,7 @@ begin
   if AOwner.FHasTablePresentation then
   begin
     Grid.ObserveTextLayout(TextLayout);
+    Grid.ObserveCellAlignment(Alignment);
   end;
 
   if AOwner.FView.Spec.HasColumnFormat then
@@ -2690,6 +2728,18 @@ begin
   if (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns)) then
   begin
     Result := Owner.CanonicalTextLayout(Columns[AColumn], ARow, ALayout);
+  end;
+end;
+
+function TColumnPane.Alignment(AColumn, ARow: Integer;
+  out APolicy: TNyxColumnAlignmentPolicy): Boolean;
+begin
+  APolicy := NyxColumnAlignment;
+  Result := (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns));
+
+  if Result then
+  begin
+    Result := Owner.CanonicalAlignment(Columns[AColumn], ARow, APolicy);
   end;
 end;
 
@@ -4049,7 +4099,7 @@ begin
     Exit(True);
   end;
 
-  if not FHasColumnLayout and not (FHasTablePresentation and (FColumnEditing <> nil)) then
+  if not FHasColumnLayout and not (FObservesTablePresentation and (FColumnEditing <> nil)) then
   begin
     Exit;
   end;
@@ -4074,7 +4124,7 @@ function TNativeMount.DeferComposingRefresh: Boolean;
 begin
   { This first check runs before the base suppresses Ready. Never query the
     event router here: an existing composition must keep its END/text delivery. }
-  Result := (FHasColumnLayout or FHasTablePresentation) and (FColumnEditing <> nil) and
+  Result := (FHasColumnLayout or FObservesTablePresentation) and (FColumnEditing <> nil) and
     FColumnEditing.Composing;
 
   if ColumnResizeInterrupted(FResizeRequest) then
@@ -5635,6 +5685,8 @@ begin
           if FHasTablePresentation then
           begin
             TNyxCollectionStringGrid(FGrid).ObserveTextLayout(GridTextLayout);
+            TNyxCollectionStringGrid(FGrid).ObserveCellAlignment(GridAlignment);
+            FTextLayoutAttached := True;
           end;
 
           if FHasColumnLayout then
@@ -5692,6 +5744,31 @@ end;
 function TNativeMount.DisplayText(const AValue: TNyxText): TNyxText;
 begin
   Result := NyxLCLColumnDisplayText(AValue);
+end;
+
+procedure TNativeMount.PrepareTablePresentation;
+begin
+
+  if FTextLayoutAttached then
+  begin
+    Exit;
+  end;
+
+  if not (FGrid is TNyxCollectionStringGrid) or not FInputGridAttached or
+    (FColumnFrame = nil) or (FColumnEditing = nil) or
+    not NyxLCLTextHistorySupported then
+  begin
+    raise ENyxCollection.Create('Runtime table presentation requires the observed Nyx native grid and its real input frame');
+  end;
+
+  if not FHasColumnLayout then
+  begin
+    FPreviousTopLeft := FGrid.OnTopLeftChanged;
+    FGrid.OnTopLeftChanged := GridTopLeft;
+  end;
+  TNyxCollectionStringGrid(FGrid).ObserveTextLayout(GridTextLayout);
+  TNyxCollectionStringGrid(FGrid).ObserveCellAlignment(GridAlignment);
+  FTextLayoutAttached := True;
 end;
 
 function TNativeMount.EditText(const AItem: TNyxItemRef; AColumn: Integer;
@@ -6379,6 +6456,26 @@ begin
   Result := CanonicalTextLayout(CanonicalColumn(FGrid, AColumn), ARow, ALayout);
 end;
 
+function TNativeMount.CanonicalAlignment(AColumn, ARow: Integer;
+  out APolicy: TNyxColumnAlignmentPolicy): Boolean;
+begin
+  APolicy := NyxColumnAlignment;
+  Result := InputLifetimeCurrent and FHasTablePresentation and (ARow > 0) and
+    (AColumn >= 0) and (AColumn < FTablePresentation.Count);
+
+  if Result then
+  begin
+    APolicy := FTablePresentation.AlignmentAt(AColumn);
+    Result := APolicy.Defined;
+  end;
+end;
+
+function TNativeMount.GridAlignment(AColumn, ARow: Integer;
+  out APolicy: TNyxColumnAlignmentPolicy): Boolean;
+begin
+  Result := CanonicalAlignment(CanonicalColumn(FGrid, AColumn), ARow, APolicy);
+end;
+
 procedure TNativeMount.PrepareTextRows(const AData: INyxCollectionSnapshot);
 var
   LBitmap: TBitmap;
@@ -6453,6 +6550,45 @@ begin
       LPadding := Max(0, Round(NyxTableRowPadding(LDensity.RowDensity) *
         Max(1, FGrid.Font.PixelsPerInch) / 96));
       LDefault := LLineHeight + 2 * LPadding;
+    end;
+
+    if FGrid is TNyxCollectionStringGrid then
+    begin
+
+      if LDensity.Defined then
+      begin
+        TNyxCollectionStringGrid(FGrid).ConfigureAlignmentVerticalInset(LPadding);
+      end
+      else
+      begin
+        TNyxCollectionStringGrid(FGrid).ConfigureAlignmentVerticalInset(varCellPadding);
+      end;
+    end;
+
+    if FStartPane <> nil then
+    begin
+
+      if LDensity.Defined then
+      begin
+        FStartPane.Grid.ConfigureAlignmentVerticalInset(LPadding);
+      end
+      else
+      begin
+        FStartPane.Grid.ConfigureAlignmentVerticalInset(varCellPadding);
+      end;
+    end;
+
+    if FEndPane <> nil then
+    begin
+
+      if LDensity.Defined then
+      begin
+        FEndPane.Grid.ConfigureAlignmentVerticalInset(LPadding);
+      end
+      else
+      begin
+        FEndPane.Grid.ConfigureAlignmentVerticalInset(varCellPadding);
+      end;
     end;
     LHeader := FGrid.RowHeights[0];
     FGrid.DefaultRowHeight := Max(1, LDefault);
@@ -7420,6 +7556,7 @@ begin
         begin
           TNyxCollectionStringGrid(FGrid).DetachReader;
           FGridReaderAttached := False;
+          FTextLayoutAttached := False;
         end;
 
         if FHasTablePresentation then

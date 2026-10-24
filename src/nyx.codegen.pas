@@ -73,6 +73,7 @@ uses
   nyx.collections.arrangement,
   nyx.collections.workbench.policy,
   nyx.collections.presentation,
+  nyx.collections.alignment,
   nyx.formatting,
   nyx.layout.constraints,
   nyx.root.types,
@@ -4407,6 +4408,11 @@ begin
       if NeedsTablePresentationUnits(ADocument) then
       begin
         LLines.Add('  nyx.collections.presentation,');
+      end;
+
+      if NeedsColumnAlignmentUnit(ADocument) then
+      begin
+        LLines.Add('  nyx.collections.alignment,');
       end;
 
       if NeedsColumnFormatUnits(ADocument) then

@@ -336,7 +336,7 @@ begin
 
   if not GetInputReady or not FEnabled or AEvent.defaultPrevented or
     AEvent.isComposing or AEvent.altKey or
-    ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) then
+    ((FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil)) then
   begin
     ResetTypeAhead;
     Exit;

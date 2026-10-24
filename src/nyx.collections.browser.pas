@@ -32,6 +32,7 @@ uses
   Web,
   nyx.collections.view,
   nyx.collections.presentation,
+  nyx.collections.alignment,
   nyx.collections.mount, nyx.collections.draft;
 
 type
@@ -3801,7 +3802,7 @@ end;
 
 function TBrowserMount.DeferComposingRefresh: Boolean;
 begin
-  Result := (FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil);
+  Result := (FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil);
 
   if Result then
   begin
@@ -3896,7 +3897,7 @@ begin
   Result := True;
   LKeepAlive := Self as INyxCollectionMount;
 
-  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
+  if (FHasColumnLayout or FObservesTablePresentation) and not GetInputReady then
   begin
     AEvent.preventDefault;
     AEvent.stopImmediatePropagation;
@@ -3921,7 +3922,7 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   FCellFocusValid := False;
 
-  if not InputLifetimeCurrent or not (FHasColumnLayout or FHasTablePresentation) or FEditsSuspended then
+  if not InputLifetimeCurrent or not (FHasColumnLayout or FObservesTablePresentation) or FEditsSuspended then
   begin
     raise ENyxCollection.Create('Cell edit suspension requires one live opted-in table lease');
   end;
@@ -4128,7 +4129,7 @@ begin
   FCellFocusValid := False;
   LSnapshot := ASnapshot;
 
-  if not InputLifetimeCurrent or not (FHasColumnLayout or FHasTablePresentation) or FEditsSuspended or
+  if not InputLifetimeCurrent or not (FHasColumnLayout or FObservesTablePresentation) or FEditsSuspended or
     (FComposingInput <> nil) or (LSnapshot = nil) then
   begin
     raise ENyxCollection.Create('Cell edit restoration requires a live opted-in table');
@@ -4473,7 +4474,7 @@ begin
   end;
   FHost := AHost;
 
-  if FHasColumnLayout or FHasTablePresentation then
+  if FHasColumnLayout or FObservesTablePresentation then
   begin
     for LIndex := Low(PendingInputEvents) to High(PendingInputEvents) do
     begin
@@ -4841,6 +4842,7 @@ var
   LWidth: Double;
   LFont: String;
   LMetricSupported: Boolean;
+  LAlignment: TNyxColumnAlignmentPolicy;
 
   function Pixels(const AName: String): Double;
   begin
@@ -4863,6 +4865,41 @@ begin
   LContext := TJSCanvasRenderingContext2D(LCanvas.getContext('2d'));
   for LIndex := 0 to High(FLabels) do
   begin
+    LAlignment := FOwner.FTablePresentation.AlignmentAt(LIndex);
+
+    if LAlignment.HasHorizontal then
+    begin
+      LText := NyxColumnHorizontalAlignmentName(LAlignment.HorizontalAlignment);
+      FCells[LIndex].style.setProperty('text-align', LText);
+    end
+    else
+    begin
+      FCells[LIndex].style.removeProperty('text-align');
+    end;
+
+    if (LIndex < Length(FInputs)) and (FInputs[LIndex] <> nil) then
+    begin
+
+      if LAlignment.HasHorizontal then
+      begin
+        FInputs[LIndex].style.setProperty('text-align',
+          NyxColumnHorizontalAlignmentName(LAlignment.HorizontalAlignment));
+      end
+      else
+      begin
+        FInputs[LIndex].style.removeProperty('text-align');
+      end;
+    end;
+
+    if LAlignment.HasVertical then
+    begin
+      FCells[LIndex].style.setProperty('vertical-align',
+        NyxColumnVerticalAlignmentName(LAlignment.VerticalAlignment));
+    end
+    else
+    begin
+      FCells[LIndex].style.removeProperty('vertical-align');
+    end;
 
     if LDensity.Defined then
     begin
@@ -6728,7 +6765,7 @@ var
   LExpanded: Boolean;
 begin
 
-  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FObservesTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -6784,7 +6821,7 @@ var
   LColumn: Integer;
 begin
 
-  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FObservesTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -6886,7 +6923,7 @@ var
   LOptions: TFocusOptions;
 begin
 
-  if (FHasColumnLayout or FHasTablePresentation) and (not GetInputReady or (FComposingInput <> nil)) then
+  if (FHasColumnLayout or FObservesTablePresentation) and (not GetInputReady or (FComposingInput <> nil)) then
   begin
     Exit(False);
   end;
@@ -6905,7 +6942,7 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   LRow := FView.Snapshot.IndexOf(AItem);
 
-  if not GetInputReady or ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) or
+  if not GetInputReady or ((FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil)) or
     (LRow < 0) or (LRow >= Length(FRows)) or (FRows[LRow] = nil) or
     (FRows[LRow].FRef.ID <> AItem.ID) or
     (AColumn < 0) or (AColumn >= Length(FRows[LRow].FInputs)) then
@@ -6923,7 +6960,7 @@ begin
     still clear; a retained input must never replace the composing control. }
   Select(AItem, nsaFocus);
 
-  if GetInputReady and not ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) and
+  if GetInputReady and not ((FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil)) and
     FHost.contains(LInput) then
   begin
     FEditingItem := AItem;
@@ -6931,7 +6968,7 @@ begin
     FFocusedColumn := AColumn;
     Refresh;
 
-    if GetInputReady and not ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) and
+    if GetInputReady and not ((FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil)) and
       FHost.contains(LInput) then
     begin
       LOptions := TFocusOptions.new;
@@ -6957,14 +6994,14 @@ begin
     Exit(True);
   end;
 
-  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
+  if (FHasColumnLayout or FObservesTablePresentation) and not GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
   end;
   Result := True;
 
-  if (FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil) then
+  if (FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil) then
   begin
     FCompositionFocusPending := True;
     Exit;
@@ -7029,7 +7066,7 @@ var
   LColumn: Integer;
 begin
 
-  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FObservesTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -7090,7 +7127,7 @@ var
   LKeepAlive: INyxCollectionMount;
 begin
 
-  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FObservesTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -7120,7 +7157,7 @@ begin
         Exit;
       end;
 
-      if (LOwner.FHasColumnLayout or LOwner.FHasTablePresentation) and (LOwner.FComposingInput = FInputs[LIndex]) then
+      if (LOwner.FHasColumnLayout or LOwner.FObservesTablePresentation) and (LOwner.FComposingInput = FInputs[LIndex]) then
       begin
         { Capture from the immutable physical snapshot, not the newer model.
           Repeated changes coalesce; final value is intentionally read at drain. }
@@ -7276,7 +7313,7 @@ var
   LAscending, LReset: Boolean;
 begin
 
-  if not GetInputReady or ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) or
+  if not GetInputReady or ((FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil)) or
     not FEnabled or FUpdating or (FQueries = nil) or
     (AColumn < 0) or (AColumn >= FView.Spec.Count) then
   begin
@@ -7304,7 +7341,7 @@ begin
     LField := FView.Spec.ColumnAt(AColumn).FieldName;
     LObservation := LQueries.Observation;
 
-    if not GetInputReady or ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) or
+    if not GetInputReady or ((FHasColumnLayout or FObservesTablePresentation) and (FComposingInput <> nil)) or
       not FEnabled or (FQueries <> LQueries) then
     begin
       Exit;
@@ -7349,7 +7386,7 @@ var
   LFilter: Boolean;
 begin
 
-  if (FHasColumnLayout or FHasTablePresentation) and (not GetInputReady or (FComposingInput <> nil)) then
+  if (FHasColumnLayout or FObservesTablePresentation) and (not GetInputReady or (FComposingInput <> nil)) then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -7393,7 +7430,7 @@ var
   LFilter: Boolean;
 begin
 
-  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
+  if (FHasColumnLayout or FObservesTablePresentation) and not GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -7479,7 +7516,7 @@ begin
         FHost.removeEventListener(ColumnFitDoubleEvent, @ColumnFitInput);
       end;
 
-      if FHasColumnLayout or FHasTablePresentation then
+      if FHasColumnLayout or FObservesTablePresentation then
       begin
         TCapturedElement(FHost).removeEventListener(ColumnCompositionStart,
           @CellComposition, True);

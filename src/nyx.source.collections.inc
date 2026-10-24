@@ -86,6 +86,96 @@ var
 begin
   Result := Default(TValue);
 
+  if SameText(AName, 'NyxColumnAlignment') then
+  begin
+
+    if At('(') then
+    begin
+      LArgs := Arguments;
+
+      if Length(LArgs) <> 0 then
+      begin
+        Fail('NyxColumnAlignment takes no factory arguments');
+      end;
+    end;
+    Result.Kind := vkColumnAlignmentPolicy;
+    Result.ColumnAlignmentPolicy := NyxColumnAlignment;
+    while At('.') do
+    begin
+      Expect('.');
+
+      if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) then
+      begin
+        Fail('Expected a typed column alignment method');
+      end;
+      LMethod := FTokens[FCursor].Text;
+      Inc(FCursor);
+
+      if not At('(') and (SameText(LMethod, 'UseDefaultHorizontal') or
+        SameText(LMethod, 'UseDefaultVertical')) then
+      begin
+        LArgs := nil;
+      end
+      else
+      begin
+        LArgs := Arguments;
+      end;
+
+      if SameText(LMethod, 'Horizontal') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnHorizontalAlignment) then
+        begin
+          Fail('Horizontal requires a typed logical column alignment');
+        end;
+        Result.ColumnAlignmentPolicy := Result.ColumnAlignmentPolicy.Horizontal(
+          TNyxColumnHorizontalAlignment(LArgs[0].Ordinal));
+      end
+      else if SameText(LMethod, 'Vertical') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnVerticalAlignment) then
+        begin
+          Fail('Vertical requires a typed column block alignment');
+        end;
+        Result.ColumnAlignmentPolicy := Result.ColumnAlignmentPolicy.Vertical(
+          TNyxColumnVerticalAlignment(LArgs[0].Ordinal));
+      end
+      else if SameText(LMethod, 'Overlay') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnAlignmentPolicy) then
+        begin
+          Fail('Overlay requires a typed column alignment policy');
+        end;
+        Result.ColumnAlignmentPolicy := Result.ColumnAlignmentPolicy.Overlay(
+          LArgs[0].ColumnAlignmentPolicy);
+      end
+      else
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('Alignment inheritance resets take no arguments');
+        end;
+
+        if SameText(LMethod, 'UseDefaultHorizontal') then
+        begin
+          Result.ColumnAlignmentPolicy := Result.ColumnAlignmentPolicy.UseDefaultHorizontal;
+        end
+        else if SameText(LMethod, 'UseDefaultVertical') then
+        begin
+          Result.ColumnAlignmentPolicy := Result.ColumnAlignmentPolicy.UseDefaultVertical;
+        end
+        else
+        begin
+          Fail('Unknown column alignment method');
+        end;
+      end;
+    end;
+    Exit;
+  end;
+
   if SameText(AName, 'NyxTablePresentation') or SameText(AName, 'NyxColumnText') then
   begin
 
@@ -506,6 +596,7 @@ begin
         SameText(LMethod, 'UseDefaultTableWorkbench') or
         SameText(LMethod, 'UseDefaultTablePresentation') or
         SameText(LMethod, 'UseDefaultColumnText') or
+        SameText(LMethod, 'UseDefaultColumnAlignment') or
         SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
       begin
         LArgs := nil;
@@ -612,6 +703,29 @@ begin
         end;
         Result.CollectionView := Result.CollectionView.TablePresentation(
           LArgs[0].TablePresentationPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'ColumnAlignment') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnAlignmentPolicy) then
+        begin
+          Fail('ColumnAlignment requires a typed NyxColumnAlignment policy');
+        end;
+        Result.CollectionView := Result.CollectionView.ColumnAlignment(
+          LArgs[0].ColumnAlignmentPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultColumnAlignment') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('UseDefaultColumnAlignment takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultColumnAlignment;
         Continue;
       end;
 

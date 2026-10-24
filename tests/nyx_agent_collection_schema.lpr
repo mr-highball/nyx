@@ -33,7 +33,7 @@ uses
   nyx.collections, nyx.collections.view.types, nyx.collections.columns,
   nyx.collections.paging, nyx.collections.query, nyx.collections.query.policy,
   nyx.collections.arrangement, nyx.formatting, nyx.collections.workbench.policy,
-  nyx.collections.presentation,
+  nyx.collections.presentation, nyx.collections.alignment,
   nyx.studio.collectionedits,
   { END QUERY_CONTROL_DISCOVERY_IMPORTS }
   SysUtils, nyx.text, nyx.data, nyx.studio.mcp, nyx.studio.agents;
@@ -89,6 +89,7 @@ var
   LFormatCount: Integer;
   LWorkbenchCount: Integer;
   LPresentationCount: Integer;
+  LAlignmentCount: Integer;
   LVersion: Integer;
   LMode: TNyxText;
 
@@ -155,11 +156,22 @@ begin
   LFormatCount := 0;
   LWorkbenchCount := 0;
   LPresentationCount := 0;
+  LAlignmentCount := 0;
   for LIndex := 0 to LActual.Count - 1 do
   begin
     LBranch := LActual.Item(LIndex);
     LProperties := LBranch.Field('properties');
     LMode := LProperties.Field('mode').Field('const').AsText;
+
+    if NyxAgentHas(LProperties, 'alignmentControls') then
+    begin
+      Inc(LAlignmentCount);
+      Check((LProperties.Field('alignmentControls').Field('type').AsText = 'boolean') and
+        not LProperties.Field('alignmentControls').Field('default').AsBoolean and
+        not Required(LBranch, 'alignmentControls') and
+        ((LMode = 'bindings') or (LMode = 'column')),
+        'alignment reads remain optional bounded Boolean selectors');
+    end;
 
     if NyxAgentHas(LProperties, 'presentationControls') then
     begin
@@ -328,7 +340,8 @@ begin
   { Version eight appends authored layout without changing any earlier wire
     envelope. Exercise the actual bind decoder with independent policy data;
     discovery alone cannot prove that saved declarations are admitted. }
-  Check(LSpecs.Count = 11, 'all ten former descriptor versions and presentation v11 remain discoverable');
+  Check((LSpecs.Count = 12) and (LAlignmentCount = 2),
+    'all eleven former descriptor versions and alignment v12 remain discoverable with two read modes');
   LSpecSchema := LSpecs.Item(7);
   LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
   Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 8) and
@@ -440,6 +453,28 @@ begin
     end;
   end;
 
+  LSpecSchema := LSpecs.Item(11);
+  LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
+  Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 12) and
+    (LSpecSchema.Field('required').Count = 13) and (LColumnSchema.Field('required').Count = 10) and
+    Required(LColumnSchema, 'alignment') and
+    (LSpecSchema.Field('allOf').Item(0).Field('properties').Field('columns').Field('contains')
+      .Field('properties').Field('alignment').Field('type').AsText = 'object'),
+    'v12 adds a nullable per-column slot but requires actual independent alignment presence');
+  LPolicy := LColumnSchema.Field('properties').Field('alignment').Field('anyOf').Item(1);
+  Check((LPolicy.Field('required').Count = 3) and (LPolicy.Field('anyOf').Count = 2) and
+    (LPolicy.Field('properties').Field('horizontal').Field('enum').Item(0).Kind = ndNull) and
+    not LPolicy.Field('additionalProperties').AsBoolean,
+    'alignment schema keeps independent nullable axes and refuses an all-null object');
+  LData := LBase.ColumnAlignment(NyxColumnAlignment.Horizontal(nchaEnd)).ToData;
+  LColumn := LData.Field('columns').Item(0);
+  LDecoded := TNyxCollectionViewSpec.FromData(LData);
+  Check(LDecoded.HasColumnAlignment and not LDecoded.HasTablePresentationPolicy and
+    not LDecoded.ColumnAt(0).AlignmentPolicy.HasVertical,
+    'alignment-only descriptors preserve independent absent presentation and vertical axes');
+  RefusesView(Replacing(LData, 'columns', NyxArray([Replacing(LColumn, 'alignment', NyxNull)])),
+    'v12 cannot manufacture presence from an entirely null alignment slot');
+
   LSpecSchema := LSpecs.Item(10);
   LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
   Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 11) and
@@ -532,7 +567,7 @@ end;
   number of schema branches. Named operations keep sixteen separate closed shapes. }
 function ExactChangeBranches(const AChanges: TNyxDataValue): Boolean;
 const
-  CActions: array[0..42] of TNyxText = (
+  CActions: array[0..44] of TNyxText = (
     'create', 'remove', 'add-field', 'default', 'add-row', 'remove-row', 'cell',
     'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
     'add-column', 'clear', 'inherit', 'selection', 'query',
@@ -541,25 +576,27 @@ const
     'table-query', 'column-query', 'default-table-query', 'default-column-query',
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
-    'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text');
-  CNamed: array[0..15] of TNyxText = (
+    'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
+    'column-alignment', 'default-column-alignment');
+  CNamed: array[0..16] of TNyxText = (
     'define', 'field', 'remove-field', 'append/update-row', 'move-row',
     'bind', 'query', 'typeahead', 'table-query', 'column-query', 'table-layout', 'column-layout',
-    'column-format', 'table-workbench', 'table-presentation', 'column-text');
-  CRequired: array[0..15] of TNyxText = (
+    'column-format', 'table-workbench', 'table-presentation', 'column-text', 'column-alignment');
+  CRequired: array[0..16] of TNyxText = (
     '|op|key|fields|rows|', '|op|key|definition|', '|op|key|field|kind|',
     '|op|key|item|values|', '|op|key|item|index|', '|op|owner|projection|spec|',
     '|op|owner|key|projection|query|', '|op|owner|key|projection|policy|',
     '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
     '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
     '|op|owner|key|projection|field|kind|policy|', '|op|owner|key|projection|policy|',
-    '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|');
+    '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
+    '|op|owner|key|projection|field|kind|policy|');
   CFamilies: array[0..3] of TNyxText = ('text', 'boolean', 'integer', 'number');
   CScalars: array[0..3] of TNyxText = ('string', 'boolean', 'integer', 'number');
 var
-  LCounts: array[0..42] of Integer;
-  LFamilies: array[0..42, 0..3] of Boolean;
-  LNamed: array[0..15] of Boolean;
+  LCounts: array[0..44] of Integer;
+  LFamilies: array[0..44, 0..3] of Boolean;
+  LNamed: array[0..16] of Boolean;
   LBranch, LProperties, LOperation, LChoices: TNyxDataValue;
   LIndex, LAt, LFamily, LAction, LShape: Integer;
   LName, LKind, LExpected: TNyxText;
@@ -795,7 +832,7 @@ begin
   LColumn := LChanges.Item(9);
   Check((LTable.Field('properties').Field('op').Field('const').AsText = 'table-query') and
     (LColumn.Field('properties').Field('op').Field('const').AsText = 'column-query') and
-    (LChanges.Item(5).Field('properties').Field('spec').Field('oneOf').Count = 11) and
+    (LChanges.Item(5).Field('properties').Field('spec').Field('oneOf').Count = 12) and
     (LChanges.Item(7).Field('properties').Field('op').Field('const').AsText = 'typeahead'),
     'query policy commands retain their positions beside the appended layout binding version');
   Check((LTable.Field('required').Count = 5) and (LColumn.Field('required').Count = 7) and
@@ -931,9 +968,9 @@ begin
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 65, 'sixteen named commands and all forty-three typed ordinary actions');
+    Check(LChanges.Count = 68, 'seventeen named commands and all forty-five typed ordinary actions');
     { BEGIN EXPANDED_ACTION_CHECK }
-    Check(ExactChangeBranches(LChanges), 'fourteen named shapes and every typed action/family occur exactly once');
+    Check(ExactChangeBranches(LChanges), 'seventeen named shapes and every typed action/family occur exactly once');
     { END EXPANDED_ACTION_CHECK }
     LDefinition := LChanges.Item(1).Field('properties').Field('definition').Field('oneOf');
     Check((LDefinition.Count = 4) and
@@ -944,7 +981,7 @@ begin
       .Field('properties').Field('choices').Field('maxItems').AsInteger = 128,
       'bounded typed domain choices');
     LDefinition := LChanges.Item(5).Field('properties').Field('spec').Field('oneOf');
-    Check((LDefinition.Count = 11) and
+    Check((LDefinition.Count = 12) and
       (LDefinition.Item(0).Field('properties').Field('version').Field('const').AsInteger = 1) and
       (LDefinition.Item(1).Field('required').Count = 6) and
       (LDefinition.Item(1).Field('properties').Field('selection').Field('const').AsText = 'multiple'),

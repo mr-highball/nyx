@@ -193,7 +193,8 @@ function CollectionViewContext(const ASpec: TNyxCollectionViewSpec;
   AOffset, ALimit: Integer; ATypeAheadSupported,
   AQueryControls, ALayoutControls, AFormatControls: Boolean;
   AWorkbenchControls: Boolean = False;
-  APresentationControls: Boolean = False): TNyxDataValue;
+  APresentationControls: Boolean = False;
+  AAlignmentControls: Boolean = False): TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
   LColumn: TNyxCollectionColumn;
@@ -254,6 +255,13 @@ begin
       LColumns[LIndex] := WithResults(LColumns[LIndex], NyxObject([
         NyxField('declared', NyxData(LColumn.HasTextPolicy)),
         NyxField('policy', LColumn.TextPolicy.ToData)]), 'presentationControls');
+    end;
+
+    if AAlignmentControls then
+    begin
+      LColumns[LIndex] := WithResults(LColumns[LIndex], NyxObject([
+        NyxField('declared', NyxData(LColumn.HasAlignmentPolicy)),
+        NyxField('policy', LColumn.AlignmentPolicy.ToData)]), 'alignmentControls');
     end;
   end;
   { A bounded scalar policy belongs to each requested binding context. Declared
@@ -362,6 +370,7 @@ var
   LFormatControls: Boolean;
   LWorkbenchControls: Boolean;
   LPresentationControls: Boolean;
+  LAlignmentControls: Boolean;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentCollectionMode) to High(TNyxAgentCollectionMode) do
@@ -441,10 +450,11 @@ begin
     LFormatControls := False;
     LWorkbenchControls := False;
     LPresentationControls := False;
+    LAlignmentControls := False;
 
     if LMode = acmBindings then
     begin
-      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|formatControls|workbenchControls|presentationControls|');
+      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|formatControls|workbenchControls|presentationControls|alignmentControls|');
       LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumCollectionFields);
       LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
     end
@@ -453,7 +463,7 @@ begin
       case LMode of
         acmColumn:
           begin
-            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|queryControls|layoutControls|formatControls|presentationControls|');
+            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|queryControls|layoutControls|formatControls|presentationControls|alignmentControls|');
           end;
         acmQuery:
           begin
@@ -520,6 +530,11 @@ begin
     begin
       LPresentationControls := AArguments.Field('presentationControls').AsBoolean;
     end;
+
+    if NyxAgentHas(AArguments, 'alignmentControls') then
+    begin
+      LAlignmentControls := AArguments.Field('alignmentControls').AsBoolean;
+    end;
     LName := AArguments.Field('owner').AsText;
     LNode := FSession.Document.Find(LName);
 
@@ -543,7 +558,7 @@ begin
       begin
         LLocal := CollectionViewContext(LNode.CollectionView, LOffset, LLimit,
           (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
-          LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls);
+          LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls, LAlignmentControls);
 
         if (LMode = acmBindings) and not LNode.CollectionView.Defined then
         begin
@@ -553,7 +568,7 @@ begin
           begin
             LRestorable := CollectionViewContext(LSpec, LOffset, LLimit,
               (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
-              LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls);
+              LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls, LAlignmentControls);
           end;
         end;
       end;
@@ -566,7 +581,7 @@ begin
         begin
           LEffective := CollectionViewContext(LProjection.CollectionView, LOffset, LLimit,
             (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
-            LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls);
+            LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls, LAlignmentControls);
         end;
       end;
 
@@ -611,6 +626,12 @@ begin
         begin
           Result := WithResults(Result, NyxData(LProjectionName = 'table'),
             'presentationControlsSupported');
+        end;
+
+        if LAlignmentControls then
+        begin
+          Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+            'alignmentControlsSupported');
         end;
         Exit;
       end;
@@ -709,6 +730,15 @@ begin
               Result := WithResults(Result, NyxObject([
                 NyxField('declared', NyxData(LColumn.HasTextPolicy)),
                 NyxField('policy', LColumn.TextPolicy.ToData)]), 'presentationControls');
+            end;
+
+            if LAlignmentControls then
+            begin
+              Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+                'alignmentControlsSupported');
+              Result := WithResults(Result, NyxObject([
+                NyxField('declared', NyxData(LColumn.HasAlignmentPolicy)),
+                NyxField('policy', LColumn.AlignmentPolicy.ToData)]), 'alignmentControls');
             end;
             Exit;
           end;

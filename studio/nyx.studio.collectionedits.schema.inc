@@ -50,6 +50,7 @@ var
   LSpecNine: TNyxText;
   LSpecTen: TNyxText;
   LSpecEleven: TNyxText;
+  LSpecTwelve: TNyxText;
   LColumnFormat: TNyxText;
   LTableQuery: TNyxText;
   LColumnQuery: TNyxText;
@@ -58,6 +59,7 @@ var
   LTableWorkbench: TNyxText;
   LTablePresentation: TNyxText;
   LColumnText: TNyxText;
+  LColumnAlignment: TNyxText;
   LLayoutFeatures: TNyxText;
   LPaging: TNyxText;
   LSizing: TNyxText;
@@ -300,6 +302,12 @@ begin
     '"required":["version","overflow","maximumLines"],"additionalProperties":false,' +
     '"allOf":[{"if":{"properties":{"overflow":{"enum":["clip","ellipsis"]}}},' +
     '"then":{"properties":{"maximumLines":{"const":1}}}}]}';
+  LColumnAlignment := '{"type":"object","properties":{"version":{"const":1},' +
+    '"horizontal":{"enum":[null,"start","center","end"]},' +
+    '"vertical":{"enum":[null,"top","middle","bottom"]}},' +
+    '"required":["version","horizontal","vertical"],"additionalProperties":false,' +
+    '"anyOf":[{"properties":{"horizontal":{"type":"string"}}},' +
+    '{"properties":{"vertical":{"type":"string"}}}]}';
   LSpecEleven := StringReplace(LSpecNine, '"const":9', '"const":11', []);
   LSpecEleven := StringReplace(LSpecEleven, '"editable":{"type":"boolean"}',
     '"editable":{"type":"boolean"},"textPresentation":{"anyOf":[{"type":"null"},' + LColumnText + ']}', []);
@@ -312,6 +320,16 @@ begin
   LSpecEleven := StringReplace(LSpecEleven,
     '"selection","query","typeAhead","paging","queryControls","layoutControls"]',
     '"selection","query","typeAhead","paging","queryControls","layoutControls","workbench","tablePresentation"]', []);
+  { Derive twelve before eleven's presence discriminator: alignment alone is a
+    valid new descriptor even when spacing and overflow are both inherited. }
+  LSpecTwelve := StringReplace(LSpecEleven, '"const":11', '"const":12', []);
+  LSpecTwelve := StringReplace(LSpecTwelve, '"editable":{"type":"boolean"}',
+    '"editable":{"type":"boolean"},"alignment":{"anyOf":[{"type":"null"},' + LColumnAlignment + ']}', []);
+  LSpecTwelve := StringReplace(LSpecTwelve,
+    '"display","textPresentation"]', '"display","textPresentation","alignment"]', []);
+  Delete(LSpecTwelve, Length(LSpecTwelve), 1);
+  LSpecTwelve := LSpecTwelve + ',"allOf":[{"properties":{"columns":{"contains":{' +
+    '"properties":{"alignment":{"type":"object"}},"required":["alignment"]}}}}]}';
   Delete(LSpecEleven, Length(LSpecEleven), 1);
   LSpecEleven := LSpecEleven + ',"anyOf":[{"properties":{"tablePresentation":{"type":"object"}}},' +
     '{"properties":{"columns":{"contains":{"properties":{"textPresentation":{"type":"object"}},' +
@@ -331,11 +349,11 @@ begin
     '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
     LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ',' +
-    LSpecNine + ',' + LSpecTen + ',' + LSpecEleven + ']}';
+    LSpecNine + ',' + LSpecTen + ',' + LSpecEleven + ',' + LSpecTwelve + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"',
-    ',"allOf":[{"if":{"properties":{"spec":{"properties":{"version":{"enum":[10,11]}}}}},' +
+    ',"allOf":[{"if":{"properties":{"spec":{"properties":{"version":{"enum":[10,11,12]}}}}},' +
     '"then":{"properties":{"projection":{"const":"table"}}}}]');
   Branch('"op":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"key":{"type":"string","minLength":1},' +
@@ -390,6 +408,11 @@ begin
     '"field":{"type":"string","minLength":1},"kind":{"enum":["text","boolean","integer","number"]},' +
     '"policy":{"oneOf":[{"type":"null"},' + LColumnText + ']}',
     '"op","owner","key","projection","field","kind","policy"');
+  Branch('"op":{"const":"column-alignment"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"field":{"type":"string","minLength":1},"kind":{"enum":["text","boolean","integer","number"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LColumnAlignment + ']}',
+    '"op","owner","key","projection","field","kind","policy"');
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
@@ -406,7 +429,8 @@ begin
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
       scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
       scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
-      scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
+      scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
+      scaColumnAlignment, scaDefaultColumnAlignment] then
     begin
       LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
       LRequired := LRequired + ',"baseline"';
@@ -460,6 +484,12 @@ begin
       LRequired := LRequired + ',"columnText"';
     end;
 
+    if LAction = scaColumnAlignment then
+    begin
+      LProperties := LProperties + ',"columnAlignment":' + LColumnAlignment;
+      LRequired := LRequired + ',"columnAlignment"';
+    end;
+
     if NyxStudioCollectionViewAction(LAction) then
     begin
       LProperties := LProperties + ',"owner":{"type":"string","minLength":1},' +
@@ -470,7 +500,8 @@ begin
         scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
         scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
-        scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
+        scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
+        scaColumnAlignment, scaDefaultColumnAlignment] then
       begin
         LProperties := StringReplace(LProperties,
           '"projection":{"enum":["list","table","tree"]}',
@@ -495,7 +526,8 @@ begin
     if LAction in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn, scaAddColumn,
       scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
       scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
-    scaColumnText, scaDefaultColumnText] then
+    scaColumnText, scaDefaultColumnText,
+    scaColumnAlignment, scaDefaultColumnAlignment] then
     begin
       LProperties := LProperties + ',"field":{"type":"string","minLength":1},' +
         '"kind":{"enum":["text","boolean","integer","number"]}';
@@ -599,7 +631,7 @@ begin
     '"layoutControls":{"type":"boolean","default":false},' +
     '"formatControls":{"type":"boolean","default":false},' +
     '"workbenchControls":{"type":"boolean","default":false},' +
-    '"presentationControls":{"type":"boolean","default":false}},' +
+    '"presentationControls":{"type":"boolean","default":false},"alignmentControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"column"},"owner":{"type":"string","minLength":1},' +
     '"field":{"type":"string","minLength":1},"source":{"enum":["local","effective","restorable"]},' +
@@ -608,7 +640,7 @@ begin
     '"queryControls":{"type":"boolean","default":false},' +
     '"layoutControls":{"type":"boolean","default":false},' +
     '"formatControls":{"type":"boolean","default":false},' +
-    '"presentationControls":{"type":"boolean","default":false}},' +
+    '"presentationControls":{"type":"boolean","default":false},"alignmentControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner","field","source"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"source":{"enum":["local","effective","restorable"]},' +

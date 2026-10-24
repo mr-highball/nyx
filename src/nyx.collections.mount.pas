@@ -385,6 +385,10 @@ type
     { A separate copied cache keeps text/density opt-in independent of width,
       pinning and arrangement controls. Runtime work limits never enter design. }
     FHasTablePresentation: Boolean;
+    { A supporting table can observe explicit runtime presentation before any
+      authored or runtime choice is active. This is capability, not opt-in;
+      older alternative views keep their unchanged ordinary path. }
+    FObservesTablePresentation: Boolean;
     FTablePresentation: TNyxTablePresentationObservation;
     FTextLimits: TNyxTableTextWorkLimits;
     { Cached during synchronization, never query a source/controller from the
@@ -471,6 +475,10 @@ type
       shields. A native target may arm its existing idle handler here, including
       an early composition-deferred return. This is not a final-ready fence. }
     procedure RefreshTargetIdle; virtual;
+    { Admit target observation before the first authored/runtime presentation
+      pass. A target may refuse unsupported direct mounts; failure does not
+      claim activation or make an old physical surface authoritative. }
+    procedure PrepareTablePresentation; virtual;
     { Flags/weak-receiver retirement only, before query/observer cleanup can
       enter external code. Actual target API/hook cleanup remains DetachTarget. }
     procedure RetireTargetInput; virtual;
@@ -2379,6 +2387,8 @@ var
   LInstalled: Boolean;
   LTable: Boolean;
   LCapture: INyxCollectionColumnsCapture;
+  LColumns: INyxCollectionColumns;
+  LPresentation: INyxCollectionTablePresentation;
 begin
   inherited Create;
   FTextLimits := TNyxTableTextWorkLimits.Defaults;
@@ -2399,6 +2409,9 @@ begin
   LTable := AView.Projection = cpTable;
   FHasColumnLayout := LTable and AView.Spec.HasLayoutControls;
   FHasTablePresentation := LTable and AView.Spec.HasPresentationPolicy;
+  FObservesTablePresentation := LTable and
+    Supports(AView, INyxCollectionColumns, LColumns) and
+    Supports(AView, INyxCollectionTablePresentation, LPresentation);
 
   if not LTable then
   begin
@@ -2435,7 +2448,7 @@ begin
   FInputLifetime := LState;
   FInputStateObject := LState;
 
-  if FHasColumnLayout or FHasTablePresentation then
+  if FHasColumnLayout or FHasTablePresentation or FObservesTablePresentation then
   begin
     LCapture := NyxCollectionColumns(AView).CaptureColumns;
 
@@ -2444,9 +2457,11 @@ begin
       apply runtime widths/pins; those remain guarded by FHasColumnLayout. }
     FColumnLayout := TNyxColumnLayoutObservation.Read(LCapture);
 
-    if FHasTablePresentation then
+    if FHasTablePresentation or FObservesTablePresentation then
     begin
       FTablePresentation := TNyxTablePresentationObservation.Read(LCapture);
+      FHasTablePresentation := FHasTablePresentation or
+        FTablePresentation.HasRuntimeOverrides;
     end;
   end;
   { The view owns only immutable authored options. Each browser/native mount
@@ -2993,6 +3008,12 @@ begin
   Result := False;
 end;
 
+procedure TNyxCollectionMountBase.PrepareTablePresentation;
+begin
+  { Browser observation is attached before activation. Native targets override
+    this boundary to admit their real frame/editor bridge and paint reader. }
+end;
+
 procedure TNyxCollectionMountBase.RefreshTargetIdle;
 begin
   { Ordinary targets have no deferred native-tail drain. }
@@ -3046,7 +3067,7 @@ begin
       Exit;
     end;
 
-    if FInputTrackingPrepared or FHasColumnLayout or FHasTablePresentation or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
+    if FInputTrackingPrepared or FHasColumnLayout or FHasTablePresentation or FObservesTablePresentation or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
       FCellRangeEnabled then
     begin
       { The independent state survives a reentrant Disconnect that clears the
@@ -3062,13 +3083,13 @@ begin
       Exit;
     end;
 
-    if FHasColumnLayout or FHasTablePresentation then
+    if FHasColumnLayout or FHasTablePresentation or FObservesTablePresentation then
     begin
       LCapture := NyxCollectionColumns(LView).CaptureColumns;
 
       LNextLayout := TNyxColumnLayoutObservation.Read(LCapture);
 
-      if FHasTablePresentation then
+      if FHasTablePresentation or FObservesTablePresentation then
       begin
         LNextPresentation := TNyxTablePresentationObservation.Read(LCapture);
       end;
@@ -3099,6 +3120,15 @@ begin
     end;
     FColumnLayout := LNextLayout;
     FTablePresentation := LNextPresentation;
+
+    if FHasTablePresentation or LNextPresentation.HasRuntimeOverrides then
+    begin
+      PrepareTablePresentation;
+      { Once activated, retain the observer for this incarnation. Reset needs
+        one final admitted pass to clear old styles/row geometry and drafts
+        must keep their composition continuity even after all choices clear. }
+      FHasTablePresentation := True;
+    end;
     RenderDataset;
 
     if FTargetRefreshDeferred then

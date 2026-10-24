@@ -711,6 +711,85 @@ begin
   end;
 end;
 
+{ Explicit runtime choices do not require persisting a dummy authored default.
+  The same view publication/transfer owners retain typed fields and reject ABA. }
+procedure RuntimeOnlyPublication;
+var
+  LStore: INyxCollection;
+  LView: INyxCollectionView;
+  LPeer: INyxCollectionView;
+  LNext: INyxCollectionView;
+  LPolicy: INyxCollectionTablePresentation;
+  LCapture: INyxCollectionPresentationCapture;
+  LPrepared: INyxPreparedPublication;
+  LSource: INyxCollectionSnapshot;
+  LSpec: TNyxCollectionViewSpec;
+  LPrefs: TNyxTablePresentationPreferences;
+  LKey: TNyxCollectionRef;
+  LRefused: Boolean;
+begin
+  LKey := NyxCollection('runtime-only-presentation');
+  LStore := NewNyxCollection(LKey, NyxCollectionSchema.Text(NyxTextField(CCommand), '')
+    .Integer(NyxIntegerField('Score'), 0), [NyxCollectionItem(NyxItem(LKey, 'one'))
+      .WithValue(NyxTextField(CCommand), CExactText).WithValue(NyxIntegerField('Score'), 4)]);
+  LSpec := NyxCollectionView(LKey).Column(NyxTextField(CCommand), 'Command')
+    .Column(NyxIntegerField('Score'), 'Score');
+  LView := NewNyxCollectionView(LStore, LSpec, cpTable);
+  LPeer := NewNyxCollectionView(LStore, LSpec, cpTable);
+  try
+    LSource := LStore.Snapshot;
+    LPolicy := NyxCollectionTablePresentation(LView);
+    LCapture := LPolicy.CapturePresentation;
+    LPrefs := NyxTablePresentationPreferences.Density(ntrdComfortable).WithColumn(
+      NyxColumnTextPreference(NyxColumnIdentity(NyxTextField(CCommand)), NyxColumnText.Wrap(3)));
+    LPrepared := LPolicy.PreparePresentation(LCapture, LPrefs);
+    LPrepared.Validate;
+    LPrepared.Retire;
+    LPrepared := nil;
+    Check(LPolicy.CapturePresentation.Serial = LCapture.Serial,
+      'retiring an admitted runtime-only plan publishes no preference or serial');
+    ConfigurePresentation(LView, LPrefs);
+    Check(not LView.Spec.HasPresentationPolicy and
+      (LView.Spec.ToData.ToJSON = LSpec.ToData.ToJSON) and (LStore.Snapshot = LSource) and
+      LPolicy.CapturePresentation.Preferences.HasDensity,
+      'runtime-only admission preserves exact absent descriptor and accepted RAW source');
+    Check(not NyxCollectionTablePresentation(LPeer).CapturePresentation.Preferences.HasDensity,
+      'a same-store peer keeps independent runtime-only density and text choices');
+    LRefused := False;
+    try
+      LPrepared := LPolicy.PreparePresentation(LCapture, NyxTablePresentationPreferences);
+    except
+      on ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'runtime-only publication retires the exact original capture');
+    LNext := NewNyxCollectionView(LStore, NyxCollectionView(LKey)
+      .Column(NyxIntegerField('Score'), 'Score').Column(NyxTextField(CCommand), 'Command'), cpTable);
+    LPrepared := PrepareNyxCollectionColumnTransfer(LView, LNext);
+    Check(LPrepared <> nil, 'same-store replacement prepares runtime-only preference transfer without a dummy saved policy');
+    PublishNyxGroup([LPrepared]);
+    Check(not LNext.Spec.HasPresentationPolicy and
+      (NyxCollectionTablePresentation(LNext).CapturePresentation.Preferences.ColumnAt(0).Field.Name = CCommand) and
+      (LNext.Spec.ColumnAt(0).FieldName = 'Score'),
+      'runtime-only transfer follows full typed identity across reordered absent target columns');
+    ConfigurePresentation(LNext, NyxTablePresentationPreferences);
+    Check(not NyxCollectionTablePresentation(LNext).CapturePresentation.Preferences.HasDensity and
+      (NyxCollectionTablePresentation(LNext).CapturePresentation.Preferences.Count = 0) and
+      (LStore.Snapshot = LSource), 'runtime-only reset clears overrides without changing source or saved absence');
+  finally
+    LPrepared := nil;
+    LCapture := nil;
+    LPolicy := nil;
+    LNext := nil;
+    LPeer := nil;
+    LView := nil;
+    LStore := nil;
+    LSource := nil;
+  end;
+end;
+
 begin
   try
     AuthoredValues;
@@ -719,6 +798,7 @@ begin
     RuntimePreferences;
     DescriptorCases;
     PublicationCases;
+    RuntimeOnlyPublication;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-table-presentation', 'passed');
     document.body.setAttribute('data-table-presentation-checks', IntToStr(GChecks));

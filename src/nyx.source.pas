@@ -764,6 +764,7 @@ uses
   nyx.collections.arrangement,
   nyx.collections.workbench.policy,
   nyx.collections.presentation,
+  nyx.collections.alignment,
   nyx.formatting,
   nyx.collections.query.policy,
   nyx.collections.query.controls,
@@ -903,7 +904,8 @@ type
     vkValueFormat, vkFormatLocale, vkFormatterRef, vkFormatDateOrder,
     vkTableWorkbenchPolicy, vkWorkbenchCopyAction, vkWorkbenchCopyFields,
     vkWorkbenchLineEnding, vkTablePresentationPolicy, vkColumnTextPolicy,
-    vkTableRowDensity);
+    vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
+    vkColumnVerticalAlignment);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -979,6 +981,7 @@ type
     TableWorkbenchPolicy: TNyxTableWorkbenchPolicy;
     TablePresentationPolicy: TNyxTablePresentationPolicy;
     ColumnTextPolicy: TNyxColumnTextPolicy;
+    ColumnAlignmentPolicy: TNyxColumnAlignmentPolicy;
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
@@ -1747,6 +1750,12 @@ begin
   RegisterEnum(vkTableRowDensity, Ord(ntrdCompact), 'ntrdCompact');
   RegisterEnum(vkTableRowDensity, Ord(ntrdNormal), 'ntrdNormal');
   RegisterEnum(vkTableRowDensity, Ord(ntrdComfortable), 'ntrdComfortable');
+  RegisterEnum(vkColumnHorizontalAlignment, Ord(nchaStart), 'nchaStart');
+  RegisterEnum(vkColumnHorizontalAlignment, Ord(nchaCenter), 'nchaCenter');
+  RegisterEnum(vkColumnHorizontalAlignment, Ord(nchaEnd), 'nchaEnd');
+  RegisterEnum(vkColumnVerticalAlignment, Ord(ncvaTop), 'ncvaTop');
+  RegisterEnum(vkColumnVerticalAlignment, Ord(ncvaMiddle), 'ncvaMiddle');
+  RegisterEnum(vkColumnVerticalAlignment, Ord(ncvaBottom), 'ncvaBottom');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoYearMonthDay), 'nfdoYearMonthDay');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoDayMonthYear), 'nfdoDayMonthYear');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoMonthDayYear), 'nfdoMonthDayYear');
@@ -3785,7 +3794,8 @@ begin
           (LName = 'nyxnodomain') or (LName = 'tnyxstatevalue') or
           (LName = 'nyxcollectionview') or (LName = 'nyxcolumnlayout') or
           (LName = 'nyxtablelayout') or (LName = 'nyxtableworkbench') or
-          (LName = 'nyxtablepresentation') or (LName = 'nyxcolumntext') then
+          (LName = 'nyxtablepresentation') or (LName = 'nyxcolumntext') or
+          (LName = 'nyxcolumnalignment') then
         begin
           Exit(CollectionConstructor(LName));
         end;
@@ -6766,6 +6776,7 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.arrangement') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.workbench.policy') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.presentation') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.alignment') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.formatting') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.resources') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or

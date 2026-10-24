@@ -28,7 +28,8 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.contract,
   nyx.codec, nyx.codegen, nyx.data, nyx.collections, nyx.collections.columns,
   nyx.collections.paging, nyx.collections.view.types, nyx.collections.query.editor,
-  nyx.collections.workbench.policy, nyx.collections.presentation, nyx.studio.projects, nyx.studio.session,
+  nyx.collections.workbench.policy, nyx.collections.presentation, nyx.collections.alignment,
+  nyx.studio.projects, nyx.studio.session,
   nyx.studio.authoring, nyx.studio.collectionintent, nyx.studio.collectionedits,
   nyx.studio.collections, nyx.studio.stateedits, nyx.studio.agents
   {$ifdef PAS2JS}, Web{$endif};
@@ -480,9 +481,218 @@ begin
   end;
 end;
 
+{ Ordinary form capture and actual semantic admission share the same logical
+  policy. These checks keep their source/history/currentness proofs distinct
+  from the separate mounted browser/LCL paint and editor journeys. }
+procedure AlignmentAuthoring;
+var
+  LSession: TNyxStudioSession;
+  LShell: TNyxNode;
+  LProjection: TNyxNode;
+  LEdit: TNyxStudioDesignEdit;
+  LIntent: TNyxStudioCollectionIntent;
+  LBefore: TNyxText;
+  LApplied: TNyxText;
+  LRefused: Boolean;
+  LPolicy: TNyxColumnAlignmentPolicy;
+
+  procedure Rebuild;
+  begin
+    FreeAndNil(LShell);
+    LShell := TNyxNode.Create(nkPage, 'alignment-inspector');
+    LProjection := LSession.SelectedProjection;
+    try
+      AddNyxCollectionBindingPanel(LShell, LSession, LProjection);
+    finally
+      FreeAndNil(LProjection);
+    end;
+  end;
+
+  function Capture(AReset: Boolean = False): Boolean;
+  var
+    LID: TNyxText;
+  begin
+    LID := NyxStudioColumnAlignmentApplyID(0);
+
+    if AReset then
+    begin
+      LID := NyxStudioColumnAlignmentDefaultID(0);
+    end;
+    Result := CaptureNyxStudioLayout(LSession, LShell.Find(LID), LShell,
+      Default(TNyxStudioPendingDesign), LEdit);
+  end;
+
+begin
+  LSession := TNyxStudioSession.Create(Seed);
+  LShell := nil;
+  LProjection := nil;
+  try
+    LSession.Select('records-table');
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    Rebuild;
+    Check((LShell.Find(NyxStudioColumnAlignmentFormID(0)).Count = 6) and
+      not LSession.Document.Find('records-table').CollectionView.HasColumnAlignment,
+      'ordinary alignment forms preserve raw absence until Apply');
+    LShell.Find(NyxStudioColumnAlignmentFieldID(0, scafHorizontal)).Configure.Value('End').Done;
+    LShell.Find(NyxStudioColumnAlignmentFieldID(0, scafVertical)).Configure.Value('Middle').Done;
+    Check(Capture and (LEdit.Collection.Action = scaColumnAlignment) and
+      (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+      'alignment capture copies exact typed axes without publishing');
+    LIntent := TNyxStudioCollectionIntent.FromData(LEdit.Collection.ToData);
+    Check(LIntent.SameIntent(LEdit.Collection), 'alignment intent round-trips its exact baseline and policy');
+    LSession.ApplyCollectionIntent(LIntent);
+    LApplied := EncodeNyxProject(LSession.ProjectSnapshot);
+    LPolicy := LSession.Document.Find('records-table').CollectionView.ColumnAt(0).AlignmentPolicy;
+    Check((LPolicy.HorizontalAlignment = nchaEnd) and (LPolicy.VerticalAlignment = ncvaMiddle) and
+      not LSession.Document.Find('records-table').CollectionView.ColumnAt(1).HasAlignmentPolicy and
+      (Pos('.ColumnAlignment(NyxColumnAlignment.Horizontal(nchaEnd).Vertical(ncvaMiddle))',
+        LSession.Source) > 0), 'alignment Apply updates only its typed column and generates crafted Pascal');
+    LRefused := False;
+    try
+      Capture;
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(LSession.ProjectSnapshot) = LApplied),
+      'an old alignment form cannot overwrite the newer accepted binding');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore, 'one Undo restores exact pre-alignment pair');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LApplied, 'one Redo restores exact alignment pair');
+    Rebuild;
+    LShell.Find(NyxStudioColumnAlignmentFieldID(0, scafHorizontal)).Configure.Value('Use host default').Done;
+    LShell.Find(NyxStudioColumnAlignmentFieldID(0, scafVertical)).Configure.Value('Bottom').Done;
+    Check(Capture and not LEdit.Collection.ColumnAlignment.HasHorizontal and
+      (LEdit.Collection.ColumnAlignment.VerticalAlignment = ncvaBottom),
+      'one-axis Apply preserves inherited inline alignment');
+    LSession.ApplyCollectionIntent(LEdit.Collection);
+    Rebuild;
+    LShell.Find(NyxStudioColumnAlignmentFieldID(0, scafHorizontal)).Configure.Value('unknown').Done;
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    LRefused := False;
+    try
+      Capture;
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+      'unknown form choices refuse atomically');
+    Check(Capture(True) and (LEdit.Collection.Action = scaDefaultColumnAlignment),
+      'explicit reset can discard an inert unsubmitted alignment draft');
+    LSession.ApplyCollectionIntent(LEdit.Collection);
+    Check(not LSession.Document.Find('records-table').CollectionView.HasColumnAlignment,
+      'reset removes alignment without manufacturing explicit default axes');
+  finally
+    LProjection.Free;
+    LShell.Free;
+    LSession.Free;
+  end;
+end;
+
+procedure SemanticAlignment;
+var
+  LAgent: TNyxAgentSession;
+  LRevision: Integer;
+  LKey: TNyxCollectionRef;
+  LField: TNyxStudioCollectionFieldRef;
+  LBefore: TNyxText;
+  LApplied: TNyxText;
+  LReply: TNyxDataValue;
+  LPlain: TNyxDataValue;
+  LRequest: TNyxDataValue;
+  LRefused: Boolean;
+
+  function Pair: TNyxText;
+  begin
+    Result := EncodeNyxProject(LAgent.PreviewPair(LRevision, 'home'));
+  end;
+
+  procedure Apply(const AID: TNyxText; const AChanges: array of TNyxCollectionChange);
+  begin
+    LRequest := NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LRevision)), NyxField('operationId', NyxData(AID)),
+      NyxField('changes', NyxCollectionPatch(AChanges).ToData)]);
+    LAgent.Call('nyx_collections', 'Alignment test', LRequest);
+    LRevision := LAgent.Revision;
+  end;
+
+begin
+  LAgent := TNyxAgentSession.Create(Seed);
+  try
+    LRevision := LAgent.Revision;
+    LKey := NyxCollection('inspected-records');
+    LField := TNyxStudioCollectionFieldRef.Text(NyxTextField('Caption'));
+    LBefore := Pair;
+    LPlain := LAgent.Call('nyx_collections', 'Alignment test', NyxObject([
+      NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('records-table')),
+      NyxField('limit', NyxData(1))]));
+    LReply := LAgent.Call('nyx_collections', 'Alignment test', NyxObject([
+      NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('records-table')),
+      NyxField('alignmentControls', NyxData(False)), NyxField('limit', NyxData(1))]));
+    Check(LPlain.ToJSON = LReply.ToJSON, 'false alignment selector retains exact previous response shape');
+    LRefused := False;
+    try
+      NyxSetCollectionColumnAlignment(NyxBindingOwner('records-table'), LKey, cpTable,
+        LField, NyxColumnAlignment);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (Pair = LBefore), 'empty alignment setters require an explicit reset');
+    Apply('alignment-group', [NyxSetCollectionColumnAlignment(NyxBindingOwner('records-table'),
+      LKey, cpTable, LField, NyxColumnAlignment.Horizontal(nchaEnd).Vertical(ncvaBottom)),
+      NyxSetCollectionTablePresentation(NyxBindingOwner('records-table'), LKey, cpTable,
+        NyxTablePresentation.Density(ntrdCompact))]);
+    LApplied := Pair;
+    LAgent.Call('nyx_collections', 'Alignment test', LRequest);
+    Check((LAgent.Revision = LRevision) and (Pair = LApplied), 'alignment grouped retries remain idempotent');
+    LReply := LAgent.Call('nyx_collections', 'Alignment test', NyxObject([
+      NyxField('mode', NyxData('column')), NyxField('owner', NyxData('records-table')),
+      NyxField('field', NyxData('Caption')), NyxField('source', NyxData('effective')),
+      NyxField('alignmentControls', NyxData(True)), NyxField('count', NyxData(1))]));
+    Check(LReply.Field('alignmentControlsSupported').AsBoolean and
+      LReply.Field('alignmentControls').Field('declared').AsBoolean and
+      (LReply.Field('alignmentControls').Field('policy').ToJSON =
+        NyxColumnAlignment.Horizontal(nchaEnd).Vertical(ncvaBottom).ToData.ToJSON),
+      'bounded exact-column read exposes the requested policy after a later independent policy edit');
+    LAgent.Call('nyx_history', 'Alignment test', NyxObject([
+      NyxField('expectedRevision', NyxData(LRevision)), NyxField('operationId', NyxData('alignment-undo')),
+      NyxField('direction', NyxData('undo'))]));
+    LRevision := LAgent.Revision;
+    Check(Pair = LBefore, 'one semantic Undo restores both grouped changes and exact source');
+    LRefused := False;
+    try
+      Apply('alignment-family-refusal', [NyxSetCollectionTablePresentation(
+        NyxBindingOwner('records-table'), LKey, cpTable, NyxTablePresentation),
+        NyxSetCollectionColumnAlignment(NyxBindingOwner('records-table'), LKey, cpTable,
+          TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('Caption')),
+          NyxColumnAlignment.Horizontal(nchaStart))]);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (Pair = LBefore) and (LAgent.Revision = LRevision),
+      'wrong scalar family refuses the entire candidate including preceding policy edits');
+  finally
+    LAgent.Free;
+  end;
+end;
+
 begin
   try
     OrdinaryAuthoring;
+    AlignmentAuthoring;
+    SemanticAlignment;
     SemanticAuthoring;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-presentation-authoring', 'passed');

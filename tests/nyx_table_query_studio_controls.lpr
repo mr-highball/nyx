@@ -41,6 +41,8 @@ uses
   nyx.collections.mount, nyx.collections.query.controls, nyx.studio.section.views,
   nyx.collections.arrangement,
   nyx.collections.workbench.policy,
+  nyx.collections.presentation,
+  nyx.collections.alignment,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.view, nyx.studio.collections, nyx.studio.collectionintent,
   nyx.studio.collectionedits, nyx.studio.stateedits, nyx.studio.authoring,
@@ -121,6 +123,10 @@ type
     FWorkbenchFinished: Boolean;
     FWorkbenchInitial: TNyxCollectionViewSpec;
     FWorkbenchAccepted: TNyxText;
+    { The same ordinary workbench path accepts presentation before Save/Open.
+      Retain its complete pair so independent resets and Undo cannot quietly
+      substitute a regenerated source or discard another policy's declaration. }
+    FPresentationAccepted: TNyxText;
     FBefore, FAfter, FDefinition, FSibling, FDefaults: TNyxText;
     { Copied descriptive handler/registration names outlive source admission and
       model replacement. They are checked against typed authored snapshots. }
@@ -662,8 +668,8 @@ begin
       (LProperties.Field('op').Field('const').AsText = 'bind') then
     begin
       LData := LProperties.Field('spec').Field('oneOf');
-      Check(LData.Count = 11,
-        'semantic discovery retains all former versions plus table presentation v11');
+      Check(LData.Count = 12,
+        'semantic discovery retains all former versions plus column alignment v12');
       LVersion := LData.Item(6);
       Check((LVersion.Field('properties').Field('version').Field('const').AsInteger = 7) and
         (LVersion.Field('required').Count = 10) and
@@ -1316,6 +1322,21 @@ function TReview.WorkbenchStep: Boolean; {$ifdef PAS2JS}async;{$endif}
 var
   LSection: TNyxNode;
   LExpected: TNyxTableWorkbenchPolicy;
+
+  procedure OpenPolicy(const AFormID: TNyxText);
+  var
+    LDisclosure: TNyxNode;
+  begin
+    LDisclosure := Root.Find(AFormID + '-section');
+    Check((LDisclosure <> nil) and NyxIsDisclosure(LDisclosure),
+      'presentation uses an ordinary mounted Disclosure: ' + AFormID);
+
+    if not NyxDisclosureExpanded(LDisclosure) then
+    begin
+      Click(LDisclosure.Part(NyxPart('header')).ID);
+    end;
+  end;
+
 begin
   Result := False;
   LExpected := NyxTableWorkbench.RangeSelection(True)
@@ -1399,6 +1420,131 @@ begin
         Check((Pair = FWorkbenchAccepted) and
           (Spec.TableWorkbenchPolicy.ToData.ToJSON = LExpected.ToData.ToJSON),
           'ordinary Undo restores the exact action policy/source pair for subsequent Save/Open');
+        Isolated;
+        FBefore := Pair;
+        OpenPolicy(NyxStudioPresentationPolicyFormID(-1));
+        Change(NyxStudioPresentationPolicyFieldID(-1, sppfDensity), 'Comfortable');
+        Check(Pair = FBefore, 'mounted spacing input is a draft until ordinary Apply');
+        Click(NyxStudioPresentationPolicyApplyID(-1));
+      end;
+    4:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.HasTablePresentationPolicy and
+          (Spec.TablePresentationPolicy.RowDensity = ntrdComfortable) and
+          (Pos('.TablePresentation(NyxTablePresentation.Density(ntrdComfortable))',
+            FSession.Source) > 0),
+          'ordinary spacing Apply produces typed adjacent Pascal: ' + FCommands.Message);
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        FBefore := Pair;
+        OpenPolicy(NyxStudioPresentationPolicyFormID(0));
+        Change(NyxStudioPresentationPolicyFieldID(0, sppfTextOverflow), 'Wrap');
+        Change(NyxStudioPresentationPolicyFieldID(0, sppfMaximumLines), '-');
+        Click(NyxInspectorEventsID);
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        Click(NyxInspectorPropertiesID);
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        Check((Pair = FBefore) and
+          (Root.Find(NyxStudioPresentationPolicyFieldID(0, sppfMaximumLines))
+            .Prop(NyxAttributeName(atValue)) = '-') and
+          (Root.Find(NyxStudioPresentationPolicyFieldID(0, sppfTextOverflow))
+            .Prop(NyxAttributeName(atValue)) = 'Wrap'),
+          'an unfinished wrap count survives the actual Inspector tab round trip');
+        OpenPolicy(NyxStudioPresentationPolicyFormID(0));
+        Change(NyxStudioPresentationPolicyFieldID(0, sppfMaximumLines), '4');
+        Click(NyxStudioPresentationPolicyApplyID(0));
+      end;
+    5:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.ColumnAt(0).HasTextPolicy and
+          (Spec.ColumnAt(0).TextPolicy.Overflow = nctoWrap) and
+          (Spec.ColumnAt(0).TextPolicy.MaximumLines = 4) and
+          not Spec.ColumnAt(1).HasTextPolicy and
+          (Spec.TablePresentationPolicy.RowDensity = ntrdComfortable) and
+          (Pos('.ColumnText(NyxColumnText.Wrap(4))', FSession.Source) > 0),
+          'ordinary wrap Apply preserves independent density, peer columns and typed source');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        FBefore := Pair;
+        OpenPolicy(NyxStudioColumnAlignmentFormID(0));
+        Change(NyxStudioColumnAlignmentFieldID(0, scafHorizontal), 'End');
+        Change(NyxStudioColumnAlignmentFieldID(0, scafVertical), 'Middle');
+        Check(Pair = FBefore, 'mounted alignment choices do not publish before Apply');
+        Click(NyxStudioColumnAlignmentApplyID(0));
+      end;
+    6:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.ColumnAt(0).HasAlignmentPolicy and
+          (Spec.ColumnAt(0).AlignmentPolicy.HorizontalAlignment = nchaEnd) and
+          (Spec.ColumnAt(0).AlignmentPolicy.VerticalAlignment = ncvaMiddle) and
+          not Spec.ColumnAt(1).HasAlignmentPolicy and
+          (Pos('.ColumnAlignment(NyxColumnAlignment.Horizontal(nchaEnd).Vertical(ncvaMiddle))',
+            FSession.Source) > 0),
+          'ordinary alignment Apply admits both typed axes and crafted adjacent Pascal');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        FPresentationAccepted := Pair;
+        FBefore := Pair;
+        OpenPolicy(NyxStudioColumnAlignmentFormID(0));
+        Change(NyxStudioColumnAlignmentFieldID(0, scafHorizontal), 'Start');
+        Click(NyxInspectorEventsID);
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        Click(NyxInspectorPropertiesID);
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        Check((Pair = FBefore) and
+          (Root.Find(NyxStudioColumnAlignmentFieldID(0, scafHorizontal))
+            .Prop(NyxAttributeName(atValue)) = 'Start'),
+          'actual Inspector tabs retain an independent unsubmitted alignment draft');
+        OpenPolicy(NyxStudioColumnAlignmentFormID(0));
+        Click(NyxStudioColumnAlignmentDefaultID(0));
+      end;
+    7:
+      begin
+        Check((FCommands.State = nssApplied) and not Spec.ColumnAt(0).HasAlignmentPolicy and
+          Spec.HasTablePresentationPolicy and Spec.ColumnAt(0).HasTextPolicy and
+          (Spec.TableWorkbenchPolicy.ToData.ToJSON = LExpected.ToData.ToJSON),
+          'ordinary alignment reset clears only alignment, ignoring its unsubmitted draft');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Click('action-undo');
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+      end;
+    8:
+      begin
+        Check(Pair = FPresentationAccepted,
+          'one ordinary Undo restores the complete pre-reset alignment/source pair');
+        FBefore := Pair;
+        OpenPolicy(NyxStudioPresentationPolicyFormID(0));
+        Change(NyxStudioPresentationPolicyFieldID(0, sppfMaximumLines), '-');
+        Click(NyxStudioPresentationPolicyDefaultID(0));
+      end;
+    9:
+      begin
+        Check((FCommands.State = nssApplied) and not Spec.ColumnAt(0).HasTextPolicy and
+          Spec.ColumnAt(0).HasAlignmentPolicy and Spec.HasTablePresentationPolicy,
+          'ordinary text reset ignores its partial count and retains alignment/spacing');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Click('action-undo');
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+      end;
+    10:
+      begin
+        Check(Pair = FPresentationAccepted,
+          'text reset Undo restores the same complete accepted presentation pair');
+        FBefore := Pair;
+        OpenPolicy(NyxStudioPresentationPolicyFormID(-1));
+        Click(NyxStudioPresentationPolicyDefaultID(-1));
+      end;
+    11:
+      begin
+        Check((FCommands.State = nssApplied) and not Spec.HasTablePresentationPolicy and
+          Spec.ColumnAt(0).HasAlignmentPolicy and Spec.ColumnAt(0).HasTextPolicy,
+          'ordinary spacing reset preserves independent text layout and alignment');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Click('action-undo');
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+      end;
+    12:
+      begin
+        Check((Pair = FPresentationAccepted) and
+          (Spec.TableWorkbenchPolicy.ToData.ToJSON = LExpected.ToData.ToJSON),
+          'the original Save/Open producer receives exact presentation and workbench policies');
         Isolated;
         Result := True;
         {$ifdef NYX_WORKBENCH_STUDIO_ONLY}

@@ -324,6 +324,71 @@ begin
   Result := False;
 end;
 
+{ Include alignment only when authored columns declare it. Older designs keep
+  their existing imports and independently compiled source bytes. }
+function NeedsColumnAlignmentUnit(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+
+  function ContainsAlignment(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.HasColumnAlignment;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := ContainsAlignment(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if ContainsAlignment(ADocument.Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if ContainsAlignment(ADocument.Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+{ Emit only explicit axes through public closed Pascal choices. Unspecified
+  axes remain inherited; source never guesses alignment from a field value. }
+function ColumnAlignmentExpression(const AValue: TNyxColumnAlignmentPolicy): TNyxText;
+const
+  CHorizontal: array[TNyxColumnHorizontalAlignment] of TNyxText =
+    ('nchaStart', 'nchaCenter', 'nchaEnd');
+  CVertical: array[TNyxColumnVerticalAlignment] of TNyxText =
+    ('ncvaTop', 'ncvaMiddle', 'ncvaBottom');
+begin
+  AValue.Validate;
+  Result := 'NyxColumnAlignment';
+
+  if AValue.HasHorizontal then
+  begin
+    Result := Result + '.Horizontal(' + CHorizontal[AValue.HorizontalAlignment] + ')';
+  end;
+
+  if AValue.HasVertical then
+  begin
+    Result := Result + '.Vertical(' + CVertical[AValue.VerticalAlignment] + ')';
+  end;
+end;
+
 { Saved closed permissions become public Pascal symbols, never numeric masks
   or an untyped interchange expression. Order is stable, including empty sets. }
 function WorkbenchCopyExpression(AActions: TNyxWorkbenchCopyActions): TNyxText;
@@ -516,6 +581,12 @@ begin
         LLine := LLine + '.AllowOnly(' + ColumnLayoutFeatureExpression(LColumnLayout.Features) + ')';
       end;
       ALines.Add(LLine + ')');
+    end;
+
+    if LColumn.HasAlignmentPolicy then
+    begin
+      ALines.Add(AIndent + '    .ColumnAlignment(' +
+        ColumnAlignmentExpression(LColumn.AlignmentPolicy) + ')');
     end;
 
     if LColumn.HasTextPolicy then

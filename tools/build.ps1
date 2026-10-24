@@ -785,9 +785,11 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
         $nyxPolicySuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
         $nyxPolicyOwnedNames = @(Get-ChildItem -LiteralPath @('src', 'tests') `
           -Recurse -File | Where-Object { $_.Extension -in @('.pas', '.pp', '.inc', '.lpr') } |
-          ForEach-Object { $_.Name }) + @('nyx.generated.view.pas', 'nyx.generated.presentation.pas')
+          ForEach-Object { $_.Name }) + @('nyx.generated.view.pas',
+            'nyx.generated.presentation.pas', 'nyx.generated.alignment.pas')
         foreach ($nyxPolicyConsumer in @('policy', 'source', 'compiled',
-            'presentation', 'presentation-source', 'presentation-compiled', 'text-layout')) {
+            'presentation', 'presentation-source', 'presentation-compiled', 'text-layout',
+            'alignment', 'alignment-view', 'alignment-source', 'alignment-compiled')) {
           $nyxPolicyProgram = 'nyx_collection_workbench_source_tests'
           $nyxPolicyPass = '(?m)^PASS \d+ typed workbench source checks; no runtime service wiring\s*$'
 
@@ -805,6 +807,15 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
           } elseif ($nyxPolicyConsumer -eq 'text-layout') {
             $nyxPolicyProgram = 'nyx_collection_text_layout_tests'
             $nyxPolicyPass = '(?m)^PASS \d+ bounded table text layout checks; substituted metrics only\s*$'
+          } elseif ($nyxPolicyConsumer -eq 'alignment') {
+            $nyxPolicyProgram = 'nyx_collection_alignment_tests'
+            $nyxPolicyPass = '(?m)^PASS \d+ typed column alignment value checks; no target paint claim\s*$'
+          } elseif ($nyxPolicyConsumer -eq 'alignment-view') {
+            $nyxPolicyProgram = 'nyx_collection_alignment_view_tests'
+            $nyxPolicyPass = '(?m)^PASS \d+ column alignment view checks; no target paint claim\s*$'
+          } elseif ($nyxPolicyConsumer -in @('alignment-source', 'alignment-compiled')) {
+            $nyxPolicyProgram = 'nyx_collection_alignment_source_tests'
+            $nyxPolicyPass = '(?m)^PASS \d+ column alignment source checks\s*$'
           }
           foreach ($nyxPolicyTarget in @('native', 'browser')) {
             $output = Join-Path $nyxPolicyRoot ($nyxPolicyConsumer + '-' + $nyxPolicyTarget)
@@ -815,6 +826,8 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
               $nyxPolicyExtra = @('-dNYX_COMPILED_WORKBENCH', "-Fu$nyxPolicyGenerated")
             } elseif ($nyxPolicyConsumer -eq 'presentation-compiled') {
               $nyxPolicyExtra = @('-dNYX_COMPILED_PRESENTATION', "-Fu$nyxPolicyGenerated")
+            } elseif ($nyxPolicyConsumer -eq 'alignment-compiled') {
+              $nyxPolicyExtra = @('-dNYX_COMPILED_ALIGNMENT', "-Fu$nyxPolicyGenerated")
             }
 
             if ($nyxPolicyTarget -eq 'native') {
@@ -851,6 +864,8 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
 
               if ($nyxPolicyConsumer -in @('source', 'presentation-source')) {
                 $nyxPolicyRunArgs = @($nyxPolicyGenerated)
+              } elseif ($nyxPolicyConsumer -eq 'alignment-source') {
+                $nyxPolicyRunArgs = @(Join-Path $nyxPolicyGenerated 'nyx.generated.alignment.pas')
               }
               $nyxPolicyResult = RunOwned (Join-Path $output ($nyxPolicyProgram + $nyxPolicySuffix)) `
                 $nyxPolicyRunArgs 'runtime' 180 $true
@@ -873,6 +888,10 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
                 Get-FileHash -LiteralPath (Join-Path $nyxPolicyGenerated 'nyx.generated.presentation.pas') |
                   Select-Object Path, Hash | ConvertTo-Json | Set-Content -LiteralPath `
                     (Join-Path $nyxPolicyRoot 'emitted-presentation-source-private.json') -Encoding UTF8
+              } elseif ($nyxPolicyConsumer -eq 'alignment-source') {
+                Get-FileHash -LiteralPath (Join-Path $nyxPolicyGenerated 'nyx.generated.alignment.pas') |
+                  Select-Object Path, Hash | ConvertTo-Json | Set-Content -LiteralPath `
+                    (Join-Path $nyxPolicyRoot 'emitted-alignment-source-private.json') -Encoding UTF8
               }
             } else {
               Copy-Item -LiteralPath $nyxPolicyRuntime -Destination (Join-Path $output 'rtl.js')
@@ -886,7 +905,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
           }
         }
         foreach ($nyxPolicyReceipt in @('emitted-source-private.json',
-            'emitted-presentation-source-private.json')) {
+            'emitted-presentation-source-private.json', 'emitted-alignment-source-private.json')) {
           $nyxPolicyEmitted = Get-Content -LiteralPath (Join-Path $nyxPolicyRoot $nyxPolicyReceipt) -Raw |
             ConvertFrom-Json
 

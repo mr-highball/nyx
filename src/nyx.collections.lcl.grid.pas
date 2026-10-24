@@ -30,6 +30,7 @@ uses
   nyx.collections.mount, nyx.gestures.lcl, nyx.widgets.lcl,
   nyx.collections.arrangement, nyx.formatting, nyx.state,
   nyx.collections.text.layout,
+  nyx.collections.alignment,
   nyx.collections.clipboard.actions;
 
 type
@@ -46,6 +47,11 @@ type
     False preserves the ordinary grid drawing path for an absent text policy. }
   TNyxGridTextLayoutReader = function(AColumn, ARow: Integer;
     out ALayout: TNyxTableTextLayout): Boolean of object;
+  { Paint/editor-only borrowed reader of copied per-column logical axes. It
+    performs no source or application callout. False preserves both inherited
+    axes; the mount detaches this receiver before retiring the physical grid. }
+  TNyxGridCellAlignmentReader = function(AColumn, ARow: Integer;
+    out APolicy: TNyxColumnAlignmentPolicy): Boolean of object;
   { Borrowed pure range-paint receiver. It reads copied page bounds/typed field
     membership only, with no dataset/widget getter, validation or publication.
     Its mount detaches it before retiring either receiver or physical grid. }
@@ -225,6 +231,10 @@ type
       their canonical reader; formatted labels can never become editor input. }
     FDisplayReader: TNyxGridDisplayReader;
     FTextLayoutReader: TNyxGridTextLayoutReader;
+    FAlignmentReader: TNyxGridCellAlignmentReader;
+    { Physical inset copied during row synchronization; paint never rescales
+      density or reads a live model. Only explicit vertical axes consume it. }
+    FAlignmentVerticalInset: Integer;
     FCellRangeReader: TNyxGridCellRangeReader;
     FEditReader: TNyxGridEditReader;
     FValidationEpoch: INyxGridValidationEpoch;
@@ -353,6 +363,10 @@ type
     procedure AttachReader(AReader: TNyxGridTextReader);
     procedure AttachDisplayReader(AReader: TNyxGridDisplayReader);
     procedure ObserveTextLayout(AReader: TNyxGridTextLayoutReader);
+    procedure ObserveCellAlignment(AReader: TNyxGridCellAlignmentReader);
+    procedure ConfigureAlignmentVerticalInset(APixels: Integer);
+    function CellAlignment(AColumn, ARow: Integer;
+      out APolicy: TNyxColumnAlignmentPolicy): Boolean;
     function CellTextLayout(AColumn, ARow: Integer;
       out ALayout: TNyxTableTextLayout): Boolean;
     procedure ObserveCellRange(AReader: TNyxGridCellRangeReader);
@@ -430,7 +444,8 @@ function NewNyxGridInputContinuity: INyxGridInputContinuity;
 implementation
 
 uses
-  Forms, SysUtils, Math, Graphics, StdCtrls, WSGrids, InterfaceBase, LCLPlatformDef, nyx.collections
+  Forms, SysUtils, Math, Graphics, StdCtrls, WSGrids, InterfaceBase, LCLPlatformDef,
+  nyx.collections, nyx.editing, nyx.editing.lcl
   {$ifdef WINDOWS}, Windows, CommCtrl{$endif};
 
 type
@@ -1409,6 +1424,14 @@ end;
 procedure TNyxCollectionStringGrid.SyncColumnEditorStyle;
 var
   LOriginal: TWinControl;
+  LPolicy: TNyxColumnAlignmentPolicy;
+  LAlignment: TAlignment;
+  LSelection: TNyxTextSelection;
+  LText: TNyxText;
+  LFocused: Boolean;
+  LNativeStart: Integer;
+  LNativeLength: Integer;
+  LSurface: INyxGridInputSurface;
 begin
 
   if (FInputSurface = nil) or (FColumnEditor = nil) then
@@ -1421,7 +1444,109 @@ begin
     mirror on show, position and painting, including later base-typed changes. }
   TColumnCellEditor(FColumnEditor).BorderStyle :=
     TCellEditorAccess(LOriginal).BorderStyle;
-  TColumnCellEditor(FColumnEditor).Alignment := GetColumnAlignment(Col, False);
+  LAlignment := GetColumnAlignment(Col, False);
+
+  if not Assigned(FAlignmentReader) then
+  begin
+    TColumnCellEditor(FColumnEditor).Alignment := LAlignment;
+    Exit;
+  end;
+
+  if CellAlignment(Col, Row, LPolicy) and LPolicy.HasHorizontal then
+  begin
+    case ResolveNyxColumnHorizontalAlignment(LPolicy.HorizontalAlignment,
+      UseRightToLeftAlignment) of
+      ncpaLeft: LAlignment := taLeftJustify;
+      ncpaCenter: LAlignment := taCenter;
+      ncpaRight: LAlignment := taRightJustify;
+    end;
+  end;
+
+  if TColumnCellEditor(FColumnEditor).Alignment <> LAlignment then
+  begin
+    { Win32 alignment can recreate an edit HWND. Keep the actual entry/caret
+      and input frame, and suppress validation/reset during that presentation
+      transition. This never accepts or substitutes an unfinished draft. }
+    LSurface := FInputSurface;
+    LText := NyxLCLInputText(FColumnEditor);
+
+    if not LSurface.Current then
+    begin
+      Exit;
+    end;
+    LSelection := CaptureNyxLCLSelection(FColumnEditor);
+
+    if not LSurface.Current then
+    begin
+      Exit;
+    end;
+    { Capture the admitted widgetset's actual offset pair as well. Win32 LCL
+      caches these same units in SelStart/SelLength when no HWND exists. Never
+      infer native units from scalar indexes or allocate a hidden HWND. }
+    LNativeStart := TColumnCellEditor(FColumnEditor).SelStart;
+
+    if not LSurface.Current then
+    begin
+      Exit;
+    end;
+    LNativeLength := TColumnCellEditor(FColumnEditor).SelLength;
+
+    if not LSurface.Current then
+    begin
+      Exit;
+    end;
+    LFocused := FColumnEditor.Focused;
+    BeginPresentationChange;
+    try
+      TColumnCellEditor(FColumnEditor).Alignment := LAlignment;
+
+      if (LSurface <> nil) and not LSurface.Current then
+      begin
+        Exit;
+      end;
+
+      if NyxLCLInputText(FColumnEditor) <> LText then
+      begin
+        RestoreNyxLCLInputText(FColumnEditor, LText);
+      end;
+
+      if (LSurface <> nil) and not LSurface.Current then
+      begin
+        Exit;
+      end;
+
+      if LFocused and FColumnEditor.CanFocus then
+      begin
+        FColumnEditor.SetFocus;
+      end;
+
+      if (LSurface <> nil) and not LSurface.Current then
+      begin
+        Exit;
+      end;
+
+      if LSelection.Defined then
+      begin
+
+        if FColumnEditor.HandleAllocated then
+        begin
+          SelectNyxLCLText(FColumnEditor, LSelection);
+        end
+        else
+        begin
+          { RecreateWnd deliberately leaves an invisible edit windowless.
+            These normal LCL setters update only its cached pair in that state;
+            InitializeWnd later applies it when the host actually reveals the
+            SAME control. The original scalar admission and exact text remain
+            the proof; the live-window selection API must not run here. }
+          TColumnCellEditor(FColumnEditor).SelStart := LNativeStart;
+          TColumnCellEditor(FColumnEditor).SelLength := LNativeLength;
+        end;
+      end;
+    finally
+      EndPresentationChange;
+    end;
+  end;
 end;
 
 function TNyxCollectionStringGrid.ColumnEditorBounds(const ACell: TRect;
@@ -1446,6 +1571,37 @@ var
   LSurface: INyxGridInputSurface;
   LFrame: INyxNativeGestureFrame;
   LSelected: Boolean;
+  LPolicy: TNyxColumnAlignmentPolicy;
+  LStyle: TTextStyle;
+
+  procedure ApplyAlignment;
+  begin
+
+    if (ARow > 0) and CellAlignment(AColumn, ARow, LPolicy) then
+    begin
+      LStyle := Canvas.TextStyle;
+
+      if LPolicy.HasHorizontal then
+      begin
+        case ResolveNyxColumnHorizontalAlignment(LPolicy.HorizontalAlignment,
+          UseRightToLeftAlignment) of
+          ncpaLeft: LStyle.Alignment := taLeftJustify;
+          ncpaCenter: LStyle.Alignment := taCenter;
+          ncpaRight: LStyle.Alignment := taRightJustify;
+        end;
+      end;
+
+      if LPolicy.HasVertical then
+      begin
+        case LPolicy.VerticalAlignment of
+          ncvaTop: LStyle.Layout := tlTop;
+          ncvaMiddle: LStyle.Layout := tlCenter;
+          ncvaBottom: LStyle.Layout := tlBottom;
+        end;
+      end;
+      Canvas.TextStyle := LStyle;
+    end;
+  end;
 begin
   LSurface := FInputSurface;
 
@@ -1456,6 +1612,7 @@ begin
     begin
       Include(AState, gdSelected);
     end;
+    ApplyAlignment;
     inherited DoPrepareCanvas(AColumn, ARow, AState);
     Exit;
   end;
@@ -1483,6 +1640,7 @@ begin
         OnPrepareCanvas chain, so custom painting remains the final authority. }
       Canvas.Brush.Color := TColumnCellEditor(FColumnEditor).Color;
     end;
+    ApplyAlignment;
     inherited DoPrepareCanvas(AColumn, ARow, AState);
   finally
     LFrame.Leave;
@@ -1880,6 +2038,9 @@ var
   LHeight: Integer;
   LRect: TRect;
   LHasLayout: Boolean;
+  LBlockLayout: TTextLayout;
+  LPolicy: TNyxColumnAlignmentPolicy;
+  LHasAlignment: Boolean;
 begin
   LSurface := FInputSurface;
   LFrame := nil;
@@ -1897,6 +2058,7 @@ begin
     end;
 
     LHasLayout := (ARow > 0) and CellTextLayout(AColumn, ARow, LLayout);
+    LHasAlignment := CellAlignment(AColumn, ARow, LPolicy);
 
     if not LHasLayout and Assigned(FDisplayReader) then
     begin
@@ -1919,6 +2081,14 @@ begin
     if LHasLayout then
     begin
       LStyle := Canvas.TextStyle;
+      { Existing wrapped cells center their complete block. Preserve that path
+        unless an explicit vertical axis was admitted for this exact column. }
+      LBlockLayout := tlCenter;
+
+      if LHasAlignment and LPolicy.HasVertical then
+      begin
+        LBlockLayout := LStyle.Layout;
+      end;
       LStyle.SingleLine := True;
       LStyle.Wordbreak := False;
       LStyle.EndEllipsis := False;
@@ -1928,7 +2098,11 @@ begin
       LRect := ARect;
       Inc(LRect.Left, varCellPadding);
       Dec(LRect.Right, varCellPadding);
-      Inc(LRect.Top, Max(0, (ARect.Height - LHeight * LLayout.Count) div 2));
+      case LBlockLayout of
+        tlTop: Inc(LRect.Top, FAlignmentVerticalInset);
+        tlCenter: Inc(LRect.Top, Max(0, (ARect.Height - LHeight * LLayout.Count) div 2));
+        tlBottom: Inc(LRect.Top, Max(0, ARect.Height - LHeight * LLayout.Count - FAlignmentVerticalInset));
+      end;
       for LLine := 0 to LLayout.Count - 1 do
       begin
         LRect.Bottom := Min(ARect.Bottom, LRect.Top + LHeight);
@@ -1937,6 +2111,20 @@ begin
         Inc(LRect.Top, LHeight);
       end;
       Exit;
+    end;
+
+    if LHasAlignment and LPolicy.HasVertical then
+    begin
+      { Inherited drawing applies varCellPadding itself. Adjust only the
+        difference, so logical density is scaled/applied exactly once. }
+      case Canvas.TextStyle.Layout of
+        tlTop: Inc(ARect.Top, FAlignmentVerticalInset - varCellPadding);
+        tlBottom: Dec(ARect.Bottom, FAlignmentVerticalInset - varCellPadding);
+        tlCenter:
+          begin
+            { Centering already divides the full remaining allocation. }
+          end;
+      end;
     end;
     inherited DrawCellText(AColumn, ARow, ARect, AState, AText);
   finally
@@ -3078,6 +3266,8 @@ begin
   FReader := nil;
   FDisplayReader := nil;
   FTextLayoutReader := nil;
+  FAlignmentReader := nil;
+  FAlignmentVerticalInset := 0;
   FCellRangeReader := nil;
   FOverrides := nil;
 end;
@@ -3085,6 +3275,33 @@ end;
 procedure TNyxCollectionStringGrid.ObserveTextLayout(AReader: TNyxGridTextLayoutReader);
 begin
   FTextLayoutReader := AReader;
+end;
+
+procedure TNyxCollectionStringGrid.ObserveCellAlignment(AReader: TNyxGridCellAlignmentReader);
+begin
+  FAlignmentReader := AReader;
+end;
+
+procedure TNyxCollectionStringGrid.ConfigureAlignmentVerticalInset(APixels: Integer);
+begin
+
+  if APixels < 0 then
+  begin
+    raise EArgumentException.Create('Native vertical alignment inset must be nonnegative');
+  end;
+  FAlignmentVerticalInset := APixels;
+end;
+
+function TNyxCollectionStringGrid.CellAlignment(AColumn, ARow: Integer;
+  out APolicy: TNyxColumnAlignmentPolicy): Boolean;
+begin
+  APolicy := NyxColumnAlignment;
+  Result := (ARow > 0) and Assigned(FAlignmentReader);
+
+  if Result then
+  begin
+    Result := FAlignmentReader(AColumn, ARow, APolicy);
+  end;
 end;
 
 function TNyxCollectionStringGrid.CellTextLayout(AColumn, ARow: Integer;

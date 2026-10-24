@@ -61,6 +61,9 @@ type
   { Presentation form roles remain typed while incomplete line-count input stays
     an inert draft. Column -1 addresses the independent body-row spacing form. }
   TNyxStudioPresentationPolicyField = (sppfDensity, sppfTextOverflow, sppfMaximumLines);
+  { Independent optional logical axes in the existing layout draft owner.
+    Transport column positions never replace the captured full typed field. }
+  TNyxStudioColumnAlignmentField = (scafHorizontal, scafVertical);
   { A copied presentation receipt, never design data/history. Exact command
     context prevents a later project, selection or revision from inheriting its
     report. Rows/controls/stores are not retained. Last preview describes its
@@ -172,6 +175,16 @@ function NyxStudioPresentationPolicyDefaultID(AColumn: Integer): TNyxText;
 function CaptureNyxStudioPresentation(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Ordinary Nyx alignment forms retain unfinished choices until explicit Apply.
+  Default reset changes no spacing, overflow, formatter, source data or peers. }
+function NyxStudioColumnAlignmentFormID(AColumn: Integer): TNyxText;
+function NyxStudioColumnAlignmentFieldID(AColumn: Integer;
+  AField: TNyxStudioColumnAlignmentField): TNyxText;
+function NyxStudioColumnAlignmentApplyID(AColumn: Integer): TNyxText;
+function NyxStudioColumnAlignmentDefaultID(AColumn: Integer): TNyxText;
+function CaptureNyxStudioColumnAlignment(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture owns no accepted node/store and performs no source generation.
   Partial scalar notation stays text until the isolated session parses it.
   False means this is not the command's supported event. Invalid closed choices,
@@ -230,6 +243,7 @@ uses
   nyx.contract,
   nyx.formatting,
   nyx.collections.presentation,
+  nyx.collections.alignment,
   nyx.resources,
   nyx.times,
   nyx.numbers.decimal,
@@ -267,7 +281,8 @@ const
     'table-query', 'column-query', 'default-table-query', 'default-column-query',
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
-     'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text');
+     'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
+     'column-alignment', 'default-column-alignment');
   CQueryEditor = NyxStudioQueryEditorID;
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
@@ -432,6 +447,7 @@ end;
 {$include nyx.studio.collections.formatting.inc}
 {$include nyx.studio.collections.workbench.inc}
 {$include nyx.studio.collections.presentation.inc}
+{$include nyx.studio.collections.alignment.inc}
 
 procedure AddLayoutPolicyForms(AParent: TNyxNode; const AOwner: TNyxText;
   const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
@@ -545,6 +561,7 @@ begin
   end;
   AddFormatPolicyForms(LEditor.Node, AOwner, ASchema, ASpec, ALocked);
   AddPresentationPolicyForms(LEditor.Node, AOwner, ASpec, ALocked);
+  AddColumnAlignmentForms(LEditor.Node, AOwner, ASpec, ALocked);
   AParent.Add(LEditor);
 end;
 
@@ -943,7 +960,8 @@ begin
         [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
          scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
          scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
-         scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText]) then
+         scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
+         scaColumnAlignment, scaDefaultColumnAlignment]) then
     begin
       try
         LSchema := ASession.Document.Collections.Snapshot(
@@ -1647,6 +1665,11 @@ var
 
 begin
 
+  if CaptureNyxStudioColumnAlignment(ASession, AButton, AShellRoot, APending, AEdit) then
+  begin
+    Exit(True);
+  end;
+
   if CaptureNyxStudioPresentation(ASession, AButton, AShellRoot, APending, AEdit) then
   begin
     Exit(True);
@@ -1976,7 +1999,8 @@ begin
   if LAction in [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
-    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
+    scaColumnAlignment, scaDefaultColumnAlignment] then
   begin
     raise ENyxCollection.Create('Use the current complete query or layout policy form');
   end;

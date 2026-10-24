@@ -25,7 +25,8 @@ unit nyx.collections.presentation;
 
 interface
 
-uses SysUtils, nyx.text, nyx.data, nyx.collections, nyx.collections.arrangement;
+uses SysUtils, nyx.text, nyx.data, nyx.collections, nyx.collections.arrangement,
+  nyx.collections.alignment;
 
 type
   { Closed body-row spacing choices. Headers retain their existing management
@@ -141,7 +142,7 @@ type
 
   { Detached user overrides, never part of a saved collection descriptor. Each
     builder/copy owns a new bounded column vector on both targets. Density and
-    column overrides reset independently; no order/width/pin preference changes.
+    column text/alignment overrides reset independently; no order/width/pin preference changes.
     Applications persist this separate value under their own collection/schema
     key, then ValidateFields against CURRENT authored fields before adoption.
     Unknown fields and same-name family changes refuse the whole candidate.
@@ -152,27 +153,40 @@ type
     FHasDensity: Boolean;
     FDensity: TNyxTableRowDensity;
     FColumns: array of TNyxColumnTextPreference;
+    FAlignments: array of TNyxColumnAlignmentPreference;
     function GetCount: Integer;
+    function GetAlignmentCount: Integer;
     function GetDensity: TNyxTableRowDensity;
   public
     function Density(AValue: TNyxTableRowDensity): TNyxTablePresentationPreferences;
     function UseDefaultDensity: TNyxTablePresentationPreferences;
     function WithColumn(const AValue: TNyxColumnTextPreference): TNyxTablePresentationPreferences;
     function WithoutColumn(const AField: TNyxColumnIdentity): TNyxTablePresentationPreferences;
+    { Alignment overlays axes independently; removing one field restores its
+      complete authored alignment without changing text or density overrides. }
+    function WithAlignment(const AValue: TNyxColumnAlignmentPreference): TNyxTablePresentationPreferences;
+    function WithoutAlignment(const AField: TNyxColumnIdentity): TNyxTablePresentationPreferences;
     function Copy: TNyxTablePresentationPreferences;
     function ColumnAt(AIndex: Integer): TNyxColumnTextPreference;
     function IndexOf(const AField: TNyxColumnIdentity): Integer;
+    function AlignmentAt(AIndex: Integer): TNyxColumnAlignmentPreference;
+    function AlignmentIndexOf(const AField: TNyxColumnIdentity): Integer;
     procedure Validate;
     procedure ValidateFields(const AFields: array of TNyxColumnIdentity);
     function ResolveTable(const AAuthored: TNyxTablePresentationPolicy): TNyxTablePresentationPolicy;
     function ResolveColumn(const AField: TNyxColumnIdentity;
       const AAuthored: TNyxColumnTextPolicy): TNyxColumnTextPolicy;
+    function ResolveAlignment(const AField: TNyxColumnIdentity;
+      const AAuthored: TNyxColumnAlignmentPolicy): TNyxColumnAlignmentPolicy;
+    { Alignment-free values retain the exact version1 runtime wire. Version2
+      adds a nonempty alignment vector only; neither enters saved descriptors. }
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxTablePresentationPreferences; static;
     property Defined: Boolean read FDefined;
     property HasDensity: Boolean read FHasDensity;
     property RowDensity: TNyxTableRowDensity read GetDensity;
     property Count: Integer read GetCount;
+    property AlignmentCount: Integer read GetAlignmentCount;
   end;
 
 function NyxTablePresentation: TNyxTablePresentationPolicy;
@@ -206,7 +220,8 @@ begin
   end;
 end;
 
-procedure RequireShape(const AData: TNyxDataValue; const AKeys: array of TNyxText);
+procedure RequireShape(const AData: TNyxDataValue; const AKeys: array of TNyxText;
+  AVersion: Integer = 1);
 var
   I: Integer;
   J: Integer;
@@ -237,7 +252,7 @@ begin
     end;
   end;
 
-  if AData.Field('version').AsInteger <> 1 then
+  if AData.Field('version').AsInteger <> AVersion then
   begin
     raise EArgumentException.Create('Unsupported presentation version');
   end;
@@ -594,7 +609,8 @@ var
   J: Integer;
 begin
 
-  if not FDefined or (Length(FColumns) > NyxMaximumColumnLayoutFields) then
+  if not FDefined or (Length(FColumns) > NyxMaximumColumnLayoutFields) or
+    (Length(FAlignments) > NyxMaximumColumnLayoutFields) then
   begin
     raise EArgumentException.Create('Presentation preferences require an initialized bounded vector');
   end;
@@ -615,6 +631,27 @@ begin
       end;
     end;
   end;
+  for I := 0 to High(FAlignments) do
+  begin
+    FAlignments[I].Validate;
+    for J := 0 to I - 1 do
+    begin
+
+      if FAlignments[I].Field.Name = FAlignments[J].Field.Name then
+      begin
+        raise EArgumentException.Create('Duplicate or conflicting alignment preference identity');
+      end;
+    end;
+    for J := 0 to High(FColumns) do
+    begin
+
+      if (FAlignments[I].Field.Name = FColumns[J].Field.Name) and
+        not FAlignments[I].Field.Same(FColumns[J].Field) then
+      begin
+        raise EArgumentException.Create('Text and alignment preference scalar families differ');
+      end;
+    end;
+  end;
 end;
 
 function TNyxTablePresentationPreferences.Copy: TNyxTablePresentationPreferences;
@@ -624,10 +661,16 @@ var
 begin
   LPreferences := Self;
   LPreferences.FColumns := nil;
+  LPreferences.FAlignments := nil;
   SetLength(LPreferences.FColumns, Length(FColumns));
   for I := 0 to High(FColumns) do
   begin
     LPreferences.FColumns[I] := FColumns[I].Copy;
+  end;
+  SetLength(LPreferences.FAlignments, Length(FAlignments));
+  for I := 0 to High(FAlignments) do
+  begin
+    LPreferences.FAlignments[I] := FAlignments[I].Copy;
   end;
   Result := LPreferences;
 end;
@@ -636,6 +679,12 @@ function TNyxTablePresentationPreferences.GetCount: Integer;
 begin
   Validate;
   Result := Length(FColumns);
+end;
+
+function TNyxTablePresentationPreferences.GetAlignmentCount: Integer;
+begin
+  Validate;
+  Result := Length(FAlignments);
 end;
 
 function TNyxTablePresentationPreferences.GetDensity: TNyxTableRowDensity;
@@ -713,6 +762,7 @@ begin
   Validate;
   AValue.Validate;
   LIndex := IndexOf(AValue.Field);
+  AlignmentIndexOf(AValue.Field);
   LPreferences := Copy;
 
   if LIndex < 0 then
@@ -745,6 +795,88 @@ begin
       LPreferences.FColumns[I] := LPreferences.FColumns[I + 1];
     end;
     SetLength(LPreferences.FColumns, Length(LPreferences.FColumns) - 1);
+  end;
+  Result := LPreferences;
+end;
+
+function TNyxTablePresentationPreferences.AlignmentIndexOf(
+  const AField: TNyxColumnIdentity): Integer;
+var
+  LIndex: Integer;
+begin
+  Validate;
+  AField.Validate;
+  for LIndex := 0 to High(FAlignments) do
+  begin
+
+    if FAlignments[LIndex].Field.Name = AField.Name then
+    begin
+
+      if not FAlignments[LIndex].Field.Same(AField) then
+      begin
+        raise EArgumentException.Create('Alignment preference scalar family changed');
+      end;
+      Exit(LIndex);
+    end;
+  end;
+  Result := -1;
+end;
+
+function TNyxTablePresentationPreferences.AlignmentAt(
+  AIndex: Integer): TNyxColumnAlignmentPreference;
+begin
+  Validate;
+
+  if (AIndex < 0) or (AIndex >= Length(FAlignments)) then
+  begin
+    raise EArgumentException.Create('Alignment preference index is outside its captured vector');
+  end;
+  Result := FAlignments[AIndex].Copy;
+end;
+
+function TNyxTablePresentationPreferences.WithAlignment(
+  const AValue: TNyxColumnAlignmentPreference): TNyxTablePresentationPreferences;
+var
+  LPreferences: TNyxTablePresentationPreferences;
+  LIndex: Integer;
+begin
+  Validate;
+  AValue.Validate;
+  LIndex := AlignmentIndexOf(AValue.Field);
+  IndexOf(AValue.Field);
+  LPreferences := Copy;
+
+  if LIndex < 0 then
+  begin
+
+    if Length(LPreferences.FAlignments) >= NyxMaximumColumnLayoutFields then
+    begin
+      raise EArgumentException.Create('Alignment preferences exceed the authored field bound');
+    end;
+    LIndex := Length(LPreferences.FAlignments);
+    SetLength(LPreferences.FAlignments, LIndex + 1);
+  end;
+  LPreferences.FAlignments[LIndex] := AValue.Copy;
+  Result := LPreferences;
+end;
+
+function TNyxTablePresentationPreferences.WithoutAlignment(
+  const AField: TNyxColumnIdentity): TNyxTablePresentationPreferences;
+var
+  LPreferences: TNyxTablePresentationPreferences;
+  LIndex: Integer;
+  LNext: Integer;
+begin
+  LIndex := AlignmentIndexOf(AField);
+  LPreferences := Copy;
+
+  if LIndex >= 0 then
+  begin
+    for LNext := LIndex to High(LPreferences.FAlignments) - 1 do
+    begin
+      LPreferences.FAlignments[LNext] := LPreferences.FAlignments[LNext + 1];
+    end;
+    SetLength(LPreferences.FAlignments, Length(LPreferences.FAlignments) - 1);
   end;
   Result := LPreferences;
 end;
@@ -791,6 +923,24 @@ begin
       raise EArgumentException.Create('Text preference does not match a current authored field');
     end;
   end;
+  for I := 0 to High(FAlignments) do
+  begin
+    LFound := False;
+    for J := 0 to High(AFields) do
+    begin
+
+      if FAlignments[I].Field.Same(AFields[J]) then
+      begin
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if not LFound then
+    begin
+      raise EArgumentException.Create('Alignment preference does not match a current authored field');
+    end;
+  end;
 end;
 
 function TNyxTablePresentationPreferences.ResolveTable(const AAuthored: TNyxTablePresentationPolicy): TNyxTablePresentationPolicy;
@@ -835,6 +985,7 @@ end;
 function TNyxTablePresentationPreferences.ToData: TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
+  LAlignments: array of TNyxDataValue;
   LDensity: TNyxDataValue;
   I: Integer;
 begin
@@ -858,6 +1009,39 @@ begin
   end;
   Result := NyxObject([NyxField('version', NyxData(1)), NyxField('density', LDensity),
     NyxField('columns', NyxArray(LColumns))]);
+
+  if Length(FAlignments) > 0 then
+  begin
+    SetLength(LAlignments, Length(FAlignments));
+    for I := 0 to High(FAlignments) do
+    begin
+      LAlignments[I] := FAlignments[I].ToData;
+    end;
+    Result := NyxObject([NyxField('version', NyxData(2)), NyxField('density', LDensity),
+      NyxField('columns', NyxArray(LColumns)), NyxField('alignments', NyxArray(LAlignments))]);
+  end;
+end;
+
+function TNyxTablePresentationPreferences.ResolveAlignment(
+  const AField: TNyxColumnIdentity;
+  const AAuthored: TNyxColumnAlignmentPolicy): TNyxColumnAlignmentPolicy;
+var
+  LPolicy: TNyxColumnAlignmentPolicy;
+  LIndex: Integer;
+begin
+  AField.Validate;
+  LPolicy := AAuthored.Copy;
+
+  if FDefined then
+  begin
+    LIndex := AlignmentIndexOf(AField);
+
+    if LIndex >= 0 then
+    begin
+      LPolicy := LPolicy.Overlay(FAlignments[LIndex].Alignment);
+    end;
+  end;
+  Result := LPolicy;
 end;
 
 class function TNyxTablePresentationPreferences.FromData(const AData: TNyxDataValue): TNyxTablePresentationPreferences;
@@ -867,6 +1051,9 @@ var
   LColumn: TNyxDataValue;
   LText: TNyxColumnTextPolicy;
   LField: TNyxColumnIdentity;
+  LVersion: Integer;
+  LAlignments: TNyxDataValue;
+  LAlignment: TNyxColumnAlignmentPreference;
   I: Integer;
   J: Integer;
   LFound: Boolean;
@@ -877,7 +1064,16 @@ begin
   begin
     Exit(Default(TNyxTablePresentationPreferences));
   end;
-  RequireShape(AData, ['version', 'density', 'columns']);
+  LVersion := AData.Field('version').AsInteger;
+
+  if LVersion = 2 then
+  begin
+    RequireShape(AData, ['version', 'density', 'columns', 'alignments'], 2);
+  end
+  else
+  begin
+    RequireShape(AData, ['version', 'density', 'columns']);
+  end;
   LPreferences := NyxTablePresentationPreferences;
 
   if AData.Field('density').Kind <> ndNull then
@@ -915,6 +1111,27 @@ begin
       raise EArgumentException.Create('Repeated saved text preference field');
     end;
     LPreferences := LPreferences.WithColumn(NyxColumnTextPreference(LField, LText));
+  end;
+
+  if LVersion = 2 then
+  begin
+    LAlignments := AData.Field('alignments');
+
+    if (LAlignments.Kind <> ndArray) or (LAlignments.Count < 1) or
+      (LAlignments.Count > NyxMaximumColumnLayoutFields) then
+    begin
+      raise EArgumentException.Create('Version-two preferences require a bounded nonempty alignment list');
+    end;
+    for I := 0 to LAlignments.Count - 1 do
+    begin
+      LAlignment := TNyxColumnAlignmentPreference.FromData(LAlignments.Item(I));
+
+      if LPreferences.AlignmentIndexOf(LAlignment.Field) >= 0 then
+      begin
+        raise EArgumentException.Create('Repeated saved alignment preference field');
+      end;
+      LPreferences := LPreferences.WithAlignment(LAlignment);
+    end;
   end;
   LPreferences.Validate;
   Result := LPreferences;

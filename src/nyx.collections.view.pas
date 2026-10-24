@@ -46,6 +46,7 @@ uses
   nyx.collections.view.types,
   nyx.collections.arrangement,
   nyx.collections.presentation,
+  nyx.collections.alignment,
   nyx.scheduler,
   nyx.collections.selection;
 
@@ -155,8 +156,9 @@ type
 
   { Optional UI-thread presentation commands preserve every existing view ABI.
     Preparation reserves the existing column publication slot; density/text and
-    width plans cannot overwrite one another's original captures. Nonempty user
-    overrides require authored presentation opt-in; clearing them always works.
+    width plans cannot overwrite one another's original captures. Explicit user
+    overrides can activate presentation independently of saved defaults; an
+    absent authored policy stays absent. Clearing overrides always works.
     Notifications use the view's existing observer owner and never change data,
     query, selection, column geometry or authored defaults. }
   INyxCollectionTablePresentation = interface(IInterface)

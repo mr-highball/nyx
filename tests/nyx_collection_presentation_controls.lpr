@@ -29,11 +29,11 @@ uses Classes, SysUtils, Math, nyx.text, nyx.types, nyx.state, nyx.model, nyx.con
   nyx.collections.view, nyx.collections.view.types, nyx.collections.mount,
   nyx.collections.arrangement, nyx.collections.arrangement.controls,
   nyx.collections.arrangement.presenter, nyx.collections.presentation,
-  nyx.collections.text.layout
+  nyx.collections.text.layout, nyx.collections.alignment, nyx.publication
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.arrangement.browser
   {$else}, Interfaces, Forms, Controls, Grids, StdCtrls, Graphics, LCLType,
-  LMessages, LCLIntf, nyx.render.lcl, nyx.collections.lcl.grid,
-  nyx.collections.arrangement.lcl, nyx.editing.lcl, nyx.test.capture.lcl{$endif};
+  LMessages, LCLIntf, Windows, nyx.render.lcl, nyx.collections.lcl, nyx.collections.lcl.grid,
+  nyx.collections.arrangement.lcl, nyx.editing, nyx.editing.lcl, nyx.test.capture.lcl{$endif};
 
 type
   {$ifdef PAS2JS}
@@ -49,6 +49,12 @@ type
   public
     constructor new(const AType: String; AInit: TJSObject); reintroduce;
   end;
+  { The DOM Range measurement API exposes the actual glyph bounds for this
+    fixture's borrowed rendered text. It neither edits text nor owns a host. }
+  TAlignmentRange = class external name 'Range'(TJSRange)
+  public
+    function getBoundingClientRect: TJSDOMRect;
+  end;
   {$else}
   { Deferred native errors are captured, never hidden behind a modal dialog. }
   TLayoutErrors = class
@@ -56,6 +62,15 @@ type
     Text: TNyxText;
     procedure Failed(Sender: TObject; E: Exception);
   end;
+  { Inspect the real inherited native prepare/paint style after the mount's
+    installed reader runs; this does not synthesize trusted hardware input. }
+  TAlignmentGridAccess = class(TNyxCollectionStringGrid)
+  public
+    function PreparedStyle(AColumn, ARow: Integer): TTextStyle;
+  end;
+  { Expose the standard native edit's actual alignment without replacing its
+    producer or reading a Nyx test-only mirror of the presentation policy. }
+  TAlignmentEditAccess = class(TCustomEdit);
   {$endif}
 
 const
@@ -93,6 +108,14 @@ end;
 procedure TLayoutErrors.Failed(Sender: TObject; E: Exception);
 begin
   Text := TNyxText(E.Message);
+  WriteLn('Deferred native failure: ', E.ClassName, ': ', E.Message);
+  DumpExceptionBackTrace(Output);
+end;
+
+function TAlignmentGridAccess.PreparedStyle(AColumn, ARow: Integer): TTextStyle;
+begin
+  PrepareCanvas(AColumn, ARow, []);
+  Result := Canvas.TextStyle;
 end;
 {$endif}
 
@@ -170,7 +193,8 @@ begin
   LPolicy.ConfigurePresentation(APreferences);
 end;
 
-function Fixture(AArranged: Boolean): TNyxDocument;
+function Fixture(AArranged: Boolean; APresentation: Boolean = True;
+  AAlignment: Boolean = False): TNyxDocument;
 var
   LPage: INyxPage;
   LTable: INyxTable;
@@ -202,22 +226,51 @@ begin
     begin
       LSpec := LSpec.ColumnLayout(NyxColumnLayout.PinStart);
     end;
-    LSpec := LSpec.ColumnText(NyxColumnText.Wrap(3))
-      .Column(NyxNumberField('Amount'), 'Amount', cmEditable)
-        .ColumnSizing(NyxColumnSizing.Fixed(90))
-      .Column(NyxTextField('Notes'), 'Notes')
+
+    if APresentation then
+    begin
+      LSpec := LSpec.ColumnText(NyxColumnText.Wrap(3));
+    end;
+
+    if AAlignment then
+    begin
+      LSpec := LSpec.ColumnAlignment(NyxColumnAlignment.Horizontal(nchaStart).Vertical(ncvaTop));
+    end;
+    LSpec := LSpec.Column(NyxNumberField('Amount'), 'Amount', cmEditable)
+        .ColumnSizing(NyxColumnSizing.Fixed(90));
+
+    if AAlignment then
+    begin
+      LSpec := LSpec.ColumnAlignment(NyxColumnAlignment.Horizontal(nchaEnd).Vertical(ncvaBottom));
+    end;
+    LSpec := LSpec.Column(NyxTextField('Notes'), 'Notes')
         .ColumnSizing(NyxColumnSizing.Fixed(100));
 
     if AArranged then
     begin
       LSpec := LSpec.ColumnLayout(NyxColumnLayout.PinEnd);
     end;
-    LSpec := LSpec.ColumnText(NyxColumnText.Ellipsis)
-      .Column(NyxTextField('Clip'), 'Clip')
-        .ColumnSizing(NyxColumnSizing.Fixed(80)).ColumnText(NyxColumnText.Clip)
+
+    if APresentation then
+    begin
+      LSpec := LSpec.ColumnText(NyxColumnText.Ellipsis);
+    end;
+    LSpec := LSpec.Column(NyxTextField('Clip'), 'Clip')
+        .ColumnSizing(NyxColumnSizing.Fixed(80));
+
+    if APresentation then
+    begin
+      LSpec := LSpec.ColumnText(NyxColumnText.Clip);
+    end;
+    LSpec := LSpec
       .Column(NyxTextField('Budget'), 'Budget')
-        .ColumnSizing(NyxColumnSizing.Fixed(100)).ColumnText(NyxColumnText.Wrap(1000))
-      .TablePresentation(NyxTablePresentation.Density(ntrdCompact));
+        .ColumnSizing(NyxColumnSizing.Fixed(100));
+
+    if APresentation then
+    begin
+      LSpec := LSpec.ColumnText(NyxColumnText.Wrap(1000))
+        .TablePresentation(NyxTablePresentation.Density(ntrdCompact));
+    end;
 
     if AArranged then
     begin
@@ -317,6 +370,7 @@ var
       end;
     end;
   end;
+
   {$endif}
 begin
   LDocument := nil;
@@ -629,6 +683,836 @@ begin
   end;
 end;
 
+{ Runtime policy is deliberately absent from the complete document. Both paths
+  use real renderer-managed controls: one applies before a new mount, the other
+  while an initially ordinary editor is composing. A peer remains independent. }
+procedure RuntimeCases(AInitial: Boolean); {$ifdef PAS2JS}async;{$endif}
+var
+  LDocument: TNyxDocument;
+  LState: TNyxState;
+  LView: INyxCollectionView;
+  LPeer: INyxCollectionView;
+  LMount: INyxCollectionMount;
+  LColumns: INyxCollectionColumns;
+  LPresentation: INyxCollectionTablePresentation;
+  LCapture: INyxCollectionPresentationCapture;
+  LPrepared: INyxPreparedPublication;
+  LRejected: INyxPreparedPublication;
+  LAdmission: INyxCollectionInputAdmission;
+  LOldInput: INyxCollectionInputLifetime;
+  LEdits: INyxCollectionEditMount;
+  LDrafts: INyxCollectionEditsSnapshot;
+  LSource: INyxCollectionSnapshot;
+  LPeerTable: INyxTable;
+  LSpec: TNyxCollectionViewSpec;
+  LPrefs: TNyxTablePresentationPreferences;
+  LAuthored: TNyxText;
+  LPeerPreferences: TNyxText;
+  LHeight: Integer;
+  LPeerHeight: Integer;
+  LSerial: Integer;
+  LRefused: Boolean;
+  LFound: Boolean;
+  I: Integer;
+  {$ifdef PAS2JS}
+  LRenderer: TNyxBrowserRenderer;
+  LSurface: TJSHTMLElement;
+  LTable: TJSHTMLElement;
+  LPeerElement: TJSHTMLElement;
+  LCell: TJSHTMLElement;
+  LLabel: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LInit: TJSObject;
+  {$else}
+  LRenderer: TNyxLCLRenderer;
+  LSurface: TForm;
+  LGrid: TNyxCollectionStringGrid;
+  LPeerGrid: TNyxCollectionStringGrid;
+  LEditor: TCustomEdit;
+  LLayout: TNyxTableTextLayout;
+  LRaw: TStringGrid;
+  LRawMount: INyxCollectionMount;
+  {$endif}
+begin
+  LDocument := nil;
+  LState := nil;
+  LRenderer := nil;
+  LSurface := nil;
+  {$ifndef PAS2JS}LRaw := nil;{$endif}
+  try
+    LDocument := Fixture(False, False);
+    LSpec := LDocument.Find('layout-table').CollectionView;
+    LPeerTable := NewNyxTable('layout-peer');
+    LPeerTable.Configure.Height(200).Done;
+    LPeerTable.Binds.Collection(LSpec);
+    LDocument.Pages[0].Add(LPeerTable);
+    LDocument.Validate;
+    LAuthored := TNyxCodec.Encode(LDocument);
+    LState := LDocument.State.Clone;
+    {$ifdef PAS2JS}
+    LSurface := TJSHTMLElement(document.createElement('div'));
+    LSurface.style.setProperty('width', IntToStr(Max(1, Round(window.innerWidth) - 16)) + 'px');
+    document.body.appendChild(LSurface);
+    LRenderer := TNyxBrowserRenderer.Create;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LSurface, False, LState);
+    LTable := TJSHTMLElement(LRenderer.ElementFor('layout-table'));
+    LPeerElement := TJSHTMLElement(LRenderer.ElementFor('layout-peer'));
+    {$else}
+    LSurface := TForm.CreateNew(nil);
+    LSurface.SetBounds(20, 20, GClientWidth, 650);
+    LSurface.ClientWidth := GClientWidth;
+    LSurface.Show;
+    LRenderer := TNyxLCLRenderer.Create;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LSurface, False, LState);
+    LGrid := TNyxCollectionStringGrid(LRenderer.ControlFor('layout-table'));
+    LPeerGrid := TNyxCollectionStringGrid(LRenderer.ControlFor('layout-peer'));
+    {$endif}
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    LView := LRenderer.CollectionView('layout-table');
+    LPeer := LRenderer.CollectionView('layout-peer');
+    LMount := LRenderer.CollectionMount('layout-table');
+    LPresentation := NyxCollectionTablePresentation(LView);
+    LColumns := NyxCollectionColumns(LView);
+    LSource := LView.Store.Snapshot;
+    LPeerPreferences := NyxCollectionTablePresentation(LPeer).CapturePresentation.Preferences.ToData.ToJSON;
+    Check(not LView.Spec.HasPresentationPolicy and not LView.Spec.HasLayoutControls,
+      'runtime-only controls begin with exact authored text density and arrangement absence');
+    {$ifdef PAS2JS}
+    LHeight := Round(TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"]')).offsetHeight);
+    LPeerHeight := Round(TJSHTMLElement(LPeerElement.querySelector('[data-nyx-item="one"]')).offsetHeight);
+    Check(LTable.querySelector('[data-nyx-text-layout]') = nil,
+      'an initially absent browser table keeps its ordinary text path');
+    {$else}
+    LHeight := LGrid.RowHeights[1];
+    LPeerHeight := LPeerGrid.RowHeights[1];
+    Check(not LGrid.CellTextLayout(0, 1, LLayout),
+      'an initially absent native table keeps its ordinary text path');
+    {$endif}
+    LPrefs := NyxTablePresentationPreferences.Density(ntrdComfortable).WithColumn(
+      NyxColumnTextPreference(NyxColumnIdentity(NyxTextField('Name')), NyxColumnText.Wrap(3)));
+    LCapture := LPresentation.CapturePresentation;
+    LSerial := LCapture.Serial;
+    LPrepared := LPresentation.PreparePresentation(LCapture, LPrefs);
+    LRefused := False;
+    try
+      LRejected := LColumns.PrepareColumns(LColumns.CaptureColumns, NyxColumnPreferences);
+    except
+      on ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'runtime-only presentation reserves the original shared column command slot');
+    LPrepared.Retire;
+    LPrepared := nil;
+    Check(LPresentation.CapturePresentation.Serial = LSerial,
+      'cancelling an uninstalled runtime-only plan leaves the original serial and physical table');
+
+    if AInitial then
+    begin
+      Check(Supports(LMount, INyxCollectionInputAdmission, LAdmission),
+        'renderer mount exposes its canonical input incarnation');
+      LOldInput := LAdmission.GetInputLifetime;
+      LMount.Disconnect;
+      ApplyPresentation(LView, LPrefs);
+      LMount := LRenderer.BindCollection('layout-table', LView);
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      Check(not LOldInput.Current and LMount.Connected,
+        'a new observed mount adopts already accepted runtime preferences without reviving old input');
+      {$ifdef PAS2JS}
+      Check(LTable.querySelector('[data-nyx-text-layout="ellipsized"]') <> nil,
+        'pre-mount runtime text choices activate actual browser wrapping');
+      {$else}
+      Check(LGrid.CellTextLayout(0, 1, LLayout) and (LLayout.Count = 3),
+        'pre-mount runtime text choices activate actual native wrapping');
+      {$endif}
+      ApplyPresentation(LView, NyxTablePresentationPreferences);
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    end;
+    {$ifdef PAS2JS}
+    LCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="1"]'));
+    LCell.focus;
+    LInit := TJSObject.new;
+    LInit['key'] := 'F2';
+    LInit['bubbles'] := True;
+    LInit['cancelable'] := True;
+    LCell.dispatchEvent(TLayoutKey.new('keydown', LInit));
+    LInput := TJSHTMLInputElement(LCell.querySelector('input'));
+    LInput.value := '-';
+    LInput.setSelectionRange(1, 1);
+    LInput.dispatchEvent(TLayoutComposition.new('compositionstart', LInit));
+    {$else}
+    LGrid.Col := 1;
+    LGrid.Row := 1;
+    LGrid.SetFocus;
+    LCLIntf.SendMessage(LGrid.Handle, LM_KEYDOWN, VK_F2, 0);
+    Check(LGrid.EditorMode and (LGrid.Editor is TCustomEdit),
+      'initially unconfigured native table enters its original numeric editor');
+    LEditor := TCustomEdit(LGrid.Editor);
+    RestoreNyxLCLInputText(LEditor, '-');
+    LEditor.SelStart := 1;
+    LEditor.SelLength := 0;
+    { Own-window message injection qualifies the installed composition bridge,
+      never trusted hardware, a physical IME session or an OS clipboard effect. }
+    Windows.SendMessage(LEditor.Handle, WM_IME_STARTCOMPOSITION, 0, 0);
+    Drain;
+    {$endif}
+    LCapture := LPresentation.CapturePresentation;
+    LSerial := LCapture.Serial;
+    ApplyPresentation(LView, LPrefs);
+    ApplyPresentation(LView, NyxTablePresentationPreferences);
+    ApplyPresentation(LView, LPrefs);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LPresentation.CapturePresentation.Serial = LSerial + 3,
+      'runtime set reset and set publish distinct canonical serials while composition holds geometry');
+    {$ifdef PAS2JS}
+    Check((LCell.querySelector('input') = LInput) and (document.activeElement = LInput) and
+      (LInput.value = '-') and (LInput.selectionStart = 1) and
+      (TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"]')).offsetHeight = LHeight),
+      'first runtime activation defers browser geometry and preserves the composing editor');
+    LInput.dispatchEvent(TLayoutComposition.new('compositionend', LInit));
+    {$else}
+    Check(LGrid.EditorMode and (LGrid.Editor = LEditor) and (NyxLCLInputText(LEditor) = '-') and
+      (LEditor.SelStart = 1) and (LGrid.RowHeights[1] = LHeight),
+      'first runtime activation defers native geometry and preserves the composing editor');
+    Windows.SendMessage(LEditor.Handle, WM_IME_ENDCOMPOSITION, 0, 0);
+    {$endif}
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    {$ifdef PAS2JS}
+    LLabel := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="0"] .nyx-cell-value'));
+    Check((LLabel.getAttribute('data-nyx-text-layout') = 'ellipsized') and
+      (LLabel.getBoundingClientRect.height >= 3 * JS.parseFloat(
+        window.getComputedStyle(LLabel).getPropertyValue('font-size'))) and
+      (TJSHTMLElement(LLabel.parentElement).style.getPropertyValue('padding-top') = '10px'),
+      'completed composition applies the latest runtime-only wrap and density');
+    {$else}
+    Check(LGrid.CellTextLayout(0, 1, LLayout) and (LLayout.Count = 3) and
+      (LGrid.RowHeights[1] >= 3 * Max(1, Abs(LGrid.Font.Height))),
+      'completed composition applies the latest runtime-only wrap and density');
+    {$endif}
+    LRefused := False;
+    try
+      LRejected := LPresentation.PreparePresentation(LCapture, NyxTablePresentationPreferences);
+    except
+      on ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'runtime-only preference ABA cannot revive the original presentation capture');
+    ApplyPresentation(LView, NyxTablePresentationPreferences);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    {$ifdef PAS2JS}
+    Check((LTable.querySelector('[data-nyx-text-layout]') = nil) and
+      (TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"]')).offsetHeight = LHeight),
+      'runtime reset removes generated browser styles and restores ordinary row geometry');
+    Check(TJSHTMLElement(LPeerElement.querySelector('[data-nyx-item="one"]')).offsetHeight = LPeerHeight,
+      'peer browser row geometry remains independent of another runtime table');
+    {$else}
+    Check(not LGrid.CellTextLayout(0, 1, LLayout) and (LGrid.RowHeights[1] = LHeight),
+      'runtime reset clears native measured lines and restores ordinary row geometry');
+    Check(LPeerGrid.RowHeights[1] = LPeerHeight,
+      'peer native row geometry remains independent of another runtime table');
+    {$endif}
+    Check(Supports(LMount, INyxCollectionEditMount, LEdits),
+      'runtime activation retains the ordinary typed draft handoff');
+    LDrafts := LEdits.SuspendCellEdits;
+    LFound := False;
+    for I := 0 to LDrafts.Count - 1 do
+    begin
+
+      if (LDrafts.CellAt(I).Item.ID = 'one') and
+        LDrafts.CellAt(I).Field.Same(NyxColumnIdentity(NyxNumberField('Amount'))) and
+        (LDrafts.CellAt(I).Text = '-') then
+      begin
+        LFound := True;
+      end;
+    end;
+    Check(LFound, 'runtime activation and reset retain the exact incomplete accepted-cell draft');
+    LEdits.ResumeCellEdits(LDrafts, False);
+    LDrafts := nil;
+    Check((TNyxCodec.Encode(LDocument) = LAuthored) and
+      not LView.Spec.HasPresentationPolicy and (LView.Store.Snapshot = LSource) and
+      (LView.CellText(NyxItem(LSpec.Key, 'one'), 0) = CPath) and
+      (LView.CellText(NyxItem(LSpec.Key, 'one'), 2) = CNotes) and
+      (LView.CellText(NyxItem(LSpec.Key, 'one'), 3) = CClip) and
+      (NyxCollectionTablePresentation(LPeer).CapturePresentation.Preferences.ToData.ToJSON = LPeerPreferences),
+      'runtime-only choices preserve authored bytes RAW Unicode NUL line endings source and peer preferences');
+    LRenderer.Unmount;
+    Check(not LMount.Connected, 'runtime-only retirement ends the original observed mount');
+    {$ifndef PAS2JS}
+
+    if not AInitial then
+    begin
+      LRaw := TStringGrid.Create(LSurface);
+      LRaw.Parent := LSurface;
+      ApplyPresentation(LView, LPrefs);
+      LRefused := False;
+      try
+        LRawMount := MountNyxLCLCollection(LRaw, LView);
+      except
+        on ENyxCollection do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (LRawMount = nil),
+        'initial runtime presentation refuses an unobserved direct native grid honestly');
+      ApplyPresentation(LView, NyxTablePresentationPreferences);
+      LRawMount := MountNyxLCLCollection(LRaw, LView);
+      LRefused := False;
+      try
+        ApplyPresentation(LView, LPrefs);
+      except
+        on ENyxPublicationNotification do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and LRawMount.Connected and not LView.Spec.HasPresentationPolicy and
+        LPresentation.CapturePresentation.Preferences.HasDensity,
+        'late unsupported native activation reports committed model notification failure without inventing host support');
+      ApplyPresentation(LView, NyxTablePresentationPreferences);
+      LRawMount.Disconnect;
+      LRawMount := nil;
+      FreeAndNil(LRaw);
+    end;
+    Check(GErrors.Text = '', 'runtime-only native controls leave no deferred error');
+    {$endif}
+  finally
+    {$ifndef PAS2JS}
+
+    if LRawMount <> nil then
+    begin
+      LRawMount.Disconnect;
+    end;
+    LRawMount := nil;
+    LRaw.Free;
+    {$endif}
+    LDrafts := nil;
+    LEdits := nil;
+    LPrepared := nil;
+    LRejected := nil;
+    LOldInput := nil;
+    LAdmission := nil;
+    LCapture := nil;
+    LPresentation := nil;
+    LColumns := nil;
+    LMount := nil;
+    LPeer := nil;
+    LView := nil;
+    LSource := nil;
+    LPeerTable := nil;
+    LRenderer.Free;
+    {$ifdef PAS2JS}
+
+    if LSurface <> nil then
+    begin
+      LSurface.remove;
+    end;
+    {$else}
+    Drain;
+    LSurface.Free;
+    {$endif}
+    LState.Free;
+    LDocument.Free;
+  end;
+end;
+
+{ Authored and runtime alignment share the existing input, column publication
+  and composition owners. Exercise ordinary and pinned physical producers,
+  including the actual unfinished native/browser editor and independent axes. }
+procedure AlignmentCases(AArranged: Boolean; AOnlyRuntime: Boolean = False); {$ifdef PAS2JS}async;{$endif}
+var
+  LDocument: TNyxDocument;
+  LState: TNyxState;
+  LView: INyxCollectionView;
+  LMount: INyxCollectionMount;
+  LPresentation: INyxCollectionTablePresentation;
+  LPreferences: TNyxTablePresentationPreferences;
+  LSource: INyxCollectionSnapshot;
+  LAuthored: TNyxText;
+  LSerial: Integer;
+  LName: TNyxColumnIdentity;
+  LAmount: TNyxColumnIdentity;
+  LAdmission: INyxCollectionInputAdmission;
+  LFormerInput: INyxCollectionInputLifetime;
+  LManagerMount: INyxCollectionColumnArrangementMount;
+  LManager: INyxColumnArrangementManager;
+  LPresenter: INyxColumnArrangementPresenter;
+  LColumns: INyxCollectionColumns;
+  LAction: TNyxText;
+  {$ifdef PAS2JS}
+  LRenderer: TNyxBrowserRenderer;
+  LSurface: TJSHTMLElement;
+  LTable: TJSHTMLElement;
+  LNameCell: TJSHTMLElement;
+  LAmountCell: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LInit: TJSObject;
+  LTarget: INyxBrowserColumnArrangementPresenter;
+  LRange: TAlignmentRange;
+  LTextBounds: TJSDOMRect;
+  LCellBounds: TJSDOMRect;
+  {$else}
+  LRenderer: TNyxLCLRenderer;
+  LSurface: TForm;
+  LGrid: TNyxCollectionStringGrid;
+  LNameGrid: TNyxCollectionStringGrid;
+  LAmountGrid: TNyxCollectionStringGrid;
+  LNameColumn: Integer;
+  LAmountColumn: Integer;
+  LEditor: TCustomEdit;
+  LStyle: TTextStyle;
+  LTarget: INyxLCLColumnArrangementPresenter;
+
+  function Field(const ATitle: TNyxText; out AColumn: Integer): TNyxCollectionStringGrid;
+  var
+    LChild: Integer;
+    LAt: Integer;
+    LCandidate: TNyxCollectionStringGrid;
+  begin
+    Result := nil;
+    AColumn := -1;
+    for LChild := -1 to LGrid.ControlCount - 1 do
+    begin
+      LCandidate := LGrid;
+
+      if LChild >= 0 then
+      begin
+
+        if not (LGrid.Controls[LChild] is TNyxCollectionStringGrid) then
+        begin
+          Continue;
+        end;
+        LCandidate := TNyxCollectionStringGrid(LGrid.Controls[LChild]);
+      end;
+      for LAt := 0 to LCandidate.ColCount - 1 do
+      begin
+
+        if Pos(ATitle, TNyxText(LCandidate.Cells[LAt, 0])) = 1 then
+        begin
+          AColumn := LAt;
+          Exit(LCandidate);
+        end;
+      end;
+    end;
+  end;
+  { An invisible native editor may retain its admitted text/range while LCL
+    deliberately drops its HWND during a style change. Later handle creation
+    must restore the same scalar range without accepting that parked draft. }
+  procedure HiddenAlignmentSelection;
+  var
+    LDraft: TNyxText;
+    LSelection: TNyxTextSelection;
+    LRestored: TNyxTextSelection;
+    LNativeStart: Integer;
+    LNativeLength: Integer;
+    LWindow: HWND;
+  begin
+    LAmountGrid := Field('Amount', LAmountColumn);
+    LAmountGrid.Col := LAmountColumn;
+    LAmountGrid.Row := 1;
+    LAmountGrid.SetFocus;
+    LCLIntf.SendMessage(LAmountGrid.Handle, LM_KEYDOWN, VK_F2, 0);
+    Check(LAmountGrid.EditorMode and (LAmountGrid.Editor is TCustomEdit),
+      'hidden alignment regression enters the actual original text editor');
+    LEditor := TCustomEdit(LAmountGrid.Editor);
+    LDraft := '-🌙 unfinished';
+    RestoreNyxLCLInputText(LEditor, LDraft);
+    LSelection := NyxTextSelection(LDraft, NyxTextScalarCount('-'),
+      NyxTextScalarCount('-') + 1, ntdUnknown);
+    SelectNyxLCLText(LEditor, LSelection);
+    LNativeStart := LEditor.SelStart;
+    LNativeLength := LEditor.SelLength;
+    Check((LNativeLength = 2) and CaptureNyxLCLSelection(LEditor).SameRange(LSelection),
+      'actual live editor selection crosses the supplementary scalar in native UTF16');
+    LAmountGrid.BeginPresentationChange;
+    try
+      LAmountGrid.EditorMode := False;
+    finally
+      LAmountGrid.EndPresentationChange;
+    end;
+    Check(not LEditor.Visible and LEditor.HandleAllocated,
+      'ordinary hide parks the admitted native editor before alignment changes');
+    ApplyPresentation(LView, NyxTablePresentationPreferences.WithAlignment(
+      NyxColumnAlignmentPreference(LAmount, NyxColumnAlignment.Horizontal(nchaStart))));
+    Drain;
+    Check(not LEditor.HandleAllocated and (NyxLCLInputText(LEditor) = LDraft) and
+      (LEditor.SelStart = LNativeStart) and (LEditor.SelLength = LNativeLength),
+      'hidden style recreation preserves exact cached native range without allocating an HWND');
+    { Request the normal LCL handle explicitly as the host would on reveal.
+      The production restore itself above must leave the hidden edit windowless. }
+    LWindow := LEditor.Handle;
+    LRestored := CaptureNyxLCLSelection(LEditor);
+    Check((LWindow <> 0) and (NyxLCLInputText(LEditor) = LDraft) and
+      LRestored.Defined and LRestored.SameRange(LSelection) and not LEditor.Focused,
+      'later native handle creation restores the exact supplementary range without stealing focus');
+    Check((LView.Store.Snapshot = LSource) and (TNyxCodec.Encode(LDocument) = LAuthored),
+      'hidden editor alignment never accepts its draft or rewrites authored policy');
+    ApplyPresentation(LView, NyxTablePresentationPreferences);
+    Drain;
+  end;
+  {$endif}
+begin
+  LDocument := nil;
+  LState := nil;
+  LRenderer := nil;
+  LSurface := nil;
+  try
+    LDocument := Fixture(AArranged, not AOnlyRuntime, not AOnlyRuntime);
+    LAuthored := TNyxCodec.Encode(LDocument);
+    LState := LDocument.State.Clone;
+    {$ifdef PAS2JS}
+    LSurface := TJSHTMLElement(document.createElement('div'));
+    LSurface.style.setProperty('width', IntToStr(Max(1, Round(window.innerWidth) - 16)) + 'px');
+    document.body.appendChild(LSurface);
+    LRenderer := TNyxBrowserRenderer.Create;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LSurface, False, LState);
+    LTable := TJSHTMLElement(LRenderer.ElementFor('layout-table'));
+    {$else}
+    LSurface := TForm.CreateNew(nil);
+    LSurface.SetBounds(20, 20, GClientWidth, 650);
+    LSurface.ClientWidth := GClientWidth;
+    LSurface.Show;
+    LRenderer := TNyxLCLRenderer.Create;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LSurface, False, LState);
+    LGrid := TNyxCollectionStringGrid(LRenderer.ControlFor('layout-table'));
+    {$endif}
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    LView := LRenderer.CollectionView('layout-table');
+    LMount := LRenderer.CollectionMount('layout-table');
+    LPresentation := NyxCollectionTablePresentation(LView);
+    LSource := LView.Store.Snapshot;
+    LName := NyxColumnIdentity(NyxTextField('Name'));
+    LAmount := NyxColumnIdentity(NyxNumberField('Amount'));
+
+    if AOnlyRuntime then
+    begin
+      Check(not LView.Spec.HasPresentationPolicy and not LView.Spec.HasLayoutControls,
+        'alignment-only activation starts without any saved text density alignment or arrangement');
+      LPreferences := NyxTablePresentationPreferences.WithAlignment(
+        NyxColumnAlignmentPreference(LAmount,
+          NyxColumnAlignment.Horizontal(nchaEnd).Vertical(ncvaBottom)));
+      {$ifdef PAS2JS}
+      LAmountCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="1"]'));
+      LAmountCell.focus;
+      LInit := TJSObject.new;
+      LInit['key'] := 'F2';
+      LInit['bubbles'] := True;
+      LInit['cancelable'] := True;
+      LAmountCell.dispatchEvent(TLayoutKey.new('keydown', LInit));
+      LInput := TJSHTMLInputElement(LAmountCell.querySelector('input'));
+      LInput.value := '-';
+      LInput.setSelectionRange(1, 1);
+      LInput.dispatchEvent(TLayoutComposition.new('compositionstart', LInit));
+      {$else}
+      LAmountGrid := Field('Amount', LAmountColumn);
+      LAmountGrid.Col := LAmountColumn;
+      LAmountGrid.Row := 1;
+      LAmountGrid.SetFocus;
+      LCLIntf.SendMessage(LAmountGrid.Handle, LM_KEYDOWN, VK_F2, 0);
+      Check(LAmountGrid.EditorMode and (LAmountGrid.Editor is TCustomEdit),
+        'unaligned ordinary native cell enters its original editor before runtime activation');
+      LEditor := TCustomEdit(LAmountGrid.Editor);
+      RestoreNyxLCLInputText(LEditor, '-');
+      LEditor.SelStart := 1;
+      LEditor.SelLength := 0;
+      Windows.SendMessage(LEditor.Handle, WM_IME_STARTCOMPOSITION, 0, 0);
+      {$endif}
+      LSerial := LPresentation.CapturePresentation.Serial;
+      ApplyPresentation(LView, LPreferences);
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      Check((LPresentation.CapturePresentation.Serial = LSerial + 1) and
+        not LView.Spec.HasPresentationPolicy,
+        'alignment-only runtime publication uses the canonical serial without authored opt-in');
+      {$ifdef PAS2JS}
+      Check((LInput.value = '-') and (LInput.selectionStart = 1) and
+        (LAmountCell.style.getPropertyValue('text-align') = ''),
+        'first alignment-only activation keeps the composing browser editor and inherited style');
+      LInput.dispatchEvent(TLayoutComposition.new('compositionend', LInit));
+      {$else}
+      Check((NyxLCLInputText(LEditor) = '-') and (LEditor.SelStart = 1) and
+        (TAlignmentEditAccess(LEditor).Alignment = taLeftJustify),
+        'first alignment-only activation keeps the composing native editor and inherited style');
+      Windows.SendMessage(LEditor.Handle, WM_IME_ENDCOMPOSITION, 0, 0);
+      {$endif}
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      {$ifdef PAS2JS}
+      Check((LInput.value = '-') and (LInput.selectionStart = 1) and
+        (document.activeElement = LInput) and
+        (window.getComputedStyle(LInput).getPropertyValue('text-align') = 'end') and
+        (window.getComputedStyle(LAmountCell).getPropertyValue('vertical-align') = 'bottom'),
+        'only runtime alignment activates browser paint and the exact retained draft after composition');
+      {$else}
+      LStyle := TAlignmentGridAccess(LAmountGrid).PreparedStyle(LAmountColumn, 1);
+      Check((LStyle.Alignment = taRightJustify) and (LStyle.Layout = tlBottom) and
+        (LAmountGrid.Editor = LEditor) and LEditor.Focused and
+        (NyxLCLInputText(LEditor) = '-') and (LEditor.SelStart = 1) and
+        (TAlignmentEditAccess(LEditor).Alignment = taRightJustify),
+        'only runtime alignment activates native paint and the exact retained draft after composition');
+      {$endif}
+      ApplyPresentation(LView, NyxTablePresentationPreferences);
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      {$ifdef PAS2JS}
+      Check((LAmountCell.style.getPropertyValue('text-align') = '') and
+        (LAmountCell.style.getPropertyValue('vertical-align') = '') and
+        (LInput.style.getPropertyValue('text-align') = '') and (LInput.value = '-'),
+        'alignment-only browser reset restores inherited axes without accepting a draft');
+      {$else}
+      LStyle := TAlignmentGridAccess(LAmountGrid).PreparedStyle(LAmountColumn, 1);
+      Check((LStyle.Alignment = taLeftJustify) and
+        (TAlignmentEditAccess(LEditor).Alignment = taLeftJustify) and
+        (NyxLCLInputText(LEditor) = '-') and (LEditor.SelStart = 1),
+        'alignment-only native reset restores inherited axes without accepting a draft');
+      {$endif}
+      Check(Supports(LMount, INyxCollectionInputAdmission, LAdmission),
+        'alignment-only mount retains its original canonical input lifetime');
+      LFormerInput := LAdmission.GetInputLifetime;
+      LMount.Disconnect;
+      ApplyPresentation(LView, LPreferences);
+      LMount := LRenderer.BindCollection('layout-table', LView);
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      Check(not LFormerInput.Current and LMount.Connected,
+        'initial alignment-only preferences activate a fresh mount while the old input stays retired');
+      {$ifdef PAS2JS}
+      LAmountCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="1"]'));
+      Check((window.getComputedStyle(LAmountCell).getPropertyValue('text-align') = 'end') and
+        (window.getComputedStyle(LAmountCell).getPropertyValue('vertical-align') = 'bottom'),
+        'fresh browser mount reads nonempty alignment-only runtime presence');
+      {$else}
+      LAmountGrid := Field('Amount', LAmountColumn);
+      LStyle := TAlignmentGridAccess(LAmountGrid).PreparedStyle(LAmountColumn, 1);
+      Check((LStyle.Alignment = taRightJustify) and (LStyle.Layout = tlBottom),
+        'fresh native mount reads nonempty alignment-only runtime presence');
+      {$endif}
+      Check((TNyxCodec.Encode(LDocument) = LAuthored) and (LView.Store.Snapshot = LSource) and
+        (LView.CellText(NyxItem(LView.Spec.Key, 'one'), 1) = '1234.5'),
+        'runtime-only alignment initial and reset paths preserve exact saved absence and accepted data');
+      LRenderer.Unmount;
+      Check(not LMount.Connected, 'alignment-only native/browser retirement disconnects the fresh mount');
+      Exit;
+    end;
+    Check(LView.Spec.HasColumnAlignment and
+      (LView.Spec.ToData.Field('version').AsInteger = 12),
+      'real table admits exact authored alignment through the ordinary descriptor');
+    {$ifdef PAS2JS}
+    LNameCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="0"]'));
+    LAmountCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="1"]'));
+    Check((window.getComputedStyle(LNameCell).getPropertyValue('text-align') = 'start') and
+      (window.getComputedStyle(LNameCell).getPropertyValue('vertical-align') = 'top') and
+      (window.getComputedStyle(LAmountCell).getPropertyValue('text-align') = 'end') and
+      (window.getComputedStyle(LAmountCell).getPropertyValue('vertical-align') = 'bottom'),
+      'actual browser body cells use independent authored logical and vertical alignment');
+    LAmountCell.focus;
+    LInit := TJSObject.new;
+    LInit['key'] := 'F2';
+    LInit['bubbles'] := True;
+    LInit['cancelable'] := True;
+    LAmountCell.dispatchEvent(TLayoutKey.new('keydown', LInit));
+    LInput := TJSHTMLInputElement(LAmountCell.querySelector('input'));
+    LInput.value := '-';
+    LInput.setSelectionRange(1, 1);
+    Check(window.getComputedStyle(LInput).getPropertyValue('text-align') = 'end',
+      'actual browser numeric editor follows explicit alignment without guessing its scalar family');
+    LInput.dispatchEvent(TLayoutComposition.new('compositionstart', LInit));
+    {$else}
+    LNameGrid := Field('Name', LNameColumn);
+    LAmountGrid := Field('Amount', LAmountColumn);
+    Check((LNameGrid <> nil) and (LAmountGrid <> nil),
+      'native alignment resolves canonical fields across the actual ordinary or pinned panes');
+    LStyle := TAlignmentGridAccess(LNameGrid).PreparedStyle(LNameColumn, 1);
+    Check((LStyle.Alignment = taLeftJustify) and (LStyle.Layout = tlTop),
+      'actual native wrapped text prepare uses authored Start Top');
+    LStyle := TAlignmentGridAccess(LAmountGrid).PreparedStyle(LAmountColumn, 1);
+    Check((LStyle.Alignment = taRightJustify) and (LStyle.Layout = tlBottom),
+      'actual native numeric text prepare uses authored End Bottom without data inference');
+    LAmountGrid.Col := LAmountColumn;
+    LAmountGrid.Row := 1;
+    LAmountGrid.SetFocus;
+    LCLIntf.SendMessage(LAmountGrid.Handle, LM_KEYDOWN, VK_F2, 0);
+    Check(LAmountGrid.EditorMode and (LAmountGrid.Editor is TCustomEdit),
+      'aligned native numeric cell enters the original editor');
+    LEditor := TCustomEdit(LAmountGrid.Editor);
+    RestoreNyxLCLInputText(LEditor, '-');
+    LEditor.SelStart := 1;
+    LEditor.SelLength := 0;
+    Check(TAlignmentEditAccess(LEditor).Alignment = taRightJustify,
+      'actual native editor follows the same explicit logical alignment');
+    Windows.SendMessage(LEditor.Handle, WM_IME_STARTCOMPOSITION, 0, 0);
+    {$endif}
+    LSerial := LPresentation.CapturePresentation.Serial;
+    LPreferences := NyxTablePresentationPreferences
+      .WithAlignment(NyxColumnAlignmentPreference(LName,
+        NyxColumnAlignment.Horizontal(nchaCenter)))
+      .WithAlignment(NyxColumnAlignmentPreference(LAmount,
+        NyxColumnAlignment.Horizontal(nchaStart).Vertical(ncvaMiddle)));
+    ApplyPresentation(LView, LPreferences);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LPresentation.CapturePresentation.Serial = LSerial + 1,
+      'alignment publishes through the existing canonical column serial');
+    {$ifdef PAS2JS}
+    Check((document.activeElement = LInput) and (LInput.value = '-') and
+      (LInput.selectionStart = 1) and
+      (window.getComputedStyle(LInput).getPropertyValue('text-align') = 'end'),
+      'browser composition keeps original alignment unfinished entry focus and caret');
+    LInput.dispatchEvent(TLayoutComposition.new('compositionend', LInit));
+    {$else}
+    Check((LAmountGrid.Editor = LEditor) and (NyxLCLInputText(LEditor) = '-') and
+      (LEditor.SelStart = 1) and (TAlignmentEditAccess(LEditor).Alignment = taRightJustify),
+      'native composition keeps original alignment unfinished entry focus and caret');
+    Windows.SendMessage(LEditor.Handle, WM_IME_ENDCOMPOSITION, 0, 0);
+    {$endif}
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    {$ifdef PAS2JS}
+    Check((LAmountCell.querySelector('input') = LInput) and (LInput.value = '-') and
+      (LInput.selectionStart = 1) and (document.activeElement = LInput) and
+      (window.getComputedStyle(LInput).getPropertyValue('text-align') = 'start') and
+      (window.getComputedStyle(LAmountCell).getPropertyValue('vertical-align') = 'middle') and
+      (window.getComputedStyle(LNameCell).getPropertyValue('text-align') = 'center') and
+      (window.getComputedStyle(LNameCell).getPropertyValue('vertical-align') = 'top'),
+      'browser applies completed alignment with separate inherited axis and exact draft');
+    {$else}
+    LStyle := TAlignmentGridAccess(LNameGrid).PreparedStyle(LNameColumn, 1);
+    Check((LStyle.Alignment = taCenter) and (LStyle.Layout = tlTop),
+      'native runtime horizontal alignment retains the independent authored vertical axis');
+    LStyle := TAlignmentGridAccess(LAmountGrid).PreparedStyle(LAmountColumn, 1);
+    Check((LStyle.Alignment = taLeftJustify) and (LStyle.Layout = tlCenter) and
+      (LAmountGrid.Editor = LEditor) and (NyxLCLInputText(LEditor) = '-') and
+      (LEditor.SelStart = 1) and LEditor.Focused and
+      (TAlignmentEditAccess(LEditor).Alignment = taLeftJustify),
+      'native completed alignment preserves the actual draft object caret focus through HWND styling');
+    {$endif}
+    LPreferences := LPreferences.WithoutAlignment(LAmount);
+    ApplyPresentation(LView, LPreferences);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    {$ifdef PAS2JS}
+    Check((window.getComputedStyle(LInput).getPropertyValue('text-align') = 'end') and
+      (window.getComputedStyle(LAmountCell).getPropertyValue('vertical-align') = 'bottom') and
+      (window.getComputedStyle(LNameCell).getPropertyValue('text-align') = 'center'),
+      'browser resetting one runtime field restores its authored axes independently');
+    {$else}
+    LStyle := TAlignmentGridAccess(LAmountGrid).PreparedStyle(LAmountColumn, 1);
+    Check((LStyle.Alignment = taRightJustify) and (LStyle.Layout = tlBottom) and
+      (TAlignmentEditAccess(LEditor).Alignment = taRightJustify) and
+      (NyxLCLInputText(LEditor) = '-') and (LEditor.SelStart = 1),
+      'native resetting one runtime field restores authored axes without accepting its draft');
+    {$endif}
+    ApplyPresentation(LView, NyxTablePresentationPreferences);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+
+    if AArranged then
+    begin
+      LColumns := NyxCollectionColumns(LView);
+      ApplyPresentation(LView, NyxTablePresentationPreferences.WithAlignment(
+        NyxColumnAlignmentPreference(LName, NyxColumnAlignment.Horizontal(nchaEnd))));
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      Check(Supports(LMount, INyxCollectionColumnArrangementMount, LManagerMount),
+        'aligned table retains its original managed Fit owner');
+      LManager := LManagerMount.ColumnArrangement;
+      LManager.Open;
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      LPresenter := LManager.Presenter;
+      LSerial := LColumns.CaptureColumns.Serial;
+      LAction := NyxColumnArrangementActionID(NyxColumnArrangementEditorID,
+        LManager.Observation, LName, ncaaFitWidth);
+      {$ifdef PAS2JS}
+      Check(Supports(LPresenter, INyxBrowserColumnArrangementPresenter, LTarget),
+        'aligned browser Fit exposes the actual retained managed action');
+      LTarget.Presentation.Renderer.Reveal(LAction, niRuntime);
+      TJSHTMLElement(LTarget.Presentation.Renderer.ElementFor(LAction)).click;
+      await(Drain);
+      {$else}
+      Check(Supports(LPresenter, INyxLCLColumnArrangementPresenter, LTarget),
+        'aligned native Fit exposes the actual retained managed action');
+      LTarget.Presentation.Renderer.Reveal(LAction, niRuntime);
+      TButton(LTarget.Presentation.Renderer.ControlFor(LAction)).Click;
+      Drain;
+      {$endif}
+      Check((LColumns.CaptureColumns.Serial = LSerial + 1) and
+        LManager.Observation.ColumnAt(0).HasWidth and
+        (LManager.Observation.ColumnAt(0).Width > 120),
+        'actual Fit publishes full text measurement while explicit alignment is active');
+      LPresenter.Close;
+      ApplyPresentation(LView, NyxTablePresentationPreferences);
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    end;
+    Check((TNyxCodec.Encode(LDocument) = LAuthored) and (LView.Store.Snapshot = LSource) and
+      (LView.CellText(NyxItem(LView.Spec.Key, 'one'), 1) = '1234.5') and
+      (LView.CellText(NyxItem(LView.Spec.Key, 'one'), 0) = CPath),
+      'all alignment changes preserve authored wire accepted scalar comparison text and complete RAW');
+    {$ifdef PAS2JS}
+    LInput.focus;
+    LInit['key'] := 'Escape';
+    LInput.dispatchEvent(TLayoutKey.new('keydown', LInit));
+    LTable.style.setProperty('direction', 'rtl');
+    LMount.Refresh;
+    await(Drain);
+    LAmountCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="1"]'));
+    LRange := TAlignmentRange(document.createRange);
+    LRange.selectNodeContents(LAmountCell.querySelector('.nyx-cell-value'));
+    LTextBounds := LRange.getBoundingClientRect;
+    LCellBounds := LAmountCell.getBoundingClientRect;
+    Check((window.getComputedStyle(LAmountCell).getPropertyValue('direction') = 'rtl') and
+      (window.getComputedStyle(LAmountCell).getPropertyValue('text-align') = 'end') and
+      (LTextBounds.width > 0) and (LTextBounds.left <= LCellBounds.left + 12) and
+      (LTextBounds.right <= LCellBounds.right - 12),
+      'actual browser RTL End places the rendered numeric glyphs at the logical trailing edge');
+    await(Capture('alignment-rtl-' + LowerCase(BoolToStr(AArranged, True))));
+    {$else}
+
+    if LEditor.CanFocus then
+    begin
+      LEditor.SetFocus;
+    end;
+    LCLIntf.SendMessage(LEditor.Handle, LM_KEYDOWN, VK_ESCAPE, 0);
+    LGrid.BiDiMode := bdRightToLeft;
+    LMount.Refresh;
+    Drain;
+    LNameGrid := Field('Name', LNameColumn);
+    LAmountGrid := Field('Amount', LAmountColumn);
+    LStyle := TAlignmentGridAccess(LNameGrid).PreparedStyle(LNameColumn, 1);
+    Check((LStyle.Alignment = taRightJustify) and (LStyle.Layout = tlTop),
+      'actual native RTL Start mirrors the authored wrapped body text');
+    LStyle := TAlignmentGridAccess(LAmountGrid).PreparedStyle(LAmountColumn, 1);
+    Check((LStyle.Alignment = taLeftJustify) and (LStyle.Layout = tlBottom),
+      'actual native RTL End mirrors numeric body text without guessing from its value');
+    HiddenAlignmentSelection;
+    {$endif}
+    Check((LView.Store.Snapshot = LSource) and (TNyxCodec.Encode(LDocument) = LAuthored),
+      'direction layout and editor cancellation do not publish data or rewrite saved alignment');
+    LRenderer.Unmount;
+    Check(not LMount.Connected, 'aligned table retirement ends the original input mount');
+    {$ifndef PAS2JS}
+    Check(GErrors.Text = '', 'alignment control journey leaves no deferred native failure: ' + GErrors.Text);
+    {$endif}
+  finally
+    LFormerInput := nil;
+    LAdmission := nil;
+    LTarget := nil;
+    LColumns := nil;
+    LPresenter := nil;
+    LManager := nil;
+    LManagerMount := nil;
+    LPresentation := nil;
+    LMount := nil;
+    LView := nil;
+    LRenderer.Free;
+    {$ifdef PAS2JS}
+
+    if LSurface <> nil then
+    begin
+      LSurface.remove;
+    end;
+    {$else}
+    Drain;
+    LSurface.Free;
+    {$endif}
+    LState.Free;
+    LDocument.Free;
+  end;
+end;
+
 procedure Start; {$ifdef PAS2JS}async;{$endif}
 begin
   try
@@ -636,12 +1520,22 @@ begin
     await(Run(True));
     await(Run(False));
     await(Run(True, True));
+    await(RuntimeCases(True));
+    await(RuntimeCases(False));
+    await(AlignmentCases(True));
+    await(AlignmentCases(False));
+    await(AlignmentCases(False, True));
     document.body.setAttribute('data-presentation-controls', 'passed');
     document.body.setAttribute('data-presentation-control-checks', IntToStr(GChecks));
     {$else}
     Run(True);
     Run(False);
     Run(True, True);
+    RuntimeCases(True);
+    RuntimeCases(False);
+    AlignmentCases(True);
+    AlignmentCases(False);
+    AlignmentCases(False, True);
     WriteLn('PASS ', GChecks, ' actual presentation control checks; no external effects');
     {$endif}
   except

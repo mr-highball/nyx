@@ -4,7 +4,90 @@
 
 ## Column arrangement W1 — 2026-10-22
 
-### Current checkpoint — native button admission and runtime table presentation
+### Current checkpoint — typed column alignment authoring
+
+Column alignment now has independent optional logical horizontal and vertical
+axes, typed source generation/reading, ordinary collapsed Inspector forms and
+revision-aware grouped semantic set/reset operations. Descriptor12 requires
+actual alignment presence; versions1–11 retain their prior shapes. Optional
+bounded `alignmentControls` reads preserve the old response when omitted/false.
+Edits retain exact field/family identity and the baseline after preceding grouped
+changes; independent reset leaves spacing, overflow and other columns intact.
+
+Source05 passes22 native/browser round-trip checks; its exact emitted Pascal
+independently compiles and passes1 complete-value check on each actual target.
+Authoring02 passes57 native and actual browser checks at1280x900/390x900; actual
+native MCP discovery passes230. Native heaps are complete/clean and browser
+warning/error logs are empty. These are portable form capture, paired history,
+source and direct semantic-session checks, not mounted Inspector input or a live
+network MCP connection. The first schema run retained an obsolete eleven-version
+assertion; correcting it to twelve preserves the independent schema checks.
+Earlier source fixtures retained an incorrect UTF8 helper name and exposed a
+missing factory dispatch; the latter is repaired in the actual source reader.
+
+Lil' Scooty's closed23 target source passes129 native control checks at390/1280
+with clean heaps. Its later26 extension passes130 actual browser controls at
+390x900/1280x900 (table350/1240), with empty warning/error logs, including
+alignment-only activation/reset, physical RTL placement and aligned Fit. Native26
+failed the original final deferred-error assertion: alignment can recreate an
+editor HWND before scalar selection restoration. Diagnostic27 retains the exact
+stack. Repair29 preserves the previously admitted native offset pair through the
+normal LCL cache while hidden; live handles still use the scalar bridge. It
+passes161 actual controls at390/1280 (table362/1252), with complete clean heaps,
+including supplementary-range hide/reveal, no hidden HWND creation, unchanged
+focus/RAW/source and the original final error assertion. Representation26 and
+clipboard968 remain passing with clean heaps. Browser28 is byte-identical to the
+actual130-check26 artifact. All15 helper alignment sources match their closed
+receipt; this qualification does not imply whole Studio parity or OS effects.
+
+The maintained policy/source02 function completes22 fresh compilers and11 native
+consumers, passing171/37/38/88/36/4/27/53/19/22/1 with complete clean heaps and zero
+owned warnings. All2242 source pins reverify unchanged. The first integration run
+passed a directory to a fixture expecting an emitted filename; its file-create
+failure remains retained, and the runner now supplies the explicit filename.
+All matching browser consumers compile; only the separately recorded actual
+browser executions above have runtime credit. Browser Studio, source worker,
+native Studio and backend also compile from that same closed source, with zero
+owned warnings. Compilation does not establish mounted Inspector behavior.
+
+Root's original full native Studio15 journey separately reaches stage18/check353
+but still exceeds its unchanged900s bound. The actual process is joined, with
+all2241 fixed pre-authoring source pins unchanged; a forced deadline provides no
+complete heap or own-export acceptance. Native UI ownership then passes to Lil'
+Scooty. Diagnostic27 joins with a complete clean heap and traces the selection
+failure to grid style synchronization after Win32 alignment recreates the HWND.
+That repair and its exact hide/reveal assertions are now qualified as29 above.
+The earlier temporary Pascal preview host is stopped/joined, with its listener
+absent and test tab closed. The current mounted-input01 fixture extends the SAME
+workbench journey through real spacing/wrap/alignment Apply, draft tab retention,
+independent reset and paired Undo/Redo before Save/Open. Its three compilers pass;
+actual native runs pass230 at1280 and232 at390 within the unchanged900s bound,
+with complete clean heaps. All2242 fixed source pins remain unchanged. Their
+accepted project packets preserve the same authored policies. These focused
+producer checks do not qualify full Save/Open or an independently compiled native
+own-export application. Native-only static phase diagnostics separate property/
+context admission from realization, copy and Sync. Inspector replacement still
+costs about13s in an observed refresh; a retained refresh is materially smaller,
+so complete native responsiveness remains a real prerequisite.
+
+The preceding browser tab is now authoritatively absent after the turn ended;
+it yielded no terminal evidence. A fresh tab reaches the same original fixture
+URL but still does not answer bounded frame/DOM observations. Inventory, dialog
+and empty warning/error log reads work; no browser dialog is open. A separate
+small fixture passes in the same browser. This is no Studio browser pass or
+confirmed browser disconnect. The current run remains retained instead of being
+restarted on an observation timeout. Process/tab details stay in private handoff.
+
+Lil' Scooty next owns the existing W2 pointer endpoint prerequisite: its optional
+selection-owner facet reuses the existing range publication owner, reserves before
+source getters and completes once after canonical input. Pure06 passes33 plus
+unchanged navigation37/range47 native checks, all clean; browser compiles, actual
+browser/target input remain pending. Earlier record portability and fixture
+retirement failures stay retained. All seven original task03 criteria, complete
+mounted-input qualification, own-export/native performance and the full goal stay
+open. File inventories and validation snapshots impose no permission boundary.
+
+### Earlier checkpoint — native button admission and runtime table presentation
 
 Native button measurement/refresh now reuse an immutable typed face admitted
 against the exact effective property wire. Changed or malformed values still

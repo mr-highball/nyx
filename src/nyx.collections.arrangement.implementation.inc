@@ -631,11 +631,6 @@ begin
   begin
     FNextPresentation.Validate;
 
-    if not LSpec.HasPresentationPolicy and
-      (FNextPresentation.HasDensity or (FNextPresentation.Count > 0)) then
-    begin
-      raise ENyxCollection.Create('Runtime text choices require authored presentation opt-in');
-    end;
     SetLength(LTextFields, LSpec.Count);
     for LIndex := 0 to LSpec.Count - 1 do
     begin
@@ -843,6 +838,7 @@ var
   LSourcePresentation: TNyxTablePresentationPreferences;
   LAcceptedPresentation: TNyxTablePresentationPreferences;
   LTextPreference: TNyxColumnTextPreference;
+  LAlignmentPreference: TNyxColumnAlignmentPreference;
 begin
   Result := nil;
   LFormer := AFormer;
@@ -858,8 +854,16 @@ begin
   LSource := LFormerColumns.CaptureColumns;
   LTarget := LNextColumns.CaptureColumns;
   LSpec := LTarget.Spec;
+  LSourcePresentation := NyxTablePresentationPreferences;
 
-  if not LSpec.HasLayoutControls and not LSpec.HasPresentationPolicy then
+  if Supports(LSource, INyxCollectionPresentationCapture, LPresentationSource) then
+  begin
+    LSourcePresentation := LPresentationSource.Preferences;
+  end;
+
+  if not LSpec.HasLayoutControls and not LSpec.HasPresentationPolicy and
+    not LSourcePresentation.HasDensity and (LSourcePresentation.Count = 0) and
+    (LSourcePresentation.AlignmentCount = 0) then
   begin
     Exit;
   end;
@@ -904,10 +908,8 @@ begin
   LAccepted := LAccepted.Order(LOrder);
   LAcceptedPresentation := NyxTablePresentationPreferences;
 
-  if LSpec.HasPresentationPolicy and
-    Supports(LSource, INyxCollectionPresentationCapture, LPresentationSource) then
+  if LPresentationSource <> nil then
   begin
-    LSourcePresentation := LPresentationSource.Preferences;
 
     if LSourcePresentation.HasDensity then
     begin
@@ -920,6 +922,15 @@ begin
       if LSpec.ColumnIndex(LTextPreference.Field) >= 0 then
       begin
         LAcceptedPresentation := LAcceptedPresentation.WithColumn(LTextPreference);
+      end;
+    end;
+    for LIndex := 0 to LSourcePresentation.AlignmentCount - 1 do
+    begin
+      LAlignmentPreference := LSourcePresentation.AlignmentAt(LIndex);
+
+      if LSpec.ColumnIndex(LAlignmentPreference.Field) >= 0 then
+      begin
+        LAcceptedPresentation := LAcceptedPresentation.WithAlignment(LAlignmentPreference);
       end;
     end;
   end;

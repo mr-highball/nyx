@@ -26,19 +26,22 @@ unit nyx.collections.presentation.controls;
 interface
 
 uses nyx.collections.arrangement, nyx.collections.presentation,
-  nyx.collections.view;
+  nyx.collections.view, nyx.collections.alignment;
 
 type
   { Detached effective density and text policies from ONE canonical columns
     capture. All getters use copied values; paint never queries a view, store,
     selection or runtime preference owner. An absent policy stays absent, so
-    existing tables retain their original metrics and text path. }
+    existing tables retain their original metrics and text path. Explicit
+    runtime overrides are reported independently of authored presence. }
   TNyxTablePresentationObservation = record
   private
     FTable: TNyxTablePresentationPolicy;
     FFields: array of TNyxColumnIdentity;
     FText: array of TNyxColumnTextPolicy;
+    FAlignment: array of TNyxColumnAlignmentPolicy;
     FSerial: Integer;
+    FHasRuntimeOverrides: Boolean;
     function GetCount: Integer;
     function GetTable: TNyxTablePresentationPolicy;
   public
@@ -47,9 +50,11 @@ type
     function Copy: TNyxTablePresentationObservation;
     function FieldAt(ACanonical: Integer): TNyxColumnIdentity;
     function TextAt(ACanonical: Integer): TNyxColumnTextPolicy;
+    function AlignmentAt(ACanonical: Integer): TNyxColumnAlignmentPolicy;
     property Count: Integer read GetCount;
     property TablePolicy: TNyxTablePresentationPolicy read GetTable;
     property Serial: Integer read FSerial;
+    property HasRuntimeOverrides: Boolean read FHasRuntimeOverrides;
   end;
 
 implementation
@@ -86,6 +91,17 @@ begin
   Result := FText[ACanonical].Copy;
 end;
 
+function TNyxTablePresentationObservation.AlignmentAt(
+  ACanonical: Integer): TNyxColumnAlignmentPolicy;
+begin
+
+  if (ACanonical < 0) or (ACanonical >= Count) then
+  begin
+    raise EArgumentException.Create('Alignment policy is outside its captured vector');
+  end;
+  Result := FAlignment[ACanonical].Copy;
+end;
+
 function TNyxTablePresentationObservation.Copy: TNyxTablePresentationObservation;
 var
   LValue: TNyxTablePresentationObservation;
@@ -94,12 +110,15 @@ begin
   LValue := Self;
   LValue.FFields := nil;
   LValue.FText := nil;
+  LValue.FAlignment := nil;
   SetLength(LValue.FFields, Count);
   SetLength(LValue.FText, Count);
+  SetLength(LValue.FAlignment, Count);
   for I := 0 to Count - 1 do
   begin
     LValue.FFields[I] := FFields[I];
     LValue.FText[I] := FText[I].Copy;
+    LValue.FAlignment[I] := FAlignment[I].Copy;
   end;
   Result := LValue;
 end;
@@ -143,16 +162,21 @@ begin
   end;
   SetLength(LValue.FFields, LSpec.Count);
   SetLength(LValue.FText, LSpec.Count);
+  SetLength(LValue.FAlignment, LSpec.Count);
   for I := 0 to LSpec.Count - 1 do
   begin
     LValue.FFields[I] := LSpec.ColumnAt(I).Identity;
   end;
   LPreferences.ValidateFields(LValue.FFields);
+  LValue.FHasRuntimeOverrides := LPreferences.HasDensity or (LPreferences.Count > 0) or
+    (LPreferences.AlignmentCount > 0);
   LValue.FTable := LPreferences.ResolveTable(LSpec.TablePresentationPolicy);
   for I := 0 to LSpec.Count - 1 do
   begin
     LValue.FText[I] := LPreferences.ResolveColumn(LValue.FFields[I],
       LSpec.ColumnAt(I).TextPolicy);
+    LValue.FAlignment[I] := LPreferences.ResolveAlignment(LValue.FFields[I],
+      LSpec.ColumnAt(I).AlignmentPolicy);
   end;
   Result := LValue;
 end;

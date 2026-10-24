@@ -10,6 +10,20 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The alignment continuation adds independent typed logical axes, version12 only
+on actual presence, crafted source output, ordinary Inspector capture and grouped
+semantic set/reset with optional bounded reads. Source05 passes22 per target and
+its independently compiled emitted application passes1 per target. Authoring02
+passes57 native/browser checks and native MCP discovery230; heaps are clean and
+browser logs empty. Target26/28 browser controls pass130 at measured390/1280
+widths; native29 repairs hidden editor selection after alignment recreates its
+HWND and passes161 at both widths, with clean heaps and original26/968
+preservation. Focused mounted Studio input01 additionally passes230/232 native
+checks at desktop/compact widths, with clean heaps. Its browser counterpart,
+complete original Save/Open and native own-export/performance remain open.
+These separate cohorts close no original criterion; WORK records their exact
+boundaries and remaining checks.
+
 The native responsiveness prerequisite now reuses strictly admitted immutable
 button faces by exact effective wire, preserving resource and callback currentness.
 Configuration03 passes88 on both actual targets; ordinary native Studio chrome

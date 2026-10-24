@@ -8044,6 +8044,22 @@ var
   LFrame: TNyxViewFrame;
   LMeasurements: INyxContainerSnapshot;
   LNextSelection: TNyxPresentationSelection;
+  {$ifdef NYX_STUDIO_PROFILE}
+  LPhaseStarted: QWord;
+
+  procedure RefreshPhase(const APhase: TNyxText);
+  var
+    LNow: QWord;
+  begin
+    { Diagnostic builds expose static boundaries only. Keep admission,
+      realization and physical Sync separate so a fast layout cannot conceal
+      costly validation/repeated source work in the retained-view path. }
+    LNow := GetTickCount64;
+    WriteLn('native-refresh,', APhase, ',', Length(FBindings), ',',
+      LNow - LPhaseStarted);
+    LPhaseStarted := LNow;
+  end;
+  {$endif}
 
   function Compatible(AFrom, ATo: TNyxNode; AArrange: Boolean): Boolean;
   begin
@@ -8129,6 +8145,7 @@ begin
   LEnteredFrame := FPhysicalFrame;
   LEnteredFrame.Enter;
   try
+  {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
 
   FEvents.Scheduler.RequireUI;
   RequireNativeGeneration(LGeneration);
@@ -8167,16 +8184,19 @@ begin
     RequireNativeGeneration(LGeneration);
   end;
   RequireNativeGeneration(LGeneration);
+  {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('guards');{$endif}
   { Validate fresh public data before comparing the immutable context. Retaining
     controls never implies a stale document cache or skipped source admission. }
   ValidateNyxDocumentProperties(ADocument);
   RequireNativeGeneration(LGeneration);
+  {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('properties');{$endif}
 
   if NyxProjectionContext(ADocument) <> FProjectionContext then
   begin
     Exit;
   end;
   RequireNativeGeneration(LGeneration);
+  {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('context');{$endif}
   LCandidate := nil;
   RequireNativeGeneration(LGeneration);
   LPrevious := nil;
@@ -8210,6 +8230,7 @@ begin
       Exit;
     end;
     RequireNativeGeneration(LGeneration);
+    {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('theme');{$endif}
     LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
       Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
       RequireNativeGeneration(LGeneration);
@@ -8227,6 +8248,7 @@ begin
     RequireNativeGeneration(LGeneration);
     LCandidate := RealizeNyxView(ADocument, ARoot, LFrame, LMeasurements);
     RequireNativeGeneration(LGeneration);
+    {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('realize');{$endif}
 
     if FResourceContext <> nil then
     begin
@@ -8238,6 +8260,7 @@ begin
     RequireNativeGeneration(LGeneration);
     ApplyNyxPlatform(LCandidate, npfNativeLCL);
     RequireNativeGeneration(LGeneration);
+    {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('content-platform');{$endif}
 
     LAccepted := LCandidate;
     LBaseline := FProjectionBaseline;
@@ -8255,6 +8278,7 @@ begin
       LAccepted := LProjectedCandidate;
       LBaseline := LProjectedBaseline;
     end;
+    {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('bound-prepare');{$endif}
     LArrangement := not Compatible(FRoot, LAccepted, False);
     RequireNativeGeneration(LGeneration);
 
@@ -8263,11 +8287,14 @@ begin
         not Compatible(LBaseline, LAccepted, True))) or
       (FProjectionSchemaRevision <> NyxSchemaRevision) then
     begin
+      {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('incompatible');{$endif}
       Exit;
     end;
     RequireNativeGeneration(LGeneration);
+    {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('compatible');{$endif}
     LPrevious := FRoot.Clone;
     RequireNativeGeneration(LGeneration);
+    {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('rollback-copy');{$endif}
     LPreviousSelection := FPresentationSelection;
 
     try
@@ -8277,6 +8304,7 @@ begin
         Exit;
       end;
       RequireNativeGeneration(LGeneration);
+      {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('apply');{$endif}
 
       if LArrangement then
       begin
@@ -8289,6 +8317,7 @@ begin
       RequireNativeGeneration(LGeneration);
       Sync;
       RequireNativeGeneration(LGeneration);
+      {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('sync');{$endif}
     except
 
       if not NativeGenerationCurrent(LGeneration) then
@@ -8333,6 +8362,7 @@ begin
     QueueContent;
     RequireNativeGeneration(LGeneration);
     Result := True;
+    {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('adopt');{$endif}
   finally
     LContentBlueprint.Free;
     LTheme.Free;
