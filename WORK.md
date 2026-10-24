@@ -576,6 +576,31 @@ concrete defect. Next Root work attaches these domains to actual event
 generations, then integrates the existing reversible form port into renderers
 and Studio. All original task criteria and native performance remain open.
 
+Scheduler work scopes are committed/pushed asa04c1c0, exact remote verified.
+The helper's separate range07 portable packet now passes46 native checks with
+a complete50344/50344 clean heap and46 actual browser checks, logs empty. It
+retains all original32 capture assertions and adds14 independent selection
+lifetime/reentry assertions. Rectangles follow actual filtered page and visible
+column order through the existing SelectedPage TSV producer; typed endpoints,
+Unicode/NUL, headers/line endings and original row selection stay exact. The
+independent selection reserves before getters, preserves a prior accepted range
+on failure and retires old flags before releasing snapshots. Nested Select/
+Clear/Revoke and caller-owner withdrawal cannot redirect the returning intent.
+
+Earlier01 source-selection setup,02 hidden-result atomicity and05/06 final-owner
+fixture failures remain retained. The final fixture bounds factory creation and
+the SAME public Select call so compiler-held expression receiver leases end
+before its unchanged final retirement assertion. All46 pass on each actual
+target; new exception bodies follow the expanded style. Root independently
+reviews capture admission, existing producer reuse, canonical selection flags
+and reentrant/retirement cases without finding another concrete defect. All
+three current/private range pins and three original/staged range artifact pairs
+remain exact after browser execution, under the already joined host53712 cohort.
+This is portable capture/selection qualification only: mounted highlighting,
+keyboard input, same-slot copy and real OS effects remain open. The helper now
+implements those command/target prerequisites in disjoint files while Root
+continues event-generation attachment and actual retained-form adoption.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

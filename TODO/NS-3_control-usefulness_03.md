@@ -140,6 +140,15 @@ scheduler checks pass87 native/61 browser. Event-generation attachment and actua
 renderer/Studio preview adoption are still required before this can address the
 whole native Inspector refresh cost.
 
+The explicit cell-range capture/selection prerequisite passes46 native checks
+with a complete clean heap and46 actual browser checks, logs empty. It retains
+directional typed endpoints, actual filtered-page/visible-field order and exact
+RAW TSV through the existing SelectedPage producer. Independent selection
+generations survive nested getter admission safely without changing ordinary
+row selection or data. Mounted range input/highlighting and copying through the
+existing host request slot are still required; this portable packet does not
+accept the range criterion or enable a new default UI behavior.
+
 Let application users arrange columns, read difficult values and act on cells
 without leaving their working context. Prioritize real debugging/inspection and
 data-entry workflows over adding isolated properties with no visible interaction.

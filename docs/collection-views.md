@@ -992,6 +992,41 @@ receipt separation and nested stale context admission on both targets.
 Effects use injected hosts; real OS clipboard behavior and full workbench
 acceptance remain separate.
 
+## Explicit cell range captures
+
+`nyx.collections.range` supplies immutable cell rectangles using stable
+`TNyxCollectionCellIdentity` endpoints. Each endpoint pairs a collection-scoped
+item with its fully typed field. Capture takes the actual accepted source/page
+and copied visible presentation fields; it never infers coordinates from a
+native grid pane or substitutes ordinary row selection.
+
+Both endpoints are included. Anchor/focus preserve gesture direction, while the
+payload follows actual page and visible-column order. Reversing endpoints keeps
+the same output. Hidden/off-page/foreign endpoints, mismatched scalar families
+or source revisions and work/output limits refuse before publication. Captured
+RAW TSV reuses `NewNyxCollectionClipboardRows` with SelectedPage membership,
+including its header, escaping and line-ending rules. A singleton range remains
+explicit TSV; ordinary single-cell RAW copy keeps its existing exact text.
+
+The independent `INyxCollectionCellRangeSelection` in
+`nyx.collections.range.actions` owns one accepted range intent. Select reserves
+intent before outward snapshot getters and publishes only a complete admitted
+candidate. Failed admission preserves the previous choice. Nested Select, Clear
+or terminal Revoke prevents an older returning call from replacing that newer
+decision. Replacing/clearing a selection retires its original flags before
+releasing old snapshots; retained copied data remains readable afterward.
+Each intent exposes flags-only readiness independently of its immutable source,
+page and payload. Commands must still fence their original mount/input/column
+cohort before using it.
+
+These portable capture/selection boundaries pass 46 native checks with a clean
+heap and 46 actual browser checks with empty logs, including genuine filtered
+page order, hidden columns, exact Unicode/NUL and reentrant snapshot getters.
+They publish no ordinary row-selection/data notifications and retain no live
+view/store. Mounted range highlighting, keyboard input and same-slot copy
+commands are the next integration step; this result does not enable those UI
+routes by default or qualify platform clipboard effects.
+
 ## Exporting captured table results
 
 `nyx.collections.export` prepares immutable RAW TSV from an actual
