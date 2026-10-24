@@ -1273,6 +1273,261 @@ begin
   end;
 end;
 
+function TNativeMount.FocusCellRange(ARow, AColumn: Integer): Boolean;
+var
+  LLease: INyxCollectionMount;
+  LGrid: TStringGrid;
+  LOuter: TNyxCollectionStringGrid;
+  LInput: INyxCollectionInputLifetime;
+  LFrame: INyxNativeGestureFrame;
+  LEpoch: Integer;
+  LPhysical: Integer;
+  LUpdating: Boolean;
+
+  function Original: Boolean;
+  begin
+    Result := LInput.Current and LInput.Ready and (LInput.Epoch = LEpoch) and
+      (GetInputLifetime = LInput) and (FGrid = LOuter) and GetConnected;
+  end;
+
+begin
+  LLease := Self as INyxCollectionMount;
+  Result := False;
+
+  if FHasColumnLayout then
+  begin
+    LGrid := GridForColumn(AColumn, LPhysical);
+  end
+  else
+  begin
+    LGrid := FGrid;
+    LPhysical := AColumn;
+  end;
+  LInput := GetInputLifetime;
+
+  if (LGrid = nil) or (ARow < 0) or (ARow + 1 >= LGrid.RowCount) or
+    not GetInputReady or not (FGrid is TNyxCollectionStringGrid) then
+  begin
+    Exit;
+  end;
+  LOuter := TNyxCollectionStringGrid(FGrid);
+  LEpoch := LInput.Epoch;
+  LFrame := FColumnFrame;
+  LUpdating := FUpdating;
+
+  if LFrame <> nil then
+  begin
+    { Public prepared input need not arrive inside a native key frame. Retain
+      the original controls through custom LCL selection/focus callbacks too. }
+    LFrame.Enter;
+  end;
+  try
+    FUpdating := True;
+    LOuter.BeginColumnTransition;
+    try
+      LGrid.Col := LPhysical;
+
+      if not Original then
+      begin
+        Exit;
+      end;
+      LGrid.Row := ARow + 1;
+
+      if not Original then
+      begin
+        Exit;
+      end;
+      FActiveGrid := LGrid;
+      FFocusedCanonical := AColumn;
+
+      if LGrid.CanFocus and Original then
+      begin
+        LGrid.SetFocus;
+      end;
+
+      if Original then
+      begin
+        Result := LGrid.Focused;
+      end;
+    finally
+
+      if LInput.Current then
+      begin
+        LOuter.EndColumnTransition;
+      end;
+    end;
+  finally
+    FUpdating := LUpdating;
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
+  end;
+end;
+
+function TNativeMount.CellRangeKeyDown(Sender: TObject; var AKey: Word;
+  AShift: TShiftState): Boolean;
+var
+  LLease: INyxCollectionMount;
+  LCommand: INyxCollectionCellRangeKeyCommand;
+  LKey: TNyxCollectionRangeKey;
+  LOriginal: Word;
+  LGrid: TStringGrid;
+  LData: INyxCollectionSnapshot;
+  LItem: TNyxItemRef;
+  LField: TNyxColumnIdentity;
+  LPrevious: TKeyEvent;
+  LSender: TObject;
+  LRow: Integer;
+  LColumn: Integer;
+  LCount: Integer;
+begin
+  Result := False;
+
+  if not FCellRangeEnabled or
+    (AShift * [ssAlt, ssSuper, ssAltGr] <> []) or
+    ((ssCtrl in AShift) and (ssMeta in AShift)) then
+  begin
+    Exit;
+  end;
+  LGrid := InputGrid(Sender);
+
+  if (LGrid = nil) or LGrid.EditorMode then
+  begin
+    Exit;
+  end;
+
+  if (AKey = VK_ESCAPE) and (AShift = []) and (GetCellRange <> nil) then
+  begin
+    LKey := ncrkClear;
+  end
+  else
+  begin
+
+    if not (ssShift in AShift) then
+    begin
+      Exit;
+    end;
+    case AKey of
+      VK_LEFT:
+        begin
+          LKey := ncrkExtendLeft;
+        end;
+      VK_RIGHT:
+        begin
+          LKey := ncrkExtendRight;
+        end;
+      VK_UP:
+        begin
+          LKey := ncrkExtendUp;
+        end;
+      VK_DOWN:
+        begin
+          LKey := ncrkExtendDown;
+        end;
+      VK_HOME:
+        begin
+          LKey := ncrkExtendRowStart;
+        end;
+      VK_END:
+        begin
+          LKey := ncrkExtendRowEnd;
+        end;
+      else
+      begin
+        Exit;
+      end;
+    end;
+
+    if AShift * [ssCtrl, ssMeta] <> [] then
+    begin
+
+      if AKey = VK_HOME then
+      begin
+        LKey := ncrkExtendFirstCell;
+      end
+      else if AKey = VK_END then
+      begin
+        LKey := ncrkExtendLastCell;
+      end
+      else
+      begin
+        Exit;
+      end;
+    end;
+
+    if FHasColumnLayout and FGrid.UseRightToLeftAlignment then
+    begin
+
+      if LKey = ncrkExtendLeft then
+      begin
+        LKey := ncrkExtendRight;
+      end
+      else if LKey = ncrkExtendRight then
+      begin
+        LKey := ncrkExtendLeft;
+      end;
+    end;
+  end;
+  LLease := Self as INyxCollectionMount;
+  LCommand := BeginCellRangeKey(LKey);
+
+  if LCommand = nil then
+  begin
+    Exit;
+  end;
+  Result := True;
+  LOriginal := AKey;
+  LPrevious := FPreviousKey;
+  LSender := Sender;
+
+  if FHasColumnLayout then
+  begin
+    LSender := FGrid;
+  end;
+  LData := FRendered;
+  FRejectTextKey := True;
+  FConsumedTextKey := True;
+  try
+    try
+
+      if (LKey <> ncrkClear) and LCommand.Current then
+      begin
+        LRow := LGrid.Row - 1;
+        LColumn := CanonicalColumn(LGrid, LGrid.Col);
+        LField := ClipboardField(LColumn);
+
+        if (LData <> nil) and (LRow >= 0) and LField.Defined then
+        begin
+          LCount := LData.Count;
+
+          if LCommand.Current and (LRow < LCount) then
+          begin
+            LItem := LData.ItemAt(LRow).Ref;
+            LCommand.ResolveOrigin(NyxCollectionCellIdentity(LItem, LField));
+          end;
+        end;
+      end;
+      LCommand.Prepare;
+    except
+      on E: ENyxCollectionRangeStale do
+      begin
+        { Original input remains claimed; a nested newer selection survives. }
+      end;
+    end;
+
+    if LCommand.DispatchCurrent and Assigned(LPrevious) then
+    begin
+      LPrevious(LSender, AKey, AShift);
+    end;
+    LCommand.Complete((AKey = LOriginal) and LCommand.DispatchCurrent);
+  finally
+    AKey := 0;
+    LCommand.Retire;
+  end;
+end;
+
 function TNativeMount.ClipboardKeyDown(Sender: TObject; var AKey: Word;
   AShift: TShiftState): Boolean;
 var
@@ -1410,6 +1665,11 @@ var
   LColumn: Integer;
   LPageRows: Integer;
 begin
+
+  if CellRangeKeyDown(Sender, AKey, AShift) then
+  begin
+    Exit;
+  end;
 
   if ClipboardKeyDown(Sender, AKey, AShift) then
   begin

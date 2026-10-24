@@ -46,6 +46,7 @@ uses
   nyx.collections.range,
   nyx.collections.range.actions,
   nyx.collections.range.commands,
+  nyx.collections.range.navigation,
   nyx.collections.export.actions,
   nyx.collections.export,
   nyx.collections.cell.actions,
@@ -278,7 +279,8 @@ type
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
-    INyxCollectionExportMount, INyxCollectionCellRangeMount)
+    INyxCollectionExportMount, INyxCollectionCellRangeMount,
+    INyxCollectionCellRangeKeyInput)
   private
     FToken: INyxCollectionViewSubscription;
     FConnected: Boolean;
@@ -389,6 +391,13 @@ type
     function CellRangeAvailable: Boolean; virtual;
     function CellRangeContains(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity): Boolean;
+    { Reserve before an adapter reads its current row. The returned command is
+      synchronous and owns this mount only through canonical key completion. }
+    function BeginCellRangeKey(AKey: TNyxCollectionRangeKey): INyxCollectionCellRangeKeyCommand;
+    { Move only physical focus using the already admitted row/canonical field.
+      Implementations suppress ordinary row-selection/editor side effects and
+      return after any focus callbacks; the command then repeats its final fence. }
+    function FocusCellRange(ARow, AColumn: Integer): Boolean; virtual;
     { Cached target flags only: no source, router, widget, DOM or application
       callback may run from a final clipboard readiness check. }
     function ClipboardInputAvailable: Boolean; virtual;
@@ -559,6 +568,44 @@ type
     procedure CheckReady;
   end;
 
+  { Original mounted range key. Prepared selection and copied snapshot leases
+    cannot outlive this synchronous envelope; the accepted range owns none of
+    these live mount/view references. Flags-only checks follow every callout. }
+  TCellRangeKeyCommand = class(TInterfacedObject, INyxCollectionCellRangeKeyCommand)
+  private
+    FOwner: TNyxCollectionMountBase;
+    FLease: INyxCollectionMount;
+    FView: INyxCollectionView;
+    FInput: INyxCollectionInputLifetime;
+    FSelection: INyxCollectionCellRangeSelection;
+    FPrevious: INyxCollectionCellRangeIntent;
+    FKey: TNyxCollectionRangeKey;
+    FOrigin: TNyxCollectionCellIdentity;
+    FOptions: TNyxCollectionClipboardOptions;
+    FPlan: INyxPreparedPublication;
+    FReady: INyxPublicationReadiness;
+    FEpoch: Integer;
+    FMutation: Integer;
+    FRequest: Integer;
+    FRow: Integer;
+    FColumn: Integer;
+    FAdmitted: Boolean;
+    FResolved: Boolean;
+    FPrepared: Boolean;
+    FCompleted: Boolean;
+    FRetired: Boolean;
+    function PreparedCurrent: Boolean;
+  public
+    constructor Create(AOwner: TNyxCollectionMountBase; AKey: TNyxCollectionRangeKey);
+    destructor Destroy; override;
+    procedure ResolveOrigin(const AOrigin: TNyxCollectionCellIdentity);
+    procedure Prepare;
+    function GetCurrent: Boolean;
+    function GetDispatchCurrent: Boolean;
+    function Complete(AAllowDefault: Boolean): Boolean;
+    procedure Retire;
+  end;
+
   { Private control authority remains with the mount. Readers own only this
     object's readonly interface, which stays revoked after its mount is gone. }
   TCollectionInputState = class(TInterfacedObject, INyxCollectionInputLifetime)
@@ -685,6 +732,304 @@ begin
   end;
   {$endif}
   raise ENyxCollection.Create(AFailure.Message);
+end;
+
+constructor TCellRangeKeyCommand.Create(AOwner: TNyxCollectionMountBase;
+  AKey: TNyxCollectionRangeKey);
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FLease := AOwner as INyxCollectionMount;
+  FView := AOwner.FView;
+  FInput := AOwner.FInputLifetime;
+  FSelection := AOwner.FCellRanges;
+  FKey := AKey;
+  FMutation := AOwner.FCellMutationSerial;
+  FOptions := AOwner.FClipboardOptions;
+  FRow := -1;
+  FColumn := -1;
+
+  if FInput <> nil then
+  begin
+    FEpoch := FInput.Epoch;
+  end;
+  { Even an inert reservation remains claimed. A later default must not borrow
+    a new epoch after a getter/callback disables and re-enables this mount. }
+
+  if AOwner.FCellRangeRequest < High(Integer) then
+  begin
+    Inc(AOwner.FCellRangeRequest);
+    FRequest := AOwner.FCellRangeRequest;
+  end;
+  FAdmitted := (FRequest > 0) and (FRequest < High(Integer)) and
+    AOwner.FConnected and not AOwner.FDisconnecting and AOwner.FCellRangeEnabled and
+    AOwner.FEnabled and not AOwner.FUpdating and not AOwner.FEditsSuspended and
+    (FInput <> nil) and (FEpoch > 0) and (FEpoch < High(Integer)) and FInput.Ready and
+    (FSelection <> nil) and AOwner.ClipboardInputAvailable;
+
+  if FSelection <> nil then
+  begin
+    FPrevious := FSelection.Selection;
+  end;
+end;
+
+destructor TCellRangeKeyCommand.Destroy;
+begin
+  try
+    Retire;
+  except
+    { Explicit retirement reports failure. Final release still frees fields. }
+  end;
+  inherited Destroy;
+end;
+
+function TCellRangeKeyCommand.GetDispatchCurrent: Boolean;
+begin
+  Result := not FRetired and FAdmitted and (FOwner <> nil) and
+    FOwner.FConnected and not FOwner.FDisconnecting and
+    (FOwner.FView = FView) and (FOwner.FInputLifetime = FInput) and FInput.Current;
+end;
+
+function TCellRangeKeyCommand.GetCurrent: Boolean;
+begin
+  Result := GetDispatchCurrent and FOwner.FCellRangeEnabled and FOwner.FEnabled and
+    not FOwner.FUpdating and not FOwner.FEditsSuspended and
+    (FOwner.FCellRanges = FSelection) and (FMutation < High(Integer)) and
+    (FOwner.FCellMutationSerial = FMutation) and
+    (FOwner.FCellRangeRequest = FRequest) and FOwner.ClipboardInputAvailable and
+    FInput.Ready and (FInput.Epoch = FEpoch);
+end;
+
+procedure TCellRangeKeyCommand.ResolveOrigin(const AOrigin: TNyxCollectionCellIdentity);
+begin
+
+  if FResolved or FPrepared or not GetCurrent then
+  begin
+    Exit;
+  end;
+  FResolved := True;
+  FOrigin := NyxCollectionCellIdentity(AOrigin.Item, AOrigin.Field);
+end;
+
+procedure TCellRangeKeyCommand.Prepare;
+var
+  LLease: INyxCollectionCellRangeKeyCommand;
+  LStore: INyxCollection;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LRangeCapture: INyxCollectionCellRangeCapture;
+  LObservation: TNyxColumnLayoutObservation;
+  LFields: TNyxCollectionClipboardFields;
+  LNavigation: INyxCollectionRangeNavigation;
+  LPreparation: INyxCollectionCellRangePreparation;
+  LReady: INyxPublicationReadiness;
+  LFocus: TNyxCollectionCellIdentity;
+  LIndex: Integer;
+begin
+  LLease := Self;
+
+  if FPrepared or not GetCurrent then
+  begin
+    Exit;
+  end;
+  FPrepared := True;
+
+  if FKey = ncrkClear then
+  begin
+
+    if FPrevious = nil then
+    begin
+      Exit;
+    end;
+    LRangeCapture := FPrevious.Capture;
+
+    if not GetCurrent or (LRangeCapture = nil) then
+    begin
+      Exit;
+    end;
+    LNavigation := NewNyxCollectionRangeNavigation(nil, nil, [], FOrigin,
+      FPrevious, FKey, LRangeCapture.ColumnSerial, False, nccleLF,
+      Default(TNyxCollectionClipboardLimits));
+  end
+  else
+  begin
+
+    if not FResolved then
+    begin
+      Exit;
+    end;
+    LStore := FView.Store;
+
+    if not GetCurrent or (LStore = nil) then
+    begin
+      Exit;
+    end;
+    LSource := LStore.Snapshot;
+
+    if not GetCurrent or (LSource = nil) then
+    begin
+      Exit;
+    end;
+    LPage := FView.Snapshot;
+
+    if not GetCurrent or (LPage = nil) then
+    begin
+      Exit;
+    end;
+    LColumns := NyxCollectionColumns(FView);
+
+    if not GetCurrent then
+    begin
+      Exit;
+    end;
+    LCapture := LColumns.CaptureColumns;
+
+    if not GetCurrent then
+    begin
+      Exit;
+    end;
+    LObservation := TNyxColumnLayoutObservation.Read(LCapture);
+    LFields := NyxCollectionClipboardFields(LObservation, nccfVisiblePresentation);
+
+    if not GetCurrent then
+    begin
+      Exit;
+    end;
+    LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+      FOrigin, FPrevious, FKey, LObservation.Serial, FOptions.IncludeHeaders,
+      FOptions.Lines, FOptions.WorkLimits);
+
+    if not GetCurrent then
+    begin
+      Exit;
+    end;
+    LFocus := LNavigation.Focus;
+    FRow := LPage.IndexOf(LFocus.Item);
+
+    if not GetCurrent then
+    begin
+      Exit;
+    end;
+    for LIndex := 0 to High(FOwner.FClipboardFields) do
+    begin
+
+      if FOwner.FClipboardFields[LIndex].Same(LFocus.Field) then
+      begin
+        FColumn := LIndex;
+        Break;
+      end;
+    end;
+
+    if (FRow < 0) or (FColumn < 0) then
+    begin
+      Exit;
+    end;
+  end;
+
+  if not GetCurrent or not Supports(FSelection,
+    INyxCollectionCellRangePreparation, LPreparation) then
+  begin
+    Exit;
+  end;
+  FPlan := LPreparation.PrepareNavigation(LNavigation);
+
+  if not GetCurrent or (FPlan = nil) then
+  begin
+    Exit;
+  end;
+  FPlan.Validate;
+
+  if Supports(FPlan, INyxPublicationReadiness, LReady) then
+  begin
+    FReady := LReady;
+  end;
+end;
+
+function TCellRangeKeyCommand.PreparedCurrent: Boolean;
+begin
+  Result := False;
+
+  if FReady = nil then
+  begin
+    Exit;
+  end;
+  try
+    { Only this canonical flags-only fence supplies expected stale refusal.
+      Application/canonical/focus exceptions never enter this catch boundary. }
+    FReady.CheckReady;
+    Result := True;
+  except
+    on E: ENyxCollectionRangeStale do
+    begin
+      { A newer selection/preparation has won; preserve it unchanged. }
+    end;
+  end;
+end;
+
+function TCellRangeKeyCommand.Complete(AAllowDefault: Boolean): Boolean;
+var
+  LLease: INyxCollectionCellRangeKeyCommand;
+begin
+  LLease := Self;
+  Result := True;
+
+  if FCompleted then
+  begin
+    Exit;
+  end;
+  { Claim completion before any allow/current/focus callout. Consumed input and
+    nested focus callbacks must not retry this original prepared publication. }
+  FCompleted := True;
+
+  if not AAllowDefault or not GetCurrent or not PreparedCurrent then
+  begin
+    Exit;
+  end;
+
+  if (FKey <> ncrkClear) and not FOwner.FocusCellRange(FRow, FColumn) then
+  begin
+    Exit;
+  end;
+
+  if not GetCurrent or not PreparedCurrent or not GetCurrent then
+  begin
+    Exit;
+  end;
+  { Both last fences are callbacks-free. Install retires only original range
+    flags and adopts the fully admitted rectangle; it publishes no data/row edit. }
+  FPlan.Install;
+  FPlan.Notify;
+  FOwner.RenderCellRange;
+end;
+
+procedure TCellRangeKeyCommand.Retire;
+var
+  LPlan: INyxPreparedPublication;
+  LLease: INyxCollectionMount;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+  LLease := FLease;
+  LPlan := FPlan;
+  FPlan := nil;
+  FReady := nil;
+  FPrevious := nil;
+  FSelection := nil;
+  FView := nil;
+  FInput := nil;
+  FOwner := nil;
+  FLease := nil;
+
+  if LPlan <> nil then
+  begin
+    LPlan.Retire;
+  end;
 end;
 
 constructor TClipboardInputFence.Create(AOwner: TNyxCollectionMountBase);
@@ -1240,6 +1585,23 @@ end;
 procedure TNyxCollectionMountBase.RenderCellRange;
 begin
   { Target adapters repaint cached immutable membership only. }
+end;
+
+function TNyxCollectionMountBase.BeginCellRangeKey(AKey: TNyxCollectionRangeKey):
+  INyxCollectionCellRangeKeyCommand;
+begin
+  Result := nil;
+
+  if FCellRangeEnabled and (FCellRanges <> nil) then
+  begin
+    Result := TCellRangeKeyCommand.Create(Self, AKey);
+  end;
+end;
+
+function TNyxCollectionMountBase.FocusCellRange(ARow, AColumn: Integer): Boolean;
+begin
+  { A direct nonvisual mount cannot manufacture physical navigation. }
+  Result := False;
 end;
 
 function TNyxCollectionMountBase.CellRangeAvailable: Boolean;

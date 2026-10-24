@@ -35,6 +35,7 @@ uses
   nyx.collections.export.actions
   , nyx.collections.representation, nyx.collections.draft,
   nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands,
+  nyx.collections.range.navigation,
   nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
     nyx.menu.browser, nyx.popover.browser, nyx.editing.browser
@@ -165,10 +166,14 @@ type
     grid clipboard default is replaced only by a no-effect sentinel, so even a
     failing copy-interception assertion cannot mutate the user's clipboard.
     The editor case targets this grid-owned key route with a real active editor
-    and an explicitly consuming canonical callback, not an OS editor shortcut. }
+    and an explicitly consuming canonical callback, not an OS editor shortcut.
+    InvokeGridClick enters the installed virtual LCL boundary without claiming
+    a trusted pointer gesture; the optional WM probe is reported separately. }
   TNoClipboardGrid = class(TNyxCollectionStringGrid)
   protected
     procedure DoCopyToClipboard; override;
+  public
+    procedure InvokeGridClick;
   end;
 
   { Native callback failures are captured instead of opening a modal dialog. }
@@ -180,7 +185,9 @@ type
   {$endif}
 
   { One real renderer/data control owns all cases. Runtime data is independent
-    from authored source; the host/payload are injected through public facets. }
+    from authored source; the host/payload are injected through public facets.
+    Native final selection callbacks retire this same owner only after all its
+    ordinary cases, exercising physical-frame safety without a second fixture. }
   TCopyReview = class
   private
     FDocument: TNyxDocument;
@@ -196,6 +203,7 @@ type
     FCallback: INyxEventCallback;
     FToken: INyxEventSubscription;
     FContextToken: INyxEventSubscription;
+    FClickToken: INyxEventSubscription;
     FContextScheduler: TContextScheduler;
     FContextSchedulerLease: INyxScheduler;
     FCellMount: INyxCollectionCellActionsMount;
@@ -205,6 +213,11 @@ type
     FSaveHostLease: INyxFileSaveHost;
     FMode: TKeyMode;
     FKeys: Integer;
+    FRangeKeys: Integer;
+    FRangeClicks: Integer;
+    FRangeClickPhase: TNyxText;
+    FRangeKeyName: TNyxText;
+    FRangeKeySending: Boolean;
     FConsumed: Integer;
     FContexts: Integer;
     FInspectorLegacyClicks: Integer;
@@ -212,6 +225,10 @@ type
     FLastPayload: INyxCollectionClipboardText;
     FContextColumn: Integer;
     FLastDraft: INyxCollectionFocusedDraftCapture;
+    {$ifndef PAS2JS}
+    FRetireRangeSelection: Boolean;
+    FRangeSelectionCallbacks: Integer;
+    {$endif}
     {$ifdef PAS2JS}
     FRenderer: TNyxBrowserRenderer;
     FSurface: TJSHTMLElement;
@@ -224,11 +241,16 @@ type
     FSurface: TForm;
     FGrid: TNoClipboardGrid;
     FEditorContexts: Integer;
+    procedure NativeRangeSelected(Sender: TObject; AColumn, ARow: Integer);
+    procedure RunRangeFocusRetirement;
+    function RunNativePointerProbe: Boolean;
     procedure PreviousEditorContext(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
     {$endif}
     procedure FocusCell;
     function CopyKey: Boolean;
+    procedure RangeKey(const AKey: TNyxText; AShift: Boolean = True;
+      AControl: Boolean = False);
     procedure EditValue(const AText: TNyxText);
     procedure Filter(AEnabled: Boolean);
     procedure Context(AWait: Boolean = True);
@@ -262,6 +284,7 @@ var
   {$ifndef PAS2JS}
   GFallbackCopies: Integer;
   GErrors: TNativeErrors;
+  GPointerUnavailable: Boolean;
   {$endif}
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
@@ -552,6 +575,11 @@ begin
   Inc(GFallbackCopies);
 end;
 
+procedure TNoClipboardGrid.InvokeGridClick;
+begin
+  Click;
+end;
+
 function GridFactory(ANode: TNyxNode; AOwner: TComponent): TControl;
 begin
   Result := TNoClipboardGrid.Create(AOwner);
@@ -656,10 +684,17 @@ begin
   FCallback := LCallback;
   FToken := FRenderer.Events.OnKeyDown(NyxControlEvents(CTable, niRuntime)).Subscribe(FCallback);
   FContextToken := FRenderer.Events.OnContextMenu(NyxControlEvents(CTable, niRuntime)).Subscribe(FCallback);
+  FClickToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime), ntClick).Subscribe(FCallback);
 end;
 
 destructor TCopyReview.Destroy;
 begin
+
+  if FClickToken <> nil then
+  begin
+    FClickToken.Cancel;
+  end;
+  FClickToken := nil;
 
   if FContextScheduler <> nil then
   begin
@@ -788,6 +823,110 @@ begin
   {$endif}
 end;
 
+procedure TCopyReview.RangeKey(const AKey: TNyxText; AShift: Boolean;
+  AControl: Boolean);
+var
+  LPrevious: Boolean;
+  {$ifdef PAS2JS}
+  LInit: TJSObject;
+  LEvent: TJSKeyboardEvent;
+  LTarget: TJSHTMLElement;
+  {$else}
+  LSaved: TKeyboardState;
+  LState: TKeyboardState;
+  LKey: Word;
+  LHandle: HWND;
+  {$endif}
+begin
+  LPrevious := FRangeKeySending;
+  FRangeKeyName := AKey;
+  FRangeKeySending := True;
+  try
+    {$ifdef PAS2JS}
+    LInit := TJSObject.new;
+    LInit['key'] := AKey;
+    LInit['shiftKey'] := AShift;
+    LInit['ctrlKey'] := AControl;
+    LInit['bubbles'] := True;
+    LInit['cancelable'] := True;
+    LEvent := TCopyKeyEvent.new('keydown', LInit);
+    LTarget := TJSHTMLElement(document.activeElement);
+    Check((LTarget <> nil) and FTable.contains(LTarget),
+      'range key enters the currently focused actual table descendant');
+    LTarget.dispatchEvent(LEvent);
+    Check(LEvent.defaultPrevented,
+      'explicit cell range key is consumed through the actual canonical DOM route');
+    {$else}
+    LKey := 0;
+
+    if AKey = 'Home' then
+    begin
+      LKey := VK_HOME;
+    end
+    else if AKey = 'End' then
+    begin
+      LKey := VK_END;
+    end
+    else if AKey = 'ArrowDown' then
+    begin
+      LKey := VK_DOWN;
+    end
+    else if AKey = 'ArrowUp' then
+    begin
+      LKey := VK_UP;
+    end
+    else if AKey = 'ArrowLeft' then
+    begin
+      LKey := VK_LEFT;
+    end
+    else if AKey = 'ArrowRight' then
+    begin
+      LKey := VK_RIGHT;
+    end
+    else if AKey = 'Escape' then
+    begin
+      LKey := VK_ESCAPE;
+    end;
+    Check((LKey <> 0) and (Screen.ActiveControl is TCustomGrid),
+      'range key targets a real currently focused outer or pinned grid');
+    LHandle := Screen.ActiveControl.Handle;
+    Check(GetKeyboardState(LSaved), 'capture exact native range modifiers');
+    LState := LSaved;
+    LState[VK_CONTROL] := 0;
+    LState[VK_LCONTROL] := 0;
+    LState[VK_RCONTROL] := 0;
+    LState[VK_SHIFT] := 0;
+    LState[VK_LSHIFT] := 0;
+    LState[VK_RSHIFT] := 0;
+
+    if AControl then
+    begin
+      LState[VK_CONTROL] := $80;
+      LState[VK_LCONTROL] := $80;
+    end;
+
+    if AShift then
+    begin
+      LState[VK_SHIFT] := $80;
+      LState[VK_LSHIFT] := $80;
+    end;
+    Check(SetKeyboardState(LState), 'install explicit native range modifiers');
+    try
+      SendMessage(LHandle, WM_KEYDOWN, LKey, 1);
+
+      if FInput.Current and IsWindow(LHandle) then
+      begin
+        SendMessage(LHandle, WM_KEYUP, LKey, LPARAM($C0000001));
+      end;
+    finally
+      Check(SetKeyboardState(LSaved), 'restore exact caller range modifiers');
+    end;
+    {$endif}
+  finally
+    FRangeKeySending := LPrevious;
+  end;
+end;
+
 procedure TCopyReview.EditValue(const AText: TNyxText);
 begin
   { Bound the fluent store self-return to this call, not the ownership journey. }
@@ -812,7 +951,21 @@ procedure TCopyReview.Semantic(const AEvent: TNyxEventInfo;
 var
   LResponse: INyxEventResponse;
   LCommand: INyxCollectionClipboardCommand;
+  LRange: INyxCollectionCellRangeMount;
+  LEpoch: Integer;
 begin
+
+  if AEvent.Trigger = ntClick then
+  begin
+    Inc(FRangeClicks);
+
+    if FRangeClickPhase = '' then
+    begin
+      FRangeClickPhase := FRangeKeyName + '/mode=' + TNyxText(IntToStr(Ord(FMode))) +
+        '/sending=' + TNyxText(BoolToStr(FRangeKeySending, True));
+    end;
+    Exit;
+  end;
 
   if AEvent.Trigger = ntContextMenu then
   begin
@@ -840,6 +993,45 @@ begin
         Context(False);
       finally
         FMode := kmNested;
+      end;
+    end;
+    Exit;
+  end;
+
+  if FRangeKeySending and AEvent.HasKeyboard then
+  begin
+    Check((AEvent.OriginID = CTable) and (AEvent.SourceID = CTable),
+      'real range key preserves its original canonical table identity');
+    Inc(FRangeKeys);
+    case FMode of
+      kmConsume:
+      begin
+        Check(Supports(AExecution, INyxEventResponse, LResponse) and LResponse.CanConsume,
+          'range callback can consume the original physical default');
+        LResponse.Consume;
+      end;
+      kmDisableABA:
+      begin
+        FMount.SetInteraction(False, False);
+        FMount.SetInteraction(True, False);
+      end;
+      kmMutate:
+      begin
+        LEpoch := FInput.Epoch;
+        FMount.Refresh;
+        Check(FInput.Current and FInput.Ready and (FInput.Epoch = LEpoch),
+          'benign same-source refresh restores the same admitted input epoch');
+      end;
+      kmNested:
+      begin
+        Check(Supports(FMount, INyxCollectionCellRangeMount, LRange) and
+          LRange.SelectCells(NyxCollectionCellIdentity(ItemB, NameField),
+            NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+          'nested canonical range callback installs its own newer actual cell selection');
+      end;
+      else
+      begin
+        { Observation/terminal cases retain their original ordinary behavior. }
       end;
     end;
     Exit;
@@ -1455,6 +1647,8 @@ end;
 procedure TCopyReview.RunCellRange; {$ifdef PAS2JS}async;{$endif}
 var
   LRanges: INyxCollectionCellRangeMount;
+  LKeyInput: INyxCollectionCellRangeKeyInput;
+  LKeyCommand: INyxCollectionCellRangeKeyCommand;
   LIntent: INyxCollectionCellRangeIntent;
   LSource: INyxCollectionSnapshot;
   LPage: INyxCollectionSnapshot;
@@ -1466,10 +1660,21 @@ var
   LExpected: TNyxText;
   LQuery: TNyxText;
   LScore: TNyxColumnIdentity;
+  LFirst: TNyxCollectionCellIdentity;
+  LLastField: TNyxColumnIdentity;
+  LAnchorField: TNyxColumnIdentity;
   LBefore: Integer;
   LKeys: Integer;
   LReplies: Integer;
   LIndex: Integer;
+  LClicks: Integer;
+  {$ifdef PAS2JS}
+  LFocusBefore: TJSHTMLElement;
+  {$else}
+  LFocusBefore: TNyxCollectionStringGrid;
+  LFocusRow: Integer;
+  LFocusColumn: Integer;
+  {$endif}
   {$ifndef PAS2JS}
   LPanes: Integer;
   LPane: TNyxCollectionStringGrid;
@@ -1617,6 +1822,179 @@ begin
     Check(not FGrid.CellRangeSelected(LPhysical, 1),
       'clear removes actual native range paint membership');
     {$endif}
+    { Real range keyboard input starts from the same focused middle cell and
+      crosses both pinned panes. Ordinary row membership/focus remains separate. }
+    FContextColumn := 1;
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      FContextColumn := 2;
+    end;
+    LAnchorField := FView.Spec.ColumnAt(FContextColumn).Identity;
+    LLastField := FView.Spec.ColumnAt(4).Identity;
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      LLastField := LScore;
+    end;
+    {$ifdef PAS2JS}
+    Cell.focus;
+    {$else}
+    FGrid.Col := LPhysical;
+    FGrid.Row := 1;
+    FGrid.SetFocus;
+    LClicks := FRangeClicks;
+    FGrid.InvokeGridClick;
+    Check(FRangeClicks = LClicks + 1,
+      'admitted actual native virtual Click outside the internal transition reaches the installed canonical handler once; no hardware claim');
+    {$endif}
+    Check(Supports(FMount, INyxCollectionCellRangeKeyInput, LKeyInput),
+      'actual mounted range input exposes its synchronous typed prepared envelope');
+    LKeyCommand := LKeyInput.BeginCellRangeKey(ncrkExtendRowStart);
+    Check(LKeyCommand <> nil, 'opted-in mount reserves the original public range-key envelope');
+    LKeyCommand.ResolveOrigin(NyxCollectionCellIdentity(ItemA, LAnchorField));
+    LKeyCommand.Prepare;
+    {$ifdef PAS2JS}
+    LFocusBefore := TJSHTMLElement(document.activeElement);
+    {$else}
+    LFocusBefore := TNyxCollectionStringGrid(Screen.ActiveControl);
+    LFocusRow := LFocusBefore.Row;
+    LFocusColumn := LFocusBefore.Col;
+    {$endif}
+    Check(LKeyCommand.Current and LKeyCommand.Complete(False) and
+      LKeyCommand.Complete(True) and (LRanges.CellRange = nil),
+      'consumed first completion permanently claims the same prepared key and an allowed retry cannot install its range');
+    {$ifdef PAS2JS}
+    Check(document.activeElement = LFocusBefore,
+      'duplicate allowed completion after consumption cannot move actual browser focus');
+    {$else}
+    Check((Screen.ActiveControl = LFocusBefore) and (LFocusBefore.Row = LFocusRow) and
+      (LFocusBefore.Col = LFocusColumn),
+      'duplicate allowed completion after consumption cannot move actual native grid focus or coordinates');
+    {$endif}
+    LKeyCommand.Retire;
+    LKeyCommand := nil;
+    LKeyInput := nil;
+    LClicks := FRangeClicks;
+    FRangeClickPhase := '';
+    LKeys := FRangeKeys;
+    RangeKey('Home');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    LIntent := LRanges.CellRange;
+    Check((FRangeKeys = LKeys + 1) and (LIntent <> nil) and LIntent.Current and
+      LIntent.Capture.Anchor.Same(NyxCollectionCellIdentity(ItemA, LAnchorField)) and
+      LIntent.Capture.Focus.Same(NyxCollectionCellIdentity(ItemA, NameField)),
+      'real Shift+Home prepares before canonical callbacks and extends to the first visible typed field');
+    LFirst := LIntent.Capture.Anchor;
+    RangeKey('End');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(not LIntent.Current and LRanges.CellRange.Capture.Anchor.Same(LFirst) and
+      LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemA, LLastField)),
+      'real Shift+End continues from moved physical focus and retains its directional anchor');
+    RangeKey('ArrowDown');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, LLastField)),
+      'real Shift+Down follows actual current-page order across the logical end pane');
+    RangeKey('ArrowLeft');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(not LRanges.CellRange.Capture.Focus.Field.Same(LLastField) and
+      (LRanges.CellRange.Capture.Focus.Item.ID = ItemB.ID),
+      'real Shift+Left crosses the end pane into the actual middle field order');
+    RangeKey('ArrowRight');
+    RangeKey('ArrowUp');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemA, LLastField)),
+      'real Shift+Right and Shift+Up use the newly focused exact field and page row');
+    RangeKey('Home', True, True);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemA, NameField)),
+      'real Control+Shift+Home moves to the first actual page cell');
+    RangeKey('End', True, True);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, LLastField)) and
+      FView.Selection.Snapshot.SameState(LRows) and (FHost.Writes = LBefore + 1),
+      'real Control+Shift+End reaches the last page cell without changing row state or clipboard');
+    {$ifdef PAS2JS}
+    Check((TJSHTMLElement(document.activeElement).getAttribute('data-nyx-column') =
+      IntToStr(FView.Spec.ColumnIndex(LLastField))) and
+      (TJSHTMLElement(document.activeElement).parentElement.getAttribute('data-nyx-item') = ItemB.ID) and
+      (TJSHTMLElement(document.activeElement).getAttribute('tabindex') = '0') and
+      (FTable.querySelectorAll('[role="gridcell"][tabindex="0"]').length = 1),
+      'actual moved range focus remains the sole Tab entry after measured-window reconciliation');
+    {$endif}
+    LIntent := LRanges.CellRange;
+    RangeKey('Escape', False);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(not LIntent.Current and (LRanges.CellRange = nil),
+      'real unmodified Escape retires only the original independent cell range');
+    FMode := kmConsume;
+    RangeKey('Home');
+    Check(LRanges.CellRange = nil,
+      'consumed canonical Shift+Home does not create a range or run an inherited row default');
+    FMode := kmNested;
+    RangeKey('Home');
+    LIntent := LRanges.CellRange;
+    Check((LIntent <> nil) and LIntent.Current and
+      LIntent.Capture.Anchor.Same(NyxCollectionCellIdentity(ItemB, NameField)) and
+      LIntent.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, LScore)),
+      'nested newer canonical range survives the older prepared keyboard default');
+    { Public SelectCells deliberately does not move physical focus. In the
+      ordinary table that nested Score endpoint differs from the Clock cell
+      currently holding End focus. Use actual keys to establish matched input
+      before testing a benign refresh; never let a stale coordinate retarget it. }
+    FMode := kmObserve;
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemB, NameField),
+      NyxCollectionCellIdentity(ItemB, NameField)),
+      'public selection can designate a newer endpoint without stealing physical focus');
+    LIntent := LRanges.CellRange;
+    {$ifdef PAS2JS}
+    LFocusBefore := TJSHTMLElement(document.activeElement);
+    {$else}
+    LFocusBefore := TNyxCollectionStringGrid(Screen.ActiveControl);
+    LFocusRow := LFocusBefore.Row;
+    LFocusColumn := LFocusBefore.Col;
+    {$endif}
+    RangeKey('Home');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LIntent.Current and (LRanges.CellRange = LIntent),
+      'mismatched physical endpoint refuses the old movement and preserves the newer selected range');
+    {$ifdef PAS2JS}
+    Check(document.activeElement = LFocusBefore,
+      'refused browser movement cannot steal focus or replay its key default');
+    {$else}
+    Check((Screen.ActiveControl = LFocusBefore) and (LFocusBefore.Row = LFocusRow) and
+      (LFocusBefore.Col = LFocusColumn),
+      'refused native movement cannot move physical cell coordinates or replay its key default');
+    {$endif}
+    RangeKey('Escape', False);
+    RangeKey('Home');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    LIntent := LRanges.CellRange;
+    Check((LIntent <> nil) and LIntent.Current and
+      LIntent.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, NameField)),
+      'fresh actual keys establish the current cell endpoint without moving ordinary row state');
+    LFirst := LIntent.Capture.Anchor;
+    FMode := kmMutate;
+    RangeKey('Home');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(not LIntent.Current and (LRanges.CellRange <> nil) and LRanges.CellRange.Current and
+      LRanges.CellRange.Capture.Anchor.Same(LFirst) and
+      LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, NameField)) and
+      (LRanges.CellRange.Source = LSource) and (LRanges.CellRange.Page = LPage),
+      'benign callback refresh completes the exact original prepared key with unchanged page/source and directional anchor');
+    FMode := kmDisableABA;
+    RangeKey('Home');
+    Check(not LIntent.Current and (LRanges.CellRange = nil),
+      'disable/re-enable during the canonical range callback cannot lend the old key a fresh epoch');
+    FMode := kmObserve;
+    Check((FRangeKeys = LKeys + 16) and FView.Selection.Snapshot.SameState(LRows) and
+      (FHost.Writes = LBefore + 1),
+      'all real range keys preserve ordinary row selection and make no host write');
+    Check(FRangeClicks = LClicks,
+      'internal range cursor moves never emit a ghost canonical user Click on arranged or ordinary grids;arranged=' +
+      TNyxText(BoolToStr(FView.Spec.HasLayoutControls, True)) + ';before=' +
+      TNyxText(IntToStr(LClicks)) + ';after=' + TNyxText(IntToStr(FRangeClicks)) +
+      ';first=' + FRangeClickPhase);
     Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
       NyxCollectionCellIdentity(ItemB, LScore)), 'range can be selected again before a real filter replacement');
     LIntent := LRanges.CellRange;
@@ -1646,6 +2024,116 @@ begin
     (FView.QueryPolicy.ToData.ToJSON = LQuery) and (TNyxCodec.Encode(FDocument) = FAuthored),
     'mounted range paint and RAW copy preserve exact accepted data row/query state and authored source');
 end;
+
+{$ifndef PAS2JS}
+procedure TCopyReview.NativeRangeSelected(Sender: TObject; AColumn, ARow: Integer);
+begin
+
+  if FRetireRangeSelection then
+  begin
+    FRetireRangeSelection := False;
+    Inc(FRangeSelectionCallbacks);
+    FRenderer.Unmount;
+  end;
+end;
+
+{ Explicit --probe-native-pointer runs only after the functional journeys.
+  A locked/noninteractive desktop is an unavailable physical observation, not
+  a passing pointer proof and not a reason to skip keyboard/lifetime checks. }
+function TCopyReview.RunNativePointerProbe: Boolean;
+var
+  LBounds: TRect;
+  LPoint: TPoint;
+  LSaved: TPoint;
+  LHandle: HWND;
+  LClicks: Integer;
+begin
+  Result := False;
+
+  if not GetCursorPos(LSaved) then
+  begin
+    WriteLn('UNAVAILABLE native WM pointer probe: GetCursorPos refused the current desktop');
+    Exit;
+  end;
+  FCellActions.Close;
+  FMode := kmObserve;
+  FContextColumn := 2;
+  FocusCell;
+  LClicks := FRangeClicks;
+  LBounds := FGrid.CellRect(2, 1);
+  LPoint := Point((LBounds.Left + LBounds.Right) div 2,
+    (LBounds.Top + LBounds.Bottom) div 2);
+  LPoint := FGrid.ClientToScreen(LPoint);
+  try
+    Check(SetCursorPos(LPoint.X, LPoint.Y),
+      'position native pointer at the same real cell as the paired mouse messages');
+    LPoint := FGrid.ScreenToClient(LPoint);
+    LHandle := FGrid.Handle;
+    SendMessage(LHandle, WM_MOUSEMOVE, 0, MakeLParam(LPoint.X, LPoint.Y));
+    SendMessage(LHandle, WM_LBUTTONDOWN, MK_LBUTTON, MakeLParam(LPoint.X, LPoint.Y));
+    SendMessage(LHandle, WM_LBUTTONUP, 0, MakeLParam(LPoint.X, LPoint.Y));
+    Drain;
+  finally
+    Check(SetCursorPos(LSaved.X, LSaved.Y),
+      'restore caller cursor after the admitted native cell mouse pair');
+  end;
+  Check(FRangeClicks = LClicks + 1,
+    'admitted native WM data-cell pair outside the internal transition delivers canonical Click once');
+  Result := True;
+  WriteLn('PASS native WM pointer probe; paired messages with real cursor position, no trusted hardware claim');
+end;
+
+{ The existing ordinary-table owner is retired only after its full unchanged
+  journey. An actual LCL selection callback interrupts the first Col setter;
+  the entered physical frame must protect that setter's remaining native tail. }
+procedure TCopyReview.RunRangeFocusRetirement;
+var
+  LRanges: INyxCollectionCellRangeMount;
+  LKeyInput: INyxCollectionCellRangeKeyInput;
+  LCommand: INyxCollectionCellRangeKeyCommand;
+  LOldSelection: TOnSelectEvent;
+  LSource: INyxCollectionSnapshot;
+  LOrigin: TNyxCollectionCellIdentity;
+  LBefore: Integer;
+  LClicks: Integer;
+begin
+  Check(not FView.Spec.HasLayoutControls,
+    'native setter-retirement probe uses the same ordinary renderer-managed table');
+  FContextColumn := 2;
+  FocusCell;
+  LSource := FView.Store.Snapshot;
+  LBefore := FHost.Writes;
+  LClicks := FRangeClicks;
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges) and
+    Supports(FMount, INyxCollectionCellRangeKeyInput, LKeyInput),
+    'ordinary native owner retains its actual prepared range input contracts');
+  LRanges.ConfigureCellRange(True);
+  LOrigin := NyxCollectionCellIdentity(ItemA, FView.Spec.ColumnAt(2).Identity);
+  LCommand := LKeyInput.BeginCellRangeKey(ncrkExtendRowStart);
+  LCommand.ResolveOrigin(LOrigin);
+  LCommand.Prepare;
+  Check(LCommand.Current and (LRanges.CellRange = nil),
+    'original ordinary native movement is fully prepared before the fallible setter');
+  LOldSelection := FGrid.OnSelection;
+  FGrid.OnSelection := NativeRangeSelected;
+  FRetireRangeSelection := True;
+  try
+    LCommand.Complete(True);
+  finally
+
+    if FInput.Current then
+    begin
+      FGrid.OnSelection := LOldSelection;
+    end;
+  end;
+  Check((FRangeSelectionCallbacks = 1) and FInput.Retired and not FMount.Connected and
+    (LRanges.CellRange = nil) and (FRangeClicks = LClicks) and (FHost.Writes = LBefore) and
+    (FView.Store.Snapshot = LSource) and (TNyxCodec.Encode(FDocument) = FAuthored),
+    'real native Col-setter retirement skips later borrowed-grid work and range publication without a ghost Click or data/source change');
+  LCommand.Retire;
+  LCommand := nil;
+end;
+{$endif}
 
 { Same real editor and managed presenters as the RAW journey. Native context
   uses the actual editor HWND/keyboard-context message; browser context is a
@@ -1978,6 +2466,7 @@ end;
 
 procedure TCopyReview.Run; {$ifdef PAS2JS}async;{$endif}
 var
+  LRangeMount: INyxCollectionCellRangeMount;
   LBefore: Integer;
   LKeys: Integer;
   LConsumed: Integer;
@@ -2137,11 +2626,16 @@ begin
   {$endif}
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LCellIntent),
     'retirement probe retains the actual canonical context facade');
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRangeMount),
+    'retirement probe retains the public range facet separately from its renderer');
   LBefore := FHost.Writes;
   FMode := kmRetire;
   CopyKey;
   Check(FInput.Retired and not FMount.Connected and (FHost.Writes = LBefore),
     'canonical callback retirement cannot publish from an old key tail');
+  LRangeMount.ClearCellRange;
+  Check((LRangeMount.CellRange = nil) and (FHost.Writes = LBefore),
+    'retained public range clear remains inert after target and input retirement');
   Check(LCellIntent.Intent = 0,
     'retained context facade safely reports terminal intent after actual renderer retirement');
   Check((FLastDraft <> nil) and (FLastDraft.Value.Text = '-') and
@@ -2185,6 +2679,7 @@ begin
       LReview.RunFocusedDraft;
       LReview.RunDraftActions;
       LReview.RunCellRange;
+      LReview.RunRangeFocusRetirement;
       {$endif}
     finally
       LReview.Free;
@@ -2192,6 +2687,13 @@ begin
     LReview := TCopyReview.Create(True, True);
     try
       {$ifdef PAS2JS}await(LReview.RunDraftActions);{$else}LReview.RunDraftActions;{$endif}
+      {$ifndef PAS2JS}
+
+      if (ParamCount > 0) and (ParamStr(1) = '--probe-native-pointer') then
+      begin
+        GPointerUnavailable := not LReview.RunNativePointerProbe;
+      end;
+      {$endif}
     finally
       LReview.Free;
     end;
@@ -2200,6 +2702,15 @@ begin
     document.body.setAttribute('data-clipboard-control-checks', IntToStr(GChecks));
     {$else}
     WriteLn('PASS ', GChecks, ' collection clipboard control checks; injected host/no OS write');
+
+    if GPointerUnavailable then
+    begin
+      ExitCode := 2;
+    end
+    else if (ParamCount = 0) or (ParamStr(1) <> '--probe-native-pointer') then
+    begin
+      WriteLn('Native WM pointer probe not requested; functional result makes no OS pointer claim');
+    end;
     {$endif}
   except
     on E: Exception do

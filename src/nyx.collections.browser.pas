@@ -69,6 +69,14 @@ type
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
   end;
 
+  { Optional explicitly enabled cell-range key route. Only exact resident cells
+    qualify; editors retain their own selection/caret and default-off tables keep
+    ordinary row navigation. It uses the existing canonical keyboard envelope. }
+  INyxBrowserCollectionCellRangeInput = interface(IInterface)
+    ['{C86619CD-DDBD-4A10-856A-877C3D08F2D0}']
+    function BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
+  end;
+
   { Optional exact resident-cell context entry. Editors retain their native text
     menu unless focused-draft actions explicitly opt in. The renderer reserves
     this proof before canonical context callbacks and completes its managed
@@ -158,7 +166,9 @@ uses
   nyx.collections.selection,
   nyx.collections.clipboard.actions,
   nyx.collections.range.actions,
+  nyx.collections.range,
   nyx.collections.range.commands,
+  nyx.collections.range.navigation,
   nyx.collections.cell.actions,
   nyx.collections.representation,
   nyx.scheduler,
@@ -221,6 +231,20 @@ type
     FCommand: INyxCollectionClipboardCommand;
   public
     constructor Create(const ACommand: INyxCollectionClipboardCommand);
+    destructor Destroy; override;
+    procedure Prepare;
+    function GetCurrent: Boolean;
+    function GetDispatchCurrent: Boolean;
+    function Complete(AAllowDefault: Boolean): Boolean;
+    procedure Retire;
+  end;
+  { Adapts one prepared original range key to the same canonical host envelope;
+    no replay, button action, host write or second event route is introduced. }
+  TBrowserRangeKeyCommand = class(TInterfacedObject, INyxBrowserColumnCommand)
+  private
+    FCommand: INyxCollectionCellRangeKeyCommand;
+  public
+    constructor Create(const ACommand: INyxCollectionCellRangeKeyCommand);
     destructor Destroy; override;
     procedure Prepare;
     function GetCurrent: Boolean;
@@ -478,7 +502,8 @@ type
   TBrowserMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
-    INyxBrowserCollectionCellContextInput, INyxCollectionFocusedDraftInput)
+    INyxBrowserCollectionCellContextInput, INyxCollectionFocusedDraftInput,
+    INyxBrowserCollectionCellRangeInput)
   private
     FHost: TJSHTMLElement;
     { A permanent caption survives an empty visible-column map. Opening focus
@@ -641,6 +666,7 @@ type
       AFocusOnly: Boolean = False);
   protected
     procedure RenderCellRange; override;
+    function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
     function ClipboardInputAvailable: Boolean; override;
     function BeginCellPresentation: INyxCollectionCellPresentation; override;
     function PrepareColumnFit(const ALaunch: INyxCollectionColumnsCapture;
@@ -657,6 +683,7 @@ type
       const AInputGate: INyxCollectionInputGate = nil);
     function BeginColumnKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
+    function BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginCellContext(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
     function CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
     function BeginColumnDoubleClick(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
@@ -694,6 +721,58 @@ const
     'mousemove', 'touchstart', 'touchmove', 'touchend', 'wheel',
     'dblclick', 'click', ColumnCompositionStart, 'compositionupdate',
     ColumnCompositionEnd, 'selectstart');
+
+constructor TBrowserRangeKeyCommand.Create(const ACommand: INyxCollectionCellRangeKeyCommand);
+begin
+  inherited Create;
+  FCommand := ACommand;
+end;
+
+destructor TBrowserRangeKeyCommand.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TBrowserRangeKeyCommand.Prepare;
+begin
+  try
+    FCommand.Prepare;
+  except
+    on E: ENyxCollectionRangeStale do
+    begin
+      { A nested newer range keeps authority; the original key remains claimed. }
+    end;
+  end;
+end;
+
+function TBrowserRangeKeyCommand.GetCurrent: Boolean;
+begin
+  Result := (FCommand <> nil) and FCommand.Current;
+end;
+
+function TBrowserRangeKeyCommand.GetDispatchCurrent: Boolean;
+begin
+  Result := (FCommand <> nil) and FCommand.DispatchCurrent;
+end;
+
+function TBrowserRangeKeyCommand.Complete(AAllowDefault: Boolean): Boolean;
+begin
+  Result := FCommand.Complete(AAllowDefault);
+end;
+
+procedure TBrowserRangeKeyCommand.Retire;
+var
+  LCommand: INyxCollectionCellRangeKeyCommand;
+begin
+  LCommand := FCommand;
+  FCommand := nil;
+
+  if LCommand <> nil then
+  begin
+    LCommand.Retire;
+  end;
+end;
 
 constructor TBrowserCopyCommand.Create(const ACommand: INyxCollectionClipboardCommand);
 begin
@@ -1087,7 +1166,21 @@ procedure TBrowserMount.RenderCellRange;
 var
   LRow: TBrowserRow;
   LResident: Integer;
+  LColumn: Integer;
+  LFocus: TJSHTMLElement;
 begin
+
+  if FHost = nil then
+  begin
+    Exit;
+  end;
+  LFocus := TJSHTMLElement(document.activeElement);
+
+  if (LFocus = nil) or not FHost.contains(LFocus) or
+    (LFocus.getAttribute('role') <> 'gridcell') then
+  begin
+    LFocus := nil;
+  end;
   for LResident := 0 to High(FResidentRows) do
   begin
     LRow := FRows[FResidentRows[LResident]];
@@ -1097,6 +1190,22 @@ begin
       Continue;
     end;
     LRow.SyncCellRange;
+
+    if FCellRangeEnabled and (LFocus <> nil) then
+    begin
+      for LColumn := 0 to High(LRow.FCells) do
+      begin
+
+        if LRow.FCells[LColumn] = LFocus then
+        begin
+          LRow.FCells[LColumn].setAttribute('tabindex', '0');
+        end
+        else
+        begin
+          LRow.FCells[LColumn].setAttribute('tabindex', '-1');
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -1130,6 +1239,164 @@ begin
     begin
       LCell.removeAttribute('data-nyx-range-selected');
       LCell.removeAttribute('aria-selected');
+    end;
+  end;
+end;
+
+function TBrowserMount.FocusCellRange(ARow, AColumn: Integer): Boolean;
+var
+  LInput: INyxCollectionInputLifetime;
+  LFocus: TJSHTMLElement;
+  LUpdating: Boolean;
+begin
+  Result := False;
+  LInput := GetInputLifetime;
+
+  if not GetInputReady or (ARow < 0) or (AColumn < 0) then
+  begin
+    Exit;
+  end;
+  EnsureRow(ARow);
+
+  if not GetInputReady or (ARow >= Length(FRows)) or (FRows[ARow] = nil) or
+    (AColumn >= Length(FRows[ARow].FCells)) then
+  begin
+    Exit;
+  end;
+  LFocus := FRows[ARow].FCells[AColumn];
+  LUpdating := FUpdating;
+  FUpdating := True;
+  try
+    FFocusedColumn := AColumn;
+    { Exact TD focus leaves every unfinished editor/draft inert. No Gesture or
+      live View.Selection call belongs to independent cell-range navigation. }
+    LFocus.focus;
+    Result := LInput.Current and (document.activeElement = LFocus);
+  finally
+    FUpdating := LUpdating;
+  end;
+end;
+
+function TBrowserMount.BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
+var
+  LKey: TNyxCollectionRangeKey;
+  LCommand: INyxCollectionCellRangeKeyCommand;
+  LRow: TBrowserRow;
+  LIndex: Integer;
+  LColumn: Integer;
+begin
+  Result := nil;
+
+  if not FCellRangeEnabled or AEvent.defaultPrevented or AEvent.isComposing or
+    AEvent.altKey or AEvent.getModifierState('AltGraph') or
+    (AEvent.ctrlKey and AEvent.metaKey) then
+  begin
+    Exit;
+  end;
+
+  if (AEvent.key = 'Escape') and not AEvent.shiftKey and
+    not AEvent.ctrlKey and not AEvent.metaKey and (GetCellRange <> nil) then
+  begin
+    LKey := ncrkClear;
+  end
+  else
+  begin
+
+    if not AEvent.shiftKey then
+    begin
+      Exit;
+    end;
+    case AEvent.key of
+      'ArrowLeft':
+        begin
+          LKey := ncrkExtendLeft;
+        end;
+      'ArrowRight':
+        begin
+          LKey := ncrkExtendRight;
+        end;
+      'ArrowUp':
+        begin
+          LKey := ncrkExtendUp;
+        end;
+      'ArrowDown':
+        begin
+          LKey := ncrkExtendDown;
+        end;
+      'Home':
+        begin
+          LKey := ncrkExtendRowStart;
+        end;
+      'End':
+        begin
+          LKey := ncrkExtendRowEnd;
+        end;
+      else
+      begin
+        Exit;
+      end;
+    end;
+
+    if AEvent.ctrlKey or AEvent.metaKey then
+    begin
+
+      if AEvent.key = 'Home' then
+      begin
+        LKey := ncrkExtendFirstCell;
+      end
+      else if AEvent.key = 'End' then
+      begin
+        LKey := ncrkExtendLastCell;
+      end
+      else
+      begin
+        Exit;
+      end;
+    end;
+
+    if FHasColumnLayout and
+      (window.getComputedStyle(FHost).getPropertyValue('direction') = 'rtl') then
+    begin
+
+      if LKey = ncrkExtendLeft then
+      begin
+        LKey := ncrkExtendRight;
+      end
+      else if LKey = ncrkExtendRight then
+      begin
+        LKey := ncrkExtendLeft;
+      end;
+    end;
+  end;
+  { Resident cell identity is private and callback-free. Reserve BEFORE any
+    immutable page/item getter. Inputs/custom descendants keep native behavior. }
+  for LIndex := 0 to High(FResidentRows) do
+  begin
+    LRow := FRows[FResidentRows[LIndex]];
+
+    if LRow = nil then
+    begin
+      Continue;
+    end;
+    for LColumn := 0 to High(LRow.FCells) do
+    begin
+
+      if AEvent.target = LRow.FCells[LColumn] then
+      begin
+        LCommand := BeginCellRangeKey(LKey);
+
+        if LCommand <> nil then
+        begin
+
+          if LKey <> ncrkClear then
+          begin
+            LCommand.ResolveOrigin(NyxCollectionCellIdentity(LRow.FRef,
+              ClipboardField(LColumn)));
+          end;
+          Result := TBrowserRangeKeyCommand.Create(LCommand);
+        end;
+        Exit;
+      end;
     end;
   end;
 end;
@@ -6153,6 +6420,16 @@ begin
   end;
   FRendered := LData;
   FForcedItem := Default(TNyxItemRef);
+  { Cell ranges deliberately do not publish ordinary row focus. A measured
+    window reconciliation must therefore retain the actual focused range cell
+    as the sole Tab entry instead of returning to View.Selection.Focus. }
+
+  if FCellRangeEnabled and (LFocused <> nil) and FHost.contains(LFocused) and
+    (LFocused.getAttribute('role') = 'gridcell') and
+    (LFocused.closest('[aria-hidden="true"]') = nil) then
+  begin
+    LTabStop := LFocused;
+  end;
   FHost.setAttribute('tabindex', '-1');
 
   if FEnabled then

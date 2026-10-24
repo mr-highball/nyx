@@ -9277,6 +9277,7 @@ var
   LColumnCommand: INyxBrowserColumnCommand;
   LColumnRelease: INyxBrowserCollectionColumnRelease;
   LClipboardInput: INyxBrowserCollectionClipboardInput;
+  LRangeInput: INyxBrowserCollectionCellRangeInput;
 begin
   try
     LGeneration := TBrowserViewGeneration(FGenerationObject);
@@ -9294,6 +9295,16 @@ begin
     if ATrigger = ntKeyDown then
     begin
       LMount := FCollectionMount;
+
+      if Supports(LMount, INyxBrowserCollectionCellRangeInput, LRangeInput) then
+      begin
+        LColumnCommand := LRangeInput.BeginRangeKey(AEvent);
+
+        if LColumnCommand <> nil then
+        begin
+          Exit(ColumnKeyboard(AEvent, LColumnCommand));
+        end;
+      end;
 
       if Supports(LMount, INyxBrowserCollectionClipboardInput, LClipboardInput) then
       begin

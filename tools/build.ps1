@@ -779,6 +779,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
         'tests/nyx_popover_open_lifetime_tests.lpr'))
       foreach ($nyxWorkbenchCopyConsumer in @('nyx_collection_range_tests',
+          'nyx_collection_range_navigation_tests',
           'nyx_collection_clipboard_commands_tests')) {
         Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
           "tests/$nyxWorkbenchCopyConsumer.lpr"))
@@ -848,6 +849,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       Get-Content -LiteralPath $nyxWorkbenchLifetimeLog
       if ($nyxWorkbenchLifetimeExit -ne 0) { throw 'Actual popover open-lifetime checks failed' }
       $nyxWorkbenchCopyConsumers = @('nyx_collection_range_tests',
+        'nyx_collection_range_navigation_tests',
         'nyx_collection_clipboard_commands_tests')
       if ($nyxWorkbenchNativeActivation) {
         # This no-effect host consumer owns its actual window size. It does not
@@ -920,6 +922,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
     if ($Target -eq 'query-workbench') {
       foreach ($nyxWorkbenchCompanion in @('nyx_column_activation_controls',
           'nyx_popover_open_lifetime_tests', 'nyx_collection_range_tests',
+          'nyx_collection_range_navigation_tests',
           'nyx_collection_clipboard_commands_tests', 'nyx_collection_clipboard_controls')) {
         Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
           '-Fusrc', '-Futests', '-Fustudio', '-Fisrc',

@@ -748,6 +748,68 @@ native editor performance/application journey after this actual Inspector
 integration. Lil' Scooty's keyboard07 browser/review packet and the separate
 managed range-copy menu remain the helper's next work. No user input or blocker.
 
+#### Keyboard review and full native continuation
+
+The authority clarification is committed/pushed as331f2d1, with the exact remote
+identity verified. It simplifies existing permission guidance rather than adding
+an implementation boundary. The preceding retained-Inspector continuation made
+product progress; all original task03 criteria remain open.
+
+Own13 closes2284 committed source files at79a5f5f and starts the maintained full
+ordinary query-authoring target. It retains checked -O2, both native widths, each
+journey's own emitted application and the unchanged900s runtime deadline. The
+actual native compiler is still live and advancing at this checkpoint; no new
+whole-editor runtime or performance result is claimed. Its fixed source copy is
+independent of the helper's ongoing keyboard/menu implementation.
+
+Root reviews keyboard07 and finds two concrete gaps: completion was not claimed
+before consumed/focus paths, and native range movement could synthesize a user
+Click. Repaired09 makes completion single-use before callouts, retains the actual
+native physical frame and repeats original input checks after setters. Browser09
+passes617 checks at independently preflighted1280x900 and390x900, with empty logs.
+Native09 instead fails its new ordinary-grid zero-ghost-Click assertion, with a
+complete6435708/6435708 clean heap. The ordinary callback's Refresh restores a
+cursor outside the explicit transition; that concrete native repair remains in
+progress. Earlier07 browser607 and08 fixture compilation errors remain evidence.
+
+The separate menu01 portable command consumer passes151 native checks with a
+complete413663/413663 clean heap and151 actual browser checks, logs empty. This
+is not managed-menu integration acceptance. The helper corrects outbound receipt
+byte counts; Root additionally finds that optional range byte-limit refusal can
+escape as ENyxCollectionClipboard and prevent otherwise valid accepted-cell
+inspection. The next regression preserves RAW actions while omitting that
+unavailable optional range. Original command/control assertions remain required.
+Public documentation now describes the typed keyboard route and its separate
+qualification boundary. No LAN/Studio service or MCP configuration is changed.
+
+Keyboard11 repairs the ordinary refresh case with the same canonical input-ready
+fence used by other native input routes. Counted transitions also suppress
+setter-generated Click. The actual virtual LCL Click still enters the installed
+ordinary handler once when admitted. Functional native11 passes611 checks with
+a complete8069665/8069665 clean heap, including real Col-setter retirement and
+consumed-then-retried completion. All1119 private source pins remain unchanged;
+Root independently matches all11 working keyboard source files to that capture.
+Browser11's index, program and matched RTL are byte-identical to executed10,
+which passes617 at both preflighted1280x900 and390x900 widths, logs empty.
+The maintained query-workbench target includes the portable navigation consumer.
+
+Native10's new cursor-position prerequisite was refused by Windows before mouse
+messages, with a complete4752216/4752216 clean heap. That physical-pointer probe
+remains separately invokable with explicit unavailable reporting; it cannot mask
+the functional checks or acquire passing credit from them. Source08 compilation
+mistakes, native09 ghost Click and native10 cursor refusal remain retained.
+
+Menu02 now preserves accepted RAW inspection/copy when only optional range TSV
+exceeds the later byte budget. It passes156 native checks with a complete
+422582/422582 clean heap and156 actual browser checks, logs empty. Root reviews
+that admission-family repair and the detached outbound receipt payload. Actual
+managed-menu invocation remains the helper's next integration task. All original
+task03 criteria remain open; none is closed by this runtime-only range packet.
+
+Own13's native compiler joins0 after compiling422962 lines with zero warnings.
+The actual ordinary-browser compiler is now live; full native editor execution,
+both own emitted applications and whole-editor performance remain unqualified.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

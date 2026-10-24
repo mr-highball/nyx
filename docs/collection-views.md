@@ -1035,13 +1035,56 @@ Ordinary editor Ctrl+C and default-off tables retain their existing behavior.
 interfaces and row commands keep their contracts. A stale range remains a
 claimed refusal and cannot turn into a newly captured single-cell command.
 
+For an explicitly enabled table, the current adapters also support these keys
+from a data cell in navigation mode:
+
+| Key | Cell-range action |
+| --- | --- |
+| Shift+Left/Right/Up/Down | Extend from the original anchor to the neighboring visible cell |
+| Shift+Home/End | Extend to the first/last visible column of the focused row |
+| Ctrl+Shift+Home/End, or Meta+Shift+Home/End | Extend to the first/last cell of the actual current page |
+| Escape without modifiers | Clear an existing cell range |
+
+Movement clamps at page and column boundaries. It follows visible presentation
+order, including pinned columns, and preserves the original anchor when the
+direction reverses. Arranged tables on both targets respect the table's
+right-to-left direction. Extending a range moves its physical focus
+without replacing ordinary row membership or editing accepted data. The browser
+retains one navigation Tab entry. Active editors keep their own text-selection,
+caret and copy keys; composing input and Alt/AltGraph combinations are left to
+the existing input route. Tables without the explicit opt-in keep their existing
+selection behavior.
+
+`nyx.collections.range.navigation` exposes the typed movement intentions and
+the optional actual-mount `INyxCollectionCellRangeKeyInput` contract. Its
+single-use envelope reserves the original input epoch before row/field getters,
+prepares the complete candidate before canonical key callbacks and rechecks
+the original source/page/column and selection authority after focus callbacks.
+Consumed input, a newer selection or retirement defeats that candidate without
+retargeting another cell. `Complete` claims the envelope once even when its
+default action is refused; calling it again cannot revive the prepared range.
+These synchronous UI contracts do not transfer a live mount to a worker or
+clipboard host.
+
 Current range/command fixtures pass 47/127 checks on both actual targets. Real
 controls pass393 native checks with a complete clean heap and465 browser checks
 at measured1280x900 and390x900, with empty logs. These include exact Unicode/NUL,
 view/getter reentry, ordinary/arranged tables, pinned paint and same-slot copy
-with injected host authority. Range gestures and discoverable menu actions are
-the next integration step. These results do not establish real OS clipboard
-effects, native qualification at two widths or complete workbench acceptance.
+with injected host authority. The later keyboard11 consumer retains the original
+journey and passes611 native checks with a complete clean heap. Its browser
+artifacts are byte-identical to the executed10 consumer, which passes617 at each
+independently preflighted1280x900/390x900 width with empty logs. These checks cover
+consumed input, single completion, refresh, stale endpoints, ordinary/pinned
+tables and retirement during a native cursor setter. Actual LCL Click entry
+still delivers the ordinary callback once outside internal transitions; internal
+movement and refresh deliver none.
+
+The separate `--probe-native-pointer` fixture option reports unavailable when
+Windows cannot provide cursor positioning. Its retained unavailable result
+grants no hardware-pointer coverage. Pointer/touch range gestures and
+discoverable menu actions remain required. These results do not establish real
+OS clipboard effects, native qualification at two widths or complete workbench
+acceptance.
 
 ## Exporting captured table results
 

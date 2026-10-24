@@ -304,7 +304,12 @@ var
   LCopy: INyxBrowserColumnCommand;
 begin
   Result := True;
-  LCopy := BeginClipboardKey(AEvent);
+  LCopy := BeginRangeKey(AEvent);
+
+  if LCopy = nil then
+  begin
+    LCopy := BeginClipboardKey(AEvent);
+  end;
 
   if LCopy <> nil then
   begin

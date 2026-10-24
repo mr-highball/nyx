@@ -167,11 +167,16 @@ Mounted range09 adds explicitly enabled independent cell selection, cached
 highlighting across pinned panes and canonical same-slot Ctrl+C. Range47 and
 command127 pass on both actual targets; native controls393 have a complete clean
 heap and browser controls465 pass at measured1280x900/390x900 with empty logs.
-The executed07 browser artifacts are byte-identical to09. This is public typed
-range setup with synthetic input and injected host authority. Real range
-gestures, menu discovery, OS effects and complete workbench/Studio/native
-performance acceptance remain required. WORK retains exact source identities
-and earlier failures; current Root form/event integration is a separate cohort.
+The executed07 browser artifacts are byte-identical to09. Later keyboard11 adds
+typed Shift navigation, anchored page/column extension and Escape through the
+same mounted selection. Functional native611 checks have a complete clean heap;
+byte-identical browser10/11 artifacts pass617 at1280x900/390x900, logs empty.
+Consumed completion cannot retry, stale focus cannot retarget a newer selection
+and internal cursor/refresh work cannot synthesize a user Click. This remains
+synthetic target input with injected host authority. Pointer/touch range gestures,
+menu discovery, OS effects and complete workbench/Studio/native performance
+acceptance remain required. WORK retains exact source identities, native09's
+ghost-Click failure and the separate native10 unavailable cursor probe.
 
 The explicit cell-range capture/selection prerequisite passes46 native checks
 with a complete clean heap and46 actual browser checks, logs empty. It retains

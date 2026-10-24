@@ -123,6 +123,7 @@ uses
   nyx.collections.range,
   nyx.collections.range.actions,
   nyx.collections.range.commands,
+  nyx.collections.range.navigation,
   nyx.scheduler,
   nyx.collections.tree.rows;
 
@@ -605,6 +606,8 @@ type
     procedure KeyDown(Sender: TObject; var AKey: Word; AShift: TShiftState);
     function ClipboardKeyDown(Sender: TObject; var AKey: Word;
       AShift: TShiftState): Boolean;
+    function CellRangeKeyDown(Sender: TObject; var AKey: Word;
+      AShift: TShiftState): Boolean;
     procedure UTF8KeyPress(Sender: TObject; var AKey: TUTF8Char);
     procedure GridMouseDown(Sender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
@@ -624,6 +627,7 @@ type
       const AValue: TNyxText): TNyxText;
   protected
     procedure RenderCellRange; override;
+    function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
     function CellRangeAvailable: Boolean; override;
     function ClipboardInputAvailable: Boolean; override;
     function BeginCellPresentation: INyxCollectionCellPresentation; override;

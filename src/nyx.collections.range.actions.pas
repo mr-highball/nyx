@@ -85,7 +85,7 @@ function NewNyxCollectionCellRangeSelection: INyxCollectionCellRangeSelection;
 
 implementation
 
-uses SysUtils;
+uses SysUtils, nyx.collections.range.navigation, nyx.publication;
 
 type
   { The concrete intent is private so the selection owner can retire its known
@@ -108,17 +108,51 @@ type
     function GetCurrent: Boolean;
   end;
 
+  { Prepared selection owns this UI controller independently. The controller
+    never retains a preparation, so abandoning one cannot create a cycle. }
+  TRangeSelection = class;
+
+  { Single original request and its fully admitted candidate. Old/new immutable
+    values stay leased through flags-only installation; abandonment cancels only
+    the uninstalled candidate. No model or physical host participates here. }
+  TRangePublication = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPublicationReadiness)
+  private
+    FOwner: TRangeSelection;
+    FOwnerLease: INyxCollectionCellRangeSelection;
+    FPrevious: INyxCollectionCellRangeIntent;
+    FPreviousObject: TRangeIntent;
+    FCandidate: INyxCollectionCellRangeIntent;
+    FCandidateObject: TRangeIntent;
+    FRequest: Integer;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FRetired: Boolean;
+    procedure RequireCurrent;
+    procedure DoRetire;
+  public
+    destructor Destroy; override;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
   { The UI owner retains exactly one accepted intent. The borrowed concrete
     pointer is valid only while FSelection owns it. Intent serial is separate
     from accepted lifetime: failed work cannot revoke the previous selection,
     but a nested newer reservation makes the older operation refuse. }
-  TRangeSelection = class(TInterfacedObject, INyxCollectionCellRangeSelection)
+  TRangeSelection = class(TInterfacedObject, INyxCollectionCellRangeSelection,
+    INyxCollectionCellRangePreparation)
   private
     FSelection: INyxCollectionCellRangeIntent;
     FSelected: TRangeIntent;
     FIntent: Integer;
     FRevoked: Boolean;
     procedure ClearInternal(ARevoke: Boolean);
+    procedure InstallSelection(const ACandidate: INyxCollectionCellRangeIntent;
+      ACandidateObject: TRangeIntent);
   public
     destructor Destroy; override;
     function Select(const ASource, APage: INyxCollectionSnapshot;
@@ -129,6 +163,7 @@ type
     function GetSelection: INyxCollectionCellRangeIntent;
     procedure Clear;
     procedure Revoke;
+    function PrepareNavigation(const ANavigation: INyxCollectionRangeNavigation): INyxPreparedPublication;
   end;
 
 constructor TRangeIntent.Create(const ACapture: INyxCollectionCellRangeCapture;
@@ -177,6 +212,103 @@ end;
 function TRangeIntent.GetCurrent: Boolean;
 begin
   Result := not FScope.Cancelled;
+end;
+
+destructor TRangePublication.Destroy;
+begin
+  DoRetire;
+  inherited Destroy;
+end;
+
+procedure TRangePublication.RequireCurrent;
+begin
+
+  if FRetired or FInstalled or (FOwner = nil) or FOwner.FRevoked or
+    (FRequest >= High(Integer)) or (FOwner.FIntent <> FRequest) or
+    (FOwner.FSelection <> FPrevious) or (FOwner.FSelected <> FPreviousObject) then
+  begin
+    raise ENyxCollectionRangeStale.Create('Prepared cell range request is no longer current');
+  end;
+
+  if FPreviousObject <> nil then
+  begin
+    FPreviousObject.FReady.CheckReady;
+  end;
+end;
+
+procedure TRangePublication.Validate;
+begin
+  RequireCurrent;
+  FValidated := True;
+end;
+
+procedure TRangePublication.CheckReady;
+begin
+
+  if not FValidated then
+  begin
+    raise ENyxCollectionRange.Create('Prepared cell range was not validated');
+  end;
+  RequireCurrent;
+end;
+
+procedure TRangePublication.Install;
+begin
+
+  if not FValidated or FRetired or FInstalled then
+  begin
+    Exit;
+  end;
+  { The coordinator's final readiness check already admitted these exact
+    private flags. Old/candidate leases survive this nonthrowing assignment. }
+  FOwner.InstallSelection(FCandidate, FCandidateObject);
+  FInstalled := True;
+end;
+
+procedure TRangePublication.Notify;
+begin
+  { Independent cell selection has no model/view observers or host effects. }
+end;
+
+procedure TRangePublication.DoRetire;
+var
+  LOwner: INyxCollectionCellRangeSelection;
+  LPrevious: INyxCollectionCellRangeIntent;
+  LCandidate: INyxCollectionCellRangeIntent;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+  LOwner := FOwnerLease;
+  LPrevious := FPrevious;
+  LCandidate := FCandidate;
+
+  if not FInstalled and (FCandidateObject <> nil) then
+  begin
+    FCandidateObject.Retire;
+  end;
+  FOwner := nil;
+  FOwnerLease := nil;
+  FPrevious := nil;
+  FPreviousObject := nil;
+  FCandidate := nil;
+  FCandidateObject := nil;
+  { Snapshot finalizers can reenter their application. Detach all duties first,
+    and retain the controller until both independent value leases are gone. }
+  LPrevious := nil;
+  LCandidate := nil;
+  LOwner := nil;
+end;
+
+procedure TRangePublication.Retire;
+var
+  LLease: INyxPreparedPublication;
+begin
+  LLease := Self;
+  DoRetire;
 end;
 
 destructor TRangeSelection.Destroy;
@@ -245,7 +377,6 @@ var
   LCandidate: TRangeIntent;
   LCandidateLease: INyxCollectionCellRangeIntent;
   LPrevious: INyxCollectionCellRangeIntent;
-  LPreviousObject: TRangeIntent;
   LIntent: Integer;
 begin
   LLease := Self;
@@ -271,17 +402,173 @@ begin
     raise ENyxCollectionRangeStale.Create('Cell range reservation was replaced during capture');
   end;
   LPrevious := FSelection;
-  LPreviousObject := FSelected;
-
-  if LPreviousObject <> nil then
-  begin
-    LPreviousObject.Retire;
-  end;
-  FSelection := LCandidateLease;
-  FSelected := LCandidate;
+  InstallSelection(LCandidateLease, LCandidate);
   { Final-only result assignment also preserves a caller's earlier interface
     when admission fails. No caller-owned interface is released mid-install. }
   Result := LCandidateLease;
+end;
+
+procedure TRangeSelection.InstallSelection(const ACandidate: INyxCollectionCellRangeIntent;
+  ACandidateObject: TRangeIntent);
+begin
+
+  if FSelected <> nil then
+  begin
+    FSelected.Retire;
+  end;
+  FSelection := ACandidate;
+  FSelected := ACandidateObject;
+end;
+
+function TRangeSelection.PrepareNavigation(
+  const ANavigation: INyxCollectionRangeNavigation): INyxPreparedPublication;
+var
+  LLease: INyxCollectionCellRangeSelection;
+  LNavigation: INyxCollectionRangeNavigation;
+  LNormalized: INyxCollectionRangeNavigation;
+  LOriginal: INyxCollectionCellRangeIntent;
+  LPrevious: INyxCollectionCellRangeIntent;
+  LPreviousObject: TRangeIntent;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+  LFields: TNyxCollectionClipboardFields;
+  LOrigin: TNyxCollectionCellIdentity;
+  LAnchor: TNyxCollectionCellIdentity;
+  LFocus: TNyxCollectionCellIdentity;
+  LKey: TNyxCollectionRangeKey;
+  LLimits: TNyxCollectionClipboardLimits;
+  LLines: TNyxCollectionCopyLineEnding;
+  LHeaders: Boolean;
+  LSerial: Integer;
+  LCount: Integer;
+  LIndex: Integer;
+  LRequest: Integer;
+  LCapture: INyxCollectionCellRangeCapture;
+  LCandidate: TRangeIntent;
+  LCandidateLease: INyxCollectionCellRangeIntent;
+  LPublication: TRangePublication;
+  LPublicationLease: INyxPreparedPublication;
+
+  procedure RequireReservation;
+  begin
+
+    if FRevoked or (FIntent <> LRequest) or (FSelection <> LOriginal) then
+    begin
+      raise ENyxCollectionRangeStale.Create('Cell range preparation was replaced during capture');
+    end;
+  end;
+
+begin
+  LLease := Self;
+
+  if FRevoked or (FIntent >= High(Integer) - 1) then
+  begin
+    raise ENyxCollectionRange.Create('Cell range selection is retired or saturated');
+  end;
+  Inc(FIntent);
+  LRequest := FIntent;
+  LOriginal := FSelection;
+  LPreviousObject := FSelected;
+  LNavigation := ANavigation;
+
+  if LNavigation = nil then
+  begin
+    raise ENyxCollectionRange.Create('Cell range preparation requires its original movement');
+  end;
+  LPrevious := LNavigation.Previous;
+  RequireReservation;
+
+  if LPrevious <> LOriginal then
+  begin
+    raise ENyxCollectionRangeStale.Create('Cell range movement belongs to another accepted selection');
+  end;
+  LKey := LNavigation.Key;
+  RequireReservation;
+  LCandidate := nil;
+  LCandidateLease := nil;
+
+  if LKey = ncrkClear then
+  begin
+
+    if LOriginal = nil then
+    begin
+      raise ENyxCollectionRange.Create('Prepared Escape requires its original selected cells');
+    end;
+  end
+  else
+  begin
+    LSource := LNavigation.Source;
+    RequireReservation;
+    LPage := LNavigation.Page;
+    RequireReservation;
+    LOrigin := LNavigation.Origin;
+    RequireReservation;
+    LAnchor := LNavigation.Anchor;
+    RequireReservation;
+    LFocus := LNavigation.Focus;
+    RequireReservation;
+    LSerial := LNavigation.ColumnSerial;
+    RequireReservation;
+    LCount := LNavigation.FieldCount;
+    RequireReservation;
+
+    if (LCount < 1) or (LCount > NyxMaximumCollectionFields) then
+    begin
+      raise ENyxCollectionRange.Create('Prepared movement visible fields exceed the column limit');
+    end;
+    SetLength(LFields, LCount);
+    for LIndex := 0 to High(LFields) do
+    begin
+      LFields[LIndex] := LNavigation.FieldAt(LIndex);
+      RequireReservation;
+    end;
+    LHeaders := LNavigation.IncludeHeaders;
+    RequireReservation;
+    LLines := LNavigation.LineEnding;
+    RequireReservation;
+    LLimits := LNavigation.Limits;
+    RequireReservation;
+
+    if (LOriginal <> nil) and ((LOriginal.Source <> LSource) or
+      (LOriginal.Page <> LPage) or not LOrigin.Same(LOriginal.Capture.Focus) or
+      not LAnchor.Same(LOriginal.Capture.Anchor) or
+      (LOriginal.Capture.ColumnSerial <> LSerial)) then
+    begin
+      raise ENyxCollectionRangeStale.Create('Prepared movement cannot retarget its original cell range');
+    end;
+
+    if (LOriginal = nil) and not LOrigin.Same(LAnchor) then
+    begin
+      raise ENyxCollectionRange.Create('Initial range movement must retain its exact origin anchor');
+    end;
+    { Alternate proposal implementations are extension callouts, not trusted
+      navigation engines. Re-admit the key with the shared arithmetic before
+      accepting its claimed endpoints or complete RAW candidate. }
+    LNormalized := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+      LOrigin, LOriginal, LKey, LSerial, LHeaders, LLines, LLimits);
+    RequireReservation;
+
+    if not LNormalized.Anchor.Same(LAnchor) or not LNormalized.Focus.Same(LFocus) then
+    begin
+      raise ENyxCollectionRange.Create('Prepared movement endpoints do not match its typed key');
+    end;
+    LCapture := NewNyxCollectionCellRange(LSource, LPage, LFields, LAnchor, LFocus,
+      LSerial, LHeaders, LLines, LLimits);
+    RequireReservation;
+    LCandidate := TRangeIntent.Create(LCapture, LSource, LPage);
+    LCandidateLease := LCandidate;
+    RequireReservation;
+  end;
+  LPublication := TRangePublication.Create;
+  LPublicationLease := LPublication;
+  LPublication.FOwner := Self;
+  LPublication.FOwnerLease := LLease;
+  LPublication.FPrevious := LOriginal;
+  LPublication.FPreviousObject := LPreviousObject;
+  LPublication.FCandidate := LCandidateLease;
+  LPublication.FCandidateObject := LCandidate;
+  LPublication.FRequest := LRequest;
+  Result := LPublicationLease;
 end;
 
 function NewNyxCollectionCellRangeSelection: INyxCollectionCellRangeSelection;

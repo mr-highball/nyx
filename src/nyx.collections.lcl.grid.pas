@@ -208,7 +208,10 @@ type
     Inherited input/validation still owns edit admission. Provider/model data is
     saved through Nyx, never by native widget streaming of its physical cache.
     Grid geometry and model snapshots remain dataset-sized; this class alone
-    establishes neither browser row windowing nor complete memory/frame budgets. }
+    establishes neither browser row windowing nor complete memory/frame budgets.
+    Counted internal column transitions and a withdrawn attached input lifetime
+    suppress setter-generated Click. Admitted physical/canonical user Click
+    outside those transitions and raw grids without input retain LCL behavior. }
   TNyxCollectionStringGrid = class(TStringGrid)
   private
     FReader: TNyxGridTextReader;
@@ -279,6 +282,7 @@ type
       X, Y: Integer); override;
     procedure DblClick; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure Click; override;
     procedure DoEnter; override;
     procedure DoExit; override;
     function CanEditShow: Boolean; override;
@@ -2469,6 +2473,19 @@ begin
       LFrame.Leave;
     end;
   end;
+end;
+
+procedure TNyxCollectionStringGrid.Click;
+begin
+
+  if ColumnTransitionActive or ((FInputSurface <> nil) and not FInputSurface.Ready) then
+  begin
+    { LCL Col/Row setters synthesize Click after moving the cursor. Internal
+      restoration/navigation and a refreshing/retired original input must not
+      dispatch another application action. The surface reads canonical flags. }
+    Exit;
+  end;
+  inherited Click;
 end;
 
 procedure TNyxCollectionStringGrid.DoEnter;
