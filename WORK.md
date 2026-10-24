@@ -68,12 +68,32 @@ passes448 checks at1280 and448 at390, each with complete clean6670398-block heap
 The browser companion also compiles from that same own export with zero owned
 warnings. This is now a native-produced own-application proof, rather than reuse
 of an example or a browser-produced packet. A compact full-Studio comparison
-uses the same already-built executable and unchanged900s bound; its live handle
-stays in private handoff. Full instrumented Studio, actual updated browser
-execution, compact authoring and whole-editor responsiveness remain open.
+uses the same already-built executable and unchanged900s bound and now passes
+1094 checks in451.3s. Both complete native producers save byte-identical14897-byte
+project and8112-byte Pascal files. All jobs are joined; this is functional
+authoring evidence without full-Studio heap qualification. Full instrumented
+Studio, actual updated browser execution and whole-editor responsiveness remain
+open.
 
-Browser Parts/forms/publication/full Studio and its matching worker are compiled
-and staged as10 static artifacts. Automatic approval review rejects starting the
+The bounded optional parsed-property candidate is rejected after measurement.
+Its eight checked native consumers pass852/126/35/58/70/73/140/29 with complete
+clean heaps; matching browser consumers compile with zero owned warnings. Exact
+public metadata snapshots match byte for byte. However, three alternating runs
+of the unchanged public benchmark show no meaningful Studio composition gain:
+at2048 controls baseline657/640/640ms versus candidate656/656/640ms, and admission
+188/187/187ms versus188/187/188ms. Faster64-query metadata reads save only about
+16ms while write-heavy128-control admission adds about15ms. The candidate and
+its candidate-specific tests are removed from working product sources; both
+closed variants, logs and4634 input pins remain in private qualification evidence.
+The first orchestration pass mistakenly classified seven installed RTL warnings
+as owned; the corrected exact external-path classification reuses the verified
+compiler outputs. No product compiler failure is hidden. This experiment earns
+no completion credit or full-editor responsiveness claim. Next inspect actual
+native synchronization/control churn; do not repeat the unchanged900s editor
+run without a concrete repair.
+
+Browser Parts/forms/publication/full Studio, matching worker and own application
+are compiled and staged. Automatic approval review rejects starting the
 temporary loopback Pascal host before execution, stating only blocked by policy.
 No server or LAN change occurs; existing local endpoint inventory finds no test
 host to reuse. Browser execution of this repair remains unqualified. No repeated

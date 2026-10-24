@@ -30,13 +30,15 @@ The Parts-context repair declares only the existing public baseline wire in its
 independent retained form, preserving strict owner/path/action and event fencing.
 Native Parts73/form-controls38/publication58 pass with clean heaps; the canonical
 old-Studio control fails the new physical-retention assertion. The complete
-native desktop authoring journey now passes1083 without heap instrumentation,
-with all other safety/assertion checks and the original900s bound retained. Its
+native desktop/compact authoring journeys now pass1083/1094 without heap
+instrumentation, with all other safety/assertion checks and the original900s
+bound retained. Their
 actual saved Pascal independently compiles into an application passing448 at
 both native widths with clean heaps. The same browser companion compiles only.
-Full instrumented Studio still times out at18/512; updated browser execution,
-compact full authoring and responsiveness remain open. This closes no original
-criterion or complete task; WORK preserves the separate exact evidence.
+Both native producers save byte-identical project/Pascal exports. Full
+instrumented Studio still times out at18/512; updated browser execution and
+responsiveness remain open. This closes no original criterion or complete task;
+WORK preserves the separate exact evidence.
 
 The native responsiveness prerequisite now reuses strictly admitted immutable
 button faces by exact effective wire, preserving resource and callback currentness.
