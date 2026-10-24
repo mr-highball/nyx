@@ -185,14 +185,17 @@ var
   {$endif}
 
 { Diagnostic presentation only. Native output is flushed at each completed
-  boundary so an interrupted synchronous call retains its last entered phase.
-  No widget, scheduler, query or pending-state getter is evaluated for logging. }
+  boundary; browser console capture retains the last entered phase even when a
+  synchronous call prevents DOM inspection. No widget, scheduler, query or
+  pending-state getter is evaluated for logging. }
 procedure Trace(const APhase: TNyxText; AStage: Integer = -1);
 begin
   {$ifdef PAS2JS}
   document.body.setAttribute('data-query-authoring-stage', APhase +
     ';stage=' + IntToStr(AStage) + ';checks=' + IntToStr(GChecks));
   document.body.setAttribute('data-query-authoring-polls', IntToStr(GPolls));
+  document.title := 'Studio trace / ' + APhase + ' / ' + IntToStr(GChecks);
+  console.log('TRACE ', APhase, ';stage=', AStage, ';checks=', GChecks);
   {$else}
   WriteLn('TRACE ticks=', GetTickCount64, ' stage=', AStage,
     ' checks=', GChecks, ' ', APhase);
@@ -286,11 +289,15 @@ begin
 
     if LExchange.RequestPending then
     begin
+      Trace('exchange:deliver:before', LIndex);
       LExchange.Deliver;
+      Trace('exchange:deliver:after', LIndex);
     end
     else if LExchange.TickPending then
     begin
+      Trace('exchange:tick:before', LIndex);
       LExchange.FireTick;
+      Trace('exchange:tick:after', LIndex);
     end;
     { A reply can replace or retire its owning Studio. Reacquire the vector at
       the next iteration and never touch the just-serviced receiver afterward. }
@@ -1742,6 +1749,7 @@ var
   {$ifndef PAS2JS}LStore: TNyxProjectStore; LRevision: TNyxText;{$endif}
 begin
   Result := False;
+  {$ifdef PAS2JS}Trace('step:readiness:before', FSetup);{$endif}
 
   if FCommands.Busy then
   begin
@@ -1754,7 +1762,9 @@ begin
   begin
     Exit;
   end;
+  Trace('step:inspect:before', FSetup);
   InspectAccepted;
+  Trace('step:inspect:after', FSetup);
 
   if FSetup < 2 then
   begin
@@ -3099,7 +3109,9 @@ begin
     end;
 
     {$ifdef PAS2JS}
+    Trace('drive:exchange:before');
     ServiceExchange;
+    Trace('drive:exchange:after');
 
     if await(GReview.Step) then
     {$else}if GReview.Step then{$endif}

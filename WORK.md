@@ -149,14 +149,21 @@ a compiler because its argument array was malformed; that runner evidence is
 retained separately from the successful corrected04 cohort.
 
 For the open ordinary Studio criterion, the browser title-only diagnostic now
-establishes that construction returns at check63. The next bounded investigation
-marks the first exchange, readiness and accepted-pair inspection boundaries in
-this SAME fixture; stop after locating its next stalled synchronous call, then
-repair that call or retain the concrete frontier. No timeout/reload alone earns
-interaction credit. The earlier failed DOM/console observations and original
-source remain retained. This switches from unproductive repeated observation to
-one decision-producing diagnostic while keeping the native responsiveness and
-full own-export gates unchanged.
+establishes that construction returns at check63. The bounded exchange/Step trace02
+also compiles with unchanged closed product inputs and advances through real
+Inspector input; the preceding title01 run reaches workbench check214. Thus the
+first exchange is not a proven permanently stalled call. Superseded170/173 runs
+are explicitly closed to reduce competing browser load. The desktop title01 run
+then completes228 checks at measured1280x900: terminal passed status, no error
+attribute and an inert11728-unit accepted project are observed in the actual DOM.
+It exercises ordinary spacing/wrap/alignment input, partial drafts, independent
+resets, isolation and paired Undo/Redo. The compact trace02 run still advances;
+it has no terminal result yet. These exact fixed artifacts/handles and frontiers
+stay in private handoff. Earlier bounded CDP reads remain incomplete observations,
+not failed application assertions. Preserve the compact run rather than start
+another equivalent diagnostic; after its result, continue native responsiveness/
+full own-export and physical-drag prerequisites. Focused input does not qualify
+full Save/Open, an independently compiled own application or responsiveness.
 
 ### Earlier checkpoint — native button admission and runtime table presentation
 
