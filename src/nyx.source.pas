@@ -763,6 +763,7 @@ uses
   nyx.collections.columns,
   nyx.collections.arrangement,
   nyx.collections.workbench.policy,
+  nyx.collections.presentation,
   nyx.formatting,
   nyx.collections.query.policy,
   nyx.collections.query.controls,
@@ -901,7 +902,8 @@ type
     vkButtonAlignment, vkButtonWeight, vkGlyphTone,
     vkValueFormat, vkFormatLocale, vkFormatterRef, vkFormatDateOrder,
     vkTableWorkbenchPolicy, vkWorkbenchCopyAction, vkWorkbenchCopyFields,
-    vkWorkbenchLineEnding);
+    vkWorkbenchLineEnding, vkTablePresentationPolicy, vkColumnTextPolicy,
+    vkTableRowDensity);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -975,6 +977,8 @@ type
     FormatLocale: TNyxFormatLocale;
     TableLayoutPolicy: TNyxTableLayoutPolicy;
     TableWorkbenchPolicy: TNyxTableWorkbenchPolicy;
+    TablePresentationPolicy: TNyxTablePresentationPolicy;
+    ColumnTextPolicy: TNyxColumnTextPolicy;
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
@@ -1740,6 +1744,9 @@ begin
   RegisterEnum(vkWorkbenchCopyFields, Ord(nwcfAllArrangement), 'nwcfAllArrangement');
   RegisterEnum(vkWorkbenchLineEnding, Ord(nwleLF), 'nwleLF');
   RegisterEnum(vkWorkbenchLineEnding, Ord(nwleCRLF), 'nwleCRLF');
+  RegisterEnum(vkTableRowDensity, Ord(ntrdCompact), 'ntrdCompact');
+  RegisterEnum(vkTableRowDensity, Ord(ntrdNormal), 'ntrdNormal');
+  RegisterEnum(vkTableRowDensity, Ord(ntrdComfortable), 'ntrdComfortable');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoYearMonthDay), 'nfdoYearMonthDay');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoDayMonthYear), 'nfdoDayMonthYear');
   RegisterEnum(vkFormatDateOrder, Ord(nfdoMonthDayYear), 'nfdoMonthDayYear');
@@ -3777,7 +3784,8 @@ begin
           (LName = 'nyxintegerfield') or (LName = 'nyxnumberfield') or
           (LName = 'nyxnodomain') or (LName = 'tnyxstatevalue') or
           (LName = 'nyxcollectionview') or (LName = 'nyxcolumnlayout') or
-          (LName = 'nyxtablelayout') or (LName = 'nyxtableworkbench') then
+          (LName = 'nyxtablelayout') or (LName = 'nyxtableworkbench') or
+          (LName = 'nyxtablepresentation') or (LName = 'nyxcolumntext') then
         begin
           Exit(CollectionConstructor(LName));
         end;
@@ -6757,6 +6765,7 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.arrangement') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.workbench.policy') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.presentation') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.formatting') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.resources') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or

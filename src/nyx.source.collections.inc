@@ -86,6 +86,113 @@ var
 begin
   Result := Default(TValue);
 
+  if SameText(AName, 'NyxTablePresentation') or SameText(AName, 'NyxColumnText') then
+  begin
+
+    if At('(') then
+    begin
+      LArgs := Arguments;
+
+      if Length(LArgs) <> 0 then
+      begin
+        Fail('Table presentation factories take no arguments');
+      end;
+    end;
+
+    if SameText(AName, 'NyxTablePresentation') then
+    begin
+      Result.Kind := vkTablePresentationPolicy;
+      Result.TablePresentationPolicy := NyxTablePresentation;
+    end
+    else
+    begin
+      Result.Kind := vkColumnTextPolicy;
+      Result.ColumnTextPolicy := NyxColumnText;
+    end;
+    while At('.') do
+    begin
+      Expect('.');
+
+      if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) then
+      begin
+        Fail('Expected a typed table presentation method');
+      end;
+      LMethod := FTokens[FCursor].Text;
+      Inc(FCursor);
+
+      if (Result.Kind = vkColumnTextPolicy) and not At('(') and
+        (SameText(LMethod, 'Clip') or SameText(LMethod, 'Ellipsis') or
+          SameText(LMethod, 'Wrap')) then
+      begin
+        LArgs := nil;
+      end
+      else
+      begin
+        LArgs := Arguments;
+      end;
+
+      if Result.Kind = vkTablePresentationPolicy then
+      begin
+
+        if not SameText(LMethod, 'Density') or (Length(LArgs) <> 1) or
+          (LArgs[0].Kind <> vkTableRowDensity) then
+        begin
+          Fail('Density requires one typed table row density');
+        end;
+        Result.TablePresentationPolicy := Result.TablePresentationPolicy.Density(
+          TNyxTableRowDensity(LArgs[0].Ordinal));
+        Continue;
+      end;
+
+      if SameText(LMethod, 'Wrap') then
+      begin
+        LInteger := 3;
+
+        if Length(LArgs) = 1 then
+        begin
+
+          if (LArgs[0].Kind <> vkInteger) or
+            not TryNyxStateInteger(LArgs[0].Text, LInteger) then
+          begin
+            Fail('Wrap requires a positive portable Integer line count');
+          end;
+        end
+        else if Length(LArgs) <> 0 then
+        begin
+          Fail('Wrap accepts only its optional line count');
+        end;
+
+        if LInteger < 1 then
+        begin
+          Fail('Wrap requires a positive line count');
+        end;
+        Result.ColumnTextPolicy := Result.ColumnTextPolicy.Wrap(LInteger);
+      end
+      else
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('Single-line text presentation takes no arguments');
+        end;
+
+        if SameText(LMethod, 'Clip') then
+        begin
+          Result.ColumnTextPolicy := Result.ColumnTextPolicy.Clip;
+        end
+        else if SameText(LMethod, 'Ellipsis') then
+        begin
+          Result.ColumnTextPolicy := Result.ColumnTextPolicy.Ellipsis;
+        end
+        else
+        begin
+          Fail('Unknown column text presentation method');
+        end;
+      end;
+    end;
+    Exit;
+  end;
+
   if SameText(AName, 'NyxTableWorkbench') then
   begin
 
@@ -397,6 +504,8 @@ begin
         SameText(LMethod, 'UseDefaultColumnFormat') or
         SameText(LMethod, 'UseDefaultTableLayout') or
         SameText(LMethod, 'UseDefaultTableWorkbench') or
+        SameText(LMethod, 'UseDefaultTablePresentation') or
+        SameText(LMethod, 'UseDefaultColumnText') or
         SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
       begin
         LArgs := nil;
@@ -491,6 +600,49 @@ begin
           Fail('UseDefaultColumnFormat takes no arguments');
         end;
         Result.CollectionView := Result.CollectionView.UseDefaultColumnFormat;
+        Continue;
+      end;
+
+      if SameText(LMethod, 'TablePresentation') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkTablePresentationPolicy) then
+        begin
+          Fail('TablePresentation requires a typed NyxTablePresentation policy');
+        end;
+        Result.CollectionView := Result.CollectionView.TablePresentation(
+          LArgs[0].TablePresentationPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'ColumnText') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnTextPolicy) then
+        begin
+          Fail('ColumnText requires a typed NyxColumnText policy');
+        end;
+        Result.CollectionView := Result.CollectionView.ColumnText(LArgs[0].ColumnTextPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultTablePresentation') or
+        SameText(LMethod, 'UseDefaultColumnText') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('Restoring text presentation defaults takes no arguments');
+        end;
+
+        if SameText(LMethod, 'UseDefaultTablePresentation') then
+        begin
+          Result.CollectionView := Result.CollectionView.UseDefaultTablePresentation;
+        end
+        else
+        begin
+          Result.CollectionView := Result.CollectionView.UseDefaultColumnText;
+        end;
         Continue;
       end;
 

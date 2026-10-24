@@ -6,6 +6,46 @@
 
 ### Current checkpoint — authored workbench policies and runtime integration
 
+The current continuation qualifies actual mounted workbench authoring and adds
+typed table presentation source support. Focused Studio04 passes121 native
+checks with complete90387766/90387766 clean heap, and119/121 browser checks at
+independently preflighted1280x900/390x900, warning/error logs empty. All three
+accepted project packets are byte-identical. These actual controls exercise
+Apply, tab-switch draft retention, independent reset and exact paired Undo/Redo;
+the normal full Save/Open/own-application journey now includes them but remains
+unqualified. This focused run takes about228s with checked/optimized/profiled
+native sources; it is not a production latency benchmark or full W1 acceptance.
+Studio01's stale discovery-count assertion and03's attempt to click a collapsed
+Disclosure are retained as fixture failures, each with a complete clean heap.
+
+Presentation04 passes81 per actual target and preserves the unchanged171-check
+workbench-policy regression. Its optional interfaces share the existing column
+serial, with independent authored/runtime settings and real retirement checks.
+Browser03's retained peer interface exposed an out-parameter lifetime mistake
+in the test;04 releases that reference before the next Supports call without
+weakening the retirement assertion. Shared bounded text-layout07 passes21 per
+actual target using substituted metrics, with clean native heap and empty
+browser logs; target text painting/Fit are Lil' Scooty's current implementation.
+
+Root's presentation-source02 passes36 source checks on each actual target.
+The exact emitted Pascal independently compiles and passes4 complete-value
+checks on each actual target. Native heaps are complete556037/556037 and
+21880/21880; browser warning/error logs are empty. The source fixture covers all
+density/text modes, explicit absence/defaults, positive large wrap counts,
+strict typed refusals, independent resets, unused reusable imports, crafted
+Unicode text and exact NUL-bearing data. Source01's unnecessary native LCL file
+dependency failure is retained;02 writes emitted UTF-8 bytes through plain RTL.
+The maintained policy/source stage also completes all twelve fresh compilers
+with zero owned warnings and all six native consumers with complete clean heaps:
+171/37/38 unchanged workbench checks and81/36/4 presentation checks. Its592
+fixed source pins reverify exactly. Actual browser source/emitted consumers pass
+37/38/36/4 with empty logs; its171/81 browser artifacts are byte-identical to the
+already executed policy proofs. The full original native Studio journey also
+compiles with its workbench stage included; its full runtime is still required.
+All remaining target/Studio/MCP presentation adoption stays separate from this
+source proof. Full native performance, original W1/W2 and all seven
+task criteria remain open. No user input or source-scope permission is needed.
+
 The last authority-only turn verified existing committed guidance; it was not
 new product progress. The current continuation qualifies authored table runtime
 behavior and implements ordinary Studio/semantic authoring. Library implementations,

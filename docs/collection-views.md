@@ -300,6 +300,51 @@ Current pure, target-control and generated-application qualification is recorded
 in [WORK.md](../WORK.md); full workbench acceptance and installed Studio delivery
 remain separate.
 
+## Table text and row spacing
+
+`nyx.collections.presentation` separates text layout and body-row spacing from
+typed values, formatting and column geometry. Author the choices on the same
+collection specification:
+
+```pascal
+LServicesTable.Binds.Collection(
+  NyxCollectionView(NyxCollection('services'))
+    .Column(NyxTextField('command'), 'Command line')
+      .ColumnText(NyxColumnText.Wrap(4))
+    .Column(NyxTextField('status'), 'Status')
+      .ColumnText(NyxColumnText.Ellipsis)
+    .TablePresentation(NyxTablePresentation.Density(ntrdComfortable)));
+```
+
+`Clip`, `Ellipsis` and `Wrap` affect presentation only. Wrap honors hard breaks
+and long unspaced paths; its positive line count bounds the intended height.
+There is no arbitrary authoring ceiling below `High(Integer)`. Runtime hosts
+have separate, adjustable work limits with typed refusal outcomes. An accepted
+saved policy does not promise that every host can admit its requested work.
+Raw values, unfinished drafts and explicitly represented copy remain distinct.
+
+Absence preserves the former host behavior. Explicit Clip and Normal density
+remain present choices. `UseDefaultColumnText` and
+`UseDefaultTablePresentation` remove their respective authored choices without
+clearing formatting, workbench permissions, query or layout defaults. The saved
+descriptor uses version11 only when a text/density policy is present; resetting
+both reproduces the earlier descriptor and generated Pascal exactly.
+
+The optional `INyxCollectionTablePresentation` facet prepares runtime preferences
+through the existing column publication owner. Density and field/family keyed
+text overrides reset independently; applications persist those preferences
+separately from designs and collection data. Captures retain copied values and
+inert identity proofs, so they do not keep a view or its store alive. Stale,
+foreign or competing captures refuse before publication. Existing view
+interfaces retain their signatures.
+
+Value ownership and source reading/generation have executed native/browser
+evidence, including independent compilation of the emitted application. Actual
+target painting, Fit, ordinary Studio presentation controls and semantic
+version11 discovery remain in progress under
+[the table workbench task](../TODO/NS-3_control-usefulness_03.md). This source
+contract alone does not establish those interaction or parity outcomes.
+
 ## Authored table arrangement defaults
 
 Import `nyx.collections.arrangement` with the existing view and typed-field units

@@ -40,6 +40,7 @@ uses
   nyx.collections.query.editor, nyx.collections.query.policy, nyx.collections.view,
   nyx.collections.mount, nyx.collections.query.controls, nyx.studio.section.views,
   nyx.collections.arrangement,
+  nyx.collections.workbench.policy,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.view, nyx.studio.collections, nyx.studio.collectionintent,
   nyx.studio.collectionedits, nyx.studio.stateedits, nyx.studio.authoring,
@@ -113,6 +114,13 @@ type
     FLayoutStage: Integer;
     FLayoutFinished: Boolean;
     FLayoutInitial: TNyxCollectionViewSpec;
+    { Workbench authoring runs before the same Save/Open producer. The optional
+      focused build exercises only this ordinary Studio path and reports its
+      own narrower marker, never the full query/application acceptance marker. }
+    FWorkbenchStage: Integer;
+    FWorkbenchFinished: Boolean;
+    FWorkbenchInitial: TNyxCollectionViewSpec;
+    FWorkbenchAccepted: TNyxText;
     FBefore, FAfter, FDefinition, FSibling, FDefaults: TNyxText;
     { Copied descriptive handler/registration names outlive source admission and
       model replacement. They are checked against typed authored snapshots. }
@@ -129,6 +137,7 @@ type
     procedure Expand(AColumn: Integer);
     procedure ExpandLayout(AColumn: Integer);
     function LayoutStep: Boolean; {$ifdef PAS2JS}async;{$endif}
+    function WorkbenchStep: Boolean; {$ifdef PAS2JS}async;{$endif}
     function Pair: TNyxText;
     { Return a real section root rather than passing the native lookup forest
       to a compound capture that requires an actual owned model tree. }
@@ -653,7 +662,8 @@ begin
       (LProperties.Field('op').Field('const').AsText = 'bind') then
     begin
       LData := LProperties.Field('spec').Field('oneOf');
-      Check(LData.Count = 9, 'semantic discovery retains all former versions plus display v9');
+      Check(LData.Count = 10,
+        'semantic discovery retains all former versions plus table workbench v10');
       LVersion := LData.Item(6);
       Check((LVersion.Field('properties').Field('version').Field('const').AsInteger = 7) and
         (LVersion.Field('required').Count = 10) and
@@ -1298,6 +1308,114 @@ begin
   Check(LRefused and (Pair = LBefore), 'invalid policy draft refuses without changing the accepted pair');
 end;
 
+{ Ordinary controls and SourceJobs own every mutation here. The selected table
+  begins inherited; its reusable definition, peer and exact collection defaults
+  remain independently checked. In the complete journey these choices enter
+  the original Save/Open producer before its independently compiled companion. }
+function TReview.WorkbenchStep: Boolean; {$ifdef PAS2JS}async;{$endif}
+var
+  LSection: TNyxNode;
+  LExpected: TNyxTableWorkbenchPolicy;
+begin
+  Result := False;
+  LExpected := NyxTableWorkbench.RangeSelection(True)
+    .AllowCopy([nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange])
+    .CopyFields(nwcfAllArrangement).Headers(False).LineEnding(nwleCRLF).FocusedDraft(True);
+  Trace('workbench:before', FWorkbenchStage);
+  case FWorkbenchStage of
+    0:
+      begin
+        Inspector;
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        Click(NyxInspectorPropertiesID);
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        LSection := Root.Find(NyxStudioWorkbenchPolicyFormID + '-section');
+        Check((LSection <> nil) and NyxIsDisclosure(LSection),
+          'table actions use the ordinary independent Disclosure control');
+
+        if not NyxDisclosureExpanded(LSection) then
+        begin
+          Click(LSection.Part(NyxPart('header')).ID);
+        end;
+        FWorkbenchInitial := Spec;
+        FBefore := Pair;
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfRangeSelection), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfCopyCell), 'false');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfCopySelectedSource), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfCopySelectedPage), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfCopyCellRange), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfCopyFields), 'All authored columns, including hidden');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfHeaders), 'false');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfLineEnding), 'CRLF');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfFocusedDraft), 'true');
+        Check(Pair = FBefore, 'actual action inputs stay drafts before the complete Apply');
+        Click(NyxStudioWorkbenchPolicyApplyID);
+      end;
+    1:
+      begin
+        Check((FCommands.State = nssApplied) and Spec.HasTableWorkbenchPolicy and
+          (Spec.TableWorkbenchPolicy.ToData.ToJSON = LExpected.ToData.ToJSON),
+          'ordinary SourceJobs accepts the complete typed action form: ' + FCommands.Message);
+        Check((Pos('.TableWorkbench(NyxTableWorkbench', FSession.Source) > 0) and
+          (Pos('nyx.collections.workbench.policy', FSession.Source) > 0),
+          'ordinary source generation promotes the typed workbench contract');
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        FWorkbenchAccepted := Pair;
+        LSection := Root.Find(NyxStudioWorkbenchPolicyFormID + '-section');
+
+        if not NyxDisclosureExpanded(LSection) then
+        begin
+          Click(LSection.Part(NyxPart('header')).ID);
+        end;
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfCopyCell), 'true');
+        Click(NyxInspectorEventsID);
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        Click(NyxInspectorPropertiesID);
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        Check((Root.Find(NyxStudioWorkbenchPolicyFieldID(swpfCopyCell))
+          .Prop(NyxAttributeName(atValue)) = 'true') and (Pair = FWorkbenchAccepted),
+          'the actual Inspector retains an independent action draft without changing accepted Pascal');
+        LSection := Root.Find(NyxStudioWorkbenchPolicyFormID + '-section');
+
+        if not NyxDisclosureExpanded(LSection) then
+        begin
+          Click(LSection.Part(NyxPart('header')).ID);
+        end;
+        FBefore := Pair;
+        Click(NyxStudioWorkbenchPolicyDefaultID);
+      end;
+    2:
+      begin
+        Check((FCommands.State = nssApplied) and not Spec.HasTableWorkbenchPolicy and
+          (Spec.ToData.ToJSON = FWorkbenchInitial.UseDefaultTableWorkbench.ToData.ToJSON),
+          'ordinary reset removes only workbench presence, preserving earlier table choices: ' +
+          FCommands.Message);
+        {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+        Click('action-undo');
+        {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+      end;
+    3:
+      begin
+        Check((Pair = FWorkbenchAccepted) and
+          (Spec.TableWorkbenchPolicy.ToData.ToJSON = LExpected.ToData.ToJSON),
+          'ordinary Undo restores the exact action policy/source pair for subsequent Save/Open');
+        Isolated;
+        Result := True;
+        {$ifdef NYX_WORKBENCH_STUDIO_ONLY}
+        GSaved := Pair;
+        {$ifndef PAS2JS}
+        WriteNyxTextFile(IncludeTrailingPathDelimiter(GEvidence) + 'accepted-project.json',
+          NyxTextFile('accepted-project.json', GSaved));
+        WriteNyxTextFile(IncludeTrailingPathDelimiter(GEvidence) + 'nyx.fixture.table.query.studio.pas',
+          NyxTextFile('nyx.fixture.table.query.studio.pas', FSession.Source));
+        {$endif}
+        {$endif}
+      end;
+  end;
+  Trace('workbench:after', FWorkbenchStage);
+  Inc(FWorkbenchStage);
+end;
+
 { Physical inspector input precedes this journey's original Save/Open/export.
   Its generated companion therefore consumes these exact accepted policies,
   with the existing query callbacks, handwritten Pascal and independent peer. }
@@ -1507,8 +1625,19 @@ begin
     Exit;
   end;
   {$endif}
+  {$ifdef NYX_WORKBENCH_STUDIO_ONLY}
+  {$ifdef PAS2JS}Result := await(WorkbenchStep);{$else}Result := WorkbenchStep;{$endif}
+  {$else}
   { Keep the original twenty-six query/event/file stages intact. Layout input
     finishes before their existing Save/Open captures the actual whole pair. }
+
+  if (FStage = 18) and not FWorkbenchFinished then
+  begin
+    {$ifdef PAS2JS}FWorkbenchFinished := await(WorkbenchStep);{$else}
+    FWorkbenchFinished := WorkbenchStep;
+    {$endif}
+    Exit;
+  end;
 
   if (FStage = 18) and not FLayoutFinished then
   begin
@@ -1817,6 +1946,7 @@ begin
   end;
   Trace('step:after', FStage);
   Inc(FStage);
+  {$endif}
 end;
 
 { The same proof runs against the ordinary reopened document and the independently
@@ -2802,6 +2932,9 @@ procedure Drive; {$ifdef PAS2JS}async;{$endif}
 var
   LPair: TNyxProjectPair;
   LDocument: TNyxDocument;
+  {$if defined(PAS2JS) and defined(NYX_WORKBENCH_STUDIO_ONLY)}
+  LArtifact: TJSHTMLElement;
+  {$endif}
 begin
   LDocument := nil;
 
@@ -2825,12 +2958,31 @@ begin
     if await(GReview.Step) then
     {$else}if GReview.Step then{$endif}
     begin
+      {$if not defined(PAS2JS) or not defined(NYX_WORKBENCH_STUDIO_ONLY)}
       FreeAndNil(GReview);
+      {$endif}
+      {$ifdef NYX_WORKBENCH_STUDIO_ONLY}
+      {$ifdef PAS2JS}
+      { Keep the actual completed editor visible until pagehide for inspection.
+        The copied packet is inert DOM text; no generated code is evaluated. }
+      LArtifact := TJSHTMLElement(document.createElement('script'));
+      LArtifact.setAttribute('type', 'application/json');
+      LArtifact.setAttribute('id', 'workbench-studio-project');
+      LArtifact.textContent := GSaved;
+      document.body.appendChild(LArtifact);
+      document.body.setAttribute('data-workbench-studio-project-length', IntToStr(Length(GSaved)));
+      document.body.setAttribute('data-workbench-studio', 'passed');
+      document.body.setAttribute('data-workbench-studio-checks', IntToStr(GChecks));
+      {$else}
+      WriteLn('PASS ', GChecks, ' actual focused Studio workbench checks');
+      {$endif}
+      {$else}
       LPair := DecodeNyxProject(GSaved);
       LDocument := TNyxCodec.Decode(LPair.Design);
       {$ifdef PAS2JS}await(ApplicationProof(LPair, LDocument));
       {$else}ApplicationProof(LPair, LDocument);{$endif}
       Passed;
+      {$endif}
     end
     {$ifdef PAS2JS}else
     begin

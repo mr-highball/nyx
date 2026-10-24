@@ -10,6 +10,17 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+Actual focused Studio04 now passes121 native checks with a complete clean heap
+and119/121 browser checks at measured1280x900/390x900, logs empty. Exact accepted
+project packets match across all three runs. Apply, draft retention, independent
+reset and paired Undo/Redo use ordinary mounted controls and SourceJobs. This
+does not replace full Save/Open/native-own-application or performance acceptance.
+Presentation04 separately qualifies81 per actual target; bounded text-layout07
+qualifies21 with substituted metrics. Typed presentation source02 passes36 per
+actual target and its independently compiled emitted application passes4 per
+target. Actual text paint/Fit and ordinary Studio/semantic presentation adoption
+remain required; all original criteria below remain unchanged.
+
 The latest authored runtime06 adopts saved table actions through ordinary native
 and browser renderers. The complete retained control suite passes878 native
 checks with a clean heap and945 browser checks at1280x900/390x900, logs empty.

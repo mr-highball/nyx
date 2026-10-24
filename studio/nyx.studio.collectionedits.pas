@@ -430,6 +430,13 @@ begin
       a value its schema and eventual runtime mount would both reject. }
     raise ENyxCollection.Create('Authored workbench actions require a table binding');
   end;
+
+  if Result.FSpec.HasPresentationPolicy and (AProjection <> cpTable) then
+  begin
+    { Text wrapping/density has the same known table-only authoring boundary;
+      neutral reusable descriptors still defer actual projection validation. }
+    raise ENyxCollection.Create('Table text and density policies require a table binding');
+  end;
   Result.FKey := NyxCollection(ASpec.Key.Name);
   Result.FProjection := AProjection;
 end;

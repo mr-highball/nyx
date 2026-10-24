@@ -45,6 +45,7 @@ uses
   nyx.collections.registry,
   nyx.collections.view.types,
   nyx.collections.arrangement,
+  nyx.collections.presentation,
   nyx.scheduler,
   nyx.collections.selection;
 
@@ -64,6 +65,19 @@ type
     function GetSerial: Integer;
     property Spec: TNyxCollectionViewSpec read GetSpec;
     property Preferences: TNyxColumnPreferences read GetPreferences;
+    property Serial: Integer read GetSerial;
+  end;
+
+  { One detached presentation observation shares the table's canonical column
+    serial and identity. It owns exact authored descriptors and copied user
+    text/density overrides only; neither view nor store/widget is retained. }
+  INyxCollectionPresentationCapture = interface(IInterface)
+    ['{CF4EC4CA-7744-44CB-A36D-22B59FEB166D}']
+    function GetSpec: TNyxCollectionViewSpec;
+    function GetPresentationPreferences: TNyxTablePresentationPreferences;
+    function GetSerial: Integer;
+    property Spec: TNyxCollectionViewSpec read GetSpec;
+    property Preferences: TNyxTablePresentationPreferences read GetPresentationPreferences;
     property Serial: Integer read GetSerial;
   end;
 
@@ -137,6 +151,21 @@ type
     function PrepareAutoSize(const ACapture: INyxCollectionColumnsCapture;
       const AField: TNyxColumnIdentity; AWidth: Integer): INyxPreparedPublication;
     function ConfigureColumns(const APreferences: TNyxColumnPreferences): INyxCollectionColumns;
+  end;
+
+  { Optional UI-thread presentation commands preserve every existing view ABI.
+    Preparation reserves the existing column publication slot; density/text and
+    width plans cannot overwrite one another's original captures. Nonempty user
+    overrides require authored presentation opt-in; clearing them always works.
+    Notifications use the view's existing observer owner and never change data,
+    query, selection, column geometry or authored defaults. }
+  INyxCollectionTablePresentation = interface(IInterface)
+    ['{5B3BE59F-76D3-4812-BDC2-D2EC52ECC4D0}']
+    function CapturePresentation: INyxCollectionPresentationCapture;
+    function PreparePresentation(const ACapture: INyxCollectionPresentationCapture;
+      const APreferences: TNyxTablePresentationPreferences): INyxPreparedPublication;
+    function ConfigurePresentation(const APreferences: TNyxTablePresentationPreferences):
+      INyxCollectionTablePresentation;
   end;
   { Bounded immutable text from the CURRENT table page, independent of host font
     measurement. Count is at most the authored AutoSizeRows limit; an empty page
@@ -346,6 +375,10 @@ function NyxCollectionPages(const AView: INyxCollectionView): INyxCollectionPage
 { Unsupported alternatives/non-table views refuse explicitly. The optional
   facet never manufactures a toolkit-specific column engine or data copy. }
 function NyxCollectionColumns(const AView: INyxCollectionView): INyxCollectionColumns;
+{ Retains an optional UI-thread text/density command owner. Unsupported or
+  non-table alternatives refuse; no host-specific control API is exposed. }
+function NyxCollectionTablePresentation(const AView: INyxCollectionView):
+  INyxCollectionTablePresentation;
 function NewNyxCollectionContext(
   const ADefaults: INyxCollectionDefaults): INyxCollectionContext; overload;
 { Resource-backed seeds resolve into independent application/instance stores at
@@ -416,6 +449,15 @@ type
     function PrepareColumnImport(const ACapture: INyxCollectionColumnsCapture;
       const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
   end;
+  { Trusted native/browser replacement imports width/order and text/density as
+    one participant in the existing column slot. Old public interfaces stay
+    intact; external implementations never gain an undocumented bypass. }
+  IColumnPresentationTransferTarget = interface(IInterface)
+    ['{E29F716F-8507-477B-A8AD-9344E0A7C719}']
+    function PrepareColumnPresentationImport(const ACapture: INyxCollectionColumnsCapture;
+      const AColumns: TNyxColumnPreferences;
+      const APresentation: TNyxTablePresentationPreferences): INyxPreparedPublication;
+  end;
   TViewSubscription = class(TInterfacedObject, INyxCollectionViewSubscription)
   public
     Owner: TView;
@@ -461,6 +503,7 @@ type
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
+    INyxCollectionTablePresentation, IColumnPresentationTransferTarget,
     INyxCollectionColumnSampling, INyxCollectionExportView, INyxCollectionSelectedRowsView)
   private
     FRowCopyReadiness: INyxCancellationReadiness;
@@ -481,6 +524,7 @@ type
       Saturation disables sampling only; ordinary notifications never throw. }
     FColumnSampleSerial: Integer;
     FColumnPreferences: TNyxColumnPreferences;
+    FPresentationPreferences: TNyxTablePresentationPreferences;
     { Identity has no owner backlink. Intent includes accepted session metadata
       changes; equal raw assignments remain complete no-ops. }
     FQueryIdentity: IInterface;
@@ -554,6 +598,11 @@ type
     function GetQuery: TNyxCollectionQuery;
     function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
     function CaptureColumns: INyxCollectionColumnsCapture;
+    function CapturePresentation: INyxCollectionPresentationCapture;
+    function PreparePresentation(const ACapture: INyxCollectionPresentationCapture;
+      const APreferences: TNyxTablePresentationPreferences): INyxPreparedPublication;
+    function ConfigurePresentation(const APreferences: TNyxTablePresentationPreferences):
+      INyxCollectionTablePresentation;
     function CaptureExport: INyxCollectionExportCapture;
     function CaptureSelectedRows: INyxCollectionSelectedRowsCapture;
     procedure CheckExportCurrent(const ACapture: INyxCollectionExportCapture);
@@ -568,6 +617,9 @@ type
       AWidth: Integer): INyxPreparedPublication;
     function PrepareColumnImport(const ACapture: INyxCollectionColumnsCapture;
       const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
+    function PrepareColumnPresentationImport(const ACapture: INyxCollectionColumnsCapture;
+      const AColumns: TNyxColumnPreferences;
+      const APresentation: TNyxTablePresentationPreferences): INyxPreparedPublication;
     function CaptureQuery: INyxCollectionQueryCapture;
     function PrepareQuery(const ACapture: INyxCollectionQueryCapture;
       const AQuery: TNyxCollectionQuery): INyxPreparedPublication;
@@ -702,17 +754,21 @@ type
   { Detached inspector/command context. Returning copies prevents a pas2js
     caller's record-array mutation from changing any later reader's snapshot. }
   TColumnCapture = class(TInterfacedObject, INyxCollectionColumnsCapture,
+    INyxCollectionPresentationCapture,
     IColumnCaptureProof)
   private
     FIdentity: IInterface;
     FSerial: Integer;
     FSpec: TNyxCollectionViewSpec;
     FPreferences: TNyxColumnPreferences;
+    FPresentation: TNyxTablePresentationPreferences;
   public
     constructor Create(const AIdentity: IInterface; ASerial: Integer;
-      const ASpec: TNyxCollectionViewSpec; const APreferences: TNyxColumnPreferences);
+      const ASpec: TNyxCollectionViewSpec; const APreferences: TNyxColumnPreferences;
+      const APresentation: TNyxTablePresentationPreferences);
     function GetSpec: TNyxCollectionViewSpec;
     function GetPreferences: TNyxColumnPreferences;
+    function GetPresentationPreferences: TNyxTablePresentationPreferences;
     function GetSerial: Integer;
     function ColumnIdentity: IInterface;
     function ColumnSerial: Integer;
@@ -791,6 +847,12 @@ type
     FSource, FSnapshot: INyxCollectionSnapshot;
     FSelection: INyxCollectionSelection;
     FBefore, FNext: TNyxColumnPreferences;
+    { Both presentation vectors stay retained through flags-only Install. One
+      shared serial fences concurrent column plans and same-byte ABA changes. }
+    FBeforePresentation: TNyxTablePresentationPreferences;
+    FNextPresentation: TNyxTablePresentationPreferences;
+    FApplyPresentation: Boolean;
+    FOnlyPresentation: Boolean;
     FSerial: Integer;
     FChanged, FValidated, FValidationStarted: Boolean;
     FInstalled, FNotified, FRetired: Boolean;
@@ -805,6 +867,11 @@ type
       const AAutoSize: TNyxColumnIdentity; AImported: Boolean = False);
     procedure InitializeSample(AOwner: TView; ASample: TColumnSample;
       AWidth: Integer);
+    procedure InitializePresentation(AOwner: TView;
+      const ACapture: INyxCollectionColumnsCapture;
+      const AColumns: TNyxColumnPreferences;
+      const APresentation: TNyxTablePresentationPreferences;
+      AOnlyPresentation: Boolean; AImported: Boolean = False);
     destructor Destroy; override;
     procedure Validate;
     procedure CheckReady;
@@ -1695,6 +1762,7 @@ begin
   FQueryIdentity := TInterfacedObject.Create;
   FColumnIdentity := TInterfacedObject.Create;
   FColumnPreferences := NyxColumnPreferences;
+  FPresentationPreferences := NyxTablePresentationPreferences;
   ASpec.Validate;
 
   if (AStore = nil) or not ASpec.Defined then
@@ -1716,6 +1784,11 @@ begin
   if ASpec.HasTableWorkbenchPolicy and (AProjection <> cpTable) then
   begin
     raise ENyxCollection.Create('Authored workbench actions require a table projection');
+  end;
+
+  if ASpec.HasPresentationPolicy and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Table text and density policies require a table projection');
   end;
 
   if ASpec.HasLayoutControls and (AProjection <> cpTable) then
@@ -1878,6 +1951,11 @@ begin
   if ASpec.HasTableWorkbenchPolicy and (AProjection <> cpTable) then
   begin
     raise ENyxCollection.Create('Authored workbench actions require a table projection');
+  end;
+
+  if ASpec.HasPresentationPolicy and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Table text and density policies require a table projection');
   end;
 
   if ASpec.HasLayoutControls and (AProjection <> cpTable) then
@@ -2698,7 +2776,7 @@ begin
   LCapture.Page := FSnapshot;
   LCapture.Selection := FSelection.Snapshot;
   LCapture.Columns := TColumnCapture.Create(FColumnIdentity, FColumnSerial,
-    FSpec, FColumnPreferences);
+    FSpec, FColumnPreferences, FPresentationPreferences);
   LCapture.Readiness := LReady;
   Result := LCaptureLease;
 end;
@@ -2722,7 +2800,7 @@ begin
   LCapture.Filtered := FUnpaged;
   LCapture.Page := FSnapshot;
   LCapture.Columns := TColumnCapture.Create(FColumnIdentity, FColumnSerial,
-    FSpec, FColumnPreferences);
+    FSpec, FColumnPreferences, FPresentationPreferences);
   { The atomic store Busy getter is outward. Keep original fields first, then
     require that exact cohort after readiness rather than recapture its result. }
   CheckExportCurrent(Result);

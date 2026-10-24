@@ -785,14 +785,23 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
         $nyxPolicySuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
         $nyxPolicyOwnedNames = @(Get-ChildItem -LiteralPath @('src', 'tests') `
           -Recurse -File | Where-Object { $_.Extension -in @('.pas', '.pp', '.inc', '.lpr') } |
-          ForEach-Object { $_.Name }) + @('nyx.generated.view.pas')
-        foreach ($nyxPolicyConsumer in @('policy', 'source', 'compiled')) {
+          ForEach-Object { $_.Name }) + @('nyx.generated.view.pas', 'nyx.generated.presentation.pas')
+        foreach ($nyxPolicyConsumer in @('policy', 'source', 'compiled',
+            'presentation', 'presentation-source', 'presentation-compiled')) {
           $nyxPolicyProgram = 'nyx_collection_workbench_source_tests'
           $nyxPolicyPass = '(?m)^PASS \d+ typed workbench source checks; no runtime service wiring\s*$'
 
           if ($nyxPolicyConsumer -eq 'policy') {
             $nyxPolicyProgram = 'nyx_collection_workbench_policy_tests'
             $nyxPolicyPass = '(?m)^PASS \d+ pure table workbench policy checks; no runtime service wiring\s*$'
+          }
+
+          if ($nyxPolicyConsumer -eq 'presentation') {
+            $nyxPolicyProgram = 'nyx_collection_presentation_tests'
+            $nyxPolicyPass = '(?m)^PASS \d+ typed table presentation policy checks; no target paint claim\s*$'
+          } elseif ($nyxPolicyConsumer -in @('presentation-source', 'presentation-compiled')) {
+            $nyxPolicyProgram = 'nyx_collection_presentation_source_tests'
+            $nyxPolicyPass = '(?m)^PASS \d+ presentation source/generated application checks\s*$'
           }
           foreach ($nyxPolicyTarget in @('native', 'browser')) {
             $output = Join-Path $nyxPolicyRoot ($nyxPolicyConsumer + '-' + $nyxPolicyTarget)
@@ -801,6 +810,8 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
 
             if ($nyxPolicyConsumer -eq 'compiled') {
               $nyxPolicyExtra = @('-dNYX_COMPILED_WORKBENCH', "-Fu$nyxPolicyGenerated")
+            } elseif ($nyxPolicyConsumer -eq 'presentation-compiled') {
+              $nyxPolicyExtra = @('-dNYX_COMPILED_PRESENTATION', "-Fu$nyxPolicyGenerated")
             }
 
             if ($nyxPolicyTarget -eq 'native') {
@@ -835,7 +846,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
             if ($nyxPolicyTarget -eq 'native') {
               $nyxPolicyRunArgs = @()
 
-              if ($nyxPolicyConsumer -eq 'source') {
+              if ($nyxPolicyConsumer -in @('source', 'presentation-source')) {
                 $nyxPolicyRunArgs = @($nyxPolicyGenerated)
               }
               $nyxPolicyResult = RunOwned (Join-Path $output ($nyxPolicyProgram + $nyxPolicySuffix)) `
@@ -855,6 +866,10 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
                 Get-FileHash -LiteralPath (Join-Path $nyxPolicyGenerated 'nyx.generated.view.pas') |
                   Select-Object Path, Hash | ConvertTo-Json | Set-Content -LiteralPath `
                     (Join-Path $nyxPolicyRoot 'emitted-source-private.json') -Encoding UTF8
+              } elseif ($nyxPolicyConsumer -eq 'presentation-source') {
+                Get-FileHash -LiteralPath (Join-Path $nyxPolicyGenerated 'nyx.generated.presentation.pas') |
+                  Select-Object Path, Hash | ConvertTo-Json | Set-Content -LiteralPath `
+                    (Join-Path $nyxPolicyRoot 'emitted-presentation-source-private.json') -Encoding UTF8
               }
             } else {
               Copy-Item -LiteralPath $nyxPolicyRuntime -Destination (Join-Path $output 'rtl.js')
@@ -867,11 +882,14 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
             }
           }
         }
-        $nyxPolicyEmitted = Get-Content -LiteralPath (Join-Path $nyxPolicyRoot 'emitted-source-private.json') -Raw |
-          ConvertFrom-Json
+        foreach ($nyxPolicyReceipt in @('emitted-source-private.json',
+            'emitted-presentation-source-private.json')) {
+          $nyxPolicyEmitted = Get-Content -LiteralPath (Join-Path $nyxPolicyRoot $nyxPolicyReceipt) -Raw |
+            ConvertFrom-Json
 
-        if ((Get-FileHash -LiteralPath $nyxPolicyEmitted.Path).Hash -ne $nyxPolicyEmitted.Hash) {
-          throw 'The emitted workbench source changed during independent compilation'
+          if ((Get-FileHash -LiteralPath $nyxPolicyEmitted.Path).Hash -ne $nyxPolicyEmitted.Hash) {
+            throw 'The emitted table policy source changed during independent compilation'
+          }
         }
       }
       Invoke-NyxWorkbenchPolicyChecks

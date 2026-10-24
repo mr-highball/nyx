@@ -26,13 +26,15 @@
   are queried; final readiness and Install inspect canonical fields only. }
 
 constructor TColumnCapture.Create(const AIdentity: IInterface; ASerial: Integer;
-  const ASpec: TNyxCollectionViewSpec; const APreferences: TNyxColumnPreferences);
+  const ASpec: TNyxCollectionViewSpec; const APreferences: TNyxColumnPreferences;
+  const APresentation: TNyxTablePresentationPreferences);
 begin
   inherited Create;
   FIdentity := AIdentity;
   FSerial := ASerial;
   FSpec := ASpec.Copy;
   FPreferences := APreferences.Copy;
+  FPresentation := APresentation.Copy;
 end;
 
 function TColumnCapture.GetSpec: TNyxCollectionViewSpec;
@@ -43,6 +45,11 @@ end;
 function TColumnCapture.GetPreferences: TNyxColumnPreferences;
 begin
   Result := FPreferences.Copy;
+end;
+
+function TColumnCapture.GetPresentationPreferences: TNyxTablePresentationPreferences;
+begin
+  Result := FPresentation.Copy;
 end;
 
 function TColumnCapture.GetSerial: Integer;
@@ -86,7 +93,96 @@ begin
     raise ENyxCollection.Create('Column arrangement requires a table projection');
   end;
   Result := TColumnCapture.Create(FColumnIdentity, FColumnSerial,
-    FSpec, FColumnPreferences);
+    FSpec, FColumnPreferences, FPresentationPreferences);
+end;
+
+function TView.CapturePresentation: INyxCollectionPresentationCapture;
+var
+  LLease: INyxCollectionView;
+begin
+  LLease := Self;
+
+  if FProjection <> cpTable then
+  begin
+    raise ENyxCollection.Create('Text and density presentation requires a table projection');
+  end;
+  Result := TColumnCapture.Create(FColumnIdentity, FColumnSerial,
+    FSpec, FColumnPreferences, FPresentationPreferences);
+end;
+
+function NyxCollectionTablePresentation(const AView: INyxCollectionView):
+  INyxCollectionTablePresentation;
+var
+  LView: INyxCollectionView;
+  LPresentation: INyxCollectionTablePresentation;
+begin
+  LView := AView;
+
+  if (LView = nil) or
+    not Supports(LView, INyxCollectionTablePresentation, LPresentation) then
+  begin
+    raise ENyxCollection.Create('Collection view does not support table presentation');
+  end;
+
+  if LView.Projection <> cpTable then
+  begin
+    raise ENyxCollection.Create('Text and density presentation requires a table projection');
+  end;
+  Result := LPresentation;
+end;
+
+function TView.PreparePresentation(const ACapture: INyxCollectionPresentationCapture;
+  const APreferences: TNyxTablePresentationPreferences): INyxPreparedPublication;
+var
+  LLease: INyxCollectionView;
+  LCapture: INyxCollectionPresentationCapture;
+  LColumns: INyxCollectionColumnsCapture;
+  LPreferences: TNyxTablePresentationPreferences;
+  LPreparation: TColumnPreparation;
+  LResult: INyxPreparedPublication;
+begin
+  LLease := Self;
+  LCapture := ACapture;
+  LPreferences := APreferences.Copy;
+  LPreferences.Validate;
+
+  if (LCapture = nil) or not Supports(LCapture, INyxCollectionColumnsCapture, LColumns) then
+  begin
+    raise ENyxCollection.Create('Presentation requires its original canonical table capture');
+  end;
+  LPreparation := TColumnPreparation.Create;
+  LResult := LPreparation;
+  LPreparation.InitializePresentation(Self, LColumns, FColumnPreferences,
+    LPreferences, True);
+  Result := LResult;
+end;
+
+function TView.ConfigurePresentation(const APreferences: TNyxTablePresentationPreferences):
+  INyxCollectionTablePresentation;
+var
+  LLease: INyxCollectionTablePresentation;
+  LPrepared: INyxPreparedPublication;
+begin
+  LLease := Self;
+  LPrepared := PreparePresentation(CapturePresentation, APreferences);
+  PublishNyxGroup([LPrepared]);
+  Result := LLease;
+end;
+
+function TView.PrepareColumnPresentationImport(const ACapture: INyxCollectionColumnsCapture;
+  const AColumns: TNyxColumnPreferences;
+  const APresentation: TNyxTablePresentationPreferences): INyxPreparedPublication;
+var
+  LLease: INyxCollectionView;
+  LPreparation: TColumnPreparation;
+  LResult: INyxPreparedPublication;
+begin
+  LLease := Self;
+  LPreparation := TColumnPreparation.Create;
+  LResult := LPreparation;
+  LPreparation.InitializePresentation(Self, ACapture, AColumns, APresentation,
+    False, True);
+  Result := LResult;
 end;
 
 function ColumnItemText(const AItem: TNyxCollectionItem;
@@ -249,7 +345,7 @@ begin
     Admission above still refuses an older/foreign original; this does not
     recapture authority after a stale launch or expose a public proof factory. }
   LSample.FOriginal := TColumnCapture.Create(LSample.FIdentity,
-    LSample.FColumnSerial, FSpec, LSample.FPreferences);
+    LSample.FColumnSerial, FSpec, LSample.FPreferences, FPresentationPreferences);
   LCount := LSample.FSnapshot.Count;
   RequireCaptureCurrent;
 
@@ -273,6 +369,33 @@ begin
   end;
   RequireCaptureCurrent;
   Result := LSampleLease;
+end;
+
+procedure TColumnPreparation.InitializePresentation(AOwner: TView;
+  const ACapture: INyxCollectionColumnsCapture;
+  const AColumns: TNyxColumnPreferences;
+  const APresentation: TNyxTablePresentationPreferences;
+  AOnlyPresentation: Boolean; AImported: Boolean);
+var
+  LNext: TNyxTablePresentationPreferences;
+begin
+  { Admit the complete value before Writable can invoke an alternate Busy.
+    Initialize then owns this view, reserves its one slot and checks the exact
+    original column identity/serial. No second publication engine is created. }
+  LNext := APresentation.Copy;
+  LNext.Validate;
+  Initialize(AOwner, ACapture, AColumns, Default(TNyxColumnIdentity), AImported);
+  FBeforePresentation := AOwner.FPresentationPreferences.Copy;
+  FNextPresentation := LNext;
+  FApplyPresentation := True;
+  FOnlyPresentation := AOnlyPresentation;
+  FChanged := FChanged or
+    (FBeforePresentation.ToData.ToJSON <> FNextPresentation.ToData.ToJSON);
+
+  if FChanged and (FSerial = High(Integer)) then
+  begin
+    raise ENyxCollection.Create('Table presentation serial is exhausted');
+  end;
 end;
 
 function TView.PrepareSampleAutoSize(const ASample: INyxCollectionColumnSample;
@@ -476,6 +599,7 @@ var
   LPreviousPosition, LNextPosition: array of Integer;
   LIndex, LField, LPrevious, LBarrier, LPeer: Integer;
   LFeature: TNyxColumnLayoutFeature;
+  LTextFields: array of TNyxColumnIdentity;
 
   procedure RequireFeature(AFeature: TNyxColumnLayoutFeature);
   begin
@@ -502,6 +626,30 @@ begin
   FValidationStarted := True;
   LSpec := FOwner.FSpec.Copy;
   LTable := LSpec.TableLayoutPolicy;
+
+  if FApplyPresentation then
+  begin
+    FNextPresentation.Validate;
+
+    if not LSpec.HasPresentationPolicy and
+      (FNextPresentation.HasDensity or (FNextPresentation.Count > 0)) then
+    begin
+      raise ENyxCollection.Create('Runtime text choices require authored presentation opt-in');
+    end;
+    SetLength(LTextFields, LSpec.Count);
+    for LIndex := 0 to LSpec.Count - 1 do
+    begin
+      LTextFields[LIndex] := LSpec.ColumnAt(LIndex).Identity;
+    end;
+    FNextPresentation.ValidateFields(LTextFields);
+
+    if FOnlyPresentation then
+    begin
+      RequireCurrent;
+      FValidated := True;
+      Exit;
+    end;
+  end;
   FNext.Validate;
 
   if not LSpec.HasLayoutControls and
@@ -620,7 +768,16 @@ begin
     if FChanged then
     begin
       FOwner.RetireRowCopy;
-      FOwner.FColumnPreferences := FNext;
+
+      if not FOnlyPresentation then
+      begin
+        FOwner.FColumnPreferences := FNext;
+      end;
+
+      if FApplyPresentation then
+      begin
+        FOwner.FPresentationPreferences := FNextPresentation;
+      end;
       FOwner.FColumnSerial := FSerial + 1;
     end;
     FInstalled := True;
@@ -663,6 +820,8 @@ begin
   FSelection := nil;
   FBefore := Default(TNyxColumnPreferences);
   FNext := Default(TNyxColumnPreferences);
+  FBeforePresentation := Default(TNyxTablePresentationPreferences);
+  FNextPresentation := Default(TNyxTablePresentationPreferences);
   FLease := nil;
 end;
 
@@ -679,6 +838,11 @@ var
   LColumn: TNyxCollectionColumn;
   LIndex, LField, LCount: Integer;
   LImport: IColumnTransferTarget;
+  LPresentationImport: IColumnPresentationTransferTarget;
+  LPresentationSource: INyxCollectionPresentationCapture;
+  LSourcePresentation: TNyxTablePresentationPreferences;
+  LAcceptedPresentation: TNyxTablePresentationPreferences;
+  LTextPreference: TNyxColumnTextPreference;
 begin
   Result := nil;
   LFormer := AFormer;
@@ -695,11 +859,16 @@ begin
   LTarget := LNextColumns.CaptureColumns;
   LSpec := LTarget.Spec;
 
-  if not LSpec.HasLayoutControls then
+  if not LSpec.HasLayoutControls and not LSpec.HasPresentationPolicy then
   begin
     Exit;
   end;
   LPreferences := LSource.Preferences;
+
+  if not LSpec.HasLayoutControls then
+  begin
+    LPreferences := NyxColumnPreferences;
+  end;
   LAccepted := NyxColumnPreferences;
   for LIndex := 0 to LPreferences.Count - 1 do
   begin
@@ -733,12 +902,38 @@ begin
   end;
   SetLength(LOrder, LCount);
   LAccepted := LAccepted.Order(LOrder);
+  LAcceptedPresentation := NyxTablePresentationPreferences;
+
+  if LSpec.HasPresentationPolicy and
+    Supports(LSource, INyxCollectionPresentationCapture, LPresentationSource) then
+  begin
+    LSourcePresentation := LPresentationSource.Preferences;
+
+    if LSourcePresentation.HasDensity then
+    begin
+      LAcceptedPresentation := LAcceptedPresentation.Density(LSourcePresentation.RowDensity);
+    end;
+    for LIndex := 0 to LSourcePresentation.Count - 1 do
+    begin
+      LTextPreference := LSourcePresentation.ColumnAt(LIndex);
+
+      if LSpec.ColumnIndex(LTextPreference.Field) >= 0 then
+      begin
+        LAcceptedPresentation := LAcceptedPresentation.WithColumn(LTextPreference);
+      end;
+    end;
+  end;
   { Rebinding preserves existing choices even if the new authored policy locks
     further user changes. It still prunes incompatible names/families/bounds.
     No interface-to-object cast or raw owner address crosses this boundary. }
   LImport := nil;
 
-  if Supports(LNext, IColumnTransferTarget, LImport) then
+  if Supports(LNext, IColumnPresentationTransferTarget, LPresentationImport) then
+  begin
+    Result := LPresentationImport.PrepareColumnPresentationImport(LTarget, LAccepted,
+      LAcceptedPresentation);
+  end
+  else if Supports(LNext, IColumnTransferTarget, LImport) then
   begin
     Result := LImport.PrepareColumnImport(LTarget, LAccepted);
   end
