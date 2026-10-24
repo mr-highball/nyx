@@ -29,11 +29,20 @@ uses
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
-  { Deterministic UI ticket owns no callback or router. Its state is monotonic
-    after execution; cancellation is observable independently of callback entry. }
+  { Deterministic UI ticket owns no callback or router. Its state stays terminal
+    after execution; cancellation is observable independently of callback entry.
+    An injected Pascal failure is owned until raised; raw platform values are
+    retained only for explicit browser notification-failure qualification. }
   TTicket = class(TInterfacedObject, INyxExecution)
   public
     State: TNyxExecutionStatus;
+    CancelCalls: Integer;
+    Failure: Exception;
+    {$ifdef PAS2JS}
+    RaiseRaw: Boolean;
+    RawFailure: JSValue;
+    {$endif}
+    destructor Destroy; override;
     procedure Cancel;
     function GetCancelled: Boolean;
     function GetStatus: TNyxExecutionStatus;
@@ -150,6 +159,9 @@ var
   GChecks: Integer;
   GCallerEffect: INyxPreparedPublication;
   GRollbackOrder: TNyxText;
+  {$ifdef PAS2JS}
+  GStringifications: Integer;
+  {$endif}
 
 procedure Check(ACondition: Boolean; const AMessage: TNyxText);
 begin
@@ -189,9 +201,34 @@ begin
   end;
 end;
 
-procedure TTicket.Cancel;
+destructor TTicket.Destroy;
 begin
+  Failure.Free;
+  inherited Destroy;
+end;
+
+procedure TTicket.Cancel;
+var
+  LFailure: Exception;
+begin
+  Inc(CancelCalls);
   State := nesCancelled;
+
+  if Failure <> nil then
+  begin
+    LFailure := Failure;
+    Failure := nil;
+    raise LFailure;
+  end;
+  {$ifdef PAS2JS}
+
+  if RaiseRaw then
+  begin
+    asm
+      throw this.RawFailure;
+    end;
+  end;
+  {$endif}
 end;
 
 function TTicket.GetCancelled: Boolean;
@@ -858,6 +895,256 @@ begin
   end;
 end;
 
+procedure PublishFailureMode(AMode: Integer; const AFirst,
+  ASecond: INyxPreparedPublication);
+var
+  LGroup: INyxPreparedPublication;
+begin
+  case AMode of
+    0:
+      begin
+        PublishNyxGroup([AFirst, ASecond]);
+      end;
+    1:
+      begin
+        LGroup := PrepareNyxGroup([AFirst, ASecond]);
+        PublishNyxGroup([LGroup]);
+      end;
+    2:
+      begin
+        { The first receiver withdraws this ONLY caller group reference during
+          Notify. The group's entered lease must finish the second receiver
+          and its own retirement before returning the original failure. }
+        GCallerEffect := PrepareNyxGroup([AFirst, ASecond]);
+        GCallerEffect.Validate;
+        GCallerEffect.Install;
+        GCallerEffect.Notify;
+      end;
+  end;
+end;
+
+{$ifdef PAS2JS}
+function RefuseStringification: JSValue;
+begin
+  Result := Undefined;
+  Inc(GStringifications);
+  raise Exception.Create('Raw notification failures must not be stringified');
+end;
+
+function RawFailure(AKind: Integer): JSValue;
+begin
+  Result := Undefined;
+  case AKind of
+    1:
+      begin
+        Result := Null;
+      end;
+    2:
+      begin
+        Result := False;
+      end;
+    3:
+      begin
+        Result := 0;
+      end;
+    4:
+      begin
+        Result := String(TNyxText('raw / 🌙') + #0 + ' / exact');
+      end;
+    5:
+      begin
+        Result := TJSObject.new;
+        TJSObject(Result)['toString'] := @RefuseStringification;
+      end;
+  end;
+end;
+
+function SameRaw(AFirst, ASecond: JSValue): Boolean;
+begin
+  asm
+    return AFirst === ASecond;
+  end;
+end;
+{$endif}
+
+procedure GroupNotificationFailureCases;
+var
+  LMode: Integer;
+  LKind: Integer;
+  LFirst: TTarget;
+  LSecond: TTarget;
+  LFirstLease: INyxPreparedPublication;
+  LSecondLease: INyxPreparedPublication;
+  LMessage: TNyxText;
+  LExact: Boolean;
+  {$ifdef PAS2JS}
+  LRaw: JSValue;
+  {$endif}
+begin
+  for LMode := 0 to 2 do
+  begin
+    for LKind := 0 to 1 do
+    begin
+      LFirst := TTarget.Create;
+      LFirstLease := LFirst;
+      LSecond := TTarget.Create;
+      LSecondLease := LSecond;
+      LFirst.Ready := True;
+      LSecond.Ready := True;
+      LFirst.ClearCallerOnNotify := LMode = 2;
+      LMessage := '';
+
+      if LKind = 1 then
+      begin
+        LMessage := TNyxText('first / 🌙') + #0 + ' / exact';
+      end;
+      LFirst.Failure := ENyxPublicationNotification.CreateReceiverFailure(LMessage);
+      LSecond.Failure := Exception.Create('Later failure must not replace the first');
+      LExact := False;
+      try
+        PublishFailureMode(LMode, LFirstLease, LSecondLease);
+      except
+        on E: ENyxPublicationNotification do
+        begin
+          LExact := E.HasReceiverMessage and (E.ReceiverMessage = LMessage);
+        end;
+      end;
+      Check(LExact and (LFirst.Notifications = 1) and (LSecond.Notifications = 1),
+        'both direct and nested notifications preserve the exact first Pascal diagnostic');
+      Check((LFirst.Installs = 1) and (LSecond.Installs = 1) and
+        (LFirst.Retirements = 1) and (LSecond.Retirements = 1),
+        'notification failure retains committed participants and retires each original owner');
+      GCallerEffect := nil;
+    end;
+    {$ifdef PAS2JS}
+    for LKind := 0 to 5 do
+    begin
+      LFirst := TTarget.Create;
+      LFirstLease := LFirst;
+      LSecond := TTarget.Create;
+      LSecondLease := LSecond;
+      LFirst.Ready := True;
+      LSecond.Ready := True;
+      LFirst.ClearCallerOnNotify := LMode = 2;
+      LFirst.RaiseRaw := True;
+      LRaw := RawFailure(LKind);
+      LFirst.RawFailure := LRaw;
+      LSecond.Failure := Exception.Create('Later Pascal failure cannot replace raw browser data');
+      LExact := False;
+      try
+        PublishFailureMode(LMode, LFirstLease, LSecondLease);
+      except
+        LExact := SameRaw(JSExceptValue, LRaw);
+      end;
+      Check(LExact and (LFirst.Notifications = 1) and (LSecond.Notifications = 1),
+        'an earlier raw browser failure cannot skip the later receiver or change first identity');
+      Check((LFirst.Retirements = 1) and (LSecond.Retirements = 1) and
+        (GStringifications = 0), 'raw failures retire every owner without external stringification');
+      GCallerEffect := nil;
+    end;
+    {$endif}
+  end;
+end;
+
+procedure EarlierTicketFailureCases;
+var
+  LKind: Integer;
+  LQueue: TQueue;
+  LScheduler: INyxScheduler;
+  LEvents: INyxEvents;
+  LBefore: INyxCancellationScope;
+  LCallback: TCallback;
+  LCallbackLease: INyxEventCallback;
+  LTarget: TTarget;
+  LTargetLease: INyxPreparedPublication;
+  LContext: INyxPreparedPublication;
+  LCommitted: Boolean;
+  LExact: Boolean;
+  {$ifdef PAS2JS}
+  LRaw: JSValue;
+  {$endif}
+begin
+  for LKind := 0 to {$ifdef PAS2JS}6{$else}0{$endif} do
+  begin
+    LQueue := TQueue.Create;
+    LScheduler := LQueue;
+    LEvents := NewNyxEvents(LScheduler);
+    try
+      LCallback := TCallback.Create;
+      LCallbackLease := LCallback;
+      LEvents.On(NyxControlEvents('button'), ntClick).Policy(neUIQueue).Subscribe(LCallbackLease);
+      LEvents.On(NyxControlEvents('button'), ntClick).Subscribe(LCallbackLease);
+      Click(LEvents);
+      LQueue.Drain;
+      Check((LCallback.Calls = 2) and (Length(LQueue.FTickets) = 2),
+        'two genuine old event invocations finish before the retained preview');
+      LBefore := NyxEventGeneration(LEvents);
+      LTarget := TTarget.Create;
+      LTargetLease := LTarget;
+      LTarget.Events := LEvents;
+      LTarget.Value := 'accepted';
+      LTarget.Ready := True;
+      LContext := NewNyxProjectionContextPublication(LEvents, LTargetLease);
+      LContext.Validate;
+      LTarget.Value := 'successor';
+
+      if LKind = 0 then
+      begin
+        LQueue.FStates[0].Failure := ENyxSchedule.Create('First ticket cancellation failed');
+      end;
+      {$ifdef PAS2JS}
+
+      if LKind > 0 then
+      begin
+        LRaw := RawFailure(LKind - 1);
+        LQueue.FStates[0].RaiseRaw := True;
+        LQueue.FStates[0].RawFailure := LRaw;
+      end;
+      {$endif}
+      LQueue.FStates[1].Failure := ENyxSchedule.Create('Second cancellation failed');
+      LExact := False;
+      try
+        PublishNyxViewSections([], LContext, LCommitted);
+      except
+        {$ifdef PAS2JS}
+
+        if LKind > 0 then
+        begin
+          LExact := SameRaw(JSExceptValue, LRaw);
+        end
+        else if isClassInstance(JSExceptValue) and
+          (TObject(JSExceptValue) is ENyxPublicationNotification) then
+        begin
+          LExact := Pos('First ticket cancellation failed',
+            ENyxPublicationNotification(JSExceptValue).ReceiverMessage) > 0;
+        end;
+        {$else}
+        on E: ENyxPublicationNotification do
+        begin
+          LExact := Pos('First ticket cancellation failed', E.ReceiverMessage) > 0;
+        end;
+        {$endif}
+      end;
+      Check(LExact and LCommitted and LBefore.Cancelled and (LTarget.Value = 'successor'),
+        'the first original cancellation failure reports already committed successor data');
+      Check((LQueue.FStates[0].CancelCalls = 1) and (LQueue.FStates[1].CancelCalls = 1) and
+        (LTarget.Notifications = 1) and (LTarget.Retirements = 1),
+        'every old ticket cancellation and the later target notification is attempted exactly once');
+      LContext := nil;
+      {$ifdef PAS2JS}
+      LQueue.FStates[0].RaiseRaw := False;
+      {$endif}
+    finally
+      LContext := nil;
+      LTargetLease := nil;
+      LEvents.Close;
+      LEvents := nil;
+      LQueue.Shutdown;
+      LScheduler := nil;
+    end;
+  end;
+end;
+
 procedure EffectOwnershipAndFailureCases;
 var
   LTarget: TTarget;
@@ -945,6 +1232,8 @@ begin
     CoupledCases;
     PostPreviewFenceCase;
     ReentrantContextCases;
+    GroupNotificationFailureCases;
+    EarlierTicketFailureCases;
     EffectOwnershipAndFailureCases;
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' retained-context publication checks';

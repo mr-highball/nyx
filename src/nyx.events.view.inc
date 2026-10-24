@@ -397,6 +397,10 @@ var
   LIndex: Integer;
   LFailed: Boolean;
   LFailure: TNyxText;
+  {$ifdef PAS2JS}
+  LRaw: Boolean;
+  LRawFailure: JSValue;
+  {$endif}
 begin
 
   if not FInstalled or FNotified then
@@ -409,29 +413,56 @@ begin
   LExecutions := FExecutions;
   LFailed := False;
   LFailure := '';
+  {$ifdef PAS2JS}
+  LRaw := False;
+  LRawFailure := Undefined;
+  {$endif}
   for LIndex := 0 to High(LExecutions) do
   begin
     try
       LExecutions[LIndex].Cancel;
     except
+      {$ifdef PAS2JS}
+
+      if not LFailed then
+      begin
+        LRawFailure := JSExceptValue;
+
+        if isClassInstance(LRawFailure) and (TObject(LRawFailure) is Exception) then
+        begin
+          LFailure := Exception(LRawFailure).Message;
+        end
+        else
+        begin
+          LRaw := True;
+        end;
+      end;
+      LFailed := True;
+      {$else}
       on E: Exception do
       begin
 
         if not LFailed then
         begin
-          {$ifdef PAS2JS}
-          LFailure := E.Message;
-          {$else}
           LFailure := UTF8Encode(UnicodeString(E.Message));
-          {$endif}
         end;
         LFailed := True;
       end;
+      {$endif}
     end;
   end;
 
   if LFailed then
   begin
+    {$ifdef PAS2JS}
+
+    if LRaw then
+    begin
+      asm
+        throw LRawFailure;
+      end;
+    end;
+    {$endif}
     raise ENyxSchedule.Create('Event view installed; old execution cancellation failed: ' +
       LFailure);
   end;

@@ -370,7 +370,9 @@ procedure DispatchNyxTextResult(const AEvents: INyxEvents; AOrigin: TNyxNode;
 
 implementation
 
-{$IFNDEF PAS2JS}
+{$IFDEF PAS2JS}
+uses JS;
+{$ELSE}
 uses
   Classes;
 {$ENDIF}

@@ -84,11 +84,35 @@ procedure PublishNyxGroup(const APrepared: array of INyxPreparedPublication);
 
 implementation
 
+{$ifdef PAS2JS}
+uses JS;
+{$endif}
+
 type
+  { First notification failure is detached from the active catch before any
+    sibling receiver runs. Pascal failures keep the established exact diagnostic
+    text; raw browser values retain identity, including undefined and objects,
+    without stringifying external values. Failed is independent of empty
+    text or the platform value so neither can masquerade as success. }
+  TNotificationFailure = record
+  private
+    FFailed: Boolean;
+    FMessage: TNyxText;
+    {$ifdef PAS2JS}
+    FRaw: Boolean;
+    FValue: JSValue;
+    {$endif}
+  public
+    procedure Capture{$ifdef PAS2JS}(AValue: JSValue){$else}(AException: Exception){$endif};
+    procedure RaiseFailure;
+  end;
+
   { Single-use owner of participant/fence leases for a nested prepared group.
     Validate checks every participant before callback-free readiness and Install;
     retirement releases the complete group after refusal or notification failure.
-    Borrowed model/receiver lifetimes remain each participant's responsibility. }
+    Borrowed model/receiver lifetimes remain each participant's responsibility.
+    Entered notification retains this group and its original participant vector
+    through receivers that withdraw the caller's group reference. }
   TPreparedGroup = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
   private
     FItems: TNyxPreparedPublications;
@@ -106,6 +130,77 @@ type
     procedure Retire;
     procedure CheckReady;
   end;
+
+procedure TNotificationFailure.Capture{$ifdef PAS2JS}(AValue: JSValue){$else}(AException: Exception){$endif};
+var
+  LException: Exception;
+begin
+
+  if FFailed then
+  begin
+    Exit;
+  end;
+  FFailed := True;
+  {$ifdef PAS2JS}
+
+  if not isClassInstance(AValue) or not (TObject(AValue) is Exception) then
+  begin
+    FRaw := True;
+    FValue := AValue;
+    Exit;
+  end;
+  LException := Exception(AValue);
+  {$else}
+  LException := AException;
+  {$endif}
+
+  if (LException is ENyxPublicationNotification) and
+    ENyxPublicationNotification(LException).HasReceiverMessage then
+  begin
+    FMessage := ENyxPublicationNotification(LException).ReceiverMessage;
+  end
+  else
+  begin
+    {$ifdef PAS2JS}
+    FMessage := LException.Message;
+    {$else}
+
+    if LException is ENyxState then
+    begin
+      FMessage := RawByteString(LException.Message);
+      SetCodePage(RawByteString(FMessage), CP_UTF8, False);
+    end
+    else
+    begin
+      FMessage := TNyxText(LException.Message);
+    end;
+    {$endif}
+  end;
+end;
+
+procedure TNotificationFailure.RaiseFailure;
+{$ifdef PAS2JS}
+var
+  LValue: JSValue;
+{$endif}
+begin
+
+  if not FFailed then
+  begin
+    Exit;
+  end;
+  {$ifdef PAS2JS}
+
+  if FRaw then
+  begin
+    LValue := FValue;
+    asm
+      throw LValue;
+    end;
+  end;
+  {$endif}
+  raise ENyxPublicationNotification.CreateReceiverFailure(FMessage);
+end;
 
 constructor ENyxPublicationNotification.CreateReceiverFailure(const AMessage: TNyxText);
 begin
@@ -217,60 +312,35 @@ end;
 procedure TPreparedGroup.Notify;
 var
   LIndex: Integer;
-  LError: TNyxText;
-  LFailed: Boolean;
+  LLease: INyxPreparedPublication;
+  LItems: TNyxPreparedPublications;
+  LFailure: TNotificationFailure;
 begin
+  LLease := Self;
 
   if not FInstalled or FRetired or FNotified then
   begin
     raise ENyxPublication.Create('Prepared group notification requires installed data');
   end;
   FNotified := True;
-  LError := '';
-  LFailed := False;
-  for LIndex := 0 to High(FItems) do
+  LFailure := Default(TNotificationFailure);
+  LItems := FItems;
+  for LIndex := 0 to High(LItems) do
   begin
     try
-      FItems[LIndex].Notify;
+      LItems[LIndex].Notify;
     except
+      {$ifdef PAS2JS}
+      LFailure.Capture(JSExceptValue);
+      {$else}
       on LException: Exception do
       begin
-
-        if not LFailed then
-        begin
-          LFailed := True;
-
-          if (LException is ENyxPublicationNotification) and
-            ENyxPublicationNotification(LException).HasReceiverMessage then
-          begin
-            LError := ENyxPublicationNotification(LException).ReceiverMessage;
-          end
-          else
-          begin
-            {$IFDEF PAS2JS}
-            LError := LException.Message;
-            {$ELSE}
-
-            if LException is ENyxState then
-            begin
-              LError := RawByteString(LException.Message);
-              SetCodePage(RawByteString(LError), CP_UTF8, False);
-            end
-            else
-            begin
-              LError := TNyxText(LException.Message);
-            end;
-            {$ENDIF}
-          end;
-        end;
+        LFailure.Capture(LException);
       end;
+      {$endif}
     end;
   end;
-
-  if LFailed then
-  begin
-    raise ENyxPublicationNotification.CreateReceiverFailure(LError);
-  end;
+  LFailure.RaiseFailure;
 end;
 
 procedure TPreparedGroup.Retire;
@@ -299,14 +369,12 @@ procedure PublishNyxGroup(const APrepared: array of INyxPreparedPublication);
 var
   LIndex: Integer;
   LPrevious: Integer;
-  LError: TNyxText;
-  LHasError: Boolean;
+  LFailure: TNotificationFailure;
   LPrepared: array of INyxPreparedPublication;
   LFences: array of INyxPublicationReadiness;
   LFence: INyxPublicationReadiness;
 begin
-  LError := '';
-  LHasError := False;
+  LFailure := Default(TNotificationFailure);
 
   if (Length(APrepared) = 0) or (Length(APrepared) > 2048) then
   begin
@@ -362,37 +430,14 @@ begin
       try
         LPrepared[LIndex].Notify;
       except
+        {$ifdef PAS2JS}
+        LFailure.Capture(JSExceptValue);
+        {$else}
         on LException: Exception do
         begin
-
-          if not LHasError then
-          begin
-            LHasError := True;
-
-            if (LException is ENyxPublicationNotification) and
-              ENyxPublicationNotification(LException).HasReceiverMessage then
-            begin
-              LError := ENyxPublicationNotification(LException).ReceiverMessage;
-            end
-            else
-            begin
-              {$IFDEF PAS2JS}
-              LError := LException.Message;
-              {$ELSE}
-
-              if LException is ENyxState then
-              begin
-                LError := RawByteString(LException.Message);
-                SetCodePage(RawByteString(LError), CP_UTF8, False);
-              end
-              else
-              begin
-                LError := TNyxText(LException.Message);
-              end;
-              {$ENDIF}
-            end;
-          end;
+          LFailure.Capture(LException);
         end;
+        {$endif}
       end;
     end;
   finally
@@ -406,10 +451,7 @@ begin
     end;
   end;
 
-  if LHasError then
-  begin
-    raise ENyxPublicationNotification.CreateReceiverFailure(LError);
-  end;
+  LFailure.RaiseFailure;
 end;
 
 end.

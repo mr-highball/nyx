@@ -481,6 +481,24 @@ adds the actual nested-getter editor assertion before the next qualification.
 The next disjoint range packet reuses existing selected-page TSV ordering rather
 than creating another serializer. Root has not changed LAN/Studio services.
 
+The notification prerequisite is now repaired and qualified in
+publication-notification01. Direct/nested prepared groups preserve their first
+failure while attempting every original receiver; nested notification owns its
+entered group/vector through caller withdrawal. Raw browser undefined/null/false/
+zero/text/object failures retain exact identity without calling external string
+conversion. Real event-view notification also attempts every captured old-ticket
+cancellation, so an earlier failure cannot skip a later target notification.
+Pascal empty and supplementary Unicode/NUL diagnostics retain their original
+meaning. The consumer passes54 native checks with a complete693/693 clean heap
+and110 actual browser checks, logs empty. Unchanged event publication passes58
+on each actual target with a complete1189/1189 native heap. All four current
+source pins and six original/staged browser artifact pairs reverify unchanged.
+Both compiler/runtime jobs are joined; exact host52896 is stopped/joined,
+port19150 has no listener and tab115 is closed. This resolves the earlier raw
+notification gap; it does not qualify scheduler descendants, physical form
+adoption or whole native Studio performance. Independent helper review finds
+no further concrete defect in these notification paths.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

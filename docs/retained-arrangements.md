@@ -90,18 +90,27 @@ This keeps its participant vector alive through target and scheduler callouts;
 retirement during validation refuses before preview, while notification
 retirement preserves already installed data.
 
-This portable publication consumer passes 39 native checks with a complete clean
-heap and 41 actual browser checks with empty logs; the browser adds two raw throw
-cases. The unchanged event-publication regression passes 58 per actual target.
+This portable publication consumer now passes 54 native checks with a complete
+clean heap and 110 actual browser checks with empty logs. The browser additionally
+checks raw throw values, including undefined, null, false, zero and an object
+whose string conversion refuses. The unchanged event-publication regression
+passes 58 per actual target.
 These use real routers/coordinators and injected target phases. Studio/renderer
 adoption, actual physical-input/focus and worker integration, and whole-Inspector
 performance remain open. The maintained `retained-arrangement` target includes
 both portable form and retained-context publication consumers.
 
-Before physical adoption, the generic prepared-group notification loop also
-needs qualification for a raw JavaScript failure from an earlier event-ticket
-cancellation. The current raw assertions cover failure from the last target;
-they do not establish independent later notification after that earlier failure.
+The generic prepared-group notification loop attempts every original receiver
+after an earlier receiver fails. Nested groups retain their original participant
+vector through caller reference withdrawal. Pascal diagnostics preserve exact
+empty or Unicode text; a raw browser failure retains its original value and
+identity without string conversion. Event-view retirement likewise attempts
+every captured execution cancellation before reporting its first failure. The
+consumer exercises both direct/nested groups and two actual completed router
+invocations whose cancellation fails before a later target notification.
+Installed data stays committed and all adopted preparations retire. This resolves
+the earlier notification gap; descendant-work admission and actual physical
+renderer/Studio adoption remain prerequisites.
 
 The portable `TNyxNode.ArrangeLike` boundary prepares every owner array and actual
 managed implementation anchor before publication. It adopts no candidate node.
