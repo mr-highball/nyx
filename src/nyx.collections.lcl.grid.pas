@@ -40,6 +40,10 @@ type
     portable outcome/RAW/diagnostic facts from the same pure presentation read. }
   TNyxGridDisplayReader = function(AColumn, ARow: Integer;
     out APresentation: TNyxValuePresentation): TNyxText of object;
+  { Borrowed pure range-paint receiver. It reads copied page bounds/typed field
+    membership only, with no dataset/widget getter, validation or publication.
+    Its mount detaches it before retiring either receiver or physical grid. }
+  TNyxGridCellRangeReader = function(AColumn, ARow: Integer): Boolean of object;
   { Pure per-cell edit admission for arranged data surfaces. Like the text
     reader this borrows its receiver and must neither publish nor dispose it. }
   TNyxGridEditReader = function(AColumn, ARow: Integer): Boolean of object;
@@ -211,6 +215,7 @@ type
     { Paint-only accepted display. Cells and LCL's edit/validation path retain
       their canonical reader; formatted labels can never become editor input. }
     FDisplayReader: TNyxGridDisplayReader;
+    FCellRangeReader: TNyxGridCellRangeReader;
     FEditReader: TNyxGridEditReader;
     FValidationEpoch: INyxGridValidationEpoch;
     FValidationActivity: INyxGridValidationActivity;
@@ -336,6 +341,8 @@ type
       exclusive receiver; no managed backreference or ownership transfer occurs. }
     procedure AttachReader(AReader: TNyxGridTextReader);
     procedure AttachDisplayReader(AReader: TNyxGridDisplayReader);
+    procedure ObserveCellRange(AReader: TNyxGridCellRangeReader);
+    function CellRangeSelected(AColumn, ARow: Integer): Boolean;
     { The same paint-only projection is observable by native target consumers.
       It borrows the exclusive mount receiver until DetachReader retires it. }
     function DisplayCellText(AColumn, ARow: Integer): TNyxText;
@@ -1430,6 +1437,11 @@ begin
 
   if LSurface = nil then
   begin
+
+    if CellRangeSelected(AColumn, ARow) then
+    begin
+      Include(AState, gdSelected);
+    end;
     inherited DoPrepareCanvas(AColumn, ARow, AState);
     Exit;
   end;
@@ -1441,6 +1453,11 @@ begin
     if not LSurface.Current then
     begin
       Exit;
+    end;
+
+    if CellRangeSelected(AColumn, ARow) then
+    begin
+      Include(AState, gdSelected);
     end;
     GetSelectedState(AState, LSelected);
 
@@ -2999,7 +3016,23 @@ procedure TNyxCollectionStringGrid.DetachReader;
 begin
   FReader := nil;
   FDisplayReader := nil;
+  FCellRangeReader := nil;
   FOverrides := nil;
+end;
+
+procedure TNyxCollectionStringGrid.ObserveCellRange(AReader: TNyxGridCellRangeReader);
+begin
+  FCellRangeReader := AReader;
+end;
+
+function TNyxCollectionStringGrid.CellRangeSelected(AColumn, ARow: Integer): Boolean;
+begin
+  Result := False;
+
+  if Assigned(FCellRangeReader) then
+  begin
+    Result := FCellRangeReader(AColumn, ARow);
+  end;
 end;
 
 procedure TNyxCollectionStringGrid.AttachDisplayReader(AReader: TNyxGridDisplayReader);

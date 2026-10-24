@@ -778,10 +778,17 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       $nyxWorkbenchCompanionFlags = @($nyxWorkbenchFlags | Where-Object { $_ -ne '-B' })
       Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
         'tests/nyx_popover_open_lifetime_tests.lpr'))
+      foreach ($nyxWorkbenchCopyConsumer in @('nyx_collection_range_tests',
+          'nyx_collection_clipboard_commands_tests')) {
+        Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
+          "tests/$nyxWorkbenchCopyConsumer.lpr"))
+      }
       $nyxWorkbenchNativeActivation = $nyxWorkbenchPlatform -match '-win32$'
       if ($nyxWorkbenchNativeActivation) {
         Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
           'tests/nyx_native_column_activation_controls.lpr'))
+        Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
+          'tests/nyx_collection_clipboard_controls.lpr'))
       }
     }
     if ($Target -eq 'query-authoring' -and -not $QueryAuthoringDiagnostic) {
@@ -840,6 +847,23 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       $nyxWorkbenchLifetimeExit = $LASTEXITCODE
       Get-Content -LiteralPath $nyxWorkbenchLifetimeLog
       if ($nyxWorkbenchLifetimeExit -ne 0) { throw 'Actual popover open-lifetime checks failed' }
+      $nyxWorkbenchCopyConsumers = @('nyx_collection_range_tests',
+        'nyx_collection_clipboard_commands_tests')
+      if ($nyxWorkbenchNativeActivation) {
+        # This no-effect host consumer owns its actual window size. It does not
+        # claim a second measured viewport merely from a duplicate invocation.
+        $nyxWorkbenchCopyConsumers += 'nyx_collection_clipboard_controls'
+      }
+      foreach ($nyxWorkbenchCopyConsumer in $nyxWorkbenchCopyConsumers) {
+        $nyxWorkbenchCopyLog = Join-Path $nyxWorkbenchRoot ($nyxWorkbenchCopyConsumer + '.log')
+        & (Join-Path $nyxWorkbenchNative ($nyxWorkbenchCopyConsumer +
+          $nyxWorkbenchSuffix)) *> $nyxWorkbenchCopyLog
+        $nyxWorkbenchCopyExit = $LASTEXITCODE
+        Get-Content -LiteralPath $nyxWorkbenchCopyLog
+        if ($nyxWorkbenchCopyExit -ne 0) {
+          throw ('Actual collection range/copy checks failed: ' + $nyxWorkbenchCopyConsumer)
+        }
+      }
     }
     if ($Target -eq 'query-authoring' -and $QueryAuthoringDiagnostic) {
       Write-Host 'Native1280 diagnostic only;390 and matching browser compilation remain required.'
@@ -895,7 +919,8 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
     }
     if ($Target -eq 'query-workbench') {
       foreach ($nyxWorkbenchCompanion in @('nyx_column_activation_controls',
-          'nyx_popover_open_lifetime_tests')) {
+          'nyx_popover_open_lifetime_tests', 'nyx_collection_range_tests',
+          'nyx_collection_clipboard_commands_tests', 'nyx_collection_clipboard_controls')) {
         Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
           '-Fusrc', '-Futests', '-Fustudio', '-Fisrc',
           "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchCompanion.lpr")

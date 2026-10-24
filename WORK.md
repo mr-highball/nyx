@@ -633,6 +633,48 @@ preview boundary, not actual retained-form/Inspector integration or whole-editor
 performance. Root next integrates that boundary into real renderers and Studio;
 Lil' Scooty qualifies mounted ranges before their keyboard/discovery packet.
 
+Mounted ranges now expose an explicitly enabled public selection facet on the
+ordinary table mount. Selection retains exact source/page/visible-field facts,
+reserves before foreign getters and leaves ordinary row selection unchanged.
+Native paint reads cached row bounds/field bits across actual start/end panes;
+browser cells expose selected range paint/accessibility state. The canonical
+Ctrl+C route uses the existing controller/request slot, original input witness
+and exact RAW range payload. Stale scope, filtering, suspension, disablement and
+retirement cannot redirect a returning command to a newer selection or editor.
+
+The helper's mounted09 handoff retains native range47/command127 qualification
+from fixed04 and actual native controls393 from09, all with complete clean heaps
+and zero compiler warnings. Native controls allocate/free7866394 blocks exactly.
+Root independently executes range47, command127 and real browser controls465 at
+preflighted1280x900 and390x900, with empty warning/error logs. All nine09 browser
+artifacts are byte-identical to the executed07 artifacts, with an explicit saved
+equality receipt. All14 current Pascal pins match the source-ready receipt.
+Root reviews the optional contracts, source admission, shared request slot,
+target paint/key routes, retirement and actual new control assertions without
+finding another concrete defect. New assertions retain the original332 native/
+415 browser control checks and original90 command checks.
+
+Earlier mounted01/02 compiler declaration/call errors,03/04/05 native header
+lookup failures and06 staging-source mismatch remain retained. Final native
+locators use the actual DisplayCellText header and distinguish query suffixes
+and pin-reservation spacers; no production predicate is weakened to match a
+test. All helper jobs and native UI readers are joined. Root's exact temporary
+host40584 is stopped, wrapper3310 joins0, tab120 is closed and viewport override
+is reset. All12 original/staged artifact pairs reverify unchanged, including
+the separate form04 consumer. No LAN/Studio service or MCP configuration changes.
+
+The maintained query-workbench target compiles/runs/stages the existing range,
+command and actual control companions; its current orchestration parses cleanly.
+The full target is not rerun by this slice. This is typed runtime range setup
+and synthetic input with injected clipboard authority, not gestures, native
+two-width/visual-quality or actual OS clipboard acceptance. The helper continues
+prepared keyboard selection/navigation and managed menu discoverability. Root's
+separate form04 consumer passes34 native checks with a clean100787/100787 heap
+and30 actual browser checks, but subsequent alias repairs remain unqualified
+and actual Studio adoption is still pending. The range snapshot excludes those
+current event/form changes, which require joint qualification. All original
+task03/W1/W2 criteria and whole native Studio performance remain open.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

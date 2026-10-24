@@ -29,7 +29,8 @@ uses
   nyx.collections.query, nyx.collections.arrangement, nyx.collections.mount,
   nyx.collections.clipboard, nyx.collections.clipboard.actions,
   nyx.collections.clipboard.commands, nyx.collections.representation,
-  nyx.collections.draft,
+  nyx.collections.draft, nyx.collections.range, nyx.collections.range.actions,
+  nyx.collections.range.commands,
   nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events
   {$ifdef PAS2JS}, Web{$endif};
 
@@ -37,6 +38,20 @@ type
   { Injected host cleanup may synchronously admit a newer canonical command;
     no event loop, real clipboard or timing assumption is involved. }
   TEndingCallback = procedure of object;
+
+  { A foreign immutable-intent facade clears the real accepted selection from
+    its readiness getter. The command must keep its original reserved input
+    and reject the returned stale scope rather than recapturing a fresh range. }
+  TRangeIntentProxy = class(TInterfacedObject, INyxCollectionCellRangeIntent)
+  public
+    Inner: INyxCollectionCellRangeIntent;
+    ClearOnRead: INyxCollectionCellRangeSelection;
+    function GetCapture: INyxCollectionCellRangeCapture;
+    function GetSource: INyxCollectionSnapshot;
+    function GetPage: INyxCollectionSnapshot;
+    function GetReadiness: INyxCancellationReadiness;
+    function GetCurrent: Boolean;
+  end;
 
   { Explicit async receiver ownership is independent of the fixture/controller.
     Counts prove that captured-write arbitration releases the old receiver and
@@ -105,6 +120,30 @@ type
       AReply: TNyxClipboardWriteReply): INyxClipboardWriteRequest;
   end;
 
+  { Snapshot getter reentry is an ordinary alternate-source callout, not a
+    mutation of the target's callback-free final readiness contract. }
+  TRangeSourceAction = (rsaNone, rsaClear, rsaNested);
+
+  { Transparent source delegates data/subscriptions to the actual store. The
+    optional borrowed callback runs once before returning its current snapshot. }
+  TRangeSource = class(TInterfacedObject, INyxCollection)
+  public
+    Inner: INyxCollection;
+    OnSnapshot: TEndingCallback;
+    function Snapshot: INyxCollectionSnapshot;
+    function Append(const AItem: TNyxCollectionItem): INyxCollection;
+    function Insert(AIndex: Integer; const AItem: TNyxCollectionItem): INyxCollection;
+    function Remove(const ARef: TNyxItemRef): INyxCollection;
+    function Move(const ARef: TNyxItemRef; AIndex: Integer): INyxCollection;
+    function Update(const AItem: TNyxCollectionItem): INyxCollection;
+    function Replace(const AItem: TNyxCollectionItem): INyxCollection;
+    procedure Apply(const AEdits: array of TNyxCollectionEdit; AExpectedRevision: Integer = -1);
+    procedure Assign(const ASource: INyxCollectionSnapshot; AExpectedRevision: Integer = -1);
+    function Clone: INyxCollection;
+    function Subscribe(AObserver: TNyxCollectionObserver;
+      AValidator: TNyxCollectionValidator = nil): INyxCollectionSubscription;
+  end;
+
   { Real shared mount exercises staged/ancestor/disabled/refresh/suspension
     admission independently of target widgets. Render uses the public command
     surface to attempt reentry while its actual refresh shield is held. }
@@ -112,9 +151,13 @@ type
   public
     ProbeOnRender: Boolean;
     ProbeRefused: Boolean;
+    RangeProbeRefused: Boolean;
+    SourceAction: TRangeSourceAction;
+    NestedRangeAdmitted: Boolean;
     Item: TNyxItemRef;
     Field: TNyxColumnIdentity;
     procedure SuspendInput(AValue: Boolean);
+    procedure ReadSource;
   protected
     procedure RenderDataset; override;
     procedure DetachTarget; override;
@@ -249,6 +292,42 @@ end;
 function TReentrantValue.GetDomain: TNyxValueDomain;
 begin
   Result := Value.Domain;
+end;
+
+function TRangeIntentProxy.GetCapture: INyxCollectionCellRangeCapture;
+begin
+  Result := Inner.Capture;
+end;
+
+function TRangeIntentProxy.GetSource: INyxCollectionSnapshot;
+begin
+  Result := Inner.Source;
+end;
+
+function TRangeIntentProxy.GetPage: INyxCollectionSnapshot;
+begin
+  Result := Inner.Page;
+end;
+
+function TRangeIntentProxy.GetReadiness: INyxCancellationReadiness;
+var
+  LInner: INyxCollectionCellRangeIntent;
+  LSelection: INyxCollectionCellRangeSelection;
+begin
+  LInner := Inner;
+  LSelection := ClearOnRead;
+  ClearOnRead := nil;
+
+  if LSelection <> nil then
+  begin
+    LSelection.Clear;
+  end;
+  Result := LInner.Readiness;
+end;
+
+function TRangeIntentProxy.GetCurrent: Boolean;
+begin
+  Result := Inner.Current;
 end;
 
 destructor TCapturedReply.Destroy;
@@ -518,6 +597,96 @@ begin
   LCommand.Complete(True);
 end;
 
+function TRangeSource.Snapshot: INyxCollectionSnapshot;
+var
+  LLease: INyxCollection;
+  LCall: TEndingCallback;
+begin
+  LLease := Self;
+  LCall := OnSnapshot;
+  OnSnapshot := nil;
+
+  if Assigned(LCall) then
+  begin
+    LCall;
+  end;
+  Result := Inner.Snapshot;
+end;
+
+function TRangeSource.Append(const AItem: TNyxCollectionItem): INyxCollection;
+begin
+  Result := Inner.Append(AItem);
+end;
+
+function TRangeSource.Insert(AIndex: Integer; const AItem: TNyxCollectionItem): INyxCollection;
+begin
+  Result := Inner.Insert(AIndex, AItem);
+end;
+
+function TRangeSource.Remove(const ARef: TNyxItemRef): INyxCollection;
+begin
+  Result := Inner.Remove(ARef);
+end;
+
+function TRangeSource.Move(const ARef: TNyxItemRef; AIndex: Integer): INyxCollection;
+begin
+  Result := Inner.Move(ARef, AIndex);
+end;
+
+function TRangeSource.Update(const AItem: TNyxCollectionItem): INyxCollection;
+begin
+  Result := Inner.Update(AItem);
+end;
+
+function TRangeSource.Replace(const AItem: TNyxCollectionItem): INyxCollection;
+begin
+  Result := Inner.Replace(AItem);
+end;
+
+procedure TRangeSource.Apply(const AEdits: array of TNyxCollectionEdit; AExpectedRevision: Integer);
+begin
+  Inner.Apply(AEdits, AExpectedRevision);
+end;
+
+procedure TRangeSource.Assign(const ASource: INyxCollectionSnapshot; AExpectedRevision: Integer);
+begin
+  Inner.Assign(ASource, AExpectedRevision);
+end;
+
+function TRangeSource.Clone: INyxCollection;
+begin
+  Result := Inner.Clone;
+end;
+
+function TRangeSource.Subscribe(AObserver: TNyxCollectionObserver;
+  AValidator: TNyxCollectionValidator): INyxCollectionSubscription;
+begin
+  Result := Inner.Subscribe(AObserver, AValidator);
+end;
+
+procedure TTestMount.ReadSource;
+var
+  LAction: TRangeSourceAction;
+begin
+  LAction := SourceAction;
+  SourceAction := rsaNone;
+  case LAction of
+    rsaNone:
+      begin
+        { An ordinary read has no application reentry. }
+      end;
+    rsaClear:
+      begin
+        ClearCellRange;
+      end;
+    rsaNested:
+      begin
+        NestedRangeAdmitted := SelectCells(NyxCollectionCellIdentity(Item, Field),
+          NyxCollectionCellIdentity(Item, Field));
+      end;
+  end;
+end;
+
 procedure TTestMount.SuspendInput(AValue: Boolean);
 begin
   SetCellEditsSuspended(AValue);
@@ -543,6 +712,8 @@ begin
   LCommand.Prepare;
   ProbeRefused := not LCommand.Current and (LCommand.Payload = nil);
   LCommand.Retire;
+  RangeProbeRefused := not SelectCells(NyxCollectionCellIdentity(Item, Field),
+    NyxCollectionCellIdentity(Item, Field));
 end;
 
 procedure TTestMount.DetachTarget;
@@ -800,6 +971,182 @@ begin
   end;
 end;
 
+{ Ranges share the actual existing controller/host slot with ordinary RAW and
+  represented commands. The selected rectangle is independent of row selection;
+  only immutable values and typed generation/readiness are supplied here. }
+procedure RangeArbitration;
+var
+  LFixture: TFixture;
+  LSelection: INyxCollectionCellRangeSelection;
+  LIntent: INyxCollectionCellRangeIntent;
+  LRangeInput: INyxCollectionClipboardRangeInput;
+  LCommand: INyxCollectionClipboardRangeCommand;
+  LRawCommand: INyxCollectionClipboardCommand;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LFields: TNyxCollectionClipboardFields;
+  LRowSelection: TNyxCollectionSelectionSnapshot;
+  LOld: INyxClipboardWriteRequest;
+  LOldObject: TWrite;
+  LProxy: TRangeIntentProxy;
+  LProxyLease: INyxCollectionCellRangeIntent;
+  LBefore: Integer;
+  LReplies: Integer;
+  LRefused: Boolean;
+  LExpected: TNyxText;
+
+  procedure SelectRange;
+  begin
+    LCapture := LColumns.CaptureColumns;
+    LIntent := LSelection.Select(LFixture.Store.Snapshot, LFixture.View.Snapshot,
+      LFields, NyxCollectionCellIdentity(LFixture.ItemB, LFields[1]),
+      NyxCollectionCellIdentity(LFixture.ItemA, LFields[0]), LCapture.Serial,
+      True, nccleLF, TNyxCollectionClipboardLimits.Defaults);
+  end;
+
+  procedure PrepareRange;
+  begin
+    LCommand := LRangeInput.BeginRangeInput;
+    LCommand.ResolveRange(LIntent);
+    LCommand.Prepare;
+  end;
+
+begin
+  LFixture := TFixture.Create;
+  LSelection := NewNyxCollectionCellRangeSelection;
+  try
+    LColumns := NyxCollectionColumns(LFixture.View);
+    SetLength(LFields, 2);
+    LFields[0] := LFixture.Field;
+    LFields[1] := NyxColumnIdentity(NyxIntegerField('Score'));
+    SelectRange;
+    LRowSelection := LFixture.View.Selection.Snapshot;
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardRangeInput, LRangeInput),
+      'ordinary controller exposes optional range reservation without changing its existing interface');
+    PrepareRange;
+    Check((LCommand.Payload = nil) and not LCommand.Current and LCommand.DispatchCurrent,
+      'existing default permissions do not implicitly enable cell-range copying');
+    LCommand.Complete(True);
+    Check((LFixture.Host.Writes = 0) and LFixture.View.Selection.Snapshot.SameState(LRowSelection),
+      'disallowed range still claims its canonical envelope without changing row selection or entering host');
+    LFixture.Restrict([nccaCell, nccaSelectedSource, nccaSelectedPage, nccaCellRange]);
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardRangeInput, LRangeInput),
+      'explicit range permission retains the same controller optional port');
+    PrepareRange;
+    LExpected := 'Name' + #9 + 'Score' + #10 + '"' + CText + '"' + #9 + '1' + #10 + 'B' + #9 + '2';
+    Check(LCommand.Current and (LCommand.Payload.Text = LExpected) and
+      (LCommand.Payload.RowCount = 2) and (LCommand.Payload.FieldCount = 2) and
+      (LCommand.Payload.ItemAt(0).ID = LFixture.ItemA.ID) and
+      (LCommand.Payload.CellValue(0, 0).TextValue = CText),
+      'prepared range reuses bounded exact RAW TSV including Unicode NUL and embedded newlines');
+    LFixture.View.SetSelection([LFixture.ItemB], LFixture.ItemB, LFixture.ItemB);
+    Check(LCommand.Current, 'ordinary row-selection changes do not redefine an explicit cell rectangle');
+    LCommand.Complete(True);
+    Check((LFixture.Host.Writes = 1) and (LFixture.Host.Text = LExpected) and
+      (LFixture.LastPayload.RowCount = 2),
+      'accepted range transfers once through the existing RAW observer and physical slot');
+    PrepareRange;
+    LBefore := LFixture.Host.Writes;
+    LCommand.Complete(False);
+    Check((LFixture.Host.Writes = LBefore) and LIntent.Current,
+      'consumed canonical range default leaves accepted selection and clipboard authority untouched');
+    PrepareRange;
+    LSelection.Clear;
+    Check(not LCommand.Current and LCommand.DispatchCurrent,
+      'selection retirement refuses the old default while ordinary original key delivery remains current');
+    LCommand.Complete(True);
+    Check(LFixture.Host.Writes = LBefore, 'retired range cannot recapture new row selection at completion');
+    SelectRange;
+    LProxy := TRangeIntentProxy.Create;
+    LProxyLease := LProxy;
+    LProxy.Inner := LIntent;
+    LProxy.ClearOnRead := LSelection;
+    LCommand := LRangeInput.BeginRangeInput;
+    LCommand.ResolveRange(LProxyLease);
+    LCommand.Prepare;
+    Check(not LCommand.Current and (LCommand.Payload = nil) and (LSelection.Selection = nil),
+      'foreign readiness getter clearing the selection cannot lend its stale intent newer authority');
+    LCommand.Complete(True);
+    Check(LFixture.Host.Writes = LBefore, 'stale getter reservation enters no clipboard host');
+    SelectRange;
+    PrepareRange;
+    Inc(LFixture.Input.EpochValue);
+    LCommand.Complete(True);
+    Check(LFixture.Host.Writes = LBefore,
+      'original input epoch still fences range commands across disable-style ABA');
+    LFixture.Host.InlineCompletion := False;
+    LRawCommand := LFixture.Cell;
+    LRawCommand.Complete(True);
+    LOld := LFixture.Host.LastLease;
+    LOldObject := LFixture.Host.Last;
+    LBefore := LFixture.Host.Endings;
+    LReplies := LFixture.Replies;
+    PrepareRange;
+    LCommand.Complete(True);
+    Check((LFixture.Host.Endings = LBefore + 1) and (LFixture.Host.Text = LExpected),
+      'fresh range displaces a pending cell write in the same slot');
+    LOldObject.Finish;
+    Check(LFixture.Replies = LReplies, 'late displaced cell completion cannot reply into a range write');
+    LOld := nil;
+    LSelection.Clear;
+    LFixture.Host.Last.Finish;
+    Check(LFixture.Replies = LReplies,
+      'detached pending range host scope loses receiver authority when its exact selection retires');
+    SelectRange;
+    PrepareRange;
+    LCommand.Complete(True);
+    LBefore := LFixture.Host.Endings;
+    LRawCommand := LFixture.Cell;
+    LRawCommand.Complete(True);
+    Check((LFixture.Host.Endings = LBefore + 1) and (LFixture.Host.Text = CText),
+      'ordinary accepted cell copy can supersede range output without a second clipboard controller');
+    LFixture.Commands.CancelPending;
+    LFixture.Host.InlineCompletion := True;
+    LFixture.ThrowReply := True;
+    PrepareRange;
+    LRefused := False;
+    LReplies := LFixture.Replies;
+    try
+      LCommand.Complete(True);
+    except
+      on E: Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFixture.Replies = LReplies + 1) and
+      (LFixture.Commands.Phase = nccpCompleted) and (LFixture.LastPayload.Text = LExpected),
+      'inline range observer failure propagates once after terminal completion without replay');
+    LFixture.ThrowReply := False;
+    PrepareRange;
+    LBefore := LFixture.Host.Writes;
+    LColumns.ConfigureColumns(NyxColumnPreferences.WithColumn(
+      NyxColumnPreference(LFields[0]).Width(200)));
+    LCommand.Complete(True);
+    Check(LFixture.Host.Writes = LBefore,
+      'changed actual column preference serial refuses the original prepared rectangle');
+    PrepareRange;
+    Check(not LCommand.Current and (LCommand.Payload = nil),
+      'retained old range column provenance cannot become a fresh command after rearrangement');
+    SelectRange;
+    PrepareRange;
+    LFixture.Filter;
+    LCommand.Complete(True);
+    Check((LFixture.Host.Writes = LBefore) and (LIntent.Capture.Payload.Text = LExpected),
+      'filter replacement cannot retarget an old range or change retained RAW bytes');
+  finally
+    LSelection.Revoke;
+    LCommand := nil;
+    LRawCommand := nil;
+    LRangeInput := nil;
+    LOld := nil;
+    LProxyLease := nil;
+    LColumns := nil;
+    LCapture := nil;
+    LFixture.Free;
+  end;
+end;
+
 procedure MountedAdmission;
 var
   LFixture: TFixture;
@@ -812,6 +1159,8 @@ var
   LCommands: INyxCollectionClipboardCommands;
   LCommand: INyxCollectionClipboardCommand;
   LInput: INyxCollectionInputLifetime;
+  LRanges: INyxCollectionCellRangeMount;
+  LRange: INyxCollectionCellRangeIntent;
   LBefore: Integer;
   LRefused: Boolean;
 
@@ -827,6 +1176,9 @@ var
       Supports(LMount, INyxCollectionClipboardMount, LClipboard),
       'real mount exposes optional original-input and clipboard facets');
     LInput := LAdmission.GetInputLifetime;
+    Check(Supports(LMount, INyxCollectionCellRangeMount, LRanges),
+      'actual shared mount exposes independent opt-in typed range selection');
+    LRanges.ConfigureCellRange(True);
     LClipboard.ConfigureClipboard(LFixture.HostLease, LFixture.Events,
       LFixture.Scheduler, TNyxCollectionClipboardOptions.Defaults);
     LCommands := LClipboard.ClipboardCommands;
@@ -837,6 +1189,8 @@ var
     LCommand := nil;
     LCommands := nil;
     LClipboard := nil;
+    LRange := nil;
+    LRanges := nil;
     LAdmission := nil;
     LMount := nil;
   end;
@@ -849,6 +1203,9 @@ begin
       NyxCollectionView(LFixture.Key).Column(NyxTextField('Name'), 'Name'), cpTable);
     LGate := NewNyxCollectionInputGate;
     Mount(ncipStaged, LGate);
+    Check(not LRanges.SelectCells(NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field),
+      NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field)),
+      'explicit range mode cannot select through unadmitted local or ancestor input');
     LCommand := LCommands.BeginCell(LFixture.ItemA, LFixture.Field);
     LCommand.Prepare;
     LCommand.Complete(True);
@@ -858,6 +1215,10 @@ begin
     Check(not LInput.Ready, 'local installation cannot bypass a staged original ancestor');
     LGate.Install;
     Check(LInput.Ready, 'same original local/ancestor owners become ready after both actual installs');
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field),
+      NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field)),
+      'actual admitted ordinary-layout table captures its exact page rectangle');
+    LRange := LRanges.CellRange;
     LCommand := LCommands.BeginCell(LFixture.ItemA, LFixture.Field);
     LCommand.Prepare;
     LCommand.Complete(True);
@@ -866,11 +1227,15 @@ begin
     LMount.Refresh;
     Check(LObject.ProbeRefused and LInput.Ready,
       'refresh callback reentry cannot prepare a command while the actual input shield is held');
+    Check(LObject.RangeProbeRefused and LRange.Current,
+      'refresh shield refuses nested range admission without replacing accepted range facts');
     LObject.ProbeOnRender := False;
     LCommand := LCommands.BeginCell(LFixture.ItemA, LFixture.Field);
     LCommand.Prepare;
     LMount.SetInteraction(False, False);
     LMount.SetInteraction(True, False);
+    Check(not LRange.Current and (LRanges.CellRange = nil),
+      'disabled ABA retires the original mounted range even when data stays unchanged');
     Check(not LCommand.Current and LCommand.DispatchCurrent,
       'actual disable/re-enable advances legacy clipboard epoch without retiring canonical incarnation');
     LCommand.Complete(True);
@@ -885,6 +1250,14 @@ begin
       (LFixture.Host.Endings = LBefore + 1),
       'actual suspension changes original input and cancels exactly the pending host request');
     LObject.SuspendInput(False);
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field),
+      NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field)),
+      'resumed actual mount admits a fresh range independently from the old command');
+    LRange := LRanges.CellRange;
+    LObject.SuspendInput(True);
+    LObject.SuspendInput(False);
+    Check(not LRange.Current and (LRanges.CellRange = nil),
+      'explicit suspension withdraws mounted range authority across resume');
     LCommand.Complete(True);
     Check(LInput.Ready and (LFixture.Host.Writes = 2),
       'resume restores new readiness without repeating the transferred old command');
@@ -930,6 +1303,73 @@ begin
   finally
     ReleaseMount;
     LView := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ Actual alternate source reentry occurs before the complete immutable range
+  can be built. The original mount entry must preserve a newer Select/Clear
+  even when every accepted source/page/column revision remains unchanged. }
+procedure MountedRangeReentry;
+var
+  LFixture: TFixture;
+  LSource: TRangeSource;
+  LSourceLease: INyxCollection;
+  LView: INyxCollectionView;
+  LObject: TTestMount;
+  LMount: INyxCollectionMount;
+  LRanges: INyxCollectionCellRangeMount;
+  LPrevious: INyxCollectionCellRangeIntent;
+  LCurrent: INyxCollectionCellRangeIntent;
+  LSourceBefore: INyxCollectionSnapshot;
+begin
+  LFixture := TFixture.Create;
+  try
+    LSource := TRangeSource.Create;
+    LSourceLease := LSource;
+    LSource.Inner := LFixture.Store;
+    LView := NewNyxCollectionView(LSourceLease,
+      NyxCollectionView(LFixture.Key).Column(NyxTextField('Name'), 'Name'), cpTable);
+    LSourceBefore := LSource.Inner.Snapshot;
+    LObject := TTestMount.Create(LView, ncipReady, nil);
+    LMount := LObject;
+    LObject.Item := LFixture.ItemA;
+    LObject.Field := LFixture.Field;
+    LObject.Activate;
+    Supports(LMount, INyxCollectionCellRangeMount, LRanges);
+    LRanges.ConfigureCellRange(True);
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field),
+      NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field)),
+      'alternate source establishes the actual original mounted range');
+    LPrevious := LRanges.CellRange;
+    LObject.SourceAction := rsaClear;
+    LSource.OnSnapshot := LObject.ReadSource;
+    Check(not LRanges.SelectCells(NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field),
+      NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field)) and
+      not LPrevious.Current and (LRanges.CellRange = nil),
+      'actual source getter clear defeats the older original mount reservation');
+    LObject.SourceAction := rsaNested;
+    LSource.OnSnapshot := LObject.ReadSource;
+    Check(not LRanges.SelectCells(NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field),
+      NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field)) and LObject.NestedRangeAdmitted,
+      'actual source getter admits one newer selection without lending its proof to the older entry');
+    LCurrent := LRanges.CellRange;
+    Check(LCurrent.Current and (LCurrent.Capture.Anchor.Item.ID = LFixture.ItemA.ID) and
+      (LCurrent.Capture.Focus.Item.ID = LFixture.ItemA.ID) and
+      (LCurrent.Capture.Payload.Key.Name = LFixture.Key.Name) and
+      (LSource.Inner.Snapshot = LSourceBefore),
+      'newer mounted rectangle stays exact while source data remains untouched');
+    LMount.Disconnect;
+  finally
+
+    if LSourceLease <> nil then
+    begin
+      LSource.OnSnapshot := nil;
+    end;
+    LRanges := nil;
+    LMount := nil;
+    LView := nil;
+    LSourceLease := nil;
     LFixture.Free;
   end;
 end;
@@ -1109,7 +1549,9 @@ begin
     Run;
     CapturedArbitration;
     RepresentedArbitration;
+    RangeArbitration;
     MountedAdmission;
+    MountedRangeReentry;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-collection-clipboard-commands', 'passed');
     document.body.setAttribute('data-collection-clipboard-command-checks', IntToStr(GChecks));

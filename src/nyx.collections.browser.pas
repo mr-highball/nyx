@@ -157,6 +157,8 @@ uses
   nyx.collections.window,
   nyx.collections.selection,
   nyx.collections.clipboard.actions,
+  nyx.collections.range.actions,
+  nyx.collections.range.commands,
   nyx.collections.cell.actions,
   nyx.collections.representation,
   nyx.scheduler,
@@ -441,6 +443,8 @@ type
     Field: TNyxColumnIdentity;
     Accepted: TNyxStateValue;
   end;
+  { One realized stable row owns its cells/editors. Range paint uses cached
+    immutable membership and never changes accepted data or draft focus. }
   TBrowserRow = class
   private
     FOwner: TBrowserMount;
@@ -453,6 +457,8 @@ type
     FLabels: array of TJSHTMLElement;
     FInputs: array of TJSHTMLInputElement;
     FInitialized: Boolean;
+    FHadCellRange: Boolean;
+    procedure SyncCellRange;
     function Click(AEvent: TJSMouseEvent): Boolean;
     function DoubleClick(AEvent: TJSMouseEvent): Boolean;
     function Change(AEvent: TEventListenerEvent): Boolean;
@@ -634,6 +640,7 @@ type
     procedure Gesture(const AItem: TNyxItemRef; AShift, AControl: Boolean;
       AFocusOnly: Boolean = False);
   protected
+    procedure RenderCellRange; override;
     function ClipboardInputAvailable: Boolean; override;
     function BeginCellPresentation: INyxCollectionCellPresentation; override;
     function PrepareColumnFit(const ALaunch: INyxCollectionColumnsCapture;
@@ -1076,6 +1083,57 @@ begin
     (FColumnResize = nil) and (FColumnResizePending = nil) and not FOpeningColumnManager;
 end;
 
+procedure TBrowserMount.RenderCellRange;
+var
+  LRow: TBrowserRow;
+  LResident: Integer;
+begin
+  for LResident := 0 to High(FResidentRows) do
+  begin
+    LRow := FRows[FResidentRows[LResident]];
+
+    if LRow = nil then
+    begin
+      Continue;
+    end;
+    LRow.SyncCellRange;
+  end;
+end;
+
+procedure TBrowserRow.SyncCellRange;
+var
+  LCell: TJSHTMLElement;
+  LColumn: Integer;
+  LSelected: Boolean;
+begin
+
+  if not FOwner.FCellRangeEnabled and not FHadCellRange then
+  begin
+    Exit;
+  end;
+  FHadCellRange := FOwner.FCellRangeEnabled;
+  for LColumn := 0 to High(FCells) do
+  begin
+    LCell := FCells[LColumn];
+    LSelected := FOwner.CellRangeContains(FRef, FOwner.ClipboardField(LColumn));
+
+    if LSelected then
+    begin
+
+      if LCell.getAttribute('data-nyx-range-selected') <> 'true' then
+      begin
+        LCell.setAttribute('data-nyx-range-selected', 'true');
+        LCell.setAttribute('aria-selected', 'true');
+      end;
+    end
+    else if LCell.hasAttribute('data-nyx-range-selected') then
+    begin
+      LCell.removeAttribute('data-nyx-range-selected');
+      LCell.removeAttribute('aria-selected');
+    end;
+  end;
+end;
+
 function TBrowserMount.BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
 var
   LCommands: INyxCollectionClipboardCommands;
@@ -1083,9 +1141,13 @@ var
   LRow: TBrowserRow;
   LIndex: Integer;
   LColumn: Integer;
+  LIntent: INyxCollectionCellRangeIntent;
+  LRangeInput: INyxCollectionClipboardRangeInput;
+  LRangeCommand: INyxCollectionClipboardRangeCommand;
 begin
   Result := nil;
   LCommands := FClipboardCommands;
+  LIntent := GetCellRange;
 
   if (LCommands = nil) or AEvent.defaultPrevented or AEvent.isComposing or
     AEvent.altKey or AEvent.shiftKey or AEvent.getModifierState('AltGraph') or
@@ -1109,7 +1171,22 @@ begin
 
       if AEvent.target = LRow.FCells[LColumn] then
       begin
-        LCommand := LCommands.BeginCell(LRow.FRef, ClipboardField(LColumn));
+
+        if LIntent <> nil then
+        begin
+
+          if not Supports(LCommands, INyxCollectionClipboardRangeInput, LRangeInput) then
+          begin
+            raise ENyxCollection.Create('Collection clipboard cannot reserve original cell range input');
+          end;
+          LRangeCommand := LRangeInput.BeginRangeInput;
+          LRangeCommand.ResolveRange(LIntent);
+          LCommand := LRangeCommand;
+        end
+        else
+        begin
+          LCommand := LCommands.BeginCell(LRow.FRef, ClipboardField(LColumn));
+        end;
         Exit(TBrowserCopyCommand.Create(LCommand));
       end;
     end;
@@ -4551,6 +4628,7 @@ begin
   begin
     Toggle(nil);
   end;
+  SyncCellRange;
 end;
 
 function TBrowserRow.HasDraft: Boolean;

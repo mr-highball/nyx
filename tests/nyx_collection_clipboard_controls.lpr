@@ -34,6 +34,7 @@ uses
   nyx.files.save, nyx.collections.paging, nyx.collections.export,
   nyx.collections.export.actions
   , nyx.collections.representation, nyx.collections.draft,
+  nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands,
   nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
     nyx.menu.browser, nyx.popover.browser, nyx.editing.browser
@@ -238,6 +239,7 @@ type
     procedure RunDisplayed; {$ifdef PAS2JS}async;{$endif}
     procedure RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
     procedure RunDraftActions; {$ifdef PAS2JS}async;{$endif}
+    procedure RunCellRange; {$ifdef PAS2JS}async;{$endif}
     procedure ExportPaging(AEnabled: Boolean);
     procedure Semantic(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
@@ -617,7 +619,8 @@ begin
   FHost := THost.Create;
   FHostLease := FHost;
   FClipboard.ConfigureClipboard(FHostLease, FRenderer.Events,
-    FRenderer.Events.Scheduler, TNyxCollectionClipboardOptions.Defaults);
+    FRenderer.Events.Scheduler, TNyxCollectionClipboardOptions.Defaults.AllowOnly(
+      [nccaCell, nccaSelectedSource, nccaSelectedPage, nccaCellRange]));
   FCommands := FClipboard.ClipboardCommands;
   FCommands.Observe({$ifdef PAS2JS}@{$endif}Reply);
   Check(Supports(FMount, INyxCollectionExportMount, FExport),
@@ -1445,6 +1448,205 @@ begin
     'an inert retained draft cannot revive active editor authority or alter authored/accepted data');
 end;
 
+{ Same table owner/source as the original journey. Selection is installed
+  through the optional typed mount contract; paired real key routes then copy
+  that exact range. This slice proves mounted paint/copy, not a hardware range
+  drag or OS clipboard effect. Gesture navigation is a separate next input. }
+procedure TCopyReview.RunCellRange; {$ifdef PAS2JS}async;{$endif}
+var
+  LRanges: INyxCollectionCellRangeMount;
+  LIntent: INyxCollectionCellRangeIntent;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+  LRows: TNyxCollectionSelectionSnapshot;
+  LItems: TNyxItemRefs;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LPreferences: TNyxColumnPreferences;
+  LExpected: TNyxText;
+  LQuery: TNyxText;
+  LScore: TNyxColumnIdentity;
+  LBefore: Integer;
+  LKeys: Integer;
+  LReplies: Integer;
+  LIndex: Integer;
+  {$ifndef PAS2JS}
+  LPanes: Integer;
+  LPane: TNyxCollectionStringGrid;
+  LPhysical: Integer;
+  LHeader: TNyxText;
+  LHeaderFacts: TNyxText;
+  LPaintedHeader: TNyxText;
+  {$endif}
+begin
+  LSource := FView.Store.Snapshot;
+  LQuery := FView.QueryPolicy.ToData.ToJSON;
+  LRows := FView.Selection.Snapshot;
+  SetLength(LItems, LRows.Count);
+  for LIndex := 0 to LRows.Count - 1 do
+  begin
+    LItems[LIndex] := LRows.ItemAt(LIndex);
+  end;
+  LScore := NyxColumnIdentity(NyxIntegerField('Score'));
+  FMode := kmObserve;
+  FContextColumn := 0;
+  FocusCell;
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges),
+    'same renderer-managed table exposes optional typed cell range selection');
+  Check(not LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+    NyxCollectionCellIdentity(ItemB, LScore)) and (LRanges.CellRange = nil),
+    'ordinary default table mode does not implicitly reinterpret row selection as a cell range');
+  LColumns := NyxCollectionColumns(FView);
+  LCapture := LColumns.CaptureColumns;
+  LPreferences := LCapture.Preferences;
+  try
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      LColumns.ConfigureColumns(LPreferences.WithColumn(NyxColumnPreference(NameField).Pinned(ncpStart))
+        .WithColumn(NyxColumnPreference(LScore).Pinned(ncpEnd)));
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    end;
+    {$ifndef PAS2JS}
+    { Native pinned budgets use real inert spacer columns on the outer grid.
+      Resolve an actual data header before producing input; physical zero is
+      intentionally not a data-cell identity when a start pane is present. }
+    { Score is inside the ordinary Name..Score rectangle, and its header does
+      not carry the first-column whole-page row-count decoration. }
+    LHeader := FView.Spec.ColumnAt(1).Title;
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      LHeader := FView.Spec.ColumnAt(2).Title;
+    end;
+    LPhysical := -1;
+    LHeaderFacts := '';
+    for LIndex := 0 to FGrid.ColCount - 1 do
+    begin
+      LPaintedHeader := FGrid.DisplayCellText(LIndex, 0);
+      LHeaderFacts := LHeaderFacts + '[' + TNyxText(IntToStr(LIndex)) + ':paint=' +
+        LPaintedHeader + ';raw=' + TNyxText(FGrid.Cells[LIndex, 0]) + ']';
+
+      { The actual native query affordance appends its own two-space suffix.
+        Match this fixture's unique full title plus that owned boundary. }
+
+      if (LPaintedHeader = LHeader) or (Pos(LHeader + '  ', LPaintedHeader) = 1) then
+      begin
+        LPhysical := LIndex;
+        Break;
+      end;
+    end;
+    Check(LPhysical >= 0, 'native range input resolves its actual middle data header beyond pin spacers; expected=' +
+      LHeader + ';count=' + TNyxText(IntToStr(FGrid.ColCount)) +
+      ';connected=' + TNyxText(BoolToStr(FMount.Connected, True)) +
+      ';ready=' + TNyxText(BoolToStr(FInput.Ready, True)) + ';headers=' + LHeaderFacts);
+    FGrid.Col := LPhysical;
+    FGrid.Row := 1;
+    FGrid.SetFocus;
+    Drain;
+    {$endif}
+    LRanges.ConfigureCellRange(True);
+    LPage := FView.Snapshot;
+    LBefore := FHost.Writes;
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+      NyxCollectionCellIdentity(ItemB, LScore)),
+      'explicit stable identities select the actual page rectangle without a source mutation');
+    LIntent := LRanges.CellRange;
+    LExpected := LIntent.Capture.Payload.Text;
+    Check(LIntent.Current and (LIntent.Source = LSource) and (LIntent.Page = LPage) and
+      (LIntent.Capture.Payload.RowCount = 2) and
+      LIntent.Capture.Contains(ItemA, NameField) and LIntent.Capture.Contains(ItemB, LScore) and
+      FView.Selection.Snapshot.SameState(LRows) and (FHost.Writes = LBefore),
+      'range selection owns exact original page/field facts and leaves row selection and host untouched');
+    {$ifdef PAS2JS}
+    Check(FTable.querySelector('[data-nyx-item="a"] [data-nyx-column="0"][data-nyx-range-selected="true"]') <> nil,
+      'actual Name cell exposes its selected range paint and accessibility state');
+    Check(FTable.querySelector('[data-nyx-item="b"] [data-nyx-column="1"][data-nyx-range-selected="true"]') <> nil,
+      'actual Score cell is highlighted across the logical opposite pin edge');
+    {$else}
+    FGrid.Repaint;
+    Check(not FGrid.CellRangeSelected(LPhysical, 0) and FGrid.CellRangeSelected(LPhysical, 1) and
+      FGrid.CellRangeSelected(LPhysical, 2),
+      'actual native paint predicate highlights bounded data rows and excludes the header');
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      LPanes := 0;
+      for LIndex := 0 to FGrid.ControlCount - 1 do
+      begin
+
+        if (FGrid.Controls[LIndex] is TNyxCollectionStringGrid) and FGrid.Controls[LIndex].Visible then
+        begin
+          LPane := TNyxCollectionStringGrid(FGrid.Controls[LIndex]);
+          Check(LPane.CellRangeSelected(0, 1) and LPane.CellRangeSelected(0, 2),
+            'real editable pinned pane uses the same exact range paint membership');
+          Inc(LPanes);
+        end;
+      end;
+      Check(LPanes = 2, 'wide native range paint includes both actual logical pin panes');
+    end;
+    {$endif}
+    LKeys := FKeys;
+    LReplies := FReplies;
+    CopyKey;
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((FKeys = LKeys + 1) and (FHost.Writes = LBefore + 1) and
+      (FReplies = LReplies + 1) and (FHost.Text = LExpected) and
+      (FLastPayload.Text = LExpected) and (FLastPayload.RowCount = 2),
+      'real canonical Ctrl+C transfers the selected RAW TSV once through the original host slot');
+    FMode := kmConsume;
+    CopyKey;
+    Check((FHost.Writes = LBefore + 1) and LIntent.Current,
+      'consumed real range key cannot write or withdraw the accepted rectangle');
+    FMode := kmDisableABA;
+    CopyKey;
+    Check((FHost.Writes = LBefore + 1) and not LIntent.Current and (LRanges.CellRange = nil),
+      'real disable/re-enable key callback retires the old range instead of copying newer authority');
+    FMode := kmObserve;
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+      NyxCollectionCellIdentity(ItemB, LScore)), 'fresh admitted input may create a new explicit range');
+    LIntent := LRanges.CellRange;
+    LRanges.ClearCellRange;
+    Check(not LIntent.Current and (LRanges.CellRange = nil) and
+      (LIntent.Capture.Payload.Text = LExpected),
+      'explicit clear revokes only selection authority and retains exact copied values');
+    {$ifdef PAS2JS}
+    Check(FTable.querySelector('[data-nyx-range-selected="true"]') = nil,
+      'clear removes actual browser range paint without hiding or replacing cells');
+    {$else}
+    Check(not FGrid.CellRangeSelected(LPhysical, 1),
+      'clear removes actual native range paint membership');
+    {$endif}
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+      NyxCollectionCellIdentity(ItemB, LScore)), 'range can be selected again before a real filter replacement');
+    LIntent := LRanges.CellRange;
+    Filter(True);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(not LIntent.Current and (LRanges.CellRange = nil) and
+      (LIntent.Capture.Payload.Text = LExpected),
+      'actual filtered page replacement retires old range input and preserves its immutable output');
+  finally
+    FMode := kmObserve;
+    LRanges.ConfigureCellRange(False);
+    Filter(False);
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      LColumns.ConfigureColumns(LPreferences);
+    end;
+    { The filter's ordinary focus reconciliation is independent of range
+      selection. Restore the caller's original row state through its public
+      owner, after checking above that selection/copy never changed it. }
+    FView.SetSelection(LItems, LRows.Focus, LRows.Anchor);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    FContextColumn := 0;
+    FocusCell;
+  end;
+  Check((FView.Store.Snapshot = LSource) and FView.Selection.Snapshot.SameState(LRows) and
+    (FView.QueryPolicy.ToData.ToJSON = LQuery) and (TNyxCodec.Encode(FDocument) = FAuthored),
+    'mounted range paint and RAW copy preserve exact accepted data row/query state and authored source');
+end;
+
 { Same real editor and managed presenters as the RAW journey. Native context
   uses the actual editor HWND/keyboard-context message; browser context is a
   synthetic cancellable event, with no trusted pointer/OS menu claim. }
@@ -1925,11 +2127,13 @@ begin
   await(RunExport);
   await(RunDisplayed);
   await(RunFocusedDraft);
+  await(RunCellRange);
   {$else}
   RunContext;
   RunExport;
   RunDisplayed;
   RunFocusedDraft;
+  RunCellRange;
   {$endif}
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LCellIntent),
     'retirement probe retains the actual canonical context facade');
@@ -1976,9 +2180,11 @@ begin
       {$ifdef PAS2JS}
       await(LReview.RunFocusedDraft);
       await(LReview.RunDraftActions);
+      await(LReview.RunCellRange);
       {$else}
       LReview.RunFocusedDraft;
       LReview.RunDraftActions;
+      LReview.RunCellRange;
       {$endif}
     finally
       LReview.Free;

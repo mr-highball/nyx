@@ -356,6 +356,7 @@ begin
     '.nyx-table th,.nyx-table td{text-align:left;padding:10px;border-bottom:1px solid var(--nyx-border);}' +
     '.nyx-table thead th{position:sticky;top:0;z-index:1;background:var(--nyx-surface);}' +
     '.nyx-table td{scroll-margin-top:var(--nyx-grid-header-height,40px);}' +
+    '.nyx-table [data-nyx-range-selected="true"]{outline:2px solid var(--nyx-accent);outline-offset:-2px;}' +
     '.nyx-table .nyx-cell-value{display:block;min-width:0;}' +
     '.nyx-table .nyx-cell-value[hidden],.nyx-table .nyx-cell-editor[hidden]{display:none;}' +
     '.nyx-table .nyx-cell-editor{font:inherit;line-height:inherit;color:inherit;'

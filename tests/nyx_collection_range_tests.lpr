@@ -457,6 +457,7 @@ var
   LAnchor: TNyxCollectionCellIdentity;
   LFocus: TNyxCollectionCellIdentity;
   LRange: INyxCollectionCellRangeCapture;
+  LBounds: INyxCollectionCellRangeBounds;
   LReverse: INyxCollectionCellRangeCapture;
   LSingle: INyxCollectionCellRangeCapture;
   LCandidate: INyxCollectionCellRangeCapture;
@@ -538,6 +539,10 @@ begin
     Check(LRange.Anchor.Same(LAnchor) and LRange.Focus.Same(LFocus) and
       (LRange.ColumnSerial = LSerial) and LRange.IncludeHeaders and
       (LRange.LineEnding = nccleCRLF), 'direction and explicit output/column provenance are retained');
+    Check(Supports(LRange, INyxCollectionCellRangeBounds, LBounds) and
+      (LBounds.AnchorRow = 1) and (LBounds.FocusRow = 2) and
+      (LBounds.FirstRow = 1) and (LBounds.LastRow = 2),
+      'optional paint bounds describe the exact captured page without a live row getter');
     Check(LRange.Contains(LA, LFields[0]) and LRange.Contains(LC, LFields[2]) and
       not LRange.Contains(LB, LFields[0]) and not LRange.Contains(LA, LFields[3]) and
       not LRange.Contains(LA, NyxColumnIdentity(NyxTextField('Hidden'))),

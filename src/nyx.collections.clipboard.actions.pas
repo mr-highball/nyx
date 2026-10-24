@@ -31,8 +31,10 @@ uses nyx.text, nyx.collections, nyx.collections.arrangement,
 
 type
   { Closed accepted-raw commands distinguish complete source membership from
-    the explicit current page. No command implicitly copies an editor draft. }
-  TNyxCollectionClipboardAction = (nccaCell, nccaSelectedSource, nccaSelectedPage);
+    the explicit current page. CellRange is append-only and explicitly opt-in;
+    no command implicitly copies an editor draft or changes row selection. }
+  TNyxCollectionClipboardAction = (nccaCell, nccaSelectedSource, nccaSelectedPage,
+    nccaCellRange);
 
   { Runtime opt-in permissions, independent of data editability and authored
     layout features. Read-only data can still be inspected/copied. }

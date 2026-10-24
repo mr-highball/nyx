@@ -150,6 +150,16 @@ scheduler and58-per-target observation checks remain passing, with clean native
 heaps and empty browser logs. Actual renderer/form/Studio adoption and complete
 native performance remain required; these outcomes do not close W1 or W2.
 
+Mounted range09 adds explicitly enabled independent cell selection, cached
+highlighting across pinned panes and canonical same-slot Ctrl+C. Range47 and
+command127 pass on both actual targets; native controls393 have a complete clean
+heap and browser controls465 pass at measured1280x900/390x900 with empty logs.
+The executed07 browser artifacts are byte-identical to09. This is public typed
+range setup with synthetic input and injected host authority. Real range
+gestures, menu discovery, OS effects and complete workbench/Studio/native
+performance acceptance remain required. WORK retains exact source identities
+and earlier failures; current Root form/event integration is a separate cohort.
+
 The explicit cell-range capture/selection prerequisite passes46 native checks
 with a complete clean heap and46 actual browser checks, logs empty. It retains
 directional typed endpoints, actual filtered-page/visible-field order and exact

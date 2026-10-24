@@ -43,6 +43,9 @@ uses
   nyx.collections.arrangement.controls,
   nyx.collections.arrangement.presenter,
   nyx.collections.clipboard.actions,
+  nyx.collections.range,
+  nyx.collections.range.actions,
+  nyx.collections.range.commands,
   nyx.collections.export.actions,
   nyx.collections.export,
   nyx.collections.cell.actions,
@@ -268,12 +271,14 @@ type
     portable interfaces. Activate runs after concrete handles are initialized
     and the caller retains an interface owner; target factories do this before
     activating. Active commands retain their own call frames through callbacks.
-    UI-thread confinement is inherited from the view/store contract. }
+    Optional cell-range selection owns independent immutable generation facts;
+    it never changes the view's ordinary row-selection owner. UI-thread
+    confinement is inherited from the view/store contract. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
-    INyxCollectionExportMount)
+    INyxCollectionExportMount, INyxCollectionCellRangeMount)
   private
     FToken: INyxCollectionViewSubscription;
     FConnected: Boolean;
@@ -288,6 +293,9 @@ type
     { A host/scheduler callback cannot install another clipboard controller
       while the exact original runtime authority is being configured. }
     FConfiguringClipboard: Boolean;
+    { Range enablement may read a foreign view; recursive configuration cannot
+      replace a newer mode while the original entry is still inspecting it. }
+    FConfiguringCellRange: Boolean;
     { Export authority is separately injected; reentrant configuration cannot
       replace the original candidate while its scheduler/host is inspected. }
     FConfiguringExport: Boolean;
@@ -332,6 +340,9 @@ type
       saturating serial never wraps back to an older import's identity; reaching
       its limit refuses further structural edit handoffs until a fresh mount. }
     FCellMutationSerial: Integer;
+    { One mount entry reservation spans source/page/column getters before the
+      detached selection owner can reserve its own complete candidate. }
+    FCellRangeRequest: Integer;
     FEnabled: Boolean;
     FReadOnly: Boolean;
     FQueries: INyxCollectionQueryWorkbench;
@@ -339,6 +350,11 @@ type
     { Controller owns model/runtime authority only. Per-command synchronous
       fences may retain this mount; asynchronous host scopes never do. }
     FClipboardCommands: INyxCollectionClipboardCommands;
+    { Range mode is off by default. Only detached range intent and canonical
+      cancel flags belong here; the state retains no mount/view callback. }
+    FCellRangeEnabled: Boolean;
+    FCellRanges: INyxCollectionCellRangeSelection;
+    FClipboardOptions: TNyxCollectionClipboardOptions;
     FExportCommands: INyxCollectionExportCommands;
     FCellActions: INyxCollectionCellActions;
     FClipboardFields: TNyxCollectionClipboardFields;
@@ -367,6 +383,12 @@ type
     FNormalizeColumn: Integer;
     function PrepareClipboardInput: INyxCancellationReadiness;
     function ClipboardField(ACanonical: Integer): TNyxColumnIdentity;
+    { Presentation only, using cached immutable range membership. Target
+      overrides must not refresh/validate editors or query the live dataset. }
+    procedure RenderCellRange; virtual;
+    function CellRangeAvailable: Boolean; virtual;
+    function CellRangeContains(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity): Boolean;
     { Cached target flags only: no source, router, widget, DOM or application
       callback may run from a final clipboard readiness check. }
     function ClipboardInputAvailable: Boolean; virtual;
@@ -448,6 +470,10 @@ type
       const AEvents: INyxEvents; const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionClipboardOptions);
     function GetClipboardCommands: INyxCollectionClipboardCommands;
+    procedure ConfigureCellRange(AEnabled: Boolean);
+    function SelectCells(const AAnchor, AFocus: TNyxCollectionCellIdentity): Boolean;
+    procedure ClearCellRange;
+    function GetCellRange: INyxCollectionCellRangeIntent;
     procedure ConfigureExport(const AHost: INyxFileSaveHost;
       const AEvents: INyxEvents; const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionExportOptions);
@@ -1211,6 +1237,259 @@ begin
   end;
 end;
 
+procedure TNyxCollectionMountBase.RenderCellRange;
+begin
+  { Target adapters repaint cached immutable membership only. }
+end;
+
+function TNyxCollectionMountBase.CellRangeAvailable: Boolean;
+begin
+  Result := True;
+end;
+
+function TNyxCollectionMountBase.CellRangeContains(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity): Boolean;
+var
+  LRange: INyxCollectionCellRangeIntent;
+begin
+  Result := False;
+
+  if not FCellRangeEnabled or (FCellRanges = nil) or not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+  LRange := FCellRanges.Selection;
+  Result := (LRange <> nil) and LRange.Current and LRange.Capture.Contains(AItem, AField);
+end;
+
+function TNyxCollectionMountBase.GetCellRange: INyxCollectionCellRangeIntent;
+begin
+  Result := nil;
+
+  if FCellRangeEnabled and (FCellRanges <> nil) and GetInputReady then
+  begin
+    Result := FCellRanges.Selection;
+  end;
+end;
+
+procedure TNyxCollectionMountBase.ConfigureCellRange(AEnabled: Boolean);
+var
+  LLease: INyxCollectionMount;
+  LView: INyxCollectionView;
+  LInput: INyxCollectionInputLifetime;
+  LSpec: TNyxCollectionViewSpec;
+  LFields: TNyxCollectionClipboardFields;
+  LPrevious: INyxCollectionCellRangeIntent;
+  LIndex: Integer;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if FConfiguringCellRange then
+  begin
+    raise ENyxCollectionRange.Create('Cell range mode configuration is already entered');
+  end;
+  FConfiguringCellRange := True;
+  try
+
+    if FCellRangeRequest < High(Integer) then
+    begin
+      Inc(FCellRangeRequest);
+    end;
+    LView := FView;
+    LInput := FInputLifetime;
+
+    if not FConnected or FDisconnecting or (LView = nil) or
+      (LInput = nil) or not LInput.Current then
+    begin
+      raise ENyxCollectionRange.Create('Cell range mode requires a connected table incarnation');
+    end;
+
+    if AEnabled then
+    begin
+
+      if not CellRangeAvailable then
+      begin
+        raise ENyxCollectionRange.Create('This target has no managed cell range presentation');
+      end;
+
+      if LView.Projection <> cpTable then
+      begin
+        raise ENyxCollectionRange.Create('Cell range mode requires a table projection');
+      end;
+      LSpec := LView.Spec;
+
+      if not FConnected or FDisconnecting or (FView <> LView) or
+        (FInputLifetime <> LInput) or not LInput.Current then
+      begin
+        raise ENyxCollectionRangeStale.Create('Table changed while enabling cell range mode');
+      end;
+      SetLength(LFields, LSpec.Count);
+      for LIndex := 0 to High(LFields) do
+      begin
+        LFields[LIndex] := LSpec.ColumnAt(LIndex).Identity;
+      end;
+
+      if FCellRanges = nil then
+      begin
+        FCellRanges := NewNyxCollectionCellRangeSelection;
+      end;
+      FClipboardFields := LFields;
+    end;
+    FCellRangeEnabled := AEnabled;
+
+    if not AEnabled and (FCellRanges <> nil) then
+    begin
+      LPrevious := FCellRanges.Selection;
+      FCellRanges.Clear;
+    end;
+    { Match optional clipboard admission even on an ordinary no-layout table. }
+    TCollectionInputState(FInputStateObject).InteractionEnabled(FEnabled);
+    RenderCellRange;
+  finally
+    FConfiguringCellRange := False;
+  end;
+end;
+
+procedure TNyxCollectionMountBase.ClearCellRange;
+var
+  LLease: INyxCollectionMount;
+  LPrevious: INyxCollectionCellRangeIntent;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if FCellRangeRequest < High(Integer) then
+  begin
+    Inc(FCellRangeRequest);
+  end;
+
+  if FCellRanges = nil then
+  begin
+    Exit;
+  end;
+  LPrevious := FCellRanges.Selection;
+  FCellRanges.Clear;
+  RenderCellRange;
+end;
+
+function TNyxCollectionMountBase.SelectCells(const AAnchor,
+  AFocus: TNyxCollectionCellIdentity): Boolean;
+var
+  LLease: INyxCollectionMount;
+  LSelection: INyxCollectionCellRangeSelection;
+  LCandidate: INyxCollectionCellRangeIntent;
+  LView: INyxCollectionView;
+  LInput: INyxCollectionInputLifetime;
+  LStore: INyxCollection;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LObservation: TNyxColumnLayoutObservation;
+  LFields: TNyxCollectionClipboardFields;
+  LAnchor: TNyxCollectionCellIdentity;
+  LFocus: TNyxCollectionCellIdentity;
+  LOptions: TNyxCollectionClipboardOptions;
+  LEpoch: Integer;
+  LMutation: Integer;
+  LRequest: Integer;
+
+  function Current: Boolean;
+  begin
+    Result := FConnected and not FDisconnecting and FCellRangeEnabled and
+      not FUpdating and not FEditsSuspended and FEnabled and
+      (FView = LView) and (FInputLifetime = LInput) and
+      (FCellRanges = LSelection) and (FCellMutationSerial = LMutation) and
+      (LRequest < High(Integer)) and (FCellRangeRequest = LRequest) and
+      LInput.Ready and (LInput.Epoch = LEpoch);
+  end;
+
+begin
+  Result := False;
+  LLease := Self as INyxCollectionMount;
+  LSelection := FCellRanges;
+  LView := FView;
+  LInput := FInputLifetime;
+  LMutation := FCellMutationSerial;
+  LOptions := FClipboardOptions;
+
+  if not FCellRangeEnabled or (LSelection = nil) or (LInput = nil) or
+    not LInput.Ready or not FEnabled or FUpdating or FEditsSuspended or
+    not ClipboardInputAvailable then
+  begin
+    Exit;
+  end;
+  { Reserve before any view/store/page getter. A nested newer selection or
+    Clear remains authoritative even if all data revisions stay unchanged. }
+
+  if FCellRangeRequest = High(Integer) then
+  begin
+    Exit;
+  end;
+  Inc(FCellRangeRequest);
+  LRequest := FCellRangeRequest;
+  LEpoch := LInput.Epoch;
+  LAnchor := NyxCollectionCellIdentity(AAnchor.Item, AAnchor.Field);
+  LFocus := NyxCollectionCellIdentity(AFocus.Item, AFocus.Field);
+  LStore := LView.Store;
+
+  if not Current or (LStore = nil) then
+  begin
+    Exit;
+  end;
+  LSource := LStore.Snapshot;
+
+  if not Current or (LSource = nil) then
+  begin
+    Exit;
+  end;
+  LPage := LView.Snapshot;
+
+  if not Current or (LPage = nil) then
+  begin
+    Exit;
+  end;
+  LColumns := NyxCollectionColumns(LView);
+
+  if not Current then
+  begin
+    Exit;
+  end;
+  LCapture := LColumns.CaptureColumns;
+
+  if not Current then
+  begin
+    Exit;
+  end;
+  LObservation := TNyxColumnLayoutObservation.Read(LCapture);
+  LFields := NyxCollectionClipboardFields(LObservation, nccfVisiblePresentation);
+
+  if not Current then
+  begin
+    Exit;
+  end;
+  try
+    LCandidate := LSelection.Select(LSource, LPage, LFields, LAnchor, LFocus,
+      LCapture.Serial, LOptions.IncludeHeaders, LOptions.Lines, LOptions.WorkLimits);
+  except
+    on E: ENyxCollectionRangeStale do
+    begin
+      Exit;
+    end;
+  end;
+
+  if not Current then
+  begin
+
+    if LSelection.Selection = LCandidate then
+    begin
+      LSelection.Clear;
+    end;
+    Exit;
+  end;
+  Result := True;
+  RenderCellRange;
+end;
+
 function TNyxCollectionMountBase.GetClipboardCommands: INyxCollectionClipboardCommands;
 begin
   Result := FClipboardCommands;
@@ -1454,6 +1733,7 @@ begin
         LHost, LScheduler, LOptions, PrepareClipboardInput);
       Current;
       FClipboardFields := LFields;
+      FClipboardOptions := LOptions;
       FClipboardCommands := LCommands;
     except
 
@@ -1715,6 +1995,7 @@ var
   LTable: Boolean;
 begin
   inherited Create;
+  FClipboardOptions := TNyxCollectionClipboardOptions.Defaults;
 
   if not (AInputPhase in [ncipReady, ncipStaged]) then
   begin
@@ -1826,6 +2107,7 @@ var
   LExport: INyxCollectionExportCommands;
   LCells: INyxCollectionCellActions;
   LFailure: TMountCleanupFailure;
+  LRangeIntent: INyxCollectionCellRangeIntent;
 begin
   LClipboard := FClipboardCommands;
   LExport := FExportCommands;
@@ -1839,6 +2121,12 @@ begin
 
   if AValue then
   begin
+
+    if FCellRanges <> nil then
+    begin
+      LRangeIntent := FCellRanges.Selection;
+      FCellRanges.Clear;
+    end;
     { Epoch withdrawal precedes host cancellation. Callers retain the mount and
       recheck their exact suspension before touching any borrowed target. }
     LFailure := Default(TMountCleanupFailure);
@@ -1936,6 +2224,8 @@ var
   LExport: INyxCollectionExportCommands;
   LCells: INyxCollectionCellActions;
   LCellFactory: INyxCollectionCellPresenterFactory;
+  LRanges: INyxCollectionCellRangeSelection;
+  LRangeIntent: INyxCollectionCellRangeIntent;
 begin
 
   if FDisconnecting or ((FView = nil) and not FConnected) then
@@ -1955,6 +2245,12 @@ begin
     when an implementation throws; retain the first failure for the caller
     and always release the disconnect guard and borrowed target at the end. }
   LClipboard := FClipboardCommands;
+  LRanges := FCellRanges;
+
+  if LRanges <> nil then
+  begin
+    LRangeIntent := LRanges.Selection;
+  end;
   LExport := FExportCommands;
   LCells := FCellActions;
   LCellFactory := FCellFactory;
@@ -1964,6 +2260,8 @@ begin
   LQueryFactory := FQueryFactory;
   LToken := FToken;
   FClipboardCommands := nil;
+  FCellRanges := nil;
+  FCellRangeEnabled := False;
   FExportCommands := nil;
   FCellActions := nil;
   FCellFactory := nil;
@@ -1974,6 +2272,11 @@ begin
   FQueryFactory := nil;
   FToken := nil;
   LFailure := Default(TMountCleanupFailure);
+
+  if LRanges <> nil then
+  begin
+    LRanges.Revoke;
+  end;
   try
     try
 
@@ -2213,9 +2516,18 @@ var
   LBefore: INyxCollectionSelection;
   LAfter: INyxCollectionSelection;
   LObserver: TNyxCollectionSelectionObserver;
+  LRangeIntent: INyxCollectionCellRangeIntent;
 begin
   LKeepAlive := Self as INyxCollectionMount;
   FCellFocusValid := False;
+
+  if FCellRanges <> nil then
+  begin
+    { Any view publication withdraws this physical range. Keep the old immutable
+      snapshots alive through the entered notification, before foreign getters. }
+    LRangeIntent := FCellRanges.Selection;
+    FCellRanges.Clear;
+  end;
 
   if FCellMutationSerial < High(Integer) then
   begin
@@ -2310,7 +2622,8 @@ begin
       Exit;
     end;
 
-    if FHasColumnLayout or (FClipboardCommands <> nil) or (FExportCommands <> nil) then
+    if FHasColumnLayout or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
+      FCellRangeEnabled then
     begin
       { The independent state survives a reentrant Disconnect that clears the
         mount field. Ready blocks NEW OS/DOM input throughout all outward reads
@@ -2439,6 +2752,7 @@ var
   LMutation: Integer;
   LBodyFailed: Boolean;
   LFailure: TMountCleanupFailure;
+  LRangeIntent: INyxCollectionCellRangeIntent;
 
   function Current: Boolean;
   begin
@@ -2462,7 +2776,13 @@ begin
   FReadOnly := AReadOnly;
   FCellFocusValid := False;
 
-  if (FHasColumnLayout or (LClipboard <> nil) or (LExport <> nil)) and
+  if not AEnabled and (FCellRanges <> nil) then
+  begin
+    LRangeIntent := FCellRanges.Selection;
+    FCellRanges.Clear;
+  end;
+
+  if (FHasColumnLayout or (LClipboard <> nil) or (LExport <> nil) or FCellRangeEnabled) and
     (FInputStateObject <> nil) then
   begin
     { Revoke captured query epochs BEFORE SetEnabled can call the scheduler or

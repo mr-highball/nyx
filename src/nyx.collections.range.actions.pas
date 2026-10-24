@@ -29,6 +29,11 @@ uses nyx.collections, nyx.collections.arrangement, nyx.collections.clipboard,
   nyx.collections.range, nyx.scheduler;
 
 type
+  { A newer selection/clear/retirement during an outward getter defeats the
+    entered reservation. Mounted input may claim this refused default without
+    reporting a malformed-data diagnostic or replacing the newer selection. }
+  ENyxCollectionRangeStale = class(ENyxCollectionRange);
+
   { One accepted range generation owns immutable source/page snapshots and the
     exact bounded RAW rectangle, never the live store, view, mount or editor.
     Current/Readiness describe only selection lifetime. A command must ALSO
@@ -263,7 +268,7 @@ begin
   if FRevoked or (FIntent <> LIntent) then
   begin
     LCandidate.Retire;
-    raise ENyxCollectionRange.Create('Cell range reservation was replaced during capture');
+    raise ENyxCollectionRangeStale.Create('Cell range reservation was replaced during capture');
   end;
   LPrevious := FSelection;
   LPreviousObject := FSelected;

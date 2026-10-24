@@ -74,6 +74,22 @@ type
     property LineEnding: TNyxCollectionCopyLineEnding read GetLineEnding;
   end;
 
+  { Optional scalar bounds refer only to the EXACT immutable captured page.
+    They never authorize a current widget index. Targets first compare that
+    page incarnation, then use these copied bounds to paint without calling
+    a dataset getter from DrawCell. Original range interface/GUID stays intact. }
+  INyxCollectionCellRangeBounds = interface(IInterface)
+    ['{FA7CD31F-3203-4615-B035-DFAE74424F56}']
+    function GetAnchorRow: Integer;
+    function GetFocusRow: Integer;
+    function GetFirstRow: Integer;
+    function GetLastRow: Integer;
+    property AnchorRow: Integer read GetAnchorRow;
+    property FocusRow: Integer read GetFocusRow;
+    property FirstRow: Integer read GetFirstRow;
+    property LastRow: Integer read GetLastRow;
+  end;
+
 { Admit an exact typed endpoint. Uninitialized/empty references refuse rather
   than becoming a physical-coordinate fallback. }
 function NyxCollectionCellIdentity(const AItem: TNyxItemRef;
@@ -102,9 +118,10 @@ implementation
 uses nyx.state, nyx.collections.selection;
 
 type
-  { Only the normalized row-membership snapshot, copied field subset and
+  { Only normalized row membership, copied page bounds/field subset and
     immutable RAW payload survive construction. No private array is exposed. }
-  TCellRange = class(TInterfacedObject, INyxCollectionCellRangeCapture)
+  TCellRange = class(TInterfacedObject, INyxCollectionCellRangeCapture,
+    INyxCollectionCellRangeBounds)
   private
     FAnchor: TNyxCollectionCellIdentity;
     FFocus: TNyxCollectionCellIdentity;
@@ -114,6 +131,8 @@ type
     FFields: TNyxCollectionClipboardFields;
     FHeaders: Boolean;
     FLines: TNyxCollectionCopyLineEnding;
+    FAnchorRow: Integer;
+    FFocusRow: Integer;
   public
     function GetAnchor: TNyxCollectionCellIdentity;
     function GetFocus: TNyxCollectionCellIdentity;
@@ -121,6 +140,10 @@ type
     function GetPayload: INyxCollectionClipboardText;
     function GetIncludeHeaders: Boolean;
     function GetLineEnding: TNyxCollectionCopyLineEnding;
+    function GetAnchorRow: Integer;
+    function GetFocusRow: Integer;
+    function GetFirstRow: Integer;
+    function GetLastRow: Integer;
     function Contains(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity): Boolean;
   end;
@@ -372,6 +395,8 @@ begin
   LRange.FPayload := LPayload;
   LRange.FHeaders := AHeaders;
   LRange.FLines := ALineEnding;
+  LRange.FAnchorRow := LAnchorRow;
+  LRange.FFocusRow := LFocusRow;
   { FPC can pass a caller's existing interface variable as the hidden Result
     destination. Publish only this complete local owner; refusal must not clear
     that caller value while the candidate is still being admitted. }
@@ -406,6 +431,36 @@ end;
 function TCellRange.GetLineEnding: TNyxCollectionCopyLineEnding;
 begin
   Result := FLines;
+end;
+
+function TCellRange.GetAnchorRow: Integer;
+begin
+  Result := FAnchorRow;
+end;
+
+function TCellRange.GetFocusRow: Integer;
+begin
+  Result := FFocusRow;
+end;
+
+function TCellRange.GetFirstRow: Integer;
+begin
+  Result := FAnchorRow;
+
+  if FFocusRow < Result then
+  begin
+    Result := FFocusRow;
+  end;
+end;
+
+function TCellRange.GetLastRow: Integer;
+begin
+  Result := FAnchorRow;
+
+  if FFocusRow > Result then
+  begin
+    Result := FFocusRow;
+  end;
 end;
 
 function TCellRange.Contains(const AItem: TNyxItemRef;

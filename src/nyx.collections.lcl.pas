@@ -119,6 +119,10 @@ uses
   nyx.collections.selection,
   nyx.collections.cell.actions,
   nyx.collections.representation,
+  nyx.collections.clipboard,
+  nyx.collections.range,
+  nyx.collections.range.actions,
+  nyx.collections.range.commands,
   nyx.scheduler,
   nyx.collections.tree.rows;
 
@@ -231,6 +235,7 @@ type
     function Display(AColumn, ARow: Integer;
       out APresentation: TNyxValuePresentation): TNyxText;
     function Editable(AColumn, ARow: Integer): Boolean;
+    function RangeSelected(AColumn, ARow: Integer): Boolean;
     procedure Revoke;
   end;
 
@@ -391,6 +396,12 @@ type
     FList: TListBox;
     FGrid: TStringGrid;
     FGridReaderAttached: Boolean;
+    { Exact copied page bounds/field bits drive paint without querying a live
+      store/view or a snapshot row from the native DrawCell callback. }
+    FRangePaint: INyxCollectionCellRangeIntent;
+    FRangeFirstRow: Integer;
+    FRangeLastRow: Integer;
+    FRangePaintFields: array of Boolean;
     FInputGrid: TNyxCollectionStringGrid;
     FInputGridAttached: Boolean;
     FColumnFrame: INyxNativeGestureFrame;
@@ -402,6 +413,8 @@ type
     FColumnToolbarHeight: Integer;
     FColumnClick: TNyxLCLColumnClick;
     FCellContextDispatch: TNyxLCLCellContextDispatch;
+    function GridRangeSelected(AColumn, ARow: Integer): Boolean;
+    function CanonicalRangeSelected(AColumn, ARow: Integer): Boolean;
     function PrepareFitButton(Sender: TObject): INyxGridColumnButtonCommand;
     function PrepareColumnsButton(Sender: TObject): INyxGridColumnButtonCommand;
     function PrepareColumnButtonDraft(Sender: TObject): Boolean;
@@ -610,6 +623,8 @@ type
     function EditText(const AItem: TNyxItemRef; AColumn: Integer;
       const AValue: TNyxText): TNyxText;
   protected
+    procedure RenderCellRange; override;
+    function CellRangeAvailable: Boolean; override;
     function ClipboardInputAvailable: Boolean; override;
     function BeginCellPresentation: INyxCollectionCellPresentation; override;
     function PrepareColumnFit(const ALaunch: INyxCollectionColumnsCapture;
@@ -2480,6 +2495,11 @@ begin
     Grid.AttachDisplayReader(Display);
   end;
   Grid.AttachEditReader(Editable);
+
+  if AOwner.FCellRangeEnabled then
+  begin
+    Grid.ObserveCellRange(RangeSelected);
+  end;
   Grid.ObserveValidationIdle(AOwner.ColumnValidationIdle);
   Grid.ObserveColumnDoubleClick(AOwner.ColumnDoubleClick);
   Grid.ObserveColumnEditor(AOwner.ColumnEditorShown);
@@ -2596,6 +2616,16 @@ begin
   if (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns)) then
   begin
     Result := Owner.CanonicalEditable(Columns[AColumn], ARow);
+  end;
+end;
+
+function TColumnPane.RangeSelected(AColumn, ARow: Integer): Boolean;
+begin
+  Result := False;
+
+  if (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns)) then
+  begin
+    Result := Owner.CanonicalRangeSelected(Columns[AColumn], ARow);
   end;
 end;
 
@@ -4004,6 +4034,13 @@ begin
   FColumnGeometryPending := False;
   FColumnClick := nil;
   FCellContextDispatch := nil;
+  FRangePaint := nil;
+  FRangePaintFields := nil;
+
+  if FGrid is TNyxCollectionStringGrid then
+  begin
+    TNyxCollectionStringGrid(FGrid).ObserveCellRange(nil);
+  end;
 
   if FInputGrid <> nil then
   begin
@@ -4017,12 +4054,14 @@ begin
 
   if FStartPane <> nil then
   begin
+    FStartPane.Grid.ObserveCellRange(nil);
     FStartPane.Grid.ConfigureCellContext(GetInputLifetime, nil, nil);
     FStartPane.Grid.ObserveColumnEditor(nil);
   end;
 
   if FEndPane <> nil then
   begin
+    FEndPane.Grid.ObserveCellRange(nil);
     FEndPane.Grid.ConfigureCellContext(GetInputLifetime, nil, nil);
     FEndPane.Grid.ObserveColumnEditor(nil);
   end;

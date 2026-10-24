@@ -914,6 +914,144 @@ begin
   end;
 end;
 
+function TNativeMount.CellRangeAvailable: Boolean;
+begin
+  Result := FGrid is TNyxCollectionStringGrid;
+end;
+
+function TNativeMount.CanonicalRangeSelected(AColumn, ARow: Integer): Boolean;
+begin
+  Result := FCellRangeEnabled and (FRangePaint <> nil) and
+    InputLifetimeCurrent and FRangePaint.Current and
+    (ARow >= FRangeFirstRow) and (ARow <= FRangeLastRow) and
+    (AColumn >= 0) and (AColumn < Length(FRangePaintFields));
+
+  if Result then
+  begin
+    Result := FRangePaintFields[AColumn];
+  end;
+end;
+
+function TNativeMount.GridRangeSelected(AColumn, ARow: Integer): Boolean;
+begin
+  Result := CanonicalRangeSelected(CanonicalColumn(FGrid, AColumn), ARow);
+end;
+
+procedure TNativeMount.RenderCellRange;
+var
+  LLease: INyxCollectionMount;
+  LIntent: INyxCollectionCellRangeIntent;
+  LPrevious: INyxCollectionCellRangeIntent;
+  LCapture: INyxCollectionCellRangeCapture;
+  LBounds: INyxCollectionCellRangeBounds;
+  LPayload: INyxCollectionClipboardText;
+  LFrame: INyxNativeGestureFrame;
+  LCanonical: Integer;
+  LField: Integer;
+begin
+  LLease := Self as INyxCollectionMount;
+  LPrevious := FRangePaint;
+  FRangePaint := nil;
+  FRangePaintFields := nil;
+
+  if FCellRangeEnabled and (FCellRanges <> nil) then
+  begin
+    LIntent := FCellRanges.Selection;
+
+    if (LIntent <> nil) and LIntent.Current and (LIntent.Page = FRendered) then
+    begin
+      LCapture := LIntent.Capture;
+
+      if Supports(LCapture, INyxCollectionCellRangeBounds, LBounds) then
+      begin
+        LPayload := LCapture.Payload;
+        SetLength(FRangePaintFields, Length(FClipboardFields));
+        for LCanonical := 0 to High(FRangePaintFields) do
+        begin
+          for LField := 0 to LPayload.FieldCount - 1 do
+          begin
+
+            if LPayload.FieldAt(LField).Same(FClipboardFields[LCanonical]) then
+            begin
+              FRangePaintFields[LCanonical] := True;
+              Break;
+            end;
+          end;
+        end;
+        FRangeFirstRow := LBounds.FirstRow + 1;
+        FRangeLastRow := LBounds.LastRow + 1;
+        FRangePaint := LIntent;
+      end;
+    end;
+  end;
+  LFrame := FColumnFrame;
+
+  if LFrame <> nil then
+  begin
+    LFrame.Enter;
+  end;
+  try
+
+    if FGrid is TNyxCollectionStringGrid then
+    begin
+
+      if FCellRangeEnabled then
+      begin
+        TNyxCollectionStringGrid(FGrid).ObserveCellRange(GridRangeSelected);
+      end
+      else
+      begin
+        TNyxCollectionStringGrid(FGrid).ObserveCellRange(nil);
+      end;
+      FGrid.Invalidate;
+    end;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+
+    if FStartPane <> nil then
+    begin
+
+      if FCellRangeEnabled then
+      begin
+        FStartPane.Grid.ObserveCellRange(FStartPane.RangeSelected);
+      end
+      else
+      begin
+        FStartPane.Grid.ObserveCellRange(nil);
+      end;
+      FStartPane.Grid.Invalidate;
+    end;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+
+    if FEndPane <> nil then
+    begin
+
+      if FCellRangeEnabled then
+      begin
+        FEndPane.Grid.ObserveCellRange(FEndPane.RangeSelected);
+      end
+      else
+      begin
+        FEndPane.Grid.ObserveCellRange(nil);
+      end;
+      FEndPane.Grid.Invalidate;
+    end;
+  finally
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
+  end;
+end;
+
 constructor TNativeCellPresentation.Create(AOwner: TNativeMount);
 begin
   inherited Create;
@@ -1141,7 +1279,11 @@ var
   LLease: INyxCollectionMount;
   LCommands: INyxCollectionClipboardCommands;
   LEntry: INyxCollectionClipboardCellInput;
-  LCommand: INyxCollectionClipboardCellCommand;
+  LCommand: INyxCollectionClipboardCommand;
+  LCellCommand: INyxCollectionClipboardCellCommand;
+  LRangeInput: INyxCollectionClipboardRangeInput;
+  LRangeCommand: INyxCollectionClipboardRangeCommand;
+  LRangeIntent: INyxCollectionCellRangeIntent;
   LGrid: TStringGrid;
   LData: INyxCollectionSnapshot;
   LField: TNyxColumnIdentity;
@@ -1154,6 +1296,7 @@ var
 begin
   Result := False;
   LCommands := FClipboardCommands;
+  LRangeIntent := GetCellRange;
 
   if (LCommands = nil) or (AKey <> VK_C) or
     not ((AShift * [ssCtrl, ssShift, ssAlt, ssMeta, ssSuper, ssAltGr] = [ssCtrl]) or
@@ -1171,13 +1314,28 @@ begin
     LSender := FGrid;
   end;
 
-  if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+  if LRangeIntent <> nil then
   begin
-    raise ENyxCollection.Create('Collection clipboard cannot reserve original cell input');
+
+    if not Supports(LCommands, INyxCollectionClipboardRangeInput, LRangeInput) then
+    begin
+      raise ENyxCollectionRange.Create('Collection clipboard cannot reserve original cell range input');
+    end;
+    LRangeCommand := LRangeInput.BeginRangeInput;
+    LCommand := LRangeCommand;
+  end
+  else
+  begin
+
+    if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+    begin
+      raise ENyxCollection.Create('Collection clipboard cannot reserve original cell input');
+    end;
+    LCellCommand := LEntry.BeginCellInput;
+    LCommand := LCellCommand;
   end;
   { Reserve the original input/epoch/intent/final fence BEFORE even an immutable
     source item getter. Resolution below cannot lend this key newer authority. }
-  LCommand := LEntry.BeginCellInput;
   try
     LGrid := InputGrid(Sender);
 
@@ -1194,22 +1352,31 @@ begin
     begin
       Exit;
     end;
-    LRow := LGrid.Row - 1;
-    LColumn := CanonicalColumn(LGrid, LGrid.Col);
-    LField := ClipboardField(LColumn);
 
-    if (LData <> nil) and (LRow >= 0) and (LColumn >= 0) and LField.Defined then
+    if LRangeCommand <> nil then
     begin
-      LCount := LData.Count;
+      LRangeCommand.ResolveRange(LRangeIntent);
+      LCommand.Prepare;
+    end
+    else
+    begin
+      LRow := LGrid.Row - 1;
+      LColumn := CanonicalColumn(LGrid, LGrid.Col);
+      LField := ClipboardField(LColumn);
 
-      if LCommand.Current and (LRow < LCount) then
+      if (LData <> nil) and (LRow >= 0) and (LColumn >= 0) and LField.Defined then
       begin
-        LItem := LData.ItemAt(LRow).Ref;
-        LCommand.ResolveCell(LItem, LField);
+        LCount := LData.Count;
 
-        if LCommand.Current then
+        if LCommand.Current and (LRow < LCount) then
         begin
-          LCommand.Prepare;
+          LItem := LData.ItemAt(LRow).Ref;
+          LCellCommand.ResolveCell(LItem, LField);
+
+          if LCommand.Current then
+          begin
+            LCommand.Prepare;
+          end;
         end;
       end;
     end;

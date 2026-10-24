@@ -1019,13 +1019,29 @@ Each intent exposes flags-only readiness independently of its immutable source,
 page and payload. Commands must still fence their original mount/input/column
 cohort before using it.
 
-These portable capture/selection boundaries pass 46 native checks with a clean
-heap and 46 actual browser checks with empty logs, including genuine filtered
-page order, hidden columns, exact Unicode/NUL and reentrant snapshot getters.
-They publish no ordinary row-selection/data notifications and retain no live
-view/store. Mounted range highlighting, keyboard input and same-slot copy
-commands are the next integration step; this result does not enable those UI
-routes by default or qualify platform clipboard effects.
+An ordinary table mount also exposes `INyxCollectionCellRangeMount` from
+`nyx.collections.range.commands`. Enable it explicitly with `ConfigureCellRange`
+and use `SelectCells` with those typed endpoints. Its selection stays independent
+of row selection. The actual native/browser table highlights the accepted
+rectangle across both pinned edges. Native paint reads cached bounds/field bits,
+with no dataset getters in `DrawCell`; browser cells expose their selected state.
+Refresh, filtering, suspension, disabled input and retirement withdraw the old
+range rather than borrowing authority from a new page.
+
+With the existing injected clipboard controller configured, Ctrl+C on a data
+cell copies that exact current rectangle through the original request slot.
+Ordinary editor Ctrl+C and default-off tables retain their existing behavior.
+`INyxCollectionClipboardRangeInput` is an optional controller facet; old
+interfaces and row commands keep their contracts. A stale range remains a
+claimed refusal and cannot turn into a newly captured single-cell command.
+
+Current range/command fixtures pass 47/127 checks on both actual targets. Real
+controls pass393 native checks with a complete clean heap and465 browser checks
+at measured1280x900 and390x900, with empty logs. These include exact Unicode/NUL,
+view/getter reentry, ordinary/arranged tables, pinned paint and same-slot copy
+with injected host authority. Range gestures and discoverable menu actions are
+the next integration step. These results do not establish real OS clipboard
+effects, native qualification at two widths or complete workbench acceptance.
 
 ## Exporting captured table results
 

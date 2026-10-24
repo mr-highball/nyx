@@ -42,7 +42,8 @@ implementation
 uses SysUtils, nyx.text, nyx.collections, nyx.collections.selection,
   nyx.collections.arrangement, nyx.collections.arrangement.controls,
   nyx.collections.clipboard, nyx.collections.view.types, nyx.collections.export.actions,
-  nyx.collections.representation, nyx.contract, nyx.state;
+  nyx.collections.representation, nyx.contract, nyx.state,
+  nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands;
 
 type
   { Forward controller is borrowed only under an entered managed owner lease. }
@@ -99,12 +100,14 @@ type
     procedure Cancel;
   end;
 
-  { Prepared input token owns exact source/page/selection/column proof and the
-    synchronous final fence. It retains its controller, never the reverse.
-    Retire after transfer cannot cancel the independent asynchronous request. }
+  { Prepared input token owns exact source/page/row-or-cell-selection/column
+    proof and the synchronous final fence. It retains its controller, never the
+    reverse. Cell-range authority is separately flags-only; no range controller
+    enters an asynchronous host. Retire after transfer cannot cancel that request. }
   TCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
     INyxCollectionClipboardCellCommand, INyxCollectionClipboardPreparedScope,
-    INyxCollectionClipboardOutputCapture, INyxCollectionClipboardDisplayCapture)
+    INyxCollectionClipboardOutputCapture, INyxCollectionClipboardDisplayCapture,
+    INyxCollectionClipboardRangeCommand)
   private
     FOwner: TCommands;
     FOwnerLease: INyxCollectionClipboardCommands;
@@ -120,6 +123,14 @@ type
     FEntryReady: Boolean;
     FEligible: Boolean;
     FCellResolved: Boolean;
+    FRangeStarted: Boolean;
+    FRangeResolved: Boolean;
+    FRangeSource: INyxCollectionSnapshot;
+    FRangePage: INyxCollectionSnapshot;
+    FRangeAnchor: TNyxCollectionCellIdentity;
+    FRangeFocus: TNyxCollectionCellIdentity;
+    FRangeSerial: Integer;
+    FRangeReady: INyxCancellationReadiness;
     FPrepared: Boolean;
     FCompleteStarted: Boolean;
     FRetired: Boolean;
@@ -153,6 +164,7 @@ type
     procedure Prepare;
     procedure ResolveCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity);
+    procedure ResolveRange(const AIntent: INyxCollectionCellRangeIntent);
     function Complete(AAllowDefault: Boolean): Boolean;
     procedure Retire;
   public
@@ -162,11 +174,12 @@ type
   end;
 
   { Runtime controller keeps one exact pending receipt/request and immutable
-    authority. A receipt borrows this owner; it is revoked before host Cancel.
-    No member retains a command or its mount-retaining synchronous fence. }
+    authority for RAW cell, explicit cell rectangle, row and represented writes.
+    A receipt borrows this owner; it is revoked before host Cancel. No member
+    retains a command, live range selection or mount-retaining synchronous fence. }
   TCommands = class(TInterfacedObject, INyxCollectionClipboardCommands,
     INyxCollectionClipboardCellInput, INyxCollectionClipboardCapturedWrite,
-    INyxCollectionClipboardRepresentationWrite)
+    INyxCollectionClipboardRepresentationWrite, INyxCollectionClipboardRangeInput)
   private
     FView: INyxCollectionView;
     FInput: INyxCollectionInputLifetime;
@@ -204,6 +217,7 @@ type
     function BeginCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity): INyxCollectionClipboardCommand;
     function BeginCellInput: INyxCollectionClipboardCellCommand;
+    function BeginRangeInput: INyxCollectionClipboardRangeCommand;
     function BeginRows(AMembership: TNyxCollectionCopyMembership): INyxCollectionClipboardCommand;
     procedure Observe(AObserver: TNyxCollectionClipboardObserver);
     procedure CancelPending;
@@ -367,6 +381,16 @@ begin
   begin
     try
       FReadiness.CheckReady;
+
+      if (FAction = nccaCellRange) and FRangeResolved and FPrepared then
+      begin
+
+        if FRangeReady = nil then
+        begin
+          Exit(False);
+        end;
+        FRangeReady.CheckReady;
+      end;
     except
       Exit(False);
     end;
@@ -442,7 +466,7 @@ begin
     Exit;
   end;
 
-  if FAction <> nccaCell then
+  if FAction in [nccaSelectedSource, nccaSelectedPage] then
   begin
     LSelection := FView.Selection;
 
@@ -535,6 +559,7 @@ var
   LDefinition: TNyxCollectionField;
   LSchema: TNyxCollectionSchema;
   LIndex: Integer;
+  LRange: INyxCollectionCellRangeCapture;
 begin
 
   if FPrepared or FCompleteStarted or FRetired then
@@ -543,7 +568,8 @@ begin
   end;
   FPrepared := True;
 
-  if not FEligible or ((FAction = nccaCell) and not FCellResolved) then
+  if not FEligible or ((FAction = nccaCell) and not FCellResolved) or
+    ((FAction = nccaCellRange) and not FRangeResolved) then
   begin
     Exit;
   end;
@@ -572,7 +598,13 @@ begin
     Exit;
   end;
 
-  if FAction <> nccaCell then
+  if (FAction = nccaCellRange) and
+    ((FRangeSource <> FSource) or (FRangePage <> FPage)) then
+  begin
+    Exit;
+  end;
+
+  if FAction in [nccaSelectedSource, nccaSelectedPage] then
   begin
     LSelection := FView.Selection;
 
@@ -606,6 +638,11 @@ begin
   begin
     Exit;
   end;
+
+  if (FAction = nccaCellRange) and (FRangeSerial <> FColumnSerial) then
+  begin
+    Exit;
+  end;
   FColumnBaseline := LSpec.ToData.ToJSON + #10 + LCapture.Preferences.ToData.ToJSON;
 
   if not OriginalFlags then
@@ -633,11 +670,20 @@ begin
   begin
     Exit;
   end;
-  LScope := TCopyScope.Create(FInput, FEpoch, FParentReady);
+  LScope := TCopyScope.Create(FInput, FEpoch, FParentReady, FRangeReady);
   FScope := LScope;
   FScopeReady := LScope;
 
-  if FAction = nccaCell then
+  if FAction = nccaCellRange then
+  begin
+    LObservation := TNyxColumnLayoutObservation.Read(LCapture);
+    LFields := NyxCollectionClipboardFields(LObservation, nccfVisiblePresentation);
+    LRange := NewNyxCollectionCellRange(FSource, FPage, LFields,
+      FRangeAnchor, FRangeFocus, FColumnSerial, FOptions.IncludeHeaders,
+      FOptions.Lines, FOptions.WorkLimits);
+    FPayload := LRange.Payload;
+  end
+  else if FAction = nccaCell then
   begin
     FPayload := NewNyxCollectionClipboardCell(FSource, FItem, FField, FOptions.WorkLimits);
     { Ordinary RAW/context entry captures metadata only. Strict formatting is
@@ -737,6 +783,84 @@ begin
   FField := TNyxColumnIdentity.FromData(AField.ToData);
 end;
 
+procedure TCommand.ResolveRange(const AIntent: INyxCollectionCellRangeIntent);
+var
+  LLease: INyxCollectionClipboardCommand;
+  LIntent: INyxCollectionCellRangeIntent;
+  LReady: INyxCancellationReadiness;
+  LCapture: INyxCollectionCellRangeCapture;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+begin
+  LLease := Self;
+  LIntent := AIntent;
+
+  if (FAction <> nccaCellRange) or FRangeStarted or FPrepared or FCompleteStarted or FRetired then
+  begin
+    raise ENyxCollectionRange.Create('Cell range resolution is single-use before preparation');
+  end;
+  FRangeStarted := True;
+
+  if not OriginalFlags or (LIntent = nil) then
+  begin
+    Exit;
+  end;
+  LReady := LIntent.Readiness;
+
+  if not OriginalFlags or (LReady = nil) then
+  begin
+    Exit;
+  end;
+  FRangeReady := LReady;
+  FRangeResolved := True;
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+  LCapture := LIntent.Capture;
+
+  if not OriginalFlags or (LCapture = nil) then
+  begin
+    FRangeResolved := False;
+    Exit;
+  end;
+  LSource := LIntent.Source;
+
+  if not OriginalFlags or (LSource = nil) then
+  begin
+    FRangeResolved := False;
+    Exit;
+  end;
+  LPage := LIntent.Page;
+
+  if not OriginalFlags or (LPage = nil) then
+  begin
+    FRangeResolved := False;
+    Exit;
+  end;
+  FRangeAnchor := LCapture.Anchor;
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+  FRangeFocus := LCapture.Focus;
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+  FRangeSerial := LCapture.ColumnSerial;
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+  FRangeSource := LSource;
+  FRangePage := LPage;
+end;
+
 function TCommand.Complete(AAllowDefault: Boolean): Boolean;
 begin
   Result := True;
@@ -830,6 +954,15 @@ var
 begin
   LLease := Self;
   Result := TCommand.Create(Self, nccaCell, Default(TNyxItemRef),
+    Default(TNyxColumnIdentity), True);
+end;
+
+function TCommands.BeginRangeInput: INyxCollectionClipboardRangeCommand;
+var
+  LLease: INyxCollectionClipboardCommands;
+begin
+  LLease := Self;
+  Result := TCommand.Create(Self, nccaCellRange, Default(TNyxItemRef),
     Default(TNyxColumnIdentity), True);
 end;
 
