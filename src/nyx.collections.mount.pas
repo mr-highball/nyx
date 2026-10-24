@@ -50,6 +50,7 @@ uses
   nyx.collections.range.commands,
   nyx.collections.range.navigation,
   nyx.collections.range.pointer,
+  nyx.collections.range.stroke,
   nyx.collections.export.actions,
   nyx.collections.export,
   nyx.collections.cell.actions,
@@ -295,7 +296,8 @@ type
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
-    INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput)
+    INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
+    INyxCollectionCellRangeStrokeInput)
   private
     FToken: INyxCollectionViewSubscription;
     FConnected: Boolean;
@@ -374,6 +376,12 @@ type
       cancel flags belong here; the state retains no mount/view callback. }
     FCellRangeEnabled: Boolean;
     FCellRanges: INyxCollectionCellRangeSelection;
+    { Pending gesture ownership is detached data plus flags only. No message
+      entry, target callback or widget is retained between physical events. }
+    FCellStroke: INyxCollectionRangeStroke;
+    FCellStrokeScope: INyxCancellationScope;
+    FCellStrokePointer: TNyxCollectionRangeStrokePointer;
+    FCellStrokePreview: INyxCollectionCellRangeCapture;
     FClipboardOptions: TNyxCollectionClipboardOptions;
     FExportCommands: INyxCollectionExportCommands;
     FCellActions: INyxCollectionCellActions;
@@ -423,6 +431,7 @@ type
     function BeginCellRangeKey(AKey: TNyxCollectionRangeKey): INyxCollectionCellRangeKeyCommand;
     function BeginCellRangePointer(AAction: TNyxCollectionRangePointerAction):
       INyxCollectionCellRangePointerEntry;
+    procedure CancelCellRangeStroke;
     { Move only physical focus using the already admitted row/canonical field.
       Implementations suppress ordinary row-selection/editor side effects and
       return after any focus callbacks; the command then repeats its final fence. }
@@ -517,6 +526,12 @@ type
     function SelectCells(const AAnchor, AFocus: TNyxCollectionCellIdentity): Boolean;
     procedure ClearCellRange;
     function GetCellRange: INyxCollectionCellRangeIntent;
+    function BeginCellRangeStroke(APhase: TNyxCollectionRangeStrokePhase;
+      const APointer: TNyxCollectionRangeStrokePointer;
+      AAction: TNyxCollectionRangePointerAction;
+      const AStroke: INyxCollectionRangeStroke = nil): INyxCollectionCellRangeStrokeEntry;
+    procedure AbandonCellRangeStroke(const APointer: TNyxCollectionRangeStrokePointer;
+      const AStroke: INyxCollectionRangeStroke);
     procedure ConfigureExport(const AHost: INyxFileSaveHost;
       const AEvents: INyxEvents; const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionExportOptions);
@@ -635,12 +650,13 @@ type
     FPrepared: Boolean;
     FCompleted: Boolean;
     FRetired: Boolean;
-    procedure CaptureOwner(AOwner: TNyxCollectionMountBase);
+    procedure CaptureOwner(AOwner: TNyxCollectionMountBase; AKeepStroke: Boolean = False);
     function PreparedCurrent: Boolean;
   public
     constructor Create(AOwner: TNyxCollectionMountBase; AKey: TNyxCollectionRangeKey);
     constructor CreatePointer(AOwner: TNyxCollectionMountBase;
       AAction: TNyxCollectionRangePointerAction);
+    constructor CreateStrokeGuard(AOwner: TNyxCollectionMountBase; AKeepStroke: Boolean);
     destructor Destroy; override;
     procedure ResolveOrigin(const AOrigin: TNyxCollectionCellIdentity);
     procedure ResolveCells(const AOrigin, ATarget: TNyxCollectionCellIdentity);
@@ -648,6 +664,57 @@ type
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
     function Complete(AAllowDefault: Boolean): Boolean;
+    procedure Retire;
+  end;
+
+  { Readiness retains canonical input flags and a cancellation flag, never its
+    mount. This is safe for the detached pending stroke after message retirement;
+    epoch ABA and ancestor retirement cannot revive its original admission. }
+  TCellStrokeReadiness = class(TInterfacedObject, INyxCancellationReadiness)
+  public
+    Input: INyxCollectionInputLifetime;
+    Scope: INyxCancellationScope;
+    Epoch: Integer;
+    procedure CheckReady;
+  end;
+
+  { One message delegates original mounted reservation to the existing guard.
+    Its owned snapshots and guard cannot escape into the detached stroke. Focus
+    runs only at begin/release, and every outward read repeats that SAME guard.
+    Claimed completion stays entered through cleanup: explicit callback-driven
+    retirement abandons it without resuming a borrowed receiver tail. }
+  TCellStrokeEntry = class(TInterfacedObject, INyxCollectionCellRangePointerEntry,
+    INyxCollectionCellRangeStrokeEntry)
+  private
+    FGuard: TCellRangeKeyCommand;
+    FGuardLease: INyxCollectionCellRangePointerEntry;
+    FPhase: TNyxCollectionRangeStrokePhase;
+    FPointer: TNyxCollectionRangeStrokePointer;
+    FAction: TNyxCollectionRangePointerAction;
+    FStroke: INyxCollectionRangeStroke;
+    FScope: INyxCancellationScope;
+    FSource: INyxCollectionSnapshot;
+    FPage: INyxCollectionSnapshot;
+    FFields: TNyxCollectionClipboardFields;
+    FSerial: Integer;
+    FReady: Boolean;
+    FCompleted: Boolean;
+    FCompleting: Boolean;
+    FRetired: Boolean;
+    function Facts(const AFocus: TNyxCollectionCellIdentity): TNyxCollectionRangeStrokeInput;
+  public
+    constructor Create(AOwner: TNyxCollectionMountBase;
+      APhase: TNyxCollectionRangeStrokePhase;
+      const APointer: TNyxCollectionRangeStrokePointer;
+      AAction: TNyxCollectionRangePointerAction;
+      const AStroke: INyxCollectionRangeStroke);
+    destructor Destroy; override;
+    procedure ResolveCells(const AOrigin, ATarget: TNyxCollectionCellIdentity);
+    procedure Prepare;
+    function GetCurrent: Boolean;
+    function GetDispatchCurrent: Boolean;
+    function Complete(AAllowDefault: Boolean): Boolean;
+    function GetPendingStroke: INyxCollectionRangeStroke;
     procedure Retire;
   end;
 
@@ -779,6 +846,379 @@ begin
   raise ENyxCollection.Create(AFailure.Message);
 end;
 
+procedure TCellStrokeReadiness.CheckReady;
+begin
+
+  if (Scope = nil) or Scope.Cancelled or (Input = nil) or not Input.Ready or
+    (Input.Epoch <> Epoch) then
+  begin
+    raise ENyxSchedule.Create('The original mounted range stroke is no longer ready');
+  end;
+end;
+
+constructor TCellStrokeEntry.Create(AOwner: TNyxCollectionMountBase;
+  APhase: TNyxCollectionRangeStrokePhase;
+  const APointer: TNyxCollectionRangeStrokePointer;
+  AAction: TNyxCollectionRangePointerAction;
+  const AStroke: INyxCollectionRangeStroke);
+begin
+  inherited Create;
+  FPhase := APhase;
+  FPointer := APointer;
+  FAction := AAction;
+  FStroke := AStroke;
+  FPointer.Validate;
+
+  if (Ord(FPhase) < Ord(Low(TNyxCollectionRangeStrokePhase))) or
+    (Ord(FPhase) > Ord(High(TNyxCollectionRangeStrokePhase))) or
+    (Ord(FAction) < Ord(Low(TNyxCollectionRangePointerAction))) or
+    (Ord(FAction) > Ord(High(TNyxCollectionRangePointerAction))) then
+  begin
+    raise ENyxCollectionRange.Create('Mounted stroke phase or action is invalid');
+  end;
+  FGuard := TCellRangeKeyCommand.CreateStrokeGuard(AOwner, FPhase <> ncrspBegin);
+  FGuardLease := FGuard;
+
+  if FPhase = ncrspBegin then
+  begin
+    FStroke := nil;
+
+    if FGuard.GetCurrent then
+    begin
+      FScope := NewNyxCancellationScope;
+      AOwner.FCellStrokeScope := FScope;
+      AOwner.FCellStrokePointer := FPointer;
+    end;
+  end
+  else
+  begin
+    FScope := AOwner.FCellStrokeScope;
+  end;
+end;
+
+destructor TCellStrokeEntry.Destroy;
+begin
+  try
+    Retire;
+  except
+    { Explicit retirement reports failure; final release must still unwind. }
+  end;
+  inherited Destroy;
+end;
+
+function TCellStrokeEntry.GetDispatchCurrent: Boolean;
+begin
+  Result := not FRetired and (FGuard <> nil) and FGuard.GetDispatchCurrent;
+end;
+
+function TCellStrokeEntry.GetCurrent: Boolean;
+begin
+  Result := not FRetired and (FGuard <> nil) and FGuard.GetCurrent and
+    (FScope <> nil) and not FScope.Cancelled and
+    (FGuard.FOwner.FCellStrokeScope = FScope) and
+    FGuard.FOwner.FCellStrokePointer.Same(FPointer) and
+    ((FPhase = ncrspBegin) or ((FStroke <> nil) and
+      (FGuard.FOwner.FCellStroke = FStroke)));
+end;
+
+procedure TCellStrokeEntry.ResolveCells(const AOrigin,
+  ATarget: TNyxCollectionCellIdentity);
+begin
+
+  if GetCurrent then
+  begin
+    FGuard.ResolveCells(AOrigin, ATarget);
+  end;
+end;
+
+procedure TCellStrokeEntry.Prepare;
+var
+  LLease: INyxCollectionCellRangeStrokeEntry;
+  LStore: INyxCollection;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LObservation: TNyxColumnLayoutObservation;
+  LFields: TNyxCollectionClipboardFields;
+  LFocus: TNyxCollectionCellIdentity;
+  LIndex: Integer;
+begin
+  LLease := Self;
+
+  if not GetCurrent or FGuard.FPrepared or not FGuard.FResolved then
+  begin
+    Exit;
+  end;
+  FGuard.FPrepared := True;
+  LStore := FGuard.FView.Store;
+
+  if not GetCurrent or (LStore = nil) then
+  begin
+    Exit;
+  end;
+  LSource := LStore.Snapshot;
+
+  if not GetCurrent or (LSource = nil) then
+  begin
+    Exit;
+  end;
+  LPage := FGuard.FView.Snapshot;
+
+  if not GetCurrent or (LPage = nil) then
+  begin
+    Exit;
+  end;
+  LColumns := NyxCollectionColumns(FGuard.FView);
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+  LCapture := LColumns.CaptureColumns;
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+  LObservation := TNyxColumnLayoutObservation.Read(LCapture);
+  LFields := NyxCollectionClipboardFields(LObservation, nccfVisiblePresentation);
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+  LFocus := FGuard.FOrigin;
+
+  if FPhase = ncrspRelease then
+  begin
+    LFocus := FGuard.FTarget;
+  end;
+  FGuard.FRow := LPage.IndexOf(LFocus.Item);
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FGuard.FOwner.FClipboardFields) do
+  begin
+
+    if FGuard.FOwner.FClipboardFields[LIndex].Same(LFocus.Field) then
+    begin
+      FGuard.FColumn := LIndex;
+      Break;
+    end;
+  end;
+
+  if (FGuard.FRow < 0) or (FGuard.FColumn < 0) then
+  begin
+    Exit;
+  end;
+  FSource := LSource;
+  FPage := LPage;
+  FFields := LFields;
+  FSerial := LObservation.Serial;
+  FReady := GetCurrent;
+end;
+
+function TCellStrokeEntry.Facts(const AFocus: TNyxCollectionCellIdentity):
+  TNyxCollectionRangeStrokeInput;
+begin
+  Result := NyxCollectionRangeStrokeInput(GetCurrent, FGuard.FEpoch,
+    FGuard.FMutation, FSerial, AFocus);
+end;
+
+function TCellStrokeEntry.GetPendingStroke: INyxCollectionRangeStroke;
+begin
+  Result := nil;
+
+  if not FRetired then
+  begin
+    Result := FStroke;
+  end;
+end;
+
+function TCellStrokeEntry.Complete(AAllowDefault: Boolean): Boolean;
+var
+  LLease: INyxCollectionCellRangeStrokeEntry;
+  LReadinessObject: TCellStrokeReadiness;
+  LReadiness: INyxCancellationReadiness;
+  LRelease: INyxCollectionRangeStrokeRelease;
+  LNewStroke: INyxCollectionRangeStroke;
+  LOwner: TNyxCollectionMountBase;
+  LBodyFailed: Boolean;
+begin
+  LLease := Self;
+  Result := True;
+
+  if FCompleted or FRetired then
+  begin
+    Exit;
+  end;
+  FCompleted := True;
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+  LOwner := FGuard.FOwner;
+  LBodyFailed := False;
+  FCompleting := True;
+  try
+    try
+
+      if AAllowDefault and FReady then
+      begin
+
+        if FPhase = ncrspBegin then
+        begin
+
+          if not LOwner.FocusCellRange(FGuard.FRow, FGuard.FColumn) or not GetCurrent then
+          begin
+            Exit;
+          end;
+          LReadinessObject := TCellStrokeReadiness.Create;
+          LReadiness := LReadinessObject;
+          LReadinessObject.Input := FGuard.FInput;
+          LReadinessObject.Scope := FScope;
+          LReadinessObject.Epoch := FGuard.FEpoch;
+          LNewStroke := NewNyxCollectionRangeStroke(FGuard.FSelection, LReadiness,
+            FPointer, FSource, FPage, FFields, FGuard.FOrigin, FGuard.FTarget,
+            FAction, Facts(FGuard.FOrigin), FGuard.FOptions.IncludeHeaders,
+            FGuard.FOptions.Lines, FGuard.FOptions.WorkLimits);
+
+          if not GetCurrent or not LNewStroke.Current then
+          begin
+            LNewStroke.Retire;
+            Exit;
+          end;
+          FStroke := LNewStroke;
+          LOwner.FCellStroke := FStroke;
+        end
+        else
+        begin
+
+          if not FStroke.Stage(FPointer, FSource, FPage, Facts(FGuard.FOrigin),
+            FGuard.FTarget) or not GetCurrent then
+          begin
+            Exit;
+          end;
+
+          if FPhase = ncrspRelease then
+          begin
+            LRelease := FStroke.PrepareRelease(FPointer, FSource, FPage,
+              Facts(FGuard.FOrigin));
+            try
+
+              if (LRelease <> nil) and GetCurrent and
+                LOwner.FocusCellRange(FGuard.FRow, FGuard.FColumn) and GetCurrent then
+              begin
+                LRelease.Complete(True, FSource, FPage, Facts(FGuard.FTarget));
+              end;
+            finally
+
+              if LRelease <> nil then
+              begin
+                LRelease.Retire;
+              end;
+            end;
+            Exit;
+          end;
+        end;
+        LOwner.FCellStrokePreview := FStroke.Preview;
+      end;
+    except
+      LBodyFailed := True;
+      raise;
+    end;
+  finally
+    try
+      try
+        { An abandoned/consumed message withdraws only its own current pending
+          owner. A newer nested message's request and preview remain untouched. }
+        if (FGuard <> nil) and FGuard.GetCurrent and (LOwner.FCellStrokeScope = FScope) then
+        begin
+
+          if not AAllowDefault or not FReady or (FStroke = nil) or
+            not FStroke.Current or (FPhase = ncrspRelease) then
+          begin
+            LOwner.CancelCellRangeStroke;
+          end;
+
+          if (FGuard <> nil) and FGuard.GetCurrent then
+          begin
+            LOwner.RenderCellRange;
+          end;
+        end;
+      except
+        { Cleanup still withdraws pending authority. Preserve a prior Pascal or
+          raw browser focus/canonical failure if painting also refuses. }
+        if not LBodyFailed then
+        begin
+          raise;
+        end;
+      end;
+    finally
+      FCompleting := False;
+    end;
+  end;
+end;
+
+procedure TCellStrokeEntry.Retire;
+var
+  LGuard: INyxCollectionCellRangePointerEntry;
+  LOwner: TNyxCollectionMountBase;
+  LCancel: Boolean;
+  LStroke: INyxCollectionRangeStroke;
+  LScope: INyxCancellationScope;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+
+  LCancel := (not FCompleted or FCompleting) and GetCurrent;
+  LOwner := nil;
+
+  if FGuard <> nil then
+  begin
+    LOwner := FGuard.FOwner;
+  end;
+  FRetired := True;
+  LGuard := FGuardLease;
+  LStroke := FStroke;
+  LScope := FScope;
+  LSource := FSource;
+  LPage := FPage;
+  FGuardLease := nil;
+  FGuard := nil;
+  FStroke := nil;
+  FScope := nil;
+  FSource := nil;
+  FPage := nil;
+  FFields := nil;
+  { No Self access follows the first outward retirement. This also works from
+    Destroy without resurrecting a zero-reference interface receiver. }
+
+  if LCancel then
+  begin
+    LOwner.CancelCellRangeStroke;
+
+    if LGuard.Current then
+    begin
+      LOwner.RenderCellRange;
+    end;
+  end;
+
+  if LGuard <> nil then
+  begin
+    LGuard.Retire;
+  end;
+end;
+
 constructor TCellRangeKeyCommand.Create(AOwner: TNyxCollectionMountBase;
   AKey: TNyxCollectionRangeKey);
 begin
@@ -796,7 +1236,18 @@ begin
   CaptureOwner(AOwner);
 end;
 
-procedure TCellRangeKeyCommand.CaptureOwner(AOwner: TNyxCollectionMountBase);
+constructor TCellRangeKeyCommand.CreateStrokeGuard(AOwner: TNyxCollectionMountBase;
+  AKeepStroke: Boolean);
+begin
+  inherited Create;
+  FPointer := True;
+  CaptureOwner(AOwner, AKeepStroke);
+end;
+
+procedure TCellRangeKeyCommand.CaptureOwner(AOwner: TNyxCollectionMountBase;
+  AKeepStroke: Boolean);
+var
+  LHadPreview: Boolean;
 begin
   FOwner := AOwner;
   FLease := AOwner as INyxCollectionMount;
@@ -819,6 +1270,19 @@ begin
   begin
     Inc(AOwner.FCellRangeRequest);
     FRequest := AOwner.FCellRangeRequest;
+  end;
+
+  if not AKeepStroke then
+  begin
+    LHadPreview := AOwner.FCellStrokePreview <> nil;
+    AOwner.CancelCellRangeStroke;
+
+    if LHadPreview and AOwner.FConnected and not AOwner.FDisconnecting then
+    begin
+      { Even a consumed legacy key/endpoint must remove the abandoned preview.
+        This port paints cached membership only; it reads no source or editor. }
+      AOwner.RenderCellRange;
+    end;
   end;
   FAdmitted := (FRequest > 0) and (FRequest < High(Integer)) and
     AOwner.FConnected and not AOwner.FDisconnecting and AOwner.FCellRangeEnabled and
@@ -1730,6 +2194,77 @@ begin
   end;
 end;
 
+procedure TNyxCollectionMountBase.CancelCellRangeStroke;
+var
+  LStroke: INyxCollectionRangeStroke;
+  LScope: INyxCancellationScope;
+  LPreview: INyxCollectionCellRangeCapture;
+begin
+  { Withdraw authority and cached paint before releasing caller-owned immutable
+    snapshots. A finalizer may reenter, but cannot clear a newer pending stroke. }
+  LStroke := FCellStroke;
+  LScope := FCellStrokeScope;
+  LPreview := FCellStrokePreview;
+  FCellStroke := nil;
+  FCellStrokeScope := nil;
+  FCellStrokePreview := nil;
+  FCellStrokePointer := Default(TNyxCollectionRangeStrokePointer);
+
+  if LScope <> nil then
+  begin
+    LScope.Cancel;
+  end;
+
+  if LStroke <> nil then
+  begin
+    LStroke.Retire;
+  end;
+end;
+
+function TNyxCollectionMountBase.BeginCellRangeStroke(
+  APhase: TNyxCollectionRangeStrokePhase;
+  const APointer: TNyxCollectionRangeStrokePointer;
+  AAction: TNyxCollectionRangePointerAction;
+  const AStroke: INyxCollectionRangeStroke): INyxCollectionCellRangeStrokeEntry;
+begin
+  Result := nil;
+
+  if FCellRangeEnabled and (FCellRanges <> nil) then
+  begin
+    Result := TCellStrokeEntry.Create(Self, APhase, APointer, AAction, AStroke);
+  end;
+end;
+
+procedure TNyxCollectionMountBase.AbandonCellRangeStroke(
+  const APointer: TNyxCollectionRangeStrokePointer;
+  const AStroke: INyxCollectionRangeStroke);
+var
+  LLease: INyxCollectionMount;
+  LStroke: INyxCollectionRangeStroke;
+  LRequest: Integer;
+begin
+  LLease := Self as INyxCollectionMount;
+  LStroke := AStroke;
+
+  if (LStroke = nil) or (FCellStroke <> LStroke) or
+    not FCellStrokePointer.Same(APointer) then
+  begin
+    Exit;
+  end;
+
+  if FCellRangeRequest < High(Integer) then
+  begin
+    Inc(FCellRangeRequest);
+  end;
+  LRequest := FCellRangeRequest;
+  CancelCellRangeStroke;
+
+  if (FCellRangeRequest = LRequest) and GetInputReady then
+  begin
+    RenderCellRange;
+  end;
+end;
+
 function TNyxCollectionMountBase.FocusCellRange(ARow, AColumn: Integer): Boolean;
 begin
   { A direct nonvisual mount cannot manufacture physical navigation. }
@@ -1751,6 +2286,11 @@ begin
   if not FCellRangeEnabled or (FCellRanges = nil) or not InputLifetimeCurrent then
   begin
     Exit;
+  end;
+
+  if FCellStrokePreview <> nil then
+  begin
+    Exit(FCellStrokePreview.Contains(AItem, AField));
   end;
   LRange := FCellRanges.Selection;
   Result := (LRange <> nil) and LRange.Current and LRange.Capture.Contains(AItem, AField);
@@ -1789,6 +2329,7 @@ begin
     begin
       Inc(FCellRangeRequest);
     end;
+    CancelCellRangeStroke;
     LView := FView;
     LInput := FInputLifetime;
 
@@ -1855,6 +2396,7 @@ begin
   begin
     Inc(FCellRangeRequest);
   end;
+  CancelCellRangeStroke;
 
   if FCellRanges = nil then
   begin
@@ -1921,6 +2463,7 @@ begin
   end;
   Inc(FCellRangeRequest);
   LRequest := FCellRangeRequest;
+  CancelCellRangeStroke;
   LEpoch := LInput.Epoch;
   LAnchor := NyxCollectionCellIdentity(AAnchor.Item, AAnchor.Field);
   LFocus := NyxCollectionCellIdentity(AFocus.Item, AFocus.Field);
@@ -2655,6 +3198,7 @@ begin
 
   if AValue then
   begin
+    CancelCellRangeStroke;
 
     if FCellRanges <> nil then
     begin
@@ -2812,6 +3356,12 @@ begin
     LRanges.Revoke;
   end;
   try
+    try
+      CancelCellRangeStroke;
+    except
+      {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
+      {$else}on E: Exception do CaptureMountCleanup(LFailure, TNyxText(E.Message));{$endif}
+    end;
     try
 
       if LCells <> nil then
@@ -3055,6 +3605,7 @@ var
 begin
   LKeepAlive := Self as INyxCollectionMount;
   FCellFocusValid := False;
+  CancelCellRangeStroke;
 
   if FCellRanges <> nil then
   begin
@@ -3162,6 +3713,10 @@ begin
   LInputState := nil;
   FUpdating := True;
   try
+    { A complete target refresh withdraws an unfinished physical gesture. Its
+      cached highlight cannot outlive changed geometry or a deferred import.
+      The existing updating shield refuses finalizer-created physical input. }
+    CancelCellRangeStroke;
 
     if DeferComposingRefresh then
     begin
@@ -3338,6 +3893,7 @@ begin
   FEnabled := AEnabled;
   FReadOnly := AReadOnly;
   FCellFocusValid := False;
+  CancelCellRangeStroke;
 
   if not AEnabled and (FCellRanges <> nil) then
   begin

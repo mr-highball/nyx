@@ -9,6 +9,41 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Active continuation — mounted range strokes
+
+The previous turn qualifies and pushes button-form retention asbe90180. Root
+continues alone on existing task03 W2 physical range selection. Its pure pending
+stroke cannot retain the old synchronous mount envelope across pointer messages.
+The current bridge adds an optional per-message Begin/Move/Release facet, sharing
+the mount's original request/epoch/selection fences. Only detached stroke data,
+canonical input/cancellation flags and cached preview membership survive between
+messages. Release focuses and rechecks before installing; wrong-pointer capture
+loss, consumed input and nested newer work cannot retarget the older gesture.
+Accepted ranges, RAW data and ordinary row selection stay separate from preview.
+
+The first checked native bridge run passes258 command checks with a complete
+clean heap. Closed02 adds exact-subject abandonment and withdrawal on target
+refresh/edit suspension, passing39 stroke/33 pointer/263 command checks and the
+unchanged1054 native control journey, all with complete clean heaps. Matching
+browser consumers compile, with zero owned warnings and all2316 pins unchanged.
+A subsequent first-diagnostic regression exposes the initial bridge's focus
+error being replaced during repaint cleanup, leaking2 blocks/80 bytes. That
+negative wrapper expected a clean failure and itself rejects the dirty heap;
+the raw failed assertion and leak remain evidence. Repair03 preserves the first
+error and passes265 native command checks with a complete clean heap; browser
+compilation and2316 input pins qualify separately. Current04 additionally covers
+explicit entry retirement reentered from focus, including no stale guard tail
+or pending-owner revival. It passes267 native command checks with a complete
+clean685214-block heap and zero owned warnings; its browser companion compiles.
+All2316 fixed working inputs reverify unchanged. The independent E-drive source
+copy is complete and every captured input matches the compiled working bytes.
+All actual readers and the capture/audit jobs are joined. The02
+control journey and later03/04 bridge checks retain separate source identities.
+Physical browser/LCL capture/move/up/touch adapters remain unimplemented for this
+bridge. Compile/model/headless focus evidence must not count as a working drag,
+actual touch, browser execution or original criterion completion. WORK's earlier
+W1/Studio evidence remains separate below; no unchanged900s rerun is scheduled.
+
 ## Column arrangement W1 — 2026-10-22
 
 ### Active prerequisite — native Inspector responsiveness

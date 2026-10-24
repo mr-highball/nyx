@@ -1232,6 +1232,43 @@ source/page or input generation preserve the accepted range. Retained previews
 keep no renderer, mounted entry or live view/store owner alive. This model does
 not establish physical capture authority or install drag handlers by itself.
 
+The optional `INyxCollectionCellRangeStrokeInput` mount facet connects that model
+to a **fresh synchronous entry per message**. Reserve Begin/Move/Release before
+target hit/focus/source reads, resolve the owned cell identities, prepare, then
+complete from that original canonical event's allow-default result. Begin uses
+the requested origin; Move/Release use the actual currently focused cell.
+Only `PendingStroke` survives entry retirement, never the mount envelope:
+
+```pascal
+LEntry := LInput.BeginCellRangeStroke(LPhase, LPointer, ncrpReplace, LPending);
+
+if LEntry <> nil then
+begin
+  try
+    ResolveActualCells(LPhase, LOrigin, LEndpoint);
+    LEntry.ResolveCells(LOrigin, LEndpoint);
+    LEntry.Prepare;
+    LAllowDefault := DispatchOriginalPointerMessage(LEntry);
+    LEntry.Complete(LAllowDefault);
+    LPending := LEntry.PendingStroke;
+  finally
+    LEntry.Retire;
+  end;
+end;
+```
+
+Here `ResolveActualCells` belongs to the target adapter, and `LAllowDefault`
+comes from that same message's synchronous canonical dispatch. The mount keeps
+cached preview membership separate from its public accepted `CellRange` and
+ordinary row selection. Matching `AbandonCellRangeStroke(LPointer, LPending)`
+withdraws capture loss/Escape without clearing the previous accepted range.
+Other pointers and superseded subjects are inert. Refresh, edit suspension,
+disable/re-enable, newer input and teardown retire the pending authority. An
+entry retired reentrantly during focus cannot resume its old default. A focus
+failure remains the first diagnostic when repaint cleanup also fails.
+Browser/LCL sustained capture, movement, release and touch wiring remain open;
+these mount APIs alone do not enable a new default gesture.
+
 Current range/command fixtures pass 47/127 checks on both actual targets. Real
 controls pass393 native checks with a complete clean heap and465 browser checks
 at measured1280x900 and390x900, with empty logs. These include exact Unicode/NUL,

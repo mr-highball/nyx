@@ -10,6 +10,15 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The W2 pending-stroke continuation now connects its portable model to an
+optional per-message mount envelope. Cached preview and accepted cells remain
+separate; exact-pointer abandonment, original input/focus fences and callback
+retirement are checked. Native command04 passes267 with a clean heap; the
+independent control02 preservation journey passes1054. Browser companions compile
+only. Physical browser/LCL capture/movement/release/touch and original acceptance
+remain open; [WORK](../WORK.md#active-continuation--mounted-range-strokes) owns
+the separate cohorts, negative diagnostics and next adapter integration.
+
 The alignment continuation adds independent typed logical axes, version12 only
 on actual presence, crafted source output, ordinary Inspector capture and grouped
 semantic set/reset with optional bounded reads. Source05 passes22 per target and

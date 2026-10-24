@@ -34,6 +34,7 @@ uses
   nyx.collections.identities,
   nyx.collections.range.commands,
   nyx.collections.range.pointer,
+  nyx.collections.range.stroke,
   nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events,
   nyx.publication
   {$ifdef PAS2JS}, Web{$endif};
@@ -162,13 +163,18 @@ type
       reenter ordinary range selection. It is cleared before that callback. }
     FocusPointer: INyxCollectionCellRangePointerEntry;
     Focuses: Integer;
+    ThrowStrokeFocus: Boolean;
+    ThrowStrokePaint: Boolean;
+    RetireStrokeOnFocus: Boolean;
     Item: TNyxItemRef;
     Field: TNyxColumnIdentity;
     procedure SuspendInput(AValue: Boolean);
     procedure ReadSource;
+    function PreviewContains(const ACell: TNyxCollectionCellIdentity): Boolean;
   protected
     procedure RenderDataset; override;
     procedure DetachTarget; override;
+    procedure RenderCellRange; override;
     function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
   end;
 
@@ -794,6 +800,11 @@ begin
   SetCellEditsSuspended(AValue);
 end;
 
+function TTestMount.PreviewContains(const ACell: TNyxCollectionCellIdentity): Boolean;
+begin
+  Result := CellRangeContains(ACell.Item, ACell.Field);
+end;
+
 procedure TTestMount.RenderDataset;
 var
   LCommands: INyxCollectionClipboardCommands;
@@ -823,17 +834,40 @@ begin
   Inc(GDetached);
 end;
 
+procedure TTestMount.RenderCellRange;
+begin
+
+  if ThrowStrokePaint then
+  begin
+    raise Exception.Create('stroke paint diagnostic');
+  end;
+end;
+
 function TTestMount.FocusCellRange(ARow, AColumn: Integer): Boolean;
 var
   LPointer: INyxCollectionCellRangePointerEntry;
 begin
   Inc(Focuses);
+
+  if ThrowStrokeFocus then
+  begin
+    raise Exception.Create('stroke focus diagnostic');
+  end;
   LPointer := FocusPointer;
   FocusPointer := nil;
 
   if LPointer <> nil then
   begin
-    LPointer.Complete(True);
+
+    if RetireStrokeOnFocus then
+    begin
+      RetireStrokeOnFocus := False;
+      LPointer.Retire;
+    end
+    else
+    begin
+      LPointer.Complete(True);
+    end;
   end;
   ReadSource;
   Result := GetConnected and GetInputReady and (ARow >= 0) and (AColumn >= 0);
@@ -1717,6 +1751,193 @@ begin
     LMount := nil;
     LView := nil;
     LSourceLease := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ Each message owns only a synchronous mount lease. The pending preview is
+  separate from accepted cells, canonical consumption is single-use, and the
+  detached stroke must not keep a released mount/view/store alive. }
+procedure MountedStrokeAdmission;
+var
+  LFixture: TFixture;
+  LView: INyxCollectionView;
+  LObject: TTestMount;
+  LMount: INyxCollectionMount;
+  LRanges: INyxCollectionCellRangeMount;
+  LInput: INyxCollectionCellRangeStrokeInput;
+  LEntry: INyxCollectionCellRangeStrokeEntry;
+  LOlder: INyxCollectionCellRangeStrokeEntry;
+  LStroke: INyxCollectionRangeStroke;
+  LPrevious: INyxCollectionCellRangeIntent;
+  LPointer: TNyxCollectionRangeStrokePointer;
+  LOtherPointer: TNyxCollectionRangeStrokePointer;
+  LOrigin: TNyxCollectionCellIdentity;
+  LTarget: TNyxCollectionCellIdentity;
+  LBefore: INyxCollectionSnapshot;
+  LFocuses: Integer;
+  LDetached: Integer;
+  LFailure: TNyxText;
+
+  procedure Prepare(APhase: TNyxCollectionRangeStrokePhase;
+    const APointer: TNyxCollectionRangeStrokePointer);
+  begin
+    LEntry := LInput.BeginCellRangeStroke(APhase, APointer, ncrpReplace, LStroke);
+    LEntry.ResolveCells(LOrigin, LTarget);
+    LEntry.Prepare;
+  end;
+
+  procedure BeginStroke;
+  begin
+    Prepare(ncrspBegin, LPointer);
+    LEntry.Complete(True);
+    LStroke := LEntry.PendingStroke;
+    Check((LStroke <> nil) and LStroke.Current, 'Actual mount begins a detached pending preview');
+    LEntry.Retire;
+  end;
+begin
+  LFixture := TFixture.Create;
+  try
+    LView := NewNyxCollectionView(LFixture.Store,
+      NyxCollectionView(LFixture.Key).Column(NyxTextField('Name'), 'Name'), cpTable);
+    LObject := TTestMount.Create(LView, ncipReady, nil);
+    LMount := LObject;
+    LObject.Item := LFixture.ItemA;
+    LObject.Field := LFixture.Field;
+    LObject.Activate;
+    Check(Supports(LMount, INyxCollectionCellRangeStrokeInput, LInput) and
+      Supports(LMount, INyxCollectionCellRangeMount, LRanges),
+      'Actual mount exposes the optional per-message stroke facet');
+    LPointer := NyxCollectionRangeStrokePointer(ncrsdMouse, 0);
+    LOtherPointer := NyxCollectionRangeStrokePointer(ncrsdTouch, 4);
+    Check(LInput.BeginCellRangeStroke(ncrspBegin, LPointer, ncrpReplace) = nil,
+      'Default-off mount grants no new gesture interception');
+    LRanges.ConfigureCellRange(True);
+    LOrigin := NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field);
+    LTarget := LOrigin;
+    LBefore := LFixture.Store.Snapshot;
+    BeginStroke;
+    Check((LRanges.CellRange = nil) and LObject.PreviewContains(LOrigin),
+      'Pending cached highlight does not publish an accepted range');
+    LTarget := NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field);
+    Prepare(ncrspMove, LPointer);
+    LFocuses := LObject.Focuses;
+    Check(LEntry.Complete(False) and LEntry.Complete(True) and
+      not LStroke.Current and (LRanges.CellRange = nil) and
+      (LObject.Focuses = LFocuses) and not LObject.PreviewContains(LOrigin),
+      'Consumed-first movement cannot retry, publish or move focus');
+    LEntry.Retire;
+    LTarget := LOrigin;
+    BeginStroke;
+    LTarget := NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field);
+    Prepare(ncrspMove, LPointer);
+    LEntry.Complete(True);
+    Check(LStroke.Current and LStroke.Preview.Focus.Same(LTarget) and
+      LObject.PreviewContains(LTarget) and (LRanges.CellRange = nil) and
+      (LObject.Focuses = LFocuses + 1),
+      'Move stages the exact RAW rectangle without changing accepted cells or focus');
+    LEntry.Retire;
+    Prepare(ncrspMove, LOtherPointer);
+    Check(not LEntry.Current and LEntry.Complete(True) and LStroke.Current,
+      'Another physical pointer cannot cancel or move this pending stroke');
+    LEntry.Retire;
+    Prepare(ncrspRelease, LPointer);
+    LObject.FocusPointer := LEntry;
+    LEntry.Complete(True);
+    LPrevious := LRanges.CellRange;
+    Check((LPrevious <> nil) and LPrevious.Current and
+      LPrevious.Capture.Anchor.Same(LOrigin) and LPrevious.Capture.Focus.Same(LTarget) and
+      (LStroke.Status = ncrssCommitted) and (LObject.Focuses = LFocuses + 2),
+      'Matching release focuses and commits once despite a nested completion retry');
+    LEntry.Retire;
+    LTarget := LOrigin;
+    BeginStroke;
+    Prepare(ncrspRelease, LPointer);
+    LEntry.Complete(False);
+    Check((LRanges.CellRange = LPrevious) and LPrevious.Current and not LStroke.Current,
+      'Consumed release preserves the complete previous accepted range');
+    LEntry.Retire;
+    BeginStroke;
+    LInput.AbandonCellRangeStroke(LOtherPointer, LStroke);
+    Check(LStroke.Current, 'Another pointer cannot abandon this pending preview');
+    LInput.AbandonCellRangeStroke(LPointer, LStroke);
+    Check(not LStroke.Current and (LRanges.CellRange = LPrevious) and
+      LObject.PreviewContains(LPrevious.Capture.Focus),
+      'Matching capture loss restores accepted highlighting without clearing its range');
+    BeginStroke;
+    LMount.Refresh;
+    Check(not LStroke.Current and (LRanges.CellRange = LPrevious),
+      'A target refresh withdraws pending geometry while preserving accepted cells');
+    BeginStroke;
+    Prepare(ncrspMove, LPointer);
+    LOlder := LEntry;
+    Prepare(ncrspMove, LPointer);
+    LOlder.Complete(False);
+    Check(LStroke.Current and LEntry.Current,
+      'An older message cannot cancel a newer reservation for the SAME stroke');
+    LOlder.Retire;
+    LEntry.Complete(True);
+    LEntry.Retire;
+    Prepare(ncrspRelease, LPointer);
+    LObject.SourceAction := rsaNested;
+    LEntry.Complete(True);
+    Check(LObject.NestedRangeAdmitted and not LStroke.Current and
+      (LRanges.CellRange <> LPrevious) and LRanges.CellRange.Capture.Focus.Same(LOrigin),
+      'Newer selection from release focus survives the older pending default');
+    LEntry.Retire;
+    BeginStroke;
+    Prepare(ncrspMove, LPointer);
+    LMount.SetInteraction(False, False);
+    LMount.SetInteraction(True, False);
+    Check(not LEntry.Current and LEntry.DispatchCurrent and not LStroke.Current,
+      'Disabled ABA revokes stroke authority without suppressing original canonical delivery');
+    LEntry.Complete(True);
+    LEntry.Retire;
+    BeginStroke;
+    Prepare(ncrspRelease, LPointer);
+    LObject.ThrowStrokeFocus := True;
+    LObject.ThrowStrokePaint := True;
+    LFailure := '';
+    try
+      LEntry.Complete(True);
+    except
+      on E: Exception do
+      begin
+        LFailure := E.Message;
+      end;
+    end;
+    LObject.ThrowStrokeFocus := False;
+    LObject.ThrowStrokePaint := False;
+    Check((LFailure = 'stroke focus diagnostic') and not LStroke.Current and
+      (LRanges.CellRange = nil),
+      'Focus failure remains the first diagnostic even when cached-paint cleanup also fails');
+    LEntry.Retire;
+    BeginStroke;
+    Prepare(ncrspRelease, LPointer);
+    LObject.FocusPointer := LEntry;
+    LObject.RetireStrokeOnFocus := True;
+    Check(LEntry.Complete(True) and not LEntry.DispatchCurrent and not LStroke.Current and
+      (LRanges.CellRange = nil),
+      'Explicit entry retirement inside focus abandons the old gesture without a stale tail');
+    BeginStroke;
+    LEntry := nil;
+    LDetached := GDetached;
+    LRanges := nil;
+    LInput := nil;
+    LMount := nil;
+    Check((GDetached = LDetached + 1) and not LStroke.Current,
+      'A retained detached stroke does not retain its actual mount');
+    Check((LFixture.Store.Snapshot = LBefore) and (LView.Selection.Count = 0),
+      'The whole stroke journey preserves exact RAW data and ordinary row selection');
+  finally
+    LEntry := nil;
+    LOlder := nil;
+    LStroke := nil;
+    LPrevious := nil;
+    LRanges := nil;
+    LInput := nil;
+    LMount := nil;
+    LView := nil;
     LFixture.Free;
   end;
 end;
@@ -2709,6 +2930,7 @@ begin
     MountedAdmission;
     MountedRangeReentry;
     MountedPointerAdmission;
+    MountedStrokeAdmission;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-collection-clipboard-commands', 'passed');
     document.body.setAttribute('data-collection-clipboard-command-checks', IntToStr(GChecks));

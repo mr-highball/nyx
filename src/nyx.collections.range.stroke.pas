@@ -130,6 +130,41 @@ type
     property ErrorText: TNyxText read GetError;
   end;
 
+  { Each target message obtains new synchronous authority. Begin copies a
+    private preview, Move replaces that preview and Release alone may commit;
+    no mounted entry is retained between physical messages. }
+  TNyxCollectionRangeStrokePhase = (ncrspBegin, ncrspMove, ncrspRelease);
+
+  { Optional UI-owner message envelope. ResolveCells supplies the requested
+    origin on Begin, and the actual current focused cell on Move/Release, plus
+    an owned hit cell before Prepare reads source data. Begin focuses its origin
+    before constructing the pending preview. Complete
+    consumes its first call even when canonical callbacks refuse the default.
+    PendingStroke is data/cancellation only; copy it before retiring this entry.
+    A Release focuses its exact endpoint and repeats the original input fences.
+    No physical capture, pointer dispatch or gesture policy is implied here. }
+  INyxCollectionCellRangeStrokeEntry = interface(INyxCollectionCellRangePointerEntry)
+    ['{2E72B42D-FF51-426D-9563-BC8EC8811AB5}']
+    function GetPendingStroke: INyxCollectionRangeStroke;
+    property PendingStroke: INyxCollectionRangeStroke read GetPendingStroke;
+  end;
+
+  { Optional mount facet preserves existing input interface identities. Reserve
+    BEFORE reading target hit/focus/source facts. Move/Release require the SAME
+    pending stroke produced by this mount; a foreign or superseded stroke stays
+    inert. Returned entries retain the mount only until synchronous retirement. }
+  INyxCollectionCellRangeStrokeInput = interface(IInterface)
+    ['{0D216937-0238-4CE6-8BB4-065F1A3B7BCB}']
+    function BeginCellRangeStroke(APhase: TNyxCollectionRangeStrokePhase;
+      const APointer: TNyxCollectionRangeStrokePointer;
+      AAction: TNyxCollectionRangePointerAction;
+      const AStroke: INyxCollectionRangeStroke = nil): INyxCollectionCellRangeStrokeEntry;
+    { Lost capture/Escape withdraw only this exact pointer/subject. The previous
+      accepted range remains intact; another pointer or newer subject is inert. }
+    procedure AbandonCellRangeStroke(const APointer: TNyxCollectionRangeStrokePointer;
+      const AStroke: INyxCollectionRangeStroke);
+  end;
+
 function NyxCollectionRangeStrokePointer(ADevice: TNyxCollectionRangeStrokeDevice;
   AID: Integer): TNyxCollectionRangeStrokePointer;
 function NyxCollectionRangeStrokeInput(AReady: Boolean; AEpoch, AMutation,
