@@ -36,6 +36,7 @@ uses
   , nyx.collections.representation, nyx.collections.draft,
   nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands,
   nyx.collections.range.navigation,
+  nyx.collections.workbench.policy, nyx.collections.workbench.runtime,
   nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
     nyx.menu.browser, nyx.popover.browser, nyx.editing.browser
@@ -229,6 +230,10 @@ type
     FLastPayload: INyxCollectionClipboardText;
     FContextColumn: Integer;
     FLastDraft: INyxCollectionFocusedDraftCapture;
+    { Only the new authored-policy journey omits manual mount configuration.
+      Its missing-service branch still uses actual managed menus and inputs. }
+    FAuthoredWorkbench: Boolean;
+    FUnavailableClipboard: Boolean;
     {$ifndef PAS2JS}
     FRetireRangeSelection: Boolean;
     FRangeSelectionCallbacks: Integer;
@@ -260,6 +265,7 @@ type
     procedure Context(AWait: Boolean = True);
     procedure MenuAction(const AID: TNyxText);
     function HasMenuAction(const AID: TNyxText): Boolean;
+    function HasInspectorAction(const AID: TNyxText): Boolean;
     procedure InspectorAction(const AID: TNyxText);
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
@@ -268,6 +274,9 @@ type
     procedure RunDraftActions; {$ifdef PAS2JS}async;{$endif}
     procedure RunCellRange; {$ifdef PAS2JS}async;{$endif}
     procedure RunRangeMenu; {$ifdef PAS2JS}async;{$endif}
+    procedure RunAuthoredWorkbench; {$ifdef PAS2JS}async;{$endif}
+    procedure RunAuthoredInspection; {$ifdef PAS2JS}async;{$endif}
+    procedure RunAuthoredRowMenu; {$ifdef PAS2JS}async;{$endif}
     procedure ReplaceContextRange;
     procedure ExportPaging(AEnabled: Boolean);
     procedure Semantic(const AEvent: TNyxEventInfo;
@@ -276,7 +285,10 @@ type
     procedure Reply(const APayload: INyxCollectionClipboardText;
       const AResult: TNyxClipboardWriteResult);
   public
-    constructor Create(AArranged: Boolean = True; ADraftActions: Boolean = False);
+    constructor Create(AArranged: Boolean = True; ADraftActions: Boolean = False;
+      AAuthoredWorkbench: Boolean = False; AUnavailableClipboard: Boolean = False;
+      ACopyActions: TNyxWorkbenchCopyActions =
+        [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange]);
     destructor Destroy; override;
     procedure Run; {$ifdef PAS2JS}async;{$endif}
   end;
@@ -366,7 +378,9 @@ begin
   Result := NyxColumnIdentity(NyxTextField('Name'));
 end;
 
-function Fixture(AArranged: Boolean): TNyxDocument;
+function Fixture(AArranged: Boolean; AAuthoredWorkbench: Boolean = False;
+  ADraftActions: Boolean = False; ACopyActions: TNyxWorkbenchCopyActions =
+    [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange]): TNyxDocument;
 var
   LPage: INyxPage;
   LTable: INyxTable;
@@ -404,6 +418,13 @@ begin
     if not AArranged then
     begin
       LSpec := LSpec.UseDefaultTableLayout;
+    end;
+
+    if AAuthoredWorkbench then
+    begin
+      LSpec := LSpec.TableWorkbench(NyxTableWorkbench.RangeSelection(True)
+        .AllowCopy(ACopyActions)
+        .Headers(False).LineEnding(nwleCRLF).FocusedDraft(ADraftActions));
     end;
     LTable.Binds.Collection(LSpec);
     LPage.Add(LTable);
@@ -624,7 +645,9 @@ begin
 end;
 {$endif}
 
-constructor TCopyReview.Create(AArranged: Boolean; ADraftActions: Boolean);
+constructor TCopyReview.Create(AArranged: Boolean; ADraftActions: Boolean;
+  AAuthoredWorkbench: Boolean; AUnavailableClipboard: Boolean;
+  ACopyActions: TNyxWorkbenchCopyActions);
 var
   LCallback: TKeyCallback;
   LAdmission: INyxCollectionInputAdmission;
@@ -632,9 +655,13 @@ var
   LFactory: INyxCollectionCellPresenterFactory;
 begin
   inherited Create;
-  FDocument := Fixture(AArranged);
+  FAuthoredWorkbench := AAuthoredWorkbench;
+  FUnavailableClipboard := AUnavailableClipboard;
+  FDocument := Fixture(AArranged, AAuthoredWorkbench, ADraftActions, ACopyActions);
   FAuthored := TNyxCodec.Encode(FDocument);
   FState := FDocument.State.Clone;
+  FHost := THost.Create;
+  FHostLease := FHost;
   {$ifdef PAS2JS}
   FSurface := TJSHTMLElement(document.createElement('div'));
   document.body.appendChild(FSurface);
@@ -646,6 +673,11 @@ begin
   FRenderer := TNyxLCLRenderer.Create;
   FRenderer.RegisterFactory('table', GridFactory);
   {$endif}
+
+  if FAuthoredWorkbench and not FUnavailableClipboard then
+  begin
+    FRenderer.TableWorkbenchServices := NewNyxTableWorkbenchServices(FHostLease);
+  end;
   FRenderer.Render(FDocument, FDocument.Pages[0], FSurface, False, FState);
   {$ifdef PAS2JS}
   FTable := FRenderer.ElementFor(CTable);
@@ -662,39 +694,54 @@ begin
     Supports(FMount, INyxCollectionInputAdmission, LAdmission),
     'actual projected table exposes typed copy and original input');
   FInput := LAdmission.GetInputLifetime;
-  FHost := THost.Create;
-  FHostLease := FHost;
-  FClipboard.ConfigureClipboard(FHostLease, FRenderer.Events,
-    FRenderer.Events.Scheduler, TNyxCollectionClipboardOptions.Defaults.AllowOnly(
-      [nccaCell, nccaSelectedSource, nccaSelectedPage, nccaCellRange]));
+
+  if not FAuthoredWorkbench then
+  begin
+    FClipboard.ConfigureClipboard(FHostLease, FRenderer.Events,
+      FRenderer.Events.Scheduler, TNyxCollectionClipboardOptions.Defaults.AllowOnly(
+        [nccaCell, nccaSelectedSource, nccaSelectedPage, nccaCellRange]));
+  end;
   FCommands := FClipboard.ClipboardCommands;
+
+  if FAuthoredWorkbench then
+  begin
+    Check(FCommands <> nil,
+      'ordinary renderer binds authored copy policy without manual clipboard configuration');
+  end;
   FCommands.Observe({$ifdef PAS2JS}@{$endif}Reply);
   Check(Supports(FMount, INyxCollectionExportMount, FExport),
     'actual table exposes optional runtime RAW export authority');
-  FSaveHost := TSaveHost.Create;
-  FSaveHostLease := FSaveHost;
-  FSaveHost.InlineReply := True;
-  FSaveHost.Outcome := nfsoWritten;
-  FExport.ConfigureExport(FSaveHostLease, FRenderer.Events,
-    FRenderer.Events.Scheduler, TNyxCollectionExportOptions.Defaults);
+
+  if not FAuthoredWorkbench then
+  begin
+    FSaveHost := TSaveHost.Create;
+    FSaveHostLease := FSaveHost;
+    FSaveHost.InlineReply := True;
+    FSaveHost.Outcome := nfsoWritten;
+    FExport.ConfigureExport(FSaveHostLease, FRenderer.Events,
+      FRenderer.Events.Scheduler, TNyxCollectionExportOptions.Defaults);
+  end;
   Check(Supports(FMount, INyxCollectionCellActionsMount, FCellMount),
     'actual mounted table exposes managed cell context actions');
-  LFactory := {$ifdef PAS2JS}NewNyxBrowserCollectionCellPresenterFactory(FTable)
-    {$else}NewNyxLCLCollectionCellPresenterFactory(FGrid){$endif};
+  if not FAuthoredWorkbench then
+  begin
+    LFactory := {$ifdef PAS2JS}NewNyxBrowserCollectionCellPresenterFactory(FTable)
+      {$else}NewNyxLCLCollectionCellPresenterFactory(FGrid){$endif};
 
-  if ADraftActions then
-  begin
-    Check(Supports(FMount, INyxCollectionCellActionOptionsMount, LOptionsMount),
-      'focused draft actions opt in through the optional typed mount configuration');
-    FContextScheduler := TContextScheduler.Create;
-    FContextSchedulerLease := FContextScheduler;
-    FContextScheduler.Base := FRenderer.Events.Scheduler;
-    LOptionsMount.ConfigureCellActionsWithOptions(LFactory, FContextSchedulerLease,
-      TNyxCollectionCellActionOptions.Defaults.FocusedDraft(True));
-  end
-  else
-  begin
-    FCellMount.ConfigureCellActions(LFactory, FRenderer.Events.Scheduler);
+    if ADraftActions then
+    begin
+      Check(Supports(FMount, INyxCollectionCellActionOptionsMount, LOptionsMount),
+        'focused draft actions opt in through the optional typed mount configuration');
+      FContextScheduler := TContextScheduler.Create;
+      FContextSchedulerLease := FContextScheduler;
+      FContextScheduler.Base := FRenderer.Events.Scheduler;
+      LOptionsMount.ConfigureCellActionsWithOptions(LFactory, FContextSchedulerLease,
+        TNyxCollectionCellActionOptions.Defaults.FocusedDraft(True));
+    end
+    else
+    begin
+      FCellMount.ConfigureCellActions(LFactory, FRenderer.Events.Scheduler);
+    end;
   end;
   FCellActions := FCellMount.CellActions;
   LCallback := TKeyCallback.Create;
@@ -1091,8 +1138,18 @@ end;
 procedure TCopyReview.Reply(const APayload: INyxCollectionClipboardText;
   const AResult: TNyxClipboardWriteResult);
 begin
-  Check((AResult.Outcome = ncwoWritten) and (AResult.ByteCount = APayload.ByteCount),
-    'actual input gets one typed receipt with original bytes');
+
+  if FUnavailableClipboard then
+  begin
+    Check((AResult.Outcome = ncwoUnavailable) and (AResult.ByteCount = 0) and
+      (AResult.Representation = nctrNone) and (AResult.Error <> ''),
+      'actual absent-service input gets one explicit non-write receipt and diagnostic');
+  end
+  else
+  begin
+    Check((AResult.Outcome = ncwoWritten) and (AResult.ByteCount = APayload.ByteCount),
+      'actual input gets one typed receipt with original bytes');
+  end;
   Inc(FReplies);
   FLastPayload := APayload;
 end;
@@ -1189,6 +1246,35 @@ begin
       Exit;
     end;
     Result := LMenu.Presentation.Renderer.FocusFor(AID) <> nil;
+  end;
+end;
+
+{ Query the ordinary inspector's public tree before touching a physical face.
+  Missing copy controls are intentional for readonly authored policies. }
+function TCopyReview.HasInspectorAction(const AID: TNyxText): Boolean;
+var
+  {$ifdef PAS2JS}
+  LInspector: INyxBrowserPopover;
+  {$else}
+  LInspector: INyxLCLPopover;
+  {$endif}
+begin
+  Result := False;
+
+  if (FCellActions.Inspector = nil) or not FCellActions.Inspector.IsOpen then
+  begin
+    Exit;
+  end;
+
+  if Supports(FCellActions.Inspector,
+    {$ifdef PAS2JS}INyxBrowserPopover{$else}INyxLCLPopover{$endif}, LInspector) then
+  begin
+
+    if LInspector.Renderer.Root.Find(AID) = nil then
+    begin
+      Exit;
+    end;
+    Result := LInspector.Renderer.FocusFor(AID) <> nil;
   end;
 end;
 
@@ -2725,6 +2811,344 @@ begin
     'all export actions preserve source values, authored defaults and only the two explicit test edits advance data');
 end;
 
+procedure TCopyReview.RunAuthoredWorkbench; {$ifdef PAS2JS}async;{$endif}
+var
+  LRanges: INyxCollectionCellRangeMount;
+  LDrafts: INyxCollectionCellDraftActions;
+  LCommand: INyxCollectionClipboardCommand;
+  LNewMount: INyxCollectionMount;
+  LNewClipboard: INyxCollectionClipboardMount;
+  LNewCommands: INyxCollectionClipboardCommands;
+  LBefore: Integer;
+  LReplies: Integer;
+  LExpected: TNyxText;
+  LRefused: Boolean;
+begin
+  FMode := kmObserve;
+  FContextColumn := 0;
+  Check(FAuthoredWorkbench and FView.Spec.HasTableWorkbenchPolicy and
+    (FCellActions <> nil) and Supports(FCellActions, INyxCollectionCellDraftActions, LDrafts) and
+    LDrafts.FocusedDraftEnabled,
+    'saved fluent policy enables managed context and explicit draft options through ordinary Render');
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges) and
+    LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+      NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+    'authored range selection works without calling runtime ConfigureCellRange');
+  FocusCell;
+  LBefore := FHost.Writes;
+  LReplies := FReplies;
+  LExpected := '"' + CText + '"' + #9 + '1' + #13#10 + 'B' + #9 + '2';
+  Check(CopyKey, 'actual target Ctrl+C claims the authored selected-cells action');
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FReplies = LReplies + 1) and (FLastPayload.Text = LExpected) and
+    (FLastPayload.RowCount = 2) and (FLastPayload.FieldCount = 2),
+    'authored no-header CRLF policy preserves RAW Unicode NUL and embedded line endings');
+
+  if FUnavailableClipboard then
+  begin
+    Check((FHost.Writes = LBefore) and
+      (FCommands.LastResult.Outcome = ncwoUnavailable) and
+      (FCommands.LastResult.ByteCount = 0),
+      'missing runtime service reports typed Unavailable without granting a platform write');
+  end
+  else
+  begin
+    Check((FHost.Writes = LBefore + 1) and (FHost.Text = LExpected) and
+      (FCommands.LastResult.Outcome = ncwoWritten),
+      'configured renderer service receives the same original physical copy once');
+  end;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(HasMenuAction(NyxCellActionsInspectID) and HasMenuAction(NyxCellActionsCopyRangeID),
+    'ordinary renderer-created menu exposes full inspection and selected-cells copy');
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsCopyRangeID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+
+  if FUnavailableClipboard then
+  begin
+    Check((FHost.Writes = LBefore) and (FCellActions.LastResult.Outcome = ncwoUnavailable) and
+      (FCellActions.Inspector <> nil) and FCellActions.Inspector.IsOpen and
+      (FCellActions.Inspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState)) =
+        'Clipboard request did not write: ' + FCellActions.LastResult.Error),
+      'real managed menu visibly presents unavailable copy while inspection stays usable');
+  end
+  else
+  begin
+    Check((FHost.Writes = LBefore + 1) and (FHost.Text = LExpected) and
+      (FCellActions.LastResult.Outcome = ncwoWritten),
+      'authored real menu reuses the configured service and original rectangle');
+  end;
+  FCellActions.Close;
+  LRefused := False;
+  try
+    FRenderer.TableWorkbenchServices := NewNyxTableWorkbenchServices(FHostLease);
+  except
+    on ENyxModel do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and FInput.Current and FMount.Connected,
+    'mounted service replacement refuses without replacing accepted command authority');
+  LCommand := FCommands.BeginCell(ItemA, NameField);
+  LCommand.Prepare;
+  LBefore := FHost.Writes;
+  FRenderer.Unmount;
+  LCommand.Complete(True);
+  LCommand.Retire;
+  LCommand := nil;
+  Check(FInput.Retired and not FMount.Connected and (FHost.Writes = LBefore),
+    'retired authored mount cannot transfer a prepared copy to a later renderer incarnation');
+  FRenderer.TableWorkbenchServices := NewNyxTableWorkbenchServices(FHostLease);
+  FRenderer.Render(FDocument, FDocument.Pages[0], FSurface, False, FState);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LNewMount := FRenderer.CollectionMount(CTable);
+  Check(Supports(LNewMount, INyxCollectionClipboardMount, LNewClipboard) and
+    (LNewClipboard.ClipboardCommands <> nil),
+    'explicit Unmount permits new runtime services for a newly authored incarnation');
+  LNewCommands := LNewClipboard.ClipboardCommands;
+  LCommand := LNewCommands.BeginCell(ItemA, NameField);
+  LCommand.Prepare;
+  LCommand.Complete(True);
+  LCommand.Retire;
+  Check((FHost.Writes = LBefore + 1) and (FHost.Text = CText) and
+    (LNewCommands.LastResult.Outcome = ncwoWritten),
+    'replacement incarnation uses newly supplied service while old range and commands stay retired');
+  Check(TNyxCodec.Encode(FDocument) = FAuthored,
+    'rendered policy, clipboard services and runtime receipts never rewrite the saved design');
+end;
+
+{ Exercise permissions through ordinary renderer-created controls. Inspection
+  is useful without clipboard permission; range-only and row-only policies must
+  not accidentally authorize accepted/display/draft cell writes. Each fixture
+  retains the same immutable source while its actual editor has unfinished text. }
+procedure TCopyReview.RunAuthoredInspection; {$ifdef PAS2JS}async;{$endif}
+var
+  LPolicy: TNyxTableWorkbenchPolicy;
+  LRanges: INyxCollectionCellRangeMount;
+  LDrafts: INyxCollectionCellDraftActions;
+  LSource: INyxCollectionSnapshot;
+  LExpected: TNyxText;
+  LVisibleText: TNyxText;
+  LBefore: Integer;
+  LReplies: Integer;
+  {$ifdef PAS2JS}
+  LTarget: INyxBrowserPopover;
+  LMemo: TJSHTMLTextAreaElement;
+  LEditor: TJSHTMLInputElement;
+  LOptions: TJSObject;
+  {$else}
+  LTarget: INyxLCLPopover;
+  LMemo: TCustomEdit;
+  LEditor: TCustomEdit;
+  {$endif}
+
+  procedure CheckReadonlyInspector(const AText: TNyxText);
+  begin
+    Check(Supports(FCellActions.Inspector,
+      {$ifdef PAS2JS}INyxBrowserPopover{$else}INyxLCLPopover{$endif}, LTarget),
+      'permission-limited inspection uses the real target popover');
+    LMemo := {$ifdef PAS2JS}TJSHTMLTextAreaElement{$else}TCustomEdit{$endif}(
+      LTarget.Renderer.FocusFor(NyxCellInspectorValueID));
+    Check(LMemo.ReadOnly, 'permission-limited inspector uses an actual readonly memo');
+    LVisibleText := {$ifdef PAS2JS}LMemo.value{$else}NyxLCLInputText(LMemo){$endif};
+    {$ifndef PAS2JS}
+    { Match the existing RunContext display oracle: native multiline controls
+      expose CRLF while the escaped inspection notation uses LF. RAW payload
+      and authored line-ending assertions above remain byte-for-byte exact. }
+    LVisibleText := StringReplace(LVisibleText, #13#10, #10, [rfReplaceAll]);
+    {$endif}
+    Check(LVisibleText = NyxCollectionCellInspectionText(AText),
+      'readonly inspection preserves full supplementary text and escaped control notation');
+    Check(not HasInspectorAction(NyxCellInspectorCopyID) and
+      not HasInspectorAction(NyxCellInspectorCopyDisplayID) and
+      not HasInspectorAction(NyxCellInspectorCopyDraftID),
+      'actual readonly inspector omits every forbidden copy control');
+  end;
+
+begin
+  FMode := kmObserve;
+  FContextColumn := 0;
+  LPolicy := FView.Spec.TableWorkbenchPolicy;
+  LSource := FView.Store.Snapshot;
+  Check(FAuthoredWorkbench and not LPolicy.AllowsCopy(nwcaCell) and
+    Supports(FCellActions, INyxCollectionCellDraftActions, LDrafts) and
+    LDrafts.FocusedDraftEnabled,
+    'authored no-cell-copy policy still installs explicit draft inspection');
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges) and
+    LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+      NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+    'range selection remains independent from permission to copy that range');
+  FocusCell;
+  LBefore := FHost.Writes;
+  LReplies := FReplies;
+  LExpected := '"' + CText + '"' + #9 + '1' + #13#10 + 'B' + #9 + '2';
+  CopyKey;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+
+  if LPolicy.AllowsCopy(nwcaCellRange) then
+  begin
+    Check((FHost.Writes = LBefore + 1) and (FReplies = LReplies + 1) and
+      (FHost.Text = LExpected),
+      'range-only permission permits exact physical selected-cells copy without cell-copy authority');
+  end
+  else
+  begin
+    Check((FHost.Writes = LBefore) and (FReplies = LReplies) and (FLastPayload = nil),
+      'empty and row-only permissions cannot capture or write a physical cell/range copy');
+  end;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(HasMenuAction(NyxCellActionsInspectID) and
+    not HasMenuAction(NyxCellActionsCopyID) and
+    not HasMenuAction(NyxCellActionsCopyDisplayID) and
+    not HasMenuAction(NyxCellActionsCopyDraftID) and
+    (HasMenuAction(NyxCellActionsCopyRangeID) = LPolicy.AllowsCopy(nwcaCellRange)) and
+    (FCellActions.Snapshot.Text = CText),
+    'real context always offers RAW inspection and independently permitted range action');
+
+  if LPolicy.AllowsCopy(nwcaCellRange) then
+  begin
+    LBefore := FHost.Writes;
+    MenuAction(NyxCellActionsCopyRangeID);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((FHost.Writes = LBefore + 1) and (FHost.Text = LExpected),
+      'actual range-only menu action transfers its original rectangle through the same host');
+    Context;
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  end;
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsInspectID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  CheckReadonlyInspector(CText);
+  Check(FHost.Writes = LBefore, 'readonly accepted-value inspection performs no clipboard effect');
+  InspectorAction(NyxCellInspectorCloseID);
+  FCellActions.Close;
+  FocusCell;
+  {$ifdef PAS2JS}
+  await(Drain);
+  Key(Cell, 'F2', False);
+  await(Drain);
+  LEditor := TJSHTMLInputElement(Cell.querySelector('input'));
+  Check((LEditor <> nil) and (document.activeElement = LEditor),
+    'restricted draft journey enters the actual focused browser cell editor');
+  LEditor.value := CDraft;
+  LOptions := TJSObject.new;
+  LOptions['bubbles'] := True;
+  LOptions['cancelable'] := True;
+  LOptions['button'] := 2;
+  LEditor.dispatchEvent(TCellContextEvent.new('contextmenu', LOptions));
+  await(Drain);
+  {$else}
+  SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+  Drain;
+  Check(FGrid.EditorMode and (FGrid.Editor is TCustomEdit),
+    'restricted draft journey enters the actual focused native cell editor');
+  LEditor := TCustomEdit(FGrid.Editor);
+  RestoreNyxLCLInputText(LEditor, CDraft);
+  SendMessage(LEditor.Handle, WM_CONTEXTMENU, LEditor.Handle, MakeLParam(-1, -1));
+  Drain;
+  {$endif}
+  Check(HasMenuAction(NyxCellActionsInspectDraftID) and
+    not HasMenuAction(NyxCellActionsCopyID) and
+    not HasMenuAction(NyxCellActionsCopyDisplayID) and
+    not HasMenuAction(NyxCellActionsCopyDraftID) and
+    (LDrafts.CapturedDraft <> nil) and (LDrafts.CapturedDraft.Value.Text = CDraft) and
+    (LDrafts.CapturedDraft.Value.RawText = CText),
+    'actual unfinished editor still offers separate draft inspection without any cell write permission');
+  MenuAction(NyxCellActionsInspectDraftID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  CheckReadonlyInspector(CDraft);
+  InspectorAction(NyxCellInspectorCloseID);
+  FCellActions.Close;
+  {$ifdef PAS2JS}
+  Key(LEditor, 'Escape', False);
+  await(Drain);
+  {$else}
+  SendMessage(FGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
+  Drain;
+  {$endif}
+  Check((FHost.Writes = LBefore) and (FView.Store.Snapshot = LSource) and
+    (TNyxCodec.Encode(FDocument) = FAuthored),
+    'restricted accepted/draft inspection leaves clipboard, accepted source and authored policy exact');
+end;
+
+{ Selected rows have their own explicit menu memberships. Selecting cells does
+  not select records, and changing row membership cannot redirect an old menu
+  to another record. Both arranged and ordinary real controls run this journey. }
+procedure TCopyReview.RunAuthoredRowMenu; {$ifdef PAS2JS}async;{$endif}
+var
+  LSource: INyxCollectionSnapshot;
+  LPayload: INyxCollectionClipboardText;
+  LSourcePayload: INyxCollectionClipboardText;
+  LBefore: Integer;
+begin
+  FMode := kmObserve;
+  FContextColumn := 0;
+  LSource := FView.Store.Snapshot;
+  ExportPaging(True);
+  FView.SetSelection([ItemA, ItemB], ItemA, ItemA);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FView.Snapshot.Count = 1) and (FView.Selection.Count = 2),
+    'actual row menu begins with selected source records extending beyond the current page');
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(HasMenuAction(NyxCellActionsCopySourceRowsID) and
+    HasMenuAction(NyxCellActionsCopyPageRowsID) and
+    HasMenuAction(NyxCellActionsInspectID) and not HasMenuAction(NyxCellActionsCopyID),
+    'row-only authored permissions expose both exact memberships without cell-copy authority');
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsCopySourceRowsID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LSourcePayload := FCommands.LastPayload;
+  Check((FHost.Writes = LBefore + 1) and (LSourcePayload.RowCount = 2) and
+    (LSourcePayload.ItemAt(0).ID = ItemA.ID) and (LSourcePayload.ItemAt(1).ID = ItemB.ID) and
+    (LSourcePayload.CellValue(0, 0).TextValue = CText) and
+    (LSourcePayload.CellValue(1, 0).TextValue = 'B') and
+    (FHost.Text = LSourcePayload.Text) and (Pos('"' + CText + '"' + #9, FHost.Text) = 1) and
+    (Pos(#13#10 + 'B' + #9, FHost.Text) > 0),
+    'actual selected-source menu copies both original records with exact RAW text, no header and CRLF rows');
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsCopyPageRowsID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LPayload := FCommands.LastPayload;
+  Check((FHost.Writes = LBefore + 1) and (LPayload.RowCount = 1) and
+    (LPayload.ItemAt(0).ID = ItemA.ID) and (LPayload.CellValue(0, 0).TextValue = CText) and
+    (FHost.Text = LPayload.Text) and (LSourcePayload.RowCount = 2),
+    'actual current-page row action intersects the original page without changing its earlier full-source capture');
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(HasMenuAction(NyxCellActionsCopySourceRowsID),
+    'a fresh exact selected-row menu is open before row membership changes');
+  FView.SetSelection([ItemB], ItemA, ItemA);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsCopySourceRowsID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FHost.Writes = LBefore) and (FCellActions.LastResult.Outcome = ncwoCancelled) and
+    (FCellActions.Inspector <> nil) and FCellActions.Inspector.IsOpen and
+    (FCellActions.Inspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState)) <> '') and
+    (FCellActions.Snapshot.Text = CText),
+    'changing selected records visibly refuses the original row action while independent RAW inspection remains useful');
+  InspectorAction(NyxCellInspectorCloseID);
+  FCellActions.Close;
+  FView.ClearSelection;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(HasMenuAction(NyxCellActionsInspectID) and
+    not HasMenuAction(NyxCellActionsCopySourceRowsID) and
+    not HasMenuAction(NyxCellActionsCopyPageRowsID) and
+    (FHost.Writes = LBefore) and (FView.Store.Snapshot = LSource) and
+    (TNyxCodec.Encode(FDocument) = FAuthored),
+    'empty row membership offers useful inspection without phantom copy actions or data/design mutation');
+end;
+
 procedure TCopyReview.Run; {$ifdef PAS2JS}async;{$endif}
 var
   LRangeMount: INyxCollectionCellRangeMount;
@@ -2959,6 +3383,61 @@ begin
         GPointerUnavailable := not LReview.RunNativePointerProbe;
       end;
       {$endif}
+    finally
+      LReview.Free;
+    end;
+    { These use the same actual controls/input routes, with authored intent
+      replacing every manual copy/range/menu configuration step. No real OS
+      clipboard adapter is installed, including in the absent-service case. }
+    LReview := TCopyReview.Create(True, True, True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunAuthoredWorkbench);
+      {$else}LReview.RunAuthoredWorkbench;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(False, True, True, True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunAuthoredWorkbench);
+      {$else}LReview.RunAuthoredWorkbench;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(True, True, True, False, []);
+    try
+      {$ifdef PAS2JS}await(LReview.RunAuthoredInspection);
+      {$else}LReview.RunAuthoredInspection;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(False, True, True, False,
+      [nwcaSelectedSource, nwcaSelectedPage]);
+    try
+      {$ifdef PAS2JS}await(LReview.RunAuthoredInspection);
+      {$else}LReview.RunAuthoredInspection;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(True, True, True, False, [nwcaCellRange]);
+    try
+      {$ifdef PAS2JS}await(LReview.RunAuthoredInspection);
+      {$else}LReview.RunAuthoredInspection;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(True, True, True, False,
+      [nwcaSelectedSource, nwcaSelectedPage]);
+    try
+      {$ifdef PAS2JS}await(LReview.RunAuthoredRowMenu);
+      {$else}LReview.RunAuthoredRowMenu;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(False, True, True, False,
+      [nwcaSelectedSource, nwcaSelectedPage]);
+    try
+      {$ifdef PAS2JS}await(LReview.RunAuthoredRowMenu);
+      {$else}LReview.RunAuthoredRowMenu;{$endif}
     finally
       LReview.Free;
     end;

@@ -45,6 +45,7 @@ uses
   nyx.collections.registry,
   nyx.collections.view.types,
   nyx.collections.arrangement,
+  nyx.scheduler,
   nyx.collections.selection;
 
 const
@@ -81,6 +82,34 @@ type
     property Filtered: INyxCollectionSnapshot read GetFiltered;
     property Page: INyxCollectionSnapshot read GetPage;
     property Columns: INyxCollectionColumnsCapture read GetColumns;
+  end;
+
+  { Detached original row-copy membership. Source, actual page, selection and
+    typed columns belong to one accepted table cohort. Readiness reads inert
+    synchronized retirement facts only; no view/store/mount/tree is retained.
+    Accepted selection, source, query, page or column changes retire this proof
+    before publication callbacks, including a later ABA to identical values. }
+  INyxCollectionSelectedRowsCapture = interface(IInterface)
+    ['{389DD80F-9F6D-4AD5-92DA-5CD741E06DCC}']
+    function GetSource: INyxCollectionSnapshot;
+    function GetPage: INyxCollectionSnapshot;
+    function GetSelection: TNyxCollectionSelectionSnapshot;
+    function GetColumns: INyxCollectionColumnsCapture;
+    function GetReadiness: INyxCancellationReadiness;
+    property Source: INyxCollectionSnapshot read GetSource;
+    property Page: INyxCollectionSnapshot read GetPage;
+    property Selection: TNyxCollectionSelectionSnapshot read GetSelection;
+    property Columns: INyxCollectionColumnsCapture read GetColumns;
+    property Readiness: INyxCancellationReadiness read GetReadiness;
+  end;
+
+  { Optional flags/snapshots-only UI-owner capture leaves the original view ABI
+    unchanged. It invokes no application/atomic Busy getter, so input reserves
+    this cohort before outward factories. Nil means locally busy/unsupported;
+    later command admission still checks actual publication readiness. }
+  INyxCollectionSelectedRowsView = interface(IInterface)
+    ['{79319356-2F27-483A-866A-95C121894889}']
+    function CaptureSelectedRows: INyxCollectionSelectedRowsCapture;
   end;
 
   { Optional output capture keeps all existing view GUIDs unchanged. Capture is
@@ -398,11 +427,44 @@ type
   end;
   TParentIndexes = TNyxQueryIndexes;
 
+  { One accepted row-copy generation has only an atomic active flag. The view
+    retires it before changing accepted fields; captures can outlive that owner
+    without querying a mutable object or keeping any subscription alive. }
+  TRowCopyReadiness = class(TInterfacedObject, INyxCancellationReadiness)
+  private
+    FActive: LongInt;
+  public
+    constructor Create;
+    procedure Retire;
+    procedure CheckReady;
+  end;
+
+  { Immutable copied membership and a detached generation flag. Its getters
+    never consult live query/selection state or acquire clipboard authority. }
+  TRowCopyCapture = class(TInterfacedObject, INyxCollectionSelectedRowsCapture)
+  public
+    Source: INyxCollectionSnapshot;
+    Page: INyxCollectionSnapshot;
+    Selection: TNyxCollectionSelectionSnapshot;
+    Columns: INyxCollectionColumnsCapture;
+    Readiness: INyxCancellationReadiness;
+    function GetSource: INyxCollectionSnapshot;
+    function GetPage: INyxCollectionSnapshot;
+    function GetSelection: TNyxCollectionSelectionSnapshot;
+    function GetColumns: INyxCollectionColumnsCapture;
+    function GetReadiness: INyxCancellationReadiness;
+  end;
+
+  { Live projection owns accepted query/page/selection state and subscriptions.
+    Optional detached row-copy witnesses are retired before state installation
+    and final release, and never retain this owner through a captured menu. }
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
-    INyxCollectionColumnSampling, INyxCollectionExportView)
+    INyxCollectionColumnSampling, INyxCollectionExportView, INyxCollectionSelectedRowsView)
   private
+    FRowCopyReadiness: INyxCancellationReadiness;
+    FRowCopyReadinessObject: TRowCopyReadiness;
     FStore: INyxCollection;
     FAtomic: INyxAtomicCollection;
     FPrepared: TView; { detached, privately owned projection; never subscribed }
@@ -450,6 +512,7 @@ type
     FTokens: array of TViewSubscription;
     FNextSerial: Integer;
     FNotifying: Boolean;
+    procedure RetireRowCopy;
     procedure Writable;
     procedure ValidateDataset(const AData: INyxCollectionSnapshot;
       out AParents: TParentIndexes);
@@ -492,6 +555,7 @@ type
     function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
     function CaptureColumns: INyxCollectionColumnsCapture;
     function CaptureExport: INyxCollectionExportCapture;
+    function CaptureSelectedRows: INyxCollectionSelectedRowsCapture;
     procedure CheckExportCurrent(const ACapture: INyxCollectionExportCapture);
     function PrepareColumns(const ACapture: INyxCollectionColumnsCapture;
       const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
@@ -1108,6 +1172,7 @@ begin
 
     if FChanged then
     begin
+      FOwner.RetireRowCopy;
       FOwner.FQuery := FQuery;
       FOwner.FSnapshot := FCandidate.FSnapshot;
       FOwner.FUnpaged := FCandidate.FUnpaged;
@@ -1552,6 +1617,73 @@ begin
   end;
 end;
 
+constructor TRowCopyReadiness.Create;
+begin
+  inherited Create;
+  FActive := 1;
+end;
+
+procedure TRowCopyReadiness.Retire;
+begin
+  {$ifdef PAS2JS}
+  FActive := 0;
+  {$else}
+  InterlockedExchange(FActive, 0);
+  {$endif}
+end;
+
+procedure TRowCopyReadiness.CheckReady;
+var
+  LActive: Boolean;
+begin
+  {$ifdef PAS2JS}
+  LActive := FActive <> 0;
+  {$else}
+  LActive := InterlockedCompareExchange(FActive, 0, 0) <> 0;
+  {$endif}
+
+  if not LActive then
+  begin
+    raise ENyxCollection.Create('Original selected-row cohort is no longer current');
+  end;
+end;
+
+function TRowCopyCapture.GetSource: INyxCollectionSnapshot;
+begin
+  Result := Source;
+end;
+
+function TRowCopyCapture.GetPage: INyxCollectionSnapshot;
+begin
+  Result := Page;
+end;
+
+function TRowCopyCapture.GetSelection: TNyxCollectionSelectionSnapshot;
+begin
+  Result := Selection;
+end;
+
+function TRowCopyCapture.GetColumns: INyxCollectionColumnsCapture;
+begin
+  Result := Columns;
+end;
+
+function TRowCopyCapture.GetReadiness: INyxCancellationReadiness;
+begin
+  Result := Readiness;
+end;
+
+procedure TView.RetireRowCopy;
+begin
+
+  if FRowCopyReadinessObject <> nil then
+  begin
+    FRowCopyReadinessObject.Retire;
+  end;
+  FRowCopyReadinessObject := nil;
+  FRowCopyReadiness := nil;
+end;
+
 constructor TView.Create(const AStore: INyxCollection;
   const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
 var
@@ -1655,6 +1787,7 @@ var
 begin
   { Lifetime ports retire before source disconnection or any model finalizer.
     Retained snapshots/leases can observe retirement without retaining Self. }
+  RetireRowCopy;
 
   if (FQuerySession <> nil) and (FQuerySession.Scope <> nil) then
   begin
@@ -1990,6 +2123,7 @@ procedure TView.InstallCandidate(const AData: INyxCollectionSnapshot;
 begin
   { Private installation is a nonallocating adoption of immutable references
     and detached vectors. No user callback, query or selection command runs. }
+  RetireRowCopy;
   FSource := FPrepared.FSource;
   FSnapshot := FPrepared.FSnapshot;
   FUnpaged := FPrepared.FUnpaged;
@@ -2063,6 +2197,7 @@ begin
       end;
     end;
   end;
+  RetireRowCopy;
   FSource := AChanges.After;
   FSnapshot := LResult;
   FUnpaged := LUnpaged;
@@ -2341,6 +2476,7 @@ begin
     LResult := NyxPageSnapshot(LResult, LWindow);
   end;
   LSelection := ReconcileSelection(FSource, LResult, FSnapshot);
+  RetireRowCopy;
   FQuery := LPolicy;
   FSnapshot := LResult;
   FUnpaged := LUnpaged;
@@ -2422,6 +2558,7 @@ begin
     LResult := NyxPageSnapshot(FUnpaged, LWindow);
   end;
   LSelection := ReconcileSelection(FSource, LResult, FSnapshot);
+  RetireRowCopy;
   FPaging := LPolicy;
   FPage := LWindow.Page;
   FSnapshot := LResult;
@@ -2460,6 +2597,7 @@ begin
   end;
   LResult := NyxPageSnapshot(FUnpaged, LWindow);
   LSelection := ReconcileSelection(FSource, LResult, FSnapshot);
+  RetireRowCopy;
   FPage := LWindow.Page;
   FSnapshot := LResult;
   FSelection := LSelection;
@@ -2530,6 +2668,39 @@ end;
 function TExportCapture.ExportData: TExportCapture;
 begin
   Result := Self;
+end;
+
+function TView.CaptureSelectedRows: INyxCollectionSelectedRowsCapture;
+var
+  LLease: INyxCollectionView;
+  LCapture: TRowCopyCapture;
+  LCaptureLease: INyxCollectionSelectedRowsCapture;
+  LReady: INyxCancellationReadiness;
+begin
+  LLease := Self;
+  Result := nil;
+
+  if (FProjection <> cpTable) or FNotifying or (FPrepared <> nil) or
+    (FQueryPreparation <> nil) or (FColumnPreparation <> nil) or (FAtomic = nil) then
+  begin
+    Exit;
+  end;
+
+  if FRowCopyReadinessObject = nil then
+  begin
+    FRowCopyReadinessObject := TRowCopyReadiness.Create;
+    FRowCopyReadiness := FRowCopyReadinessObject;
+  end;
+  LReady := FRowCopyReadiness;
+  LCapture := TRowCopyCapture.Create;
+  LCaptureLease := LCapture;
+  LCapture.Source := FSource;
+  LCapture.Page := FSnapshot;
+  LCapture.Selection := FSelection.Snapshot;
+  LCapture.Columns := TColumnCapture.Create(FColumnIdentity, FColumnSerial,
+    FSpec, FColumnPreferences);
+  LCapture.Readiness := LReady;
+  Result := LCaptureLease;
 end;
 
 function TView.CaptureExport: INyxCollectionExportCapture;
@@ -2702,6 +2873,7 @@ begin
   begin
     Exit;
   end;
+  RetireRowCopy;
   FSelection := LSelection;
   Notify(nil);
 end;
@@ -3055,6 +3227,8 @@ begin
     and release a later receiver. The interface local protects our lifetime if
     a callback drops the last application's view reference. }
   LKeepAlive := Self as INyxCollectionView;
+
+  RetireRowCopy;
 
   if FColumnSampleSerial < High(Integer) then
   begin

@@ -10,6 +10,16 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The latest authored runtime06 adopts saved table actions through ordinary native
+and browser renderers. The complete retained control suite passes878 native
+checks with a clean heap and945 browser checks at1280x900/390x900, logs empty.
+Independent empty/row-only/range-only permissions, RAW/draft inspection, exact
+selected-source/page menu cohorts, stale-selection refusal and explicit
+unavailable feedback are exercised with injected host authority. All1927 fixed
+inputs reverify. Studio workbench authoring/history/semantic adoption, selected-ID
+target menus, authored export services, actual OS effects and full original
+acceptance remain open; WORK owns their current assignments and retained failures.
+
 Current W1 implements typed resize/Fit, visible column management, both logical
 pin edges, defaults, per-instance preferences, Studio authoring and source/history
 support. Native/browser control journeys exercise desktop and compact sizes,

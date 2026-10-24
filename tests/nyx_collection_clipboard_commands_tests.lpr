@@ -26,13 +26,14 @@ program nyx_collection_clipboard_commands_tests;
 uses
   SysUtils, nyx.text, nyx.state, nyx.collections,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.selection,
-  nyx.collections.query, nyx.collections.arrangement, nyx.collections.mount,
+  nyx.collections.query, nyx.collections.paging, nyx.collections.arrangement, nyx.collections.mount,
   nyx.collections.clipboard, nyx.collections.clipboard.actions,
   nyx.collections.clipboard.commands, nyx.collections.representation,
   nyx.collections.cell.actions,
   nyx.collections.draft, nyx.collections.range, nyx.collections.range.actions,
   nyx.collections.range.commands,
-  nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events
+  nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events,
+  nyx.publication
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -164,6 +165,16 @@ type
     procedure DetachTarget; override;
   end;
 
+  { A foreign value facade can copy public getters and lie about the action;
+    it owns no private original-controller witness and must never gain a write. }
+  TForeignActionCapture = class(TInterfacedObject, INyxCollectionClipboardActionCapture)
+  public
+    Inner: INyxCollectionClipboardActionCapture;
+    function GetAction: TNyxCollectionClipboardAction;
+    function GetPayload: INyxCollectionClipboardText;
+    function GetReadiness: INyxCancellationReadiness;
+  end;
+
   { Fixture keeps every borrowed receiver alive through explicit cancellation.
     Only the injected host substitutes authority; the view/store/router and
     immutable producer are the actual library implementations. }
@@ -189,6 +200,7 @@ type
     RepresentationReplies: Integer;
     RepresentationValue: INyxCollectionCellText;
     ThrowRepresentation: Boolean;
+    OnReadiness: TEndingCallback;
     constructor Create(ADisplay: Boolean = False);
     destructor Destroy; override;
     function Readiness: INyxCancellationReadiness;
@@ -200,6 +212,11 @@ type
     procedure Represented(const AValue: INyxCollectionCellText;
       const AResult: TNyxClipboardWriteResult);
     procedure NestedEnding;
+    procedure ClearSelection;
+    procedure IgnoreView(const AView: INyxCollectionView;
+      const AChanges: INyxCollectionChanges);
+    procedure IgnoreStore(const AStore: INyxCollection;
+      const AChanges: INyxCollectionChanges);
   end;
 
   { Foreign representation getters can synchronously run an application action.
@@ -449,6 +466,21 @@ begin
   end;
 end;
 
+function TForeignActionCapture.GetAction: TNyxCollectionClipboardAction;
+begin
+  Result := nccaCell;
+end;
+
+function TForeignActionCapture.GetPayload: INyxCollectionClipboardText;
+begin
+  Result := Inner.Payload;
+end;
+
+function TForeignActionCapture.GetReadiness: INyxCancellationReadiness;
+begin
+  Result := Inner.Readiness;
+end;
+
 constructor TFixture.Create(ADisplay: Boolean);
 var
   LSpec: TNyxCollectionViewSpec;
@@ -531,8 +563,32 @@ begin
 end;
 
 function TFixture.Readiness: INyxCancellationReadiness;
+var
+  LCall: TEndingCallback;
 begin
+  LCall := OnReadiness;
+  OnReadiness := nil;
+
+  if Assigned(LCall) then
+  begin
+    LCall;
+  end;
   Result := TFence.Create(Input);
+end;
+
+procedure TFixture.ClearSelection;
+begin
+  View.SetSelection([], ItemA, ItemA);
+end;
+
+procedure TFixture.IgnoreView(const AView: INyxCollectionView;
+  const AChanges: INyxCollectionChanges);
+begin
+end;
+
+procedure TFixture.IgnoreStore(const AStore: INyxCollection;
+  const AChanges: INyxCollectionChanges);
+begin
 end;
 
 procedure TFixture.Reply(const APayload: INyxCollectionClipboardText;
@@ -1604,6 +1660,517 @@ begin
   end;
 end;
 
+{ Readonly entry captures the original accepted cell independently of transfer
+  permissions. Ordinary physical copy still captures nothing when disallowed;
+  the optional capture cannot be completed into an unauthorized host write. }
+procedure InspectionPermissions;
+var
+  LFixture: TFixture;
+  LInspection: INyxCollectionClipboardInspectionInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LPhysical: INyxCollectionClipboardCommand;
+  LPermission: INyxCollectionClipboardCellPermission;
+  LPayload: INyxCollectionClipboardText;
+  LRange: INyxCollectionCellRangeSelection;
+  LIntent: INyxCollectionCellRangeIntent;
+  LContext: INyxCollectionClipboardCellRangeContext;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LOptions: TNyxCollectionClipboardActions;
+  LCase: Integer;
+begin
+  LFixture := TFixture.Create;
+  try
+    for LCase := 0 to 2 do
+    begin
+      case LCase of
+        0:
+          begin
+            LOptions := [];
+          end;
+        1:
+          begin
+            LOptions := [nccaSelectedSource, nccaSelectedPage];
+          end;
+      else
+        begin
+          LOptions := [nccaCellRange];
+        end;
+      end;
+      LFixture.Restrict(LOptions);
+      LPhysical := LFixture.Cell;
+      Check(not LPhysical.Current and (LPhysical.Payload = nil) and
+        LPhysical.DispatchCurrent, 'disallowed physical cell copy retains canonical dispatch without accepted-value capture');
+      LPhysical.Complete(True);
+      Check(Supports(LFixture.Commands, INyxCollectionClipboardInspectionInput, LInspection),
+        'the same configured controller exposes optional readonly original entry');
+      LCommand := LInspection.BeginCellInspection;
+      LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+
+      if LCase = 2 then
+      begin
+        LRange := NewNyxCollectionCellRangeSelection;
+        LColumns := NyxCollectionColumns(LFixture.View);
+        LCapture := LColumns.CaptureColumns;
+        LIntent := LRange.Select(LFixture.Store.Snapshot, LFixture.View.Snapshot,
+          [LFixture.Field], NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field),
+          NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field), LCapture.Serial,
+          True, nccleLF, TNyxCollectionClipboardLimits.Defaults);
+        Check(Supports(LCommand, INyxCollectionClipboardCellRangeContext, LContext),
+          'readonly original command retains the optional independently permitted range');
+        LContext.AttachRange(LIntent);
+      end;
+      LCommand.Prepare;
+      Check(LCommand.Current and (LCommand.Payload.Text = CText) and
+        LCommand.Payload.FieldAt(0).Same(LFixture.Field) and
+        (LCommand.Payload.ItemAt(0).ID = LFixture.ItemA.ID),
+        'empty/row-only/range-only permissions preserve exact Unicode NUL RAW inspection provenance');
+      Check(Supports(LCommand, INyxCollectionClipboardCellPermission, LPermission) and
+        not LPermission.CellCopyAllowed, 'inspection reports captured cell transfer permission separately');
+
+      if LCase = 2 then
+      begin
+        Check((LContext.RangePayload <> nil) and (LContext.RangePayload.RowCount = 2) and
+          (LContext.RangeReadiness <> nil), 'range-only context captures its independent selected-cell action');
+      end;
+      LPayload := LCommand.Payload;
+      LCommand.Complete(True);
+      LCommand.Retire;
+      Check((LFixture.Host.Writes = 0) and (LPayload.Text = CText),
+        'inspection capture never promotes a denied cell completion into clipboard authority');
+    end;
+    LFixture.Restrict([nccaCell]);
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardInspectionInput, LInspection),
+      'readonly entry remains available alongside permitted physical copy');
+    LCommand := LInspection.BeginCellInspection;
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    LCommand.Prepare;
+    Check(Supports(LCommand, INyxCollectionClipboardCellPermission, LPermission) and
+      LPermission.CellCopyAllowed, 'permitted context captures the original cell permission');
+    LCommand.Complete(True);
+    Check((LFixture.Host.Writes = 1) and (LFixture.Host.Text = CText),
+      'permitted context retains the established same-slot exact transfer behavior');
+  finally
+    LContext := nil;
+    LCapture := nil;
+    LColumns := nil;
+    LIntent := nil;
+    LRange := nil;
+    LCommand := nil;
+    LPhysical := nil;
+    LPermission := nil;
+    LInspection := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ The original prepared seal grants only its actual selected-cell permission.
+  Public value facades and a replacement controller cannot relabel/adopt it;
+  all accepted transfers still run through the existing single host slot. }
+procedure CapturedActionPermission;
+var
+  LFixture: TFixture;
+  LEntry: INyxCollectionClipboardInspectionInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LContext: INyxCollectionClipboardCellRangeContext;
+  LTransfers: INyxCollectionClipboardContextTransfers;
+  LRange: INyxCollectionCellRangeSelection;
+  LIntent: INyxCollectionCellRangeIntent;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LToken: INyxCollectionClipboardActionCapture;
+  LWriter: INyxCollectionClipboardCapturedActionWrite;
+  LCellWriter: INyxCollectionClipboardCapturedWrite;
+  LCancel: INyxCancellationScope;
+  LRequest: INyxClipboardWriteRequest;
+  LForeign: TForeignActionCapture;
+  LForeignLease: INyxCollectionClipboardActionCapture;
+begin
+  LFixture := TFixture.Create;
+  try
+    LFixture.Restrict([nccaCellRange]);
+    Supports(LFixture.Commands, INyxCollectionClipboardInspectionInput, LEntry);
+    Supports(LFixture.Commands, INyxCollectionClipboardCapturedActionWrite, LWriter);
+    Supports(LFixture.Commands, INyxCollectionClipboardCapturedWrite, LCellWriter);
+    LColumns := NyxCollectionColumns(LFixture.View);
+    LCapture := LColumns.CaptureColumns;
+    LRange := NewNyxCollectionCellRangeSelection;
+    LIntent := LRange.Select(LFixture.Store.Snapshot, LFixture.View.Snapshot,
+      [LFixture.Field], NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field),
+      NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field), LCapture.Serial,
+      True, nccleLF, TNyxCollectionClipboardLimits.Defaults);
+    LCommand := LEntry.BeginCellInspection;
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    Supports(LCommand, INyxCollectionClipboardCellRangeContext, LContext);
+    LContext.AttachRange(LIntent);
+    LCommand.Prepare;
+    Check(Supports(LCommand, INyxCollectionClipboardContextTransfers, LTransfers),
+      'original readonly command exposes sealed independent transfer actions');
+    LToken := LTransfers.RangeAction;
+    Check((LToken <> nil) and (LToken.Action = nccaCellRange) and
+      (LToken.Payload = LContext.RangePayload), 'range-only permission seals the actual original range payload');
+    LCancel := NewNyxCancellationScope;
+    LRequest := LCellWriter.WriteCaptured(LCommand.Payload, LCancel, LToken.Readiness, nil, nil);
+    Check((LRequest = nil) and (LFixture.Host.Writes = 0),
+      'range-only authority cannot promote an accepted cell through the unchanged cell write port');
+    LForeign := TForeignActionCapture.Create;
+    LForeignLease := LForeign;
+    LForeign.Inner := LToken;
+    LRequest := LWriter.WriteCapturedAction(LForeignLease, LCancel, LToken.Readiness, nil, nil);
+    Check((LRequest = nil) and (LFixture.Host.Writes = 0),
+      'copied public token values and a relabeled action have no original-controller provenance');
+    LRequest := LWriter.WriteCapturedAction(LToken, LCancel, LToken.Readiness, nil, nil);
+    Check((LFixture.Host.Writes = 1) and (LFixture.Host.Text = LToken.Payload.Text),
+      'sealed range-only action reaches the same injected host exactly once');
+    LFixture.Restrict([nccaCellRange]);
+    LToken.Readiness.CheckReady;
+    Supports(LFixture.Commands, INyxCollectionClipboardCapturedActionWrite, LWriter);
+    LRequest := LWriter.WriteCapturedAction(LToken, LCancel, LToken.Readiness, nil, nil);
+    Check((LRequest = nil) and (LFixture.Host.Writes = 1),
+      'even equal permitted options cannot move an old action seal to a replacement controller');
+  finally
+    LRequest := nil;
+    LForeignLease := nil;
+    LToken := nil;
+    LTransfers := nil;
+    LContext := nil;
+    LCommand := nil;
+    LEntry := nil;
+    LWriter := nil;
+    LCellWriter := nil;
+    LIntent := nil;
+    LRange := nil;
+    LCapture := nil;
+    LColumns := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ The original selected-source and current-page cohorts are independent of the
+  inspected cell. Real accepted selection/page/column changes retire only those
+  optional actions; the readonly accepted cell remains available. }
+procedure SelectedRowsContext;
+var
+  LFixture: TFixture;
+  LEntry: INyxCollectionClipboardInspectionInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LRows: INyxCollectionClipboardCellRowsContext;
+  LTransfers: INyxCollectionClipboardContextTransfers;
+  LSourceAction: INyxCollectionClipboardActionCapture;
+  LPageAction: INyxCollectionClipboardActionCapture;
+  LWriter: INyxCollectionClipboardCapturedActionWrite;
+  LCancel: INyxCancellationScope;
+  LRequest: INyxClipboardWriteRequest;
+  LPages: INyxCollectionPages;
+  LColumns: INyxCollectionColumns;
+  LColumnCapture: INyxCollectionColumnsCapture;
+  LPlan: INyxPreparedPublication;
+  LExpected: INyxCollectionClipboardText;
+  LRefused: Boolean;
+  LBefore: Integer;
+
+  procedure Prepare;
+  begin
+    LCommand := LEntry.BeginCellInspection;
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    LCommand.Prepare;
+    Supports(LCommand, INyxCollectionClipboardCellRowsContext, LRows);
+    Supports(LCommand, INyxCollectionClipboardContextTransfers, LTransfers);
+    LSourceAction := LTransfers.SourceRowsAction;
+    LPageAction := LTransfers.PageRowsAction;
+  end;
+
+  procedure SetPaging;
+  begin
+    LPages.ConfigurePaging(NyxCollectionPaging.PageSize(1));
+  end;
+
+  procedure RestoreSelection;
+  begin
+    LFixture.View.SetSelection([LFixture.ItemA, LFixture.ItemB],
+      LFixture.ItemA, LFixture.ItemA);
+  end;
+
+  procedure UpdateSource;
+  begin
+    { End the fluent store receiver here, independently of retained proofs. }
+    LFixture.Store.Update(NyxCollectionItem(LFixture.ItemB)
+      .WithValue(NyxIntegerField('Score'), 3));
+  end;
+
+  procedure Refuses(const AAction: INyxCollectionClipboardActionCapture;
+    const AReason: string);
+  begin
+    LRefused := False;
+    LBefore := LFixture.Host.Writes;
+    try
+      LRequest := LWriter.WriteCapturedAction(AAction, LCancel,
+        AAction.Readiness, nil, nil);
+    except
+      on E: ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFixture.Host.Writes = LBefore), AReason);
+  end;
+
+begin
+  LFixture := TFixture.Create;
+  try
+    LFixture.Restrict([nccaSelectedSource, nccaSelectedPage]);
+    Supports(LFixture.Commands, INyxCollectionClipboardInspectionInput, LEntry);
+    Supports(LFixture.Commands, INyxCollectionClipboardCapturedActionWrite, LWriter);
+    LPages := NyxCollectionPages(LFixture.View);
+    SetPaging;
+    LCancel := NewNyxCancellationScope;
+    Prepare;
+    Check(LCommand.Current and (LCommand.Payload.Text = CText) and
+      (LSourceAction <> nil) and (LPageAction <> nil),
+      'row-only context keeps independent RAW inspection and both original selected-row actions');
+    Check((LRows.SourceRowsPayload.RowCount = 2) and
+      (LRows.PageRowsPayload.RowCount = 1) and
+      (LRows.SourceRowsPayload.ItemAt(0).ID = LFixture.ItemA.ID) and
+      (LRows.SourceRowsPayload.ItemAt(1).ID = LFixture.ItemB.ID) and
+      (LRows.PageRowsPayload.ItemAt(0).ID = LFixture.ItemA.ID),
+      'source includes off-page selection while page copy keeps exact launch page membership and order');
+    LExpected := NewNyxCollectionClipboardRows(LFixture.Store.Snapshot,
+      LFixture.View.Selection.Snapshot,
+      [LFixture.Field, NyxColumnIdentity(NyxIntegerField('Score'))],
+      nccmAllSelectedSource, nil, True, nccleLF, TNyxCollectionClipboardLimits.Defaults);
+    Check((LSourceAction.Payload.Text = LExpected.Text) and
+      (LSourceAction.Payload.CellValue(0, 0).TextValue = CText) and
+      (LSourceAction.Action = nccaSelectedSource) and (LPageAction.Action = nccaSelectedPage),
+      'row tokens retain exact escaped Unicode/NUL/newline RAW values, typed fields and distinct original actions');
+    LRequest := LWriter.WriteCapturedAction(LPageAction, LCancel,
+      LPageAction.Readiness, nil, nil);
+    Check((LFixture.Host.Writes = 1) and
+      (LFixture.Host.Text = LRows.PageRowsPayload.Text),
+      'selected-page token reaches the existing host slot without cell-copy permission');
+    LRequest := LWriter.WriteCapturedAction(LSourceAction, LCancel,
+      LSourceAction.Readiness, nil, nil);
+    Check((LFixture.Host.Writes = 2) and (LFixture.Host.Text = LExpected.Text),
+      'selected-source token uses the same arbitration slot and exact original rows');
+    { The two successful writes deliberately advanced the shared command slot.
+      Start a fresh original command before isolating selection-only retirement. }
+    Prepare;
+    LFixture.ClearSelection;
+    RestoreSelection;
+    Refuses(LSourceAction, 'selection ABA refuses the old source action without an extra host entry');
+    Check(LCommand.Current and (LCommand.Payload.Text = CText),
+      'selection retirement leaves the independent accepted-cell inspection current');
+    Prepare;
+    LPages.GoToPage(2);
+    Refuses(LPageAction, 'a page transition retires the original page action before it can copy a newer cohort');
+    LPages.GoToPage(1);
+    LFixture.OnReadiness := {$ifdef PAS2JS}@{$endif}LFixture.ClearSelection;
+    Prepare;
+    Check(LCommand.Current and (LCommand.Payload.Text = CText) and
+      (LSourceAction = nil) and (LPageAction = nil),
+      'selection captured BEFORE outward readiness cannot silently become the nested selection');
+    RestoreSelection;
+    Prepare;
+    LColumns := NyxCollectionColumns(LFixture.View);
+    LColumnCapture := LColumns.CaptureColumns;
+    LPlan := LColumns.PrepareColumns(LColumnCapture,
+      NyxColumnPreferences.WithColumn(NyxColumnPreference(LFixture.Field).Width(200)));
+    LPlan.Validate;
+    LPlan.Install;
+    Refuses(LSourceAction,
+      'actual column Install retires original row authority before any participant notification');
+    LPlan.Notify;
+    LPlan.Retire;
+    LPlan := nil;
+    Prepare;
+    UpdateSource;
+    Refuses(LSourceAction, 'actual source installation retires the original selected-row transfer');
+    Prepare;
+    LFixture.Filter;
+    Refuses(LSourceAction, 'accepted filter replacement retires original selected-source menu authority');
+    Check(LExpected.RowCount = 2, 'later filtering cannot mutate retained original source bytes');
+    Prepare;
+    Check((LRows.SourceRowsPayload.RowCount = 2) and
+      (LRows.PageRowsPayload.RowCount = 1) and
+      (LRows.PageRowsPayload.ItemAt(0).ID = LFixture.ItemB.ID),
+      'fresh source-row action includes hidden selected members while page action uses the filtered launch page');
+  finally
+
+    if LPlan <> nil then
+    begin
+      LPlan.Retire;
+    end;
+    LPlan := nil;
+    LColumnCapture := nil;
+    LColumns := nil;
+    LPages := nil;
+    LRequest := nil;
+    LExpected := nil;
+    LSourceAction := nil;
+    LPageAction := nil;
+    LTransfers := nil;
+    LRows := nil;
+    LCommand := nil;
+    LEntry := nil;
+    LWriter := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ A retained menu action and view-provided row observation are genuinely
+  detached values. The last controller/view/store can retire while their copied
+  text remains readable, and the inert readiness refuses after that retirement. }
+procedure SelectedRowsLifetime;
+var
+  LFixture: TFixture;
+  LEntry: INyxCollectionClipboardInspectionInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LTransfers: INyxCollectionClipboardContextTransfers;
+  LAction: INyxCollectionClipboardActionCapture;
+  LRowsView: INyxCollectionSelectedRowsView;
+  LCapture: INyxCollectionSelectedRowsCapture;
+  LViewToken: INyxCollectionViewSubscription;
+  LStoreToken: INyxCollectionSubscription;
+  LRetired: INyxCollectionClipboardCommands;
+  LRefused: Boolean;
+begin
+  LFixture := TFixture.Create;
+  try
+    LFixture.Restrict([nccaSelectedSource]);
+    Supports(LFixture.Commands, INyxCollectionClipboardInspectionInput, LEntry);
+    Supports(LFixture.View, INyxCollectionSelectedRowsView, LRowsView);
+    LCapture := LRowsView.CaptureSelectedRows;
+    LCommand := LEntry.BeginCellInspection;
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    LCommand.Prepare;
+    Supports(LCommand, INyxCollectionClipboardContextTransfers, LTransfers);
+    LAction := LTransfers.SourceRowsAction;
+    Check((LAction <> nil) and (LTransfers.PageRowsAction = nil),
+      'source-only permission cannot manufacture a page transfer token');
+    LViewToken := LFixture.View.Subscribe({$ifdef PAS2JS}@{$endif}LFixture.IgnoreView);
+    LStoreToken := LFixture.Store.Subscribe({$ifdef PAS2JS}@{$endif}LFixture.IgnoreStore);
+    LTransfers := nil;
+    LCommand := nil;
+    LEntry := nil;
+    LRowsView := nil;
+    LRetired := LFixture.Commands;
+    LRetired.Revoke;
+    LFixture.Commands := nil;
+    LFixture.View := nil;
+    LFixture.Store := nil;
+    Check(not LViewToken.Connected and not LStoreToken.Connected,
+      'retained row token, capture and revoked controller keep neither actual view nor store owner alive');
+    Check((LCapture.Selection.Count = 2) and (LAction.Payload.RowCount = 2) and
+      (LAction.Payload.CellValue(0, 0).TextValue = CText),
+      'exact copied selection/text remain readable after their live owners retire');
+    LRefused := False;
+    try
+      LAction.Readiness.CheckReady;
+    except
+      on E: ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'owner retirement marks the detached row action unavailable without a borrowed owner lookup');
+  finally
+    LAction := nil;
+    LCapture := nil;
+    LRowsView := nil;
+    LTransfers := nil;
+    LCommand := nil;
+    LEntry := nil;
+    LViewToken := nil;
+    LStoreToken := nil;
+    LRetired := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ The optional multi-row output has its own bounded admission. A valid cell
+  inspection survives a stricter row-byte limit, while permitted pending row
+  writes still share supersession with the original physical RAW-cell route. }
+procedure SelectedRowsAdmission;
+var
+  LFixture: TFixture;
+  LEntry: INyxCollectionClipboardInspectionInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LTransfers: INyxCollectionClipboardContextTransfers;
+  LToken: INyxCollectionClipboardActionCapture;
+  LWriter: INyxCollectionClipboardCapturedActionWrite;
+  LCancel: INyxCancellationScope;
+  LRequest: INyxClipboardWriteRequest;
+  LOld: TWrite;
+  LOldLease: INyxClipboardWriteRequest;
+  LRaw: INyxCollectionClipboardCommand;
+  LPayload: INyxCollectionClipboardText;
+  LOptions: TNyxCollectionClipboardOptions;
+
+  procedure ConfigureBounded;
+  begin
+    LFixture.Commands.Revoke;
+    LOptions := TNyxCollectionClipboardOptions.Defaults.AllowOnly([nccaSelectedSource])
+      .Limits(TNyxCollectionClipboardLimits.Defaults.UTF8Bytes(LPayload.ByteCount));
+    LFixture.Commands := NewNyxCollectionClipboardCommands(LFixture.View,
+      LFixture.InputLease, LFixture.Events, LFixture.HostLease, LFixture.Scheduler,
+      LOptions, {$ifdef PAS2JS}@{$endif}LFixture.Readiness);
+  end;
+
+  procedure Prepare;
+  begin
+    Supports(LFixture.Commands, INyxCollectionClipboardInspectionInput, LEntry);
+    LCommand := LEntry.BeginCellInspection;
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    LCommand.Prepare;
+    Supports(LCommand, INyxCollectionClipboardContextTransfers, LTransfers);
+  end;
+
+begin
+  LFixture := TFixture.Create;
+  try
+    LPayload := NewNyxCollectionClipboardCell(LFixture.Store.Snapshot,
+      LFixture.ItemA, LFixture.Field, TNyxCollectionClipboardLimits.Defaults);
+    ConfigureBounded;
+    Prepare;
+    Check(LCommand.Current and (LCommand.Payload.Text = CText) and
+      (LTransfers.SourceRowsAction = nil) and (LTransfers.PageRowsAction = nil),
+      'row byte refusal omits only optional rows and preserves an exact valid readonly cell');
+    LFixture.Restrict([nccaCell, nccaSelectedSource]);
+    Prepare;
+    LToken := LTransfers.SourceRowsAction;
+    Supports(LFixture.Commands, INyxCollectionClipboardCapturedActionWrite, LWriter);
+    LCancel := NewNyxCancellationScope;
+    LFixture.Host.InlineCompletion := False;
+    LRequest := LWriter.WriteCapturedAction(LToken, LCancel, LToken.Readiness, nil, nil);
+    LOld := LFixture.Host.Last;
+    LOldLease := LFixture.Host.LastLease;
+    Check((LRequest <> nil) and (LFixture.Commands.Phase = nccpPending),
+      'row menu transfer uses the actual pending host slot');
+    LFixture.Host.InlineCompletion := True;
+    LRaw := LFixture.Cell;
+    LRaw.Complete(True);
+    Check((LFixture.Host.Writes = 2) and (LFixture.Host.Endings = 2) and
+      (LFixture.Replies = 1) and (LFixture.Host.Text = CText),
+      'a later ordinary RAW cell cancels only the old row receiver on the same arbitration slot');
+    LRequest.Cancel;
+    Check(LFixture.Host.Endings = 2, 'old row cancellation cannot cancel the newer RAW receipt');
+    LOld.Finish;
+    Check((LFixture.Host.Writes = 2) and (LFixture.LastPayload.Text = CText) and
+      (LFixture.Commands.Phase = nccpCompleted),
+      'late old row completion cannot replace the newer RAW receipt');
+  finally
+    LRaw := nil;
+    LOldLease := nil;
+    LRequest := nil;
+    LToken := nil;
+    LTransfers := nil;
+    LCommand := nil;
+    LEntry := nil;
+    LWriter := nil;
+    LPayload := nil;
+    LFixture.Free;
+  end;
+end;
+
 procedure Run;
 var
   LFixture: TFixture;
@@ -1777,6 +2344,11 @@ end;
 begin
   try
     Run;
+    InspectionPermissions;
+    CapturedActionPermission;
+    SelectedRowsContext;
+    SelectedRowsLifetime;
+    SelectedRowsAdmission;
     CapturedArbitration;
     RepresentedArbitration;
     RangeArbitration;

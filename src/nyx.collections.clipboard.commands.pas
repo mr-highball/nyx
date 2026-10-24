@@ -52,6 +52,34 @@ type
   { Forward command never belongs to the controller's pending-host slot. }
   TCommand = class;
 
+  { Forward seal is private implementation data, never an author-supplied
+    action/payload tuple or a backlink to its originating controller. }
+  TCapturedAction = class;
+
+  { Only actual built-in seals expose this private value witness. The owning
+    QI local retains its borrowed class data through admission/reentry checks. }
+  ICapturedActionProof = interface(IInterface)
+    ['{CB869C02-A396-4DD9-9DFD-4DDF737F1783}']
+    function CapturedData: TCapturedAction;
+  end;
+
+  { Immutable authorized values carry one independent controller identity and
+    inert readiness. No controller/view/mount is retained by a sealed action. }
+  TCapturedAction = class(TInterfacedObject, INyxCollectionClipboardActionCapture,
+    ICapturedActionProof)
+  public
+    Identity: IInterface;
+    Action: TNyxCollectionClipboardAction;
+    Payload: INyxCollectionClipboardText;
+    Readiness: INyxCancellationReadiness;
+    constructor Create(const AIdentity: IInterface; AAction: TNyxCollectionClipboardAction;
+      const APayload: INyxCollectionClipboardText; const AReady: INyxCancellationReadiness);
+    function GetAction: TNyxCollectionClipboardAction;
+    function GetPayload: INyxCollectionClipboardText;
+    function GetReadiness: INyxCancellationReadiness;
+    function CapturedData: TCapturedAction;
+  end;
+
   { Owner-free cancellation passed to asynchronous clipboard hosts. It retains
     only certified flags-only parent readiness, canonical input and its own
     synchronized cancel flag. The mounted final fence is deliberately absent. }
@@ -105,11 +133,14 @@ type
     reverse. Optional context-range authority is separate from RAW cell proof;
     clearing the range cannot cancel accepted-cell inspection or copy. No range
     controller enters an asynchronous host. Retire after transfer cannot cancel
-    that request. }
+    that request. Readonly inspection can capture without cell-copy permission;
+    the same token still cannot complete a disallowed write. }
   TCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
     INyxCollectionClipboardCellCommand, INyxCollectionClipboardPreparedScope,
     INyxCollectionClipboardOutputCapture, INyxCollectionClipboardDisplayCapture,
-    INyxCollectionClipboardRangeCommand, INyxCollectionClipboardCellRangeContext)
+    INyxCollectionClipboardRangeCommand, INyxCollectionClipboardCellRangeContext,
+    INyxCollectionClipboardCellPermission, INyxCollectionClipboardCellRowsContext,
+    INyxCollectionClipboardContextTransfers)
   private
     FOwner: TCommands;
     FOwnerLease: INyxCollectionClipboardCommands;
@@ -124,6 +155,14 @@ type
     FSerial: Integer;
     FEntryReady: Boolean;
     FEligible: Boolean;
+    FInspection: Boolean;
+    FRowsCapture: INyxCollectionSelectedRowsCapture;
+    FSourceRowsPayload: INyxCollectionClipboardText;
+    FPageRowsPayload: INyxCollectionClipboardText;
+    FRowsReady: INyxCancellationReadiness;
+    FRangeAction: INyxCollectionClipboardActionCapture;
+    FSourceRowsAction: INyxCollectionClipboardActionCapture;
+    FPageRowsAction: INyxCollectionClipboardActionCapture;
     FCellResolved: Boolean;
     FRangeStarted: Boolean;
     FRangeResolved: Boolean;
@@ -166,6 +205,14 @@ type
     procedure PrepareOutput;
     function GetOutput: INyxCollectionExportCapture;
     function GetDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+    function GetCellCopyAllowed: Boolean;
+    function GetSourceRowsPayload: INyxCollectionClipboardText;
+    function GetPageRowsPayload: INyxCollectionClipboardText;
+    function GetRowsReadiness: INyxCancellationReadiness;
+    procedure PrepareContextRows;
+    function GetRangeAction: INyxCollectionClipboardActionCapture;
+    function GetSourceRowsAction: INyxCollectionClipboardActionCapture;
+    function GetPageRowsAction: INyxCollectionClipboardActionCapture;
     procedure Prepare;
     procedure ResolveCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity);
@@ -180,18 +227,23 @@ type
   public
     constructor Create(AOwner: TCommands; AAction: TNyxCollectionClipboardAction;
       const AItem: TNyxItemRef; const AField: TNyxColumnIdentity;
-      AResolveLater: Boolean = False);
+      AResolveLater: Boolean = False; AInspection: Boolean = False);
   end;
 
   { Runtime controller keeps one exact pending receipt/request and immutable
     authority for RAW cell, explicit cell rectangle, row and represented writes.
     A receipt borrows this owner; it is revoked before host Cancel. No member
-    retains a command, live range selection or mount-retaining synchronous fence. }
+    retains a command, live range selection or mount-retaining synchronous fence.
+    Optional readonly context entry shares original command arbitration without
+    changing physical-copy eligibility. }
   TCommands = class(TInterfacedObject, INyxCollectionClipboardCommands,
     INyxCollectionClipboardCellInput, INyxCollectionClipboardCapturedWrite,
-    INyxCollectionClipboardRepresentationWrite, INyxCollectionClipboardRangeInput)
+    INyxCollectionClipboardRepresentationWrite, INyxCollectionClipboardRangeInput,
+    INyxCollectionClipboardInspectionInput, INyxCollectionClipboardCapturedActionWrite)
   private
     FView: INyxCollectionView;
+    FRowsView: INyxCollectionSelectedRowsView;
+    FTransferIdentity: IInterface;
     FInput: INyxCollectionInputLifetime;
     FEvents: INyxEvents;
     FHost: INyxClipboardWriteHost;
@@ -221,12 +273,22 @@ type
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
       AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+    function WriteCapturedAction(const AAction: INyxCollectionClipboardActionCapture;
+      const ACancellation: INyxCancellationScope;
+      const AReadiness: INyxCancellationReadiness;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+    function SubmitCapturedAction(AAction: TNyxCollectionClipboardAction;
+      const APayload: INyxCollectionClipboardText;
+      const ACancellation: INyxCancellationScope;
+      const AReadiness: INyxCancellationReadiness;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
     procedure Received(AReceipt: TReceipt; const AResult: TNyxClipboardWriteResult);
     procedure CancelCurrent;
     procedure RevokeInternal;
     function BeginCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity): INyxCollectionClipboardCommand;
     function BeginCellInput: INyxCollectionClipboardCellCommand;
+    function BeginCellInspection: INyxCollectionClipboardCellCommand;
     function BeginRangeInput: INyxCollectionClipboardRangeCommand;
     function BeginRows(AMembership: TNyxCollectionCopyMembership): INyxCollectionClipboardCommand;
     procedure Observe(AObserver: TNyxCollectionClipboardObserver);
@@ -251,6 +313,37 @@ type
       AReadiness: TNyxCollectionClipboardReadinessFactory);
     destructor Destroy; override;
   end;
+
+constructor TCapturedAction.Create(const AIdentity: IInterface;
+  AAction: TNyxCollectionClipboardAction; const APayload: INyxCollectionClipboardText;
+  const AReady: INyxCancellationReadiness);
+begin
+  inherited Create;
+  Identity := AIdentity;
+  Action := AAction;
+  Payload := APayload;
+  Readiness := AReady;
+end;
+
+function TCapturedAction.GetAction: TNyxCollectionClipboardAction;
+begin
+  Result := Action;
+end;
+
+function TCapturedAction.GetPayload: INyxCollectionClipboardText;
+begin
+  Result := Payload;
+end;
+
+function TCapturedAction.GetReadiness: INyxCancellationReadiness;
+begin
+  Result := Readiness;
+end;
+
+function TCapturedAction.CapturedData: TCapturedAction;
+begin
+  Result := Self;
+end;
 
 constructor TCopyScope.Create(const AInput: INyxCollectionInputLifetime;
   AEpoch: Integer; const AParent: INyxCancellationReadiness;
@@ -342,9 +435,11 @@ begin
 end;
 
 constructor TCommand.Create(AOwner: TCommands; AAction: TNyxCollectionClipboardAction;
-  const AItem: TNyxItemRef; const AField: TNyxColumnIdentity; AResolveLater: Boolean);
+  const AItem: TNyxItemRef; const AField: TNyxColumnIdentity; AResolveLater: Boolean;
+  AInspection: Boolean);
 var
   LFactory: TNyxCollectionClipboardReadinessFactory;
+  LRowsView: INyxCollectionSelectedRowsView;
 begin
   inherited Create;
   FOwnerLease := AOwner;
@@ -354,6 +449,7 @@ begin
   FEvents := AOwner.FEvents;
   FOptions := AOwner.FOptions;
   FAction := AAction;
+  FInspection := AInspection and (FAction = nccaCell);
   FSerial := AOwner.FSerial;
 
   if (FAction = nccaCell) and not AResolveLater then
@@ -372,6 +468,19 @@ begin
   FEntryReady := FInput.Ready and
     (FEpoch > 0) and (FEpoch < High(Integer)) and
     (FSerial > 0) and (FSerial < High(Integer));
+  { The optional port was retained during configuration. Its contract captures
+    only owned flags/snapshots, BEFORE the outward mount-input factory below. }
+
+  if FInspection and FEntryReady and FInput.Current and
+    ((nccaSelectedSource in FOptions.Actions) or (nccaSelectedPage in FOptions.Actions)) then
+  begin
+    LRowsView := AOwner.FRowsView;
+
+    if LRowsView <> nil then
+    begin
+      FRowsCapture := LRowsView.CaptureSelectedRows;
+    end;
+  end;
   LFactory := AOwner.FReadiness;
 
   if FEntryReady and FInput.Current and Assigned(LFactory) then
@@ -546,6 +655,41 @@ begin
   Result := FDisplayPolicy.Copy;
 end;
 
+function TCommand.GetCellCopyAllowed: Boolean;
+begin
+  Result := (FAction = nccaCell) and FEligible;
+end;
+
+function TCommand.GetSourceRowsPayload: INyxCollectionClipboardText;
+begin
+  Result := FSourceRowsPayload;
+end;
+
+function TCommand.GetPageRowsPayload: INyxCollectionClipboardText;
+begin
+  Result := FPageRowsPayload;
+end;
+
+function TCommand.GetRowsReadiness: INyxCancellationReadiness;
+begin
+  Result := FRowsReady;
+end;
+
+function TCommand.GetRangeAction: INyxCollectionClipboardActionCapture;
+begin
+  Result := FRangeAction;
+end;
+
+function TCommand.GetSourceRowsAction: INyxCollectionClipboardActionCapture;
+begin
+  Result := FSourceRowsAction;
+end;
+
+function TCommand.GetPageRowsAction: INyxCollectionClipboardActionCapture;
+begin
+  Result := FPageRowsAction;
+end;
+
 function TCommand.GetReadiness: INyxCancellationReadiness;
 begin
   Result := nil;
@@ -579,7 +723,7 @@ begin
   end;
   FPrepared := True;
 
-  if not FEligible or ((FAction = nccaCell) and not FCellResolved) or
+  if (not FEligible and not FInspection) or ((FAction = nccaCell) and not FCellResolved) or
     ((FAction = nccaCellRange) and not FRangeResolved) then
   begin
     Exit;
@@ -731,6 +875,7 @@ begin
       end;
     end;
     PrepareContextRange(LCapture);
+    PrepareContextRows;
   end
   else
   begin
@@ -754,6 +899,12 @@ begin
     FPayload := nil;
     FContextRangePayload := nil;
     FContextRangeReady := nil;
+    FSourceRowsPayload := nil;
+    FPageRowsPayload := nil;
+    FRowsReady := nil;
+    FRangeAction := nil;
+    FSourceRowsAction := nil;
+    FPageRowsAction := nil;
   end;
 end;
 
@@ -903,6 +1054,122 @@ begin
   FRangePage := LPage;
 end;
 
+procedure TCommand.PrepareContextRows;
+var
+  LRows: INyxCollectionSelectedRowsCapture;
+  LReady: INyxCancellationReadiness;
+  LColumns: INyxCollectionColumnsCapture;
+  LSelection: TNyxCollectionSelectionSnapshot;
+  LFields: TNyxCollectionClipboardFields;
+  LObservation: TNyxColumnLayoutObservation;
+  LSourcePayload: INyxCollectionClipboardText;
+  LPagePayload: INyxCollectionClipboardText;
+  LScope: TCopyScope;
+
+  function Produce(AMembership: TNyxCollectionCopyMembership): INyxCollectionClipboardText;
+  var
+    LPayload: INyxCollectionClipboardText;
+    LPage: INyxCollectionSnapshot;
+  begin
+    Result := nil;
+
+    if AMembership = nccmSelectedPage then
+    begin
+      LPage := FPage;
+    end;
+    try
+      LPayload := NewNyxCollectionClipboardRows(FSource, LSelection, LFields,
+        AMembership, LPage, FOptions.IncludeHeaders, FOptions.Lines, FOptions.WorkLimits);
+
+      if LPayload.RowCount > 0 then
+      begin
+        Result := LPayload;
+      end;
+    except
+      on E: ENyxCollectionClipboard do
+      begin
+        { Optional membership/output admission cannot disable valid RAW
+          inspection. Application callback failures keep their normal path. }
+      end;
+    end;
+  end;
+
+begin
+  LRows := FRowsCapture;
+
+  if not FInspection or (LRows = nil) or not OriginalFlags then
+  begin
+    Exit;
+  end;
+  LReady := LRows.Readiness;
+
+  if LReady = nil then
+  begin
+    Exit;
+  end;
+  try
+    LReady.CheckReady;
+  except
+    Exit;
+  end;
+
+  if not OriginalFlags or (LRows.Source <> FSource) or (LRows.Page <> FPage) then
+  begin
+    Exit;
+  end;
+  LColumns := LRows.Columns;
+  LSelection := LRows.Selection;
+
+  if not OriginalFlags or (LColumns = nil) or (LColumns.Serial <> FColumnSerial) or
+    (LSelection.Count = 0) then
+  begin
+    Exit;
+  end;
+
+  if (LColumns.Spec.ToData.ToJSON + #10 + LColumns.Preferences.ToData.ToJSON) <> FColumnBaseline then
+  begin
+    Exit;
+  end;
+  LObservation := TNyxColumnLayoutObservation.Read(LColumns);
+  LFields := NyxCollectionClipboardFields(LObservation, FOptions.FieldChoice);
+
+  if nccaSelectedSource in FOptions.Actions then
+  begin
+    LSourcePayload := Produce(nccmAllSelectedSource);
+  end;
+
+  if nccaSelectedPage in FOptions.Actions then
+  begin
+    LPagePayload := Produce(nccmSelectedPage);
+  end;
+
+  if not OriginalFlags or ((LSourcePayload = nil) and (LPagePayload = nil)) then
+  begin
+    Exit;
+  end;
+  try
+    LReady.CheckReady;
+  except
+    Exit;
+  end;
+  LScope := TCopyScope.Create(FInput, FEpoch, FParentReady, LReady);
+  FRowsReady := LScope;
+  FSourceRowsPayload := LSourcePayload;
+  FPageRowsPayload := LPagePayload;
+
+  if LSourcePayload <> nil then
+  begin
+    FSourceRowsAction := TCapturedAction.Create(FOwner.FTransferIdentity,
+      nccaSelectedSource, LSourcePayload, LScope);
+  end;
+
+  if LPagePayload <> nil then
+  begin
+    FPageRowsAction := TCapturedAction.Create(FOwner.FTransferIdentity,
+      nccaSelectedPage, LPagePayload, LScope);
+  end;
+end;
+
 procedure TCommand.PrepareContextRange(const AColumns: INyxCollectionColumnsCapture);
 var
   LObservation: TNyxColumnLayoutObservation;
@@ -956,6 +1223,8 @@ begin
   LScope := TCopyScope.Create(FInput, FEpoch, FParentReady, FRangeReady);
   FContextRangeReady := LScope;
   FContextRangePayload := LRange.Payload;
+  FRangeAction := TCapturedAction.Create(FOwner.FTransferIdentity, nccaCellRange,
+    FContextRangePayload, LScope);
 end;
 
 function TCommand.GetRangePayload: INyxCollectionClipboardText;
@@ -977,7 +1246,7 @@ begin
     Exit;
   end;
 
-  if AAllowDefault and CurrentProof(False) and FPrepared then
+  if AAllowDefault and FEligible and CurrentProof(False) and FPrepared then
   begin
     FCompleteStarted := True;
     FOwner.Start(Self);
@@ -1005,6 +1274,7 @@ var
   LHost: INyxClipboardWriteHost;
   LScheduler: INyxScheduler;
   LOptions: TNyxCollectionClipboardOptions;
+  LRowsView: INyxCollectionSelectedRowsView;
 begin
   inherited Create;
   LView := AView;
@@ -1033,6 +1303,9 @@ begin
   FScheduler := LScheduler;
   FOptions := LOptions;
   FReadiness := AReadiness;
+  Supports(LView, INyxCollectionSelectedRowsView, LRowsView);
+  FRowsView := LRowsView;
+  FTransferIdentity := TInterfacedObject.Create;
   FSerial := 1;
 end;
 
@@ -1062,6 +1335,15 @@ begin
   LLease := Self;
   Result := TCommand.Create(Self, nccaCell, Default(TNyxItemRef),
     Default(TNyxColumnIdentity), True);
+end;
+
+function TCommands.BeginCellInspection: INyxCollectionClipboardCellCommand;
+var
+  LLease: INyxCollectionClipboardCommands;
+begin
+  LLease := Self;
+  Result := TCommand.Create(Self, nccaCell, Default(TNyxItemRef),
+    Default(TNyxColumnIdentity), True, True);
 end;
 
 function TCommands.BeginRangeInput: INyxCollectionClipboardRangeCommand;
@@ -1122,12 +1404,66 @@ function TCommands.WriteCaptured(const APayload: INyxCollectionClipboardText;
   AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
 var
   LLease: INyxCollectionClipboardCommands;
+begin
+  LLease := Self;
+  Result := SubmitCapturedAction(nccaCell, APayload, ACancellation, AReadiness,
+    AReply, AReplyOwner);
+end;
+
+function TCommands.WriteCapturedAction(const AAction: INyxCollectionClipboardActionCapture;
+  const ACancellation: INyxCancellationScope; const AReadiness: INyxCancellationReadiness;
+  AReply: TNyxClipboardWriteReply;
+  const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+var
+  LLease: INyxCollectionClipboardCommands;
+  LAction: INyxCollectionClipboardActionCapture;
+  LProof: ICapturedActionProof;
+  LData: TCapturedAction;
+  LSerial: Integer;
+  LReady: INyxCancellationReadiness;
+begin
+  LLease := Self;
+  LAction := AAction;
+  LSerial := FSerial;
+  Result := nil;
+
+  if FRevoked or (LAction = nil) or (AReadiness = nil) or
+    not Supports(LAction, ICapturedActionProof, LProof) then
+  begin
+    Exit;
+  end;
+  LData := LProof.CapturedData;
+
+  if FRevoked or (FSerial <> LSerial) or (LData = nil) or
+    (LData.Identity <> FTransferIdentity) then
+  begin
+    Exit;
+  end;
+  LReady := TCopyScope.Create(FInput, FInput.Epoch, LData.Readiness, AReadiness);
+
+  if FRevoked or (FSerial <> LSerial) then
+  begin
+    Exit;
+  end;
+  Result := SubmitCapturedAction(LData.Action, LData.Payload, ACancellation,
+    LReady, AReply, AReplyOwner);
+end;
+
+function TCommands.SubmitCapturedAction(AAction: TNyxCollectionClipboardAction;
+  const APayload: INyxCollectionClipboardText;
+  const ACancellation: INyxCancellationScope;
+  const AReadiness: INyxCancellationReadiness;
+  AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+var
+  LLease: INyxCollectionClipboardCommands;
   LSerial: Integer;
 begin
   Result := nil;
   LLease := Self;
 
-  if FRevoked or not (nccaCell in FOptions.Actions) or (APayload = nil) or
+  if FRevoked or (Ord(AAction) < Ord(Low(TNyxCollectionClipboardAction))) or
+    (Ord(AAction) > Ord(High(TNyxCollectionClipboardAction))) or
+    not (AAction in FOptions.Actions) or (APayload = nil) or
     (ACancellation = nil) or (AReadiness = nil) then
   begin
     Exit;
@@ -1478,6 +1814,7 @@ end;
 procedure TCommands.RevokeInternal;
 var
   LView: INyxCollectionView;
+  LRowsView: INyxCollectionSelectedRowsView;
   LInput: INyxCollectionInputLifetime;
   LEvents: INyxEvents;
   LHost: INyxClipboardWriteHost;
@@ -1493,11 +1830,13 @@ begin
   FObserver := nil;
   FRepresentationObserver := nil;
   LView := FView;
+  LRowsView := FRowsView;
   LInput := FInput;
   LEvents := FEvents;
   LHost := FHost;
   LScheduler := FScheduler;
   FView := nil;
+  FRowsView := nil;
   FInput := nil;
   FEvents := nil;
   FHost := nil;

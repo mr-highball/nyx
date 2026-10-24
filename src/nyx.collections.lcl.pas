@@ -670,6 +670,7 @@ var
   LLease: INyxCollectionMount;
   LCommands: INyxCollectionClipboardCommands;
   LEntry: INyxCollectionClipboardCellInput;
+  LInspection: INyxCollectionClipboardInspectionInput;
   LCommand: INyxCollectionClipboardCellCommand;
   LPrepared: INyxCollectionClipboardPreparedScope;
   LReady: INyxCancellationReadiness;
@@ -753,14 +754,31 @@ begin
   LFrame.Enter;
   try
 
-    if not GetInputReady or (FColumnFrame <> LFrame) or
-      not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+    if not GetInputReady or (FColumnFrame <> LFrame) then
     begin
       Exit;
     end;
-    { Reserve before any source/native getter. No canonical event or platform
-      copy is synthesized; this method only captures deliberately requested text. }
-    LCommand := LEntry.BeginCellInput;
+    { Reserve readonly inspection before source/native getters. Proving the
+      accepted counterpart of this draft grants no cell-copy authority, and
+      therefore also works when the authored copy permission set is empty. }
+    if Supports(LCommands, INyxCollectionClipboardInspectionInput, LInspection) then
+    begin
+      LCommand := LInspection.BeginCellInspection;
+    end
+    else
+    begin
+
+      if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+      begin
+        Exit;
+      end;
+      LCommand := LEntry.BeginCellInput;
+    end;
+
+    if LCommand = nil then
+    begin
+      Exit;
+    end;
     try
       LFocus := Screen.ActiveControl;
       LGrid := InputGrid(LFocus);

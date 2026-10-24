@@ -113,6 +113,7 @@ uses
   nyx.collections.pager,
   nyx.collections.view.types,
   nyx.collections.mount,
+  nyx.collections.workbench.runtime,
   nyx.collections.clipboard.actions,
   nyx.collections.lcl,
   nyx.collections.lcl.grid,
@@ -367,6 +368,9 @@ type
     FRoot: TNyxNode;
     FResourceContext: INyxResourceContext;
     FResourceUpdates: INyxResourceUpdateQueue;
+    { Runtime services survive remounts as independent configuration leases;
+      their host authority never enters a design or an authored policy. }
+    FTableWorkbenchServices: INyxTableWorkbenchServices;
     FPresentationSelection: TNyxPresentationSelection;
     FPresentationView: INyxPresentationViewOwner;
     { Independently owned recipes outlive the source document. Queued work
@@ -602,6 +606,7 @@ type
     procedure SetResourceContext(const AContext: INyxResourceContext);
     function GetResourceContext: INyxResourceContext;
     procedure SetResourceUpdates(const AQueue: INyxResourceUpdateQueue);
+    procedure SetTableWorkbenchServices(const AServices: INyxTableWorkbenchServices);
     procedure WakeResources;
     procedure Resize(ASender: TObject);
     procedure MountCanvases(ADocument: TNyxDocument);
@@ -914,6 +919,11 @@ type
     { Install while unmounted. The port owns no renderer; the application must
       stop it before destroying receivers. Deferred Wake cannot publish here. }
     property ResourceUpdates: INyxResourceUpdateQueue read FResourceUpdates write SetResourceUpdates;
+    { Configure before Render or after explicit Unmount, with no active render
+      attempt. Hidden candidates and embedded children copy this lease; existing
+      mounts keep their original clipboard host. Nil reports Unavailable. }
+    property TableWorkbenchServices: INyxTableWorkbenchServices
+      read FTableWorkbenchServices write SetTableWorkbenchServices;
     function ResourceReady: Boolean;
     { View-section publication requires an idle input/model boundary. False
       during synchronous event/editing/gesture dispatch, scalar/collection
@@ -954,6 +964,7 @@ uses
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
   nyx.collections, nyx.collections.query.lcl,
   nyx.collections.arrangement.lcl,
+  nyx.collections.cell.lcl,
   nyx.application.resources, nyx.projection.context;
 
 type
@@ -6960,6 +6971,7 @@ begin
       LCandidate.FCollectionInputGate := LCollectionInputGate;
       RequireAttempt;
       LCandidate.FCollectionInputPhase := ncipStaged;
+      LCandidate.FTableWorkbenchServices := FTableWorkbenchServices;
       { Build may mount saved canvases before this outer candidate commits. }
       LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
       RequireAttempt;
@@ -8326,6 +8338,17 @@ begin
 end;
 
 
+procedure TNyxLCLRenderer.SetTableWorkbenchServices(
+  const AServices: INyxTableWorkbenchServices);
+begin
+
+  if (FRoot <> nil) or (FRenderAttempt <> nil) or FPublishingContent then
+  begin
+    raise ENyxModel.Create('Configure table services before mounting or after Unmount');
+  end;
+  FTableWorkbenchServices := AServices;
+end;
+
 procedure TNyxLCLRenderer.SetResourceContext(const AContext: INyxResourceContext);
 var
   LContext: INyxResourceContext;
@@ -8621,6 +8644,7 @@ var
   LQueryMount: INyxCollectionQueryMount;
   LColumnsMount: INyxCollectionColumnArrangementMount;
   LInputAdmission: INyxCollectionInputAdmission;
+  LWorkbenchSpec: TNyxCollectionViewSpec;
 begin
 
   if AView = nil then
@@ -8676,6 +8700,19 @@ begin
     LColumnsMount.ConfigureColumnArrangement(
       NewNyxLCLColumnArrangementFactory(TWinControl(LBinding.FControl), FTheme,
         LInputAdmission.GetInputLifetime), FCollectionQueryEvents);
+  end;
+
+  if not FDesignMode and (AView.Projection = cpTable) then
+  begin
+    LWorkbenchSpec := AView.Spec;
+
+    if LWorkbenchSpec.HasTableWorkbenchPolicy then
+    begin
+      ConfigureNyxTableWorkbench(Result, LWorkbenchSpec.TableWorkbenchPolicy,
+        FTableWorkbenchServices,
+        NewNyxLCLCollectionCellPresenterFactory(TWinControl(LBinding.FControl)),
+        FCollectionQueryEvents);
+    end;
   end;
 end;
 
@@ -13829,6 +13866,7 @@ begin
   ARenderer.FEventFactories := Copy(FRenderer.FEventFactories, 0, Length(FRenderer.FEventFactories));
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
   ARenderer.FResourceContext := FRenderer.FResourceContext;
+  ARenderer.FTableWorkbenchServices := FRenderer.FTableWorkbenchServices;
   ARenderer.ConfigureEmbeddedBehavior(FRenderer.FEmbeddedContext, FRenderer.FEmbeddedResolver);
   ARenderer.CanvasAdoptionHost := FRenderer.FCanvasAdoptionHost;
   ARenderer.OnEvent := CanvasEvent;

@@ -37,6 +37,8 @@ const
   NyxCellActionsInspectID = 'nyx-cell-actions-inspect';
   NyxCellActionsCopyID = 'nyx-cell-actions-copy';
   NyxCellActionsCopyRangeID = 'nyx-cell-actions-copy-range';
+  NyxCellActionsCopySourceRowsID = 'nyx-cell-actions-copy-source-rows';
+  NyxCellActionsCopyPageRowsID = 'nyx-cell-actions-copy-page-rows';
   NyxCellActionsCopyDisplayID = 'nyx-cell-actions-copy-display';
   NyxCellActionsInspectDraftID = 'nyx-cell-actions-inspect-draft';
   NyxCellActionsCopyDraftID = 'nyx-cell-actions-copy-draft';
@@ -354,7 +356,7 @@ type
   end;
 
   { One terminal host reply retains copied provenance and weak session facts.
-    Payload identifies the exact outbound cell or selected-cell byte count;
+    Payload identifies the exact outbound cell, cell-range or selected-row bytes;
     Delivered distinguishes inline reply exceptions from host admission errors. }
   TCellReply = class(TInterfacedObject)
   public
@@ -366,6 +368,7 @@ type
     Readiness: INyxCancellationReadiness;
     Payload: INyxCollectionClipboardText;
     SelectedCells: Boolean;
+    SelectedRows: Boolean;
     Value: INyxCollectionCellText;
     procedure Receive(const AResult: TNyxClipboardWriteResult);
   end;
@@ -385,7 +388,9 @@ type
     directly from its own flags before input factories/getters. Menu and form
     subscriptions refer back through TCellPort, avoiding mount/presenter cycles.
     Explicit draft and selected-cell sessions keep only copied provenance/text
-    and independent inert flags; retiring a range never retires its RAW cell. }
+    and independent inert flags; retiring a range never retires its RAW cell.
+    Captured copy permission controls transfers independently of inspection.
+    Row payloads have separate original-cohort readiness from cell/range data. }
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
     INyxCollectionCellActionIntent, INyxCollectionCellExportActions,
     INyxCollectionCellRepresentationActions, INyxCollectionCellActionInput,
@@ -393,6 +398,7 @@ type
   private
     FFactory: INyxCollectionCellPresenterFactory;
     FWriter: INyxCollectionClipboardCapturedWrite;
+    FActionWriter: INyxCollectionClipboardCapturedActionWrite;
     FRepresentationWriter: INyxCollectionClipboardRepresentationWrite;
     FExporter: INyxCollectionExportCapturedSave;
     FOutput: INyxCollectionExportCapture;
@@ -409,8 +415,15 @@ type
     FInspector: INyxPopover;
     FOpen: INyxPopoverOpenLifetime;
     FSnapshot: INyxCollectionClipboardText;
+    FCellCopyAllowed: Boolean;
     FRangePayload: INyxCollectionClipboardText;
     FRangeReady: INyxCancellationReadiness;
+    FSourceRowsPayload: INyxCollectionClipboardText;
+    FPageRowsPayload: INyxCollectionClipboardText;
+    FRowsReady: INyxCancellationReadiness;
+    FRangeAction: INyxCollectionClipboardActionCapture;
+    FSourceRowsAction: INyxCollectionClipboardActionCapture;
+    FPageRowsAction: INyxCollectionClipboardActionCapture;
     FOptions: TNyxCollectionCellActionOptions;
     FDraft: INyxCollectionFocusedDraftCapture;
     FDisplayPolicy: TNyxCollectionCellDisplayPolicy;
@@ -440,8 +453,10 @@ type
       const AOpen: INyxPopoverOpenLifetime);
     procedure Inspect(ASerial: Integer; ADraft: Boolean = False);
     procedure CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText = nil;
-      ARange: Boolean = False);
+      ARange: Boolean = False; const ARows: INyxCollectionClipboardText = nil;
+      const ARowsReady: INyxCancellationReadiness = nil);
     procedure CopyRange(ASerial: Integer);
+    procedure CopyRows(ASerial: Integer; APage: Boolean);
     procedure CopyDisplayed(ASerial: Integer);
     procedure CopyDraft(ASerial: Integer);
     procedure RepresentationRefused(const AReason: TNyxText; ASerial: Integer;
@@ -489,7 +504,9 @@ type
     readonly draft capture precedes resolution/callbacks and is matched against
     the prepared accepted cell before presentation ownership transfers. Optional
     selected-cell attachment forwards into that same original RAW command; it
-    neither starts another request nor retains a target/provider callback. }
+    neither starts another request nor retains a target/provider callback.
+    Readonly context entry prefers its optional inspection-capture facet so a
+    disallowed cell transfer cannot suppress accepted-value inspection. }
   TCellActionCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
     INyxCollectionClipboardCellCommand, INyxCollectionCellActionDraftCommand,
     INyxCollectionClipboardCellRangeContext)
@@ -812,6 +829,7 @@ constructor TCellActions.Create(const AFactory: INyxCollectionCellPresenterFacto
   const AExporter: INyxCollectionExportCapturedSave);
 var
   LWriter: INyxCollectionClipboardRepresentationWrite;
+  LActionWriter: INyxCollectionClipboardCapturedActionWrite;
 begin
   inherited Create;
 
@@ -837,6 +855,11 @@ begin
   if Supports(AWriter, INyxCollectionClipboardRepresentationWrite, LWriter) then
   begin
     FRepresentationWriter := LWriter;
+  end;
+
+  if Supports(AWriter, INyxCollectionClipboardCapturedActionWrite, LActionWriter) then
+  begin
+    FActionWriter := LActionWriter;
   end;
 end;
 
@@ -909,8 +932,15 @@ begin
   FReply := nil;
   FReplyLease := nil;
   FSnapshot := nil;
+  FCellCopyAllowed := False;
   FRangePayload := nil;
   FRangeReady := nil;
+  FSourceRowsPayload := nil;
+  FPageRowsPayload := nil;
+  FRowsReady := nil;
+  FRangeAction := nil;
+  FSourceRowsAction := nil;
+  FPageRowsAction := nil;
   FDraft := nil;
   FScope := nil;
   FScopeLease := nil;
@@ -1272,6 +1302,16 @@ var
   LRangePort: INyxCollectionClipboardCellRangeContext;
   LRangePayload: INyxCollectionClipboardText;
   LRangeReady: INyxCancellationReadiness;
+  LPermission: INyxCollectionClipboardCellPermission;
+  LCellCopyAllowed: Boolean;
+  LRows: INyxCollectionClipboardCellRowsContext;
+  LSourceRowsPayload: INyxCollectionClipboardText;
+  LPageRowsPayload: INyxCollectionClipboardText;
+  LRowsReady: INyxCancellationReadiness;
+  LTransfers: INyxCollectionClipboardContextTransfers;
+  LRangeAction: INyxCollectionClipboardActionCapture;
+  LSourceRowsAction: INyxCollectionClipboardActionCapture;
+  LPageRowsAction: INyxCollectionClipboardActionCapture;
 begin
   LLease := Self;
   LScheduler := FScheduler;
@@ -1287,6 +1327,12 @@ begin
     Exit;
   end;
   LPayload := ALaunch.Payload;
+  LCellCopyAllowed := True; { Older optional providers keep their existing contract. }
+
+  if Supports(ALaunch, INyxCollectionClipboardCellPermission, LPermission) then
+  begin
+    LCellCopyAllowed := LPermission.CellCopyAllowed;
+  end;
 
   if (LPayload = nil) or (LPayload.RowCount <> 1) or (LPayload.FieldCount <> 1) or
     not Supports(ALaunch, INyxCollectionClipboardPreparedScope, LPrepared) then
@@ -1329,6 +1375,51 @@ begin
     end;
   end;
 
+  if Supports(ALaunch, INyxCollectionClipboardCellRowsContext, LRows) then
+  begin
+    LSourceRowsPayload := LRows.SourceRowsPayload;
+    LPageRowsPayload := LRows.PageRowsPayload;
+    LRowsReady := LRows.RowsReadiness;
+    try
+
+      if LRowsReady <> nil then
+      begin
+        LRowsReady.CheckReady;
+      end
+      else
+      begin
+        LSourceRowsPayload := nil;
+        LPageRowsPayload := nil;
+      end;
+    except
+      LSourceRowsPayload := nil;
+      LPageRowsPayload := nil;
+      LRowsReady := nil;
+    end;
+  end;
+
+  if Supports(ALaunch, INyxCollectionClipboardContextTransfers, LTransfers) then
+  begin
+    LRangeAction := LTransfers.RangeAction;
+    LSourceRowsAction := LTransfers.SourceRowsAction;
+    LPageRowsAction := LTransfers.PageRowsAction;
+  end;
+
+  if (FActionWriter = nil) or (LSourceRowsAction = nil) then
+  begin
+    LSourceRowsPayload := nil;
+  end;
+
+  if (FActionWriter = nil) or (LPageRowsAction = nil) then
+  begin
+    LPageRowsPayload := nil;
+  end;
+
+  if not LCellCopyAllowed and ((FActionWriter = nil) or (LRangeAction = nil)) then
+  begin
+    LRangePayload := nil;
+  end;
+
   if (LScope = nil) or not ALaunch.Current or (GetIntent <> ASerial) then
   begin
     Exit;
@@ -1343,8 +1434,15 @@ begin
     Exit;
   end;
   FSnapshot := LPayload;
+  FCellCopyAllowed := LCellCopyAllowed;
   FRangePayload := LRangePayload;
   FRangeReady := LRangeReady;
+  FSourceRowsPayload := LSourceRowsPayload;
+  FPageRowsPayload := LPageRowsPayload;
+  FRowsReady := LRowsReady;
+  FRangeAction := LRangeAction;
+  FSourceRowsAction := LSourceRowsAction;
+  FPageRowsAction := LPageRowsAction;
   FDraft := ADraft;
   FDisplayPolicy := LDisplayPolicy;
   FOutput := LOutput;
@@ -1356,11 +1454,16 @@ begin
     LPage.Configure.Padding(8).Gap(4).Done;
     LPage.Add(NewNyxButton(NyxCellActionsInspectID).Configure
       .PartName(NyxPart(NyxCellActionsInspectID)).Text('Inspect accepted value').Done);
-    LPage.Add(NewNyxButton(NyxCellActionsCopyID).Configure
-      .PartName(NyxPart(NyxCellActionsCopyID)).Text('Copy accepted value').Done);
     LDocument.AddPage(LPage);
     LItems := NyxMenuItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectID),
-      NyxMenuCommand('inspect'))).Add(NyxMenuAction(NyxPart(NyxCellActionsCopyID), NyxMenuCommand('copy')));
+      NyxMenuCommand('inspect')));
+
+    if FCellCopyAllowed then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsCopyID).Configure
+        .PartName(NyxPart(NyxCellActionsCopyID)).Text('Copy accepted value').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopyID), NyxMenuCommand('copy')));
+    end;
 
     if FRangePayload <> nil then
     begin
@@ -1370,18 +1473,39 @@ begin
         NyxMenuCommand('copy-selected-cells')));
     end;
 
+    if FSourceRowsPayload <> nil then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsCopySourceRowsID).Configure
+        .PartName(NyxPart(NyxCellActionsCopySourceRowsID)).Text('Copy selected source rows').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopySourceRowsID),
+        NyxMenuCommand('copy-source-rows')));
+    end;
+
+    if FPageRowsPayload <> nil then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsCopyPageRowsID).Configure
+        .PartName(NyxPart(NyxCellActionsCopyPageRowsID)).Text('Copy selected rows on this page').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopyPageRowsID),
+        NyxMenuCommand('copy-page-rows')));
+    end;
+
     if FDraft <> nil then
     begin
       LPage.Add(NewNyxButton(NyxCellActionsInspectDraftID).Configure
         .PartName(NyxPart(NyxCellActionsInspectDraftID)).Text('Inspect captured draft').Done);
-      LPage.Add(NewNyxButton(NyxCellActionsCopyDraftID).Configure
-        .PartName(NyxPart(NyxCellActionsCopyDraftID)).Text('Copy captured draft').Done);
       LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectDraftID),
-        NyxMenuCommand('inspect-draft'))).Add(NyxMenuAction(NyxPart(NyxCellActionsCopyDraftID),
-        NyxMenuCommand('copy-draft')));
+        NyxMenuCommand('inspect-draft')));
+
+      if FCellCopyAllowed then
+      begin
+        LPage.Add(NewNyxButton(NyxCellActionsCopyDraftID).Configure
+          .PartName(NyxPart(NyxCellActionsCopyDraftID)).Text('Copy captured draft').Done);
+        LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopyDraftID), NyxMenuCommand('copy-draft')));
+      end;
     end;
 
-    if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
+    if FCellCopyAllowed and (FRepresentationWriter <> nil) and
+      FDisplayPolicy.Defined and FDisplayPolicy.Declared then
     begin
       LPage.Add(NewNyxButton(NyxCellActionsCopyDisplayID).Configure
         .PartName(NyxPart(NyxCellActionsCopyDisplayID)).Text('Copy displayed value').Done);
@@ -1470,6 +1594,14 @@ begin
     begin
       CopyRange(ASerial);
     end
+    else if LInvocation.Command.Name = 'copy-source-rows' then
+    begin
+      CopyRows(ASerial, False);
+    end
+    else if LInvocation.Command.Name = 'copy-page-rows' then
+    begin
+      CopyRows(ASerial, True);
+    end
     else if LInvocation.Command.Name = 'inspect-draft' then
     begin
       Inspect(ASerial, True);
@@ -1546,14 +1678,19 @@ begin
     LMemo.ReadOnly := True;
     LMemo.Configure.Height(200).Done;
     LPage.Add(LMemo);
-    LPage.Add(NewNyxButton(NyxCellInspectorCopyID).Configure.Text('Copy accepted value').Done);
 
-    if ADraft then
+    if FCellCopyAllowed then
+    begin
+      LPage.Add(NewNyxButton(NyxCellInspectorCopyID).Configure.Text('Copy accepted value').Done);
+    end;
+
+    if FCellCopyAllowed and ADraft then
     begin
       LPage.Add(NewNyxButton(NyxCellInspectorCopyDraftID).Configure.Text('Copy captured draft').Done);
     end;
 
-    if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
+    if FCellCopyAllowed and (FRepresentationWriter <> nil) and
+      FDisplayPolicy.Defined and FDisplayPolicy.Declared then
     begin
       LPage.Add(NewNyxButton(NyxCellInspectorCopyDisplayID).Configure
         .Text('Copy displayed value').Done);
@@ -1581,15 +1718,20 @@ begin
   begin
     Exit;
   end;
-  ObserveButton(LEvents, NyxCellInspectorCopyID, 1, ASerial);
+
+  if FCellCopyAllowed then
+  begin
+    ObserveButton(LEvents, NyxCellInspectorCopyID, 1, ASerial);
+  end;
   ObserveButton(LEvents, NyxCellInspectorCloseID, 2, ASerial);
 
-  if ADraft then
+  if FCellCopyAllowed and ADraft then
   begin
     ObserveButton(LEvents, NyxCellInspectorCopyDraftID, 4, ASerial);
   end;
 
-  if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
+  if FCellCopyAllowed and (FRepresentationWriter <> nil) and
+    FDisplayPolicy.Defined and FDisplayPolicy.Declared then
   begin
     ObserveButton(LEvents, NyxCellInspectorCopyDisplayID, 3, ASerial);
   end;
@@ -1697,7 +1839,8 @@ begin
   LLease := Self;
   LCaptured := FDraft;
 
-  if not Current(ASerial) or (LCaptured = nil) or (FRepresentationWriter = nil) then
+  if not Current(ASerial) or not FCellCopyAllowed or
+    (LCaptured = nil) or (FRepresentationWriter = nil) then
   begin
     Exit;
   end;
@@ -1728,7 +1871,8 @@ var
 begin
   LLease := Self;
 
-  if not Current(ASerial) or (FRepresentationWriter = nil) or not FDisplayPolicy.Defined then
+  if not Current(ASerial) or not FCellCopyAllowed or
+    (FRepresentationWriter = nil) or not FDisplayPolicy.Defined then
   begin
     Exit;
   end;
@@ -1795,7 +1939,7 @@ begin
       begin
         Inspect(ASerial);
       end;
-      Status('Selected-cell copy refused: the captured range is no longer current. Copy accepted value remains available.', ASerial);
+      Status('Selected-cell copy refused: the captured range is no longer current. Inspection remains available.', ASerial);
       Exit;
     end;
   end;
@@ -1806,8 +1950,53 @@ begin
   end;
 end;
 
+procedure TCellActions.CopyRows(ASerial: Integer; APage: Boolean);
+var
+  LLease: INyxCollectionCellActions;
+  LPayload: INyxCollectionClipboardText;
+  LReady: INyxCancellationReadiness;
+begin
+  LLease := Self;
+  LReady := FRowsReady;
+  LPayload := FSourceRowsPayload;
+
+  if APage then
+  begin
+    LPayload := FPageRowsPayload;
+  end;
+
+  if not Current(ASerial) or (LPayload = nil) or (LReady = nil) then
+  begin
+    Exit;
+  end;
+  try
+    LReady.CheckReady;
+  except
+    on E: Exception do
+    begin
+      FResult := Default(TNyxClipboardWriteResult);
+      FResult.Outcome := ncwoCancelled;
+      FResult.Error := TNyxText(E.Message);
+      FHasResult := True;
+
+      if (FInspector = nil) or not FInspector.IsOpen then
+      begin
+        Inspect(ASerial);
+      end;
+      Status('Selected-row copy refused: its captured selection or table changed. Inspection remains available.', ASerial);
+      Exit;
+    end;
+  end;
+
+  if Current(ASerial) and (FRowsReady = LReady) then
+  begin
+    CopyValue(ASerial, nil, False, LPayload, LReady);
+  end;
+end;
+
 procedure TCellActions.CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText;
-  ARange: Boolean);
+  ARange: Boolean; const ARows: INyxCollectionClipboardText;
+  const ARowsReady: INyxCancellationReadiness);
 var
   LPayload: INyxCollectionClipboardText;
   LScope: INyxCancellationScope;
@@ -1820,11 +2009,21 @@ var
   LCopyScope: TCellScope;
   LRepresentationWriter: INyxCollectionClipboardRepresentationWrite;
   LDraftReady: INyxCancellationReadiness;
+  LAction: INyxCollectionClipboardActionCapture;
+  LActionWriter: INyxCollectionClipboardCapturedActionWrite;
 begin
 
-  if not Current(ASerial) or (FPort.RequestSerial >= High(Integer) - 1) or
+  if not Current(ASerial) or (not ARange and (ARows = nil) and not FCellCopyAllowed) or
+    (FPort.RequestSerial >= High(Integer) - 1) or
     ((AValue <> nil) and (FRepresentationWriter = nil)) or
     (ARange and ((AValue <> nil) or (FRangePayload = nil) or (FRangeReady = nil))) then
+  begin
+    Exit;
+  end;
+
+  if (ARows <> nil) and ((AValue <> nil) or ARange or
+    ((ARows <> FSourceRowsPayload) and (ARows <> FPageRowsPayload)) or
+    (ARowsReady = nil) or (ARowsReady <> FRowsReady)) then
   begin
     Exit;
   end;
@@ -1842,6 +2041,21 @@ begin
   if ARange then
   begin
     LDraftReady := FRangeReady;
+    LAction := FRangeAction;
+  end;
+
+  if ARows <> nil then
+  begin
+    LDraftReady := ARowsReady;
+
+    if ARows = FSourceRowsPayload then
+    begin
+      LAction := FSourceRowsAction;
+    end
+    else
+    begin
+      LAction := FPageRowsAction;
+    end;
   end;
   Inc(FPort.RequestSerial);
   LRequestSerial := FPort.RequestSerial;
@@ -1865,9 +2079,15 @@ begin
   begin
     LPayload := FRangePayload;
   end;
+
+  if ARows <> nil then
+  begin
+    LPayload := ARows;
+  end;
   LCopyScope := TCellScope.Create(FScope, FOpen, LDraftReady);
   LScope := LCopyScope;
   LWriter := FWriter;
+  LActionWriter := FActionWriter;
   LRepresentationWriter := FRepresentationWriter;
   LReply := TCellReply.Create;
   LReplyLease := LReply;
@@ -1878,12 +2098,18 @@ begin
   LReply.Readiness := LCopyScope;
   LReply.Payload := LPayload;
   LReply.SelectedCells := ARange;
+  LReply.SelectedRows := ARows <> nil;
   LReply.Value := AValue;
   FReply := LReply;
   FReplyLease := LReplyLease;
   try
 
-    if AValue = nil then
+    if (AValue = nil) and (LAction <> nil) and (LActionWriter <> nil) then
+    begin
+      LRequest := LActionWriter.WriteCapturedAction(LAction, LScope, LCopyScope,
+        {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
+    end
+    else if AValue = nil then
     begin
       LRequest := LWriter.WriteCaptured(LPayload, LScope, LCopyScope,
         {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
@@ -1989,9 +2215,14 @@ begin
 
   if AResult.Outcome = ncwoWritten then
   begin
+
     if AReply.SelectedCells then
     begin
       Status('Copied the captured selected cells.', LSerial);
+    end
+    else if AReply.SelectedRows then
+    begin
+      Status('Copied the captured selected rows.', LSerial);
     end
     else
     begin
@@ -2000,6 +2231,19 @@ begin
   end
   else
   begin
+    { A closed menu has no status surface of its own. Explain the unchanged
+      host outcome through the original RAW inspector without retrying an
+      effect or borrowing a newer context after the outward open-state read. }
+    LInspector := FInspector;
+
+    if Current(LSerial) and ((LInspector = nil) or not LInspector.IsOpen) then
+    begin
+
+      if Current(LSerial) and (FInspector = LInspector) then
+      begin
+        Inspect(LSerial);
+      end;
+    end;
     Status('Clipboard request did not write: ' + AResult.Error, LSerial);
   end;
 end;
@@ -2202,6 +2446,7 @@ begin
   LFactory := FFactory;
   FFactory := nil;
   FWriter := nil;
+  FActionWriter := nil;
   FRepresentationWriter := nil;
   FExporter := nil;
   FScheduler := nil;
@@ -2336,6 +2581,7 @@ constructor TCellActionCommand.CreateReserved(const AActions: INyxCollectionCell
 var
   LCommands: INyxCollectionClipboardCommands;
   LEntry: INyxCollectionClipboardCellInput;
+  LInspection: INyxCollectionClipboardInspectionInput;
   LExport: INyxCollectionCellExportActions;
   LDraftActions: INyxCollectionCellDraftActions;
 begin
@@ -2369,16 +2615,29 @@ begin
     Exit;
   end;
 
-  if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+  if Supports(LCommands, INyxCollectionClipboardInspectionInput, LInspection) then
   begin
-    raise ENyxCollectionClipboard.Create('Cell context requires reservable original RAW input');
-  end;
 
-  if not IntentCurrent then
+    if not IntentCurrent then
+    begin
+      Exit;
+    end;
+    FLaunch := LInspection.BeginCellInspection;
+  end
+  else
   begin
-    Exit;
+
+    if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+    begin
+      raise ENyxCollectionClipboard.Create('Cell context requires reservable original RAW input');
+    end;
+
+    if not IntentCurrent then
+    begin
+      Exit;
+    end;
+    FLaunch := LEntry.BeginCellInput;
   end;
-  FLaunch := LEntry.BeginCellInput;
 
   if (FLaunch <> nil) and not IntentCurrent then
   begin

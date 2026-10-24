@@ -830,6 +830,7 @@ var
   LLease: INyxCollectionMount;
   LCommands: INyxCollectionClipboardCommands;
   LEntry: INyxCollectionClipboardCellInput;
+  LInspection: INyxCollectionClipboardInspectionInput;
   LCommand: INyxCollectionClipboardCellCommand;
   LPrepared: INyxCollectionClipboardPreparedScope;
   LReady: INyxCancellationReadiness;
@@ -898,11 +899,27 @@ begin
   LEpoch := LLifetime.Epoch;
   LMutation := FCellMutationSerial;
 
-  if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+  { This internal reservation proves the accepted counterpart of an explicitly
+    inspected draft. It never authorizes copying: a no-cell-copy policy must
+    still permit readonly inspection. Physical Ctrl+C keeps its separate gate. }
+  if Supports(LCommands, INyxCollectionClipboardInspectionInput, LInspection) then
+  begin
+    LCommand := LInspection.BeginCellInspection;
+  end
+  else
+  begin
+
+    if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+    begin
+      Exit;
+    end;
+    LCommand := LEntry.BeginCellInput;
+  end;
+
+  if LCommand = nil then
   begin
     Exit;
   end;
-  LCommand := LEntry.BeginCellInput;
   try
 
     if not LCommand.Current or not FlagsCurrent or (document.activeElement = nil) or

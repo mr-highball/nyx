@@ -619,6 +619,7 @@ begin
 
     if FChanged then
     begin
+      FOwner.RetireRowCopy;
       FOwner.FColumnPreferences := FNext;
       FOwner.FColumnSerial := FSerial + 1;
     end;

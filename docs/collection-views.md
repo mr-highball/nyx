@@ -1127,8 +1127,31 @@ copy flags permit accepted-cell, selected-source-row, selected-current-page-row
 and selected-cell-range transfers respectively. Range selection and deliberate
 focused-draft context are independent opt-ins: permission to copy a range does
 not enable selection, and an empty copy set does not disable readonly inspection.
-This describes the authored choices; target/menu adoption has its own runtime
-qualification.
+Ordinary browser/LCL renderers now adopt these choices when a runtime table is
+mounted. Design-mode projections retain authoring behavior.
+
+Set the renderer's `TableWorkbenchServices` before rendering to provide an
+`INyxTableWorkbenchServices` from `nyx.collections.workbench.runtime`.
+`NewNyxTableWorkbenchServices(LClipboardHost)` supplies explicit clipboard
+authority; its second overload also takes bounded copy limits. The renderer
+retains these application services separately from the saved document. Replacing
+them while a tree is mounted refuses; explicitly unmount first. Missing services
+produce a visible typed Unavailable outcome while readonly inspection stays
+usable. No saved policy or generated design acquires OS authority by itself.
+
+Managed context menus distinguish selected rows from the complete source and
+selected rows on the current page. Their original membership/column snapshots
+are captured before outward input callbacks. A selection, source, query, page
+or column change retires that row proof, including change-and-restore; an old
+action visibly refuses instead of substituting current rows. Range and RAW-cell
+actions retain their independent readiness and permissions. All transfers share
+the existing controller request slot.
+
+The complete retained runtime06 fixture passes878 native checks with a clean
+heap and945 browser checks at measured1280x900/390x900, logs empty. It exercises
+actual controls with injected clipboard authority and synthetic target input.
+Real OS clipboard effects, hardware gestures, the full Studio journey and
+complete workbench acceptance remain separate requirements.
 
 `NyxTableWorkbench` defaults to range and focused-draft opt-ins off, the first
 three copy flags on, `nwcfVisiblePresentation`, headers on and `nwleLF`.

@@ -95,6 +95,7 @@ uses
   nyx.collections.pager,
   nyx.collections.view.types,
   nyx.collections.mount,
+  nyx.collections.workbench.runtime,
   nyx.collections.browser,
   nyx.literal.items,
   nyx.composition,
@@ -306,6 +307,9 @@ type
     FRoot: TNyxNode;
     FResourceContext: INyxResourceContext;
     FResourceUpdates: INyxResourceUpdateQueue;
+    { Runtime authority is configuration, never part of the mounted document.
+      Captured candidates/embedded children own independent interface leases. }
+    FTableWorkbenchServices: INyxTableWorkbenchServices;
     FHost: TJSHTMLElement;
     { A compiled document owns a connected browser mount independently of its
       volatile editor placement. The exact artifact includes private launch
@@ -379,6 +383,7 @@ type
     procedure SetResourceContext(const AContext: INyxResourceContext);
     function GetResourceContext: INyxResourceContext;
     procedure SetResourceUpdates(const AQueue: INyxResourceUpdateQueue);
+    procedure SetTableWorkbenchServices(const AServices: INyxTableWorkbenchServices);
     procedure WakeResources;
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
     { A prepared observer can target the final owner without publishing its
@@ -744,6 +749,11 @@ type
     { Install while unmounted. The port owns no renderer; the application must
       stop it before destroying receivers. Deferred Wake cannot publish here. }
     property ResourceUpdates: INyxResourceUpdateQueue read FResourceUpdates write SetResourceUpdates;
+    { Configure before Render or after explicit Unmount, with no active render
+      attempt. Existing mounts never acquire replacement clipboard authority.
+      Nil provides explicit Unavailable results for authored table actions. }
+    property TableWorkbenchServices: INyxTableWorkbenchServices
+      read FTableWorkbenchServices write SetTableWorkbenchServices;
     function ResourceReady: Boolean;
     { Same idle section-publication boundary as LCL: synchronous input dispatch,
       target synchronization and busy scalar/collection stores refuse. A caller
@@ -788,6 +798,7 @@ uses
   nyx.canvas.browser, nyx.canvas.scene, nyx.tool.canvas.browser,
   nyx.collections, nyx.collections.query.browser,
   nyx.collections.arrangement.browser,
+  nyx.collections.cell.browser,
   nyx.application.resources, nyx.projection.context;
 
 type
@@ -3645,6 +3656,7 @@ begin
       LCollectionInputGate := NewNyxCollectionInputGate(FInheritedCollectionInputGate);
       LCandidate.FCollectionInputGate := LCollectionInputGate;
       LCandidate.FCollectionInputPhase := ncipStaged;
+      LCandidate.FTableWorkbenchServices := FTableWorkbenchServices;
       { Build may mount saved canvases before this outer candidate commits. }
       LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
 
@@ -4954,6 +4966,17 @@ begin
   end;
 end;
 
+procedure TNyxBrowserRenderer.SetTableWorkbenchServices(
+  const AServices: INyxTableWorkbenchServices);
+begin
+
+  if (FRoot <> nil) or (FRenderAttempt <> nil) or FPublishingContent then
+  begin
+    raise ENyxModel.Create('Configure table services before mounting or after Unmount');
+  end;
+  FTableWorkbenchServices := AServices;
+end;
+
 procedure TNyxBrowserRenderer.SetResourceContext(const AContext: INyxResourceContext);
 var
   LContext: INyxResourceContext;
@@ -5259,6 +5282,7 @@ var
   LQueryMount: INyxCollectionQueryMount;
   LColumnsMount: INyxCollectionColumnArrangementMount;
   LColumnsInput: INyxCollectionInputAdmission;
+  LWorkbenchSpec: TNyxCollectionViewSpec;
 begin
 
   if AView = nil then
@@ -5313,6 +5337,18 @@ begin
         LColumnsMount.ConfigureColumnArrangement(
           NewNyxBrowserColumnArrangementFactory(LElement, FTheme,
             LColumnsInput.GetInputLifetime), FCollectionQueryEvents);
+      end;
+
+      if not FDesignMode and (AView.Projection = cpTable) then
+      begin
+        LWorkbenchSpec := AView.Spec;
+
+        if LWorkbenchSpec.HasTableWorkbenchPolicy then
+        begin
+          ConfigureNyxTableWorkbench(Result, LWorkbenchSpec.TableWorkbenchPolicy,
+            FTableWorkbenchServices, NewNyxBrowserCollectionCellPresenterFactory(LElement),
+            FCollectionQueryEvents);
+        end;
       end;
       Exit;
     end;
@@ -11488,6 +11524,7 @@ begin
   ARenderer.FEventFactories := Copy(FRenderer.FEventFactories, 0, Length(FRenderer.FEventFactories));
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
   ARenderer.FResourceContext := FRenderer.FResourceContext;
+  ARenderer.FTableWorkbenchServices := FRenderer.FTableWorkbenchServices;
   ARenderer.ConfigureEmbeddedBehavior(FRenderer.FEmbeddedContext, FRenderer.FEmbeddedResolver);
   ARenderer.CanvasAdoptionHost := FRenderer.FCanvasAdoptionHost;
   ARenderer.OnEvent := @CanvasEvent;

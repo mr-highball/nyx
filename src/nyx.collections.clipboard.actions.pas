@@ -116,6 +116,27 @@ type
     function BeginCellInput: INyxCollectionClipboardCellCommand;
   end;
 
+  { Optional readonly context entry reserves the SAME original command/input
+    proof as physical copy, before any source or cell getter. It may capture
+    one accepted cell even when cell copying is not permitted. Complete cannot
+    turn that capture into a disallowed write. Old physical BeginCellInput and
+    disallowed Ctrl+C retain their no-capture contract. UI-owner, synchronous
+    reservation only; no callback or host effect occurs merely on entry. }
+  INyxCollectionClipboardInspectionInput = interface(IInterface)
+    ['{4ED59038-BF81-49D9-9702-A4CBF014DD96}']
+    function BeginCellInspection: INyxCollectionClipboardCellCommand;
+  end;
+
+  { Immutable permission copied from the original controller options. Managed
+    menus/inspectors use it for accepted, displayed and explicit-draft cell
+    transfers; independently permitted cell ranges retain their own proof.
+    The Boolean is not current input authority and retains no additional owner. }
+  INyxCollectionClipboardCellPermission = interface(IInterface)
+    ['{BBF4F68F-E0AF-4519-9C78-D8355F291CD3}']
+    function GetCellCopyAllowed: Boolean;
+    property CellCopyAllowed: Boolean read GetCellCopyAllowed;
+  end;
+
   { Optional detached original cancellation for an already prepared immutable
     payload. Readiness is callback-free and retains no mount, model, command or
     physical host. Context inspectors may retain this exact snapshot authority;
@@ -143,6 +164,21 @@ type
     property RangeReadiness: INyxCancellationReadiness read GetRangeReadiness;
   end;
 
+  { Optional selected-row enrichment of the SAME original context command.
+    Both membership cohorts are captured before outward input factories;
+    current-page and complete-source choices remain explicit. Readiness is
+    independent of RAW inspection/ranges and owns only synchronized flags.
+    Missing/disallowed/empty/over-budget choices return nil, never a fallback. }
+  INyxCollectionClipboardCellRowsContext = interface(IInterface)
+    ['{E14D3D97-E450-4A9F-AE2E-9DF1CE460683}']
+    function GetSourceRowsPayload: INyxCollectionClipboardText;
+    function GetPageRowsPayload: INyxCollectionClipboardText;
+    function GetRowsReadiness: INyxCancellationReadiness;
+    property SourceRowsPayload: INyxCollectionClipboardText read GetSourceRowsPayload;
+    property PageRowsPayload: INyxCollectionClipboardText read GetPageRowsPayload;
+    property RowsReadiness: INyxCancellationReadiness read GetRowsReadiness;
+  end;
+
   { Snapshot actions share the SAME pending-write arbitration as physical copy
     keys. Payload/readiness are captured from one admitted prepared command;
     retaining them does not retain a mount. The per-call reply runs after the
@@ -155,6 +191,46 @@ type
   INyxCollectionClipboardCapturedWrite = interface(IInterface)
     ['{5A91F21F-5E73-4EAE-9A8B-69A9AB18D648}']
     function WriteCaptured(const APayload: INyxCollectionClipboardText;
+      const ACancellation: INyxCancellationScope;
+      const AReadiness: INyxCancellationReadiness;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+  end;
+
+  { Immutable prepared action is produced only by its original controller.
+    Values/readiness retain no controller/view/mount. Its private identity proof
+    prevents relabeling a range as rows/cell or adopting it on another service.
+    Public value getters alone never grant permission to submit foreign data. }
+  INyxCollectionClipboardActionCapture = interface(IInterface)
+    ['{E5C92DAA-C628-46D6-8E0B-8D46906EDBFC}']
+    function GetAction: TNyxCollectionClipboardAction;
+    function GetPayload: INyxCollectionClipboardText;
+    function GetReadiness: INyxCancellationReadiness;
+    property Action: TNyxCollectionClipboardAction read GetAction;
+    property Payload: INyxCollectionClipboardText read GetPayload;
+    property Readiness: INyxCancellationReadiness read GetReadiness;
+  end;
+
+  { Optional readonly original transfers enrich the same prepared context.
+    Nil means disallowed, stale, empty or over budget; it never selects a newer
+    row/range cohort. Returned actions share the existing host request slot. }
+  INyxCollectionClipboardContextTransfers = interface(IInterface)
+    ['{0DB4F1F8-34F1-43EF-A8A9-C97FD7737A89}']
+    function GetRangeAction: INyxCollectionClipboardActionCapture;
+    function GetSourceRowsAction: INyxCollectionClipboardActionCapture;
+    function GetPageRowsAction: INyxCollectionClipboardActionCapture;
+    property RangeAction: INyxCollectionClipboardActionCapture read GetRangeAction;
+    property SourceRowsAction: INyxCollectionClipboardActionCapture read GetSourceRowsAction;
+    property PageRowsAction: INyxCollectionClipboardActionCapture read GetPageRowsAction;
+  end;
+
+  { Optional explicit accepted-snapshot action uses the SAME host/serial slot.
+    Only an original sealed capture from this controller is admitted, with its
+    captured action permission and exact payload/readiness. Callers cannot
+    substitute an action, payload or proof; cancellation/reply ownership remains
+    the same as WriteCaptured. Old cell-only port semantics stay unchanged. }
+  INyxCollectionClipboardCapturedActionWrite = interface(IInterface)
+    ['{5A50650D-7210-4F43-B138-EC886BDF312D}']
+    function WriteCapturedAction(const AAction: INyxCollectionClipboardActionCapture;
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
       AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;

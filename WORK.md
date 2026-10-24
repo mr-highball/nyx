@@ -7,10 +7,11 @@
 ### Current checkpoint — authored workbench policies and runtime integration
 
 The last authority-only turn verified existing committed guidance; it was not
-new product progress. This continuation implements and executes authored table
-workbench behavior. Library implementations, base classes, interfaces and public
-contracts remain authorized development sources. All seven original task03
-criteria, W1/W2 and the full goal remain open; no user input is needed.
+new product progress. The current continuation qualifies authored table runtime
+behavior and implements ordinary Studio/semantic authoring. Library implementations,
+base classes, interfaces and public contracts remain authorized development
+sources. All seven original task03 criteria, W1/W2 and the full goal remain open;
+no user input is needed.
 
 The pure saved policy passes 171 checks on each actual target. Typed generation
 and source reading pass 37 checks per target; independently compiling the exact
@@ -20,30 +21,43 @@ byte-identical to the earlier generator. The maintained build's extracted pure
 stage executes its six fresh compilers and three complete clean native runs.
 These establish saved/source behavior, not Studio or runtime acceptance.
 
-Root's runtime services and ordinary browser/LCL renderer adoption compile on
-both targets. Real authored controls retain the earlier cases and expose new
-integration gaps: runtime03 correctly reports Unavailable but lacks a visible
-RAW failure surface; runtime04 repairs that surface but reveals target draft
-capture still depending on copy permission. The repaired adapters in runtime05
-execute empty and row-only RAW/draft inspection successfully before failing the
-new range-only menu transfer. Its physical selected-cells Ctrl+C succeeds; the
-managed captured-write port still incorrectly requires cell-copy permission.
-Native runtime05 exits with a complete 11973348/11973348 clean heap. The actual
-1280x900 browser fails the same assertion at check 846, with empty logs. Earlier
-fixture setup/result/display-oracle mistakes and all actual failures remain
-retained under ignored build/qualification/workbench-runtime-01 through -05.
-No full control-suite pass is claimed from these incomplete runs.
+Root's runtime06 services and ordinary browser/LCL renderer adoption pass the
+complete retained control suite: native878 checks with a complete
+14776926/14776926 clean heap, browser945 at independently preflighted1280x900
+and390x900, both warning/error logs empty. All1927 fixed source pins reverify.
+The authored policy automatically configures the real mount. Empty, row-only
+and range-only permissions leave RAW/draft inspection usable; selected-source
+and selected-page menus retain their distinct original cohorts. Changing the
+selection visibly refuses its old row action without another host effect.
+Unavailable clipboard outcomes remain typed and visible. Renderer-service
+replacement requires explicit unmounting; retired captures cannot act on a new
+incarnation. Injected authority and synthetic target input do not establish real
+OS clipboard effects, hardware gestures or native qualification at two widths.
 
-Lil' Scooty owns the detached selected-row cohort and optional action-transfer
-contracts in the existing command/context/view/arrangement files. Its stable
-inspection01 predecessor passes 177 checks on each actual target, with a clean
-native heap and empty browser logs. Root owns renderer/runtime services, the
-browser/LCL draft-capture adapters and actual-control consumer. Runtime05's
-private snapshot allows those disjoint edits without changing running inputs.
-Next qualify the correct original-action transfer through that same actual
-suite at both browser widths, then integrate Studio intent/forms, history,
-semantic operations and application services. Export-service ordering, pointer
-gestures, OS effects and the complete user workbench remain required.
+Runtime03's missing visible failure surface, runtime04's copy-gated readonly
+draft capture and runtime05's incorrectly cell-gated range-menu transfer remain
+retained with their actual failures under ignored build/qualification. Runtime05
+has a complete11973348/11973348 clean native heap and browser failure846. The
+separate earlier fixture setup/result/display-oracle mistakes are retained too;
+none is relabeled as a passing run.
+
+Lil' Scooty's detached selected-row cohort and sealed original-action transfer03
+pass210 native/browser command checks with a clean native heap and empty browser
+logs. The same qualified files feed runtime06. It prevents cross-controller
+adoption or action relabeling while preserving the original request slot and
+independent RAW/range/row readiness. Its following explicit selected-record-ID
+packet has fresh native24/226/46 results and browser builds; actual browser and
+target-menu qualification are pending. It does not grant selected-ID UI credit.
+
+Root now owns Studio workbench intent/forms, source/history, bounded semantic
+reads/patches and their consumers. New source/tests are being checked against a
+separate immutable authoring snapshot, not the helper's changing working files.
+Lil' Scooty owns the next existing prerequisite: optional runtime export services
+configured before managed actions, plus a distinct pure consumer. Root releases
+that runtime working file after runtime06's immutable readers finish; target
+renderers/control fixture and Studio remain disjoint. Full native Studio
+performance/own-export, pointer gestures, OS effects and all original acceptance
+remain required.
 
 The latest managed selected-cells menu qualifies through corrected menu04:
 actual native670 checks have a complete9803936/9803936 clean heap, and actual
