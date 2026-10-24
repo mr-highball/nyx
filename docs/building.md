@@ -317,6 +317,14 @@ Individual build targets are `core`, `generated`, `collections`, `collection-vie
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js
 artifacts have separate output directories. Build failure propagates immediately.
+Keep active unit/object files and redirected compiler logs on low-latency
+storage; retain bulk evidence elsewhere after the owning processes join. A
+compiler waiting with little CPU use may be limited by file I/O even when free
+space is plentiful. Inspect that evidence before increasing a timeout. The
+query-authoring target already accepts an explicit evidence directory and
+`-QueryAuthoringNativeUnitCache` directories. Reused units must match the compiler,
+target, defines and safety options; normal source/dependency checks stay enabled.
+Copying a verified cache is warm-build evidence, not a cold-build benchmark.
 `placement` executes typed/semantic relative placement on both native compilers,
 compares their exact exported files, runs actual native Studio input and unchanged
 compiled controls, checks transaction discovery, then stages browser consumers,

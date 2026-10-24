@@ -35,10 +35,36 @@ checks with a complete clean heap. Its emitted unit is byte-identical to06;
 the repeated06 and coherent-pool07 native compilers each hit240s before producing
 a consumer. Both terminal results are retained, not counted as successful builds.
 The generated unit and its policy/codegen/source-reader inputs are unchanged
-from02. Investigate dependency/unit reuse under the existing
-[codegen task](TODO/NS-1_codegen_01.md) before another equivalent compile. Browser
-execution is unqualified; these generated-consumer checks do not render an
-application. All actual readers are joined and the source freeze has ended.
+from02. Diagnostic08 loads qualified units without a stale-unit rejection, yet
+the actual compiler child uses0.67 CPU seconds over160.9s before its240s timeout.
+Local09 verifies889 copied dependency files/140621380 bytes, then explicitly
+compiles the current emitted unit in1.452s and its consumer in1.854s. The current
+consumer passes48 checks with a complete clean876881-block/47036406-byte heap.
+Safety flags and deadline are unchanged; active unit/log I/O placement changes.
+This is qualified dependency reuse, not cold-build or application-render proof.
+The [codegen task](TODO/NS-1_codegen_01.md) and build guidance retain that boundary.
+These reader/copy jobs are joined. Browser interaction remains unqualified.
+
+The next fixture extension now changes all six export roles through ordinary
+mounted controls, retains the export input beside the existing copy input, and
+adds export-only Apply/Undo/Redo before the original saved-pair producer. All
+original workbench/presentation assertions remain. Native/browser/worker builds
+compile with zero owned warnings. Actual focused Studio passes277 at1280 and279
+at390 client widths, with complete clean214153002-block/40662595066-byte and
+174390614-block/25809301341-byte heaps. They run434.835s/320.480s within the same
+900s bound, with the original Ready30 unchanged; this is functional evidence,
+not responsiveness acceptance. Both accepted project packets and saved Pascal
+files match byte-for-byte. All2318 fixed inputs reverify unchanged.
+
+The exact desktop-produced unit is compiled explicitly, and its unchanged
+complete-application consumer compiles on native/browser. Its first native run
+refuses the focused packet because the two query callbacks belong to later
+stages of the complete Save/Open producer. The failure has a complete clean
+272388-block/31008051-byte heap. This was an incorrect producer/consumer pairing;
+the original callback assertion remains intact. Return to the complete producer
+for that application proof. A complete browser authoring/worker package is
+prepared separately from the retained focused-source negative entry; neither
+has executed. All owning readers are joined and source freezes have ended.
 
 The first build's reused old unit cache raises an internal compiler exception;
 a clean02 output fixes compilation without toolchain/source changes. Native03

@@ -17,9 +17,14 @@ ceilings and host/save/work bounds stay independent; disabled choices and missin
 file services remain explicit. Native06 passes274/59/47/36 portable policy,
 runtime, source and authoring checks, plus1612/1601 actual table controls at
 desktop/compact widths, with complete clean heaps. Five browser companions
-compile only. Actual mounted Studio input, browser interaction and the complete
-original workbench/application journey still need qualification; WORK owns the
-independent generated-consumer evidence and retained failures.
+compile only. Mounted Studio01 now passes277/279 at desktop/compact widths with
+complete clean heaps, exercising the new controls, exact physical retention,
+export-only reset and paired history. Both complete accepted packets and saved
+Pascal exports match exactly. Its unchanged complete-application consumer compiles
+but refuses that focused packet's missing later query callbacks; preserve the
+assertion and use the complete Save/Open producer. Browser interaction and the
+full original workbench/application journey remain open; WORK owns the separate
+generated-consumer/storage evidence and retained failures.
 
 The W2 pending-stroke continuation now connects its portable model to an
 optional per-message mount envelope. Cached preview and accepted cells remain

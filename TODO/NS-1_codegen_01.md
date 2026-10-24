@@ -2,15 +2,20 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-The table-export continuation exposes a remaining generated-consumer build
+The table-export continuation exposes an I/O-sensitive generated-consumer build
 qualification gap. Its02 emitted builder compiles independently on both targets
 and passes48 native checks. Later06/07 native compilations of the byte-identical
 unit hit the same240s bound while rebuilding broad dependencies, including Pascal
 analysis units. The policy, generator, confined reader and source fixture inputs
-match02; later runtime admission changes are tracked separately. Inspect actual
-dependency/unit reuse and compiler receipts before another equivalent compile;
-neither increasing the bound nor the earlier successful consumer establishes
-current cold-build responsiveness. [WORK](../WORK.md#active-continuation--authored-table-export)
+match02; later runtime admission changes are tracked separately. Diagnostic08
+loads qualified units without stale-unit rejection but spends less than one CPU
+second in roughly160s of waiting. Local09 verifies a byte-identical889-file
+dependency copy, explicitly compiles the current emitted unit in1.45s and its
+consumer in1.85s, then passes48 native checks with a complete clean heap. The
+same safety flags/deadline remain. This resolves the current warm consumer
+qualification; cold-build/full-application responsiveness stays open. Active
+unit/log placement is now documented in [building](../docs/building.md).
+[WORK](../WORK.md#active-continuation--authored-table-export)
 owns the exact source cohorts and limits. This serves the existing emitted-source
 compilation criterion; it creates no source-scope or approval restriction.
 

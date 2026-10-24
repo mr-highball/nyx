@@ -123,6 +123,9 @@ type
     FWorkbenchFinished: Boolean;
     FWorkbenchInitial: TNyxCollectionViewSpec;
     FWorkbenchAccepted: TNyxText;
+    { Additional ordinary Apply/Undo phases withdraw only nested export intent
+      before the original accepted pair proceeds to the Save/Open producer. }
+    FExportResetStage: Integer;
     { An owning router lease prevents a destroyed/recreated router from
       satisfying identity by address reuse. The face is borrowed only for
       equality; old callbacks must retire even while its controls stay live. }
@@ -130,8 +133,10 @@ type
     FRetainedWorkbenchScope: INyxCancellationScope;
     {$ifdef PAS2JS}
     FRetainedWorkbenchInput: TJSHTMLElement;
+    FRetainedExportInput: TJSHTMLElement;
     {$else}
     FRetainedWorkbenchInput: TControl;
+    FRetainedExportInput: TControl;
     {$endif}
     { The same ordinary workbench path accepts presentation before Save/Open.
       Retain its complete pair so independent resets and Undo cannot quietly
@@ -1345,8 +1350,11 @@ begin
   FRetainedWorkbenchScope := NyxEventGeneration(FRetainedWorkbenchEvents);
   FRetainedWorkbenchInput := FRenderer.InputFor(
     NyxStudioWorkbenchPolicyFieldID(swpfHeaders));
+  FRetainedExportInput := FRenderer.InputFor(
+    NyxStudioWorkbenchPolicyFieldID(swpfExportHeaders));
   Check((FRetainedWorkbenchEvents <> nil) and
-    (FRetainedWorkbenchScope <> nil) and (FRetainedWorkbenchInput <> nil),
+    (FRetainedWorkbenchScope <> nil) and (FRetainedWorkbenchInput <> nil) and
+    (FRetainedExportInput <> nil),
     'capture the actual Inspector router, original event generation and input face');
 end;
 
@@ -1356,7 +1364,9 @@ procedure TReview.CheckWorkbenchContinuity;
 begin
   Check((FRenderer.ViewFor(CEditor).Events = FRetainedWorkbenchEvents) and
     (FRenderer.InputFor(NyxStudioWorkbenchPolicyFieldID(swpfHeaders)) =
-      FRetainedWorkbenchInput),
+      FRetainedWorkbenchInput) and
+    (FRenderer.InputFor(NyxStudioWorkbenchPolicyFieldID(swpfExportHeaders)) =
+      FRetainedExportInput),
     'ordinary policy admission retains the SAME Inspector router and physical input');
   Check(FRetainedWorkbenchScope.Cancelled,
     'retained Inspector controls retire the original action context before publication');
@@ -1385,8 +1395,43 @@ begin
   Result := False;
   LExpected := NyxTableWorkbench.RangeSelection(True)
     .AllowCopy([nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange])
-    .CopyFields(nwcfAllArrangement).Headers(False).LineEnding(nwleCRLF).FocusedDraft(True);
+    .CopyFields(nwcfAllArrangement).Headers(False).LineEnding(nwleCRLF).FocusedDraft(True)
+    .Export(NyxTableExport.Allow([nweaAllFiltered])
+      .Columns(nwcfVisiblePresentation).Headers(True).LineEnding(nwleLF));
   Trace('workbench:before', FWorkbenchStage);
+
+  if (FWorkbenchStage = 12) and (FExportResetStage < 3) then
+  begin
+    case FExportResetStage of
+      0:
+        begin
+          FBefore := Pair;
+          OpenPolicy(NyxStudioWorkbenchPolicyFormID);
+          Change(NyxStudioWorkbenchPolicyFieldID(swpfExportDeclared), 'false');
+          Check(Pair = FBefore, 'export-only reset stays a mounted draft before Apply');
+          CaptureWorkbenchContinuity;
+          Click(NyxStudioWorkbenchPolicyApplyID);
+        end;
+      1:
+        begin
+          CheckWorkbenchContinuity;
+          Check((FCommands.State = nssApplied) and Spec.HasTableWorkbenchPolicy and
+            (Spec.TableWorkbenchPolicy.ToData.ToJSON = LExpected.UseDefaultExport.ToData.ToJSON),
+            'ordinary export-only reset preserves every independent copy/selection/draft option');
+          {$ifdef PAS2JS}await(History);{$else}History;{$endif}
+          Click('action-undo');
+          {$ifdef PAS2JS}await(AwaitStudio);{$endif}
+        end;
+      2:
+        begin
+          Check(Pair = FPresentationAccepted,
+            'export-only reset Undo restores the exact original Save/Open pair');
+          Isolated;
+        end;
+    end;
+    Inc(FExportResetStage);
+    Exit;
+  end;
   case FWorkbenchStage of
     0:
       begin
@@ -1413,6 +1458,15 @@ begin
         Change(NyxStudioWorkbenchPolicyFieldID(swpfHeaders), 'false');
         Change(NyxStudioWorkbenchPolicyFieldID(swpfLineEnding), 'CRLF');
         Change(NyxStudioWorkbenchPolicyFieldID(swpfFocusedDraft), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportDeclared), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportPage), 'false');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportFiltered), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportFields), 'All authored columns, including hidden');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportFields), 'Visible columns');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportHeaders), 'false');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportHeaders), 'true');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportLineEnding), 'CRLF');
+        Change(NyxStudioWorkbenchPolicyFieldID(swpfExportLineEnding), 'LF');
         Check(Pair = FBefore, 'actual action inputs stay drafts before the complete Apply');
         CaptureWorkbenchContinuity;
         Click(NyxStudioWorkbenchPolicyApplyID);
