@@ -35,7 +35,7 @@ uses
   nyx.collections.export.actions
   , nyx.collections.representation, nyx.collections.draft,
   nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands,
-  nyx.collections.range.navigation,
+  nyx.collections.range.navigation, nyx.collections.range.pointer, nyx.gestures,
   nyx.collections.workbench.policy, nyx.collections.workbench.runtime,
   nyx.collections.identities,
   nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
@@ -56,6 +56,13 @@ type
   { Standard cancellable context event enters the real renderer/table route.
     It proves semantic/default integration, not a trusted hardware pointer. }
   TCellContextEvent = class external name 'MouseEvent'(TJSMouseEvent)
+  public
+    constructor new(const AType: String; AInit: TJSObject); reintroduce;
+  end;
+  { Standard cancellable PointerEvent enters the mounted table's real down/up
+    handlers. Synthetic events prove canonical/default routing, not trusted
+    hardware, touch-device capture or native operating-system input. }
+  TRangePointerEvent = class external name 'PointerEvent'(TJSPointerEvent)
   public
     constructor new(const AType: String; AInit: TJSObject); reintroduce;
   end;
@@ -181,6 +188,14 @@ type
     procedure InvokeGridClick;
   end;
 
+  { Access to the SAME grid's virtual mouse boundary, including pinned panes.
+    No cursor/desktop state or native clipboard default is exercised. Calling
+    these methods is explicitly an LCL producer, not trusted hardware input. }
+  TRangePointerAccess = class(TNyxCollectionStringGrid)
+  public
+    procedure InvokePointer(AShift: TShiftState; AX, AY: Integer);
+  end;
+
   { Native callback failures are captured instead of opening a modal dialog. }
   TNativeErrors = class
   public
@@ -209,6 +224,8 @@ type
     FToken: INyxEventSubscription;
     FContextToken: INyxEventSubscription;
     FClickToken: INyxEventSubscription;
+    FPointerToken: INyxEventSubscription;
+    FPointerUpToken: INyxEventSubscription;
     FContextScheduler: TContextScheduler;
     FContextSchedulerLease: INyxScheduler;
     FCellMount: INyxCollectionCellActionsMount;
@@ -224,6 +241,12 @@ type
     FRangeKeyName: TNyxText;
     FRangeReplacements: Integer;
     FRangeKeySending: Boolean;
+    FRangePointerSending: Boolean;
+    FRangePointers: Integer;
+    FRangePointerUps: Integer;
+    FPointerCallbackRecorded: Boolean;
+    FPointerCallbackRow: Integer;
+    FPointerCallbackColumn: Integer;
     FConsumed: Integer;
     FContexts: Integer;
     FInspectorLegacyClicks: Integer;
@@ -243,6 +266,7 @@ type
     FRenderer: TNyxBrowserRenderer;
     FSurface: TJSHTMLElement;
     FTable: TJSHTMLElement;
+    FPointerCallbackFocus: TJSHTMLElement;
     function Cell: TJSHTMLElement;
     function Key(AElement: TJSHTMLElement; const AKey: String;
       AControl: Boolean): Boolean;
@@ -250,6 +274,7 @@ type
     FRenderer: TNyxLCLRenderer;
     FSurface: TForm;
     FGrid: TNoClipboardGrid;
+    FPointerCallbackFocus: TWinControl;
     FEditorContexts: Integer;
     procedure NativeRangeSelected(Sender: TObject; AColumn, ARow: Integer);
     procedure RunRangeFocusRetirement;
@@ -274,6 +299,7 @@ type
     procedure RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
     procedure RunDraftActions; {$ifdef PAS2JS}async;{$endif}
     procedure RunCellRange; {$ifdef PAS2JS}async;{$endif}
+    procedure RunPointerRange; {$ifdef PAS2JS}async;{$endif}
     procedure RunRangeMenu; {$ifdef PAS2JS}async;{$endif}
     procedure RunAuthoredWorkbench; {$ifdef PAS2JS}async;{$endif}
     procedure RunAuthoredInspection; {$ifdef PAS2JS}async;{$endif}
@@ -621,6 +647,13 @@ begin
   Click;
 end;
 
+procedure TRangePointerAccess.InvokePointer(AShift: TShiftState; AX, AY: Integer);
+begin
+  MouseDown(mbLeft, AShift + [ssLeft], AX, AY);
+  Click;
+  MouseUp(mbLeft, AShift, AX, AY);
+end;
+
 function GridFactory(ANode: TNyxNode; AOwner: TComponent): TControl;
 begin
   Result := TNoClipboardGrid.Create(AOwner);
@@ -769,10 +802,24 @@ begin
   FToken := FRenderer.Events.OnKeyDown(NyxControlEvents(CTable, niRuntime)).Subscribe(FCallback);
   FContextToken := FRenderer.Events.OnContextMenu(NyxControlEvents(CTable, niRuntime)).Subscribe(FCallback);
   FClickToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime), ntClick).Subscribe(FCallback);
+  FPointerToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime), ntPointerDown).Subscribe(FCallback);
+  FPointerUpToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime), ntPointerUp).Subscribe(FCallback);
 end;
 
 destructor TCopyReview.Destroy;
 begin
+
+  if FPointerToken <> nil then
+  begin
+    FPointerToken.Cancel;
+  end;
+  FPointerToken := nil;
+
+  if FPointerUpToken <> nil then
+  begin
+    FPointerUpToken.Cancel;
+  end;
+  FPointerUpToken := nil;
 
   if FClickToken <> nil then
   begin
@@ -1036,8 +1083,75 @@ var
   LResponse: INyxEventResponse;
   LCommand: INyxCollectionClipboardCommand;
   LRange: INyxCollectionCellRangeMount;
+  LGesture: INyxGestureResponse;
   LEpoch: Integer;
 begin
+
+  if FRangePointerSending and (AEvent.Trigger = ntPointerUp) then
+  begin
+    Inc(FRangePointerUps);
+    Exit;
+  end;
+
+  if FRangePointerSending and (AEvent.Trigger = ntPointerDown) then
+  begin
+    Inc(FRangePointers);
+    Check(AEvent.HasPointer and (AEvent.OriginID = CTable) and
+      (AEvent.SourceID = CTable) and (AEvent.Pointer.Button = npbPrimary) and
+      (nmShift in AEvent.Pointer.Modifiers),
+      'managed pointer keeps the actual original canonical identity/button/modifiers');
+    Check(Supports(AExecution, INyxEventResponse, LResponse) and
+      LResponse.CanConsume and Supports(AExecution, INyxGestureResponse, LGesture) and
+      LGesture.CanRequest(ngcCapturePointer),
+      'one actual managed pointer execution admits both input and gesture decisions');
+    case FMode of
+      kmConsume:
+        begin
+          LResponse.Consume;
+        end;
+      kmDisableABA:
+        begin
+          FMount.SetInteraction(False, False);
+          FMount.SetInteraction(True, False);
+          { Disabling a real native control can legitimately move focus itself.
+            Freeze the callback's accepted result BEFORE the stale default gets
+            a chance to borrow the restored Ready flag. }
+          Check(LGesture.CanRequest(ngcCapturePointer),
+            'same-view callback may record capture but cannot grant a new input epoch');
+          LGesture.CapturePointer;
+          FPointerCallbackRecorded := True;
+          {$ifdef PAS2JS}
+          FPointerCallbackFocus := TJSHTMLElement(document.activeElement);
+          {$else}
+          FPointerCallbackFocus := Screen.ActiveControl;
+          FPointerCallbackRow := -1;
+          FPointerCallbackColumn := -1;
+
+          if FPointerCallbackFocus is TNyxCollectionStringGrid then
+          begin
+            FPointerCallbackRow := TNyxCollectionStringGrid(FPointerCallbackFocus).Row;
+            FPointerCallbackColumn := TNyxCollectionStringGrid(FPointerCallbackFocus).Col;
+          end;
+          {$endif}
+        end;
+      kmNested:
+        begin
+          Check(Supports(FMount, INyxCollectionCellRangeMount, LRange) and
+            LRange.SelectCells(NyxCollectionCellIdentity(ItemB, NameField),
+              NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+            'nested canonical pointer callback installs its own newer exact rectangle');
+        end;
+      kmMutate:
+        begin
+          FMount.Refresh;
+        end;
+      else
+        begin
+          { Observing the one original callback leaves its default admitted. }
+        end;
+    end;
+    Exit;
+  end;
 
   if AEvent.Trigger = ntClick then
   begin
@@ -2191,6 +2305,334 @@ end;
 { Reuses both existing table owners and real target menus. The menu may copy
   only its original typed rectangle; RAW cell inspection remains independent,
   including when range readiness is withdrawn after the menu took focus. }
+{ The existing same-owner fixture produces down/up/click through real target
+  routes. Browser events and native virtual methods are synthetic producers;
+  neither establishes trusted hardware, touch capture or a system clipboard. }
+procedure TCopyReview.RunPointerRange; {$ifdef PAS2JS}async;{$endif}
+var
+  LRanges: INyxCollectionCellRangeMount;
+  LIntent: INyxCollectionCellRangeIntent;
+  LSource: INyxCollectionSnapshot;
+  LRows: TNyxCollectionSelectionSnapshot;
+  LItems: TNyxItemRefs;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LPreferences: TNyxColumnPreferences;
+  LScore: TNyxColumnIdentity;
+  LOrigin: TNyxCollectionCellIdentity;
+  LTarget: TNyxCollectionCellIdentity;
+  LQuery: TNyxText;
+  LBefore: Integer;
+  LDowns: Integer;
+  LUps: Integer;
+  LClicks: Integer;
+  LCase: Integer;
+  LIndex: Integer;
+  LFocusFacts: TNyxText;
+  LGestureError: TNyxText;
+  {$ifdef PAS2JS}
+  LOriginCell: TJSHTMLElement;
+  LTargetCell: TJSHTMLElement;
+  {$else}
+  LOriginGrid: TNyxCollectionStringGrid;
+  LTargetGrid: TNyxCollectionStringGrid;
+  LOriginColumn: Integer;
+  LTargetColumn: Integer;
+  LCapturedControl: TControl;
+
+  function FindSurface(AColumn: Integer; out APhysical: Integer): TNyxCollectionStringGrid;
+  var
+    LSurface: TNyxCollectionStringGrid;
+    LTitle: TNyxText;
+    LControl: Integer;
+    LPhysical: Integer;
+  begin
+    Result := nil;
+    APhysical := -1;
+    LTitle := FView.Spec.ColumnAt(AColumn).Title;
+    for LControl := -1 to FGrid.ControlCount - 1 do
+    begin
+      LSurface := FGrid;
+
+      if LControl >= 0 then
+      begin
+
+        if not (FGrid.Controls[LControl] is TNyxCollectionStringGrid) or
+          not FGrid.Controls[LControl].Visible then
+        begin
+          Continue;
+        end;
+        LSurface := TNyxCollectionStringGrid(FGrid.Controls[LControl]);
+      end;
+      for LPhysical := 0 to LSurface.ColCount - 1 do
+      begin
+
+        if (LSurface.ColWidths[LPhysical] > 0) and
+          (Pos(LTitle, LSurface.DisplayCellText(LPhysical, 0)) = 1) then
+        begin
+          APhysical := LPhysical;
+          Exit(LSurface);
+        end;
+      end;
+    end;
+  end;
+  {$endif}
+
+  procedure FocusOrigin;
+  begin
+    {$ifdef PAS2JS}
+    LOriginCell := TJSHTMLElement(FTable.querySelector(
+      '[data-nyx-item="a"] [role="gridcell"][data-nyx-column="0"]'));
+    LTargetCell := TJSHTMLElement(FTable.querySelector(
+      '[data-nyx-item="b"] [role="gridcell"][data-nyx-column="1"]'));
+    Check((LOriginCell <> nil) and (LTargetCell <> nil),
+      'pointer test resolves exact owned resident endpoint cells');
+    LOriginCell.focus;
+    {$else}
+    LOriginGrid := FindSurface(0, LOriginColumn);
+    LTargetGrid := FindSurface(1, LTargetColumn);
+    Check((LOriginGrid <> nil) and (LTargetGrid <> nil),
+      'pointer test resolves real native surfaces across logical pin edges');
+    LOriginGrid.Col := LOriginColumn;
+    LOriginGrid.Row := 1;
+    LOriginGrid.SetFocus;
+    Drain;
+    {$endif}
+  end;
+
+  procedure Endpoint(AShift: Boolean);
+  var
+    {$ifdef PAS2JS}
+    LOptions: TJSObject;
+    LDown: TJSPointerEvent;
+    LNode: TJSHTMLElement;
+    {$else}
+    LBounds: TRect;
+    LShift: TShiftState;
+    {$endif}
+  begin
+    FRangePointerSending := AShift;
+    try
+      {$ifdef PAS2JS}
+      LOptions := TJSObject.new;
+      LOptions['bubbles'] := True;
+      LOptions['cancelable'] := True;
+      LOptions['button'] := 0;
+      LOptions['buttons'] := 1;
+      LOptions['pointerId'] := 73;
+      LOptions['pointerType'] := 'mouse';
+      LOptions['isPrimary'] := True;
+      LOptions['shiftKey'] := AShift;
+      LOptions['detail'] := 1;
+      LNode := LTargetCell;
+
+      if LTargetCell.firstElementChild <> nil then
+      begin
+        LNode := TJSHTMLElement(LTargetCell.firstElementChild);
+      end;
+      LDown := TRangePointerEvent.new('pointerdown', LOptions);
+      LNode.dispatchEvent(LDown);
+
+      if AShift then
+      begin
+        Check(LDown.defaultPrevented,
+          'managed Shift-primary down claims the actual DOM default');
+      end;
+      LOptions['buttons'] := 0;
+      LNode.dispatchEvent(TRangePointerEvent.new('pointerup', LOptions));
+      LNode.dispatchEvent(TCellContextEvent.new('click', LOptions));
+      {$else}
+      LBounds := LTargetGrid.CellRect(LTargetColumn, 2);
+      LShift := [];
+
+      if AShift then
+      begin
+        Include(LShift, ssShift);
+      end;
+      TRangePointerAccess(LTargetGrid).InvokePointer(LShift,
+        (LBounds.Left + LBounds.Right) div 2, (LBounds.Top + LBounds.Bottom) div 2);
+      Drain;
+      {$endif}
+    finally
+      FRangePointerSending := False;
+    end;
+  end;
+
+  function FocusMatches(AEndpoint: Boolean): Boolean;
+  begin
+    {$ifdef PAS2JS}
+    Result := document.activeElement = LOriginCell;
+
+    if AEndpoint then
+    begin
+      Result := document.activeElement = LTargetCell;
+    end;
+    {$else}
+    Result := (Screen.ActiveControl = LOriginGrid) and
+      (LOriginGrid.Row = 1) and (LOriginGrid.Col = LOriginColumn);
+
+    if AEndpoint then
+    begin
+      Result := (Screen.ActiveControl = LTargetGrid) and
+        (LTargetGrid.Row = 2) and (LTargetGrid.Col = LTargetColumn);
+    end;
+    {$endif}
+  end;
+
+  function CallbackFocusMatches: Boolean;
+  begin
+    {$ifdef PAS2JS}
+    Result := FPointerCallbackRecorded and
+      (document.activeElement = FPointerCallbackFocus);
+    {$else}
+    Result := FPointerCallbackRecorded and (Screen.ActiveControl = FPointerCallbackFocus);
+
+    if Result and (FPointerCallbackFocus is TNyxCollectionStringGrid) then
+    begin
+      Result := (TNyxCollectionStringGrid(FPointerCallbackFocus).Row = FPointerCallbackRow) and
+        (TNyxCollectionStringGrid(FPointerCallbackFocus).Col = FPointerCallbackColumn);
+    end;
+    {$endif}
+  end;
+begin
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges),
+    'same actual table retains its independent range owner for pointer input');
+  LSource := FView.Store.Snapshot;
+  LQuery := FView.QueryPolicy.ToData.ToJSON;
+  LRows := FView.Selection.Snapshot;
+  SetLength(LItems, LRows.Count);
+  for LIndex := 0 to LRows.Count - 1 do
+  begin
+    LItems[LIndex] := LRows.ItemAt(LIndex);
+  end;
+  LScore := NyxColumnIdentity(NyxIntegerField('Score'));
+  LOrigin := NyxCollectionCellIdentity(ItemA, NameField);
+  LTarget := NyxCollectionCellIdentity(ItemB, LScore);
+  LColumns := NyxCollectionColumns(FView);
+  LCapture := LColumns.CaptureColumns;
+  LPreferences := LCapture.Preferences;
+  LBefore := FHost.Writes;
+  try
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      LColumns.ConfigureColumns(LPreferences.WithColumn(NyxColumnPreference(NameField).Pinned(ncpStart))
+        .WithColumn(NyxColumnPreference(LScore).Pinned(ncpEnd)));
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    end;
+    LRanges.ConfigureCellRange(True);
+    for LCase := 0 to 4 do
+    begin
+      FMode := kmObserve;
+      LRanges.ClearCellRange;
+      FocusOrigin;
+      case LCase of
+        0:
+          begin
+            FMode := kmConsume;
+          end;
+        1:
+          begin
+            FMode := kmObserve;
+          end;
+        2:
+          begin
+            FMode := kmNested;
+          end;
+        3:
+          begin
+            FMode := kmDisableABA;
+          end;
+        4:
+          begin
+            FMode := kmMutate;
+          end;
+      end;
+      LDowns := FRangePointers;
+      LUps := FRangePointerUps;
+      LClicks := FRangeClicks;
+      FPointerCallbackRecorded := False;
+      LGestureError := FRenderer.LastGestureError;
+      {$ifndef PAS2JS}LCapturedControl := GetCaptureControl;{$endif}
+      Check(FocusMatches(False), 'pointer launch has actual exact origin focus before input');
+      Endpoint(True);
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      Check((FRangePointers = LDowns + 1) and (FRangePointerUps = LUps + 1) and
+        (FRangeClicks = LClicks + 1),
+        'managed down/up/click delivers original canonical callbacks exactly once');
+      LIntent := LRanges.CellRange;
+      LFocusFacts := 'case=' + TNyxText(IntToStr(LCase)) + ';range=' +
+        TNyxText(BoolToStr(LIntent <> nil, True)) + ';focus=' +
+        TNyxText(BoolToStr(FocusMatches(False), True));
+      {$ifndef PAS2JS}
+      LFocusFacts := LFocusFacts + ';origin=' +
+        TNyxText(IntToStr(LOriginGrid.Col)) + ',' + TNyxText(IntToStr(LOriginGrid.Row)) +
+        ';expected=' + TNyxText(IntToStr(LOriginColumn)) + ',1;activeIsOrigin=' +
+        TNyxText(BoolToStr(Screen.ActiveControl = LOriginGrid, True));
+      {$endif}
+      case LCase of
+        0:
+          begin
+            Check((LIntent = nil) and FocusMatches(False),
+              'consumed pointer cannot focus, select rows or publish a rectangle;' + LFocusFacts);
+          end;
+        3:
+          begin
+            Check((LIntent = nil) and CallbackFocusMatches,
+              'disabled-ABA pointer cannot move the callback accepted focus or publish a rectangle;' + LFocusFacts);
+            Check(FRenderer.LastGestureError = LGestureError,
+              'retired original input never submits its capture request to the platform');
+            {$ifndef PAS2JS}
+            Check(GetCaptureControl = LCapturedControl,
+              'retired same-view input leaves the exact native capture owner unchanged');
+            {$endif}
+          end;
+        1, 4:
+          begin
+            Check((LIntent <> nil) and LIntent.Current and
+              LIntent.Capture.Anchor.Same(LOrigin) and LIntent.Capture.Focus.Same(LTarget) and
+              LIntent.Capture.Contains(ItemA, NameField) and
+              LIntent.Capture.Contains(ItemB, LScore) and FocusMatches(True),
+              'allowed pointer and benign refresh publish exact original page endpoints and real focus');
+          end;
+        2:
+          begin
+            Check((LIntent <> nil) and LIntent.Current and FocusMatches(False) and
+              LIntent.Capture.Anchor.Same(NyxCollectionCellIdentity(ItemB, NameField)) and
+              LIntent.Capture.Focus.Same(LTarget),
+              'newer nested pointer selection survives without an older focus/default tail');
+          end;
+      end;
+      Check(FView.Selection.Snapshot.SameState(LRows) and
+        (FView.Store.Snapshot = LSource) and (FHost.Writes = LBefore),
+        'managed pointer leaves ordinary row selection, accepted RAW and host authority untouched');
+    end;
+    FMode := kmObserve;
+    LRanges.ConfigureCellRange(False);
+    FocusOrigin;
+    Endpoint(False);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((LRanges.CellRange = nil) and FView.Selection.Contains(ItemB),
+      'default-off plain primary cell input retains ordinary row-selection behavior');
+  finally
+    FMode := kmObserve;
+    FRangePointerSending := False;
+    LRanges.ConfigureCellRange(False);
+
+    if FView.Spec.HasLayoutControls then
+    begin
+      LColumns.ConfigureColumns(LPreferences);
+    end;
+    FView.SetSelection(LItems, LRows.Focus, LRows.Anchor);
+    FContextColumn := 0;
+    FocusCell;
+  end;
+  Check((FView.Store.Snapshot = LSource) and
+    (FView.QueryPolicy.ToData.ToJSON = LQuery) and
+    (TNyxCodec.Encode(FDocument) = FAuthored),
+    'pointer entry/default isolation preserves saved design and exact accepted/query values');
+end;
+
 procedure TCopyReview.RunRangeMenu; {$ifdef PAS2JS}async;{$endif}
 var
   LRanges: INyxCollectionCellRangeMount;
@@ -3371,6 +3813,7 @@ begin
   await(RunFocusedDraft);
   await(RunCellRange);
   await(RunRangeMenu);
+  await(RunPointerRange);
   {$else}
   RunContext;
   RunExport;
@@ -3378,6 +3821,7 @@ begin
   RunFocusedDraft;
   RunCellRange;
   RunRangeMenu;
+  RunPointerRange;
   {$endif}
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LCellIntent),
     'retirement probe retains the actual canonical context facade');
@@ -3431,11 +3875,13 @@ begin
       await(LReview.RunDraftActions);
       await(LReview.RunCellRange);
       await(LReview.RunRangeMenu);
+      await(LReview.RunPointerRange);
       {$else}
       LReview.RunFocusedDraft;
       LReview.RunDraftActions;
       LReview.RunCellRange;
       LReview.RunRangeMenu;
+      LReview.RunPointerRange;
       LReview.RunRangeFocusRetirement;
       {$endif}
     finally

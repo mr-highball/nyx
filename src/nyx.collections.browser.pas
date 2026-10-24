@@ -79,6 +79,16 @@ type
     function BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
   end;
 
+  { Optional Shift-primary endpoint route. The mount reserves original input
+    before DOM hit/focus or source getters. Only resident owned data cells and
+    an exact pre-down focused cell qualify; editors/custom controls and headers
+    keep their ordinary defaults. The same envelope spans canonical pointer
+    dispatch, and its matching click tail never selects an ordinary row. }
+  INyxBrowserCollectionCellRangePointerInput = interface(IInterface)
+    ['{035C3457-C726-4571-B694-FEAEFBC3F2EC}']
+    function BeginRangePointer(AEvent: TJSPointerEvent): INyxBrowserColumnCommand;
+  end;
+
   { Optional exact resident-cell context entry. Editors retain their native text
     menu unless focused-draft actions explicitly opt in. The renderer reserves
     this proof before canonical context callbacks and completes its managed
@@ -178,6 +188,7 @@ uses
   nyx.collections.range,
   nyx.collections.range.commands,
   nyx.collections.range.navigation,
+  nyx.collections.range.pointer,
   nyx.collections.cell.actions,
   nyx.collections.representation,
   nyx.collections.text.layout,
@@ -255,6 +266,20 @@ type
     FCommand: INyxCollectionCellRangeKeyCommand;
   public
     constructor Create(const ACommand: INyxCollectionCellRangeKeyCommand);
+    destructor Destroy; override;
+    procedure Prepare;
+    function GetCurrent: Boolean;
+    function GetDispatchCurrent: Boolean;
+    function Complete(AAllowDefault: Boolean): Boolean;
+    procedure Retire;
+  end;
+  { Adapts an original pointer reservation to the existing synchronous host
+    envelope. No event is replayed and no mount retains this owning wrapper. }
+  TBrowserRangePointerCommand = class(TInterfacedObject, INyxBrowserColumnCommand)
+  private
+    FCommand: INyxCollectionCellRangePointerEntry;
+  public
+    constructor Create(const ACommand: INyxCollectionCellRangePointerEntry);
     destructor Destroy; override;
     procedure Prepare;
     function GetCurrent: Boolean;
@@ -518,9 +543,14 @@ type
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
     INyxBrowserCollectionCellContextInput, INyxCollectionFocusedDraftInput,
-    INyxBrowserCollectionCellRangeInput)
+    INyxBrowserCollectionCellRangeInput, INyxBrowserCollectionCellRangePointerInput)
   private
     FHost: TJSHTMLElement;
+    { Borrowed exact down target, owned by this mount's row DOM. This scoped
+      stamp suppresses only its ensuing primary click's row/focus default.
+      Another pointer down, the matching click or retirement clears it; it
+      retains no command, view or selection owner and uses no time heuristic. }
+    FRangePointerCell: TJSHTMLElement;
     { A permanent caption survives an empty visible-column map. Opening focus
       suppresses only its own synchronous blur/change noise, not later edits. }
     FColumnLauncher: TJSHTMLElement;
@@ -704,6 +734,7 @@ type
     function BeginColumnKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
+    function BeginRangePointer(AEvent: TJSPointerEvent): INyxBrowserColumnCommand;
     function BeginCellContext(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
     function CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
     function BeginColumnDoubleClick(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
@@ -741,6 +772,59 @@ const
     'mousemove', 'touchstart', 'touchmove', 'touchend', 'wheel',
     'dblclick', 'click', ColumnCompositionStart, 'compositionupdate',
     ColumnCompositionEnd, 'selectstart');
+
+constructor TBrowserRangePointerCommand.Create(
+  const ACommand: INyxCollectionCellRangePointerEntry);
+begin
+  inherited Create;
+  FCommand := ACommand;
+end;
+
+destructor TBrowserRangePointerCommand.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TBrowserRangePointerCommand.Prepare;
+begin
+  try
+    FCommand.Prepare;
+  except
+    on E: ENyxCollectionRangeStale do
+    begin
+      { A nested newer range wins; this original physical stroke stays claimed. }
+    end;
+  end;
+end;
+
+function TBrowserRangePointerCommand.GetCurrent: Boolean;
+begin
+  Result := (FCommand <> nil) and FCommand.Current;
+end;
+
+function TBrowserRangePointerCommand.GetDispatchCurrent: Boolean;
+begin
+  Result := (FCommand <> nil) and FCommand.DispatchCurrent;
+end;
+
+function TBrowserRangePointerCommand.Complete(AAllowDefault: Boolean): Boolean;
+begin
+  Result := (FCommand <> nil) and FCommand.Complete(AAllowDefault);
+end;
+
+procedure TBrowserRangePointerCommand.Retire;
+var
+  LCommand: INyxCollectionCellRangePointerEntry;
+begin
+  LCommand := FCommand;
+  FCommand := nil;
+
+  if LCommand <> nil then
+  begin
+    LCommand.Retire;
+  end;
+end;
 
 constructor TBrowserRangeKeyCommand.Create(const ACommand: INyxCollectionCellRangeKeyCommand);
 begin
@@ -1332,6 +1416,86 @@ begin
     Result := LInput.Current and (document.activeElement = LFocus);
   finally
     FUpdating := LUpdating;
+  end;
+end;
+
+function TBrowserMount.BeginRangePointer(AEvent: TJSPointerEvent): INyxBrowserColumnCommand;
+const
+  CInteractive = 'input,textarea,select,button,a[href],[contenteditable="true"]';
+var
+  LCommand: INyxCollectionCellRangePointerEntry;
+  LTarget: TJSHTMLElement;
+  LFocus: TJSElement;
+  LRow: TBrowserRow;
+  LIndex: Integer;
+  LColumn: Integer;
+  LOrigin: TNyxCollectionCellIdentity;
+  LEndpoint: TNyxCollectionCellIdentity;
+begin
+  Result := nil;
+  FRangePointerCell := nil;
+
+  if not FCellRangeEnabled or AEvent.defaultPrevented or not AEvent.isPrimary or
+    (AEvent.button <> 0) or not AEvent.shiftKey or AEvent.ctrlKey or
+    AEvent.metaKey or AEvent.altKey then
+  begin
+    Exit;
+  end;
+  { Reservation precedes the first hit/field/source/focus getter. Unsupported
+    physical targets retire it without reinterpreting ordinary row/editor input. }
+  LCommand := BeginCellRangePointer(ncrpExtend);
+
+  if LCommand = nil then
+  begin
+    Exit;
+  end;
+  try
+    LTarget := TJSHTMLElement(AEvent.target);
+
+    if (LTarget = nil) or (LTarget.closest(CInteractive) <> nil) then
+    begin
+      Exit;
+    end;
+    LTarget := TJSHTMLElement(LTarget.closest('[role=gridcell]'));
+    LFocus := document.activeElement;
+    LOrigin := Default(TNyxCollectionCellIdentity);
+    LEndpoint := Default(TNyxCollectionCellIdentity);
+    for LIndex := 0 to High(FResidentRows) do
+    begin
+      LRow := FRows[FResidentRows[LIndex]];
+
+      if LRow = nil then
+      begin
+        Continue;
+      end;
+      for LColumn := 0 to High(LRow.FCells) do
+      begin
+
+        if LRow.FCells[LColumn] = LFocus then
+        begin
+          LOrigin := NyxCollectionCellIdentity(LRow.FRef, ClipboardField(LColumn));
+        end;
+
+        if LRow.FCells[LColumn] = LTarget then
+        begin
+          LEndpoint := NyxCollectionCellIdentity(LRow.FRef, ClipboardField(LColumn));
+        end;
+      end;
+    end;
+
+    if not LOrigin.Defined or not LEndpoint.Defined then
+    begin
+      Exit;
+    end;
+    FRangePointerCell := LTarget;
+    LCommand.ResolveCells(LOrigin, LEndpoint);
+    Result := TBrowserRangePointerCommand.Create(LCommand);
+  finally
+
+    if Result = nil then
+    begin
+      LCommand.Retire;
+    end;
   end;
 end;
 
@@ -3812,7 +3976,7 @@ end;
 
 procedure TBrowserMount.RetireTargetInput;
 begin
-
+  FRangePointerCell := nil;
   CancelColumnButtonPress;
 
   if FColumnLauncher <> nil then
@@ -6820,6 +6984,29 @@ var
   LCell: TJSHTMLElement;
   LColumn: Integer;
 begin
+
+  { A managed down already owns focus and range default. Only its exact ensuing
+    physical primary click bypasses row selection; forward the ORIGINAL click
+    to the projected host so canonical Click remains single-owned. Keyboard
+    activation (detail=0), other cells and ordinary clicks keep the old path. }
+  LCell := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest('[role=gridcell]'));
+
+  if (FOwner.FRangePointerCell <> nil) and (AEvent.detail > 0) and
+    (AEvent.button = 0) and (LCell = FOwner.FRangePointerCell) then
+  begin
+    FOwner.FRangePointerCell := nil;
+    LMount := FOwner as INyxCollectionMount;
+    LInputAdmission := FOwner as INyxCollectionInputAdmission;
+    LHost := FOwner.FHost;
+    AEvent.stopPropagation;
+
+    if LInputAdmission.InputReady and Assigned(LHost.onclick) then
+    begin
+      LHost.onclick(AEvent);
+    end;
+    AEvent.preventDefault;
+    Exit(True);
+  end;
 
   if (FOwner.FHasColumnLayout or FOwner.FObservesTablePresentation) and not FOwner.GetInputReady then
   begin

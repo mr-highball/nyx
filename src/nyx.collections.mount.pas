@@ -49,6 +49,7 @@ uses
   nyx.collections.range.actions,
   nyx.collections.range.commands,
   nyx.collections.range.navigation,
+  nyx.collections.range.pointer,
   nyx.collections.export.actions,
   nyx.collections.export,
   nyx.collections.cell.actions,
@@ -294,7 +295,7 @@ type
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
-    INyxCollectionCellRangeKeyInput)
+    INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput)
   private
     FToken: INyxCollectionViewSubscription;
     FConnected: Boolean;
@@ -420,6 +421,8 @@ type
     { Reserve before an adapter reads its current row. The returned command is
       synchronous and owns this mount only through canonical key completion. }
     function BeginCellRangeKey(AKey: TNyxCollectionRangeKey): INyxCollectionCellRangeKeyCommand;
+    function BeginCellRangePointer(AAction: TNyxCollectionRangePointerAction):
+      INyxCollectionCellRangePointerEntry;
     { Move only physical focus using the already admitted row/canonical field.
       Implementations suppress ordinary row-selection/editor side effects and
       return after any focus callbacks; the command then repeats its final fence. }
@@ -599,10 +602,13 @@ type
     procedure CheckReady;
   end;
 
-  { Original mounted range key. Prepared selection and copied snapshot leases
+  { Original mounted range input. Keys and pointer endpoints share reservation,
+    original input fences, target focus and the existing selection owner.
+    Prepared selection and copied snapshot leases
     cannot outlive this synchronous envelope; the accepted range owns none of
     these live mount/view references. Flags-only checks follow every callout. }
-  TCellRangeKeyCommand = class(TInterfacedObject, INyxCollectionCellRangeKeyCommand)
+  TCellRangeKeyCommand = class(TInterfacedObject, INyxCollectionCellRangeKeyCommand,
+    INyxCollectionCellRangePointerEntry)
   private
     FOwner: TNyxCollectionMountBase;
     FLease: INyxCollectionMount;
@@ -612,6 +618,10 @@ type
     FPrevious: INyxCollectionCellRangeIntent;
     FKey: TNyxCollectionRangeKey;
     FOrigin: TNyxCollectionCellIdentity;
+    FTarget: TNyxCollectionCellIdentity;
+    FPointer: Boolean;
+    FPointerAction: TNyxCollectionRangePointerAction;
+    FPointerPlan: INyxCollectionCellRangePointerCommand;
     FOptions: TNyxCollectionClipboardOptions;
     FPlan: INyxPreparedPublication;
     FReady: INyxPublicationReadiness;
@@ -625,11 +635,15 @@ type
     FPrepared: Boolean;
     FCompleted: Boolean;
     FRetired: Boolean;
+    procedure CaptureOwner(AOwner: TNyxCollectionMountBase);
     function PreparedCurrent: Boolean;
   public
     constructor Create(AOwner: TNyxCollectionMountBase; AKey: TNyxCollectionRangeKey);
+    constructor CreatePointer(AOwner: TNyxCollectionMountBase;
+      AAction: TNyxCollectionRangePointerAction);
     destructor Destroy; override;
     procedure ResolveOrigin(const AOrigin: TNyxCollectionCellIdentity);
+    procedure ResolveCells(const AOrigin, ATarget: TNyxCollectionCellIdentity);
     procedure Prepare;
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
@@ -769,12 +783,26 @@ constructor TCellRangeKeyCommand.Create(AOwner: TNyxCollectionMountBase;
   AKey: TNyxCollectionRangeKey);
 begin
   inherited Create;
+  FKey := AKey;
+  CaptureOwner(AOwner);
+end;
+
+constructor TCellRangeKeyCommand.CreatePointer(AOwner: TNyxCollectionMountBase;
+  AAction: TNyxCollectionRangePointerAction);
+begin
+  inherited Create;
+  FPointer := True;
+  FPointerAction := AAction;
+  CaptureOwner(AOwner);
+end;
+
+procedure TCellRangeKeyCommand.CaptureOwner(AOwner: TNyxCollectionMountBase);
+begin
   FOwner := AOwner;
   FLease := AOwner as INyxCollectionMount;
   FView := AOwner.FView;
   FInput := AOwner.FInputLifetime;
   FSelection := AOwner.FCellRanges;
-  FKey := AKey;
   FMutation := AOwner.FCellMutationSerial;
   FOptions := AOwner.FClipboardOptions;
   FRow := -1;
@@ -834,12 +862,25 @@ end;
 procedure TCellRangeKeyCommand.ResolveOrigin(const AOrigin: TNyxCollectionCellIdentity);
 begin
 
-  if FResolved or FPrepared or not GetCurrent then
+  if FPointer or FResolved or FPrepared or not GetCurrent then
   begin
     Exit;
   end;
   FResolved := True;
   FOrigin := NyxCollectionCellIdentity(AOrigin.Item, AOrigin.Field);
+end;
+
+procedure TCellRangeKeyCommand.ResolveCells(
+  const AOrigin, ATarget: TNyxCollectionCellIdentity);
+begin
+
+  if not FPointer or FResolved or FPrepared or not GetCurrent then
+  begin
+    Exit;
+  end;
+  FResolved := True;
+  FOrigin := NyxCollectionCellIdentity(AOrigin.Item, AOrigin.Field);
+  FTarget := NyxCollectionCellIdentity(ATarget.Item, ATarget.Field);
 end;
 
 procedure TCellRangeKeyCommand.Prepare;
@@ -855,6 +896,7 @@ var
   LFields: TNyxCollectionClipboardFields;
   LNavigation: INyxCollectionRangeNavigation;
   LPreparation: INyxCollectionCellRangePreparation;
+  LPointerPreparation: INyxCollectionCellRangePointerPreparation;
   LReady: INyxPublicationReadiness;
   LFocus: TNyxCollectionCellIdentity;
   LIndex: Integer;
@@ -867,7 +909,7 @@ begin
   end;
   FPrepared := True;
 
-  if FKey = ncrkClear then
+  if not FPointer and (FKey = ncrkClear) then
   begin
 
     if FPrevious = nil then
@@ -928,15 +970,32 @@ begin
     begin
       Exit;
     end;
-    LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
-      FOrigin, FPrevious, FKey, LObservation.Serial, FOptions.IncludeHeaders,
-      FOptions.Lines, FOptions.WorkLimits);
+
+    if FPointer then
+    begin
+
+      if not Supports(FSelection, INyxCollectionCellRangePointerPreparation,
+        LPointerPreparation) then
+      begin
+        Exit;
+      end;
+      FPointerPlan := LPointerPreparation.PreparePointer(LSource, LPage,
+        LFields, FOrigin, FTarget, FPrevious, FPointerAction, LObservation.Serial,
+        FOptions.IncludeHeaders, FOptions.Lines, FOptions.WorkLimits);
+      LFocus := FTarget;
+    end
+    else
+    begin
+      LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+        FOrigin, FPrevious, FKey, LObservation.Serial, FOptions.IncludeHeaders,
+        FOptions.Lines, FOptions.WorkLimits);
+      LFocus := LNavigation.Focus;
+    end;
 
     if not GetCurrent then
     begin
       Exit;
     end;
-    LFocus := LNavigation.Focus;
     FRow := LPage.IndexOf(LFocus.Item);
 
     if not GetCurrent then
@@ -957,6 +1016,11 @@ begin
     begin
       Exit;
     end;
+  end;
+
+  if FPointer then
+  begin
+    Exit;
   end;
 
   if not GetCurrent or not Supports(FSelection,
@@ -981,6 +1045,12 @@ end;
 function TCellRangeKeyCommand.PreparedCurrent: Boolean;
 begin
   Result := False;
+
+  if FPointer then
+  begin
+    Result := (FPointerPlan <> nil) and FPointerPlan.Current;
+    Exit;
+  end;
 
   if FReady = nil then
   begin
@@ -1019,7 +1089,8 @@ begin
     Exit;
   end;
 
-  if (FKey <> ncrkClear) and not FOwner.FocusCellRange(FRow, FColumn) then
+  if (FPointer or (FKey <> ncrkClear)) and
+    not FOwner.FocusCellRange(FRow, FColumn) then
   begin
     Exit;
   end;
@@ -1030,14 +1101,26 @@ begin
   end;
   { Both last fences are callbacks-free. Install retires only original range
     flags and adopts the fully admitted rectangle; it publishes no data/row edit. }
-  FPlan.Install;
-  FPlan.Notify;
+  if FPointer then
+  begin
+
+    if not FPointerPlan.Complete(True) then
+    begin
+      Exit;
+    end;
+  end
+  else
+  begin
+    FPlan.Install;
+    FPlan.Notify;
+  end;
   FOwner.RenderCellRange;
 end;
 
 procedure TCellRangeKeyCommand.Retire;
 var
   LPlan: INyxPreparedPublication;
+  LPointerPlan: INyxCollectionCellRangePointerCommand;
   LLease: INyxCollectionMount;
 begin
 
@@ -1048,7 +1131,9 @@ begin
   FRetired := True;
   LLease := FLease;
   LPlan := FPlan;
+  LPointerPlan := FPointerPlan;
   FPlan := nil;
+  FPointerPlan := nil;
   FReady := nil;
   FPrevious := nil;
   FSelection := nil;
@@ -1056,6 +1141,11 @@ begin
   FInput := nil;
   FOwner := nil;
   FLease := nil;
+
+  if LPointerPlan <> nil then
+  begin
+    LPointerPlan.Retire;
+  end;
 
   if LPlan <> nil then
   begin
@@ -1626,6 +1716,17 @@ begin
   if FCellRangeEnabled and (FCellRanges <> nil) then
   begin
     Result := TCellRangeKeyCommand.Create(Self, AKey);
+  end;
+end;
+
+function TNyxCollectionMountBase.BeginCellRangePointer(
+  AAction: TNyxCollectionRangePointerAction): INyxCollectionCellRangePointerEntry;
+begin
+  Result := nil;
+
+  if FCellRangeEnabled and (FCellRanges <> nil) then
+  begin
+    Result := TCellRangeKeyCommand.CreatePointer(Self, AAction);
   end;
 end;
 

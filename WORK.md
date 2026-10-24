@@ -2,6 +2,13 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Current collaboration — 2026-10-24
+
+The user requested single-agent operation after Lil' Scooty's pending-stroke
+foundation. That is the helper's final assignment; after its handoff, Root
+continues alone until the user explicitly changes this preference. Do not refill
+the helper queue. Necessary reruns of that same final task remain part of it.
+
 ## Column arrangement W1 — 2026-10-22
 
 ### Current checkpoint — typed column alignment authoring
@@ -100,6 +107,30 @@ seven existing warnings. The first fixture warning is corrected by an explicit
 observe branch; its narrower59-check result remains retained. These checks do
 not qualify mounted table input or trusted mouse/touch/OS behavior. The maintained
 gestures build now includes this portable consumer and its browser host.
+
+The mounted pointer03 cohort preserves the original control journey and adds
+explicit opt-in Shift-primary endpoint selection through the same range owner.
+It passes1048 native and1165 actual browser checks at1280x720/390x900, with clean
+heap/logs; mounted command01 passes239 per actual target. Its first native focus
+oracle incorrectly required pre-callback focus after deliberate disable/re-enable.
+The corrected assertion preserves the callback's final focus before default
+processing; consumed input still requires unchanged original focus.
+
+Root's subsequent capture-fence01 repair carries the exact original command
+through gesture dispatch and gates capture/release as well as range installation.
+Same-view disabled ABA cannot borrow a new input epoch. It passes1054 native
+with a complete clean21160506-block heap and1169 browser checks at1280x900/390x900,
+logs empty. The old-renderer browser control fails at the new capture assertion,
+using the SAME strengthened fixture. A once-retried native WM observation after
+the user's unlocked-desktop confirmation passes1057 with clean heap, saving and
+restoring the cursor. It remains paired messages, not trusted hardware input.
+The original private runner's incorrect functional-marker prefix remains in its
+raw receipt; a separate exact-marker review qualifies the unchanged completed
+native log. Product integration01's four products plus browser Studio fixture
+compile with zero owned warnings from2245 fixed inputs; the later capture-fence
+target consumers independently compile both changed renderer implementations.
+Sustained drag/touch integration, full Studio responsiveness/own-export and all
+original acceptance remain open.
 
 ### Earlier checkpoint — native button admission and runtime table presentation
 

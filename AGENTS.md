@@ -37,7 +37,8 @@ historical handoffs without erasing their evidence.
 
 ## Collaboration and validation
 
-- Scooty coordinates implementation and the existing Lil' Scooty helper. Keep
+- Respect the user's current collaboration mode. When helpers are enabled,
+  Scooty coordinates implementation and the existing Lil' Scooty helper. Keep
   their edits disjoint, give the helper a useful next prerequisite and resolve
   ownership changes directly between agents. Do not add further agents unless
   the user requests them.

@@ -46,6 +46,10 @@ type
   { Native compound-editor context uses the grid's borrowed prepared dispatch
     port. The renderer keeps canonical events single-owned; no event is replayed. }
   TNyxLCLCellContextDispatch = nyx.collections.lcl.grid.TNyxGridCellContextDispatch;
+  { Native pointer preparation preserves the grid's weak synchronous dispatch
+    contract. A renderer supplies its existing original-event receiver; a direct
+    host omitting it retains ordinary native row/editor input behavior. }
+  TNyxLCLRangePointerDispatch = nyx.collections.lcl.grid.TNyxGridRangePointerDispatch;
 
   { Optional native observation publication. The returned aggregate owns only
     observer/input leases and copied context, never its mount/view/store. Prepare
@@ -84,7 +88,8 @@ function MountNyxLCLCollection(AControl: TControl;
   const AInputEvents: INyxEvents = nil;
   const AOriginID: TNyxText = '';
   AColumnClick: TNyxLCLColumnClick = nil;
-  ACellContext: TNyxLCLCellContextDispatch = nil): INyxCollectionMount;
+  ACellContext: TNyxLCLCellContextDispatch = nil;
+  ARangePointer: TNyxLCLRangePointerDispatch = nil): INyxCollectionMount;
 
 { Runtime measurement limits are copied before activation, independently of
   authored policies. The physical frame/router requirements remain unchanged. }
@@ -96,7 +101,8 @@ function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
   const AInputEvents: INyxEvents = nil;
   const AOriginID: TNyxText = '';
   AColumnClick: TNyxLCLColumnClick = nil;
-  ACellContext: TNyxLCLCellContextDispatch = nil): INyxCollectionMount;
+  ACellContext: TNyxLCLCellContextDispatch = nil;
+  ARangePointer: TNyxLCLRangePointerDispatch = nil): INyxCollectionMount;
 
 implementation
 
@@ -139,6 +145,7 @@ uses
   nyx.collections.range.actions,
   nyx.collections.range.commands,
   nyx.collections.range.navigation,
+  nyx.collections.range.pointer,
   nyx.scheduler,
   nyx.collections.tree.rows;
 
@@ -456,6 +463,9 @@ type
     FColumnToolbarHeight: Integer;
     FColumnClick: TNyxLCLColumnClick;
     FCellContextDispatch: TNyxLCLCellContextDispatch;
+    FRangePointerDispatch: TNyxLCLRangePointerDispatch;
+    function PrepareRangePointer(Sender: TObject; AButton: TMouseButton;
+      AShift: TShiftState; AX, AY: Integer): INyxCollectionCellRangePointerEntry;
     function GridRangeSelected(AColumn, ARow: Integer): Boolean;
     function CanonicalRangeSelected(AColumn, ARow: Integer): Boolean;
     function PrepareFitButton(Sender: TObject): INyxGridColumnButtonCommand;
@@ -692,7 +702,8 @@ type
       const AInputEvents: INyxEvents = nil;
       const AOriginID: TNyxText = '';
       AColumnClick: TNyxLCLColumnClick = nil;
-      ACellContext: TNyxLCLCellContextDispatch = nil);
+      ACellContext: TNyxLCLCellContextDispatch = nil;
+      ARangePointer: TNyxLCLRangePointerDispatch = nil);
     function GetEditingPublication: INyxObservationPublication;
     function EditingDispatching: Boolean;
     function BeginCellContext(Sender: TObject; const APosition: TPoint):
@@ -2585,6 +2596,7 @@ begin
   Grid.Visible := False;
   Grid.AttachColumnInput(InputLifetime, Frame, AOwner.FColumnEditing.Continuity);
   Grid.ConfigureCellContext(InputLifetime, AOwner.BeginCellContext, AOwner.FCellContextDispatch);
+  Grid.ConfigureRangePointer(InputLifetime, AOwner.PrepareRangePointer, AOwner.FRangePointerDispatch);
   Grid.Parent := AOwner.FGrid;
   Grid.BorderStyle := bsNone;
   Grid.ScrollBars := ssNone;
@@ -4169,6 +4181,7 @@ begin
   FTextLayoutTotal := 0;
   FColumnClick := nil;
   FCellContextDispatch := nil;
+  FRangePointerDispatch := nil;
   FRangePaint := nil;
   FRangePaintFields := nil;
 
@@ -4183,6 +4196,7 @@ begin
     if FInputGridAttached then
     begin
       FInputGrid.ConfigureCellContext(GetInputLifetime, nil, nil);
+      FInputGrid.ConfigureRangePointer(GetInputLifetime, nil, nil);
     end;
     FInputGrid.ObserveColumnEditor(nil);
   end;
@@ -4191,6 +4205,7 @@ begin
   begin
     FStartPane.Grid.ObserveCellRange(nil);
     FStartPane.Grid.ConfigureCellContext(GetInputLifetime, nil, nil);
+    FStartPane.Grid.ConfigureRangePointer(GetInputLifetime, nil, nil);
     FStartPane.Grid.ObserveColumnEditor(nil);
   end;
 
@@ -4198,6 +4213,7 @@ begin
   begin
     FEndPane.Grid.ObserveCellRange(nil);
     FEndPane.Grid.ConfigureCellContext(GetInputLifetime, nil, nil);
+    FEndPane.Grid.ConfigureRangePointer(GetInputLifetime, nil, nil);
     FEndPane.Grid.ObserveColumnEditor(nil);
   end;
 
@@ -5508,7 +5524,8 @@ constructor TNativeMount.Create(AControl: TControl; const AView: INyxCollectionV
   const AInputGate: INyxCollectionInputGate;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
-  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch);
+  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch;
+  ARangePointer: TNyxLCLRangePointerDispatch);
 var
   LIndex: Integer;
   {$ifdef NYX_STUDIO_PROFILE}LHandleStarted: QWord;{$endif}
@@ -5555,6 +5572,7 @@ begin
     FColumnFrame := AInputFrame;
     FColumnClick := AColumnClick;
     FCellContextDispatch := ACellContext;
+    FRangePointerDispatch := ARangePointer;
 
     FColumnEditing := TColumnEditing.Create(GetInputLifetime, AInputEvents,
       AOriginID, CellCompositionEnded);
@@ -5562,6 +5580,7 @@ begin
     FInputGrid.AttachColumnInput(GetInputLifetime, FColumnFrame,
       FColumnEditing.Continuity);
     FInputGrid.ConfigureCellContext(GetInputLifetime, BeginCellContext, FCellContextDispatch);
+    FInputGrid.ConfigureRangePointer(GetInputLifetime, PrepareRangePointer, FRangePointerDispatch);
     FInputGridAttached := True;
     FColumnEditing.Add(FInputGrid);
   end;
@@ -7624,11 +7643,12 @@ function MountNyxLCLCollection(AControl: TControl;
   const AInputGate: INyxCollectionInputGate;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
-  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch): INyxCollectionMount;
+  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch;
+  ARangePointer: TNyxLCLRangePointerDispatch): INyxCollectionMount;
 begin
   Result := MountNyxLCLCollectionWithTextLimits(AControl, AView,
     TNyxTableTextWorkLimits.Defaults, AInputPhase, AInputGate, AInputFrame,
-    AInputEvents, AOriginID, AColumnClick, ACellContext);
+    AInputEvents, AOriginID, AColumnClick, ACellContext, ARangePointer);
 end;
 
 function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
@@ -7637,13 +7657,14 @@ function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
   const AInputGate: INyxCollectionInputGate;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
-  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch): INyxCollectionMount;
+  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch;
+  ARangePointer: TNyxLCLRangePointerDispatch): INyxCollectionMount;
 var
   LMount: TNativeMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted: QWord;{$endif}
 begin
   LMount := TNativeMount.Create(AControl, AView, ALimits, AInputPhase, AInputGate,
-    AInputFrame, AInputEvents, AOriginID, AColumnClick, ACellContext);
+    AInputFrame, AInputEvents, AOriginID, AColumnClick, ACellContext, ARangePointer);
   Result := LMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted := GetTickCount64;{$endif}
   LMount.Activate;

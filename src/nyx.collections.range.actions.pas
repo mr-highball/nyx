@@ -85,7 +85,8 @@ function NewNyxCollectionCellRangeSelection: INyxCollectionCellRangeSelection;
 
 implementation
 
-uses SysUtils, nyx.collections.range.navigation, nyx.publication;
+uses SysUtils, nyx.collections.range.navigation, nyx.collections.range.pointer,
+  nyx.publication;
 
 type
   { The concrete intent is private so the selection owner can retire its known
@@ -139,12 +140,33 @@ type
     procedure Retire;
   end;
 
+  { Only the SAME canonical range publication can back this private envelope.
+    The selection owner never retains it. Claiming completion before readiness
+    prevents consumed/reentrant attempts from installing the original candidate
+    later; retained proposal values contain no selection or mounted authority. }
+  TPointerCommand = class(TInterfacedObject, INyxCollectionCellRangePointerCommand)
+  private
+    FProposal: INyxCollectionRangePointer;
+    FPlan: INyxPreparedPublication;
+    FObject: TRangePublication;
+    FCompleted: Boolean;
+    FRetired: Boolean;
+    function PlanCurrent: Boolean;
+    procedure DoRetire;
+  public
+    destructor Destroy; override;
+    function GetProposal: INyxCollectionRangePointer;
+    function GetCurrent: Boolean;
+    function Complete(AAllowDefault: Boolean): Boolean;
+    procedure Retire;
+  end;
+
   { The UI owner retains exactly one accepted intent. The borrowed concrete
     pointer is valid only while FSelection owns it. Intent serial is separate
     from accepted lifetime: failed work cannot revoke the previous selection,
     but a nested newer reservation makes the older operation refuse. }
   TRangeSelection = class(TInterfacedObject, INyxCollectionCellRangeSelection,
-    INyxCollectionCellRangePreparation)
+    INyxCollectionCellRangePreparation, INyxCollectionCellRangePointerPreparation)
   private
     FSelection: INyxCollectionCellRangeIntent;
     FSelected: TRangeIntent;
@@ -164,6 +186,13 @@ type
     procedure Clear;
     procedure Revoke;
     function PrepareNavigation(const ANavigation: INyxCollectionRangeNavigation): INyxPreparedPublication;
+    function PreparePointer(const ASource, APage: INyxCollectionSnapshot;
+      const AVisibleFields: array of TNyxColumnIdentity;
+      const AOrigin, ATarget: TNyxCollectionCellIdentity;
+      const APrevious: INyxCollectionCellRangeIntent;
+      AAction: TNyxCollectionRangePointerAction; AColumnSerial: Integer;
+      AHeaders: Boolean; ALineEnding: TNyxCollectionCopyLineEnding;
+      const ALimits: TNyxCollectionClipboardLimits): INyxCollectionCellRangePointerCommand;
   end;
 
 constructor TRangeIntent.Create(const ACapture: INyxCollectionCellRangeCapture;
@@ -306,6 +335,95 @@ end;
 procedure TRangePublication.Retire;
 var
   LLease: INyxPreparedPublication;
+begin
+  LLease := Self;
+  DoRetire;
+end;
+
+destructor TPointerCommand.Destroy;
+begin
+  DoRetire;
+  inherited Destroy;
+end;
+
+function TPointerCommand.GetProposal: INyxCollectionRangePointer;
+begin
+  Result := FProposal;
+end;
+
+function TPointerCommand.PlanCurrent: Boolean;
+begin
+  Result := False;
+
+  if FRetired or (FPlan = nil) or (FObject = nil) then
+  begin
+    Exit;
+  end;
+  try
+    { FObject is our private canonical publication, with flags-only readiness.
+      No arbitrary extension or application callback runs during completion. }
+    FObject.CheckReady;
+    Result := True;
+  except
+    on E: ENyxCollectionRangeStale do
+    begin
+      { A newer selection/preparation or retirement keeps its original result. }
+    end;
+  end;
+end;
+
+function TPointerCommand.GetCurrent: Boolean;
+begin
+  Result := not FCompleted and PlanCurrent;
+end;
+
+function TPointerCommand.Complete(AAllowDefault: Boolean): Boolean;
+var
+  LLease: INyxCollectionCellRangePointerCommand;
+begin
+  LLease := Self;
+  Result := False;
+
+  if FCompleted then
+  begin
+    Exit;
+  end;
+  FCompleted := True;
+
+  if not AAllowDefault or not PlanCurrent then
+  begin
+    Exit;
+  end;
+  FObject.Install;
+  FObject.Notify;
+  Result := FObject.FInstalled;
+end;
+
+procedure TPointerCommand.DoRetire;
+var
+  LPlan: INyxPreparedPublication;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+  LPlan := FPlan;
+  FObject := nil;
+  FPlan := nil;
+
+  if LPlan <> nil then
+  begin
+    { Last callout: snapshot finalizers may release caller-held envelopes or
+      enter another selection; all duties were detached before retirement. }
+    LPlan.Retire;
+  end;
+end;
+
+procedure TPointerCommand.Retire;
+var
+  LLease: INyxCollectionCellRangePointerCommand;
 begin
   LLease := Self;
   DoRetire;
@@ -569,6 +687,90 @@ begin
   LPublication.FCandidateObject := LCandidate;
   LPublication.FRequest := LRequest;
   Result := LPublicationLease;
+end;
+
+function TRangeSelection.PreparePointer(const ASource, APage: INyxCollectionSnapshot;
+  const AVisibleFields: array of TNyxColumnIdentity;
+  const AOrigin, ATarget: TNyxCollectionCellIdentity;
+  const APrevious: INyxCollectionCellRangeIntent;
+  AAction: TNyxCollectionRangePointerAction; AColumnSerial: Integer;
+  AHeaders: Boolean; ALineEnding: TNyxCollectionCopyLineEnding;
+  const ALimits: TNyxCollectionClipboardLimits): INyxCollectionCellRangePointerCommand;
+var
+  LLease: INyxCollectionCellRangeSelection;
+  LOriginal: INyxCollectionCellRangeIntent;
+  LPreviousObject: TRangeIntent;
+  LProposal: INyxCollectionRangePointer;
+  LFields: TNyxCollectionClipboardFields;
+  LRequest: Integer;
+  LIndex: Integer;
+  LCapture: INyxCollectionCellRangeCapture;
+  LCandidate: TRangeIntent;
+  LCandidateLease: INyxCollectionCellRangeIntent;
+  LPublication: TRangePublication;
+  LPublicationLease: INyxPreparedPublication;
+  LCommand: TPointerCommand;
+  LCommandLease: INyxCollectionCellRangePointerCommand;
+
+  procedure RequireReservation;
+  begin
+
+    if FRevoked or (FIntent <> LRequest) or (FSelection <> LOriginal) then
+    begin
+      raise ENyxCollectionRangeStale.Create('Pointer range preparation was replaced during capture');
+    end;
+  end;
+
+begin
+  LLease := Self;
+
+  if FRevoked or (FIntent >= High(Integer) - 1) then
+  begin
+    raise ENyxCollectionRange.Create('Cell range selection is retired or saturated');
+  end;
+  Inc(FIntent);
+  LRequest := FIntent;
+  LOriginal := FSelection;
+  LPreviousObject := FSelected;
+
+  if APrevious <> LOriginal then
+  begin
+    raise ENyxCollectionRangeStale.Create('Pointer range belongs to another original selection');
+  end;
+  { Constructor copies arguments before its first immutable-source getter.
+    The owner request above defeats nested nil-selection ABA as well as a
+    genuinely newer accepted range; no late recapture can borrow its authority. }
+  LProposal := NewNyxCollectionRangePointer(ASource, APage, AVisibleFields,
+    AOrigin, ATarget, LOriginal, AAction, AColumnSerial, AHeaders, ALineEnding, ALimits);
+  RequireReservation;
+  SetLength(LFields, LProposal.FieldCount);
+  for LIndex := 0 to High(LFields) do
+  begin
+    LFields[LIndex] := LProposal.FieldAt(LIndex);
+  end;
+  LCapture := NewNyxCollectionCellRange(LProposal.Source, LProposal.Page, LFields,
+    LProposal.Anchor, LProposal.Focus, LProposal.ColumnSerial,
+    LProposal.IncludeHeaders, LProposal.LineEnding, LProposal.Limits);
+  RequireReservation;
+  LCandidate := TRangeIntent.Create(LCapture, LProposal.Source, LProposal.Page);
+  LCandidateLease := LCandidate;
+  RequireReservation;
+  LPublication := TRangePublication.Create;
+  LPublicationLease := LPublication;
+  LPublication.FOwner := Self;
+  LPublication.FOwnerLease := LLease;
+  LPublication.FPrevious := LOriginal;
+  LPublication.FPreviousObject := LPreviousObject;
+  LPublication.FCandidate := LCandidateLease;
+  LPublication.FCandidateObject := LCandidate;
+  LPublication.FRequest := LRequest;
+  LPublication.Validate;
+  LCommand := TPointerCommand.Create;
+  LCommandLease := LCommand;
+  LCommand.FProposal := LProposal;
+  LCommand.FPlan := LPublicationLease;
+  LCommand.FObject := LPublication;
+  Result := LCommandLease;
 end;
 
 function NewNyxCollectionCellRangeSelection: INyxCollectionCellRangeSelection;

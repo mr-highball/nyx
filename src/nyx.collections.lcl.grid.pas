@@ -31,7 +31,7 @@ uses
   nyx.collections.arrangement, nyx.formatting, nyx.state,
   nyx.collections.text.layout,
   nyx.collections.alignment,
-  nyx.collections.clipboard.actions;
+  nyx.collections.clipboard.actions, nyx.collections.range.pointer;
 
 type
   { Native-only pure text reader. The grid borrows its receiver; its mount must
@@ -77,6 +77,18 @@ type
   TNyxGridCellContextDispatch = procedure(Sender: TObject; APosition: TPoint;
     var AHandled: Boolean; const ACommand: INyxCollectionClipboardCommand;
     APrevious: TContextPopupEvent) of object;
+
+  { Weak synchronous pre-focus reservation. The original frame keeps the grid
+    alive while the mount admits exact physical endpoints; nil means ordinary
+    header/editor/default-off input, never a replacement for a stale command. }
+  TNyxGridRangePointerPrepare = function(Sender: TObject; AButton: TMouseButton;
+    AShift: TShiftState; AX, AY: Integer): INyxCollectionCellRangePointerEntry of object;
+  { Weak renderer port consumes that SAME original envelope through its actual
+    previous/canonical pointer callback. No MouseDown replay or second source
+    capture is permitted. The grid owns retirement after this synchronous call. }
+  TNyxGridRangePointerDispatch = procedure(Sender: TObject; AButton: TMouseButton;
+    AShift: TShiftState; AX, AY: Integer;
+    const ACommand: INyxCollectionCellRangePointerEntry) of object;
 
   { UI-thread continuity shared by the three surfaces of ONE logical table.
     It owns only composition/deferred-map flags, never a mount, model or widget.
@@ -248,6 +260,11 @@ type
     FColumnEditor: TWinControl;
     FCellContextPrepare: TNyxGridCellContextPrepare;
     FCellContextDispatch: TNyxGridCellContextDispatch;
+    FRangePointerPrepare: TNyxGridRangePointerPrepare;
+    FRangePointerDispatch: TNyxGridRangePointerDispatch;
+    { Only this physical down's Click/MouseUp tail bypasses LCL row/edit defaults.
+      A new down or terminal release clears it; no command is retained here. }
+    FRangePointerPress: Boolean;
     FReads: Int64;
     { Weak, bounded presentation ownership. A table has at most its two edge
       panes; neither side retains the other's component lifetime. The mount
@@ -331,6 +348,8 @@ type
       entry still requires Ready before invoking either borrowed receiver. }
     procedure ConfigureCellContext(const ALifetime: INyxCollectionInputLifetime;
       APrepare: TNyxGridCellContextPrepare; ADispatch: TNyxGridCellContextDispatch);
+    procedure ConfigureRangePointer(const ALifetime: INyxCollectionInputLifetime;
+      APrepare: TNyxGridRangePointerPrepare; ADispatch: TNyxGridRangePointerDispatch);
     procedure DetachColumnInput;
     function EditorByStyle(Style: TColumnButtonStyle): TWinControl; override;
     procedure RegisterColumnPane(APane: TNyxCollectionStringGrid);
@@ -1724,6 +1743,9 @@ begin
   begin
     FCellContextPrepare := nil;
     FCellContextDispatch := nil;
+    FRangePointerPrepare := nil;
+    FRangePointerDispatch := nil;
+    FRangePointerPress := False;
     LSurface.Retire;
   end;
 
@@ -1767,12 +1789,34 @@ begin
   FCellContextDispatch := ADispatch;
 end;
 
+procedure TNyxCollectionStringGrid.ConfigureRangePointer(
+  const ALifetime: INyxCollectionInputLifetime;
+  APrepare: TNyxGridRangePointerPrepare; ADispatch: TNyxGridRangePointerDispatch);
+begin
+
+  if (FInputSurface = nil) or not FInputSurface.MatchesLifetime(ALifetime) then
+  begin
+    raise ENyxCollection.Create('Pointer range requires its exact observed grid incarnation');
+  end;
+
+  if (Assigned(APrepare) or Assigned(ADispatch)) and
+    (FInputSurface.Retired or ALifetime.Retired) then
+  begin
+    raise ENyxCollection.Create('Retired pointer range cannot acquire new dispatch ports');
+  end;
+  FRangePointerPrepare := APrepare;
+  FRangePointerDispatch := ADispatch;
+end;
+
 procedure TNyxCollectionStringGrid.DetachColumnInput;
 var
   LSurface: INyxGridInputSurface;
 begin
   FCellContextPrepare := nil;
   FCellContextDispatch := nil;
+  FRangePointerPrepare := nil;
+  FRangePointerDispatch := nil;
+  FRangePointerPress := False;
 
   if FInputSurface <> nil then
   begin
@@ -2141,7 +2185,11 @@ procedure TNyxCollectionStringGrid.MouseDown(Button: TMouseButton;
 var
   LSurface: INyxGridInputSurface;
   LFrame: INyxNativeGestureFrame;
+  LPrepare: TNyxGridRangePointerPrepare;
+  LDispatch: TNyxGridRangePointerDispatch;
+  LCommand: INyxCollectionCellRangePointerEntry;
 begin
+  FRangePointerPress := False;
 
   if (FColumnToolbarHeight > 0) and (Y >= 0) and (Y < FColumnToolbarHeight) then
   begin
@@ -2157,6 +2205,36 @@ begin
   LFrame := LSurface.Frame;
   LFrame.Enter;
   try
+    LPrepare := FRangePointerPrepare;
+    LDispatch := FRangePointerDispatch;
+
+    if (Button = mbLeft) and (ssShift in Shift) and
+      not (ssCtrl in Shift) and not (ssAlt in Shift) and
+      not (ssMeta in Shift) and not (ssSuper in Shift) and
+      not (ssAltGr in Shift) and Assigned(LPrepare) and Assigned(LDispatch) and
+      LSurface.Ready and LSurface.PositionReady then
+    begin
+      LCommand := LPrepare(Self, Button, Shift, X, Y);
+
+      if LCommand <> nil then
+      begin
+        { TCustomGrid.MouseDown focuses/moves/commits AFTER OnMouseDown. Skip
+          those defaults for this claimed input and dispatch the real original
+          callback once through its prepared renderer port instead. }
+        FRangePointerPress := True;
+        try
+
+          if LSurface.Current and LCommand.DispatchCurrent then
+          begin
+            LDispatch(Self, Button, Shift, X, Y, LCommand);
+          end;
+        finally
+          LCommand.Complete(False);
+          LCommand.Retire;
+        end;
+        Exit;
+      end;
+    end;
     inherited MouseDown(Button, Shift, X, Y);
   finally
     LFrame.Leave;
@@ -2560,7 +2638,37 @@ var
   LActivity: INyxGridValidationActivity;
   LRelease: TValidationActivity;
   LPreviousStamp: Integer;
+  LSurface: INyxGridInputSurface;
+  LFrame: INyxNativeGestureFrame;
+  LMouse: TMouseEvent;
 begin
+  { The native Click precedes MouseUp. Its matching release still delivers the
+    original OnMouseUp but cannot run TCustomGrid.CellClick/auto-edit against
+    stale click-cache coordinates that this managed down never initialized. }
+
+  if (Button = mbLeft) and FRangePointerPress then
+  begin
+    FRangePointerPress := False;
+    LSurface := FInputSurface;
+
+    if LSurface = nil then
+    begin
+      Exit;
+    end;
+    LFrame := LSurface.Frame;
+    LFrame.Enter;
+    try
+      LMouse := OnMouseUp;
+
+      if LSurface.Current and Assigned(LMouse) then
+      begin
+        LMouse(Self, Button, Shift, X, Y);
+      end;
+    finally
+      LFrame.Leave;
+    end;
+    Exit;
+  end;
   LActivity := FValidationActivity;
   LRelease := TValidationActivity(FValidationActivityObject);
 
@@ -2708,6 +2816,8 @@ begin
 end;
 
 procedure TNyxCollectionStringGrid.Click;
+var
+  LClick: TNotifyEvent;
 begin
 
   if ColumnTransitionActive or ((FInputSurface <> nil) and not FInputSurface.Ready) then
@@ -2715,6 +2825,19 @@ begin
     { LCL Col/Row setters synthesize Click after moving the cursor. Internal
       restoration/navigation and a refreshing/retired original input must not
       dispatch another application action. The surface reads canonical flags. }
+    Exit;
+  end;
+
+  if FRangePointerPress then
+  begin
+    { Deliver the original control Click once without borrowing LCL's previous
+      FIgnoreClick/cache state. No row selection or editor default belongs here. }
+    LClick := OnClick;
+
+    if Assigned(LClick) then
+    begin
+      LClick(Self);
+    end;
     Exit;
   end;
   inherited Click;

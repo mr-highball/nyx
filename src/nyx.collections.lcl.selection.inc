@@ -1117,6 +1117,101 @@ begin
   Result := TNativeCellPresentation.Create(Self);
 end;
 
+function TNativeMount.PrepareRangePointer(Sender: TObject; AButton: TMouseButton;
+  AShift: TShiftState; AX, AY: Integer): INyxCollectionCellRangePointerEntry;
+var
+  LCommand: INyxCollectionCellRangePointerEntry;
+  LGrid: TStringGrid;
+  LOriginGrid: TStringGrid;
+  LData: INyxCollectionSnapshot;
+  LOrigin: TNyxCollectionCellIdentity;
+  LTarget: TNyxCollectionCellIdentity;
+  LPhysical: Integer;
+  LRow: Integer;
+  LOriginColumn: Integer;
+  LOriginRow: Integer;
+  LColumn: Integer;
+  LCount: Integer;
+begin
+  Result := nil;
+
+  if not FCellRangeEnabled or not Assigned(FRangePointerDispatch) or
+    (AButton <> mbLeft) or not (ssShift in AShift) or
+    not (Sender is TNyxCollectionStringGrid) then
+  begin
+    Exit;
+  end;
+  { Reserve BEFORE physical hit/focus/field and immutable page getters. The
+    grid's existing native frame protects all borrowed controls during entry. }
+  LCommand := BeginCellRangePointer(ncrpExtend);
+
+  if LCommand = nil then
+  begin
+    Exit;
+  end;
+  try
+    LGrid := InputGrid(Sender);
+    LOriginGrid := InputGrid(Screen.ActiveControl);
+
+    if (LGrid = nil) or (LOriginGrid = nil) or
+      (Screen.ActiveControl <> LOriginGrid) or LOriginGrid.EditorMode then
+    begin
+      Exit;
+    end;
+    LData := FRendered;
+    LGrid.MouseToCell(AX, AY, LPhysical, LRow);
+    LColumn := CanonicalColumn(LGrid, LPhysical);
+    LOriginRow := LOriginGrid.Row;
+    LOriginColumn := CanonicalColumn(LOriginGrid, LOriginGrid.Col);
+
+    if (LData = nil) or (LRow <= 0) or (LOriginRow <= 0) or
+      (LColumn < 0) or (LOriginColumn < 0) then
+    begin
+      Exit;
+    end;
+
+    if not LCommand.Current then
+    begin
+      Result := LCommand;
+      Exit;
+    end;
+    LCount := LData.Count;
+
+    if not LCommand.Current then
+    begin
+      Result := LCommand;
+      Exit;
+    end;
+
+    if (LRow > LCount) or (LOriginRow > LCount) then
+    begin
+      Exit;
+    end;
+    LOrigin := NyxCollectionCellIdentity(LData.ItemAt(LOriginRow - 1).Ref,
+      ClipboardField(LOriginColumn));
+
+    if not LCommand.Current then
+    begin
+      Result := LCommand;
+      Exit;
+    end;
+    LTarget := NyxCollectionCellIdentity(LData.ItemAt(LRow - 1).Ref,
+      ClipboardField(LColumn));
+
+    if LCommand.Current then
+    begin
+      LCommand.ResolveCells(LOrigin, LTarget);
+    end;
+    Result := LCommand;
+  finally
+
+    if Result = nil then
+    begin
+      LCommand.Retire;
+    end;
+  end;
+end;
+
 function TNativeMount.BeginCellContext(Sender: TObject; const APosition: TPoint):
   INyxCollectionClipboardCommand;
 var

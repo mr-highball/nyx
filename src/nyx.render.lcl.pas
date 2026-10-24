@@ -116,6 +116,8 @@ uses
   nyx.collections.workbench.runtime,
   nyx.collections.presentation,
   nyx.collections.clipboard.actions,
+  nyx.collections.range.pointer,
+  nyx.collections.range.actions,
   nyx.collections.lcl,
   nyx.collections.lcl.grid,
   nyx.literal.items,
@@ -255,7 +257,11 @@ type
     function PointerSlot(ASender: TObject): Integer;
     function PointerEvent(ASender: TObject; ATrigger: TNyxTrigger;
       const APosition: TPoint; AHasPosition: Boolean; AButton: TNyxPointerButton;
-      AShift: TShiftState): Boolean;
+      AShift: TShiftState;
+      const AManagedInput: INyxCollectionCellRangePointerEntry = nil): Boolean;
+    procedure PreparedRangePointer(ASender: TObject; AButton: TMouseButton;
+      AShift: TShiftState; AX, AY: Integer;
+      const ACommand: INyxCollectionCellRangePointerEntry);
     procedure DoubleClick(ASender: TObject);
     procedure PointerDown(ASender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
@@ -8726,7 +8732,7 @@ begin
   Result := MountNyxLCLCollectionWithTextLimits(LBinding.FControl, AView, FTableTextLimits,
     FCollectionInputPhase, FCollectionInputGate, FPhysicalFrame,
     FCollectionQueryEvents, LBinding.FNode.ID, LBinding.PerformClick,
-    LBinding.PreparedCellContext);
+    LBinding.PreparedCellContext, LBinding.PreparedRangePointer);
   LBinding.FCollectionMount := Result;
 
   if Supports(Result, INyxCollectionInputAdmission, LInputAdmission) then
@@ -10169,7 +10175,8 @@ end;
 
 function TNyxLCLBinding.PointerEvent(ASender: TObject; ATrigger: TNyxTrigger;
   const APosition: TPoint; AHasPosition: Boolean; AButton: TNyxPointerButton;
-  AShift: TShiftState): Boolean;
+  AShift: TShiftState;
+  const AManagedInput: INyxCollectionCellRangePointerEntry): Boolean;
 var
   LGeneration: INyxLCLBindingGeneration;
   LEnteredFrame: INyxNativeGestureFrame;
@@ -10316,9 +10323,26 @@ begin
         LFrame.Enter;
         RequireNativeGeneration(LGeneration);
         try
-          DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
+
+          if AManagedInput <> nil then
+          begin
+            Result := DispatchNyxGestureInput(LEvents, FNode, LDispatch, LDecision);
+          end
+          else
+          begin
+            DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
+          end;
           RequireNativeGeneration(LGeneration);
           LResult := LDecision.Seal;
+          RequireNativeGeneration(LGeneration);
+
+          { Same-view input retirement also revokes physical capture. The
+            exact original envelope survives only this synchronous call; never
+            acquire a fresh Ready/epoch after the callback re-enables a mount. }
+          if (AManagedInput <> nil) and not AManagedInput.Current then
+          begin
+            Exit;
+          end;
           RequireNativeGeneration(LGeneration);
 
           if LEvents.ViewRevision <> LRevision then
@@ -10581,6 +10605,77 @@ begin
   end;
 end;
 
+
+procedure TNyxLCLBinding.PreparedRangePointer(ASender: TObject; AButton: TMouseButton;
+  AShift: TShiftState; AX, AY: Integer;
+  const ACommand: INyxCollectionCellRangePointerEntry);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
+  LEvents: INyxEvents;
+  LRevision: Integer;
+  LPrevious: TMouseEvent;
+  LConsumed: Boolean;
+begin
+  LGeneration := GenerationLease;
+
+  if (ACommand = nil) or (LGeneration = nil) or
+    not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      if FRenderer.FDesignMode then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      LRevision := LEvents.ViewRevision;
+      LPrevious := FPointerHooks[PointerSlot(ASender)].Down;
+      try
+        ACommand.Prepare;
+      except
+        on E: ENyxCollectionRangeStale do
+        begin
+          { The original stroke remains claimed; a newer selection wins. }
+        end;
+      end;
+      RequireNativeGeneration(LGeneration);
+
+      if not ACommand.DispatchCurrent then
+      begin
+        Exit;
+      end;
+
+      if Assigned(LPrevious) then
+      begin
+        LPrevious(ASender, AButton, AShift, AX, AY);
+        RequireNativeGeneration(LGeneration);
+      end;
+
+      if (LEvents.ViewRevision <> LRevision) or not ACommand.DispatchCurrent then
+      begin
+        Exit;
+      end;
+      LConsumed := PointerEvent(ASender, ntPointerDown, Point(AX, AY), True,
+        NativePointerButton(AButton), AShift, ACommand);
+      RequireNativeGeneration(LGeneration);
+      ACommand.Complete(not LConsumed and ACommand.DispatchCurrent and
+        (LEvents.ViewRevision = LRevision));
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { The grid still claims the original stroke and unwinds its local frame. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
+end;
 
 procedure TNyxLCLBinding.PointerDown(ASender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer);

@@ -39,7 +39,7 @@ and TODO-to-DONE moves.
 
 ## Parallel work and handoffs
 
-While the goal is active, Lil' Scooty keeps one scoped assignment and identifies
+While helper collaboration is enabled, Lil' Scooty keeps one scoped assignment and identifies
 the next unmet prerequisite from the canonical task catalog. A source-ready
 handoff does not empty that queue. Report the owning criterion, deliverable,
 changed files, remaining checks and next candidate to root; continue independent
@@ -54,7 +54,7 @@ from existing tasks and their prerequisites; do not manufacture busywork,
 recurring cleanup or new acceptance credit to keep an agent occupied. A concrete
 external blocker is reported with its unblock condition and return task.
 
-At each handoff, keep the helper queue current with the active deliverable, its
+While helpers are enabled, keep their queue current at each handoff with the active deliverable, its
 owned files, the next eligible prerequisite and the action available during
 review. Root replenishes that queue before releasing the current assignment;
 another user request is not needed. Lil' Scooty may pull independent read-only

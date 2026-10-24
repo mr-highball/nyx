@@ -1204,6 +1204,24 @@ default action is refused; calling it again cannot revive the prepared range.
 These synchronous UI contracts do not transfer a live mount to a worker or
 clipboard host.
 
+With range selection enabled, focus a data cell and Shift-click another cell to
+extend the anchored rectangle. Both adapters use the exact resident endpoints
+in visible column order, including pinned surfaces. Editors, custom interactive
+descendants and headers keep their ordinary input behavior. Plain clicks retain
+ordinary row selection; range selection never edits accepted data or grants a
+clipboard effect.
+
+`nyx.collections.range.pointer` provides a typed endpoint proposal and optional
+selection/mount preparation facets. The adapters reserve the original input
+before hit testing or focus, admit the complete RAW rectangle, deliver the
+canonical pointer callback once and recheck the same input after focus. A
+sequential callback can consume the default and negotiate capture through that
+same dispatch. Cancellation, a newer selection and disable/re-enable prevent
+both stale range installation and stale pointer capture. The matching click
+still delivers its callback once while preserving independent row membership.
+These endpoint routes do not yet implement sustained drag selection or native
+touch admission; those remain separate adapter requirements.
+
 Current range/command fixtures pass 47/127 checks on both actual targets. Real
 controls pass393 native checks with a complete clean heap and465 browser checks
 at measured1280x900 and390x900, with empty logs. These include exact Unicode/NUL,

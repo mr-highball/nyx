@@ -258,7 +258,8 @@ type
     function DragEvent(AEvent: TJSDragEvent; ATrigger: TNyxTrigger;
       APhase: TNyxDragPhase): Boolean;
     function ContextMenu(AEvent: TJSMouseEvent): Boolean;
-    function PointerEvent(AEvent: TJSMouseEvent; ATrigger: TNyxTrigger): Boolean;
+    function PointerEvent(AEvent: TJSMouseEvent; ATrigger: TNyxTrigger;
+      const AManagedInput: INyxBrowserColumnCommand = nil): Boolean;
     function Wheel(AEvent: TJSWheelEvent): Boolean;
     function Scroll(AEvent: TEventListenerEvent): Boolean;
     function ScrollEnd(AEvent: TEventListenerEvent): Boolean;
@@ -7720,6 +7721,12 @@ function TNyxBrowserBinding.PointerDown(AEvent: TJSPointerEvent): Boolean;
 var
   LGeneration: TBrowserViewGeneration;
   LGenerationLease: IInterface;
+  LMount: INyxCollectionMount;
+  LInput: INyxBrowserCollectionCellRangePointerInput;
+  LCommand: INyxBrowserColumnCommand;
+  LEvents: INyxEvents;
+  LRevision: Integer;
+  LAllowed: Boolean;
 begin
   try
     LGeneration := TBrowserViewGeneration(FGenerationObject);
@@ -7728,6 +7735,36 @@ begin
     if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
     begin
       Exit(True);
+    end;
+    LMount := FCollectionMount;
+
+    if not CurrentRenderer.FDesignMode and
+      Supports(LMount, INyxBrowserCollectionCellRangePointerInput, LInput) then
+    begin
+      LCommand := LInput.BeginRangePointer(AEvent);
+
+      if LCommand <> nil then
+      begin
+        LEvents := CurrentRenderer.FEvents;
+        LRevision := FViewRevision;
+        try
+          LCommand.Prepare;
+          LAllowed := False;
+
+          if LGeneration.Current and LCommand.DispatchCurrent and
+            (LEvents.ViewRevision = LRevision) then
+          begin
+            LAllowed := PointerEvent(AEvent, ntPointerDown, LCommand);
+          end;
+          LCommand.Complete(LAllowed and LGeneration.Current and
+            (LEvents.ViewRevision = LRevision) and not AEvent.defaultPrevented);
+        finally
+          LCommand.Retire;
+          AEvent.preventDefault;
+          AEvent.stopPropagation;
+        end;
+        Exit(False);
+      end;
     end;
     Result := PointerEvent(AEvent, ntPointerDown);
   except
@@ -7981,7 +8018,7 @@ begin
 end;
 
 function TNyxBrowserBinding.PointerEvent(AEvent: TJSMouseEvent;
-  ATrigger: TNyxTrigger): Boolean;
+  ATrigger: TNyxTrigger; const AManagedInput: INyxBrowserColumnCommand): Boolean;
 var
   LGeneration: TBrowserViewGeneration;
   LGenerationLease: IInterface;
@@ -8149,10 +8186,24 @@ begin
         Include(LCapabilities, ngcReleasePointer);
       end;
       LGesture := NewNyxGestureDecision(LCapabilities);
-      DispatchNyxGesture(LEvents, FNode, LDispatch, LGesture);
+
+      if AManagedInput <> nil then
+      begin
+        LConsumed := DispatchNyxGestureInput(LEvents, FNode, LDispatch, LGesture);
+      end
+      else
+      begin
+        DispatchNyxGesture(LEvents, FNode, LDispatch, LGesture);
+      end;
       LResponse := LGesture.Seal;
 
-      if ((LEvents.ViewRevision = LRevision) and LGeneration.Current) and (LResponse.PointerRequest <> nprUnchanged) then
+      { The mounted input can retire without replacing its view (for example
+        disable/re-enable during the callback). Its sealed capture request has
+        no more authority than the range default. Keep the same original token
+        through this synchronous bridge, then recheck view flags after it. }
+      if ((AManagedInput = nil) or AManagedInput.Current) and
+        (LEvents.ViewRevision = LRevision) and LGeneration.Current and
+        (LResponse.PointerRequest <> nprUnchanged) then
       begin
         try
 

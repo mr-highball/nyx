@@ -33,6 +33,7 @@ uses
   nyx.collections.draft, nyx.collections.range, nyx.collections.range.actions,
   nyx.collections.identities,
   nyx.collections.range.commands,
+  nyx.collections.range.pointer,
   nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events,
   nyx.publication
   {$ifdef PAS2JS}, Web{$endif};
@@ -157,6 +158,10 @@ type
     RangeProbeRefused: Boolean;
     SourceAction: TRangeSourceAction;
     NestedRangeAdmitted: Boolean;
+    { A bounded test-only focus callback can retry the exact public entry or
+      reenter ordinary range selection. It is cleared before that callback. }
+    FocusPointer: INyxCollectionCellRangePointerEntry;
+    Focuses: Integer;
     Item: TNyxItemRef;
     Field: TNyxColumnIdentity;
     procedure SuspendInput(AValue: Boolean);
@@ -164,6 +169,7 @@ type
   protected
     procedure RenderDataset; override;
     procedure DetachTarget; override;
+    function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
   end;
 
   { A foreign value facade can copy public getters and lie about the action;
@@ -815,6 +821,22 @@ end;
 procedure TTestMount.DetachTarget;
 begin
   Inc(GDetached);
+end;
+
+function TTestMount.FocusCellRange(ARow, AColumn: Integer): Boolean;
+var
+  LPointer: INyxCollectionCellRangePointerEntry;
+begin
+  Inc(Focuses);
+  LPointer := FocusPointer;
+  FocusPointer := nil;
+
+  if LPointer <> nil then
+  begin
+    LPointer.Complete(True);
+  end;
+  ReadSource;
+  Result := GetConnected and GetInputReady and (ARow >= 0) and (AColumn >= 0);
 end;
 
 procedure CapturedArbitration;
@@ -1699,6 +1721,124 @@ begin
   end;
 end;
 
+{ The actual shared mount owns original input/epoch and the SAME range state.
+  A headless focus override exercises callback boundaries, not physical focus. }
+procedure MountedPointerAdmission;
+var
+  LFixture: TFixture;
+  LView: INyxCollectionView;
+  LObject: TTestMount;
+  LMount: INyxCollectionMount;
+  LRanges: INyxCollectionCellRangeMount;
+  LInput: INyxCollectionCellRangePointerInput;
+  LAdmission: INyxCollectionInputAdmission;
+  LEntry: INyxCollectionCellRangePointerEntry;
+  LOlder: INyxCollectionCellRangePointerEntry;
+  LPrevious: INyxCollectionCellRangeIntent;
+  LBefore: INyxCollectionSnapshot;
+  LFocuses: Integer;
+  LDetached: Integer;
+  LOrigin: TNyxCollectionCellIdentity;
+  LTarget: TNyxCollectionCellIdentity;
+begin
+  LFixture := TFixture.Create;
+  try
+    LView := NewNyxCollectionView(LFixture.Store,
+      NyxCollectionView(LFixture.Key).Column(NyxTextField('Name'), 'Name'), cpTable);
+    LBefore := LFixture.Store.Snapshot;
+    LObject := TTestMount.Create(LView, ncipReady, nil);
+    LMount := LObject;
+    LObject.Item := LFixture.ItemA;
+    LObject.Field := LFixture.Field;
+    LObject.Activate;
+    Check(Supports(LMount, INyxCollectionCellRangePointerInput, LInput) and
+      Supports(LMount, INyxCollectionCellRangeMount, LRanges) and
+      Supports(LMount, INyxCollectionInputAdmission, LAdmission),
+      'actual mount adds optional pointer reservation without changing old facets');
+    Check(LInput.BeginCellRangePointer(ncrpReplace) = nil,
+      'default-off original mount grants no pointer interception');
+    LRanges.ConfigureCellRange(True);
+    LOrigin := NyxCollectionCellIdentity(LFixture.ItemA, LFixture.Field);
+    LTarget := NyxCollectionCellIdentity(LFixture.ItemB, LFixture.Field);
+    LEntry := LInput.BeginCellRangePointer(ncrpReplace);
+    LEntry.ResolveCells(LOrigin, LTarget);
+    LEntry.Prepare;
+    LFocuses := LObject.Focuses;
+    Check(LEntry.Current and (LRanges.CellRange = nil),
+      'mounted pointer prepares complete RAW range before canonical publication');
+    Check(LEntry.Complete(False) and LEntry.Complete(True) and
+      (LRanges.CellRange = nil) and (LObject.Focuses = LFocuses),
+      'consumed-first mounted pointer completion cannot retry or move focus');
+    LEntry.Retire;
+    LEntry := LInput.BeginCellRangePointer(ncrpReplace);
+    LEntry.ResolveCells(LOrigin, LTarget);
+    LEntry.Prepare;
+    LObject.FocusPointer := LEntry;
+    LEntry.Complete(True);
+    LPrevious := LRanges.CellRange;
+    Check((LPrevious <> nil) and LPrevious.Current and
+      LPrevious.Capture.Anchor.Same(LOrigin) and LPrevious.Capture.Focus.Same(LTarget) and
+      (LObject.Focuses = LFocuses + 1),
+      'focus reentry cannot complete the original pointer twice or replace exact endpoints');
+    LEntry.Retire;
+    Check(LPrevious.Current and (LRanges.CellRange = LPrevious),
+      'retiring installed mounted pointer preserves its detached accepted range');
+    LOlder := LInput.BeginCellRangePointer(ncrpExtend);
+    LOlder.ResolveCells(LTarget, LOrigin);
+    LOlder.Prepare;
+    LEntry := LInput.BeginCellRangePointer(ncrpExtend);
+    LEntry.ResolveCells(LTarget, LOrigin);
+    LEntry.Prepare;
+    LOlder.Complete(True);
+    Check(LRanges.CellRange = LPrevious,
+      'a newer mounted pointer request defeats the older prepared original');
+    LObject.SourceAction := rsaNested;
+    LEntry.Complete(True);
+    Check(LObject.NestedRangeAdmitted and (LRanges.CellRange <> LPrevious) and
+      LRanges.CellRange.Capture.Focus.Same(LOrigin),
+      'newer public range selected from actual focus callback survives the older pointer default');
+    LEntry.Retire;
+    LOlder.Retire;
+    LEntry := LInput.BeginCellRangePointer(ncrpReplace);
+    LEntry.ResolveCells(LOrigin, LTarget);
+    LEntry.Prepare;
+    LFocuses := LObject.Focuses;
+    LMount.SetInteraction(False, False);
+    LMount.SetInteraction(True, False);
+    Check(not LEntry.Current and LEntry.DispatchCurrent,
+      'same-incarnation disabled ABA revokes original pointer epoch without deleting canonical delivery');
+    LEntry.Complete(True);
+    Check((LRanges.CellRange = nil) and (LObject.Focuses = LFocuses),
+      'disabled ABA never borrows a new ready epoch or focus default');
+    LEntry.Retire;
+    LEntry := LInput.BeginCellRangePointer(ncrpReplace);
+    LEntry.ResolveCells(LOrigin, LTarget);
+    LEntry.Prepare;
+    Check((LFixture.Store.Snapshot = LBefore) and (LView.Selection.Count = 0),
+      'pointer range leaves accepted RAW source and ordinary row selection unchanged');
+    LDetached := GDetached;
+    LRanges := nil;
+    LInput := nil;
+    LAdmission := nil;
+    LMount := nil;
+    Check(LEntry.Current and (GDetached = LDetached),
+      'entered pointer retains its exact mount through synchronous owner withdrawal');
+    LEntry.Retire;
+    Check((GDetached = LDetached + 1) and not LEntry.Current and
+      not LEntry.DispatchCurrent,
+      'explicit pointer retirement releases real mount without a retained cycle');
+  finally
+    LEntry := nil;
+    LOlder := nil;
+    LRanges := nil;
+    LInput := nil;
+    LAdmission := nil;
+    LMount := nil;
+    LView := nil;
+    LFixture.Free;
+  end;
+end;
+
 { Readonly entry captures the original accepted cell independently of transfer
   permissions. Ordinary physical copy still captures nothing when disallowed;
   the optional capture cannot be completed into an unauthorized host write. }
@@ -2568,6 +2708,7 @@ begin
     RangeContextCapture;
     MountedAdmission;
     MountedRangeReentry;
+    MountedPointerAdmission;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-collection-clipboard-commands', 'passed');
     document.body.setAttribute('data-collection-clipboard-command-checks', IntToStr(GChecks));
