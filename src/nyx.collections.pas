@@ -149,6 +149,10 @@ type
       const ADefault: TNyxText): TNyxCollectionSchema; overload;
     function Text(const AField: TNyxTextFieldRef;
       const ADefault: TNyxText; const ADomain: TNyxTextDomain): TNyxCollectionSchema; overload;
+    { Clock domains still store exact text. This overload preserves the typed
+      time-domain authoring emitted for admitted collection definitions. }
+    function Text(const AField: TNyxTextFieldRef;
+      const ADefault: TNyxText; const ADomain: TNyxTimeDomain): TNyxCollectionSchema; overload;
     function Boolean(const AField: TNyxBooleanFieldRef;
       const ADefault: Boolean): TNyxCollectionSchema; overload;
     function Boolean(const AField: TNyxBooleanFieldRef;

@@ -200,6 +200,46 @@ begin
   Result := False;
 end;
 
+function NeedsColumnFormatUnits(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+
+  function ContainsFormat(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.HasColumnFormat;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := ContainsFormat(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if ContainsFormat(ADocument.Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if ContainsFormat(ADocument.Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 { Emit actual enum symbols, in a stable order, rather than making generated
   callers reconstruct a policy from interchange strings or ordinal masks. }
 function ColumnLayoutFeatureExpression(const AFeatures: TNyxColumnLayoutFeatures): TNyxText;
@@ -232,6 +272,10 @@ const
   CFields: array[TNyxStateKind] of TNyxText =
     ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
   CMatches: array[TNyxTypeAheadMatch] of TNyxText = ('ntmFolded', 'ntmExact');
+  CFormatRounding: array[TNyxDecimalRounding] of TNyxText =
+    ('ndrExact', 'ndrToEven', 'ndrAwayFromZero', 'ndrTowardZero', 'ndrFloor', 'ndrCeiling');
+  CFormatDateOrder: array[TNyxFormatDateOrder] of TNyxText =
+    ('nfdoYearMonthDay', 'nfdoDayMonthYear', 'nfdoMonthDayYear');
   CComparisons: array[TNyxQueryComparison] of TNyxText =
     ('nqcEqual', 'nqcNotEqual', 'nqcLess', 'nqcAtMost', 'nqcGreater', 'nqcAtLeast',
      'nqcContains', 'nqcStartsWith', 'nqcEndsWith');
@@ -246,6 +290,7 @@ var
   LTablePolicy: TNyxTableQueryPolicy;
   LColumnLayout: TNyxColumnLayoutPolicy;
   LTableLayout: TNyxTableLayoutPolicy;
+  LFormat: TNyxValueFormat;
 begin
 
   if not ANode.HasCollectionView then
@@ -360,6 +405,33 @@ begin
         LLine := LLine + '.AllowOnly(' + ColumnLayoutFeatureExpression(LColumnLayout.Features) + ')';
       end;
       ALines.Add(LLine + ')');
+    end;
+
+    if LColumn.HasFormatPolicy then
+    begin
+      LFormat := LColumn.FormatPolicy;
+      LLine := AIndent + '    .ColumnFormat(NyxValueFormat';
+      case LFormat.Style of
+        nvfsCanonical: begin end;
+        nvfsDecimal: LLine := LLine + '.Decimal(' + TNyxText(IntToStr(LFormat.Scale)) +
+          ', ' + CFormatRounding[LFormat.Rounding] + ')';
+        nvfsCalendarDate: LLine := LLine + '.CalendarDate(' +
+          CFormatDateOrder[LFormat.DateOrder] + ', ' + PascalString(LFormat.DateSeparator) + ')';
+        nvfsClockTime: LLine := LLine + '.ClockTime(' + NyxTimePrecisionPascal(LFormat.TimePrecision) + ')';
+        nvfsBooleanLabels: LLine := LLine + '.BooleanLabels(' +
+          PascalString(LFormat.FirstText) + ', ' + PascalString(LFormat.SecondText) + ')';
+        nvfsTextAffixes: LLine := LLine + '.TextAffixes(' +
+          PascalString(LFormat.FirstText) + ', ' + PascalString(LFormat.SecondText) + ')';
+      end;
+      LLine := LLine + '.Identified(NyxFormatter(' + PascalString(LFormat.Identity.Name) + '), ' +
+        TNyxText(IntToStr(LFormat.Revision)) + ').Localized(NyxFormatLocale';
+
+      if LFormat.Locale.Locale.Defined then
+      begin
+        LLine := LLine + '.Named(NyxLocale(' + PascalString(LFormat.Locale.Locale.Name) + '))';
+      end;
+      ALines.Add(LLine + '.NumberSeparators(' + PascalString(LFormat.Locale.DecimalSeparator) +
+        ', ' + PascalString(LFormat.Locale.GroupSeparator) + ')))');
     end;
   end;
 

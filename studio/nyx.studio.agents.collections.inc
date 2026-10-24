@@ -191,7 +191,7 @@ end;
 
 function CollectionViewContext(const ASpec: TNyxCollectionViewSpec;
   AOffset, ALimit: Integer; ATypeAheadSupported,
-  AQueryControls, ALayoutControls: Boolean): TNyxDataValue;
+  AQueryControls, ALayoutControls, AFormatControls: Boolean): TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
   LColumn: TNyxCollectionColumn;
@@ -238,6 +238,13 @@ begin
       LColumns[LIndex] := WithResults(LColumns[LIndex], NyxObject([
         NyxField('declared', NyxData(LColumn.HasLayoutPolicy)),
         NyxField('policy', LColumn.LayoutPolicy.ToData)]), 'layoutControls');
+    end;
+
+    if AFormatControls then
+    begin
+      LColumns[LIndex] := WithResults(LColumns[LIndex], NyxObject([
+        NyxField('declared', NyxData(LColumn.HasFormatPolicy)),
+        NyxField('policy', LColumn.FormatPolicy.ToData)]), 'formatControls');
     end;
   end;
   { A bounded scalar policy belongs to each requested binding context. Declared
@@ -325,6 +332,7 @@ var
   LColumnSource: TNyxAgentCollectionSource;
   LQueryControls: Boolean;
   LLayoutControls: Boolean;
+  LFormatControls: Boolean;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentCollectionMode) to High(TNyxAgentCollectionMode) do
@@ -401,10 +409,11 @@ begin
   begin
     LQueryControls := False;
     LLayoutControls := False;
+    LFormatControls := False;
 
     if LMode = acmBindings then
     begin
-      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|');
+      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|formatControls|');
       LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumCollectionFields);
       LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
     end
@@ -413,7 +422,7 @@ begin
       case LMode of
         acmColumn:
           begin
-            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|queryControls|layoutControls|');
+            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|queryControls|layoutControls|formatControls|');
           end;
         acmQuery:
           begin
@@ -465,6 +474,11 @@ begin
     begin
       LLayoutControls := AArguments.Field('layoutControls').AsBoolean;
     end;
+
+    if NyxAgentHas(AArguments, 'formatControls') then
+    begin
+      LFormatControls := AArguments.Field('formatControls').AsBoolean;
+    end;
     LName := AArguments.Field('owner').AsText;
     LNode := FSession.Document.Find(LName);
 
@@ -487,7 +501,7 @@ begin
       if LNode.HasCollectionView then
       begin
         LLocal := CollectionViewContext(LNode.CollectionView, LOffset, LLimit,
-          (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls);
+          (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls, LFormatControls);
 
         if (LMode = acmBindings) and not LNode.CollectionView.Defined then
         begin
@@ -496,7 +510,7 @@ begin
           if LSpec.Defined then
           begin
             LRestorable := CollectionViewContext(LSpec, LOffset, LLimit,
-              (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls);
+              (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls, LFormatControls);
           end;
         end;
       end;
@@ -508,7 +522,7 @@ begin
         if LProjection.HasCollectionView then
         begin
           LEffective := CollectionViewContext(LProjection.CollectionView, LOffset, LLimit,
-            (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls);
+            (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls, LFormatControls);
         end;
       end;
 
@@ -535,6 +549,12 @@ begin
         begin
           Result := WithResults(Result, NyxData(LProjectionName = 'table'),
             'layoutControlsSupported');
+        end;
+
+        if LFormatControls then
+        begin
+          Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+            'formatControlsSupported');
         end;
         Exit;
       end;
@@ -615,6 +635,15 @@ begin
               Result := WithResults(Result, NyxObject([
                 NyxField('declared', NyxData(LColumn.HasLayoutPolicy)),
                 NyxField('policy', LColumn.LayoutPolicy.ToData)]), 'layoutControls');
+            end;
+
+            if LFormatControls then
+            begin
+              Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+                'formatControlsSupported');
+              Result := WithResults(Result, NyxObject([
+                NyxField('declared', NyxData(LColumn.HasFormatPolicy)),
+                NyxField('policy', LColumn.FormatPolicy.ToData)]), 'formatControls');
             end;
             Exit;
           end;

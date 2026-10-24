@@ -184,6 +184,7 @@ var
   LSample: TColumnSample;
   LSampleLease: INyxCollectionColumnSample;
   LItem: TNyxCollectionItem;
+  LSchema: TNyxCollectionSchema;
   LField: TNyxColumnIdentity;
   LCanonical, LCount, LIndex: Integer;
 
@@ -259,12 +260,16 @@ begin
   LCount := Min(LCount, FSpec.TableLayoutPolicy.AutoSizeRows);
   SetLength(LSample.FTexts, LCount);
   SetLength(LSample.FItems, LCount);
+  LSchema := LSample.FSnapshot.Schema;
+  RequireCaptureCurrent;
   for LIndex := 0 to LCount - 1 do
   begin
     LItem := LSample.FSnapshot.ItemAt(LIndex);
     RequireCaptureCurrent;
     LSample.FItems[LIndex] := LItem.Ref;
-    LSample.FTexts[LIndex] := ColumnItemText(LItem, LSample.FColumn);
+    { Paint and Fit consume the same pure display policy, with the schema of
+      this exact retained page. RAW CellText/query/edit never use this path. }
+    LSample.FTexts[LIndex] := LSample.FColumn.Display(LItem, LSchema);
   end;
   RequireCaptureCurrent;
   Result := LSampleLease;

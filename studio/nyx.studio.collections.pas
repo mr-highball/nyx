@@ -46,6 +46,11 @@ type
     complete schema/binding baseline before admitting a source command. }
   TNyxStudioLayoutPolicyField = (slpfEnabled, slpfVisible, slpfPin,
     slpfMinimumCenter, slpfAutoSizeRows);
+  { Stable scalar roles inside the existing layout/display draft subtree. Form
+    positions never replace the independently verified full typed field. }
+  TNyxStudioFormatPolicyField = (sfpfStyle, sfpfName, sfpfRevision, sfpfLocale,
+    sfpfDecimal, sfpfGroup, sfpfScale, sfpfRounding, sfpfDateOrder,
+    sfpfDateSeparator, sfpfTimePrecision, sfpfFirst, sfpfSecond);
   { A copied presentation receipt, never design data/history. Exact command
     context prevents a later project, selection or revision from inheriting its
     report. Rows/controls/stores are not retained. Last preview describes its
@@ -120,6 +125,16 @@ function NyxStudioLayoutPolicyDefaultID(AColumn: Integer): TNyxText;
 function CaptureNyxStudioLayout(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Display forms share the exact layout-card draft/baseline owner. Apply is one
+  typed source/history intent; malformed numeric text remains an inert draft. }
+function NyxStudioFormatPolicyFormID(AColumn: Integer): TNyxText;
+function NyxStudioFormatPolicyFieldID(AColumn: Integer;
+  AField: TNyxStudioFormatPolicyField): TNyxText;
+function NyxStudioFormatPolicyApplyID(AColumn: Integer): TNyxText;
+function NyxStudioFormatPolicyDefaultID(AColumn: Integer): TNyxText;
+function CaptureNyxStudioFormat(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture owns no accepted node/store and performs no source generation.
   Partial scalar notation stays text until the isolated session parses it.
   False means this is not the command's supported event. Invalid closed choices,
@@ -175,6 +190,10 @@ uses
   SysUtils,
   nyx.state,
   nyx.contract,
+  nyx.formatting,
+  nyx.resources,
+  nyx.times,
+  nyx.numbers.decimal,
   nyx.collections,
   nyx.resources.rows,
   nyx.controls,
@@ -206,7 +225,8 @@ const
     'column-content', 'column-fixed', 'column-flex', 'column-minimum',
     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
     'table-query', 'column-query', 'default-table-query', 'default-column-query',
-    'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout');
+    'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
+    'column-format', 'default-column-format');
   CQueryEditor = 'inspector-collection-query';
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
@@ -336,6 +356,8 @@ end;
 { This separate card owns no runtime arrangement. Target adapters copy only
   its unsubmitted input through the generic exact-baseline form draft contract;
   Apply/default alone enters the existing paired source-command queue. }
+{$include nyx.studio.collections.formatting.inc}
+
 procedure AddLayoutPolicyForms(AParent: TNyxNode; const AOwner: TNyxText;
   const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
   ALocked: Boolean);
@@ -415,7 +437,7 @@ begin
     .SetProp(NyxMenuFormBaselineKey, NyxQueryEditorBaseline(ASchema, ASpec))
     .SetProp(NyxMenuFormReferenceKey, '');
   LEditor.Node.Add(TNyxNode.Create(nkHeading, NyxStudioLayoutEditorID + '-title')
-    .Configure.Text('Column arrangement defaults').Done);
+    .Configure.Text('Column layout and display defaults').Done);
   LEditor.Node.Add(TNyxNode.Create(nkLabel, NyxStudioLayoutEditorID + '-help')
     .Configure.Text('Author table defaults here; runtime Columns choices remain independent. ' +
       'Disabled user controls still honor authored visibility and pins. ' +
@@ -445,6 +467,7 @@ begin
     Features(LIndex, LPolicy.Features);
     EndForm(LIndex);
   end;
+  AddFormatPolicyForms(LEditor.Node, AOwner, ASchema, ASpec, ALocked);
   AParent.Add(LEditor);
 end;
 
@@ -841,7 +864,7 @@ begin
       (APending.Collections[LPendingIndex].Intent.Action <> scaInherit) and
       not (APending.Collections[LPendingIndex].Intent.Action in
         [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
-         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout]) then
+         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat]) then
     begin
       try
         LSchema := ASession.Document.Collections.Snapshot(
@@ -1544,6 +1567,11 @@ var
   end;
 
 begin
+
+  if CaptureNyxStudioFormat(ASession, AButton, AShellRoot, APending, AEdit) then
+  begin
+    Exit(True);
+  end;
   AEdit := Default(TNyxStudioDesignEdit);
   Result := (AButton <> nil) and (AButton.Prop(CLayoutAction) <> '');
 
@@ -1857,7 +1885,7 @@ begin
   end;
 
   if LAction in [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
-    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout] then
+    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
   begin
     raise ENyxCollection.Create('Use the current complete query or layout policy form');
   end;

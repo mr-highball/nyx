@@ -26,6 +26,7 @@
   closed choices, primitive families and budgets as the strict decoder. }
 
 {$include nyx.studio.collectionedits.queryschema.inc}
+{$include nyx.studio.collectionedits.formatschema.inc}
 
 function NyxCollectionAgentSchema: TNyxDataValue;
 var
@@ -46,6 +47,8 @@ var
   LSpecSix: TNyxText;
   LSpecSeven: TNyxText;
   LSpecEight: TNyxText;
+  LSpecNine: TNyxText;
+  LColumnFormat: TNyxText;
   LTableQuery: TNyxText;
   LColumnQuery: TNyxText;
   LTableLayout: TNyxText;
@@ -256,6 +259,16 @@ begin
   LSpecEight := StringReplace(LSpecEight,
     '"selection","query","typeAhead","paging","queryControls"]',
     '"selection","query","typeAhead","paging","queryControls","layoutControls"]', []);
+  LColumnFormat := ColumnFormatAgentSchema;
+  LSpecNine := StringReplace(LSpecEight, '"const":8', '"const":9', []);
+  LSpecNine := StringReplace(LSpecNine, '"editable":{"type":"boolean"}',
+    '"editable":{"type":"boolean"},"display":{"anyOf":[{"type":"null"},' + LColumnFormat + ']}', []);
+  LSpecNine := StringReplace(LSpecNine,
+    '"required":["field","kind","title","editable","sizing","queryControls","layoutControls"]',
+    '"required":["field","kind","title","editable","sizing","queryControls","layoutControls","display"]', []);
+  Delete(LSpecNine, Length(LSpecNine), 1);
+  LSpecNine := LSpecNine + ',"allOf":[{"properties":{"columns":{"contains":{' +
+    '"properties":{"display":{"type":"object"}},"required":["display"]}}}}]}';
   Delete(LSpecEight, Length(LSpecEight), 1);
   LSpecEight := LSpecEight + ',"anyOf":[{"properties":{"layoutControls":{"type":"object"}}},' +
     '{"properties":{"columns":{"contains":{"properties":{"layoutControls":{"type":"object"}},' +
@@ -267,7 +280,7 @@ begin
     '{"properties":{"columns":{"contains":{"properties":{"queryControls":{"type":"object"}},' +
     '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
-    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ']}';
+    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ',' + LSpecNine + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
@@ -306,6 +319,11 @@ begin
     '"policy":{"oneOf":[{"type":"null"},' + LColumnLayout + ']}',
     '"op","owner","key","projection","field","kind","policy"');
 
+  Branch('"op":{"const":"column-format"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"field":{"type":"string","minLength":1},"kind":{"enum":["text","boolean","integer","number"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LColumnFormat + ']}',
+    '"op","owner","key","projection","field","kind","policy"');
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
@@ -320,7 +338,7 @@ begin
 
     if LAction in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
-      scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout] then
+      scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
     begin
       LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
       LRequired := LRequired + ',"baseline"';
@@ -350,6 +368,12 @@ begin
       LRequired := LRequired + ',"columnLayout"';
     end;
 
+    if LAction = scaColumnFormat then
+    begin
+      LProperties := LProperties + ',"columnFormat":' + LColumnFormat;
+      LRequired := LRequired + ',"columnFormat"';
+    end;
+
     if NyxStudioCollectionViewAction(LAction) then
     begin
       LProperties := LProperties + ',"owner":{"type":"string","minLength":1},' +
@@ -358,7 +382,7 @@ begin
       if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
         scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
         scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
-        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout] then
+        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
       begin
         LProperties := StringReplace(LProperties,
           '"projection":{"enum":["list","table","tree"]}',
@@ -382,7 +406,7 @@ begin
 
     if LAction in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn, scaAddColumn,
       scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
-      scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout, scaDefaultColumnLayout] then
+      scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
     begin
       LProperties := LProperties + ',"field":{"type":"string","minLength":1},' +
         '"kind":{"enum":["text","boolean","integer","number"]}';
@@ -483,14 +507,16 @@ begin
     '"offset":{"type":"integer","minimum":0,"maximum":64},' +
     '"limit":{"type":"integer","minimum":1,"maximum":50},' +
     '"queryControls":{"type":"boolean","default":false},' +
-    '"layoutControls":{"type":"boolean","default":false}},' +
+    '"layoutControls":{"type":"boolean","default":false},' +
+    '"formatControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"column"},"owner":{"type":"string","minLength":1},' +
     '"field":{"type":"string","minLength":1},"source":{"enum":["local","effective","restorable"]},' +
     '"offset":{"type":"integer","minimum":0,"maximum":8388608},' +
     '"count":{"type":"integer","minimum":1,"maximum":4096},' +
     '"queryControls":{"type":"boolean","default":false},' +
-    '"layoutControls":{"type":"boolean","default":false}},' +
+    '"layoutControls":{"type":"boolean","default":false},' +
+    '"formatControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner","field","source"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"source":{"enum":["local","effective","restorable"]},' +

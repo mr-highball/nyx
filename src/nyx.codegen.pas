@@ -71,6 +71,7 @@ uses
   nyx.typeahead,
   nyx.collections.columns,
   nyx.collections.arrangement,
+  nyx.formatting,
   nyx.layout.constraints,
   nyx.root.types,
   nyx.containers,
@@ -4394,6 +4395,17 @@ begin
       if NeedsColumnLayoutUnits(ADocument) then
       begin
         LLines.Add('  nyx.collections.arrangement,');
+      end;
+
+      if NeedsColumnFormatUnits(ADocument) then
+      begin
+        LLines.Add('  nyx.formatting,');
+
+        if (ADocument.Resources.Count = 0) and (ADocument.Flows.Count = 0) and
+          (ADocument.Programs.Count = 0) then
+        begin
+          LLines.Add('  nyx.resources,');
+        end;
       end;
       LLines.Add('  nyx.collections.selection,');
       LLines.Add('  nyx.collections.query,');

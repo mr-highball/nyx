@@ -38,6 +38,8 @@ uses
   nyx.typeahead,
   nyx.collections.columns,
   nyx.collections.arrangement,
+  nyx.formatting,
+  nyx.contract,
   nyx.collections.paging;
 
 const
@@ -68,6 +70,9 @@ type
     FSizing: TNyxColumnSizing;
     FQueryPolicy: TNyxColumnQueryPolicy;
     FLayoutPolicy: TNyxColumnLayoutPolicy;
+    FFormatPolicy: TNyxValueFormat;
+    function GetFormatPolicy: TNyxValueFormat;
+    function GetHasFormatPolicy: Boolean;
     function GetQueryPolicy: TNyxColumnQueryPolicy;
     function GetHasQueryPolicy: Boolean;
     function GetLayoutPolicy: TNyxColumnLayoutPolicy;
@@ -78,6 +83,13 @@ type
     { Read the declared scalar family from an admitted item. Missing fields and
       incompatible families reject instead of comparing formatted display text. }
     function Read(const AItem: TNyxCollectionItem): TNyxStateValue;
+    { Presentation alone uses this pure copied policy/schema path. Read and
+      CellText remain canonical accepted values for edits/query/RAW output. }
+    function Display(const AItem: TNyxCollectionItem;
+      const ASchema: TNyxCollectionSchema): TNyxText;
+    function Present(const AItem: TNyxCollectionItem;
+      const ASchema: TNyxCollectionSchema): TNyxValuePresentation;
+    procedure ValidateDisplay(const ASchema: TNyxCollectionSchema);
     property FieldName: TNyxText read FField;
     property Kind: TNyxStateKind read FKind;
     property Identity: TNyxColumnIdentity read GetIdentity;
@@ -94,6 +106,10 @@ type
       visible, unpinned defaults without manufacturing a saved choice. }
     property LayoutPolicy: TNyxColumnLayoutPolicy read GetLayoutPolicy;
     property HasLayoutPolicy: Boolean read GetHasLayoutPolicy;
+    { Absence resolves to canonical text; an explicit canonical policy retains
+      its authored presence and formatter/locale provenance independently. }
+    property FormatPolicy: TNyxValueFormat read GetFormatPolicy;
+    property HasFormatPolicy: Boolean read GetHasFormatPolicy;
   end;
 
   { Renderer-independent authored binding. Fluent calls return detached copies,
@@ -131,6 +147,7 @@ type
     function GetHasTableLayoutPolicy: Boolean;
     function GetHasLayoutControls: Boolean;
     function GetTableLayoutPolicy: TNyxTableLayoutPolicy;
+    function GetHasColumnFormat: Boolean;
   public
     function Column(const AField: TNyxTextFieldRef; const ATitle: TNyxText;
       AMode: TNyxCollectionCellMode = cmReadOnly): TNyxCollectionViewSpec; overload;
@@ -173,6 +190,10 @@ type
       table's width/order preferences or its active cell editor. }
     function ColumnLayout(const APolicy: TNyxColumnLayoutPolicy): TNyxCollectionViewSpec;
     function UseDefaultColumnLayout: TNyxCollectionViewSpec;
+    { Configure only the immediately preceding typed column's display. This
+      neither changes its editor/domain nor the accepted scalar or RAW output. }
+    function ColumnFormat(const APolicy: TNyxValueFormat): TNyxCollectionViewSpec;
+    function UseDefaultColumnFormat: TNyxCollectionViewSpec;
     { Explicit layout choices opt a bound table into column management. Removing
       this choice preserves per-column choices; removing all choices restores
       the legacy descriptor/geometry rather than persisting runtime preferences. }
@@ -215,6 +236,7 @@ type
     property HasTableLayoutPolicy: Boolean read GetHasTableLayoutPolicy;
     property HasLayoutControls: Boolean read GetHasLayoutControls;
     property TableLayoutPolicy: TNyxTableLayoutPolicy read GetTableLayoutPolicy;
+    property HasColumnFormat: Boolean read GetHasColumnFormat;
   end;
 
 function NyxCollectionView(const AKey: TNyxCollectionRef): TNyxCollectionViewSpec;
@@ -283,6 +305,103 @@ begin
   Result.FSizing := FSizing;
   Result.FQueryPolicy := FQueryPolicy;
   Result.FLayoutPolicy := FLayoutPolicy.Copy;
+  Result.FFormatPolicy := FFormatPolicy;
+end;
+
+function TNyxCollectionColumn.GetFormatPolicy: TNyxValueFormat;
+begin
+  Result := NyxValueFormat;
+
+  if FFormatPolicy.Defined then
+  begin
+    Result := FFormatPolicy.Copy;
+  end;
+end;
+
+function TNyxCollectionColumn.GetHasFormatPolicy: Boolean;
+begin
+  Result := FFormatPolicy.Defined;
+end;
+
+procedure TNyxCollectionColumn.ValidateDisplay(const ASchema: TNyxCollectionSchema);
+var
+  LDefinition: TNyxCollectionField;
+begin
+  case Kind of
+    nskText: LDefinition := ASchema.Definition(NyxTextField(FieldName));
+    nskBoolean: LDefinition := ASchema.Definition(NyxBooleanField(FieldName));
+    nskInteger: LDefinition := ASchema.Definition(NyxIntegerField(FieldName));
+    nskNumber: LDefinition := ASchema.Definition(NyxNumberField(FieldName));
+  end;
+
+  if HasFormatPolicy then
+  begin
+    FFormatPolicy.ValidateDomain(Kind, LDefinition.Domain);
+  end;
+end;
+
+function TNyxCollectionColumn.Display(const AItem: TNyxCollectionItem;
+  const ASchema: TNyxCollectionSchema): TNyxText;
+begin
+  Result := Present(AItem, ASchema).Text;
+end;
+
+function TNyxCollectionColumn.Present(const AItem: TNyxCollectionItem;
+  const ASchema: TNyxCollectionSchema): TNyxValuePresentation;
+var
+  LDefinition: TNyxCollectionField;
+begin
+
+  if not HasFormatPolicy then
+  begin
+    Exit(NyxCanonicalPresentation(Read(AItem)));
+  end;
+  case Kind of
+    nskText: LDefinition := ASchema.Definition(NyxTextField(FieldName));
+    nskBoolean: LDefinition := ASchema.Definition(NyxBooleanField(FieldName));
+    nskInteger: LDefinition := ASchema.Definition(NyxIntegerField(FieldName));
+    nskNumber: LDefinition := ASchema.Definition(NyxNumberField(FieldName));
+  end;
+  Result := FFormatPolicy.PresentValue(Read(AItem), LDefinition.Domain);
+end;
+
+function TNyxCollectionViewSpec.GetHasColumnFormat: Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if FColumns[LIndex].HasFormatPolicy then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxCollectionViewSpec.ColumnFormat(
+  const APolicy: TNyxValueFormat): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined or (Count = 0) then
+  begin
+    raise ENyxCollection.Create('Declare a column before configuring its display');
+  end;
+  APolicy.ValidateKind(FColumns[Count - 1].Kind);
+  Result := Copy;
+  Result.FColumns[Count - 1].FFormatPolicy := APolicy.Copy;
+end;
+
+function TNyxCollectionViewSpec.UseDefaultColumnFormat: TNyxCollectionViewSpec;
+begin
+
+  if not FDefined or (Count = 0) then
+  begin
+    raise ENyxCollection.Create('Declare a column before restoring its display');
+  end;
+  Result := Copy;
+  Result.FColumns[Count - 1].FFormatPolicy := Default(TNyxValueFormat);
 end;
 
 function TNyxCollectionColumn.GetIdentity: TNyxColumnIdentity;
@@ -871,6 +990,11 @@ begin
     begin
       FColumns[LIndex].QueryPolicy.Validate(FColumns[LIndex].Kind);
     end;
+
+    if FColumns[LIndex].HasFormatPolicy then
+    begin
+      FColumns[LIndex].FormatPolicy.ValidateKind(FColumns[LIndex].Kind);
+    end;
     for LOther := 0 to LIndex - 1 do
     begin
 
@@ -947,6 +1071,21 @@ begin
         NyxField('sizing', FColumns[LIndex].Sizing.ToData),
         NyxField('queryControls', FColumns[LIndex].FQueryPolicy.ToData),
         NyxField('layoutControls', FColumns[LIndex].FLayoutPolicy.ToData)]);
+    end;
+
+    if HasColumnFormat then
+    begin
+      { Version nine adds independent nullable display policy presence. Earlier
+        descriptor bytes remain unchanged when no formatting is authored. }
+      LColumns[LIndex] := NyxObject([
+        NyxField('field', NyxData(FColumns[LIndex].FieldName)),
+        NyxField('kind', NyxData(NyxStateKindName(FColumns[LIndex].Kind))),
+        NyxField('title', NyxData(FColumns[LIndex].Title)),
+        NyxField('editable', NyxData(FColumns[LIndex].Mode = cmEditable)),
+        NyxField('sizing', FColumns[LIndex].Sizing.ToData),
+        NyxField('queryControls', FColumns[LIndex].FQueryPolicy.ToData),
+        NyxField('layoutControls', FColumns[LIndex].FLayoutPolicy.ToData),
+        NyxField('display', FColumns[LIndex].FFormatPolicy.ToData)]);
     end;
   end;
   Result := NyxObject([NyxField('version', NyxData(1)),
@@ -1081,6 +1220,29 @@ begin
       NyxField('queryControls', FTableQuery.ToData),
       NyxField('layoutControls', FTableLayout.ToData)]);
   end;
+
+  if HasColumnFormat then
+  begin
+    LSelection := 'single';
+
+    if FSelectionMode = nsmMultiple then
+    begin
+      LSelection := 'multiple';
+    end;
+    LTypeAhead := NyxNull;
+
+    if FHasTypeAhead then
+    begin
+      LTypeAhead := FTypeAhead.ToData;
+    end;
+    Result := NyxObject([NyxField('version', NyxData(9)),
+      NyxField('key', NyxData(FKey.Name)), NyxField('scope', NyxData(LScope)),
+      NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
+      NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
+      NyxField('typeAhead', LTypeAhead), NyxField('paging', FPaging.ToData),
+      NyxField('queryControls', FTableQuery.ToData),
+      NyxField('layoutControls', FTableLayout.ToData)]);
+  end;
 end;
 
 class function TNyxCollectionViewSpec.FromData(
@@ -1112,7 +1274,7 @@ begin
       ((AData.Count = 8) and (AData.Field('version').AsInteger in [4, 5])) or
       ((AData.Count = 9) and (AData.Field('version').AsInteger = 6)) or
       ((AData.Count = 10) and (AData.Field('version').AsInteger = 7)) or
-      ((AData.Count = 11) and (AData.Field('version').AsInteger = 8))) then
+      ((AData.Count = 11) and (AData.Field('version').AsInteger in [8, 9]))) then
   begin
     raise ENyxCollection.Create('Unsupported collection view descriptor');
   end;
@@ -1132,7 +1294,7 @@ begin
     end;
   end;
 
-  if LVersion = 8 then
+  if LVersion in [8, 9] then
   begin
     for LFieldIndex := 0 to AData.Count - 1 do
     begin
@@ -1145,7 +1307,7 @@ begin
     end;
   end;
 
-  if LVersion in [3, 4, 5, 6, 7, 8] then
+  if LVersion in [3, 4, 5, 6, 7, 8, 9] then
   begin
     Result := Result.Query(TNyxCollectionQuery.FromData(AData.Field('query')));
 
@@ -1169,7 +1331,7 @@ begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
 
-  if (LVersion in [5, 6, 7, 8]) and (AData.Field('typeAhead').Kind <> ndNull) then
+  if (LVersion in [5, 6, 7, 8, 9]) and (AData.Field('typeAhead').Kind <> ndNull) then
   begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
@@ -1213,7 +1375,8 @@ begin
       not (((LVersion < 7) and (LColumn.Count = 4)) or
         ((LVersion in [5, 6]) and (LColumn.Count = 5)) or
         ((LVersion = 7) and (LColumn.Count = 6)) or
-        ((LVersion = 8) and (LColumn.Count = 7))) then
+        ((LVersion = 8) and (LColumn.Count = 7)) or
+        ((LVersion = 9) and (LColumn.Count = 8))) then
     begin
       raise ENyxCollection.Create('Invalid collection view column descriptor');
     end;
@@ -1289,7 +1452,7 @@ begin
   { Layout v8 is deliberately decoded separately from all earlier column
     shapes, preserving their original closed-member admission rules. }
 
-  if LVersion = 8 then
+  if LVersion in [8, 9] then
   begin
     for LIndex := 0 to LColumns.Count - 1 do
     begin
@@ -1297,8 +1460,9 @@ begin
       for LFieldIndex := 0 to LColumn.Count - 1 do
       begin
 
-        if Pos('|' + LColumn.Key(LFieldIndex) + '|',
-          '|field|kind|title|editable|sizing|queryControls|layoutControls|') = 0 then
+        if (Pos('|' + LColumn.Key(LFieldIndex) + '|',
+          '|field|kind|title|editable|sizing|queryControls|layoutControls|') = 0) and
+          not ((LVersion = 9) and (LColumn.Key(LFieldIndex) = 'display')) then
         begin
           raise ENyxCollection.Create('Unknown arranged collection column field');
         end;
@@ -1309,6 +1473,11 @@ begin
       Result.FColumns[LIndex].FSizing := TNyxColumnSizing.FromData(LColumn.Field('sizing'));
       Result.FColumns[LIndex].FQueryPolicy := TNyxColumnQueryPolicy.FromData(LColumn.Field('queryControls'));
       Result.FColumns[LIndex].FLayoutPolicy := TNyxColumnLayoutPolicy.FromData(LColumn.Field('layoutControls'));
+
+      if LVersion = 9 then
+      begin
+        Result.FColumns[LIndex].FFormatPolicy := TNyxValueFormat.FromData(LColumn.Field('display'));
+      end;
     end;
   end;
 
@@ -1317,7 +1486,7 @@ begin
     raise ENyxCollection.Create('Version-five collection views require an explicit column sizing');
   end;
 
-  if (LVersion = 6) or ((LVersion in [7, 8]) and (AData.Field('paging').Kind <> ndNull)) then
+  if (LVersion = 6) or ((LVersion in [7, 8, 9]) and (AData.Field('paging').Kind <> ndNull)) then
   begin
     Result := Result.Paged(TNyxCollectionPaging.FromData(AData.Field('paging')));
   end;
@@ -1336,15 +1505,20 @@ begin
     end;
   end;
 
-  if LVersion = 8 then
+  if LVersion in [8, 9] then
   begin
     Result.FTableQuery := TNyxTableQueryPolicy.FromData(AData.Field('queryControls'));
     Result.FTableLayout := TNyxTableLayoutPolicy.FromData(AData.Field('layoutControls'));
 
-    if not Result.HasLayoutControls then
+    if (LVersion = 8) and not Result.HasLayoutControls then
     begin
       raise ENyxCollection.Create('Version-eight views require an explicit layout choice');
     end;
+  end;
+
+  if (LVersion = 9) and not Result.HasColumnFormat then
+  begin
+    raise ENyxCollection.Create('Version-nine views require an explicit display choice');
   end;
   Result.Validate;
 end;

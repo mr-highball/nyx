@@ -244,6 +244,61 @@ resize and selective visual evidence are in
 Complete visual parity, native DPI/widgetset coverage, accessibility, production
 performance and browser column-resize handles retain their original task owners.
 
+## Typed column display formatting
+
+Import `nyx.formatting` to configure the display of the column just declared.
+Accepted values retain their original scalar family and canonical spelling:
+
+```pascal
+LTable := NewNyxTable('services-table').Binds.Collection(
+  NyxCollectionView(NyxCollection('services'))
+    .Column(NyxTextField('Service'), 'Service', cmEditable)
+      .ColumnFormat(NyxValueFormat.TextAffixes('Service: ', ''))
+    .Column(NyxNumberField('Memory'), 'Memory', cmEditable)
+      .ColumnFormat(NyxValueFormat.Decimal(2)
+        .Identified(NyxFormatter('memory-display'), 1)
+        .Localized(NyxFormatLocale.Named(NyxLocale('en-US'))
+          .NumberSeparators('.', ',')))
+    .Column(NyxBooleanField('Running'), 'Status')
+      .ColumnFormat(NyxValueFormat.BooleanLabels('Running', 'Stopped'))
+).Done;
+```
+
+`NyxValueFormat` starts with canonical display. Its immutable policies include
+decimal scale/rounding, calendar date order/separator, clock precision, Boolean
+labels and text prefixes/suffixes. Calendar and clock presentation require their
+actual typed field domains; numeric-looking text is never interpreted as a
+number. Decimal formatting uses Nyx's exact decimal domain and explicit rounding.
+It refuses values outside that domain rather than falling back to binary
+formatting. Reducing clock precision also refuses nonzero discarded parts.
+
+Locale names and formatter identities record provenance alongside copied facts
+and a revision. The locale is explicit: it does not query the machine locale or
+resolve CLDR data. Caller-supplied separators survive save/load and generated
+Pascal unchanged. `.UseDefaultColumnFormat` withdraws the saved override;
+`.ColumnFormat(NyxValueFormat)` saves an explicit canonical policy. That presence
+distinction survives reusable inheritance, local masks and paired Undo/Redo.
+Existing descriptors without formatting retain their original representation;
+explicit formatting uses the additive version-nine column descriptor.
+
+Browser labels, native painting and detached Fit samples share the presentation
+policy. Native editors still receive canonical text. A valid accepted value that
+cannot be displayed under the selected policy remains usable: paint exposes an
+explicit unavailable marker and a separate diagnostic. `Present` returns these
+facts with exact `RawText`; strict `FormatValue` refuses. Inspection, comparison,
+editing and the existing RAW copy/export commands never receive the marker or a
+formatted replacement for accepted data. Display-copy and explicit active-draft
+commands have separate integration work; these policies do not enable them.
+
+Studio's column forms expose the same typed choices through the existing
+isolated edit queue. Semantic collection reads request `formatControls` only when
+needed; the bounded response distinguishes declared policy from effective default.
+Column-format mutations use the shared revision-aware command path. Generated
+Pascal and source reading preserve every style, explicit locale and identity.
+Current pure, target-control and generated-application qualification is recorded
+in [WORK.md](../WORK.md); full workbench acceptance and installed Studio delivery
+remain separate.
+
 ## Authored table arrangement defaults
 
 Import `nyx.collections.arrangement` with the existing view and typed-field units

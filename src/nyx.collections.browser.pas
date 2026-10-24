@@ -135,6 +135,7 @@ uses
   Math,
   nyx.text,
   nyx.state,
+  nyx.formatting,
   nyx.editing,
   nyx.editing.browser,
   nyx.collections,
@@ -4168,6 +4169,9 @@ begin
 end;
 
 procedure TBrowserRow.Sync(AValuesChanged: Boolean);
+const
+  CPresentationNames: array[TNyxValuePresentationOutcome] of String =
+    ('canonical', 'formatted', 'unavailable');
 var
   LIndex: Integer;
   LText: TNyxText;
@@ -4176,6 +4180,27 @@ var
   LPrevious: Integer;
   LColumn: TNyxCollectionColumn;
   LEditing: Boolean;
+  LPresentation: TNyxValuePresentation;
+
+  procedure ApplyLabel;
+  begin
+    LPresentation := FOwner.FView.Spec.ColumnAt(LIndex)
+      .Present(LData.Item(FRef), LData.Schema);
+    FLabels[LIndex].textContent := LPresentation.Text;
+    { Status is observable independently of text. A refusal marker and tooltip
+      never re-label canonical RAW as a successful formatted representation. }
+    FLabels[LIndex].setAttribute('data-nyx-display-outcome',
+      CPresentationNames[LPresentation.Outcome]);
+
+    if LPresentation.Outcome = nvpoUnavailable then
+    begin
+      FLabels[LIndex].setAttribute('title', LPresentation.Diagnostic);
+    end
+    else
+    begin
+      FLabels[LIndex].removeAttribute('title');
+    end;
+  end;
 begin
   { Compare accepted scalar values per cell, rather than treating every dataset
     publication as permission to replace every draft. Stable row identities keep
@@ -4258,7 +4283,7 @@ begin
 
         if FLabels[LIndex] <> nil then
         begin
-          FLabels[LIndex].textContent := LText;
+          ApplyLabel;
         end;
       end;
     end
@@ -4266,8 +4291,7 @@ begin
     begin
       { Unchanged label nodes are retained just like editors. Reassigning
         textContent also destroys their DOM text node and needlessly repaints. }
-      LText := FOwner.FView.CellText(FRef, LIndex);
-      FLabels[LIndex].textContent := LText;
+      ApplyLabel;
     end;
   end;
 
@@ -5232,7 +5256,7 @@ begin
       for LRow := 0 to Min(31, LData.Count - 1) do
       begin
         LNatural := Max(LNatural, LContext.measureText(
-          FView.CellText(LData.ItemAt(LRow).Ref, LColumn)).width);
+          FView.Spec.ColumnAt(LColumn).Display(LData.ItemAt(LRow), LData.Schema)).width);
       end;
       FColumnNatural[LColumn] := Max(48, Ceil(LNatural + 24));
     end;

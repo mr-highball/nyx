@@ -47,7 +47,7 @@ uses
   nyx.collections.selection, nyx.collections.query, nyx.collections.query.editor,
   { BEGIN QUERY_CONTROL_READ_IMPORT }
   nyx.collections.query.policy,
-  nyx.collections.arrangement,
+  nyx.collections.arrangement, nyx.formatting,
   { END QUERY_CONTROL_READ_IMPORT }
   { BEGIN QUERY_POLICY_EDIT_IMPORTS }
   nyx.collections.columns, nyx.collections.paging,
@@ -1435,7 +1435,8 @@ var
               LIntent.ColumnQuery := NyxColumnQuery.Operators([nqcEqual]);
             end;
           end;
-        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout:
+        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
+        scaColumnFormat, scaDefaultColumnFormat:
           begin
             { Layout commands carry their own complete binding/schema baseline;
               they must not borrow the independent query editor's draft proof. }
@@ -1448,7 +1449,7 @@ var
               LActionDocument.Free;
             end;
 
-            if LAction in [scaColumnLayout, scaDefaultColumnLayout] then
+            if LAction in [scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
             begin
               LIntent.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('caption'));
             end;
@@ -1463,6 +1464,11 @@ var
             begin
               LIntent.ColumnLayout := NyxColumnLayout.PinEnd
                 .AllowOnly([nclfResize, nclfPinning]);
+            end;
+
+            if LAction = scaColumnFormat then
+            begin
+              LIntent.ColumnFormat := NyxValueFormat.TextAffixes('[', ']');
             end;
           end;
         { END CURRENT_INTENT_PAYLOADS }

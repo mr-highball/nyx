@@ -92,6 +92,7 @@ uses
   Graphics,
   LCLType,
   nyx.state,
+  nyx.formatting,
   nyx.editing,
   nyx.editing.lcl,
   nyx.data,
@@ -217,6 +218,8 @@ type
     constructor Create(AOwner: TNativeMount);
     destructor Destroy; override;
     function Text(AColumn, ARow: Integer): TNyxText;
+    function Display(AColumn, ARow: Integer;
+      out APresentation: TNyxValuePresentation): TNyxText;
     function Editable(AColumn, ARow: Integer): Boolean;
     procedure Revoke;
   end;
@@ -474,6 +477,8 @@ type
     function CanonicalColumn(AGrid: TStringGrid; APhysical: Integer): Integer;
     function GridForColumn(ACanonical: Integer; out APhysical: Integer): TStringGrid;
     function CanonicalText(AColumn, ARow: Integer): TNyxText;
+    function CanonicalDisplay(AColumn, ARow: Integer;
+      out APresentation: TNyxValuePresentation): TNyxText;
     function CanonicalEditable(AColumn, ARow: Integer): Boolean;
     function MainEditable(AColumn, ARow: Integer): Boolean;
     function ReadColumnEditor: TColumnEditLease;
@@ -587,6 +592,8 @@ type
     { Pure UI-thread read, clipped during native geometry/teardown transitions.
       It borrows the view only while this mount owns the grid reader. }
     function GridText(AColumn, ARow: Integer): TNyxText;
+    function GridDisplay(AColumn, ARow: Integer;
+      out APresentation: TNyxValuePresentation): TNyxText;
     procedure QueryColumn(AColumn: Integer; AFilter, AAppend: Boolean);
     function EditText(const AItem: TNyxItemRef; AColumn: Integer;
       const AValue: TNyxText): TNyxText;
@@ -2274,6 +2281,11 @@ begin
   Grid.RowCount := 2;
   Grid.FixedRows := 1;
   Grid.AttachReader(Text);
+
+  if AOwner.FView.Spec.HasColumnFormat then
+  begin
+    Grid.AttachDisplayReader(Display);
+  end;
   Grid.AttachEditReader(Editable);
   Grid.ObserveValidationIdle(AOwner.ColumnValidationIdle);
   Grid.ObserveColumnDoubleClick(AOwner.ColumnDoubleClick);
@@ -2369,6 +2381,18 @@ begin
   if (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns)) then
   begin
     Result := Owner.CanonicalText(Columns[AColumn], ARow);
+  end;
+end;
+
+function TColumnPane.Display(AColumn, ARow: Integer;
+  out APresentation: TNyxValuePresentation): TNyxText;
+begin
+  Result := '';
+  APresentation := Default(TNyxValuePresentation);
+
+  if (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns)) then
+  begin
+    Result := Owner.CanonicalDisplay(Columns[AColumn], ARow, APresentation);
   end;
 end;
 
@@ -2584,6 +2608,33 @@ begin
       nskNumber: Result := LValue.NumberText;
     end;
     Result := DisplayText(Result);
+  end;
+end;
+
+function TNativeMount.CanonicalDisplay(AColumn, ARow: Integer;
+  out APresentation: TNyxValuePresentation): TNyxText;
+var
+  LData: INyxCollectionSnapshot;
+begin
+  Result := CanonicalText(AColumn, ARow);
+  APresentation := NyxCanonicalPresentation(TNyxStateValue.FromText(Result));
+
+  if (ARow <= 0) or (AColumn < 0) or (AColumn >= FColumnLayout.Count) then
+  begin
+    Exit;
+  end;
+  LData := FColumnRendering;
+
+  if LData = nil then
+  begin
+    LData := FRendered;
+  end;
+
+  if (LData <> nil) and (ARow <= LData.Count) then
+  begin
+    APresentation := FColumnLayout.ColumnAt(AColumn).Column
+      .Present(LData.ItemAt(ARow - 1), LData.Schema);
+    Result := DisplayText(APresentation.Text);
   end;
 end;
 
@@ -4179,7 +4230,7 @@ begin
         for LRow := 0 to LSample - 1 do
         begin
           LWidth := Max(LWidth, FGrid.Canvas.TextWidth(DisplayText(
-            FView.CellText(AData.ItemAt(LRow).Ref, LColumn))) + 16);
+            FView.Spec.ColumnAt(LColumn).Display(AData.ItemAt(LRow), AData.Schema))) + 16);
         end;
         FColumnNatural[LColumn] := Min(MaximumNyxLayoutBound,
           Max(1, Round(LWidth / LScale)));
@@ -5163,6 +5214,11 @@ begin
         end;
         FGrid := TStringGrid(AControl);
 
+        if AView.Spec.HasColumnFormat and not (FGrid is TNyxCollectionStringGrid) then
+        begin
+          raise ENyxCollection.Create('Display formatting requires the native Nyx collection grid');
+        end;
+
         if FHasColumnLayout and not (FGrid is TNyxCollectionStringGrid) then
         begin
           raise ENyxCollection.Create('Column arrangement requires the Nyx native table grid');
@@ -5215,6 +5271,11 @@ begin
         if FGrid is TNyxCollectionStringGrid then
         begin
           TNyxCollectionStringGrid(FGrid).AttachReader(GridText);
+
+          if AView.Spec.HasColumnFormat then
+          begin
+            TNyxCollectionStringGrid(FGrid).AttachDisplayReader(GridDisplay);
+          end;
           FGridReaderAttached := True;
 
           if FHasColumnLayout then
@@ -5920,6 +5981,34 @@ begin
   if (ARow > 0) and (ARow <= LData.Count) then
   begin
     Result := DisplayText(FView.CellText(LData.ItemAt(ARow - 1).Ref, AColumn));
+  end;
+end;
+
+function TNativeMount.GridDisplay(AColumn, ARow: Integer;
+  out APresentation: TNyxValuePresentation): TNyxText;
+var
+  LData: INyxCollectionSnapshot;
+begin
+
+  if FHasColumnLayout then
+  begin
+    Exit(CanonicalDisplay(CanonicalColumn(FGrid, AColumn), ARow, APresentation));
+  end;
+  Result := GridText(AColumn, ARow);
+  APresentation := NyxCanonicalPresentation(TNyxStateValue.FromText(Result));
+
+  if (FView = nil) or (ARow <= 0) or (AColumn < 0) or
+    (AColumn >= FView.Spec.Count) then
+  begin
+    Exit;
+  end;
+  LData := FRendered;
+
+  if (LData <> nil) and (ARow <= LData.Count) then
+  begin
+    APresentation := FView.Spec.ColumnAt(AColumn)
+      .Present(LData.ItemAt(ARow - 1), LData.Schema);
+    Result := DisplayText(APresentation.Text);
   end;
 end;
 

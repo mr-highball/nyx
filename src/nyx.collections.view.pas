@@ -1586,6 +1586,11 @@ begin
     raise ENyxCollection.Create('Column arrangement requires a table projection');
   end;
 
+  if ASpec.HasColumnFormat and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Column display policies require a table projection');
+  end;
+
   if ASpec.PagingPolicy.Defined and (AProjection = cpTree) then
   begin
     raise ENyxCollection.Create('Tree paging requires a hierarchy-aware policy');
@@ -1737,6 +1742,13 @@ begin
     raise ENyxCollection.Create('Column arrangement requires a table projection');
   end;
 
+
+
+  if ASpec.HasColumnFormat and (AProjection <> cpTable) then
+  begin
+    raise ENyxCollection.Create('Column display policies require a table projection');
+  end;
+
   if ASpec.PagingPolicy.Defined and (AProjection = cpTree) then
   begin
     { A flat interval could detach a child from its ancestor. Reject before
@@ -1821,6 +1833,7 @@ begin
           raise ENyxCollection.Create('Collection column type differs from its schema: ' +
             LColumn.FieldName);
         end;
+        LColumn.ValidateDisplay(LSchema);
         LFound := True;
       end;
     end;

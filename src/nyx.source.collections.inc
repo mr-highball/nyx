@@ -274,6 +274,7 @@ begin
         SameText(LMethod, 'UseDefaultColumnQuery') or
         SameText(LMethod, 'UseDefaultTableQuery') or
         SameText(LMethod, 'UseDefaultColumnLayout') or
+        SameText(LMethod, 'UseDefaultColumnFormat') or
         SameText(LMethod, 'UseDefaultTableLayout') or
         SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
       begin
@@ -347,6 +348,28 @@ begin
           Fail('ColumnLayout requires a typed NyxColumnLayout policy');
         end;
         Result.CollectionView := Result.CollectionView.ColumnLayout(LArgs[0].ColumnLayoutPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'ColumnFormat') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkValueFormat) then
+        begin
+          Fail('ColumnFormat requires a typed NyxValueFormat policy');
+        end;
+        Result.CollectionView := Result.CollectionView.ColumnFormat(LArgs[0].ValueFormat);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultColumnFormat') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('UseDefaultColumnFormat takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultColumnFormat;
         Continue;
       end;
 
@@ -618,6 +641,13 @@ begin
 
       if Length(LArgs) = 3 then
       begin
+
+        if (LKind = nskText) and (LArgs[2].Kind = vkClockDomain) then
+        begin
+          Result.CollectionSchema := Result.CollectionSchema.Text(NyxTextField(LArgs[0].Text),
+            LValue.TextValue, LArgs[2].TimeDomain);
+          Continue;
+        end;
 
         if (LArgs[2].Kind <> vkDomain) or (LArgs[2].Ordinal <> Ord(LKind)) then
         begin

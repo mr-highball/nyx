@@ -762,6 +762,7 @@ uses
   nyx.typeahead,
   nyx.collections.columns,
   nyx.collections.arrangement,
+  nyx.formatting,
   nyx.collections.query.policy,
   nyx.collections.query.controls,
   nyx.collections.paging,
@@ -895,7 +896,8 @@ type
     vkDiagramPortRef, vkDiagramPort, vkKanbanIntent, vkKanbanOptions, vkKanbanLane,
     vkDateRangeOptions, vkMasterDetailOptions, vkMasterDetailIntent,
     vkButtonPresentation, vkGlyphCell, vkButtonContent, vkButtonDensity,
-    vkButtonAlignment, vkButtonWeight, vkGlyphTone);
+    vkButtonAlignment, vkButtonWeight, vkGlyphTone,
+    vkValueFormat, vkFormatLocale, vkFormatterRef, vkFormatDateOrder);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -964,6 +966,8 @@ type
     ColumnQueryPolicy: TNyxColumnQueryPolicy;
     TableQueryPolicy: TNyxTableQueryPolicy;
     ColumnLayoutPolicy: TNyxColumnLayoutPolicy;
+    ValueFormat: TNyxValueFormat;
+    FormatLocale: TNyxFormatLocale;
     TableLayoutPolicy: TNyxTableLayoutPolicy;
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
@@ -1112,6 +1116,7 @@ type
     procedure ReferenceAssignment(AIndex: Integer);
     procedure Defaults;
     function CollectionConstructor(const AName: TNyxText): TValue;
+    function FormattingConstructor(const AName: TNyxText): TValue;
     function QueryConstructor(const AName: TNyxText): TValue;
     function ComputedExpressionConstructor(const AName: TNyxText): TValue;
     function ComputedExpressionMethods(const AExpression: INyxExpression): TValue;
@@ -1721,6 +1726,9 @@ begin
   RegisterEnum(vkColumnPin, Ord(ncpNone), 'ncpNone');
   RegisterEnum(vkColumnPin, Ord(ncpStart), 'ncpStart');
   RegisterEnum(vkColumnPin, Ord(ncpEnd), 'ncpEnd');
+  RegisterEnum(vkFormatDateOrder, Ord(nfdoYearMonthDay), 'nfdoYearMonthDay');
+  RegisterEnum(vkFormatDateOrder, Ord(nfdoDayMonthYear), 'nfdoDayMonthYear');
+  RegisterEnum(vkFormatDateOrder, Ord(nfdoMonthDayYear), 'nfdoMonthDayYear');
   RegisterEnum(vkColumnLayoutFeature, Ord(nclfResize), 'nclfResize');
   RegisterEnum(vkColumnLayoutFeature, Ord(nclfAutoSize), 'nclfAutoSize');
   RegisterEnum(vkColumnLayoutFeature, Ord(nclfReorder), 'nclfReorder');
@@ -2655,6 +2663,7 @@ begin
 end;
 
 {$I nyx.source.collections.inc}
+{$I nyx.source.formatting.inc}
 {$I nyx.source.query.inc}
 {$I nyx.source.expressions.inc}
 {$I nyx.source.menus.inc}
@@ -3733,6 +3742,12 @@ begin
         if (LName = 'nyxcollectionquery') or (LName = 'nyxwhere') or (LName = 'nyxsort') then
         begin
           Exit(QueryConstructor(LName));
+        end;
+
+        if (LName = 'nyxvalueformat') or (LName = 'nyxformatlocale') or
+          (LName = 'nyxformatter') then
+        begin
+          Exit(FormattingConstructor(LName));
         end;
 
         if (LName = 'nyxbooleanexpression') or (LName = 'nyxtextexpression') or
@@ -6727,6 +6742,8 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.arrangement') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.formatting') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.resources') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.master.detail') then
       begin

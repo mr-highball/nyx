@@ -585,6 +585,12 @@ begin
   Result := AddField(AField.Name, TNyxStateValue.FromText(ADefault), ADomain.Definition);
 end;
 
+function TNyxCollectionSchema.Text(const AField: TNyxTextFieldRef;
+  const ADefault: TNyxText; const ADomain: TNyxTimeDomain): TNyxCollectionSchema;
+begin
+  Result := AddField(AField.Name, TNyxStateValue.FromText(ADefault), ADomain.Definition);
+end;
+
 function TNyxCollectionSchema.Boolean(const AField: TNyxBooleanFieldRef;
   const ADefault: Boolean): TNyxCollectionSchema;
 begin

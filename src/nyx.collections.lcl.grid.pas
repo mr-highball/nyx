@@ -28,13 +28,17 @@ interface
 uses
   Classes, Types, Controls, Grids, LMessages, LCLType, nyx.text,
   nyx.collections.mount, nyx.gestures.lcl, nyx.widgets.lcl,
-  nyx.collections.arrangement;
+  nyx.collections.arrangement, nyx.formatting, nyx.state;
 
 type
   { Native-only pure text reader. The grid borrows its receiver; its mount must
     detach before releasing the receiver/view or destroying the widget. Reads
     run on the UI thread and must not publish commands or dispose the widget. }
   TNyxGridTextReader = function(AColumn, ARow: Integer): TNyxText of object;
+  { Paint-only borrowed receiver returns target-safe text together with exact
+    portable outcome/RAW/diagnostic facts from the same pure presentation read. }
+  TNyxGridDisplayReader = function(AColumn, ARow: Integer;
+    out APresentation: TNyxValuePresentation): TNyxText of object;
   { Pure per-cell edit admission for arranged data surfaces. Like the text
     reader this borrows its receiver and must neither publish nor dispose it. }
   TNyxGridEditReader = function(AColumn, ARow: Integer): Boolean of object;
@@ -189,6 +193,9 @@ type
   TNyxCollectionStringGrid = class(TStringGrid)
   private
     FReader: TNyxGridTextReader;
+    { Paint-only accepted display. Cells and LCL's edit/validation path retain
+      their canonical reader; formatted labels can never become editor input. }
+    FDisplayReader: TNyxGridDisplayReader;
     FEditReader: TNyxGridEditReader;
     FValidationEpoch: INyxGridValidationEpoch;
     FValidationActivity: INyxGridValidationActivity;
@@ -306,6 +313,11 @@ type
     { Nil or a second active reader refuses. Caller retains/disconnects the
       exclusive receiver; no managed backreference or ownership transfer occurs. }
     procedure AttachReader(AReader: TNyxGridTextReader);
+    procedure AttachDisplayReader(AReader: TNyxGridDisplayReader);
+    { The same paint-only projection is observable by native target consumers.
+      It borrows the exclusive mount receiver until DetachReader retires it. }
+    function DisplayCellText(AColumn, ARow: Integer): TNyxText;
+    function DisplayCellPresentation(AColumn, ARow: Integer): TNyxValuePresentation;
     procedure AttachEditReader(AReader: TNyxGridEditReader);
     { Ends borrowing and clears overlays. Ordinary physical LCL cells remain;
       disconnect does not materialize the former entire bound dataset. }
@@ -1706,13 +1718,47 @@ end;
 
 procedure TNyxCollectionStringGrid.DrawCellText(AColumn, ARow: Integer;
   ARect: TRect; AState: TGridDrawState; AText: String);
+var
+  LSurface: INyxGridInputSurface;
+  LFrame: INyxNativeGestureFrame;
 begin
+  LSurface := FInputSurface;
+  LFrame := nil;
 
-  if (ARow = 0) and (FColumnToolbarHeight > 0) then
+  if LSurface <> nil then
   begin
-    ARect.Top := Min(ARect.Bottom, ARect.Top + FColumnToolbarHeight);
+    LFrame := LSurface.Frame;
+    LFrame.Enter;
   end;
-  inherited DrawCellText(AColumn, ARow, ARect, AState, AText);
+  try
+
+    if (LSurface <> nil) and not LSurface.Current then
+    begin
+      Exit;
+    end;
+
+    if Assigned(FDisplayReader) then
+    begin
+      AText := DisplayCellText(AColumn, ARow);
+    end;
+
+    if (LSurface <> nil) and not LSurface.Current then
+    begin
+      Exit;
+    end;
+
+    if (ARow = 0) and (FColumnToolbarHeight > 0) then
+    begin
+      ARect.Top := Min(ARect.Bottom, ARect.Top + FColumnToolbarHeight);
+    end;
+    inherited DrawCellText(AColumn, ARow, ARect, AState, AText);
+  finally
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
+  end;
 end;
 
 procedure TNyxCollectionStringGrid.MouseDown(Button: TMouseButton;
@@ -2409,6 +2455,7 @@ begin
     FValidationEpoch := nil;
   end;
   FReader := nil;
+  FDisplayReader := nil;
   FEditReader := nil;
   { The extra editor has exactly one component owner. Deselect it while the
     grid protocol is intact, then free it before inherited frees its OWN
@@ -2829,7 +2876,41 @@ end;
 procedure TNyxCollectionStringGrid.DetachReader;
 begin
   FReader := nil;
+  FDisplayReader := nil;
   FOverrides := nil;
+end;
+
+procedure TNyxCollectionStringGrid.AttachDisplayReader(AReader: TNyxGridDisplayReader);
+begin
+
+  if not Assigned(AReader) or Assigned(FDisplayReader) then
+  begin
+    raise ENyxCollection.Create('Grid requires one exclusive display reader');
+  end;
+  FDisplayReader := AReader;
+end;
+
+function TNyxCollectionStringGrid.DisplayCellText(AColumn, ARow: Integer): TNyxText;
+var
+  LPresentation: TNyxValuePresentation;
+begin
+
+  if Assigned(FDisplayReader) then
+  begin
+    Exit(FDisplayReader(AColumn, ARow, LPresentation));
+  end;
+  Result := Cells[AColumn, ARow];
+end;
+
+function TNyxCollectionStringGrid.DisplayCellPresentation(AColumn, ARow: Integer): TNyxValuePresentation;
+begin
+
+  if Assigned(FDisplayReader) then
+  begin
+    FDisplayReader(AColumn, ARow, Result);
+    Exit;
+  end;
+  Result := NyxCanonicalPresentation(TNyxStateValue.FromText(Cells[AColumn, ARow]));
 end;
 
 procedure TNyxCollectionStringGrid.ResetReadCount;

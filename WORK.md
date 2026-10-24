@@ -187,6 +187,66 @@ this Copy change. Evidence is under build/qualification/data-copy-02. Its exact
 loopback preview host47556 is stopped/joined, port19142 has no listener, and all
 four temporary test tabs are closed; the user's original tabs remain untouched.
 
+Lil' Scooty's later formatting05 cohort passes57 native checks with a complete
+clean heap (450907 allocations/frees) and57 actual browser checks with empty
+warning/error logs. It covers nullable/explicit v9 policy presence, typed
+format/RAW/Fit sampling, source replay and ordinary Studio form/paired history.
+Earlier03 enum-set-range and04 fixture-facet compile failures remain retained.
+The browser's seven staged artifact pins reverify unchanged; temporary host53472
+is stopped/joined, port19143 has no listener and tab107 is closed. Actual target
+painting/input, inherited/masked reusable authoring and additive semantic schema
+checks remain the helper's next prerequisite. Root review additionally identifies
+expected display refusal on valid unrestricted values (such as Decimal on1E100
+or exact rounding of1.125). Target hosts must surface that refusal while keeping
+paint/refresh, accepted RAW values and drafts usable; pure refusal alone does
+not establish that host behavior. The formatting integration remains uncommitted
+and does not close the original task criteria. Snapshot-copy checkpointf1864b4
+is pushed and remote-verified independently of those working helper changes.
+
+The subsequent bounded native diagnostic11 joins at its declared300s limit,
+stage4/check191 during Undo readiness; it is not a functional pass and has no
+complete heap. All2267 isolated source pins reverify unchanged. Private clocks
+identify native handle creation and repeated layout/staging as the larger costs:
+one367-node Inspector needs2782ms to create handles after250ms of control
+construction. Inclusive phase totals overlap and must not be added across
+layers. The product contract and label-size caches already exist; this review
+does not add a redundant cache or drop the initial-selection handle safeguard.
+
+Own12 captures2273 current files, including immutable Copy and the helper's
+typed column integration, into a verified private source tree. A fresh full
+query-authoring build uses optional -O2 while preserving assertions, range,
+overflow and I/O checks, debug lines, heap tracing and the original900s limit.
+Its native, browser and source-worker compilation precedes the native runs;
+the wrapper still requires both widths and each journey's own generated
+application. The optimized configuration is separate evidence from the prior
+unoptimized failures. The unrelated formatting pure fixture in this private
+capture predates the helper's later import-assertion correction.
+
+Formatting09 independently passes71 native pure,182 native semantic-schema,
+245 native full-semantic and26 actual native control checks, with complete clean
+heaps. Its generated all-style application passes72 natively and72 in the actual
+browser, logs empty, against the same generated source; all seven staged browser
+artifacts reverify unchanged. Host47720 is stopped/joined, port19144 has no
+listener and test tab108 is closed. Later review adds an uninvoked-program
+coexistence case and removes a duplicate resources import. Cohort10 exposes an
+overly punctuation-specific test, not an import failure: the formatter import
+correctly ends the uses clause. Cohort11 checks actual interface-import identity
+while retaining Unicode and exact typed-expression assertions. It passes73 pure
+native and26 actual native control checks with complete clean heaps and zero
+owned warnings; the actual control process is joined and absent before Root's
+full native run. The current11 browser pure suite passes73 and actual controls
+pass25 at verified1280x900 and390x900, all with empty warning/error logs; native26
+has one extra deferred-application-error assertion. The exact updated generated
+application passes74 natively with a complete clean heap and74 in the browser,
+logs empty. Current full browser semantic execution remains live after
+navigation/observer deadlines; it is not restarted or counted as passed. Root
+owns that tab and its temporary loopback host. Full W1/W2 stays open. Root
+independently reviews the new policy/paint/source boundaries; Lil' Scooty reviews
+the optimized-build diff and finds no concrete defect. The next approved W2
+packet is display copying through the existing request slot, followed by explicit
+readonly focused-draft capture. Both preserve the original RAW interface and
+command behavior.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

@@ -61,6 +61,11 @@ param(
   # Existing Pascal clocks/counters only; neither assertions nor compiler safety
   # flags change. Combine with Diagnostic for one bounded native1280 observation.
   [switch]$QueryAuthoringProfile,
+  # Optional compiler optimization keeps the same assertions, range/overflow/
+  # I/O checks, debug lines and heap tracing. Force fresh units: an ordinary PPU
+  # timestamp does not prove how its earlier optimization flags were selected.
+  # This changes compiler configuration, never the journey or its deadline.
+  [switch]$QueryAuthoringOptimize,
   [ValidateRange(1, 3600)]
   [int]$QueryAuthoringTimeoutSeconds = 300,
   # Cold full-Studio compiles can exceed the application-oriented300s default
@@ -386,6 +391,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ($QueryAuthoringOptimize -and $Target -ne 'query-authoring') {
+  throw 'Query-authoring optimization applies only to that target'
+}
+
 $nyxRoot = Split-Path -Parent $PSScriptRoot
 $nyxLocalConfig = Join-Path $nyxRoot '.local/toolchain.json'
 $nyxConfig = @{}
@@ -588,8 +598,11 @@ try {
       }
     }
     $nyxAuthoringFullRebuild = ($nyxAuthoringCachePaths.Count -eq 0) -or
-      ($Target -eq 'query-authoring' -and $QueryAuthoringProfile)
+      ($Target -eq 'query-authoring' -and ($QueryAuthoringProfile -or $QueryAuthoringOptimize))
     $nyxWorkbenchFlags = @('-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
+    if ($QueryAuthoringOptimize) {
+      $nyxWorkbenchFlags += '-O2'
+    }
     if ($nyxAuthoringFullRebuild) {
       $nyxWorkbenchFlags = @('-B') + $nyxWorkbenchFlags
     }
@@ -612,9 +625,10 @@ try {
       # including units found in explicitly supplied non-profile outputs. Keep
       # their search paths but force fresh instrumentation rather than claiming
       # ordinary source/dependency checks certify the previous define history.
-      [ordered]@{mode=if($QueryAuthoringProfile){'profile-rebuild'}elseif($nyxAuthoringCachePaths.Count -gt 0){'explicit-unit-cache'}else{'cold-rebuild'};
+      [ordered]@{mode=if($QueryAuthoringProfile){'profile-rebuild'}elseif($QueryAuthoringOptimize){'optimized-rebuild'}elseif($nyxAuthoringCachePaths.Count -gt 0){'explicit-unit-cache'}else{'cold-rebuild'};
         directories=@($nyxAuthoringCachePaths);normalSourceAndDependencyChecks=$true;
         fullRebuild=$nyxAuthoringFullRebuild;profileInstrumentation=[bool]$QueryAuthoringProfile;
+        optimizedCheckedBuild=[bool]$QueryAuthoringOptimize;
         freshNativeOutput=$nyxWorkbenchNative;
         compiler=$nyxLclFpc;arguments=$nyxWorkbenchFlags} | ConvertTo-Json -Depth 8 |
         Set-Content -LiteralPath (Join-Path $nyxWorkbenchRoot 'native-unit-cache-private.json') -Encoding UTF8

@@ -653,7 +653,7 @@ begin
       (LProperties.Field('op').Field('const').AsText = 'bind') then
     begin
       LData := LProperties.Field('spec').Field('oneOf');
-      Check(LData.Count = 8, 'semantic discovery retains all former versions plus authored layout v8');
+      Check(LData.Count = 9, 'semantic discovery retains all former versions plus display v9');
       LVersion := LData.Item(6);
       Check((LVersion.Field('properties').Field('version').Field('const').AsInteger = 7) and
         (LVersion.Field('required').Count = 10) and

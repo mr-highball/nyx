@@ -429,6 +429,11 @@ begin
       Result := Result.ColumnSizing(LColumn.Sizing);
     end;
 
+    if LColumn.HasFormatPolicy then
+    begin
+      Result := Result.ColumnFormat(LColumn.FormatPolicy);
+    end;
+
     if LPrevious.HasTypeAhead then
     begin
       Result := Result.TypeAhead(LPrevious.TypeAheadPolicy);
