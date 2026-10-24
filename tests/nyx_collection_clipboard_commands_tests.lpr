@@ -28,10 +28,15 @@ uses
   nyx.collections.view, nyx.collections.view.types, nyx.collections.selection,
   nyx.collections.query, nyx.collections.arrangement, nyx.collections.mount,
   nyx.collections.clipboard, nyx.collections.clipboard.actions,
-  nyx.collections.clipboard.commands, nyx.clipboard, nyx.scheduler, nyx.events
+  nyx.collections.clipboard.commands, nyx.collections.representation,
+  nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events
   {$ifdef PAS2JS}, Web{$endif};
 
 type
+  { Injected host cleanup may synchronously admit a newer canonical command;
+    no event loop, real clipboard or timing assumption is involved. }
+  TEndingCallback = procedure of object;
+
   { Explicit async receiver ownership is independent of the fixture/controller.
     Counts prove that captured-write arbitration releases the old receiver and
     terminal inline failure cannot replay it. }
@@ -91,6 +96,7 @@ type
     Text: TNyxText;
     InlineCompletion: Boolean;
     ThrowEnd: Boolean;
+    OnEnding: TEndingCallback;
     Last: TWrite;
     LastLease: INyxClipboardWriteRequest;
     function BeginWriteText(const AText: TNyxText;
@@ -135,7 +141,10 @@ type
     LastPayload: INyxCollectionClipboardText;
     ThrowReply: Boolean;
     RevokeReply: Boolean;
-    constructor Create;
+    RepresentationReplies: Integer;
+    RepresentationValue: INyxCollectionCellText;
+    ThrowRepresentation: Boolean;
+    constructor Create(ADisplay: Boolean = False);
     destructor Destroy; override;
     function Readiness: INyxCancellationReadiness;
     procedure Reply(const APayload: INyxCollectionClipboardText;
@@ -143,6 +152,29 @@ type
     function Cell: INyxCollectionClipboardCommand;
     procedure Filter;
     procedure Restrict(const AActions: TNyxCollectionClipboardActions);
+    procedure Represented(const AValue: INyxCollectionCellText;
+      const AResult: TNyxClipboardWriteResult);
+    procedure NestedEnding;
+  end;
+
+  { Foreign representation getters can synchronously run an application action.
+    This proxy changes only the Text call; the controller must normalize copied
+    facts then refuse its old admission if that call admitted a newer command. }
+  TReentrantValue = class(TInterfacedObject, INyxCollectionCellText)
+  public
+    Value: INyxCollectionCellText;
+    OnText: TEndingCallback;
+    function GetRepresentation: TNyxCollectionCellRepresentation;
+    function GetText: TNyxText;
+    function GetRawText: TNyxText;
+    function GetByteCount: Integer;
+    function GetItem: TNyxItemRef;
+    function GetField: TNyxColumnIdentity;
+    function GetRevision: Integer;
+    function GetValue: TNyxStateValue;
+    function GetHasFormatter: Boolean;
+    function GetFormatter: TNyxValueFormat;
+    function GetDomain: TNyxValueDomain;
   end;
 
 const
@@ -153,6 +185,70 @@ var
   GDetached: Integer;
   GCapturedReplies: Integer;
   GCapturedDestroyed: Integer;
+
+function TReentrantValue.GetRepresentation: TNyxCollectionCellRepresentation;
+begin
+  Result := Value.Representation;
+end;
+
+function TReentrantValue.GetText: TNyxText;
+var
+  LCall: TEndingCallback;
+begin
+  Result := Value.Text;
+  LCall := OnText;
+  OnText := nil;
+
+  if Assigned(LCall) then
+  begin
+    LCall;
+  end;
+end;
+
+function TReentrantValue.GetRawText: TNyxText;
+begin
+  Result := Value.RawText;
+end;
+
+function TReentrantValue.GetByteCount: Integer;
+begin
+  Result := Value.ByteCount;
+end;
+
+function TReentrantValue.GetItem: TNyxItemRef;
+begin
+  Result := Value.Item;
+end;
+
+function TReentrantValue.GetField: TNyxColumnIdentity;
+begin
+  Result := Value.Field;
+end;
+
+function TReentrantValue.GetRevision: Integer;
+begin
+  Result := Value.Revision;
+end;
+
+function TReentrantValue.GetValue: TNyxStateValue;
+begin
+  Result := Value.Value;
+end;
+
+function TReentrantValue.GetHasFormatter: Boolean;
+begin
+  Result := Value.HasFormatter;
+end;
+
+function TReentrantValue.GetFormatter: TNyxValueFormat;
+begin
+  Result := Value.Formatter;
+end;
+
+function TReentrantValue.GetDomain: TNyxValueDomain;
+begin
+  Result := Value.Domain;
+end;
 
 destructor TCapturedReply.Destroy;
 begin
@@ -235,6 +331,11 @@ begin
   begin
     Inc(LOwner.Endings);
 
+    if Assigned(LOwner.OnEnding) then
+    begin
+      LOwner.OnEnding;
+    end;
+
     if LOwner.ThrowEnd then
     begin
       raise Exception.Create('');
@@ -267,7 +368,7 @@ begin
   end;
 end;
 
-constructor TFixture.Create;
+constructor TFixture.Create(ADisplay: Boolean);
 var
   LSpec: TNyxCollectionViewSpec;
 begin
@@ -285,6 +386,12 @@ begin
   LSpec := NyxCollectionView(Key).Selection(nsmMultiple)
     .Column(NyxTextField('Name'), 'Name')
     .Column(NyxIntegerField('Score'), 'Score').TableLayout(NyxTableLayout);
+
+  if ADisplay then
+  begin
+    LSpec := LSpec.ColumnFormat(NyxValueFormat.Decimal(2).Localized(
+      NyxFormatLocale.Named(NyxLocale('de-DE')).NumberSeparators(',', '.')));
+  end;
   View := NewNyxCollectionView(Store, LSpec, cpTable);
   View.SetSelection([ItemA, ItemB], ItemA, ItemA);
   Input := TInput.Create;
@@ -385,6 +492,29 @@ begin
     HostLease, Scheduler, TNyxCollectionClipboardOptions.Defaults.AllowOnly(AActions),
     {$ifdef PAS2JS}@{$endif}Readiness);
   Commands.Observe({$ifdef PAS2JS}@{$endif}Reply);
+end;
+
+procedure TFixture.Represented(const AValue: INyxCollectionCellText;
+  const AResult: TNyxClipboardWriteResult);
+begin
+  Inc(RepresentationReplies);
+  RepresentationValue := AValue;
+  Check((AResult.Outcome = ncwoWritten) and (AResult.ByteCount = AValue.ByteCount),
+    'represented observer receives actual outbound bytes and accepted provenance');
+
+  if ThrowRepresentation then
+  begin
+    raise Exception.Create('represented inline observer failure');
+  end;
+end;
+
+procedure TFixture.NestedEnding;
+var
+  LCommand: INyxCollectionClipboardCommand;
+begin
+  Host.OnEnding := nil;
+  LCommand := Cell;
+  LCommand.Complete(True);
 end;
 
 procedure TTestMount.SuspendInput(AValue: Boolean);
@@ -513,6 +643,147 @@ begin
     LCommand := nil;
     LPrepared := nil;
     LWriter := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ The optional represented port is exercised beside real RAW commands, not a
+  second controller. Its immutable formatter is captured by ordinary Prepare;
+  only an explicit action performs formatting and submits different bytes. }
+procedure RepresentedArbitration;
+var
+  LFixture: TFixture;
+  LWriter: INyxCollectionClipboardRepresentationWrite;
+  LCapture: INyxCollectionClipboardDisplayCapture;
+  LPrepared: INyxCollectionClipboardPreparedScope;
+  LCommand: INyxCollectionClipboardCommand;
+  LReady: INyxCancellationReadiness;
+  LScope: INyxCancellationScope;
+  LRaw: INyxCollectionClipboardText;
+  LValue: INyxCollectionCellText;
+  LPolicy: TNyxCollectionCellDisplayPolicy;
+  LTicket: INyxClipboardWriteRequest;
+  LOld: INyxClipboardWriteRequest;
+  LOldObject: TWrite;
+  LBefore: Integer;
+  LReplies: Integer;
+  LRefused: Boolean;
+  LProxy: TReentrantValue;
+  LProxyLease: INyxCollectionCellText;
+begin
+  LFixture := TFixture.Create(True);
+  try
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardRepresentationWrite, LWriter),
+      'same controller exposes optional explicit represented writes');
+    LWriter.ObserveRepresentation({$ifdef PAS2JS}@{$endif}LFixture.Represented);
+    LCommand := LFixture.Commands.BeginCell(LFixture.ItemA,
+      NyxColumnIdentity(NyxIntegerField('Score')));
+    LCommand.Prepare;
+    Check(LCommand.Current and Supports(LCommand, INyxCollectionClipboardDisplayCapture, LCapture) and
+      Supports(LCommand, INyxCollectionClipboardPreparedScope, LPrepared),
+      'ordinary RAW prepare captures optional original display metadata and readiness');
+    LRaw := LCommand.Payload;
+    LPolicy := LCapture.DisplayPolicy;
+    Check(LPolicy.Defined and LPolicy.Declared and LPolicy.Field.Same(LRaw.FieldAt(0)) and
+      (LRaw.Text = '1'), 'captured display policy never relabels the accepted RAW payload');
+    LValue := NewNyxCollectionCellDisplay(LRaw, LPolicy.Formatter, LPolicy.Domain);
+    LValue := CopyNyxCollectionCellText(LValue);
+    Check((LValue.Text = '1,00') and (LValue.RawText = '1') and
+      (LValue.Value.IntegerValue = 1) and (LValue.ByteCount > LRaw.ByteCount) and
+      (LValue.Formatter.Locale.Locale.Name = 'de-DE'),
+      'normalized display retains original locale, typed scalar, provenance and actual different bytes');
+    LReady := LPrepared.Readiness;
+    Check(Supports(LReady, INyxCancellationScope, LScope),
+      'captured represented request uses the original certified cancellation scope');
+    LCommand.Retire;
+    LFixture.Host.InlineCompletion := False;
+    LCommand := LFixture.Cell;
+    LCommand.Complete(True);
+    LOld := LFixture.Host.LastLease;
+    LOldObject := LFixture.Host.Last;
+    LBefore := LFixture.Host.Endings;
+    LReplies := LFixture.Replies;
+    LTicket := LWriter.WriteRepresented(LValue, LScope, LReady, nil, nil);
+    Check((LFixture.Host.Endings = LBefore + 1) and (LFixture.Host.Text = '1,00') and
+      (LFixture.Commands.Phase = nccpCancelled) and
+      (LWriter.RepresentationPhase = nccpPending),
+      'explicit display supersedes pending RAW through the same physical request slot');
+    LOldObject.Finish;
+    Check((LFixture.Replies = LReplies) and (LFixture.RepresentationReplies = 0),
+      'late displaced RAW completion cannot reply into represented output');
+    LOld := nil;
+    LFixture.Host.Last.Finish;
+    Check((LFixture.RepresentationReplies = 1) and (LFixture.Replies = LReplies) and
+      (LWriter.LastRepresentation.Text = '1,00') and
+      (LWriter.LastRepresentationResult.ByteCount = 4),
+      'represented terminal receipt stays separate from RAW observer and byte accounting');
+    LTicket := LWriter.WriteRepresented(LValue, LScope, LReady, nil, nil);
+    LBefore := LFixture.Host.Endings;
+    LCommand := LFixture.Cell;
+    LCommand.Complete(True);
+    Check((LFixture.Host.Endings = LBefore + 1) and (LFixture.Host.Text = CText) and
+      (LWriter.RepresentationPhase = nccpCancelled) and
+      (LFixture.Commands.Phase = nccpPending),
+      'fresh canonical RAW copy supersedes represented output in the same slot');
+    LBefore := LFixture.Host.Endings;
+    LTicket.Cancel;
+    Check((LFixture.Host.Endings = LBefore) and (LFixture.Commands.Phase = nccpPending),
+      'stale represented cancellation ticket cannot cancel the newer RAW owner');
+    LFixture.Host.OnEnding := {$ifdef PAS2JS}@{$endif}LFixture.NestedEnding;
+    LBefore := LFixture.Host.Writes;
+    LTicket := LWriter.WriteRepresented(LValue, LScope, LReady, nil, nil);
+    Check((LTicket = nil) and (LFixture.Host.Writes = LBefore + 1) and
+      (LFixture.Host.Text = CText) and (LFixture.Commands.Phase = nccpPending),
+      'nested newer canonical command during old-host cancellation wins before display host entry');
+    LProxy := TReentrantValue.Create;
+    LProxyLease := LProxy;
+    LProxy.Value := LValue;
+    LProxy.OnText := {$ifdef PAS2JS}@{$endif}LFixture.NestedEnding;
+    LBefore := LFixture.Host.Writes;
+    LTicket := LWriter.WriteRepresented(LProxyLease, LScope, LReady, nil, nil);
+    Check((LTicket = nil) and (LFixture.Host.Writes = LBefore + 1) and
+      (LFixture.Host.Text = CText) and (LFixture.Commands.Phase = nccpPending),
+      'new canonical admission inside a foreign represented getter fences the old normalization before any effect');
+    LProxyLease := nil;
+    LFixture.Host.Last.Finish;
+    LFixture.Host.InlineCompletion := True;
+    LFixture.ThrowRepresentation := True;
+    LBefore := LFixture.RepresentationReplies;
+    LRefused := False;
+    try
+      LTicket := LWriter.WriteRepresented(LValue, LScope, LReady, nil, nil);
+    except
+      on E: Exception do
+      begin
+        LRefused := E.Message = 'represented inline observer failure';
+      end;
+    end;
+    Check(LRefused and (LFixture.RepresentationReplies = LBefore + 1) and
+      (LWriter.RepresentationPhase = nccpCompleted),
+      'inline represented observer failure propagates once after terminal detachment');
+    LFixture.ThrowRepresentation := False;
+    LBefore := LFixture.Host.Writes;
+    Inc(LFixture.Input.EpochValue);
+    LRefused := False;
+    try
+      LTicket := LWriter.WriteRepresented(LValue, LScope, LReady, nil, nil);
+    except
+      on E: ENyxCollectionClipboard do LRefused := True;
+    end;
+    Check(LRefused and (LFixture.Host.Writes = LBefore),
+      'disable-style epoch ABA cannot reuse an old represented readiness proof');
+    LFixture.Commands.Revoke;
+    LTicket := LWriter.WriteRepresented(LValue, LScope, LReady, nil, nil);
+    Check((LTicket = nil) and (LFixture.Host.Writes = LBefore),
+      'retained represented facade remains inert after actual controller retirement');
+  finally
+    LCommand := nil;
+    LCapture := nil;
+    LPrepared := nil;
+    LWriter := nil;
+    LTicket := nil;
+    LOld := nil;
+    LProxyLease := nil;
     LFixture.Free;
   end;
 end;
@@ -825,6 +1096,7 @@ begin
   try
     Run;
     CapturedArbitration;
+    RepresentedArbitration;
     MountedAdmission;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-collection-clipboard-commands', 'passed');

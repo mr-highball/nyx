@@ -681,6 +681,7 @@ begin
   LRaw := NewNyxCollectionClipboardCell(LSource, LItem, NyxColumnIdentity(NyxTextField('Name')),
     TNyxCollectionClipboardLimits.Defaults);
   LRawText := NewNyxCollectionCellText(LRaw);
+  LRawText := CopyNyxCollectionCellText(LRawText);
   Check((LRawText.Representation = nccrAcceptedRaw) and not LRawText.HasFormatter and
     (LRawText.Text = LText) and (LRawText.RawText = LText) and
     (LRawText.ByteCount = NyxUTF8ByteCount(LText)),
@@ -688,12 +689,21 @@ begin
   LFormat := TNyxValueFormat.Canonical.TextAffixes('[', ']')
     .Identified(NyxFormatter('inspect text'), 2);
   LDisplay := NewNyxCollectionCellDisplay(LRaw, LFormat, NyxNoDomain);
+  LDisplay := CopyNyxCollectionCellText(LDisplay);
   Check((LDisplay.Representation = nccrFormattedDisplay) and
     (LDisplay.Text = '[' + LText + ']') and (LDisplay.RawText = LText) and
     (LDisplay.Value.TextValue = LText), 'display output is tagged and never overwrites accepted RAW provenance');
   Check((LDisplay.Item.Collection.Name = LKey.Name) and (LDisplay.Item.ID = LItem.ID) and
     LDisplay.Field.Same(NyxColumnIdentity(NyxTextField('Name'))) and
     (LDisplay.Revision = 0), 'display retains exact scoped row/full typed field/source revision');
+  LRefused := False;
+  try
+    CopyNyxCollectionCellText(LDisplay, NyxUTF8ByteCount(LText));
+  except
+    on E: ENyxCollectionRepresentation do LRefused := True;
+  end;
+  Check(LRefused and (LDisplay.Text = '[' + LText + ']') and (LRawText.Text = LText),
+    'foreign-value normalization admits actual representation bytes before any output authority');
   LRefused := False;
   try
     NewNyxCollectionCellDisplay(LRaw, LFormat, NyxNoDomain, NyxUTF8ByteCount(LText));

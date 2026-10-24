@@ -287,6 +287,32 @@ accessibility, visual-quality or full Studio speed claim. Root releases native
 UI for the helper's next W2 controls; a same-source bounded cost comparison is
 the next performance decision, rather than another equivalent full timed rerun.
 
+Display-copy04 now adds an explicit managed menu/inspector action using the
+original captured formatter/domain, with separate immutable represented output
+and result/observer projections through the existing request/host serial slot.
+RAW interfaces and output behavior remain unchanged. Strict display refusal
+opens explanation with the accepted-value fallback and never copies a paint
+marker. Original context, export, Unicode/NUL and draft-retention assertions stay
+intact. Source01/02/03 import/exhaustive-case failures and the first prelaunch
+runtime-wrapper refusal remain retained;04 emits zero owned warnings.
+Native command88, representation74 and actual controls179 pass with complete
+clean heaps; controls allocate/free3895227 blocks in9.41s. Actual browser command88,
+representation74 and controls222 at verified1280x900/390x900 pass with empty
+warning/error logs. Root reviews the separate receipt/cancellation/metadata paths
+without finding a concrete defect. All nine original/staged artifact pairs remain
+unchanged. Exact host54120 is stopped/joined, port19146 has no listener, tab110 is
+closed and the temporary viewport is reset. These are injected-host effects,
+not real OS clipboard/save or complete W2 acceptance. The next helper packet is
+readonly focused-draft capture; its disjoint portable unit is source-only now.
+
+Root's same-source native cost comparison has two successful checked profile
+compilers and a single180s observation per original/current renderer. Runtimes
+read the same fixed own12-derived inputs; only the before-parent visibility move
+differs. Early baseline observation overlaps the small browser copy cohort, so
+its elapsed times cannot establish a controlled production speedup. Native UI
+is reserved for this pair after helper controls release. Whole900s Studio
+qualification stays separate and open.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

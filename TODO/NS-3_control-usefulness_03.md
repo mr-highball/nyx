@@ -80,6 +80,13 @@ fails the same assertion. Existing disclosure34 and its own compiled35 complete
 lifetime checks pass with clean heaps. Effective ancestor/disclosure visibility
 is now applied before native parenting, while controls and initialization guards
 stay retained. Full native Studio performance remains open.
+The explicit display-copy04 packet passes88 command/74 representation checks per
+actual target,179 native control checks with a clean heap and222 browser control
+checks at verified desktop/compact sizes, logs empty. Managed menu/inspection
+uses captured formatter/domain and a separately tagged result on the original
+copy slot. Strict display refusal preserves a useful accepted-value fallback;
+RAW behavior remains unchanged. Explicit focused-draft capture/transfer is the
+next W2 packet and remains unqualified.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 

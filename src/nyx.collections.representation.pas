@@ -38,6 +38,26 @@ type
   TNyxCollectionCellRepresentation = (nccrAcceptedRaw, nccrFormattedDisplay,
     nccrExplicitDraft);
 
+  { Copied original column policy. Capturing metadata must never format the
+    accepted scalar or make valid RAW fail because of a display limitation. }
+  TNyxCollectionCellDisplayPolicy = record
+  private
+    FDefined: Boolean;
+    FDeclared: Boolean;
+    FField: TNyxColumnIdentity;
+    FFormatter: TNyxValueFormat;
+    FDomain: TNyxValueDomain;
+    function GetFormatter: TNyxValueFormat;
+    function GetDomain: TNyxValueDomain;
+  public
+    function Copy: TNyxCollectionCellDisplayPolicy;
+    property Defined: Boolean read FDefined;
+    property Declared: Boolean read FDeclared;
+    property Field: TNyxColumnIdentity read FField;
+    property Formatter: TNyxValueFormat read GetFormatter;
+    property Domain: TNyxValueDomain read GetDomain;
+  end;
+
   { Detached exact single-cell output. All item/full-field/revision/scalar facts
     are copied; no original payload, view/store, formatter/locale provider,
     editor or callback is retained. Value remains the accepted scalar even for
@@ -77,6 +97,13 @@ function NewNyxCollectionCellText(const ARaw: INyxCollectionClipboardText;
 function NewNyxCollectionCellDisplay(const ARaw: INyxCollectionClipboardText;
   const AFormatter: TNyxValueFormat; const ADomain: TNyxValueDomain;
   AMaximumUTF8Bytes: Integer = 4194304): INyxCollectionCellText;
+function NyxCollectionCellDisplayPolicy(const AField: TNyxColumnIdentity;
+  const AFormatter: TNyxValueFormat; const ADomain: TNyxValueDomain;
+  ADeclared: Boolean): TNyxCollectionCellDisplayPolicy;
+{ Normalize foreign getters before asynchronous host entry. Caller must retain
+  and recheck original authority around these outward calls. No input survives. }
+function CopyNyxCollectionCellText(const AValue: INyxCollectionCellText;
+  AMaximumUTF8Bytes: Integer = 4194304): INyxCollectionCellText;
 
 implementation
 
@@ -111,6 +138,125 @@ type
     function GetFormatter: TNyxValueFormat;
     function GetDomain: TNyxValueDomain;
   end;
+
+function NyxCollectionCellDisplayPolicy(const AField: TNyxColumnIdentity;
+  const AFormatter: TNyxValueFormat; const ADomain: TNyxValueDomain;
+  ADeclared: Boolean): TNyxCollectionCellDisplayPolicy;
+begin
+  AField.Validate;
+  AFormatter.ValidateDomain(AField.Kind, ADomain);
+  Result.FField := TNyxColumnIdentity.FromData(AField.ToData);
+  Result.FFormatter := AFormatter.Copy;
+  Result.FDomain := ADomain.Copy;
+  Result.FDeclared := ADeclared;
+  Result.FDefined := True;
+end;
+
+function TNyxCollectionCellDisplayPolicy.Copy: TNyxCollectionCellDisplayPolicy;
+begin
+
+  if not FDefined then
+  begin
+    Exit(Default(TNyxCollectionCellDisplayPolicy));
+  end;
+  Result := NyxCollectionCellDisplayPolicy(FField, FFormatter, FDomain, FDeclared);
+end;
+
+function TNyxCollectionCellDisplayPolicy.GetFormatter: TNyxValueFormat;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollectionRepresentation.Create('Cell has no captured display policy');
+  end;
+  Result := FFormatter.Copy;
+end;
+
+function TNyxCollectionCellDisplayPolicy.GetDomain: TNyxValueDomain;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollectionRepresentation.Create('Cell has no captured display domain');
+  end;
+  Result := FDomain.Copy;
+end;
+
+function CopyNyxCollectionCellText(const AValue: INyxCollectionCellText;
+  AMaximumUTF8Bytes: Integer): INyxCollectionCellText;
+var
+  LSource: INyxCollectionCellText;
+  LCell: TCellText;
+  LBytes: Integer;
+begin
+  LSource := AValue;
+
+  if (LSource = nil) or (AMaximumUTF8Bytes < 1) or (AMaximumUTF8Bytes > 4194304) then
+  begin
+    raise ENyxCollectionRepresentation.Create('Cell representation requires a bounded original value');
+  end;
+  LCell := TCellText.Create;
+  Result := LCell;
+  LCell.Representation := LSource.Representation;
+  LCell.Text := LSource.Text;
+  LCell.RawText := LSource.RawText;
+  LBytes := LSource.ByteCount;
+  LCell.Item := LSource.Item;
+  LCell.Field := LSource.Field;
+  LCell.Revision := LSource.Revision;
+  LCell.Value := LSource.Value.Copy;
+  LCell.HasFormatter := LSource.HasFormatter;
+  LCell.Domain := LSource.Domain.Copy;
+  LCell.Field.Validate;
+  LCell.Value.Validate;
+
+  if not LCell.Item.Defined or (LCell.Revision < 0) or
+    (LCell.Field.Kind <> LCell.Value.Kind) or
+    (LCell.RawText <> NyxRawScalarText(LCell.Value)) or
+    (NyxUTF8ByteCount(LCell.RawText) > AMaximumUTF8Bytes) or
+    (LBytes <> NyxUTF8ByteCount(LCell.Text)) or (LBytes > AMaximumUTF8Bytes) then
+  begin
+    raise ENyxCollectionRepresentation.Create('Represented cell has inconsistent scalar/provenance/byte facts');
+  end;
+  if (Ord(LCell.Representation) < Ord(Low(TNyxCollectionCellRepresentation))) or
+    (Ord(LCell.Representation) > Ord(High(TNyxCollectionCellRepresentation))) then
+  begin
+    raise ENyxCollectionRepresentation.Create('Unknown cell representation');
+  end;
+  case LCell.Representation of
+    nccrAcceptedRaw:
+      begin
+
+        if LCell.HasFormatter or LCell.Domain.Defined or (LCell.Text <> LCell.RawText) then
+        begin
+          raise ENyxCollectionRepresentation.Create('RAW cell cannot acquire display or draft facts');
+        end;
+      end;
+    nccrFormattedDisplay:
+      begin
+
+        if not LCell.HasFormatter then
+        begin
+          raise ENyxCollectionRepresentation.Create('Display cell requires its original formatter');
+        end;
+        LCell.Formatter := LSource.Formatter.Copy;
+
+        if LCell.Text <> LCell.Formatter.FormatValue(LCell.Value, LCell.Domain, AMaximumUTF8Bytes) then
+        begin
+          raise ENyxCollectionRepresentation.Create('Display bytes do not match the captured formatter/domain');
+        end;
+      end;
+    nccrExplicitDraft:
+      begin
+        { The focused-target constructor follows with its capture contract;
+          arbitrary tagged text cannot invent that proof here. }
+        raise ENyxCollectionRepresentation.Create('Explicit draft capture is not available through this boundary yet');
+      end;
+  end;
+  LCell.Item := NyxItem(NyxCollection(LCell.Item.Collection.Name), LCell.Item.ID);
+  LCell.Field := TNyxColumnIdentity.FromData(LCell.Field.ToData);
+  LCell.Bytes := LBytes;
+end;
 
 procedure TCellText.Capture(const ARaw: INyxCollectionClipboardText; AMaximum: Integer);
 var

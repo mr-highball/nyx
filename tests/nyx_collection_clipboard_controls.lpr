@@ -33,6 +33,7 @@ uses
   , nyx.collections.cell.actions, nyx.menu, nyx.popover, nyx.bytes,
   nyx.files.save, nyx.collections.paging, nyx.collections.export,
   nyx.collections.export.actions
+  , nyx.collections.representation, nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
     nyx.menu.browser, nyx.popover.browser
   {$else}, Interfaces, Forms, Controls, Grids, StdCtrls, Windows, LCLType, Types,
@@ -157,6 +158,7 @@ type
     FInspectorLegacyClicks: Integer;
     FReplies: Integer;
     FLastPayload: INyxCollectionClipboardText;
+    FContextColumn: Integer;
     {$ifdef PAS2JS}
     FRenderer: TNyxBrowserRenderer;
     FSurface: TJSHTMLElement;
@@ -178,6 +180,7 @@ type
     procedure InspectorAction(const AID: TNyxText);
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
+    procedure RunDisplayed; {$ifdef PAS2JS}async;{$endif}
     procedure ExportPaging(AEnabled: Boolean);
     procedure Semantic(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
@@ -282,18 +285,29 @@ begin
   Result := TNyxDocument.Create;
   try
     Result.Collections.Define(Dataset,
-      NyxCollectionSchema.Text(NyxTextField('Name'), '').Integer(NyxIntegerField('Score'), 0), [
+      NyxCollectionSchema.Text(NyxTextField('Name'), '').Integer(NyxIntegerField('Score'), 0)
+        .Number(NyxNumberField('Huge'), 0).Number(NyxNumberField('Exact'), 0)
+        .Text(NyxTextField('Clock'), '', NyxTimeDomain), [
         NyxCollectionItem(ItemA).WithValue(NyxTextField('Name'), CText)
-          .WithValue(NyxIntegerField('Score'), 1),
+          .WithValue(NyxIntegerField('Score'), 1)
+          .WithValue(NyxNumberField('Huge'), 1E100)
+          .WithValue(NyxNumberField('Exact'), 1.125)
+          .WithValue(NyxTextField('Clock'), '09:10:11'),
         NyxCollectionItem(ItemB).WithValue(NyxTextField('Name'), 'B')
-          .WithValue(NyxIntegerField('Score'), 2)]);
+          .WithValue(NyxIntegerField('Score'), 2)
+          .WithValue(NyxTextField('Clock'), '00:00:00')]);
     LPage := NewNyxPage('copy-page');
     LPage.Configure.Padding(12).Gap(8).Done;
     LTable := NewNyxTable(CTable);
     LTable.Configure.Height(240).Done;
     LTable.Binds.Collection(NyxCollectionView(Dataset).Selection(nsmMultiple)
       .Column(NyxTextField('Name'), 'Name', cmEditable)
-      .Column(NyxIntegerField('Score'), 'Score').TableLayout(NyxTableLayout));
+        .ColumnFormat(NyxValueFormat.TextAffixes('«', '»').Identified(NyxFormatter('full cell'), 3))
+      .Column(NyxIntegerField('Score'), 'Score')
+      .Column(NyxNumberField('Huge'), 'Huge').ColumnFormat(NyxValueFormat.Decimal(2))
+      .Column(NyxNumberField('Exact'), 'Exact').ColumnFormat(NyxValueFormat.Decimal(2, ndrExact))
+      .Column(NyxTextField('Clock'), 'Clock').ColumnFormat(NyxValueFormat.ClockTime(ntpMinute))
+      .TableLayout(NyxTableLayout));
     LPage.Add(LTable);
     Result.AddPage(LPage);
     Result.Validate;
@@ -494,8 +508,8 @@ end;
 function TCopyReview.Cell: TJSHTMLElement;
 begin
   Result := TJSHTMLElement(FTable.querySelector(
-    '[data-nyx-item="a"] [role="gridcell"][data-nyx-column="0"]'));
-  Check(Result <> nil, 'actual resident typed Name cell exists');
+    '[data-nyx-item="a"] [role="gridcell"][data-nyx-column="' + IntToStr(FContextColumn) + '"]'));
+  Check(Result <> nil, 'actual resident typed context cell exists');
 end;
 
 function TCopyReview.Key(AElement: TJSHTMLElement; const AKey: String;
@@ -520,7 +534,7 @@ begin
   {$ifdef PAS2JS}
   Cell.focus;
   {$else}
-  FGrid.Col := 0;
+  FGrid.Col := FContextColumn;
   FGrid.Row := 1;
   FGrid.SetFocus;
   {$endif}
@@ -696,7 +710,7 @@ begin
   LOptions['button'] := 2;
   Cell.dispatchEvent(TCellContextEvent.new('contextmenu', LOptions));
   {$else}
-  LBounds := FGrid.CellRect(0, 1);
+  LBounds := FGrid.CellRect(FContextColumn, 1);
   LPoint := FGrid.ClientToScreen(Types.Point(LBounds.Left + 4, LBounds.Top + 4));
   SendMessage(FGrid.Handle, WM_CONTEXTMENU, FGrid.Handle, MakeLParam(LPoint.X, LPoint.Y));
 
@@ -928,6 +942,102 @@ begin
     (FHost.Writes = LBefore + 2), 'disable/re-enable retires context actions without any old default');
   Check((TNyxCodec.Encode(FDocument) = FAuthored) and (LCaptured.Text = CText),
     'retained immutable inspection and all authored defaults survive action cleanup');
+end;
+
+{ Real menu/inspector buttons choose explicit display output. Expected formatter
+  refusals use the same actual table and RAW inspector; no host effect, fallback
+  marker or accepted data is substituted for the requested display product. }
+procedure TCopyReview.RunDisplayed; {$ifdef PAS2JS}async;{$endif}
+var
+  LActions: INyxCollectionCellRepresentationActions;
+  LSource: INyxCollectionSnapshot;
+  LValue: INyxCollectionCellText;
+  LRaw: INyxCollectionClipboardText;
+  LWrites: Integer;
+  LReplies: Integer;
+  LColumn: Integer;
+begin
+  LSource := FView.Store.Snapshot;
+  FContextColumn := 0;
+  FMode := kmObserve;
+  FocusCell;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  Check(Supports(FCellActions, INyxCollectionCellRepresentationActions, LActions) and
+    LActions.DisplayPolicy.Declared and
+    (LActions.DisplayPolicy.Formatter.Identity.Name = 'full cell') and
+    (LActions.DisplayPolicy.Formatter.Revision = 3),
+    'actual context captures original complete formatter identity before later actions');
+  LWrites := FHost.Writes;
+  LReplies := FReplies;
+  MenuAction(NyxCellActionsCopyDisplayID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  LValue := LActions.LastRepresentation;
+  Check((FHost.Writes = LWrites + 1) and (FHost.Text = TNyxText('«') + CText + TNyxText('»')) and
+    (FReplies = LReplies) and LActions.HasRepresentationResult and
+    (LActions.LastRepresentationResult.Outcome = ncwoWritten) and
+    (LActions.LastRepresentationResult.ByteCount = NyxUTF8ByteCount(FHost.Text)),
+    'real display menu sends exact expanded Unicode/NUL/newlines through a separate typed receipt');
+  Check((LValue.Representation = nccrFormattedDisplay) and (LValue.RawText = CText) and
+    (LValue.Value.TextValue = CText) and LValue.Field.Same(NameField) and
+    (LValue.Item.ID = ItemA.ID) and (LValue.Revision = LSource.Revision),
+    'display action retains accepted RAW scalar and original full row/field/revision provenance');
+  FCellActions.Close;
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  MenuAction(NyxCellActionsInspectID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  LWrites := FHost.Writes;
+  InspectorAction(NyxCellInspectorCopyDisplayID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  Check((FHost.Writes = LWrites + 1) and (FReplies = LReplies) and
+    (FCellActions.Snapshot.Text = CText) and
+    (FCellActions.Inspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState)) <> ''),
+    'real readonly RAW inspector offers deliberate display copy without relabelling its snapshot');
+  InspectorAction(NyxCellInspectorCloseID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  try
+    for LColumn := 2 to 4 do
+    begin
+      FContextColumn := LColumn;
+      FocusCell;
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      Context;
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      LRaw := FCellActions.Snapshot;
+      LWrites := FHost.Writes;
+      LReplies := FReplies;
+      Check((LRaw <> nil) and LActions.DisplayPolicy.Declared and
+        LActions.DisplayPolicy.Field.Same(LRaw.FieldAt(0)),
+        'expected display limitation does not prevent canonical RAW context preparation');
+      MenuAction(NyxCellActionsCopyDisplayID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      Check((FHost.Writes = LWrites) and (FReplies = LReplies) and
+        LActions.HasRepresentationResult and (LActions.LastRepresentation = nil) and
+        (LActions.LastRepresentationResult.Outcome = ncwoFailed) and
+        (LActions.LastRepresentationResult.Error <> '') and
+        (FCellActions.Inspector <> nil) and FCellActions.Inspector.IsOpen,
+        'strict huge/exact-decimal/minute refusal is observable without any clipboard effect');
+      Check((FCellActions.Snapshot = LRaw) and (FView.Store.Snapshot = LSource) and
+        (FCellActions.Inspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState)) <> ''),
+        'refusal explains itself beside the exact unchanged RAW snapshot and source');
+      InspectorAction(NyxCellInspectorCopyID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      Check((FHost.Writes = LWrites + 1) and (FHost.Text = LRaw.Text) and
+        (FReplies = LReplies + 1) and (FCellActions.LastResult.Outcome = ncwoWritten),
+        'explicit accepted-RAW copy remains useful after a strict display refusal');
+      InspectorAction(NyxCellInspectorCloseID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+    end;
+  finally
+    FContextColumn := 0;
+  end;
+  FocusCell;
+  Check((FView.Store.Snapshot = LSource) and (TNyxCodec.Encode(FDocument) = FAuthored) and
+    (LValue.Text = TNyxText('«') + CText + TNyxText('»')),
+    'represented actions preserve accepted data/source and detached original displayed bytes');
 end;
 
 procedure TCopyReview.ExportPaging(AEnabled: Boolean);
@@ -1167,9 +1277,11 @@ begin
   {$ifdef PAS2JS}
   await(RunContext);
   await(RunExport);
+  await(RunDisplayed);
   {$else}
   RunContext;
   RunExport;
+  RunDisplayed;
   {$endif}
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LCellIntent),
     'retirement probe retains the actual canonical context facade');

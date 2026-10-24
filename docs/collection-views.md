@@ -287,8 +287,9 @@ cannot be displayed under the selected policy remains usable: paint exposes an
 explicit unavailable marker and a separate diagnostic. `Present` returns these
 facts with exact `RawText`; strict `FormatValue` refuses. Inspection, comparison,
 editing and the existing RAW copy/export commands never receive the marker or a
-formatted replacement for accepted data. Display-copy and explicit active-draft
-commands have separate integration work; these policies do not enable them.
+formatted replacement for accepted data. A separate managed display-copy action
+transfers explicitly captured presentation text as described below. Explicit
+focused-draft capture remains a separate integration requirement.
 
 Studio's column forms expose the same typed choices through the existing
 isolated edit queue. Semantic collection reads request `formatControls` only when
@@ -891,6 +892,38 @@ embedded NUL cannot be advertised as interoperable plain text. The browser and
 LCL adapters expose injectable authority for testing. Real OS clipboard and
 complete mounted keyboard/menu workflows have their own qualification; the
 pure capture helpers do not establish those interactions.
+
+## Explicitly copying displayed values
+
+An enabled managed cell menu offers **Copy displayed value** beside **Copy
+accepted value** when its column declares a display policy and the existing
+clipboard controller supports the optional represented-output port. The same
+choice is available in full-value inspection. It captures the original scalar,
+row/typed field, revision, formatter, locale facts and domain; later column or
+locale changes cannot redirect that copy. An unfinished editor remains a draft.
+
+`INyxCollectionCellText` owns the tagged output, exact accepted `RawText` and
+scalar/provenance facts. A formatted output carries the complete immutable
+formatter policy. It is distinct from the unchanged RAW
+`INyxCollectionClipboardText` interface and its observer/result contract.
+`INyxCollectionClipboardRepresentationWrite` exposes represented results while
+sharing the existing host, request serial and cancellation slot. A newer RAW or
+display request cancels the earlier receiver; an old ticket cannot cancel its
+successor, including during reentrant cancellation. Receipts validate the actual
+outbound UTF-8 byte count.
+
+Display copy is strict. Unsupported decimal range, exact rounding or clock
+precision refuses before any clipboard host effect. The inspector explains the
+refusal and keeps **Copy accepted value** available; a paint's unavailable marker
+is never copied as successful formatted text. Host failure/cancellation retains
+its typed outcome. Normal editor text-copy remains the platform editor's own
+operation. Explicit focused-draft output is not inferred from accepted values or
+from an arbitrary tagged string.
+
+Current qualification uses injected clipboard/save authority on actual native
+and browser controls, with separate RAW/display arbitration and retirement
+checks. It does not claim real OS clipboard access or full workbench acceptance;
+see [WORK.md](../WORK.md).
 
 ## Exporting captured table results
 

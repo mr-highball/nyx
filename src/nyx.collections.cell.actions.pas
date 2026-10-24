@@ -29,15 +29,18 @@ uses
   nyx.text, nyx.model, nyx.root.types, nyx.events, nyx.scheduler,
   nyx.menu, nyx.popover, nyx.clipboard, nyx.collections.clipboard,
   nyx.collections.clipboard.actions, nyx.collections.export,
-  nyx.collections.export.actions, nyx.collections.view, nyx.files.save;
+  nyx.collections.export.actions, nyx.collections.view, nyx.files.save,
+  nyx.collections.representation;
 
 const
   NyxCellActionsInspectID = 'nyx-cell-actions-inspect';
   NyxCellActionsCopyID = 'nyx-cell-actions-copy';
+  NyxCellActionsCopyDisplayID = 'nyx-cell-actions-copy-display';
   NyxCellActionsExportPageID = 'nyx-cell-actions-export-page';
   NyxCellActionsExportFilteredID = 'nyx-cell-actions-export-filtered';
   NyxCellInspectorValueID = 'nyx-cell-inspector-value';
   NyxCellInspectorCopyID = 'nyx-cell-inspector-copy';
+  NyxCellInspectorCopyDisplayID = 'nyx-cell-inspector-copy-display';
   NyxCellInspectorCloseID = 'nyx-cell-inspector-close';
   NyxCellInspectorStatusState = 'nyx-cell-inspector-status';
 
@@ -105,6 +108,20 @@ type
     property Intent: Integer read GetIntent;
   end;
 
+  { Separate represented result preserves the established accepted-RAW result
+    API. Nil value with a failed result denotes pre-host formatting refusal. }
+  INyxCollectionCellRepresentationActions = interface(IInterface)
+    ['{4B4EF60C-4331-4F98-8240-DF0D507BBF73}']
+    function GetDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+    function GetLastRepresentation: INyxCollectionCellText;
+    function GetHasRepresentationResult: Boolean;
+    function GetLastRepresentationResult: TNyxClipboardWriteResult;
+    property DisplayPolicy: TNyxCollectionCellDisplayPolicy read GetDisplayPolicy;
+    property LastRepresentation: INyxCollectionCellText read GetLastRepresentation;
+    property HasRepresentationResult: Boolean read GetHasRepresentationResult;
+    property LastRepresentationResult: TNyxClipboardWriteResult read GetLastRepresentationResult;
+  end;
+
   { Optional file authority exposes RAW export only when explicitly configured.
     It leaves the established cell-actions ABI intact. Receipts distinguish a
     completed write from a browser download request; neither is inferred from
@@ -144,7 +161,8 @@ function NyxCollectionCellInspectionText(const AText: TNyxText): TNyxText;
 implementation
 
 uses
-  SysUtils, nyx.types, nyx.controls, nyx.state, nyx.behavior
+  SysUtils, nyx.types, nyx.controls, nyx.state, nyx.behavior,
+  nyx.formatting, nyx.numbers.decimal, nyx.times
   {$ifdef PAS2JS}, JS{$endif};
 
 type
@@ -263,6 +281,7 @@ type
     RequestSerial: Integer;
     Delivered: Boolean;
     Readiness: INyxCancellationReadiness;
+    Value: INyxCollectionCellText;
     procedure Receive(const AResult: TNyxClipboardWriteResult);
   end;
 
@@ -280,10 +299,12 @@ type
   { Controller stores detached snapshot/cancellation only. Its menu and form
     subscriptions refer back through TCellPort, avoiding mount/presenter cycles. }
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
-    INyxCollectionCellActionIntent, INyxCollectionCellExportActions)
+    INyxCollectionCellActionIntent, INyxCollectionCellExportActions,
+    INyxCollectionCellRepresentationActions)
   private
     FFactory: INyxCollectionCellPresenterFactory;
     FWriter: INyxCollectionClipboardCapturedWrite;
+    FRepresentationWriter: INyxCollectionClipboardRepresentationWrite;
     FExporter: INyxCollectionExportCapturedSave;
     FOutput: INyxCollectionExportCapture;
     FExportRequest: INyxFileSaveRequest;
@@ -299,6 +320,10 @@ type
     FInspector: INyxPopover;
     FOpen: INyxPopoverOpenLifetime;
     FSnapshot: INyxCollectionClipboardText;
+    FDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+    FRepresentation: INyxCollectionCellText;
+    FRepresentationResult: TNyxClipboardWriteResult;
+    FHasRepresentationResult: Boolean;
     FScope: TCellScope;
     FScopeLease: INyxCancellationScope;
     FTokens: array of INyxEventSubscription;
@@ -320,7 +345,9 @@ type
     procedure InspectorDefault(AKind, ASerial: Integer;
       const AOpen: INyxPopoverOpenLifetime);
     procedure Inspect(ASerial: Integer);
-    procedure CopyValue(ASerial: Integer);
+    procedure CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText = nil);
+    procedure CopyDisplayed(ASerial: Integer);
+    procedure RepresentationRefused(const AReason: TNyxText; ASerial: Integer);
     procedure QueueExport(AMembership: TNyxCollectionExportRows; ASerial: Integer);
     procedure ExportValue(AMembership: TNyxCollectionExportRows; ASerial: Integer);
     procedure Exported(AReply: TCellExportReply; const AResult: TNyxFileSaveResult);
@@ -341,6 +368,10 @@ type
     function GetSnapshot: INyxCollectionClipboardText;
     function GetLastResult: TNyxClipboardWriteResult;
     function GetLastExecution: INyxExecution;
+    function GetDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+    function GetLastRepresentation: INyxCollectionCellText;
+    function GetHasRepresentationResult: Boolean;
+    function GetLastRepresentationResult: TNyxClipboardWriteResult;
     function GetIntent: Integer;
     function GetExportEnabled: Boolean;
     function GetLastExportResult: TNyxFileSaveResult;
@@ -626,6 +657,8 @@ constructor TCellActions.Create(const AFactory: INyxCollectionCellPresenterFacto
   const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
   APresentation: TNyxCollectionCellPresentation;
   const AExporter: INyxCollectionExportCapturedSave);
+var
+  LWriter: INyxCollectionClipboardRepresentationWrite;
 begin
   inherited Create;
 
@@ -645,6 +678,12 @@ begin
   FPort.Serial := 1;
   FPort.RequestSerial := 1;
   FPort.ExportSerial := 1;
+  { Own a local QI result before assigning its managed field. }
+
+  if Supports(AWriter, INyxCollectionClipboardRepresentationWrite, LWriter) then
+  begin
+    FRepresentationWriter := LWriter;
+  end;
 end;
 
 destructor TCellActions.Destroy;
@@ -710,6 +749,9 @@ begin
   FExportReply := nil;
   FExportReplyLease := nil;
   FOutput := nil;
+  FDisplayPolicy := Default(TNyxCollectionCellDisplayPolicy);
+  FRepresentation := nil;
+  FHasRepresentationResult := False;
   FReply := nil;
   FReplyLease := nil;
   FSnapshot := nil;
@@ -920,6 +962,10 @@ begin
   begin
     CopyValue(ASerial);
   end
+  else if AKind = 3 then
+  begin
+    CopyDisplayed(ASerial);
+  end
   else
   begin
     Close;
@@ -986,6 +1032,8 @@ var
   LScheduler: INyxScheduler;
   LOutputPort: INyxCollectionClipboardOutputCapture;
   LOutput: INyxCollectionExportCapture;
+  LDisplayPort: INyxCollectionClipboardDisplayCapture;
+  LDisplayPolicy: TNyxCollectionCellDisplayPolicy;
 begin
   LLease := Self;
   LScheduler := FScheduler;
@@ -1008,6 +1056,12 @@ begin
     Exit;
   end;
   LScope := LPrepared.Readiness;
+  LDisplayPolicy := Default(TNyxCollectionCellDisplayPolicy);
+
+  if Supports(ALaunch, INyxCollectionClipboardDisplayCapture, LDisplayPort) then
+  begin
+    LDisplayPolicy := LDisplayPort.DisplayPolicy;
+  end;
 
   if (FExporter <> nil) and Supports(ALaunch,
     INyxCollectionClipboardOutputCapture, LOutputPort) then
@@ -1029,6 +1083,7 @@ begin
     Exit;
   end;
   FSnapshot := LPayload;
+  FDisplayPolicy := LDisplayPolicy;
   FOutput := LOutput;
   FScope := TCellScope.Create(LScope);
   FScopeLease := FScope;
@@ -1043,6 +1098,13 @@ begin
     LDocument.AddPage(LPage);
     LItems := NyxMenuItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectID),
       NyxMenuCommand('inspect'))).Add(NyxMenuAction(NyxPart(NyxCellActionsCopyID), NyxMenuCommand('copy')));
+
+    if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsCopyDisplayID).Configure
+        .PartName(NyxPart(NyxCellActionsCopyDisplayID)).Text('Copy displayed value').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopyDisplayID), NyxMenuCommand('copy-display')));
+    end;
 
     if (FExporter <> nil) and (LOutput <> nil) then
     begin
@@ -1118,6 +1180,10 @@ begin
     begin
       CopyValue(ASerial);
     end
+    else if LInvocation.Command.Name = 'copy-display' then
+    begin
+      CopyDisplayed(ASerial);
+    end
     else if LInvocation.Command.Name = 'export-page' then
     begin
       QueueExport(ncerCurrentPage, ASerial);
@@ -1162,6 +1228,12 @@ begin
     LMemo.Configure.Height(200).Done;
     LPage.Add(LMemo);
     LPage.Add(NewNyxButton(NyxCellInspectorCopyID).Configure.Text('Copy accepted value').Done);
+
+    if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
+    begin
+      LPage.Add(NewNyxButton(NyxCellInspectorCopyDisplayID).Configure
+        .Text('Copy displayed value').Done);
+    end;
     LPage.Add(NewNyxButton(NyxCellInspectorCloseID).Configure
       .PartName(NyxPart(NyxCellInspectorCloseID)).Text('Close').Done);
     LDocument.State.SetValue(NyxTextState(NyxCellInspectorStatusState), '');
@@ -1187,6 +1259,11 @@ begin
   end;
   ObserveButton(LEvents, NyxCellInspectorCopyID, 1, ASerial);
   ObserveButton(LEvents, NyxCellInspectorCloseID, 2, ASerial);
+
+  if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
+  begin
+    ObserveButton(LEvents, NyxCellInspectorCopyDisplayID, 3, ASerial);
+  end;
 
   if not Current(ASerial) then
   begin
@@ -1251,7 +1328,78 @@ begin
   end;
 end;
 
-procedure TCellActions.CopyValue(ASerial: Integer);
+procedure TCellActions.RepresentationRefused(const AReason: TNyxText; ASerial: Integer);
+var
+  LInspector: INyxPopover;
+begin
+
+  if not Current(ASerial) then
+  begin
+    Exit;
+  end;
+  FRepresentation := nil;
+  FRepresentationResult := Default(TNyxClipboardWriteResult);
+  FRepresentationResult.Outcome := ncwoFailed;
+  FRepresentationResult.Error := AReason;
+  FHasRepresentationResult := True;
+  LInspector := FInspector;
+
+  if (LInspector = nil) or not LInspector.IsOpen then
+  begin
+    Inspect(ASerial);
+  end;
+  Status('Display copy refused: ' + AReason + '. Copy accepted value remains available.', ASerial);
+end;
+
+procedure TCellActions.CopyDisplayed(ASerial: Integer);
+var
+  LLease: INyxCollectionCellActions;
+  LValue: INyxCollectionCellText;
+  LPolicy: TNyxCollectionCellDisplayPolicy;
+  LPayload: INyxCollectionClipboardText;
+begin
+  LLease := Self;
+
+  if not Current(ASerial) or (FRepresentationWriter = nil) or not FDisplayPolicy.Defined then
+  begin
+    Exit;
+  end;
+  LPolicy := FDisplayPolicy.Copy;
+  LPayload := FSnapshot;
+
+  if not LPolicy.Field.Same(LPayload.FieldAt(0)) then
+  begin
+    raise ENyxCollectionRepresentation.Create('Captured display policy belongs to another typed field');
+  end;
+  try
+    { Strict output, never the target paint-refusal marker. All facts come from
+      this menu's original capture; no live column/locale lookup occurs. }
+    LValue := NewNyxCollectionCellDisplay(LPayload, LPolicy.Formatter, LPolicy.Domain);
+  except
+    on E: ENyxDecimalNumber do
+    begin
+      RepresentationRefused(TNyxText(E.Message), ASerial);
+      Exit;
+    end;
+    on E: ENyxTimeValue do
+    begin
+      RepresentationRefused(TNyxText(E.Message), ASerial);
+      Exit;
+    end;
+    on E: ENyxFormatting do
+    begin
+      RepresentationRefused(TNyxText(E.Message), ASerial);
+      Exit;
+    end;
+  end;
+
+  if Current(ASerial) then
+  begin
+    CopyValue(ASerial, LValue);
+  end;
+end;
+
+procedure TCellActions.CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText);
 var
   LPayload: INyxCollectionClipboardText;
   LScope: INyxCancellationScope;
@@ -1262,9 +1410,11 @@ var
   LWriter: INyxCollectionClipboardCapturedWrite;
   LRequestSerial: Integer;
   LCopyScope: TCellScope;
+  LRepresentationWriter: INyxCollectionClipboardRepresentationWrite;
 begin
 
-  if not Current(ASerial) or (FPort.RequestSerial >= High(Integer) - 1) then
+  if not Current(ASerial) or (FPort.RequestSerial >= High(Integer) - 1) or
+    ((AValue <> nil) and (FRepresentationWriter = nil)) then
   begin
     Exit;
   end;
@@ -1288,6 +1438,7 @@ begin
   LCopyScope := TCellScope.Create(FScope, FOpen);
   LScope := LCopyScope;
   LWriter := FWriter;
+  LRepresentationWriter := FRepresentationWriter;
   LReply := TCellReply.Create;
   LReplyLease := LReply;
   LReply.Port := FPort;
@@ -1295,11 +1446,21 @@ begin
   LReply.Serial := ASerial;
   LReply.RequestSerial := LRequestSerial;
   LReply.Readiness := LCopyScope;
+  LReply.Value := AValue;
   FReply := LReply;
   FReplyLease := LReplyLease;
   try
-    LRequest := LWriter.WriteCaptured(LPayload, LScope, LCopyScope,
-      {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
+
+    if AValue = nil then
+    begin
+      LRequest := LWriter.WriteCaptured(LPayload, LScope, LCopyScope,
+        {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
+    end
+    else
+    begin
+      LRequest := LRepresentationWriter.WriteRepresented(AValue, LScope, LCopyScope,
+        {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
+    end;
   except
 
     if FReply = LReply then
@@ -1337,6 +1498,8 @@ var
   LRequest: INyxClipboardWriteRequest;
   LReplyLease: IInterface;
   LSerial: Integer;
+  LValue: INyxCollectionCellText;
+  LInspector: INyxPopover;
 begin
 
   if not Current(AReply.Serial) or (FReply <> AReply) then
@@ -1352,6 +1515,33 @@ begin
   try
     AReply.Readiness.CheckReady;
   except
+    Exit;
+  end;
+  LValue := AReply.Value;
+
+  if LValue <> nil then
+  begin
+    ValidateNyxClipboardWriteResult(AResult, LValue.ByteCount);
+    FRepresentation := LValue;
+    FRepresentationResult := AResult;
+    FHasRepresentationResult := True;
+
+    if AResult.Outcome = ncwoWritten then
+    begin
+      Status('Copied the captured displayed value.', LSerial);
+    end
+    else
+    begin
+      { Keep the host's exact typed outcome. Opening the RAW inspector is an
+        explanation surface, never a replacement clipboard effect or receipt. }
+      LInspector := FInspector;
+
+      if (LInspector = nil) or not LInspector.IsOpen then
+      begin
+        Inspect(LSerial);
+      end;
+      Status('Displayed value was not written: ' + AResult.Error, LSerial);
+    end;
     Exit;
   end;
   ValidateNyxClipboardWriteResult(AResult, FSnapshot.ByteCount);
@@ -1566,6 +1756,7 @@ begin
   LFactory := FFactory;
   FFactory := nil;
   FWriter := nil;
+  FRepresentationWriter := nil;
   FExporter := nil;
   FScheduler := nil;
   LFailure := Default(TCellCleanupFailure);
@@ -1601,6 +1792,31 @@ end;
 function TCellActions.GetSnapshot: INyxCollectionClipboardText;
 begin
   Result := FSnapshot;
+end;
+
+function TCellActions.GetDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+begin
+  Result := FDisplayPolicy.Copy;
+end;
+
+function TCellActions.GetLastRepresentation: INyxCollectionCellText;
+begin
+  Result := FRepresentation;
+end;
+
+function TCellActions.GetHasRepresentationResult: Boolean;
+begin
+  Result := FHasRepresentationResult;
+end;
+
+function TCellActions.GetLastRepresentationResult: TNyxClipboardWriteResult;
+begin
+
+  if not FHasRepresentationResult then
+  begin
+    raise ENyxCollectionRepresentation.Create('Cell actions have no terminal represented receipt');
+  end;
+  Result := FRepresentationResult;
 end;
 
 function TCellActions.GetLastResult: TNyxClipboardWriteResult;

@@ -41,7 +41,8 @@ implementation
 
 uses SysUtils, nyx.text, nyx.collections, nyx.collections.selection,
   nyx.collections.arrangement, nyx.collections.arrangement.controls,
-  nyx.collections.clipboard, nyx.collections.view.types, nyx.collections.export.actions;
+  nyx.collections.clipboard, nyx.collections.view.types, nyx.collections.export.actions,
+  nyx.collections.representation, nyx.contract, nyx.state;
 
 type
   { Forward controller is borrowed only under an entered managed owner lease. }
@@ -58,10 +59,12 @@ type
     FInput: INyxCollectionInputLifetime;
     FEpoch: Integer;
     FParent: INyxCancellationReadiness;
+    FAdditional: INyxCancellationReadiness;
     FLocal: INyxCancellationScope;
   public
     constructor Create(const AInput: INyxCollectionInputLifetime; AEpoch: Integer;
-      const AParent: INyxCancellationReadiness);
+      const AParent: INyxCancellationReadiness;
+      const AAdditional: INyxCancellationReadiness = nil);
     procedure Cancel;
     function GetCancelled: Boolean;
     procedure CheckReady;
@@ -76,6 +79,7 @@ type
     Serial: Integer;
     Delivered: Boolean;
     Payload: INyxCollectionClipboardText;
+    Value: INyxCollectionCellText;
     Scope: INyxCancellationReadiness;
     Reply: TNyxClipboardWriteReply;
     ReplyOwner: IInterface;
@@ -100,7 +104,7 @@ type
     Retire after transfer cannot cancel the independent asynchronous request. }
   TCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
     INyxCollectionClipboardCellCommand, INyxCollectionClipboardPreparedScope,
-    INyxCollectionClipboardOutputCapture)
+    INyxCollectionClipboardOutputCapture, INyxCollectionClipboardDisplayCapture)
   private
     FOwner: TCommands;
     FOwnerLease: INyxCollectionClipboardCommands;
@@ -135,6 +139,7 @@ type
     FRevision: Integer;
     FPayload: INyxCollectionClipboardText;
     FOutput: INyxCollectionExportCapture;
+    FDisplayPolicy: TNyxCollectionCellDisplayPolicy;
     function OriginalFlags(ACompleting: Boolean = False): Boolean;
     function CurrentProof(ACompleting: Boolean): Boolean;
     function CheckProof(ACompleting: Boolean): Boolean;
@@ -144,6 +149,7 @@ type
     function GetReadiness: INyxCancellationReadiness;
     procedure PrepareOutput;
     function GetOutput: INyxCollectionExportCapture;
+    function GetDisplayPolicy: TNyxCollectionCellDisplayPolicy;
     procedure Prepare;
     procedure ResolveCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity);
@@ -159,7 +165,8 @@ type
     authority. A receipt borrows this owner; it is revoked before host Cancel.
     No member retains a command or its mount-retaining synchronous fence. }
   TCommands = class(TInterfacedObject, INyxCollectionClipboardCommands,
-    INyxCollectionClipboardCellInput, INyxCollectionClipboardCapturedWrite)
+    INyxCollectionClipboardCellInput, INyxCollectionClipboardCapturedWrite,
+    INyxCollectionClipboardRepresentationWrite)
   private
     FView: INyxCollectionView;
     FInput: INyxCollectionInputLifetime;
@@ -177,11 +184,16 @@ type
     FResult: TNyxClipboardWriteResult;
     FPayload: INyxCollectionClipboardText;
     FObserver: TNyxCollectionClipboardObserver;
+    FRepresentationPhase: TNyxCollectionClipboardPhase;
+    FRepresentationResult: TNyxClipboardWriteResult;
+    FRepresentation: INyxCollectionCellText;
+    FRepresentationObserver: TNyxCollectionRepresentationObserver;
     procedure Start(ACommand: TCommand);
     function SubmitPayload(const APayload: INyxCollectionClipboardText;
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
-      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface;
+      const AValue: INyxCollectionCellText = nil): INyxClipboardWriteRequest;
     function WriteCaptured(const APayload: INyxCollectionClipboardText;
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
@@ -199,6 +211,14 @@ type
     function GetPhase: TNyxCollectionClipboardPhase;
     function GetLastResult: TNyxClipboardWriteResult;
     function GetLastPayload: INyxCollectionClipboardText;
+    function WriteRepresented(const AValue: INyxCollectionCellText;
+      const ACancellation: INyxCancellationScope;
+      const AReadiness: INyxCancellationReadiness;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+    procedure ObserveRepresentation(AObserver: TNyxCollectionRepresentationObserver);
+    function GetRepresentationPhase: TNyxCollectionClipboardPhase;
+    function GetLastRepresentationResult: TNyxClipboardWriteResult;
+    function GetLastRepresentation: INyxCollectionCellText;
   public
     constructor Create(const AView: INyxCollectionView;
       const AInput: INyxCollectionInputLifetime; const AEvents: INyxEvents;
@@ -209,12 +229,14 @@ type
   end;
 
 constructor TCopyScope.Create(const AInput: INyxCollectionInputLifetime;
-  AEpoch: Integer; const AParent: INyxCancellationReadiness);
+  AEpoch: Integer; const AParent: INyxCancellationReadiness;
+  const AAdditional: INyxCancellationReadiness);
 begin
   inherited Create;
   FInput := AInput;
   FEpoch := AEpoch;
   FParent := AParent;
+  FAdditional := AAdditional;
   FLocal := NewNyxCancellationScope;
 end;
 
@@ -226,6 +248,11 @@ end;
 procedure TCopyScope.CheckReady;
 begin
   FParent.CheckReady;
+
+  if FAdditional <> nil then
+  begin
+    FAdditional.CheckReady;
+  end;
 
   if FLocal.Cancelled or (FEpoch <= 0) or (FEpoch >= High(Integer)) or
     not FInput.Ready or (FInput.Epoch <> FEpoch) then
@@ -480,6 +507,11 @@ begin
   Result := FPayload;
 end;
 
+function TCommand.GetDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+begin
+  Result := FDisplayPolicy.Copy;
+end;
+
 function TCommand.GetReadiness: INyxCancellationReadiness;
 begin
   Result := nil;
@@ -498,6 +530,11 @@ var
   LSelection: INyxCollectionSelection;
   LScope: TCopyScope;
   LParentReady: INyxCancellationReadiness;
+  LSpec: TNyxCollectionViewSpec;
+  LColumn: TNyxCollectionColumn;
+  LDefinition: TNyxCollectionField;
+  LSchema: TNyxCollectionSchema;
+  LIndex: Integer;
 begin
 
   if FPrepared or FCompleteStarted or FRetired then
@@ -563,7 +600,13 @@ begin
     Exit;
   end;
   FColumnSerial := LCapture.Serial;
-  FColumnBaseline := LCapture.Spec.ToData.ToJSON + #10 + LCapture.Preferences.ToData.ToJSON;
+  LSpec := LCapture.Spec;
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+  FColumnBaseline := LSpec.ToData.ToJSON + #10 + LCapture.Preferences.ToData.ToJSON;
 
   if not OriginalFlags then
   begin
@@ -597,6 +640,32 @@ begin
   if FAction = nccaCell then
   begin
     FPayload := NewNyxCollectionClipboardCell(FSource, FItem, FField, FOptions.WorkLimits);
+    { Ordinary RAW/context entry captures metadata only. Strict formatting is
+      deliberate later work and cannot make valid accepted RAW refuse. }
+    for LIndex := 0 to LSpec.Count - 1 do
+    begin
+      LColumn := LSpec.ColumnAt(LIndex);
+
+      if LColumn.Identity.Same(FField) and LColumn.HasFormatPolicy then
+      begin
+        LSchema := FSource.Schema;
+
+        if not OriginalFlags then
+        begin
+          FPayload := nil;
+          Exit;
+        end;
+        case LColumn.Kind of
+          nskText: LDefinition := LSchema.Definition(NyxTextField(LColumn.FieldName));
+          nskBoolean: LDefinition := LSchema.Definition(NyxBooleanField(LColumn.FieldName));
+          nskInteger: LDefinition := LSchema.Definition(NyxIntegerField(LColumn.FieldName));
+          nskNumber: LDefinition := LSchema.Definition(NyxNumberField(LColumn.FieldName));
+        end;
+        FDisplayPolicy := NyxCollectionCellDisplayPolicy(FField,
+          LColumn.FormatPolicy, LDefinition.Domain, True);
+        Break;
+      end;
+    end;
   end
   else
   begin
@@ -848,10 +917,103 @@ begin
   Result := SubmitPayload(APayload, ACancellation, AReadiness, AReply, AReplyOwner);
 end;
 
-function TCommands.SubmitPayload(const APayload: INyxCollectionClipboardText;
+function TCommands.WriteRepresented(const AValue: INyxCollectionCellText;
   const ACancellation: INyxCancellationScope;
   const AReadiness: INyxCancellationReadiness;
   AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+var
+  LLease: INyxCollectionClipboardCommands;
+  LScheduler: INyxScheduler;
+  LInput: INyxCollectionInputLifetime;
+  LSerial: Integer;
+  LEpoch: Integer;
+  LValue: INyxCollectionCellText;
+  LCancelReady: INyxCancellationReadiness;
+  LScope: INyxCancellationScope;
+  LReady: INyxCancellationReadiness;
+  LCopyScope: TCopyScope;
+
+  function Original: Boolean;
+  begin
+    Result := not FRevoked and (FSerial = LSerial) and (FInput = LInput) and
+      (LInput <> nil) and (LEpoch > 0) and (LEpoch < High(Integer)) and
+      LInput.Ready and (LInput.Epoch = LEpoch);
+  end;
+
+begin
+  Result := nil;
+  LLease := Self;
+  LScheduler := FScheduler;
+  LInput := FInput;
+  LSerial := FSerial;
+
+  if FRevoked or (LInput = nil) or (LScheduler = nil) or
+    not (nccaCell in FOptions.Actions) or (AValue = nil) or
+    (ACancellation = nil) or (AReadiness = nil) then
+  begin
+    Exit;
+  end;
+  LEpoch := LInput.Epoch;
+  LScheduler.RequireUI;
+
+  if not Original then
+  begin
+    Exit;
+  end;
+  AReadiness.CheckReady;
+
+  if not Original or not Supports(ACancellation, INyxCancellationReadiness, LCancelReady) then
+  begin
+    Exit;
+  end;
+  LValue := CopyNyxCollectionCellText(AValue, FOptions.WorkLimits.MaximumUTF8Bytes);
+
+  if not Original then
+  begin
+    Exit;
+  end;
+
+  if LValue.Representation <> nccrFormattedDisplay then
+  begin
+    raise ENyxCollectionRepresentation.Create('Represented transfer requires an explicit display value');
+  end;
+  LCopyScope := TCopyScope.Create(LInput, LEpoch, AReadiness, LCancelReady);
+  LScope := LCopyScope;
+  LReady := LCopyScope;
+  LReady.CheckReady;
+
+  if not Original then
+  begin
+    Exit;
+  end;
+
+  if FSerial >= High(Integer) - 1 then
+  begin
+    FSerial := High(Integer);
+    CancelCurrent;
+    Exit;
+  end;
+  Inc(FSerial);
+  LSerial := FSerial;
+  CancelCurrent;
+
+  if not Original then
+  begin
+    Exit;
+  end;
+  LReady.CheckReady;
+
+  if Original then
+  begin
+    Result := SubmitPayload(nil, LScope, LReady, AReply, AReplyOwner, LValue);
+  end;
+end;
+
+function TCommands.SubmitPayload(const APayload: INyxCollectionClipboardText;
+  const ACancellation: INyxCancellationScope;
+  const AReadiness: INyxCancellationReadiness;
+  AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface;
+  const AValue: INyxCollectionCellText): INyxClipboardWriteRequest;
 var
   LReceipt: TReceipt;
   LReceiptLease: IInterface;
@@ -867,16 +1029,35 @@ begin
   LReceipt.Owner := Self;
   LReceipt.Serial := FSerial;
   LReceipt.Payload := APayload;
+  LReceipt.Value := AValue;
   LReceipt.Scope := AReadiness;
   LReceipt.Reply := AReply;
   LReceipt.ReplyOwner := AReplyOwner;
   FReceipt := LReceipt;
   FReceiptLease := LReceiptLease;
-  FPayload := APayload;
-  FPhase := nccpPending;
+
+  if AValue = nil then
+  begin
+    FPayload := APayload;
+    FPhase := nccpPending;
+  end
+  else
+  begin
+    FRepresentation := AValue;
+    FRepresentationPhase := nccpPending;
+  end;
   try
-    LRequest := WriteNyxCollectionClipboard(APayload, LHost, LScheduler,
-      ACancellation, {$ifdef PAS2JS}@{$endif}LReceipt.Receive);
+
+    if AValue = nil then
+    begin
+      LRequest := WriteNyxCollectionClipboard(APayload, LHost, LScheduler,
+        ACancellation, {$ifdef PAS2JS}@{$endif}LReceipt.Receive);
+    end
+    else
+    begin
+      LRequest := LHost.BeginWriteText(AValue.Text, LScheduler,
+        ACancellation, {$ifdef PAS2JS}@{$endif}LReceipt.Receive);
+    end;
   except
     { An entered inline client failure is already terminal. It is never
       replayed or reclassified as a second host-admission result. }
@@ -887,7 +1068,15 @@ begin
       FReceipt := nil;
       FReceiptLease := nil;
       FRequest := nil;
-      FPhase := nccpCancelled;
+
+      if AValue = nil then
+      begin
+        FPhase := nccpCancelled;
+      end
+      else
+      begin
+        FRepresentationPhase := nccpCancelled;
+      end;
     end;
     raise;
   end;
@@ -916,6 +1105,9 @@ var
   LReady: Boolean;
   LReply: TNyxClipboardWriteReply;
   LReplyOwner: IInterface;
+  LValue: INyxCollectionCellText;
+  LRepresentationObserver: TNyxCollectionRepresentationObserver;
+  LBytes: Integer;
 begin
   LLease := Self;
 
@@ -927,6 +1119,7 @@ begin
   LReply := AReceipt.Reply;
   LReplyOwner := AReceipt.ReplyOwner;
   LPayload := AReceipt.Payload;
+  LValue := AReceipt.Value;
   LReady := False;
   try
     AReceipt.Scope.CheckReady;
@@ -940,23 +1133,50 @@ begin
   FReceipt := nil;
   FReceiptLease := nil;
   FRequest := nil;
-  FPhase := nccpCancelled;
+  LBytes := 0;
+
+  if LValue = nil then
+  begin
+    FPhase := nccpCancelled;
+    LBytes := LPayload.ByteCount;
+  end
+  else
+  begin
+    FRepresentationPhase := nccpCancelled;
+    LBytes := LValue.ByteCount;
+  end;
   { Alternate hosts share the same terminal receipt contract as built-ins.
     Detach first: an invalid receipt is terminal even when validation raises. }
-  ValidateNyxClipboardWriteResult(LResult, LPayload.ByteCount);
+  ValidateNyxClipboardWriteResult(LResult, LBytes);
 
   if not LReady then
   begin
     Exit;
   end;
-  FResult := LResult;
-  FPayload := LPayload;
-  FPhase := nccpCompleted;
-  LObserver := FObserver;
 
-  if Assigned(LObserver) then
+  if LValue = nil then
   begin
-    LObserver(LPayload, LResult);
+    FResult := LResult;
+    FPayload := LPayload;
+    FPhase := nccpCompleted;
+    LObserver := FObserver;
+
+    if Assigned(LObserver) then
+    begin
+      LObserver(LPayload, LResult);
+    end;
+  end
+  else
+  begin
+    FRepresentationResult := LResult;
+    FRepresentation := LValue;
+    FRepresentationPhase := nccpCompleted;
+    LRepresentationObserver := FRepresentationObserver;
+
+    if Assigned(LRepresentationObserver) then
+    begin
+      LRepresentationObserver(LValue, LResult);
+    end;
   end;
 
   if not FRevoked and (FSerial = AReceipt.Serial) and Assigned(LReply) then
@@ -989,6 +1209,11 @@ begin
   if FPhase = nccpPending then
   begin
     FPhase := nccpCancelled;
+  end;
+
+  if FRepresentationPhase = nccpPending then
+  begin
+    FRepresentationPhase := nccpCancelled;
   end;
 
   if LRequest <> nil then
@@ -1026,6 +1251,7 @@ begin
   FRevoked := True;
   FReadiness := nil;
   FObserver := nil;
+  FRepresentationObserver := nil;
   LView := FView;
   LInput := FInput;
   LEvents := FEvents;
@@ -1080,6 +1306,36 @@ end;
 function TCommands.GetLastPayload: INyxCollectionClipboardText;
 begin
   Result := FPayload;
+end;
+
+procedure TCommands.ObserveRepresentation(AObserver: TNyxCollectionRepresentationObserver);
+begin
+
+  if FRevoked and Assigned(AObserver) then
+  begin
+    raise ENyxCollectionClipboard.Create('Retired represented-copy receiver cannot be replaced');
+  end;
+  FRepresentationObserver := AObserver;
+end;
+
+function TCommands.GetRepresentationPhase: TNyxCollectionClipboardPhase;
+begin
+  Result := FRepresentationPhase;
+end;
+
+function TCommands.GetLastRepresentationResult: TNyxClipboardWriteResult;
+begin
+
+  if FRepresentationPhase <> nccpCompleted then
+  begin
+    raise ENyxCollectionClipboard.Create('Represented copy has no completed host result');
+  end;
+  Result := FRepresentationResult;
+end;
+
+function TCommands.GetLastRepresentation: INyxCollectionCellText;
+begin
+  Result := FRepresentation;
 end;
 
 function NewNyxCollectionClipboardCommands(const AView: INyxCollectionView;

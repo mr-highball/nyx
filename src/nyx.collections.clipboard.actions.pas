@@ -26,7 +26,8 @@ unit nyx.collections.clipboard.actions;
 interface
 
 uses nyx.text, nyx.collections, nyx.collections.arrangement,
-  nyx.collections.clipboard, nyx.clipboard, nyx.scheduler, nyx.events;
+  nyx.collections.clipboard, nyx.collections.representation,
+  nyx.clipboard, nyx.scheduler, nyx.events;
 
 type
   { Closed accepted-raw commands distinguish complete source membership from
@@ -138,6 +139,41 @@ type
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
       AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+  end;
+
+  { Optional original metadata captured during Prepare, before canonical input
+    callbacks. Reading it later never queries the live column or schema. }
+  INyxCollectionClipboardDisplayCapture = interface(IInterface)
+    ['{A7F0B926-C43B-4BC0-AC74-A26405873070}']
+    function GetDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+    property DisplayPolicy: TNyxCollectionCellDisplayPolicy read GetDisplayPolicy;
+  end;
+
+  { Borrowed represented-output observer sees actual outbound text and its
+    accepted RAW provenance. It never runs through the established RAW observer. }
+  TNyxCollectionRepresentationObserver = procedure(
+    const AValue: INyxCollectionCellText;
+    const AResult: TNyxClipboardWriteResult) of object;
+
+  { Optional explicit represented transfer shares the SAME host/serial/receipt
+    slot as RAW copy. Newer accepted writes cancel only the older receiver, not
+    an already-entered platform effect. RAW observer/phase/result stay RAW-only;
+    this port exposes represented output separately and checks its actual bytes.
+    All entry methods are UI-only. Foreign value getters are copied/admitted
+    before cancellation or effects, with original serial/readiness rechecked. }
+  INyxCollectionClipboardRepresentationWrite = interface(IInterface)
+    ['{82C47ABC-676A-4233-91CE-252832292DD9}']
+    function WriteRepresented(const AValue: INyxCollectionCellText;
+      const ACancellation: INyxCancellationScope;
+      const AReadiness: INyxCancellationReadiness;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+    procedure ObserveRepresentation(AObserver: TNyxCollectionRepresentationObserver);
+    function GetRepresentationPhase: TNyxCollectionClipboardPhase;
+    function GetLastRepresentationResult: TNyxClipboardWriteResult;
+    function GetLastRepresentation: INyxCollectionCellText;
+    property RepresentationPhase: TNyxCollectionClipboardPhase read GetRepresentationPhase;
+    property LastRepresentationResult: TNyxClipboardWriteResult read GetLastRepresentationResult;
+    property LastRepresentation: INyxCollectionCellText read GetLastRepresentation;
   end;
 
   { Borrowed terminal observer is detached before cancellation/retirement.
