@@ -701,6 +701,24 @@ scrolling. Framed fields route once through their owning face. Separately
 projected descendants retain their own identity and never duplicate a down/up/
 move callback on an ancestor.
 
+An adapter that owns a cancellable positioned pointer default can explicitly use
+the optional `INyxGestureInputEvents` facet through `DispatchNyxGestureInput`.
+That route supplies **one** callback snapshot with both `NyxEventResponse` and
+`NyxGestureResponse`: an active sequential callback can consume the default and
+request capture in the same invocation. Consuming still allows independent sibling
+callbacks. Observer membership and execution policies use the ordinary router;
+queued and retained responses cannot consume or make gesture requests. Nested
+dispatch has its own decision and does not revoke an active outer callback.
+
+This is an explicit adapter contract, not a change to ordinary `DispatchGesture`
+or permission for every pointer hook to suppress a platform default. The adapter
+reserves its original mounted input before focus/default processing, dispatches
+once, and rechecks that input, view and focus before applying the result. The
+helper leases both source nodes during synchronous delivery and seals the gesture
+decision on every outcome. Missing optional capability refuses explicitly.
+The portable regression exercises real native/browser scheduling and ownership;
+target input and trusted hardware behavior require their separate adapter checks.
+
 All snapshots survive unmounting. Adapters preserve custom widget handlers and
 stop after a chained handler navigates. Empty phase streams avoid scheduler work.
 Studio creates normal typed TODO handlers for these families, supports multiple

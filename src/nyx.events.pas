@@ -254,6 +254,20 @@ function NyxCompoundEvents(const AID: TNyxText;
 function NewNyxEvents(const AScheduler: INyxScheduler = nil): INyxEvents;
 
 type
+  { Optional adapter boundary for a positioned pointer default that also
+    negotiates capture/drag. It shares the ordinary router's ONE callback
+    snapshot and execution scopes; no callback is replayed to obtain Consume.
+    Only active sequential UI callbacks can consume or request a gesture.
+    Deferred/retained/observer responses remain read-only. Decisions seal on
+    refusal, failure, navigation and success. Existing INyxEvents implementations
+    and the meaning of their ordinary DispatchGesture remain unchanged. }
+  INyxGestureInputEvents = interface(IInterface)
+    ['{F26E0D09-F67C-4E80-BD3A-A17B6C5A6C3F}']
+    function DispatchGestureInput(const AEvent: TNyxEventInfo;
+      const AOriginDesignID, ASourceDesignID: TNyxText;
+      const ADecision: INyxGestureDecision; out AConsumed: Boolean): TNyxExecutions;
+  end;
+
   { Optional lifetime capability preserves INyxEvents compatibility. The current
     generation owns no router, renderer, document or controls. Capture it AFTER
     mounting a view; successful replacement, Unmount and Close cancel it before
@@ -349,6 +363,13 @@ function NyxGestureResponse(const AExecution: INyxExecution): INyxGestureRespons
   including failure or navigation. It owns no platform or model references. }
 procedure DispatchNyxGesture(const AEvents: INyxEvents; AOrigin: TNyxNode;
   const ADispatch: TNyxDispatch; const ADecision: INyxGestureDecision);
+{ Explicit optional gesture/input admission; missing capability refuses rather
+  than dispatching again or silently losing consumption. The synchronous bridge
+  leases both nodes and seals the owned decision on every outcome. The caller
+  still owns the original mounted input/epoch and applies the default only after
+  its canonical callback/focus fences. True means consumed, never installed. }
+function DispatchNyxGestureInput(const AEvents: INyxEvents; AOrigin: TNyxNode;
+  const ADispatch: TNyxDispatch; const ADecision: INyxGestureDecision): Boolean;
 { Shared adapter bridge. Retains both borrowed nodes across callbacks that may
   replace the mounted view; only immutable snapshots enter scheduled work. }
 function DispatchNyxInput(const AEvents: INyxEvents; AOrigin: TNyxNode;
@@ -543,7 +564,8 @@ type
     weak reservation. Dispatch depth and preview state are UI-thread-only
     admission flags, never substitutes for worker ticket completion. }
   TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration,
-    INyxEventObservation, INyxEventObservationEditing, INyxEventViewPreparation)
+    INyxEventObservation, INyxEventObservationEditing, INyxEventViewPreparation,
+    INyxGestureInputEvents)
   private
     FClosed: Boolean;
     FViewRevision: Integer;
@@ -641,6 +663,9 @@ type
     function DispatchGesture(const AEvent: TNyxEventInfo;
       const AOriginDesignID, ASourceDesignID: TNyxText;
       const ADecision: INyxGestureDecision): TNyxExecutions;
+    function DispatchGestureInput(const AEvent: TNyxEventInfo;
+      const AOriginDesignID, ASourceDesignID: TNyxText;
+      const ADecision: INyxGestureDecision; out AConsumed: Boolean): TNyxExecutions;
     procedure CancelPending;
     procedure Close;
     function GetScheduler: INyxScheduler;
@@ -966,6 +991,68 @@ begin
     ADecision.Seal;
     ADispatch.Source.ReleaseReference;
     AOrigin.ReleaseReference;
+  end;
+end;
+
+function DispatchNyxGestureInput(const AEvents: INyxEvents; AOrigin: TNyxNode;
+  const ADispatch: TNyxDispatch; const ADecision: INyxGestureDecision): Boolean;
+var
+  LFacet: INyxGestureInputEvents;
+begin
+  Result := False;
+  try
+
+    if (AEvents = nil) or (AOrigin = nil) or (ADispatch.Source = nil) or
+      (ADecision = nil) then
+    begin
+      raise ENyxSchedule.Create('Pointer input requires its owned decision and live source');
+    end;
+
+    if not Supports(AEvents, INyxGestureInputEvents, LFacet) then
+    begin
+      raise ENyxSchedule.Create('This event router does not provide gesture input admission');
+    end;
+    AOrigin.AcquireReference;
+    ADispatch.Source.AcquireReference;
+    try
+      LFacet.DispatchGestureInput(ADispatch.Info, AOrigin.DesignID,
+        ADispatch.Source.DesignID, ADecision, Result);
+    finally
+      ADispatch.Source.ReleaseReference;
+      AOrigin.ReleaseReference;
+    end;
+  finally
+
+    if ADecision <> nil then
+    begin
+      ADecision.Seal;
+    end;
+  end;
+end;
+
+function TNyxEvents.DispatchGestureInput(const AEvent: TNyxEventInfo;
+  const AOriginDesignID, ASourceDesignID: TNyxText;
+  const ADecision: INyxGestureDecision; out AConsumed: Boolean): TNyxExecutions;
+var
+  LInput: INyxInputDecision;
+begin
+  AConsumed := False;
+  try
+
+    if (ADecision = nil) or not AEvent.HasPointer or not AEvent.Pointer.HasPosition or
+      not (AEvent.Trigger in [ntPointerDown, ntPointerMove, ntPointerUp]) then
+    begin
+      raise ENyxSchedule.Create('Gesture input requires a positioned pointer down, move or up');
+    end;
+    LInput := TNyxInputDecision.Create;
+    Result := DispatchCore(AEvent, AOriginDesignID, ASourceDesignID, LInput, ADecision);
+    AConsumed := LInput.Consumed;
+  finally
+
+    if ADecision <> nil then
+    begin
+      ADecision.Seal;
+    end;
   end;
 end;
 

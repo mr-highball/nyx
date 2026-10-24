@@ -7238,6 +7238,9 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       "-Fu$nyxLazarus/lcl/units/$nyxGesturePlatform", "-Fu$nyxLazarus/lcl/units/$nyxGesturePlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxGesturePlatform", "-Fu$nyxLazarus/packager/units/$nyxGesturePlatform",
       "-FU$nyxGestureNative", "-FE$nyxGestureNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxGestureFlags + @('tests/nyx_gesture_input_tests.lpr'))
+    & (Join-Path $nyxGestureNative 'nyx_gesture_input_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Canonical gesture/input contract failed' }
     Invoke-NyxCompiler $nyxLclFpc ($nyxGestureFlags + @('tests/nyx_gesture_tests.lpr'))
     & (Join-Path $nyxGestureNative 'nyx_gesture_tests.exe') (Join-Path $nyxGestureNative 'nyx.gestures.fixture.pas')
     if ($LASTEXITCODE -ne 0) { throw 'Gesture source preparation failed' }
@@ -7255,10 +7258,13 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       "-Fu$nyxGestureNative", "-FE$nyxBrowserDir", '-dNYX_COMPILED_GESTURES', 'tests/nyx_gesture_tests.lpr'))
     Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
       "-FE$nyxBrowserDir", 'tests/nyx_gesture_studio_tests.lpr'))
+    Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', "-FE$nyxBrowserDir", 'tests/nyx_gesture_input_tests.lpr'))
     Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Fusrc', '-Futests',
       "-FE$nyxBrowserDir", 'tests/nyx_gesture_physical_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
-    foreach ($nyxGestureHost in @('gestures.html', 'gesture-studio.html', 'gestures-physical.html')) {
+    foreach ($nyxGestureHost in @('gestures.html', 'gesture-studio.html', 'gestures-physical.html',
+        'gesture-input.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxGestureHost") -Destination $nyxBrowserDir
     }
     if ($Target -eq 'gestures') { exit 0 }

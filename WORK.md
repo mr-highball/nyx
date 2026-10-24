@@ -78,14 +78,28 @@ small fixture passes in the same browser. This is no Studio browser pass or
 confirmed browser disconnect. The current run remains retained instead of being
 restarted on an observation timeout. Process/tab details stay in private handoff.
 
-Lil' Scooty next owns the existing W2 pointer endpoint prerequisite: its optional
+Lil' Scooty owns the existing W2 pointer endpoint prerequisite: its optional
 selection-owner facet reuses the existing range publication owner, reserves before
 source getters and completes once after canonical input. Pure06 passes33 plus
-unchanged navigation37/range47 native checks, all clean; browser compiles, actual
-browser/target input remain pending. Earlier record portability and fixture
-retirement failures stay retained. All seven original task03 criteria, complete
-mounted-input qualification, own-export/native performance and the full goal stay
-open. File inventories and validation snapshots impose no permission boundary.
+unchanged navigation37/range47 on native and actual browser; native heaps are
+clean and browser logs empty. Earlier record portability and fixture retirement
+failures stay retained. Managed target input is a separate qualification cohort.
+All seven original task03 criteria, complete mounted-input qualification,
+own-export/native performance and the full goal stay open. File inventories and
+validation snapshots impose no permission boundary.
+
+The optional `INyxGestureInputEvents` adapter facet now gives one positioned
+pointer dispatch both default-consumption and gesture authority through the
+ordinary captured callback/observer membership. Original INyxEvents and ordinary
+DispatchGesture/Input retain their contracts. Gesture-input02 passes69 native
+and actual browser checks: origin/source once, retained/queued refusal, callback
+failure, membership changes, navigation/close, nested inputs and real node
+retirement. Native heap1145/1145 blocks is complete/clean; browser logs are empty.
+There are zero owned compiler warnings; the installed browser RTL retains its
+seven existing warnings. The first fixture warning is corrected by an explicit
+observe branch; its narrower59-check result remains retained. These checks do
+not qualify mounted table input or trusted mouse/touch/OS behavior. The maintained
+gestures build now includes this portable consumer and its browser host.
 
 ### Earlier checkpoint — native button admission and runtime table presentation
 
