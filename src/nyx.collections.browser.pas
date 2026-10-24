@@ -901,18 +901,36 @@ end;
 
 function TBrowserMount.BeginCellContext(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
 var
+  LLease: INyxCollectionMount;
   LCommands: INyxCollectionClipboardCommands;
   LActions: INyxCollectionCellActions;
-  LCommand: INyxCollectionClipboardCommand;
+  LEntry: INyxCollectionCellActionInput;
+  LCommand: INyxCollectionClipboardCellCommand;
   LRow: TBrowserRow;
+  LField: TNyxColumnIdentity;
+  LItem: TNyxItemRef;
   LIndex: Integer;
   LColumn: Integer;
 begin
   Result := nil;
+  LLease := Self as INyxCollectionMount;
   LCommands := FClipboardCommands;
   LActions := FCellActions;
 
   if (LCommands = nil) or (LActions = nil) or AEvent.defaultPrevented then
+  begin
+    Exit;
+  end;
+
+  if not Supports(LActions, INyxCollectionCellActionInput, LEntry) then
+  begin
+    Exit;
+  end;
+  { Intent is captured before the RAW input factory or any physical/source
+    identity getter. The same envelope is returned through canonical dispatch. }
+  LCommand := LEntry.BeginCellInput(LCommands);
+
+  if (LCommand = nil) or not LCommand.Current then
   begin
     Exit;
   end;
@@ -930,9 +948,20 @@ begin
       if (AEvent.target = LRow.FCells[LColumn]) or
         ((LColumn < Length(LRow.FLabels)) and (AEvent.target = LRow.FLabels[LColumn])) then
       begin
-        LCommand := LCommands.BeginCell(LRow.FRef, ClipboardField(LColumn));
-        LCommand := NewNyxCollectionCellActionCommand(LCommand, LActions);
-        Exit(TBrowserCopyCommand.Create(LCommand));
+        LItem := LRow.FRef;
+        LField := ClipboardField(LColumn);
+
+        if not LCommand.Current then
+        begin
+          Exit;
+        end;
+        LCommand.ResolveCell(LItem, LField);
+
+        if LCommand.Current then
+        begin
+          Result := TBrowserCopyCommand.Create(LCommand);
+        end;
+        Exit;
       end;
     end;
   end;

@@ -27,7 +27,8 @@ interface
 
 uses
   nyx.text, nyx.model, nyx.root.types, nyx.events, nyx.scheduler,
-  nyx.menu, nyx.popover, nyx.clipboard, nyx.collections.clipboard,
+  nyx.menu, nyx.popover, nyx.clipboard, nyx.collections,
+  nyx.collections.arrangement, nyx.collections.clipboard,
   nyx.collections.clipboard.actions, nyx.collections.export,
   nyx.collections.export.actions, nyx.collections.view, nyx.files.save,
   nyx.collections.representation;
@@ -106,6 +107,21 @@ type
     ['{F82465BE-F251-4B7F-A5D0-8AAC5C12125B}']
     function GetIntent: Integer;
     property Intent: Integer read GetIntent;
+  end;
+
+  { Reserve the actions owner's exact intent BEFORE column/snapshot/native/DOM
+    getters. The returned single-use envelope also reserves the original RAW
+    input; ResolveCell supplies identities without capturing another intent or
+    epoch. A nested newer context makes Current/DispatchCurrent false forever,
+    including when its bytes and physical cell are identical. Stale Prepare or
+    Complete cannot open a menu or adopt that newer intent. Callers check
+    Current before reading source/physical getters. A nonnil stale envelope
+    remains safe to retire; nil denotes an already retired/exhausted owner.
+    Entry is UI-only and performs no copy. }
+  INyxCollectionCellActionInput = interface(IInterface)
+    ['{C3953EBB-4FBD-45B6-B488-8E5600F90A71}']
+    function BeginCellInput(const ACommands: INyxCollectionClipboardCommands):
+      INyxCollectionClipboardCellCommand;
   end;
 
   { Separate represented result preserves the established accepted-RAW result
@@ -296,11 +312,12 @@ type
     {$endif}
   end;
 
-  { Controller stores detached snapshot/cancellation only. Its menu and form
+  { Controller stores detached snapshot/cancellation only and reserves intent
+    directly from its own flags before input factories/getters. Menu and form
     subscriptions refer back through TCellPort, avoiding mount/presenter cycles. }
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
     INyxCollectionCellActionIntent, INyxCollectionCellExportActions,
-    INyxCollectionCellRepresentationActions)
+    INyxCollectionCellRepresentationActions, INyxCollectionCellActionInput)
   private
     FFactory: INyxCollectionCellPresenterFactory;
     FWriter: INyxCollectionClipboardCapturedWrite;
@@ -360,6 +377,8 @@ type
       const AExporter: INyxCollectionExportCapturedSave);
     destructor Destroy; override;
     function OpenCell(const ALaunch: INyxCollectionClipboardCommand): Boolean;
+    function BeginCellInput(const ACommands: INyxCollectionClipboardCommands):
+      INyxCollectionClipboardCellCommand;
     procedure Close;
     procedure Revoke;
     procedure Disconnect;
@@ -378,8 +397,11 @@ type
   end;
 
   { Short-lived original physical-input envelope changes only its default:
-    opening a managed menu instead of immediately writing the clipboard. }
-  TCellActionCommand = class(TInterfacedObject, INyxCollectionClipboardCommand)
+    opening a managed menu instead of immediately writing the clipboard. The
+    reserved constructor receives an already captured actions intent; no input
+    factory or source getter can lend it a later context's authority. }
+  TCellActionCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
+    INyxCollectionClipboardCellCommand)
   private
     FLaunch: INyxCollectionClipboardCommand;
     FActions: INyxCollectionCellActions;
@@ -388,9 +410,15 @@ type
     FIntent: INyxCollectionCellActionIntent;
     FOriginalIntent: Integer;
     FWantOutput: Boolean;
+    FPrepared: Boolean;
+    function IntentCurrent: Boolean;
   public
     constructor Create(const ALaunch: INyxCollectionClipboardCommand;
       const AActions: INyxCollectionCellActions);
+    constructor CreateReserved(const AActions: INyxCollectionCellActions;
+      const AIntent: INyxCollectionCellActionIntent; AOriginalIntent: Integer;
+      const ACommands: INyxCollectionClipboardCommands);
+    procedure ResolveCell(const AItem: TNyxItemRef; const AField: TNyxColumnIdentity);
     procedure Prepare;
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
@@ -970,6 +998,32 @@ begin
   begin
     Close;
   end;
+end;
+
+function TCellActions.BeginCellInput(const ACommands: INyxCollectionClipboardCommands):
+  INyxCollectionClipboardCellCommand;
+var
+  LLease: INyxCollectionCellActions;
+  LIntent: INyxCollectionCellActionIntent;
+  LCommands: INyxCollectionClipboardCommands;
+  LScheduler: INyxScheduler;
+  LOriginalIntent: Integer;
+begin
+  Result := nil;
+  LLease := Self;
+  { This flags-only witness precedes even RequireUI and the command factory's
+    optional-interface queries. Reentry cannot replace it with a later value. }
+  LOriginalIntent := GetIntent;
+  LScheduler := FScheduler;
+  LCommands := ACommands;
+
+  if (LOriginalIntent = 0) or (LScheduler = nil) or (LCommands = nil) then
+  begin
+    Exit;
+  end;
+  LIntent := Self;
+  LScheduler.RequireUI;
+  Result := TCellActionCommand.CreateReserved(LLease, LIntent, LOriginalIntent, LCommands);
 end;
 
 function TCellActions.OpenCell(const ALaunch: INyxCollectionClipboardCommand): Boolean;
@@ -1883,10 +1937,107 @@ begin
     LExport.ExportEnabled;
 end;
 
+constructor TCellActionCommand.CreateReserved(const AActions: INyxCollectionCellActions;
+  const AIntent: INyxCollectionCellActionIntent; AOriginalIntent: Integer;
+  const ACommands: INyxCollectionClipboardCommands);
+var
+  LCommands: INyxCollectionClipboardCommands;
+  LEntry: INyxCollectionClipboardCellInput;
+  LExport: INyxCollectionCellExportActions;
+begin
+  inherited Create;
+  FActions := AActions;
+  FIntent := AIntent;
+  FOriginalIntent := AOriginalIntent;
+  LCommands := ACommands;
+
+  if (FActions = nil) or (FIntent = nil) or (LCommands = nil) or
+    (FOriginalIntent <= 0) or (FOriginalIntent >= High(Integer)) then
+  begin
+    raise ENyxCollectionClipboard.Create('Context reservation requires exact actions/input owners');
+  end;
+
+  if not IntentCurrent then
+  begin
+    Exit;
+  end;
+  FWantOutput := Supports(FActions, INyxCollectionCellExportActions, LExport) and
+    LExport.ExportEnabled;
+
+  if not IntentCurrent then
+  begin
+    Exit;
+  end;
+
+  if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+  begin
+    raise ENyxCollectionClipboard.Create('Cell context requires reservable original RAW input');
+  end;
+
+  if not IntentCurrent then
+  begin
+    Exit;
+  end;
+  FLaunch := LEntry.BeginCellInput;
+
+  if (FLaunch <> nil) and not IntentCurrent then
+  begin
+    FLaunch.Retire;
+  end;
+end;
+
+function TCellActionCommand.IntentCurrent: Boolean;
+begin
+  Result := (FIntent <> nil) and (FOriginalIntent > 0) and
+    (FOriginalIntent < High(Integer)) and (FOriginalIntent = FIntent.Intent);
+end;
+
+procedure TCellActionCommand.ResolveCell(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity);
+var
+  LLease: INyxCollectionClipboardCommand;
+  LEntry: INyxCollectionClipboardCellCommand;
+begin
+  LLease := Self;
+
+  if FPrepared or FCompleted then
+  begin
+    raise ENyxCollectionClipboard.Create('Context cell resolution precedes preparation/completion');
+  end;
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+
+  if not Supports(FLaunch, INyxCollectionClipboardCellCommand, LEntry) then
+  begin
+    raise ENyxCollectionClipboard.Create('Context input does not support exact cell resolution');
+  end;
+
+  if GetCurrent then
+  begin
+    LEntry.ResolveCell(AItem, AField);
+  end;
+end;
+
 procedure TCellActionCommand.Prepare;
 var
+  LLease: INyxCollectionClipboardCommand;
   LOutput: INyxCollectionClipboardOutputCapture;
 begin
+  LLease := Self;
+
+  if FPrepared or FCompleted then
+  begin
+    raise ENyxCollectionClipboard.Create('Cell context preparation is single-use');
+  end;
+  FPrepared := True;
+
+  if (FLaunch = nil) or not IntentCurrent then
+  begin
+    Exit;
+  end;
   FLaunch.Prepare;
 
   if FWantOutput and GetCurrent then
@@ -1905,23 +2056,55 @@ begin
 end;
 
 function TCellActionCommand.GetCurrent: Boolean;
+var
+  LLease: INyxCollectionClipboardCommand;
 begin
-  Result := not FCompleted and FLaunch.Current and (FOriginalIntent > 0) and
-    (FOriginalIntent = FIntent.Intent);
+  LLease := Self;
+  Result := False;
+
+  if FCompleted or (FLaunch = nil) then
+  begin
+    Exit;
+  end;
+  { The original RAW proof can enter model/mount getters. Keep this envelope
+    alive and test its terminal flags and exact context intent after it. }
+  Result := FLaunch.Current;
+  Result := Result and not FCompleted and IntentCurrent;
 end;
 
 function TCellActionCommand.GetDispatchCurrent: Boolean;
+var
+  LLease: INyxCollectionClipboardCommand;
 begin
-  Result := not FCompleted and FLaunch.DispatchCurrent;
+  LLease := Self;
+  Result := False;
+
+  if FCompleted or (FLaunch = nil) then
+  begin
+    Exit;
+  end;
+  Result := FLaunch.DispatchCurrent;
+  Result := Result and not FCompleted and IntentCurrent;
 end;
 
 function TCellActionCommand.GetPayload: INyxCollectionClipboardText;
+var
+  LLease: INyxCollectionClipboardCommand;
 begin
-  Result := FLaunch.Payload;
+  LLease := Self;
+  Result := nil;
+
+  if FLaunch <> nil then
+  begin
+    Result := FLaunch.Payload;
+  end;
 end;
 
 function TCellActionCommand.Complete(AAllowDefault: Boolean): Boolean;
+var
+  LLease: INyxCollectionClipboardCommand;
 begin
+  LLease := Self;
   Result := True;
 
   if FCompleted then
@@ -1931,14 +2114,13 @@ begin
   FCompleted := True;
   try
 
-    if AAllowDefault and FLaunch.Current and (FOriginalIntent > 0) and
-      (FOriginalIntent = FIntent.Intent) then
+    if AAllowDefault and (FLaunch <> nil) and FLaunch.Current and IntentCurrent then
     begin
       FTransferred := FActions.OpenCell(FLaunch);
     end;
   finally
 
-    if not FTransferred then
+    if not FTransferred and (FLaunch <> nil) then
     begin
       FLaunch.Complete(False);
     end;
@@ -1946,10 +2128,13 @@ begin
 end;
 
 procedure TCellActionCommand.Retire;
+var
+  LLease: INyxCollectionClipboardCommand;
 begin
+  LLease := Self;
   FCompleted := True;
 
-  if not FTransferred then
+  if not FTransferred and (FLaunch <> nil) then
   begin
     FLaunch.Retire;
   end;

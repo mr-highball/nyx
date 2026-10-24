@@ -920,6 +920,16 @@ its typed outcome. Normal editor text-copy remains the platform editor's own
 operation. Explicit focused-draft output is not inferred from accepted values or
 from an arbitrary tagged string.
 
+Target adapters reserve the exact actions intent through the optional
+`INyxCollectionCellActionInput.BeginCellInput` before reading physical cells,
+source identities or a foreign RAW input factory. Its returned
+`INyxCollectionClipboardCellCommand` accepts the exact row/field through
+`ResolveCell` and stays the same envelope through canonical dispatch. A nested
+newer context makes the earlier envelope stale permanently; completing or
+retiring that earlier action cannot open a menu with the newer authority or
+close its accepted menu. This optional facet preserves existing interface
+vtables and performs no clipboard effect by itself.
+
 Current qualification uses injected clipboard/save authority on actual native
 and browser controls, with separate RAW/display arbitration and retirement
 checks. It does not claim real OS clipboard access or full workbench acceptance;

@@ -64,6 +64,28 @@ type
   { Test owner outlives every subscription and injected host receiver. }
   TCopyReview = class;
 
+  { An alternate public input factory delegates the complete RAW command to
+    the actual mounted owner. Before returning that command it enters one real
+    nested context message, modeling a reentrant input/source getter. Owner is
+    borrowed only while this same fixture retains the proxy; no queue owns it. }
+  TContextCommands = class(TInterfacedObject, INyxCollectionClipboardCommands,
+    INyxCollectionClipboardCellInput)
+  public
+    Owner: TCopyReview;
+    Commands: INyxCollectionClipboardCommands;
+    Reentries: Integer;
+    function BeginCellInput: INyxCollectionClipboardCellCommand;
+    function BeginCell(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity): INyxCollectionClipboardCommand;
+    function BeginRows(AMembership: TNyxCollectionCopyMembership): INyxCollectionClipboardCommand;
+    procedure Observe(AObserver: TNyxCollectionClipboardObserver);
+    procedure CancelPending;
+    procedure Revoke;
+    function GetPhase: TNyxCollectionClipboardPhase;
+    function GetLastResult: TNyxClipboardWriteResult;
+    function GetLastPayload: INyxCollectionClipboardText;
+  end;
+
   { Actual router callback is retained by its subscription until cancellation.
     Its owner is borrowed and never enters a clipboard request or payload. }
   TKeyCallback = class(TNyxEventCallback)
@@ -333,6 +355,69 @@ procedure TKeyCallback.Invoke(const AEvent: TNyxEventInfo;
   const AExecution: INyxExecution);
 begin
   Owner.Semantic(AEvent, AExecution);
+end;
+
+function TContextCommands.BeginCellInput: INyxCollectionClipboardCellCommand;
+var
+  LEntry: INyxCollectionClipboardCellInput;
+  LOwner: TCopyReview;
+begin
+
+  if not Supports(Commands, INyxCollectionClipboardCellInput, LEntry) then
+  begin
+    raise Exception.Create('Actual mounted commands require original cell reservation');
+  end;
+  Result := LEntry.BeginCellInput;
+  LOwner := Owner;
+  Owner := nil;
+
+  if LOwner <> nil then
+  begin
+    Inc(Reentries);
+    LOwner.Context(False);
+  end;
+end;
+
+function TContextCommands.BeginCell(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity): INyxCollectionClipboardCommand;
+begin
+  Result := Commands.BeginCell(AItem, AField);
+end;
+
+function TContextCommands.BeginRows(AMembership: TNyxCollectionCopyMembership):
+  INyxCollectionClipboardCommand;
+begin
+  Result := Commands.BeginRows(AMembership);
+end;
+
+procedure TContextCommands.Observe(AObserver: TNyxCollectionClipboardObserver);
+begin
+  Commands.Observe(AObserver);
+end;
+
+procedure TContextCommands.CancelPending;
+begin
+  Commands.CancelPending;
+end;
+
+procedure TContextCommands.Revoke;
+begin
+  Commands.Revoke;
+end;
+
+function TContextCommands.GetPhase: TNyxCollectionClipboardPhase;
+begin
+  Result := Commands.Phase;
+end;
+
+function TContextCommands.GetLastResult: TNyxClipboardWriteResult;
+begin
+  Result := Commands.LastResult;
+end;
+
+function TContextCommands.GetLastPayload: INyxCollectionClipboardText;
+begin
+  Result := Commands.LastPayload;
 end;
 
 procedure TWrite.Finish;
@@ -787,6 +872,12 @@ var
   LOpen: INyxPopoverOpenLifetime;
   LCaptured: INyxCollectionClipboardText;
   LIntent: INyxCollectionCellActionIntent;
+  LEntry: INyxCollectionCellActionInput;
+  LReserved: INyxCollectionClipboardCellCommand;
+  LProxy: TContextCommands;
+  LProxyLease: INyxCollectionClipboardCommands;
+  LNestedMenu: INyxMenu;
+  LSource: INyxCollectionSnapshot;
   LOriginalIntent: Integer;
   LMenuOpen: Boolean;
   LFailure: TNyxText;
@@ -808,6 +899,43 @@ begin
     (FCellActions.Menu = nil), 'consumed canonical context creates no menu or clipboard effect');
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LIntent),
     'mounted cell actions expose a canonical nested-intent witness');
+  Check(Supports(FCellActions, INyxCollectionCellActionInput, LEntry),
+    'managed context reserves original intent before a foreign input getter');
+  LOriginalIntent := LIntent.Intent;
+  LContexts := FContexts;
+  LSource := FView.Store.Snapshot;
+  FMode := kmObserve;
+  LProxy := TContextCommands.Create;
+  LProxyLease := LProxy;
+  LProxy.Commands := FCommands;
+  LProxy.Owner := Self;
+  LReserved := LEntry.BeginCellInput(LProxyLease);
+  Check((LProxy.Reentries = 1) and (FContexts = LContexts + 1) and
+    (LIntent.Intent = LOriginalIntent + 1) and (LReserved <> nil) and
+    not LReserved.Current and not LReserved.DispatchCurrent,
+    'real nested context inside input getter permanently retires the earlier reserved intent');
+  LReserved.ResolveCell(ItemA, NameField);
+  LReserved.Prepare;
+  Check((LReserved.Payload = nil) and LReserved.Complete(True) and
+    not LReserved.Current and not LReserved.DispatchCurrent,
+    'stale resolution/preparation/default cannot recapture the nested context even for identical bytes');
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LNestedMenu := FCellActions.Menu;
+  Check((LIntent.Intent = LOriginalIntent + 1) and (LNestedMenu <> nil) and
+    LNestedMenu.IsOpen and (FCellActions.Snapshot.Text = CText) and
+    (FCellActions.Snapshot.ItemAt(0).ID = ItemA.ID) and
+    FCellActions.Snapshot.FieldAt(0).Same(NameField) and
+    (FHost.Writes = LBefore) and (FView.Store.Snapshot = LSource),
+    'only the nested original menu is published with exact RAW provenance and no data or clipboard effect');
+  LReserved.Retire;
+  LReserved := nil;
+  LProxyLease := nil;
+  Check((FCellActions.Menu = LNestedMenu) and LNestedMenu.IsOpen and
+    (LIntent.Intent = LOriginalIntent + 1),
+    'late outer retirement leaves the exact accepted nested menu and intent intact');
+  LNestedMenu := nil;
+  FCellActions.Close;
+  FocusCell;
   LOriginalIntent := LIntent.Intent;
   LContexts := FContexts;
   FMode := kmNested;

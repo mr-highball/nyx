@@ -380,6 +380,29 @@ first reserves a cell-action intent before outward getters, then adds explicit
 draft-menu/inspection discoverability; its new cell.actions changes are separate
 unqualified working code.
 
+Context-intent06 now reserves the actions owner's original intent before UI
+admission, optional input factories and physical/source identity getters. The
+same single-use envelope reaches canonical dispatch on both targets; a nested
+newer menu cannot lend its authority to an older returning frame, even when
+cell identities and bytes are unchanged. The maintained real-control consumer
+retains its former assertions and adds a same-owner reentrant input factory.
+Native passes230 checks with a complete clean heap; browser passes292 at
+measured1280x900 and390x900 with empty warning/error logs. All four source pins
+and three staged artifacts reverify unchanged. Root independently reviews the
+shared envelope, both target entries and adversarial assertions. Exact temporary
+host43340 is stopped/joined, port19148 has no listener, tab112 is closed and the
+viewport is reset. The helper's earlier browser-provider failure remains an
+initialization failure, not a failed application test. These are synthetic target
+inputs and injected host effects, not OS clipboard/save qualification.
+
+Root's form/event integration is separate unqualified working code. Independent
+helper review found queued old-context delivery during reversible preview,
+effect-argument ownership through callbacks, exact primary-failure preservation
+and generation guards during focus restoration as prerequisites. Those are
+implementation defects to fix within existing authorization, not reasons to
+make library contracts immutable. Next helper work adds explicitly enabled
+focused-draft menu/inspection actions captured before editor focus changes.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

@@ -977,7 +977,7 @@ var
   LLease: INyxCollectionMount;
   LCommands: INyxCollectionClipboardCommands;
   LActions: INyxCollectionCellActions;
-  LEntry: INyxCollectionClipboardCellInput;
+  LEntry: INyxCollectionCellActionInput;
   LCommand: INyxCollectionClipboardCellCommand;
   LGrid: TStringGrid;
   LData: INyxCollectionSnapshot;
@@ -999,11 +999,19 @@ begin
   LLease := Self as INyxCollectionMount;
   LData := FRendered;
 
-  if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+  if not Supports(LActions, INyxCollectionCellActionInput, LEntry) then
   begin
     Exit;
   end;
-  LCommand := LEntry.BeginCellInput;
+  { Reserve both the original RAW input and the actions intent before physical
+    coordinates or snapshot getters. A nested newer menu cannot lend the
+    returning outer frame its intent, even when every cell byte is unchanged. }
+  LCommand := LEntry.BeginCellInput(LCommands);
+
+  if (LCommand = nil) or not LCommand.Current then
+  begin
+    Exit;
+  end;
   LGrid := InputGrid(Sender);
 
   if LGrid = nil then
@@ -1021,7 +1029,8 @@ begin
   LColumn := CanonicalColumn(LGrid, LPhysical);
   LField := ClipboardField(LColumn);
 
-  if (LData = nil) or (LRow < 0) or (LColumn < 0) or not LField.Defined then
+  if not LCommand.Current or (LData = nil) or (LRow < 0) or
+    (LColumn < 0) or not LField.Defined then
   begin
     Exit;
   end;
@@ -1030,8 +1039,17 @@ begin
   if LCommand.Current and (LRow < LCount) then
   begin
     LItem := LData.ItemAt(LRow).Ref;
+
+    if not LCommand.Current then
+    begin
+      Exit;
+    end;
     LCommand.ResolveCell(LItem, LField);
-    Result := NewNyxCollectionCellActionCommand(LCommand, LActions);
+
+    if LCommand.Current then
+    begin
+      Result := LCommand;
+    end;
   end;
 end;
 

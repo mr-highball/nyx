@@ -96,6 +96,12 @@ real OS effects remain open. Root's new typed portable form-context refresh
 passes32 native/browser checks and preserves the unchanged174-check native
 retained-control journey. Physical event/input adoption and whole-Inspector
 performance are still required; the existing strict default API is unchanged.
+The subsequent context-intent06 packet reserves the original actions/input
+witness before outward getters on both targets. Native controls230 pass with a
+complete clean heap; browser controls292 pass at measured desktop/compact sizes,
+logs empty. A real nested context during input-factory return cannot redirect
+the older action or retire the newer menu. Explicit draft actions and form/event
+adoption remain the next integration work, with original criteria unchanged.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 
