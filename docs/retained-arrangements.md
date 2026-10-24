@@ -98,6 +98,11 @@ adoption, actual physical-input/focus and worker integration, and whole-Inspecto
 performance remain open. The maintained `retained-arrangement` target includes
 both portable form and retained-context publication consumers.
 
+Before physical adoption, the generic prepared-group notification loop also
+needs qualification for a raw JavaScript failure from an earlier event-ticket
+cancellation. The current raw assertions cover failure from the last target;
+they do not establish independent later notification after that earlier failure.
+
 The portable `TNyxNode.ArrangeLike` boundary prepares every owner array and actual
 managed implementation anchor before publication. It adopts no candidate node.
 Runtime/source/design identities, instance scopes, complete node set and root stay

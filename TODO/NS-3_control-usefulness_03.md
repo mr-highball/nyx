@@ -111,6 +111,10 @@ target phases do not qualify actual renderer/Inspector adoption, worker/focus
 interaction or native editor performance; those outcomes remain required.
 Reentrant wrapper retirement is deferred through its entered child phase;
 caller-scheduled descendant-work admission remains an explicit integration gap.
+Earlier-member raw JavaScript notification failure also needs generic-group
+qualification before physical form adoption; current raw assertions cover the
+last target only. The separate draft-action12 native319 result remains partial
+while stale editor-menu fallback is repaired and browser behavior is qualified.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 

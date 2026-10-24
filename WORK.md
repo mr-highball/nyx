@@ -463,6 +463,24 @@ compiler/runtime cohorts are joined; the helper's independent actual control
 journey owns native UI until its recorded runtime joins. Whole task acceptance,
 physical form adoption and native Studio performance remain open.
 
+Final independent review accepts the deferred-retirement repair, and identifies
+one adjacent generic-group prerequisite before physical adoption: a raw
+JavaScript throw from an earlier event ticket's Cancel bypasses
+TPreparedGroup.Notify's Pascal-only exception handler and can skip the later
+target notification. Current raw context assertions exercise the last target's
+failure, not that earlier member. Root next fixes/qualifies this independent
+notification boundary, then caller-scheduled descendant admission and actual
+renderer/input/Inspector adoption. No source file or public contract is off-limits.
+
+The helper's draft-actions12 actual native consumer passes319 with a complete
+7008127/7008127 clean heap and UI released. Its nine-file packet is not yet
+accepted or browser-executed: subsequent self-review identifies stale managed
+editor intent falling back to the platform menu when preparation returns nil.
+There are no active12 readers; the helper immediately repairs that route and
+adds the actual nested-getter editor assertion before the next qualification.
+The next disjoint range packet reuses existing selected-page TSV ordering rather
+than creating another serializer. Root has not changed LAN/Studio services.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy
