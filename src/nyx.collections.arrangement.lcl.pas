@@ -30,7 +30,8 @@ interface
 uses
 Graphics, Controls, nyx.theme, nyx.collections.mount,
   nyx.collections.arrangement.presenter, nyx.popover.lcl, nyx.text,
-  nyx.collections.view, nyx.collections.arrangement.controls;
+  nyx.collections.view, nyx.collections.arrangement.controls,
+  nyx.collections.presentation;
 
 type
   { Managed detached native metric and its copied font/text-style witness.
@@ -69,6 +70,15 @@ function MeasureNyxLCLColumnFit(const ASample: INyxCollectionColumnSample;
   const AHeaderStyle, ABodyStyle: TTextStyle;
   ATargetPPI, AHeaderInset, ABodyInset: Integer): INyxLCLColumnFitMeasurement;
 
+{ Opted-in text policies use the same work admission as paint, while Fit reads
+  complete hard lines instead of the clipped/wrapped visual prefix. }
+function MeasureNyxLCLColumnFitWithTextPolicy(const ASample: INyxCollectionColumnSample;
+  AHeaderFont, ABodyFont: TFont; const AHeaderText: TNyxText;
+  const AHeaderStyle, ABodyStyle: TTextStyle;
+  ATargetPPI, AHeaderInset, ABodyInset: Integer;
+  const APolicy: TNyxColumnTextPolicy; const ALimits: TNyxTableTextWorkLimits):
+  INyxLCLColumnFitMeasurement;
+
 type
   { Target observation retains the exact ordinary Nyx popup. Its renderer and
     controls are borrowed from that popup and must never be freed externally. }
@@ -91,7 +101,7 @@ uses
 Types, SysUtils, Math, LCLType, LCLIntf, nyx.data, nyx.collections,
   nyx.collections.arrangement, nyx.layout.constraints, nyx.model, nyx.root.types,
   nyx.events, nyx.state, nyx.popover, nyx.popover.types,
-  nyx.collections.arrangement.workbench, nyx.types;
+  nyx.collections.arrangement.workbench, nyx.types, nyx.collections.text.layout;
 
 type
   { One weak table target, retained only as inert retirement facts by its forms.
@@ -378,12 +388,16 @@ type
     FHeaderText: TNyxText;
     FTargetPPI, FHeaderInset, FBodyInset: Integer;
     FMeasurement: INyxColumnFitMeasurement;
+    { Borrowed private bitmap only during Initialize; never retained by result. }
+    FMetricCanvas: TCanvas;
+    function MeasureLine(const AText: TNyxText): Double;
   public
     destructor Destroy; override;
     procedure Initialize(const ASample: INyxCollectionColumnSample;
       AHeaderFont, ABodyFont: TFont; const AHeaderText: TNyxText;
       const AHeaderStyle, ABodyStyle: TTextStyle;
-      ATargetPPI, AHeaderInset, ABodyInset: Integer);
+      ATargetPPI, AHeaderInset, ABodyInset: Integer;
+      const APolicy: TNyxColumnTextPolicy; const ALimits: TNyxTableTextWorkLimits);
     function GetMeasurement: INyxColumnFitMeasurement;
     function Matches(AHeaderFont, ABodyFont: TFont;
       const AHeaderText: TNyxText;
@@ -469,17 +483,33 @@ begin
   inherited Destroy;
 end;
 
+function TLCLColumnFitMeasurement.MeasureLine(const AText: TNyxText): Double;
+begin
+  Result := NativeFitTextWidth(FMetricCanvas, AText, FBodyStyle);
+end;
+
 procedure TLCLColumnFitMeasurement.Initialize(
   const ASample: INyxCollectionColumnSample; AHeaderFont, ABodyFont: TFont;
   const AHeaderText: TNyxText; const AHeaderStyle, ABodyStyle: TTextStyle;
-  ATargetPPI, AHeaderInset, ABodyInset: Integer);
+  ATargetPPI, AHeaderInset, ABodyInset: Integer;
+  const APolicy: TNyxColumnTextPolicy; const ALimits: TNyxTableTextWorkLimits);
 var
   LSample: INyxCollectionColumnSample;
   LBitmap: TBitmap;
   LNatural: Double;
   LCount, LIndex: Integer;
+  LMetric: TNyxTableTextNaturalWidth;
+  LPolicy: TNyxColumnTextPolicy;
+  LLimits: TNyxTableTextWorkLimits;
 begin
   LSample := ASample;
+  LPolicy := APolicy.Copy;
+  LLimits := ALimits;
+
+  if LPolicy.Defined then
+  begin
+    LLimits.Validate;
+  end;
   FHeaderText := AHeaderText;
   FHeaderStyle := AHeaderStyle;
   FBodyStyle := ABodyStyle;
@@ -520,6 +550,11 @@ begin
   begin
     raise ENyxCollection.Create('Native column sample exceeds the declared row bound');
   end;
+
+  if LPolicy.Defined and (LCount > LLimits.MaximumCells) then
+  begin
+    raise ENyxCollection.Create('Fit sample exceeds this host cell measurement pass budget');
+  end;
   LBitmap := TBitmap.Create;
   try
     LBitmap.SetSize(1, 1);
@@ -530,11 +565,28 @@ begin
     LBitmap.Canvas.Font.Assign(FBodyFont);
     for LIndex := 0 to LCount - 1 do
     begin
-      LNatural := Max(LNatural, NativeFitTextWidth(LBitmap.Canvas,
-        LSample.TextAt(LIndex), FBodyStyle) + FBodyInset);
+
+      if LPolicy.Defined then
+      begin
+        FMetricCanvas := LBitmap.Canvas;
+        LMetric := MeasureNaturalNyxTableText(NyxLCLColumnDisplayText(LSample.TextAt(LIndex)),
+          LPolicy, LLimits, MeasureLine);
+
+        if LMetric.Admission <> nttaReady then
+        begin
+          raise ENyxCollection.Create(LMetric.Diagnostic);
+        end;
+        LNatural := Max(LNatural, LMetric.Width + FBodyInset);
+      end
+      else
+      begin
+        LNatural := Max(LNatural, NativeFitTextWidth(LBitmap.Canvas,
+          LSample.TextAt(LIndex), FBodyStyle) + FBodyInset);
+      end;
     end;
     FMeasurement := NyxColumnFitMeasurement(LSample, LNatural * 96.0 / FTargetPPI);
   finally
+    FMetricCanvas := nil;
     LBitmap.Free;
   end;
 end;
@@ -562,6 +614,19 @@ function MeasureNyxLCLColumnFit(const ASample: INyxCollectionColumnSample;
   AHeaderFont, ABodyFont: TFont; const AHeaderText: TNyxText;
   const AHeaderStyle, ABodyStyle: TTextStyle;
   ATargetPPI, AHeaderInset, ABodyInset: Integer): INyxLCLColumnFitMeasurement;
+begin
+  Result := MeasureNyxLCLColumnFitWithTextPolicy(ASample, AHeaderFont,
+    ABodyFont, AHeaderText, AHeaderStyle, ABodyStyle, ATargetPPI,
+    AHeaderInset, ABodyInset, Default(TNyxColumnTextPolicy),
+    TNyxTableTextWorkLimits.Defaults);
+end;
+
+function MeasureNyxLCLColumnFitWithTextPolicy(const ASample: INyxCollectionColumnSample;
+  AHeaderFont, ABodyFont: TFont; const AHeaderText: TNyxText;
+  const AHeaderStyle, ABodyStyle: TTextStyle;
+  ATargetPPI, AHeaderInset, ABodyInset: Integer;
+  const APolicy: TNyxColumnTextPolicy; const ALimits: TNyxTableTextWorkLimits):
+  INyxLCLColumnFitMeasurement;
 var
   LMeasurement: TLCLColumnFitMeasurement;
 begin
@@ -569,7 +634,7 @@ begin
   LMeasurement := TLCLColumnFitMeasurement.Create;
   Result := LMeasurement;
   LMeasurement.Initialize(ASample, AHeaderFont, ABodyFont, AHeaderText,
-    AHeaderStyle, ABodyStyle, ATargetPPI, AHeaderInset, ABodyInset);
+    AHeaderStyle, ABodyStyle, ATargetPPI, AHeaderInset, ABodyInset, APolicy, ALimits);
 end;
 
 end.

@@ -30,6 +30,7 @@ interface
 
 uses
   Web, nyx.theme, nyx.collections.mount, nyx.collections.arrangement.presenter,
+  nyx.collections.presentation,
   nyx.popover.browser, nyx.collections.view, nyx.collections.arrangement.controls;
 
 type
@@ -48,6 +49,10 @@ type
     BodyCell: TJSHTMLElement;
     BodyLabel: TJSHTMLElement;
     BodyEditor: TJSHTMLElement;
+    { Optional effective text policy and runtime work limit from the SAME
+      captured presentation. Absent preserves the legacy fit composition. }
+    TextPolicy: TNyxColumnTextPolicy;
+    TextLimits: TNyxTableTextWorkLimits;
   end;
 
   { A managed metric owns copied strings/styles and the inert model sample;
@@ -72,6 +77,11 @@ type
 function MeasureNyxBrowserColumnFit(const ASample: INyxCollectionColumnSample;
   const ASurface: TNyxBrowserColumnFitSurface): INyxBrowserColumnFitMeasurement;
 
+{ Canvas-based wrap and full-line Fit share this explicit default-library style
+  admission. A borrowed computed style with unsupported extra shaping refuses;
+  it is never silently treated as the same font metric. }
+function NyxBrowserColumnTextMetricSupported(AStyle: TJSCSSStyleDeclaration): Boolean;
+
 type
   { Target observation retains the exact ordinary Nyx popup. Its renderer and
     controls are borrowed from that popup and must never be freed externally. }
@@ -93,7 +103,8 @@ implementation
 uses
 SysUtils, Math, JS, nyx.text, nyx.collections, nyx.model, nyx.root.types,
   nyx.events, nyx.state, nyx.popover, nyx.popover.types,
-  nyx.collections.arrangement.workbench, nyx.types, nyx.render.browser;
+  nyx.collections.arrangement.workbench, nyx.types, nyx.render.browser,
+  nyx.collections.text.layout;
 
 type
   { One weak table target, retained only as inert retirement facts by its forms.
@@ -448,6 +459,12 @@ type
     FScene: TFitScene;
     FTexts: array of TNyxText;
     FMeasurement: INyxColumnFitMeasurement;
+    FTextPolicy: TNyxColumnTextPolicy;
+    FTextLimits: TNyxTableTextWorkLimits;
+    { Borrowed only while the private offscreen probe is installed. }
+    FMetricProbe: TJSHTMLElement;
+    FMetricProfile: TFitProfile;
+    function MeasureLine(const AText: TNyxText): Double;
     function MeasureScene(const AScene: TFitScene): Double;
   public
     procedure Initialize(const ASample: INyxCollectionColumnSample;
@@ -468,6 +485,26 @@ const
     'text-orientation');
   CResizeAttribute = 'data-nyx-column-resize';
   CLoaded = 'loaded';
+
+function NyxBrowserColumnTextMetricSupported(AStyle: TJSCSSStyleDeclaration): Boolean;
+
+  function NormalOrZero(const AName: String): Boolean;
+  var
+    LValue: String;
+  begin
+    LValue := AStyle.getPropertyValue(AName);
+    Result := (LValue = '') or (LValue = 'normal') or (LValue = '0') or (LValue = '0px');
+  end;
+
+begin
+  Result := (AStyle <> nil) and NormalOrZero('letter-spacing') and
+    NormalOrZero('word-spacing') and
+    ((AStyle.getPropertyValue('text-transform') = '') or
+     (AStyle.getPropertyValue('text-transform') = 'none')) and
+    ((AStyle.getPropertyValue('writing-mode') = '') or
+     (AStyle.getPropertyValue('writing-mode') = 'horizontal-tb')) and
+    NormalOrZero('text-indent');
+end;
 
 function Pixels(const AValue: String): Double;
 var
@@ -912,6 +949,11 @@ begin
   end;
 end;
 
+function TBrowserColumnFitMeasurement.MeasureLine(const AText: TNyxText): Double;
+begin
+  Result := ProfileWidth(FMetricProbe, FMetricProfile, AText);
+end;
+
 function TBrowserColumnFitMeasurement.MeasureScene(const AScene: TFitScene): Double;
 var
   LProbe: TJSHTMLElement;
@@ -919,6 +961,7 @@ var
   LPart: TFitHeaderPart;
   LHeader, LBody: Double;
   LIndex: Integer;
+  LMetric: TNyxTableTextNaturalWidth;
 
   procedure RequireInline(const AProfile: TFitProfile);
   begin
@@ -1042,10 +1085,28 @@ begin
     LProbe.textContent := '';
     for LIndex := 0 to High(FTexts) do
     begin
-      LBody := ProfileWidth(LProbe, AScene.BodyLabel, FTexts[LIndex]) + AScene.BodyCell.Insets;
+
+      if FTextPolicy.Defined then
+      begin
+        FMetricProbe := LProbe;
+        FMetricProfile := AScene.BodyLabel;
+        LMetric := MeasureNaturalNyxTableText(FTexts[LIndex], FTextPolicy,
+          FTextLimits, @MeasureLine);
+
+        if LMetric.Admission <> nttaReady then
+        begin
+          raise ENyxCollection.Create(LMetric.Diagnostic);
+        end;
+        LBody := LMetric.Width + AScene.BodyCell.Insets;
+      end
+      else
+      begin
+        LBody := ProfileWidth(LProbe, AScene.BodyLabel, FTexts[LIndex]) + AScene.BodyCell.Insets;
+      end;
       Result := Max(Result, LBody);
     end;
   finally
+    FMetricProbe := nil;
     LProbe.remove;
   end;
 end;
@@ -1061,7 +1122,25 @@ var
 begin
   LSample := ASample;
   LSurface := ASurface;
+  FTextPolicy := LSurface.TextPolicy.Copy;
+  FTextLimits := LSurface.TextLimits;
+
+  if FTextPolicy.Defined then
+  begin
+    FTextLimits.Validate;
+
+    if (LSurface.BodyLabel <> nil) and not NyxBrowserColumnTextMetricSupported(
+      window.getComputedStyle(LSurface.BodyLabel)) then
+    begin
+      raise ENyxCollection.Create('This browser text style requires its own resolved layout metric');
+    end;
+  end;
   LFacts := NyxColumnFitMeasurement(LSample, 0);
+
+  if FTextPolicy.Defined and (LFacts.SampleRows > FTextLimits.MaximumCells) then
+  begin
+    raise ENyxCollection.Create('Fit sample exceeds this host cell measurement pass budget');
+  end;
   SetLength(FTexts, LFacts.SampleRows);
   for LIndex := 0 to High(FTexts) do
   begin
@@ -1086,6 +1165,16 @@ begin
   Result := False;
 
   if (FMeasurement = nil) then
+  begin
+    Exit;
+  end;
+
+  if (ASurface.TextPolicy.ToData.ToJSON <> FTextPolicy.ToData.ToJSON) or
+    (FTextPolicy.Defined and
+    ((ASurface.TextLimits.MaximumLines <> FTextLimits.MaximumLines) or
+     (ASurface.TextLimits.MaximumUTF8Bytes <> FTextLimits.MaximumUTF8Bytes) or
+     (ASurface.TextLimits.MaximumMeasurements <> FTextLimits.MaximumMeasurements) or
+     (ASurface.TextLimits.MaximumCells <> FTextLimits.MaximumCells))) then
   begin
     Exit;
   end;

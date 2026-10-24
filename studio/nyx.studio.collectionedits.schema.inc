@@ -49,12 +49,15 @@ var
   LSpecEight: TNyxText;
   LSpecNine: TNyxText;
   LSpecTen: TNyxText;
+  LSpecEleven: TNyxText;
   LColumnFormat: TNyxText;
   LTableQuery: TNyxText;
   LColumnQuery: TNyxText;
   LTableLayout: TNyxText;
   LColumnLayout: TNyxText;
   LTableWorkbench: TNyxText;
+  LTablePresentation: TNyxText;
+  LColumnText: TNyxText;
   LLayoutFeatures: TNyxText;
   LPaging: TNyxText;
   LSizing: TNyxText;
@@ -285,6 +288,34 @@ begin
   LSpecTen := StringReplace(LSpecTen,
     '"selection","query","typeAhead","paging","queryControls","layoutControls"]',
     '"selection","query","typeAhead","paging","queryControls","layoutControls","workbench"]', []);
+  { Version eleven owns nullable independent action/text/spacing declarations.
+    At least one text or spacing policy must be present. Work budgets and runtime
+    user overrides are deliberately outside this authored envelope. }
+  LTablePresentation := '{"type":"object","properties":{"version":{"const":1},' +
+    '"density":{"enum":["compact","normal","comfortable"]}},' +
+    '"required":["version","density"],"additionalProperties":false}';
+  LColumnText := '{"type":"object","properties":{"version":{"const":1},' +
+    '"overflow":{"enum":["clip","ellipsis","wrap"]},' +
+    '"maximumLines":{"type":"integer","minimum":1,"maximum":2147483647}},' +
+    '"required":["version","overflow","maximumLines"],"additionalProperties":false,' +
+    '"allOf":[{"if":{"properties":{"overflow":{"enum":["clip","ellipsis"]}}},' +
+    '"then":{"properties":{"maximumLines":{"const":1}}}}]}';
+  LSpecEleven := StringReplace(LSpecNine, '"const":9', '"const":11', []);
+  LSpecEleven := StringReplace(LSpecEleven, '"editable":{"type":"boolean"}',
+    '"editable":{"type":"boolean"},"textPresentation":{"anyOf":[{"type":"null"},' + LColumnText + ']}', []);
+  LSpecEleven := StringReplace(LSpecEleven,
+    '"required":["field","kind","title","editable","sizing","queryControls","layoutControls","display"]',
+    '"required":["field","kind","title","editable","sizing","queryControls","layoutControls","display","textPresentation"]', []);
+  LSpecEleven := StringReplace(LSpecEleven, '"parent":{"type":"string"}',
+    '"workbench":{"anyOf":[{"type":"null"},' + LTableWorkbench + ']},' +
+    '"tablePresentation":{"anyOf":[{"type":"null"},' + LTablePresentation + ']},"parent":{"type":"string"}', []);
+  LSpecEleven := StringReplace(LSpecEleven,
+    '"selection","query","typeAhead","paging","queryControls","layoutControls"]',
+    '"selection","query","typeAhead","paging","queryControls","layoutControls","workbench","tablePresentation"]', []);
+  Delete(LSpecEleven, Length(LSpecEleven), 1);
+  LSpecEleven := LSpecEleven + ',"anyOf":[{"properties":{"tablePresentation":{"type":"object"}}},' +
+    '{"properties":{"columns":{"contains":{"properties":{"textPresentation":{"type":"object"}},' +
+    '"required":["textPresentation"]}}}}]}';
   Delete(LSpecNine, Length(LSpecNine), 1);
   LSpecNine := LSpecNine + ',"allOf":[{"properties":{"columns":{"contains":{' +
     '"properties":{"display":{"type":"object"}},"required":["display"]}}}}]}';
@@ -300,11 +331,11 @@ begin
     '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
     LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ',' +
-    LSpecNine + ',' + LSpecTen + ']}';
+    LSpecNine + ',' + LSpecTen + ',' + LSpecEleven + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"',
-    ',"allOf":[{"if":{"properties":{"spec":{"properties":{"version":{"const":10}}}}},' +
+    ',"allOf":[{"if":{"properties":{"spec":{"properties":{"version":{"enum":[10,11]}}}}},' +
     '"then":{"properties":{"projection":{"const":"table"}}}}]');
   Branch('"op":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"key":{"type":"string","minLength":1},' +
@@ -350,6 +381,15 @@ begin
     '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
     '"policy":{"oneOf":[{"type":"null"},' + LTableWorkbench + ']}',
     '"op","owner","key","projection","policy"');
+  Branch('"op":{"const":"table-presentation"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LTablePresentation + ']}',
+    '"op","owner","key","projection","policy"');
+  Branch('"op":{"const":"column-text"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"field":{"type":"string","minLength":1},"kind":{"enum":["text","boolean","integer","number"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LColumnText + ']}',
+    '"op","owner","key","projection","field","kind","policy"');
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
@@ -365,7 +405,8 @@ begin
     if LAction in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
       scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
-      scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench] then
+      scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+      scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
     begin
       LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
       LRequired := LRequired + ',"baseline"';
@@ -407,6 +448,18 @@ begin
       LRequired := LRequired + ',"tableWorkbench"';
     end;
 
+    if LAction = scaTablePresentation then
+    begin
+      LProperties := LProperties + ',"tablePresentation":' + LTablePresentation;
+      LRequired := LRequired + ',"tablePresentation"';
+    end;
+
+    if LAction = scaColumnText then
+    begin
+      LProperties := LProperties + ',"columnText":' + LColumnText;
+      LRequired := LRequired + ',"columnText"';
+    end;
+
     if NyxStudioCollectionViewAction(LAction) then
     begin
       LProperties := LProperties + ',"owner":{"type":"string","minLength":1},' +
@@ -416,7 +469,8 @@ begin
         scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
         scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-        scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench] then
+        scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+        scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
       begin
         LProperties := StringReplace(LProperties,
           '"projection":{"enum":["list","table","tree"]}',
@@ -440,7 +494,8 @@ begin
 
     if LAction in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn, scaAddColumn,
       scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
-      scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
+      scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
+    scaColumnText, scaDefaultColumnText] then
     begin
       LProperties := LProperties + ',"field":{"type":"string","minLength":1},' +
         '"kind":{"enum":["text","boolean","integer","number"]}';
@@ -543,7 +598,8 @@ begin
     '"queryControls":{"type":"boolean","default":false},' +
     '"layoutControls":{"type":"boolean","default":false},' +
     '"formatControls":{"type":"boolean","default":false},' +
-    '"workbenchControls":{"type":"boolean","default":false}},' +
+    '"workbenchControls":{"type":"boolean","default":false},' +
+    '"presentationControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"column"},"owner":{"type":"string","minLength":1},' +
     '"field":{"type":"string","minLength":1},"source":{"enum":["local","effective","restorable"]},' +
@@ -551,7 +607,8 @@ begin
     '"count":{"type":"integer","minimum":1,"maximum":4096},' +
     '"queryControls":{"type":"boolean","default":false},' +
     '"layoutControls":{"type":"boolean","default":false},' +
-    '"formatControls":{"type":"boolean","default":false}},' +
+    '"formatControls":{"type":"boolean","default":false},' +
+    '"presentationControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner","field","source"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"source":{"enum":["local","effective","restorable"]},' +

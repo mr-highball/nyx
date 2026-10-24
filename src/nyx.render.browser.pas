@@ -96,6 +96,7 @@ uses
   nyx.collections.view.types,
   nyx.collections.mount,
   nyx.collections.workbench.runtime,
+  nyx.collections.presentation,
   nyx.collections.browser,
   nyx.literal.items,
   nyx.composition,
@@ -310,6 +311,8 @@ type
     { Runtime authority is configuration, never part of the mounted document.
       Captured candidates/embedded children own independent interface leases. }
     FTableWorkbenchServices: INyxTableWorkbenchServices;
+    { Runtime-only bounded text work; copied to each independently staged view. }
+    FTableTextLimits: TNyxTableTextWorkLimits;
     FHost: TJSHTMLElement;
     { A compiled document owns a connected browser mount independently of its
       volatile editor placement. The exact artifact includes private launch
@@ -384,6 +387,7 @@ type
     function GetResourceContext: INyxResourceContext;
     procedure SetResourceUpdates(const AQueue: INyxResourceUpdateQueue);
     procedure SetTableWorkbenchServices(const AServices: INyxTableWorkbenchServices);
+    procedure SetTableTextLimits(const ALimits: TNyxTableTextWorkLimits);
     procedure WakeResources;
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
     { A prepared observer can target the final owner without publishing its
@@ -754,6 +758,10 @@ type
       Nil provides explicit Unavailable results for authored table actions. }
     property TableWorkbenchServices: INyxTableWorkbenchServices
       read FTableWorkbenchServices write SetTableWorkbenchServices;
+    { Set before mounting or after Unmount. No runtime work limit is saved in
+      a document, and already entered mounts keep their original copied limits. }
+    property TableTextLimits: TNyxTableTextWorkLimits
+      read FTableTextLimits write SetTableTextLimits;
     function ResourceReady: Boolean;
     { Same idle section-publication boundary as LCL: synchronous input dispatch,
       target synchronization and busy scalar/collection stores refuse. A caller
@@ -1332,6 +1340,7 @@ end;
 constructor TNyxBrowserRenderer.Create(ATheme: TNyxTheme);
 begin
   inherited Create;
+  FTableTextLimits := TNyxTableTextWorkLimits.Defaults;
   Inc(GThemeScope);
   FThemeScope := 'nyx-theme-' + IntToStr(GThemeScope);
   FTheme := ATheme;
@@ -3657,6 +3666,7 @@ begin
       LCandidate.FCollectionInputGate := LCollectionInputGate;
       LCandidate.FCollectionInputPhase := ncipStaged;
       LCandidate.FTableWorkbenchServices := FTableWorkbenchServices;
+      LCandidate.FTableTextLimits := FTableTextLimits;
       { Build may mount saved canvases before this outer candidate commits. }
       LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
 
@@ -4966,6 +4976,17 @@ begin
   end;
 end;
 
+procedure TNyxBrowserRenderer.SetTableTextLimits(const ALimits: TNyxTableTextWorkLimits);
+begin
+  ALimits.Validate;
+
+  if (FRoot <> nil) or (FRenderAttempt <> nil) or FPublishingContent then
+  begin
+    raise ENyxModel.Create('Configure table text limits before mounting or after Unmount');
+  end;
+  FTableTextLimits := ALimits;
+end;
+
 procedure TNyxBrowserRenderer.SetTableWorkbenchServices(
   const AServices: INyxTableWorkbenchServices);
 begin
@@ -5316,7 +5337,7 @@ begin
       begin
         raise ENyxModel.Create('Control already has a live collection binding');
       end;
-      Result := MountNyxBrowserCollection(LElement, AView,
+      Result := MountNyxBrowserCollectionWithTextLimits(LElement, AView, FTableTextLimits,
         FCollectionInputPhase, FCollectionInputGate);
       FBindings[LIndex].FCollectionMount := Result;
       Result.ObserveSelection(FBindings[LIndex].CollectionSelectionChanged);
@@ -11525,6 +11546,7 @@ begin
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
   ARenderer.FResourceContext := FRenderer.FResourceContext;
   ARenderer.FTableWorkbenchServices := FRenderer.FTableWorkbenchServices;
+  ARenderer.FTableTextLimits := FRenderer.FTableTextLimits;
   ARenderer.ConfigureEmbeddedBehavior(FRenderer.FEmbeddedContext, FRenderer.FEmbeddedResolver);
   ARenderer.CanvasAdoptionHost := FRenderer.FCanvasAdoptionHost;
   ARenderer.OnEvent := @CanvasEvent;

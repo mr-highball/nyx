@@ -229,7 +229,8 @@ begin
   if (AIntent.Action in [scaQuery, scaTableQuery, scaColumnQuery,
     scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
     scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
-    scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench]) and SourceDraftPending then
+    scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText]) and SourceDraftPending then
   begin
     { An authored query or command-policy replacement regenerates managed Pascal.
       Refuse before any mutation while a handwritten draft is pending, matching

@@ -29,6 +29,7 @@ uses
   Classes, Types, Controls, Grids, LMessages, LCLType, nyx.text,
   nyx.collections.mount, nyx.gestures.lcl, nyx.widgets.lcl,
   nyx.collections.arrangement, nyx.formatting, nyx.state,
+  nyx.collections.text.layout,
   nyx.collections.clipboard.actions;
 
 type
@@ -40,6 +41,11 @@ type
     portable outcome/RAW/diagnostic facts from the same pure presentation read. }
   TNyxGridDisplayReader = function(AColumn, ARow: Integer;
     out APresentation: TNyxValuePresentation): TNyxText of object;
+  { Paint-only borrowed cache receiver. Measurement happens during guarded
+    synchronization, never from DrawCellText; returned lines own no widget.
+    False preserves the ordinary grid drawing path for an absent text policy. }
+  TNyxGridTextLayoutReader = function(AColumn, ARow: Integer;
+    out ALayout: TNyxTableTextLayout): Boolean of object;
   { Borrowed pure range-paint receiver. It reads copied page bounds/typed field
     membership only, with no dataset/widget getter, validation or publication.
     Its mount detaches it before retiring either receiver or physical grid. }
@@ -218,6 +224,7 @@ type
     { Paint-only accepted display. Cells and LCL's edit/validation path retain
       their canonical reader; formatted labels can never become editor input. }
     FDisplayReader: TNyxGridDisplayReader;
+    FTextLayoutReader: TNyxGridTextLayoutReader;
     FCellRangeReader: TNyxGridCellRangeReader;
     FEditReader: TNyxGridEditReader;
     FValidationEpoch: INyxGridValidationEpoch;
@@ -345,6 +352,9 @@ type
       exclusive receiver; no managed backreference or ownership transfer occurs. }
     procedure AttachReader(AReader: TNyxGridTextReader);
     procedure AttachDisplayReader(AReader: TNyxGridDisplayReader);
+    procedure ObserveTextLayout(AReader: TNyxGridTextLayoutReader);
+    function CellTextLayout(AColumn, ARow: Integer;
+      out ALayout: TNyxTableTextLayout): Boolean;
     procedure ObserveCellRange(AReader: TNyxGridCellRangeReader);
     function CellRangeSelected(AColumn, ARow: Integer): Boolean;
     { The same paint-only projection is observable by native target consumers.
@@ -420,7 +430,7 @@ function NewNyxGridInputContinuity: INyxGridInputContinuity;
 implementation
 
 uses
-  Forms, SysUtils, Math, StdCtrls, WSGrids, InterfaceBase, LCLPlatformDef, nyx.collections
+  Forms, SysUtils, Math, Graphics, StdCtrls, WSGrids, InterfaceBase, LCLPlatformDef, nyx.collections
   {$ifdef WINDOWS}, Windows, CommCtrl{$endif};
 
 type
@@ -1864,6 +1874,12 @@ procedure TNyxCollectionStringGrid.DrawCellText(AColumn, ARow: Integer;
 var
   LSurface: INyxGridInputSurface;
   LFrame: INyxNativeGestureFrame;
+  LLayout: TNyxTableTextLayout;
+  LStyle: TTextStyle;
+  LLine: Integer;
+  LHeight: Integer;
+  LRect: TRect;
+  LHasLayout: Boolean;
 begin
   LSurface := FInputSurface;
   LFrame := nil;
@@ -1880,7 +1896,9 @@ begin
       Exit;
     end;
 
-    if Assigned(FDisplayReader) then
+    LHasLayout := (ARow > 0) and CellTextLayout(AColumn, ARow, LLayout);
+
+    if not LHasLayout and Assigned(FDisplayReader) then
     begin
       AText := DisplayCellText(AColumn, ARow);
     end;
@@ -1893,6 +1911,32 @@ begin
     if (ARow = 0) and (FColumnToolbarHeight > 0) then
     begin
       ARect.Top := Min(ARect.Bottom, ARect.Top + FColumnToolbarHeight);
+    end;
+    { Lines have already been admitted against this content clip and copied
+      font. The physical rectangle still clips an overwide grapheme sequence.
+      Accepted editor text and the canonical Cells reader remain independent. }
+
+    if LHasLayout then
+    begin
+      LStyle := Canvas.TextStyle;
+      LStyle.SingleLine := True;
+      LStyle.Wordbreak := False;
+      LStyle.EndEllipsis := False;
+      LStyle.Clipping := True;
+      LStyle.Layout := tlTop;
+      LHeight := Max(1, Canvas.TextHeight('Ag'));
+      LRect := ARect;
+      Inc(LRect.Left, varCellPadding);
+      Dec(LRect.Right, varCellPadding);
+      Inc(LRect.Top, Max(0, (ARect.Height - LHeight * LLayout.Count) div 2));
+      for LLine := 0 to LLayout.Count - 1 do
+      begin
+        LRect.Bottom := Min(ARect.Bottom, LRect.Top + LHeight);
+        Canvas.TextRect(LRect, LRect.Left, LRect.Top,
+          LLayout.LineAt(LLine), LStyle);
+        Inc(LRect.Top, LHeight);
+      end;
+      Exit;
     end;
     inherited DrawCellText(AColumn, ARow, ARect, AState, AText);
   finally
@@ -3033,8 +3077,25 @@ procedure TNyxCollectionStringGrid.DetachReader;
 begin
   FReader := nil;
   FDisplayReader := nil;
+  FTextLayoutReader := nil;
   FCellRangeReader := nil;
   FOverrides := nil;
+end;
+
+procedure TNyxCollectionStringGrid.ObserveTextLayout(AReader: TNyxGridTextLayoutReader);
+begin
+  FTextLayoutReader := AReader;
+end;
+
+function TNyxCollectionStringGrid.CellTextLayout(AColumn, ARow: Integer;
+  out ALayout: TNyxTableTextLayout): Boolean;
+begin
+  Result := False;
+
+  if Assigned(FTextLayoutReader) then
+  begin
+    Result := FTextLayoutReader(AColumn, ARow, ALayout);
+  end;
 end;
 
 procedure TNyxCollectionStringGrid.ObserveCellRange(AReader: TNyxGridCellRangeReader);

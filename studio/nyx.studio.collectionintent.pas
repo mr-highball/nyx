@@ -32,7 +32,7 @@ uses
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
   nyx.studio.authoring, nyx.collections.columns, nyx.collections.paging,
   nyx.collections.query.policy, nyx.collections.arrangement, nyx.formatting,
-  nyx.collections.workbench.policy;
+  nyx.collections.workbench.policy, nyx.collections.presentation;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -45,7 +45,8 @@ type
     scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging,
     scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench);
+    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -118,6 +119,10 @@ type
     { Complete copied action choices share the same exact binding/schema
       baseline. Hosts, runtime bounds and live selection never enter an intent. }
     TableWorkbench: TNyxTableWorkbenchPolicy;
+    { Authored text and spacing have separate presence/reset choices. Runtime
+      preferences, host metric limits and rendered truncation never enter them. }
+    TablePresentation: TNyxTablePresentationPolicy;
+    ColumnText: TNyxColumnTextPolicy;
     LayoutBaseline: TNyxText;
     procedure Validate;
     function SameIntent(const AOther: TNyxStudioCollectionIntent): Boolean;
@@ -294,7 +299,8 @@ begin
     scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging,
     scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench];
+    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
@@ -303,7 +309,8 @@ begin
     scaBind, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaQuery,
     scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench];
+    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText];
 end;
 
 procedure TNyxStudioCollectionIntent.Validate;
@@ -325,14 +332,18 @@ begin
 
   if ((Action in [scaTableLayout, scaColumnLayout,
       scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
-      scaTableWorkbench, scaDefaultTableWorkbench]) and (LayoutBaseline = '')) or
+      scaTableWorkbench, scaDefaultTableWorkbench,
+      scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText]) and (LayoutBaseline = '')) or
     (not (Action in [scaTableLayout, scaColumnLayout,
       scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
-      scaTableWorkbench, scaDefaultTableWorkbench]) and (LayoutBaseline <> '')) or
+      scaTableWorkbench, scaDefaultTableWorkbench,
+      scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText]) and (LayoutBaseline <> '')) or
     ((Action = scaTableLayout) <> TableLayout.Defined) or
     ((Action = scaColumnLayout) <> ColumnLayout.Defined) or
     ((Action = scaColumnFormat) <> ColumnFormat.Defined) or
-    ((Action = scaTableWorkbench) <> TableWorkbench.Defined) then
+    ((Action = scaTableWorkbench) <> TableWorkbench.Defined) or
+    ((Action = scaTablePresentation) <> TablePresentation.Defined) or
+    ((Action = scaColumnText) <> ColumnText.Defined) then
   begin
     raise ENyxCollection.Create('Layout intent requires its own exact baseline and policy');
   end;
@@ -373,7 +384,8 @@ begin
     scaAddColumn, scaColumnContent, scaColumnFixed, scaColumnFlex,
     scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
     scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
-    scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat]) and not Field.Defined then
+    scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
+    scaColumnText, scaDefaultColumnText]) and not Field.Defined then
   begin
     raise ENyxCollection.Create('Collection intent requires its exact typed field');
   end;
@@ -382,7 +394,8 @@ begin
     scaParent, scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
     scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
     scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
-    scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat]) then
+    scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
+    scaColumnText, scaDefaultColumnText]) then
   begin
     raise ENyxCollection.Create('This collection intent does not use a field');
   end;
@@ -396,7 +409,8 @@ begin
     scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
     scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench]) and
+    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText]) and
     (Projection <> cpTable) then
   begin
     raise ENyxCollection.Create('Column sizing/query/layout controls require the table projection');
@@ -430,6 +444,16 @@ begin
   if Action = scaTableWorkbench then
   begin
     TableWorkbench.Validate;
+  end;
+
+  if Action = scaTablePresentation then
+  begin
+    TablePresentation.Validate;
+  end;
+
+  if Action = scaColumnText then
+  begin
+    ColumnText.Validate;
   end;
 
   if (Action in [scaPageSize, scaInitialPage, scaDefaultPaging]) and (Projection = cpTree) then
@@ -474,7 +498,9 @@ begin
     (TableLayout.ToData.ToJSON = AOther.TableLayout.ToData.ToJSON) and
     (ColumnLayout.ToData.ToJSON = AOther.ColumnLayout.ToData.ToJSON) and
     (ColumnFormat.ToData.ToJSON = AOther.ColumnFormat.ToData.ToJSON) and
-    (TableWorkbench.ToData.ToJSON = AOther.TableWorkbench.ToData.ToJSON);
+    (TableWorkbench.ToData.ToJSON = AOther.TableWorkbench.ToData.ToJSON) and
+    (TablePresentation.ToData.ToJSON = AOther.TablePresentation.ToData.ToJSON) and
+    (ColumnText.ToData.ToJSON = AOther.ColumnText.ToData.ToJSON);
 
   if Result and Item.Defined then
   begin
@@ -537,7 +563,8 @@ begin
 
   if Action in [scaTableLayout, scaColumnLayout,
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
-    scaTableWorkbench, scaDefaultTableWorkbench] then
+    scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
   begin
     SetLength(LFields, 12);
     for LIndex := 0 to 10 do
@@ -546,7 +573,8 @@ begin
     end;
     LFields[11] := NyxField('baseline', NyxData(LayoutBaseline));
 
-    if Action in [scaTableLayout, scaColumnLayout, scaColumnFormat, scaTableWorkbench] then
+    if Action in [scaTableLayout, scaColumnLayout, scaColumnFormat, scaTableWorkbench,
+      scaTablePresentation, scaColumnText] then
     begin
       SetLength(LFields, 13);
       LFields[12] := LFields[11];
@@ -562,6 +590,14 @@ begin
       else if Action = scaColumnFormat then
       begin
         LFields[11] := NyxField('columnFormat', ColumnFormat.ToData);
+      end
+      else if Action = scaTablePresentation then
+      begin
+        LFields[11] := NyxField('tablePresentation', TablePresentation.ToData);
+      end
+      else if Action = scaColumnText then
+      begin
+        LFields[11] := NyxField('columnText', ColumnText.ToData);
       end
       else
       begin
@@ -673,7 +709,8 @@ begin
 
   if AIntent.Action in [scaTableLayout, scaColumnLayout,
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
-    scaTableWorkbench, scaDefaultTableWorkbench] then
+    scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
   begin
     { This existing proof covers the complete binding and schema families; it
       performs no runtime query or preference operation. }
@@ -701,6 +738,16 @@ begin
     if AIntent.Action = scaDefaultTableWorkbench then
     begin
       Exit(ASpec.UseDefaultTableWorkbench);
+    end;
+
+    if AIntent.Action = scaTablePresentation then
+    begin
+      Exit(ASpec.TablePresentation(AIntent.TablePresentation));
+    end;
+
+    if AIntent.Action = scaDefaultTablePresentation then
+    begin
+      Exit(ASpec.UseDefaultTablePresentation);
     end;
   end;
 
@@ -795,6 +842,11 @@ begin
     { Rebuilding column/title/scope intent preserves raw presence and all
       independent action choices; only an explicit policy reset clears them. }
     Result := Result.TableWorkbench(ASpec.TableWorkbenchPolicy);
+  end;
+
+  if ASpec.HasTablePresentationPolicy then
+  begin
+    Result := Result.TablePresentation(ASpec.TablePresentationPolicy);
   end;
 
   if (AIntent.Action <> scaParent) and (ASpec.ParentField <> '') then
@@ -942,6 +994,18 @@ begin
     end;
 
     if AIntent.Field.Defined and (LColumn.FieldName = AIntent.Field.Name) and
+      (AIntent.Action = scaColumnText) then
+    begin
+      Result := Result.ColumnText(AIntent.ColumnText);
+    end
+    else if LColumn.HasTextPolicy and not
+      (AIntent.Field.Defined and (LColumn.FieldName = AIntent.Field.Name) and
+        (AIntent.Action = scaDefaultColumnText)) then
+    begin
+      Result := Result.ColumnText(LColumn.TextPolicy);
+    end;
+
+    if AIntent.Field.Defined and (LColumn.FieldName = AIntent.Field.Name) and
       (AIntent.Action = scaColumnFormat) then
     begin
       AIntent.ColumnFormat.ValidateDomain(LColumn.Kind, LField.Domain);
@@ -958,7 +1022,8 @@ begin
   if (AIntent.Action in [scaTitle, scaMode, scaRemoveColumn, scaColumnContent,
     scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
     scaColumnDefault, scaColumnQuery, scaDefaultColumnQuery,
-    scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat]) and not LColumnFound then
+    scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
+    scaColumnText, scaDefaultColumnText]) and not LColumnFound then
   begin
     raise ENyxCollection.Create('Collection column no longer exists');
   end;
@@ -1021,16 +1086,18 @@ begin
     Ord(Low(TNyxStudioCollectionAction)), Ord(High(TNyxStudioCollectionAction))));
 
   if ((Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
-      scaTableLayout, scaColumnLayout, scaColumnFormat, scaTableWorkbench]) and
+      scaTableLayout, scaColumnLayout, scaColumnFormat, scaTableWorkbench,
+      scaTablePresentation, scaColumnText]) and
       (AData.Count <> 13)) or
     ((Result.Action in [scaDefaultTableQuery, scaDefaultColumnQuery,
       scaDefaultTableLayout, scaDefaultColumnLayout, scaDefaultColumnFormat,
-      scaDefaultTableWorkbench]) and
+      scaDefaultTableWorkbench, scaDefaultTablePresentation, scaDefaultColumnText]) and
       (AData.Count <> 12)) or
     (not (Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
       scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
-      scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench]) and
+      scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+      scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText]) and
       (AData.Count <> 11)) then
   begin
     raise ENyxCollection.Create('Policy intent requires its exact extended descriptor');
@@ -1077,9 +1144,20 @@ begin
     Result.TableWorkbench := TNyxTableWorkbenchPolicy.FromData(AData.Field('tableWorkbench'));
   end;
 
+  if Result.Action = scaTablePresentation then
+  begin
+    Result.TablePresentation := TNyxTablePresentationPolicy.FromData(AData.Field('tablePresentation'));
+  end;
+
+  if Result.Action = scaColumnText then
+  begin
+    Result.ColumnText := TNyxColumnTextPolicy.FromData(AData.Field('columnText'));
+  end;
+
   if Result.Action in [scaTableLayout, scaColumnLayout,
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
-    scaTableWorkbench, scaDefaultTableWorkbench] then
+    scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
   begin
     Result.LayoutBaseline := AData.Field('baseline').AsText;
   end;

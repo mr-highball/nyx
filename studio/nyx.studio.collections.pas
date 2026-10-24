@@ -58,6 +58,9 @@ type
   TNyxStudioWorkbenchPolicyField = (swpfRangeSelection, swpfCopyCell,
     swpfCopySelectedSource, swpfCopySelectedPage, swpfCopyCellRange,
     swpfCopyFields, swpfHeaders, swpfLineEnding, swpfFocusedDraft);
+  { Presentation form roles remain typed while incomplete line-count input stays
+    an inert draft. Column -1 addresses the independent body-row spacing form. }
+  TNyxStudioPresentationPolicyField = (sppfDensity, sppfTextOverflow, sppfMaximumLines);
   { A copied presentation receipt, never design data/history. Exact command
     context prevents a later project, selection or revision from inheriting its
     report. Rows/controls/stores are not retained. Last preview describes its
@@ -159,6 +162,16 @@ function NyxStudioWorkbenchPolicyDefaultID: TNyxText;
 function CaptureNyxStudioWorkbench(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Authored spacing/text forms share the layout draft owner. IDs are transport;
+  capture independently checks owner, full typed field and current baseline. }
+function NyxStudioPresentationPolicyFormID(AColumn: Integer): TNyxText;
+function NyxStudioPresentationPolicyFieldID(AColumn: Integer;
+  AField: TNyxStudioPresentationPolicyField): TNyxText;
+function NyxStudioPresentationPolicyApplyID(AColumn: Integer): TNyxText;
+function NyxStudioPresentationPolicyDefaultID(AColumn: Integer): TNyxText;
+function CaptureNyxStudioPresentation(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture owns no accepted node/store and performs no source generation.
   Partial scalar notation stays text until the isolated session parses it.
   False means this is not the command's supported event. Invalid closed choices,
@@ -216,6 +229,7 @@ uses
   nyx.state,
   nyx.contract,
   nyx.formatting,
+  nyx.collections.presentation,
   nyx.resources,
   nyx.times,
   nyx.numbers.decimal,
@@ -252,7 +266,8 @@ const
     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
     'table-query', 'column-query', 'default-table-query', 'default-column-query',
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
-    'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench');
+    'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
+     'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text');
   CQueryEditor = NyxStudioQueryEditorID;
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
@@ -416,6 +431,7 @@ end;
   Apply/default alone enters the existing paired source-command queue. }
 {$include nyx.studio.collections.formatting.inc}
 {$include nyx.studio.collections.workbench.inc}
+{$include nyx.studio.collections.presentation.inc}
 
 procedure AddLayoutPolicyForms(AParent: TNyxNode; const AOwner: TNyxText;
   const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
@@ -528,6 +544,7 @@ begin
     EndForm(LIndex);
   end;
   AddFormatPolicyForms(LEditor.Node, AOwner, ASchema, ASpec, ALocked);
+  AddPresentationPolicyForms(LEditor.Node, AOwner, ASpec, ALocked);
   AParent.Add(LEditor);
 end;
 
@@ -925,7 +942,8 @@ begin
       not (APending.Collections[LPendingIndex].Intent.Action in
         [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
          scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-         scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench]) then
+         scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+         scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText]) then
     begin
       try
         LSchema := ASession.Document.Collections.Snapshot(
@@ -1629,6 +1647,11 @@ var
 
 begin
 
+  if CaptureNyxStudioPresentation(ASession, AButton, AShellRoot, APending, AEdit) then
+  begin
+    Exit(True);
+  end;
+
   if CaptureNyxStudioWorkbench(ASession, AButton, AShellRoot, APending, AEdit) then
   begin
     Exit(True);
@@ -1952,7 +1975,8 @@ begin
 
   if LAction in [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench] then
+    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
+    scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText] then
   begin
     raise ENyxCollection.Create('Use the current complete query or layout policy form');
   end;

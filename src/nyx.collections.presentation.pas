@@ -89,12 +89,13 @@ type
     layout fits this runtime's operational limits. Refusal changes no text or
     saved value and must not be presented as a successful ellipsis/wrap result. }
   TNyxTableTextAdmission = (nttaReady, nttaLineLimit, nttaTextLimit,
-    nttaMeasurementLimit);
+    nttaMeasurementLimit, nttaCellLimit, nttaHostMetrics);
 
   { Runtime-only per-cell work limits, separate from authored maximum lines and
     user presentation overrides. Defaults bound measurement to32 lines/64KiB
     and512 metric calls;
-    callers can explicitly raise either limit. Bytes remain within the existing
+    callers can explicitly raise these limits. A refresh measures at most4096
+    cells by default; Cells adjusts this separate host-pass allowance. Bytes remain within the existing
     collection packet ceiling. Admit performs no font/widget/model callouts and
     returns a typed refusal before a host begins line measurement. A host still
     owns any total visible-cell work budget and physical allocation bounds. }
@@ -104,17 +105,20 @@ type
     FLines: Integer;
     FBytes: Integer;
     FMeasurements: Integer;
+    FCells: Integer;
   public
     class function Defaults: TNyxTableTextWorkLimits; static;
     function Lines(AValue: Integer): TNyxTableTextWorkLimits;
     function UTF8Bytes(AValue: Integer): TNyxTableTextWorkLimits;
     function Measurements(AValue: Integer): TNyxTableTextWorkLimits;
+    function Cells(AValue: Integer): TNyxTableTextWorkLimits;
     procedure Validate;
     function Admit(const APolicy: TNyxColumnTextPolicy;
       const AText: TNyxText): TNyxTableTextAdmission;
     property MaximumLines: Integer read FLines;
     property MaximumUTF8Bytes: Integer read FBytes;
     property MaximumMeasurements: Integer read FMeasurements;
+    property MaximumCells: Integer read FCells;
   end;
 
   { One explicit runtime text override follows a complete field name/family,
@@ -454,12 +458,13 @@ begin
   Result.FLines := 32;
   Result.FBytes := 64 * 1024;
   Result.FMeasurements := 512;
+  Result.FCells := 4096;
 end;
 
 procedure TNyxTableTextWorkLimits.Validate;
 begin
 
-  if not FDefined or (FLines < 1) or (FBytes < 1) or (FMeasurements < 1) or
+  if not FDefined or (FLines < 1) or (FBytes < 1) or (FMeasurements < 1) or (FCells < 1) or
     (FBytes > NyxMaximumCollectionBytes) then
   begin
     raise EArgumentException.Create('Text layout requires positive bounded runtime work limits');
@@ -473,6 +478,17 @@ begin
   Validate;
   LLimits := Self;
   LLimits.FMeasurements := AValue;
+  LLimits.Validate;
+  Result := LLimits;
+end;
+
+function TNyxTableTextWorkLimits.Cells(AValue: Integer): TNyxTableTextWorkLimits;
+var
+  LLimits: TNyxTableTextWorkLimits;
+begin
+  Validate;
+  LLimits := Self;
+  LLimits.FCells := AValue;
   LLimits.Validate;
   Result := LLimits;
 end;

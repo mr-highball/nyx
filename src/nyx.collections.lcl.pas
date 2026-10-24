@@ -32,6 +32,7 @@ uses
   nyx.gestures.lcl,
   nyx.events, nyx.text, nyx.observation,
   nyx.collections.view,
+  nyx.collections.presentation,
   nyx.collections.mount,
   nyx.collections.clipboard.actions, nyx.collections.draft,
   nyx.collections.lcl.grid;
@@ -70,12 +71,24 @@ type
   Renderer retains/disconnects the mount before destroying its borrowed control.
   No dataset is serialized into newline/tab-separated items. Lists select rows;
   grids and tree labels edit permitted columns through atomic typed admission.
-  Opted-in column arrangement requires the caller's real frame/router/runtime
+  Opted-in arrangement or text/density requires the caller's real frame/router/runtime
   origin before any hook/handle is installed. Ordinary Apps supply them; direct
   hosts use the same context and publication port. Legacy non-layout calls keep
   their optional-argument defaults and unchanged native editing path. }
 function MountNyxLCLCollection(AControl: TControl;
   const AView: INyxCollectionView;
+  AInputPhase: TNyxCollectionInputPhase = ncipReady;
+  const AInputGate: INyxCollectionInputGate = nil;
+  const AInputFrame: INyxNativeGestureFrame = nil;
+  const AInputEvents: INyxEvents = nil;
+  const AOriginID: TNyxText = '';
+  AColumnClick: TNyxLCLColumnClick = nil;
+  ACellContext: TNyxLCLCellContextDispatch = nil): INyxCollectionMount;
+
+{ Runtime measurement limits are copied before activation, independently of
+  authored policies. The physical frame/router requirements remain unchanged. }
+function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
+  const AView: INyxCollectionView; const ALimits: TNyxTableTextWorkLimits;
   AInputPhase: TNyxCollectionInputPhase = ncipReady;
   const AInputGate: INyxCollectionInputGate = nil;
   const AInputFrame: INyxNativeGestureFrame = nil;
@@ -119,6 +132,7 @@ uses
   nyx.collections.selection,
   nyx.collections.cell.actions,
   nyx.collections.representation,
+  nyx.collections.text.layout,
   nyx.collections.clipboard,
   nyx.collections.range,
   nyx.collections.range.actions,
@@ -235,6 +249,8 @@ type
     function Text(AColumn, ARow: Integer): TNyxText;
     function Display(AColumn, ARow: Integer;
       out APresentation: TNyxValuePresentation): TNyxText;
+    function TextLayout(AColumn, ARow: Integer;
+      out ALayout: TNyxTableTextLayout): Boolean;
     function Editable(AColumn, ARow: Integer): Boolean;
     function RangeSelected(AColumn, ARow: Integer): Boolean;
     procedure Revoke;
@@ -397,6 +413,22 @@ type
     FList: TListBox;
     FGrid: TStringGrid;
     FGridReaderAttached: Boolean;
+    { A viewport-sized measured cache owns lines only. The outer grid owns row
+      geometry for all three panes; painting performs no source or font work. }
+    FTextLayouts: array of array of TNyxTableTextLayout;
+    FTextLayoutFirst: Integer;
+    FTextLayoutTotal: Integer;
+    FTextLayoutRows: array of Integer;
+    FTextLayoutApplying: Boolean;
+    FPreviousDefaultRowHeight: Integer;
+    FTextMeasureCanvas: TCanvas;
+    function MeasurePresentationText(const AText: TNyxText): Double;
+    procedure PrepareTextRows(const AData: INyxCollectionSnapshot);
+    function CanonicalTextLayout(AColumn, ARow: Integer;
+      out ALayout: TNyxTableTextLayout): Boolean;
+    function GridTextLayout(AColumn, ARow: Integer;
+      out ALayout: TNyxTableTextLayout): Boolean;
+  private
     { Exact copied page bounds/field bits drive paint without querying a live
       store/view or a snapshot row from the native DrawCell callback. }
     FRangePaint: INyxCollectionCellRangeIntent;
@@ -642,6 +674,7 @@ type
     procedure DetachTarget; override;
   public
     constructor Create(AControl: TControl; const AView: INyxCollectionView;
+      const ALimits: TNyxTableTextWorkLimits;
       AInputPhase: TNyxCollectionInputPhase = ncipReady;
       const AInputGate: INyxCollectionInputGate = nil;
       const AInputFrame: INyxNativeGestureFrame = nil;
@@ -2125,6 +2158,12 @@ begin
     Inc(Result.HeaderInset, FitButtonWidth(LGrid) + 2);
   end;
   Result.BodyInset := TextInsets(Result.BodyStyle);
+
+  if FHasTablePresentation and FTablePresentation.TextAt(AColumn).Defined then
+  begin
+    { The measured multiline drawing path uses symmetric content insets. }
+    Result.BodyInset := 2 * varCellPadding;
+  end;
 end;
 
 function TNativeMount.PrepareColumnFit(const ALaunch: INyxCollectionColumnsCapture;
@@ -2136,6 +2175,7 @@ var
   LSampling: INyxCollectionColumnSampling;
   LSample: INyxCollectionColumnSample;
   LSurface: TNativeColumnFitSurface;
+  LTextPolicy: TNyxColumnTextPolicy;
 begin
   LFenceObject := TNativeColumnFitFence.Create(Self, ALaunch, AField);
   LFence := LFenceObject;
@@ -2163,9 +2203,15 @@ begin
     raise ENyxCollection.Create('Column fit sampling returned no accepted sample');
   end;
   LSurface := ColumnFitSurface(LFenceObject.FColumn);
-  LFenceObject.FMetric := MeasureNyxLCLColumnFit(LSample, LSurface.HeaderFont,
+  LTextPolicy := Default(TNyxColumnTextPolicy);
+
+  if FHasTablePresentation then
+  begin
+    LTextPolicy := FTablePresentation.TextAt(LFenceObject.FColumn);
+  end;
+  LFenceObject.FMetric := MeasureNyxLCLColumnFitWithTextPolicy(LSample, LSurface.HeaderFont,
     LSurface.BodyFont, LSurface.HeaderText, LSurface.HeaderStyle, LSurface.BodyStyle,
-    LSurface.PPI, LSurface.HeaderInset, LSurface.BodyInset);
+    LSurface.PPI, LSurface.HeaderInset, LSurface.BodyInset, LTextPolicy, FTextLimits);
   LFenceObject.RequireCurrent;
   LModel := LSampling.PrepareSampleAutoSize(LSample, LFenceObject.FMetric.Measurement.Width);
   LFenceObject.RequireCurrent;
@@ -2512,6 +2558,11 @@ begin
   Grid.FixedRows := 1;
   Grid.AttachReader(Text);
 
+  if AOwner.FHasTablePresentation then
+  begin
+    Grid.ObserveTextLayout(TextLayout);
+  end;
+
   if AOwner.FView.Spec.HasColumnFormat then
   begin
     Grid.AttachDisplayReader(Display);
@@ -2628,6 +2679,17 @@ begin
   if (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns)) then
   begin
     Result := Owner.CanonicalDisplay(Columns[AColumn], ARow, APresentation);
+  end;
+end;
+
+function TColumnPane.TextLayout(AColumn, ARow: Integer;
+  out ALayout: TNyxTableTextLayout): Boolean;
+begin
+  Result := False;
+
+  if (Owner <> nil) and (AColumn >= 0) and (AColumn < Length(Columns)) then
+  begin
+    Result := Owner.CanonicalTextLayout(Columns[AColumn], ARow, ALayout);
   end;
 end;
 
@@ -3220,7 +3282,7 @@ var
 begin
   LKeepAlive := Self as INyxCollectionMount;
 
-  if not InputLifetimeCurrent or not FHasColumnLayout or FEditsSuspended then
+  if not InputLifetimeCurrent or not (FHasColumnLayout or FHasTablePresentation) or FEditsSuspended then
   begin
     raise ENyxCollection.Create('Cell edit suspension requires one live opted-in table lease');
   end;
@@ -3473,7 +3535,7 @@ begin
   FCellFocusValid := False;
   LSnapshot := ASnapshot;
 
-  if not InputLifetimeCurrent or not FHasColumnLayout or FEditsSuspended or
+  if not InputLifetimeCurrent or not (FHasColumnLayout or FHasTablePresentation) or FEditsSuspended or
     (FColumnEditing = nil) or FColumnEditing.Composing or (LSnapshot = nil) then
   begin
     raise ENyxCollection.Create('Cell edit restoration requires a live opted-in table');
@@ -3987,7 +4049,7 @@ begin
     Exit(True);
   end;
 
-  if not FHasColumnLayout then
+  if not FHasColumnLayout and not (FHasTablePresentation and (FColumnEditing <> nil)) then
   begin
     Exit;
   end;
@@ -4012,7 +4074,7 @@ function TNativeMount.DeferComposingRefresh: Boolean;
 begin
   { This first check runs before the base suppresses Ready. Never query the
     event router here: an existing composition must keep its END/text delivery. }
-  Result := FHasColumnLayout and (FColumnEditing <> nil) and
+  Result := (FHasColumnLayout or FHasTablePresentation) and (FColumnEditing <> nil) and
     FColumnEditing.Composing;
 
   if ColumnResizeInterrupted(FResizeRequest) then
@@ -4054,6 +4116,7 @@ var
   LIndex: Integer;
 begin
   FColumnGeometryPending := False;
+  FTextLayoutTotal := 0;
   FColumnClick := nil;
   FCellContextDispatch := nil;
   FRangePaint := nil;
@@ -4743,6 +4806,8 @@ begin
     FGrid.ShowHint := True;
     SynchronizeFitButtons;
     SynchronizeColumnsButton;
+    PrepareTextRows(AData);
+    SynchronizePaneRows;
     RestoreColumnEditor;
     { Consume geometry only after the admitted layout and copied editor have
       settled. A deferred/refused refresh retains the pending request. }
@@ -4828,7 +4893,7 @@ begin
     RetireColumnResize(LRequest);
   end;
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5042,7 +5107,7 @@ begin
     RetireColumnResize(LRequest);
   end;
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5082,7 +5147,7 @@ var
   LPoint: TPoint;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5106,7 +5171,7 @@ var
   LReply: TNotifyEvent;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5130,7 +5195,7 @@ var
   LPoint: TPoint;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5161,7 +5226,7 @@ var
   LReply: TKeyEvent;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     AKey := 0;
     Exit;
@@ -5185,7 +5250,7 @@ var
   LReply: TNotifyEvent;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5208,7 +5273,7 @@ var
   LReply: TNotifyEvent;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5237,7 +5302,7 @@ begin
     Exit;
   end;
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5311,7 +5376,7 @@ var
   LReply: TNotifyEvent;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     Exit;
   end;
@@ -5334,7 +5399,7 @@ var
   LGrid: TStringGrid;
 begin
 
-  if not GetConnected or FPaneSync or FUpdating then
+  if not GetConnected or FPaneSync or FUpdating or FTextLayoutApplying then
   begin
     Exit;
   end;
@@ -5367,6 +5432,7 @@ begin
 
   if GetConnected then
   begin
+    PrepareTextRows(FRendered);
     SynchronizePaneRows;
     SynchronizeFitButtons;
   end;
@@ -5387,6 +5453,7 @@ begin
 end;
 
 constructor TNativeMount.Create(AControl: TControl; const AView: INyxCollectionView;
+  const ALimits: TNyxTableTextWorkLimits;
   AInputPhase: TNyxCollectionInputPhase;
   const AInputGate: INyxCollectionInputGate;
   const AInputFrame: INyxNativeGestureFrame;
@@ -5396,14 +5463,21 @@ var
   LIndex: Integer;
   {$ifdef NYX_STUDIO_PROFILE}LHandleStarted: QWord;{$endif}
 begin
+  ALimits.Validate;
   inherited Create(AView, AInputPhase, AInputGate);
+  FTextLimits := ALimits;
 
-  if FHasColumnLayout then
+  if FHasTablePresentation and not (AControl is TNyxCollectionStringGrid) then
+  begin
+    raise ENyxCollection.Create('Table presentation requires the Nyx native grid');
+  end;
+
+  if FHasColumnLayout or FHasTablePresentation then
   begin
 
     if (AInputFrame = nil) or (AInputEvents = nil) or (AOriginID = '') then
     begin
-      raise ENyxCollection.Create('Arranged native tables require their real event router, physical frame and runtime origin');
+      raise ENyxCollection.Create('Native table layout requires its real event router, physical frame and runtime origin');
     end;
 
     if not NyxLCLTextHistorySupported then
@@ -5500,6 +5574,7 @@ begin
         FFocusedCanonical := -1;
         FPreviousGridHint := FGrid.Hint;
         FPreviousGridShowHint := FGrid.ShowHint;
+        FPreviousDefaultRowHeight := FGrid.DefaultRowHeight;
         FPreviousCell := FGrid.OnSelectCell;
         FPreviousValidate := FGrid.OnValidateEntry;
         FPreviousOptions := FGrid.Options;
@@ -5516,9 +5591,14 @@ begin
         FGrid.OnHeaderClick := GridHeaderClicked;
         FGrid.OnPrepareCanvas := PrepareGrid;
 
-        if FHasColumnLayout then
+        if FHasColumnLayout or FHasTablePresentation then
         begin
           FPreviousTopLeft := FGrid.OnTopLeftChanged;
+          FGrid.OnTopLeftChanged := GridTopLeft;
+        end;
+
+        if FHasColumnLayout then
+        begin
           FPreviousHeaderSized := FGrid.OnHeaderSized;
           FPreviousMouseUp := FGrid.OnMouseUp;
           FPreviousMouseMove := FGrid.OnMouseMove;
@@ -5551,6 +5631,11 @@ begin
             TNyxCollectionStringGrid(FGrid).AttachDisplayReader(GridDisplay);
           end;
           FGridReaderAttached := True;
+
+          if FHasTablePresentation then
+          begin
+            TNyxCollectionStringGrid(FGrid).ObserveTextLayout(GridTextLayout);
+          end;
 
           if FHasColumnLayout then
           begin
@@ -5698,7 +5783,7 @@ var
   LShift: TShiftState;
 begin
 
-  if FHasColumnLayout and not GetInputReady and
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady and
     not (FUpdating and not FEditsSuspended) then
   begin
     CanSelect := False;
@@ -5835,7 +5920,7 @@ var
   LEditable: Boolean;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     NewValue := OldValue;
     Exit;
@@ -6258,6 +6343,237 @@ begin
   end;
 end;
 
+function TNativeMount.MeasurePresentationText(const AText: TNyxText): Double;
+begin
+  Result := FTextMeasureCanvas.TextWidth(AText);
+end;
+
+function TNativeMount.CanonicalTextLayout(AColumn, ARow: Integer;
+  out ALayout: TNyxTableTextLayout): Boolean;
+var
+  LRow: Integer;
+begin
+  Result := False;
+  LRow := ARow - FTextLayoutFirst;
+
+  if (LRow >= 0) and (LRow < Length(FTextLayouts)) and (AColumn >= 0) and
+    (AColumn < Length(FTextLayouts[LRow])) and (FTextLayouts[LRow][AColumn].Count > 0) then
+  begin
+    ALayout := FTextLayouts[LRow][AColumn].Copy;
+    Result := True;
+  end;
+
+  if not Result and FHasTablePresentation and (ARow > 0) and
+    (ARow <= FTextLayoutTotal) and (AColumn >= 0) and
+    (AColumn < FTablePresentation.Count) and FTablePresentation.TextAt(AColumn).Defined then
+  begin
+    ALayout := UnavailableNyxTableTextLayout(nttaCellLimit,
+      'Visible cells exceed this host measurement pass budget');
+    Result := True;
+  end;
+end;
+
+function TNativeMount.GridTextLayout(AColumn, ARow: Integer;
+  out ALayout: TNyxTableTextLayout): Boolean;
+begin
+  Result := CanonicalTextLayout(CanonicalColumn(FGrid, AColumn), ARow, ALayout);
+end;
+
+procedure TNativeMount.PrepareTextRows(const AData: INyxCollectionSnapshot);
+var
+  LBitmap: TBitmap;
+  LLayouts: array of array of TNyxTableTextLayout;
+  LHeights: array of Integer;
+  LRows: array of Integer;
+  LSpec: TNyxCollectionViewSpec;
+  LDensity: TNyxTablePresentationPolicy;
+  LPolicy: TNyxColumnTextPolicy;
+  LPresentation: TNyxValuePresentation;
+  LText: TNyxText;
+  LFirst: Integer;
+  LLast: Integer;
+  LRow: Integer;
+  LColumn: Integer;
+  LPhysical: Integer;
+  LLineHeight: Integer;
+  LDefault: Integer;
+  LPadding: Integer;
+  LHeader: Integer;
+  LIndex: Integer;
+  LGrid: TStringGrid;
+  LUpdating: Boolean;
+  LFrame: INyxNativeGestureFrame;
+  LMeasuredCells: Integer;
+  LMetricSupported: Boolean;
+  LCount: Integer;
+begin
+
+  if not FHasTablePresentation or (FGrid = nil) or (AData = nil) or
+    FTextLayoutApplying or not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+  LFrame := FColumnFrame;
+
+  if LFrame <> nil then
+  begin
+    LFrame.Enter;
+  end;
+  LBitmap := nil;
+  LUpdating := FUpdating;
+  FUpdating := True;
+  FTextLayoutApplying := True;
+  try
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+    LSpec := FView.Spec;
+    LCount := AData.Count;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+    LBitmap := TBitmap.Create;
+    LBitmap.SetSize(1, 1);
+    LBitmap.Canvas.Font.Assign(FGrid.Font);
+    LMetricSupported := (FGrid.Font.Orientation = 0) and
+      not FGrid.DefaultTextStyle.SystemFont and not Assigned(FPreviousPrepare) and
+      not Assigned(FGrid.OnDrawCell) and FGrid.DefaultDrawing and (FGrid.Columns.Count = 0);
+    FTextMeasureCanvas := LBitmap.Canvas;
+    LLineHeight := Max(1, LBitmap.Canvas.TextHeight('Ag'));
+    LDensity := FTablePresentation.TablePolicy;
+    LDefault := FPreviousDefaultRowHeight;
+    LPadding := Max(0, (LDefault - LLineHeight) div 2);
+
+    if LDensity.Defined then
+    begin
+      LPadding := Max(0, Round(NyxTableRowPadding(LDensity.RowDensity) *
+        Max(1, FGrid.Font.PixelsPerInch) / 96));
+      LDefault := LLineHeight + 2 * LPadding;
+    end;
+    LHeader := FGrid.RowHeights[0];
+    FGrid.DefaultRowHeight := Max(1, LDefault);
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+    FGrid.RowHeights[0] := LHeader;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+    for LIndex := 0 to High(FTextLayoutRows) do
+    begin
+
+      if (FTextLayoutRows[LIndex] > 0) and (FTextLayoutRows[LIndex] < FGrid.RowCount) then
+      begin
+        FGrid.RowHeights[FTextLayoutRows[LIndex]] := Max(1, LDefault);
+
+        if not InputLifetimeCurrent then
+        begin
+          Exit;
+        end;
+      end;
+    end;
+    LFirst := Max(1, FGrid.TopRow);
+    LLast := Min(LCount, LFirst + Min(FGrid.VisibleRowCount + 1,
+      Max(1, FTextLimits.MaximumCells div Max(1, LSpec.Count))) - 1);
+    LMeasuredCells := 0;
+    SetLength(LLayouts, Max(0, LLast - LFirst + 1));
+    SetLength(LHeights, Length(LLayouts));
+    SetLength(LRows, Length(LLayouts));
+    for LRow := LFirst to LLast do
+    begin
+      LIndex := LRow - LFirst;
+      LRows[LIndex] := LRow;
+      LHeights[LIndex] := Max(1, LDefault);
+      SetLength(LLayouts[LIndex], LSpec.Count);
+      for LColumn := 0 to LSpec.Count - 1 do
+      begin
+        LPolicy := FTablePresentation.TextAt(LColumn);
+
+        if not LPolicy.Defined or
+          (FHasColumnLayout and not FColumnLayout.ColumnAt(LColumn).IsVisible) then
+        begin
+          Continue;
+        end;
+
+        if LMeasuredCells >= FTextLimits.MaximumCells then
+        begin
+          LLayouts[LIndex][LColumn] := UnavailableNyxTableTextLayout(nttaCellLimit,
+            'Visible cells exceed this host measurement pass budget');
+          Continue;
+        end;
+        Inc(LMeasuredCells);
+
+        if not LMetricSupported then
+        begin
+          LLayouts[LIndex][LColumn] := UnavailableNyxTableTextLayout(nttaHostMetrics,
+            'This native font or custom drawing requires its own resolved text metric');
+          Continue;
+        end;
+        LGrid := FGrid;
+        LPhysical := LColumn;
+
+        if FHasColumnLayout then
+        begin
+          LGrid := GridForColumn(LColumn, LPhysical);
+        end;
+
+        if LGrid = nil then
+        begin
+          Continue;
+        end;
+        LPresentation := LSpec.ColumnAt(LColumn).Present(AData.ItemAt(LRow - 1), AData.Schema);
+
+        if not InputLifetimeCurrent then
+        begin
+          Exit;
+        end;
+        LText := DisplayText(LPresentation.Text);
+        LLayouts[LIndex][LColumn] := LayoutNyxTableText(LText, LPolicy,
+          Max(0, LGrid.ColWidths[LPhysical] - 2 * varCellPadding),
+          FTextLimits, MeasurePresentationText);
+
+        if not InputLifetimeCurrent then
+        begin
+          Exit;
+        end;
+        LHeights[LIndex] := Max(LHeights[LIndex],
+          LLayouts[LIndex][LColumn].Count * LLineHeight + 2 * LPadding);
+      end;
+    end;
+    FTextLayouts := LLayouts;
+    FTextLayoutRows := LRows;
+    FTextLayoutFirst := LFirst;
+    FTextLayoutTotal := LCount;
+    for LIndex := 0 to High(LHeights) do
+    begin
+      FGrid.RowHeights[LRows[LIndex]] := LHeights[LIndex];
+
+      if not InputLifetimeCurrent then
+      begin
+        Exit;
+      end;
+    end;
+  finally
+    FTextMeasureCanvas := nil;
+    LBitmap.Free;
+    FTextLayoutApplying := False;
+    FUpdating := LUpdating;
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
+  end;
+end;
+
 function TNativeMount.GridDisplay(AColumn, ARow: Integer;
   out APresentation: TNyxValuePresentation): TNyxText;
 var
@@ -6416,7 +6732,7 @@ begin
     Exit;
   end;
 
-  if FHasColumnLayout then
+  if FHasColumnLayout or FHasTablePresentation then
   begin
     { Route external resizing through the same whole-refresh composition
       fence and latest captured column policy, rather than a second map path. }
@@ -6429,7 +6745,7 @@ begin
         Keep the current map usable, let that exact input finish, and use the
         SAME bounded idle/refresh queue as composition and resize retirement. }
 
-      if FColumnFrame.Dispatching or
+      if ((FColumnFrame <> nil) and FColumnFrame.Dispatching) or
         TNyxCollectionStringGrid(FGrid).ValidationActive or
         ((FStartPane <> nil) and FStartPane.Grid.ValidationActive) or
         ((FEndPane <> nil) and FEndPane.Grid.ValidationActive) then
@@ -6439,8 +6755,17 @@ begin
         Exit;
       end;
       Refresh;
+      Exit;
     end;
-    Exit;
+
+    if FHasColumnLayout then
+    begin
+      Exit;
+    end;
+    { A presentation-only table has no arranged renderer to allocate widths.
+      During its admitted refresh, retain the ordinary sizing/override path
+      below before measuring wrapped rows. External resizes still enter the
+      same composition and native-frame fence above. }
   end;
   LScale := Max(1, FGrid.Font.PixelsPerInch) / 96;
 
@@ -6813,6 +7138,13 @@ begin
           FGrid.Cells[LColumn, 0] := GridText(LColumn, 0);
         end;
       end;
+
+      if FHasTablePresentation then
+      begin
+        SizeGridColumns;
+      end;
+      PrepareTextRows(LData);
+      FColumnGeometryPending := False;
       FGrid.Invalidate;
 
       if (LSelected >= 0) and (FGrid.Row <> LSelected + 1) then
@@ -6961,9 +7293,12 @@ begin
     end;
   end;
   FRendered := LData;
+  FCellRefreshPending := False;
 end;
 
 procedure TNativeMount.DetachTarget;
+var
+  LHeader: Integer;
 
   procedure Suspend(AGrid: TStringGrid);
   begin
@@ -6979,6 +7314,8 @@ procedure TNativeMount.DetachTarget;
 
 begin
   FColumnGeometryPending := False;
+  FTextLayouts := nil;
+  FTextLayoutRows := nil;
   try
     Application.RemoveAsyncCalls(Self);
 
@@ -7084,6 +7421,14 @@ begin
           TNyxCollectionStringGrid(FGrid).DetachReader;
           FGridReaderAttached := False;
         end;
+
+        if FHasTablePresentation then
+        begin
+          FGrid.OnTopLeftChanged := FPreviousTopLeft;
+          LHeader := FGrid.RowHeights[0];
+          FGrid.DefaultRowHeight := FPreviousDefaultRowHeight;
+          FGrid.RowHeights[0] := LHeader;
+        end;
         FGrid.OnSelectCell := FPreviousCell;
         FGrid.OnValidateEntry := FPreviousValidate;
         FGrid.OnKeyDown := FPreviousKey;
@@ -7143,11 +7488,24 @@ function MountNyxLCLCollection(AControl: TControl;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
   AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch): INyxCollectionMount;
+begin
+  Result := MountNyxLCLCollectionWithTextLimits(AControl, AView,
+    TNyxTableTextWorkLimits.Defaults, AInputPhase, AInputGate, AInputFrame,
+    AInputEvents, AOriginID, AColumnClick, ACellContext);
+end;
+
+function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
+  const AView: INyxCollectionView; const ALimits: TNyxTableTextWorkLimits;
+  AInputPhase: TNyxCollectionInputPhase;
+  const AInputGate: INyxCollectionInputGate;
+  const AInputFrame: INyxNativeGestureFrame;
+  const AInputEvents: INyxEvents; const AOriginID: TNyxText;
+  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch): INyxCollectionMount;
 var
   LMount: TNativeMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted: QWord;{$endif}
 begin
-  LMount := TNativeMount.Create(AControl, AView, AInputPhase, AInputGate,
+  LMount := TNativeMount.Create(AControl, AView, ALimits, AInputPhase, AInputGate,
     AInputFrame, AInputEvents, AOriginID, AColumnClick, ACellContext);
   Result := LMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted := GetTickCount64;{$endif}

@@ -338,10 +338,40 @@ inert identity proofs, so they do not keep a view or its store alive. Stale,
 foreign or competing captures refuse before publication. Existing view
 interfaces retain their signatures.
 
+Current view admission and target activation require authored presentation
+presence. Runtime-only overrides on an otherwise absent table still need the
+contract/activation extension and reset behavior tracked in the workbench task.
+
+Studio's **Table defaults** includes collapsed **Body row spacing** and per-column
+**Text layout** sections. Apply captures one typed policy through the ordinary
+source queue; each reset clears only its own declaration. A partial wrap count
+stays an unsubmitted draft. Clip, Ellipsis and reset ignore that inactive count,
+while Wrap requires a positive Pascal integer. These forms share the existing
+layout/display draft owner, exact schema/binding baseline and paired Undo/Redo.
+
+The semantic `nyx_collections` tool accepts `presentationControls: true` on
+bounded binding and exact column reads. Requested table and column policies
+report `{declared, policy}` independently of `presentationControlsSupported`.
+An absent presentation policy stays `null`: it preserves legacy host behavior,
+rather than claiming one universal resolved font or density. Omitted/false
+retains the earlier response shape. No live cell text, user preference or
+measurement state is read by this selector.
+
+Use `NyxSetCollectionTablePresentation` / `NyxUseDefaultCollectionTablePresentation`
+and `NyxSetCollectionColumnText` / `NyxUseDefaultCollectionColumnText` in a typed
+patch. Their semantic operations are `table-presentation` and `column-text`,
+with a complete policy or `null` reset; column edits retain the exact field and
+scalar family. Ordered groups derive the current binding baseline after each
+preceding change. Revisions, operation retries, atomic refusal and paired history
+use the same admission path as ordinary authoring. Resets retain local ownership;
+restoring reusable inheritance is a separate explicit operation.
+
 Value ownership and source reading/generation have executed native/browser
 evidence, including independent compilation of the emitted application. Actual
-target painting, Fit, ordinary Studio presentation controls and semantic
-version11 discovery remain in progress under
+target checks exercise painting and Fit. Portable Studio presentation
+capture, paired history and semantic version11 discovery have separate checks;
+visual qualification, complete arrangement absence, mounted Inspector input and
+full Studio/native performance remain open under
 [the table workbench task](../TODO/NS-3_control-usefulness_03.md). This source
 contract alone does not establish those interaction or parity outcomes.
 

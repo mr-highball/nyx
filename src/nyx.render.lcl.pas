@@ -114,6 +114,7 @@ uses
   nyx.collections.view.types,
   nyx.collections.mount,
   nyx.collections.workbench.runtime,
+  nyx.collections.presentation,
   nyx.collections.clipboard.actions,
   nyx.collections.lcl,
   nyx.collections.lcl.grid,
@@ -371,6 +372,8 @@ type
     { Runtime services survive remounts as independent configuration leases;
       their host authority never enters a design or an authored policy. }
     FTableWorkbenchServices: INyxTableWorkbenchServices;
+    { Runtime-only bounded text work; copied to each independently staged view. }
+    FTableTextLimits: TNyxTableTextWorkLimits;
     FPresentationSelection: TNyxPresentationSelection;
     FPresentationView: INyxPresentationViewOwner;
     { Independently owned recipes outlive the source document. Queued work
@@ -607,6 +610,7 @@ type
     function GetResourceContext: INyxResourceContext;
     procedure SetResourceUpdates(const AQueue: INyxResourceUpdateQueue);
     procedure SetTableWorkbenchServices(const AServices: INyxTableWorkbenchServices);
+    procedure SetTableTextLimits(const ALimits: TNyxTableTextWorkLimits);
     procedure WakeResources;
     procedure Resize(ASender: TObject);
     procedure MountCanvases(ADocument: TNyxDocument);
@@ -924,6 +928,10 @@ type
       mounts keep their original clipboard host. Nil reports Unavailable. }
     property TableWorkbenchServices: INyxTableWorkbenchServices
       read FTableWorkbenchServices write SetTableWorkbenchServices;
+    { Set before mounting or after Unmount. No runtime work limit is saved in
+      a document, and already entered mounts keep their original copied limits. }
+    property TableTextLimits: TNyxTableTextWorkLimits
+      read FTableTextLimits write SetTableTextLimits;
     function ResourceReady: Boolean;
     { View-section publication requires an idle input/model boundary. False
       during synchronous event/editing/gesture dispatch, scalar/collection
@@ -1470,6 +1478,7 @@ end;
 constructor TNyxLCLRenderer.Create(ATheme: TNyxTheme);
 begin
   inherited Create;
+  FTableTextLimits := TNyxTableTextWorkLimits.Defaults;
   FFocusReplay := TNyxLCLFocusReplay.Create;
   FButtonGlyphCache := TNyxLCLButtonGlyphCache.Create;
   FGlyphCacheOwner := TNativeRenderObject.Create(FButtonGlyphCache);
@@ -6972,6 +6981,7 @@ begin
       RequireAttempt;
       LCandidate.FCollectionInputPhase := ncipStaged;
       LCandidate.FTableWorkbenchServices := FTableWorkbenchServices;
+      LCandidate.FTableTextLimits := FTableTextLimits;
       { Build may mount saved canvases before this outer candidate commits. }
       LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
       RequireAttempt;
@@ -8338,6 +8348,17 @@ begin
 end;
 
 
+procedure TNyxLCLRenderer.SetTableTextLimits(const ALimits: TNyxTableTextWorkLimits);
+begin
+  ALimits.Validate;
+
+  if (FRoot <> nil) or (FRenderAttempt <> nil) or FPublishingContent then
+  begin
+    raise ENyxModel.Create('Configure table text limits before mounting or after Unmount');
+  end;
+  FTableTextLimits := ALimits;
+end;
+
 procedure TNyxLCLRenderer.SetTableWorkbenchServices(
   const AServices: INyxTableWorkbenchServices);
 begin
@@ -8672,7 +8693,7 @@ begin
   begin
     raise ENyxModel.Create('Control already has a live collection binding');
   end;
-  Result := MountNyxLCLCollection(LBinding.FControl, AView,
+  Result := MountNyxLCLCollectionWithTextLimits(LBinding.FControl, AView, FTableTextLimits,
     FCollectionInputPhase, FCollectionInputGate, FPhysicalFrame,
     FCollectionQueryEvents, LBinding.FNode.ID, LBinding.PerformClick,
     LBinding.PreparedCellContext);
@@ -13867,6 +13888,7 @@ begin
   ARenderer.FUpdaters := Copy(FRenderer.FUpdaters, 0, Length(FRenderer.FUpdaters));
   ARenderer.FResourceContext := FRenderer.FResourceContext;
   ARenderer.FTableWorkbenchServices := FRenderer.FTableWorkbenchServices;
+  ARenderer.FTableTextLimits := FRenderer.FTableTextLimits;
   ARenderer.ConfigureEmbeddedBehavior(FRenderer.FEmbeddedContext, FRenderer.FEmbeddedResolver);
   ARenderer.CanvasAdoptionHost := FRenderer.FCanvasAdoptionHost;
   ARenderer.OnEvent := CanvasEvent;

@@ -31,6 +31,7 @@ uses
   JS,
   Web,
   nyx.collections.view,
+  nyx.collections.presentation,
   nyx.collections.mount, nyx.collections.draft;
 
 type
@@ -138,6 +139,13 @@ function MountNyxBrowserCollection(AHost: TJSHTMLElement;
   AInputPhase: TNyxCollectionInputPhase = ncipReady;
   const AInputGate: INyxCollectionInputGate = nil): INyxCollectionMount;
 
+{ Explicit runtime measurement limits are copied before activation. They affect
+  only opted-in text layout, never persisted policies or accepted cell values. }
+function MountNyxBrowserCollectionWithTextLimits(AHost: TJSHTMLElement;
+  const AView: INyxCollectionView; const ALimits: TNyxTableTextWorkLimits;
+  AInputPhase: TNyxCollectionInputPhase = ncipReady;
+  const AInputGate: INyxCollectionInputGate = nil): INyxCollectionMount;
+
 implementation
 
 uses
@@ -171,6 +179,7 @@ uses
   nyx.collections.range.navigation,
   nyx.collections.cell.actions,
   nyx.collections.representation,
+  nyx.collections.text.layout,
   nyx.scheduler,
   nyx.collections.tree.rows;
 
@@ -479,10 +488,15 @@ type
       editing mode; row membership is independent of this physical cursor. }
     FCells: array of TJSHTMLElement;
     FLabels: array of TJSHTMLElement;
+    { Complete accepted display is independent of the measured visible lines.
+      Reflow never reads or changes an input's unfinished native text. }
+    FDisplayTexts: array of TNyxText;
+    FDisplayDiagnostics: array of TNyxText;
     FInputs: array of TJSHTMLInputElement;
     FInitialized: Boolean;
     FHadCellRange: Boolean;
     procedure SyncCellRange;
+    procedure SyncTextLayout(var AMeasuredCells: Integer);
     function Click(AEvent: TJSMouseEvent): Boolean;
     function DoubleClick(AEvent: TJSMouseEvent): Boolean;
     function Change(AEvent: TEventListenerEvent): Boolean;
@@ -608,6 +622,10 @@ type
     FColumnNatural: TNyxFlowSizes;
     FColumnWidths: TNyxFlowSizes;
     FColumnFont: String;
+    { Borrowed only during synchronous line layout; cleared before return. }
+    FTextMetric: TJSCanvasRenderingContext2D;
+    function MeasurePresentationText(const AText: TNyxText): Double;
+  private
     FColumnAvailable: Integer;
     FColumnLayoutSerial: Integer;
     FColumnPresentation: TNyxColumnPresentation;
@@ -679,6 +697,7 @@ type
     procedure DetachTarget; override;
   public
     constructor Create(AHost: TJSHTMLElement; const AView: INyxCollectionView;
+      const ALimits: TNyxTableTextWorkLimits;
       AInputPhase: TNyxCollectionInputPhase = ncipReady;
       const AInputGate: INyxCollectionInputGate = nil);
     function BeginColumnKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
@@ -2244,6 +2263,12 @@ begin
   Result.SortButton := FHeaderSorts[AColumn];
   Result.FilterButton := FHeaderFilters[AColumn];
 
+  if FHasTablePresentation then
+  begin
+    Result.TextPolicy := FTablePresentation.TextAt(AColumn);
+    Result.TextLimits := FTextLimits;
+  end;
+
   if not AHasBody then
   begin
     Exit;
@@ -3776,7 +3801,7 @@ end;
 
 function TBrowserMount.DeferComposingRefresh: Boolean;
 begin
-  Result := FHasColumnLayout and (FComposingInput <> nil);
+  Result := (FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil);
 
   if Result then
   begin
@@ -3871,7 +3896,7 @@ begin
   Result := True;
   LKeepAlive := Self as INyxCollectionMount;
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     AEvent.preventDefault;
     AEvent.stopImmediatePropagation;
@@ -3896,7 +3921,7 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   FCellFocusValid := False;
 
-  if not InputLifetimeCurrent or not FHasColumnLayout or FEditsSuspended then
+  if not InputLifetimeCurrent or not (FHasColumnLayout or FHasTablePresentation) or FEditsSuspended then
   begin
     raise ENyxCollection.Create('Cell edit suspension requires one live opted-in table lease');
   end;
@@ -4103,7 +4128,7 @@ begin
   FCellFocusValid := False;
   LSnapshot := ASnapshot;
 
-  if not InputLifetimeCurrent or not FHasColumnLayout or FEditsSuspended or
+  if not InputLifetimeCurrent or not (FHasColumnLayout or FHasTablePresentation) or FEditsSuspended or
     (FComposingInput <> nil) or (LSnapshot = nil) then
   begin
     raise ENyxCollection.Create('Cell edit restoration requires a live opted-in table');
@@ -4421,7 +4446,8 @@ begin
 end;
 
 constructor TBrowserMount.Create(AHost: TJSHTMLElement;
-  const AView: INyxCollectionView; AInputPhase: TNyxCollectionInputPhase;
+  const AView: INyxCollectionView; const ALimits: TNyxTableTextWorkLimits;
+  AInputPhase: TNyxCollectionInputPhase;
   const AInputGate: INyxCollectionInputGate);
 var
   LHeader: TJSHTMLElement;
@@ -4430,7 +4456,9 @@ var
   LCaption: TJSHTMLElement;
   LIndex: Integer;
 begin
+  ALimits.Validate;
   inherited Create(AView, AInputPhase, AInputGate);
+  FTextLimits := ALimits;
 
   if AHost = nil then
   begin
@@ -4445,7 +4473,7 @@ begin
   end;
   FHost := AHost;
 
-  if FHasColumnLayout then
+  if FHasColumnLayout or FHasTablePresentation then
   begin
     for LIndex := Low(PendingInputEvents) to High(PendingInputEvents) do
     begin
@@ -4659,6 +4687,8 @@ begin
     FElement.ondblclick := DoubleClick;
   end;
   SetLength(FLabels, LColumns);
+  SetLength(FDisplayTexts, LColumns);
+  SetLength(FDisplayDiagnostics, LColumns);
   SetLength(FInputs, LColumns);
   SetLength(FCells, LColumns);
   for LIndex := 0 to LColumns - 1 do
@@ -4787,6 +4817,173 @@ begin
   inherited Destroy;
 end;
 
+function TBrowserMount.MeasurePresentationText(const AText: TNyxText): Double;
+begin
+  Result := FTextMetric.measureText(AText).width;
+end;
+
+procedure TBrowserRow.SyncTextLayout(var AMeasuredCells: Integer);
+const
+  COutcomes: array[TNyxTableTextLayoutOutcome] of String =
+    ('complete', 'clipped', 'ellipsized', 'unavailable');
+  CAdmissions: array[TNyxTableTextAdmission] of String =
+    ('ready', 'line-limit', 'text-limit', 'measurement-limit', 'cell-limit', 'host-metrics');
+var
+  LIndex: Integer;
+  LLine: Integer;
+  LText: TNyxText;
+  LPolicy: TNyxColumnTextPolicy;
+  LDensity: TNyxTablePresentationPolicy;
+  LLayout: TNyxTableTextLayout;
+  LCanvas: TJSHTMLCanvasElement;
+  LContext: TJSCanvasRenderingContext2D;
+  LStyle: TJSCSSStyleDeclaration;
+  LWidth: Double;
+  LFont: String;
+  LMetricSupported: Boolean;
+
+  function Pixels(const AName: String): Double;
+  begin
+    Result := JS.parseFloat(LStyle.getPropertyValue(AName));
+
+    if IsNan(Result) or IsInfinite(Result) then
+    begin
+      Result := 0;
+    end;
+  end;
+
+begin
+
+  if not FOwner.FHasTablePresentation then
+  begin
+    Exit;
+  end;
+  LDensity := FOwner.FTablePresentation.TablePolicy;
+  LCanvas := TJSHTMLCanvasElement(document.createElement('canvas'));
+  LContext := TJSCanvasRenderingContext2D(LCanvas.getContext('2d'));
+  for LIndex := 0 to High(FLabels) do
+  begin
+
+    if LDensity.Defined then
+    begin
+      LText := IntToStr(NyxTableRowPadding(LDensity.RowDensity)) + 'px';
+      FCells[LIndex].style.setProperty('padding-top', LText);
+      FCells[LIndex].style.setProperty('padding-bottom', LText);
+    end
+    else
+    begin
+      FCells[LIndex].style.removeProperty('padding-top');
+      FCells[LIndex].style.removeProperty('padding-bottom');
+    end;
+    LPolicy := FOwner.FTablePresentation.TextAt(LIndex);
+
+    if not LPolicy.Defined then
+    begin
+      FLabels[LIndex].textContent := FDisplayTexts[LIndex];
+      FLabels[LIndex].style.removeProperty('white-space');
+      FLabels[LIndex].style.removeProperty('overflow');
+      FLabels[LIndex].style.removeProperty('line-height');
+      FLabels[LIndex].removeAttribute('data-nyx-text-layout');
+      FLabels[LIndex].removeAttribute('data-nyx-text-layout-diagnostic');
+      FLabels[LIndex].removeAttribute('data-nyx-text-layout-admission');
+      FCells[LIndex].removeAttribute('aria-label');
+
+      if FDisplayDiagnostics[LIndex] <> '' then
+      begin
+        FLabels[LIndex].setAttribute('title', FDisplayDiagnostics[LIndex]);
+      end
+      else
+      begin
+        FLabels[LIndex].removeAttribute('title');
+      end;
+      Continue;
+    end;
+    { Read actual typography after insertion too. A newly constructed row may
+      not inherit its final face until it belongs to the ordinary table. }
+    LStyle := window.getComputedStyle(FLabels[LIndex]);
+    LMetricSupported := NyxBrowserColumnTextMetricSupported(LStyle);
+    LFont := LStyle.getPropertyValue('font');
+
+    { A hidden renderer candidate can still have unresolved inherited font
+      properties. Do not invent a line height or poison later computed styles
+      with an inline fallback. The next admitted DOM pass measures its actual
+      font; CSS itself owns the line boxes and their readable body allocation. }
+    LMetricSupported := LMetricSupported and (LFont <> '');
+    LContext.font := LFont;
+    LStyle := window.getComputedStyle(FCells[LIndex]);
+    LWidth := 0;
+
+    if LIndex < Length(FOwner.FColumnWidths) then
+    begin
+      LWidth := FOwner.FColumnWidths[LIndex];
+    end;
+
+    if FCells[LIndex].clientWidth > 0 then
+    begin
+      LWidth := FCells[LIndex].clientWidth;
+    end;
+    LWidth := Max(0, LWidth - Pixels('padding-left') - Pixels('padding-right'));
+
+    if AMeasuredCells >= FOwner.FTextLimits.MaximumCells then
+    begin
+      LLayout := UnavailableNyxTableTextLayout(nttaCellLimit,
+        'Visible cells exceed this host measurement pass budget');
+    end
+    else
+    begin
+      Inc(AMeasuredCells);
+
+      if not LMetricSupported then
+      begin
+        LLayout := UnavailableNyxTableTextLayout(nttaHostMetrics,
+          'This browser text style requires its own resolved layout metric');
+      end
+      else
+      begin
+        FOwner.FTextMetric := LContext;
+        try
+          LLayout := LayoutNyxTableText(FDisplayTexts[LIndex], LPolicy,
+            LWidth, FOwner.FTextLimits, @FOwner.MeasurePresentationText);
+        finally
+          FOwner.FTextMetric := nil;
+        end;
+      end;
+    end;
+    LText := '';
+    for LLine := 0 to LLayout.Count - 1 do
+    begin
+
+      if LLine > 0 then
+      begin
+        LText := LText + #10;
+      end;
+      LText := LText + LLayout.LineAt(LLine);
+    end;
+    FLabels[LIndex].textContent := LText;
+    FLabels[LIndex].style.setProperty('white-space', 'pre');
+    FLabels[LIndex].style.setProperty('overflow', 'hidden');
+    FLabels[LIndex].setAttribute('data-nyx-text-layout', COutcomes[LLayout.Outcome]);
+    FLabels[LIndex].setAttribute('data-nyx-text-layout-diagnostic', LLayout.Diagnostic);
+    FLabels[LIndex].setAttribute('data-nyx-text-layout-admission', CAdmissions[LLayout.Admission]);
+
+    if LLayout.Outcome = ntloUnavailable then
+    begin
+      FLabels[LIndex].setAttribute('title', LLayout.Diagnostic);
+    end
+    else
+
+    if FDisplayDiagnostics[LIndex] <> '' then
+    begin
+      FLabels[LIndex].setAttribute('title', FDisplayDiagnostics[LIndex]);
+    end
+    else
+    begin
+      FLabels[LIndex].removeAttribute('title');
+    end;
+    FCells[LIndex].setAttribute('aria-label', FDisplayTexts[LIndex]);
+  end;
+end;
+
 procedure TBrowserRow.Sync(AValuesChanged: Boolean);
 const
   CPresentationNames: array[TNyxValuePresentationOutcome] of String =
@@ -4806,6 +5003,8 @@ var
     LPresentation := FOwner.FView.Spec.ColumnAt(LIndex)
       .Present(LData.Item(FRef), LData.Schema);
     FLabels[LIndex].textContent := LPresentation.Text;
+    FDisplayTexts[LIndex] := LPresentation.Text;
+    FDisplayDiagnostics[LIndex] := LPresentation.Diagnostic;
     { Status is observable independently of text. A refusal marker and tooltip
       never re-label canonical RAW as a successful formatted representation. }
     FLabels[LIndex].setAttribute('data-nyx-display-outcome',
@@ -5980,6 +6179,7 @@ var
   LSameSnapshot: Boolean;
   LRealize: Boolean;
   LMeasured: Boolean;
+  LTextWork: Integer;
   LOffset: Double;
   LExtent: Double;
   LHeight: Double;
@@ -6421,12 +6621,14 @@ begin
     TScrollableWindow(window).scrollTo(LWindowLeft, LWindowTop);
   end;
   LMeasured := False;
+  LTextWork := 0;
   for LWorkIndex := 0 to High(FResidentRows) do
   begin
     LIndex := FResidentRows[LWorkIndex];
 
     if (FRows[LIndex] <> nil) and FHost.contains(FRows[LIndex].FElement) then
     begin
+      FRows[LIndex].SyncTextLayout(LTextWork);
       { offsetHeight is the logical outer allocation, excluding CSS transforms;
         screen rectangles would feed scaled heights back into logical spacers. }
       LHeight := FRows[LIndex].FElement.offsetHeight + LRowGap;
@@ -6526,7 +6728,7 @@ var
   LExpanded: Boolean;
 begin
 
-  if FOwner.FHasColumnLayout and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -6582,7 +6784,7 @@ var
   LColumn: Integer;
 begin
 
-  if FOwner.FHasColumnLayout and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -6684,7 +6886,7 @@ var
   LOptions: TFocusOptions;
 begin
 
-  if FHasColumnLayout and (not GetInputReady or (FComposingInput <> nil)) then
+  if (FHasColumnLayout or FHasTablePresentation) and (not GetInputReady or (FComposingInput <> nil)) then
   begin
     Exit(False);
   end;
@@ -6703,7 +6905,7 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   LRow := FView.Snapshot.IndexOf(AItem);
 
-  if not GetInputReady or (FHasColumnLayout and (FComposingInput <> nil)) or
+  if not GetInputReady or ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) or
     (LRow < 0) or (LRow >= Length(FRows)) or (FRows[LRow] = nil) or
     (FRows[LRow].FRef.ID <> AItem.ID) or
     (AColumn < 0) or (AColumn >= Length(FRows[LRow].FInputs)) then
@@ -6721,7 +6923,7 @@ begin
     still clear; a retained input must never replace the composing control. }
   Select(AItem, nsaFocus);
 
-  if GetInputReady and not (FHasColumnLayout and (FComposingInput <> nil)) and
+  if GetInputReady and not ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) and
     FHost.contains(LInput) then
   begin
     FEditingItem := AItem;
@@ -6729,7 +6931,7 @@ begin
     FFocusedColumn := AColumn;
     Refresh;
 
-    if GetInputReady and not (FHasColumnLayout and (FComposingInput <> nil)) and
+    if GetInputReady and not ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) and
       FHost.contains(LInput) then
     begin
       LOptions := TFocusOptions.new;
@@ -6755,14 +6957,14 @@ begin
     Exit(True);
   end;
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
   end;
   Result := True;
 
-  if FHasColumnLayout and (FComposingInput <> nil) then
+  if (FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil) then
   begin
     FCompositionFocusPending := True;
     Exit;
@@ -6827,7 +7029,7 @@ var
   LColumn: Integer;
 begin
 
-  if FOwner.FHasColumnLayout and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -6888,7 +7090,7 @@ var
   LKeepAlive: INyxCollectionMount;
 begin
 
-  if FOwner.FHasColumnLayout and not FOwner.GetInputReady then
+  if (FOwner.FHasColumnLayout or FOwner.FHasTablePresentation) and not FOwner.GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -6918,7 +7120,7 @@ begin
         Exit;
       end;
 
-      if LOwner.FHasColumnLayout and (LOwner.FComposingInput = FInputs[LIndex]) then
+      if (LOwner.FHasColumnLayout or LOwner.FHasTablePresentation) and (LOwner.FComposingInput = FInputs[LIndex]) then
       begin
         { Capture from the immutable physical snapshot, not the newer model.
           Repeated changes coalesce; final value is intentionally read at drain. }
@@ -7074,7 +7276,7 @@ var
   LAscending, LReset: Boolean;
 begin
 
-  if not GetInputReady or (FHasColumnLayout and (FComposingInput <> nil)) or
+  if not GetInputReady or ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) or
     not FEnabled or FUpdating or (FQueries = nil) or
     (AColumn < 0) or (AColumn >= FView.Spec.Count) then
   begin
@@ -7102,7 +7304,7 @@ begin
     LField := FView.Spec.ColumnAt(AColumn).FieldName;
     LObservation := LQueries.Observation;
 
-    if not GetInputReady or (FHasColumnLayout and (FComposingInput <> nil)) or
+    if not GetInputReady or ((FHasColumnLayout or FHasTablePresentation) and (FComposingInput <> nil)) or
       not FEnabled or (FQueries <> LQueries) then
     begin
       Exit;
@@ -7147,7 +7349,7 @@ var
   LFilter: Boolean;
 begin
 
-  if FHasColumnLayout and (not GetInputReady or (FComposingInput <> nil)) then
+  if (FHasColumnLayout or FHasTablePresentation) and (not GetInputReady or (FComposingInput <> nil)) then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -7191,7 +7393,7 @@ var
   LFilter: Boolean;
 begin
 
-  if FHasColumnLayout and not GetInputReady then
+  if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady then
   begin
     AEvent.preventDefault;
     Exit(True);
@@ -7275,6 +7477,10 @@ begin
         FHost.removeEventListener('focusout', @ColumnResizeFocus);
         FHost.removeEventListener(ColumnFitClickEvent, @ColumnFitInput);
         FHost.removeEventListener(ColumnFitDoubleEvent, @ColumnFitInput);
+      end;
+
+      if FHasColumnLayout or FHasTablePresentation then
+      begin
         TCapturedElement(FHost).removeEventListener(ColumnCompositionStart,
           @CellComposition, True);
         TCapturedElement(FHost).removeEventListener(ColumnCompositionEnd,
@@ -7339,10 +7545,19 @@ function MountNyxBrowserCollection(AHost: TJSHTMLElement;
   const AView: INyxCollectionView;
   AInputPhase: TNyxCollectionInputPhase;
   const AInputGate: INyxCollectionInputGate): INyxCollectionMount;
+begin
+  Result := MountNyxBrowserCollectionWithTextLimits(AHost, AView,
+    TNyxTableTextWorkLimits.Defaults, AInputPhase, AInputGate);
+end;
+
+function MountNyxBrowserCollectionWithTextLimits(AHost: TJSHTMLElement;
+  const AView: INyxCollectionView; const ALimits: TNyxTableTextWorkLimits;
+  AInputPhase: TNyxCollectionInputPhase;
+  const AInputGate: INyxCollectionInputGate): INyxCollectionMount;
 var
   LMount: TBrowserMount;
 begin
-  LMount := TBrowserMount.Create(AHost, AView, AInputPhase, AInputGate);
+  LMount := TBrowserMount.Create(AHost, AView, ALimits, AInputPhase, AInputGate);
   Result := LMount;
   LMount.Activate;
 end;

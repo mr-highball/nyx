@@ -41,6 +41,8 @@ uses
   nyx.publication,
   nyx.collections.query.controls,
   nyx.collections.arrangement.controls,
+  nyx.collections.presentation,
+  nyx.collections.presentation.controls,
   nyx.collections.arrangement.presenter,
   nyx.collections.clipboard.actions,
   nyx.collections.range,
@@ -380,6 +382,11 @@ type
       acquire the optional view facet. Targets never query it while painting. }
     FHasColumnLayout: Boolean;
     FColumnLayout: TNyxColumnLayoutObservation;
+    { A separate copied cache keeps text/density opt-in independent of width,
+      pinning and arrangement controls. Runtime work limits never enter design. }
+    FHasTablePresentation: Boolean;
+    FTablePresentation: TNyxTablePresentationObservation;
+    FTextLimits: TNyxTableTextWorkLimits;
     { Cached during synchronization, never query a source/controller from the
       native paint reader. Header zero retains its existing data-row ABI. }
     FQueryHeaders: array of TNyxText;
@@ -2371,8 +2378,10 @@ var
   LState: TCollectionInputState;
   LInstalled: Boolean;
   LTable: Boolean;
+  LCapture: INyxCollectionColumnsCapture;
 begin
   inherited Create;
+  FTextLimits := TNyxTableTextWorkLimits.Defaults;
   FClipboardOptions := TNyxCollectionClipboardOptions.Defaults;
 
   if not (AInputPhase in [ncipReady, ncipStaged]) then
@@ -2389,6 +2398,7 @@ begin
   FEnabled := True;
   LTable := AView.Projection = cpTable;
   FHasColumnLayout := LTable and AView.Spec.HasLayoutControls;
+  FHasTablePresentation := LTable and AView.Spec.HasPresentationPolicy;
 
   if not LTable then
   begin
@@ -2425,10 +2435,19 @@ begin
   FInputLifetime := LState;
   FInputStateObject := LState;
 
-  if FHasColumnLayout then
+  if FHasColumnLayout or FHasTablePresentation then
   begin
-    FColumnLayout := TNyxColumnLayoutObservation.Read(
-      NyxCollectionColumns(AView).CaptureColumns);
+    LCapture := NyxCollectionColumns(AView).CaptureColumns;
+
+    { Presentation-only tables also need the exact detached field/serial
+      metadata for editor handoff. Reading it does not enable arrangement or
+      apply runtime widths/pins; those remain guarded by FHasColumnLayout. }
+    FColumnLayout := TNyxColumnLayoutObservation.Read(LCapture);
+
+    if FHasTablePresentation then
+    begin
+      FTablePresentation := TNyxTablePresentationObservation.Read(LCapture);
+    end;
   end;
   { The view owns only immutable authored options. Each browser/native mount
     starts a separate engine before activation; prefix/time/focus and later
@@ -2897,6 +2916,7 @@ begin
     FQueryHeaders := nil;
     FQuerySummary := '';
     FColumnLayout := Default(TNyxColumnLayoutObservation);
+    FTablePresentation := Default(TNyxTablePresentationObservation);
     FView := nil;
     FInputGate := nil;
     FInputStateObject := nil;
@@ -2990,6 +3010,9 @@ var
   LView: INyxCollectionView;
   LSpec: TNyxCollectionViewSpec;
   LFormerLayout, LNextLayout: TNyxColumnLayoutObservation;
+  LFormerPresentation: TNyxTablePresentationObservation;
+  LNextPresentation: TNyxTablePresentationObservation;
+  LCapture: INyxCollectionColumnsCapture;
   LFormerHeaders: array of TNyxText;
   LFormerSummary: TNyxText;
   LInputLease: INyxCollectionInputLifetime;
@@ -3009,6 +3032,8 @@ begin
 
   LFormerLayout := FColumnLayout;
   LNextLayout := FColumnLayout;
+  LFormerPresentation := FTablePresentation;
+  LNextPresentation := FTablePresentation;
   LFormerHeaders := FQueryHeaders;
   LFormerSummary := FQuerySummary;
   LInputLease := nil;
@@ -3021,7 +3046,7 @@ begin
       Exit;
     end;
 
-    if FInputTrackingPrepared or FHasColumnLayout or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
+    if FInputTrackingPrepared or FHasColumnLayout or FHasTablePresentation or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
       FCellRangeEnabled then
     begin
       { The independent state survives a reentrant Disconnect that clears the
@@ -3037,10 +3062,16 @@ begin
       Exit;
     end;
 
-    if FHasColumnLayout then
+    if FHasColumnLayout or FHasTablePresentation then
     begin
-      LNextLayout := TNyxColumnLayoutObservation.Read(
-        NyxCollectionColumns(LView).CaptureColumns);
+      LCapture := NyxCollectionColumns(LView).CaptureColumns;
+
+      LNextLayout := TNyxColumnLayoutObservation.Read(LCapture);
+
+      if FHasTablePresentation then
+      begin
+        LNextPresentation := TNyxTablePresentationObservation.Read(LCapture);
+      end;
     end;
 
     if not InputLifetimeCurrent or (FView <> LView) then
@@ -3067,6 +3098,7 @@ begin
       Exit;
     end;
     FColumnLayout := LNextLayout;
+    FTablePresentation := LNextPresentation;
     RenderDataset;
 
     if FTargetRefreshDeferred then
@@ -3086,6 +3118,7 @@ begin
     if FTargetRefreshDeferred and InputLifetimeCurrent and (FView = LView) then
     begin
       FColumnLayout := LFormerLayout;
+      FTablePresentation := LFormerPresentation;
       FQueryHeaders := LFormerHeaders;
       FQuerySummary := LFormerSummary;
     end;
@@ -3109,7 +3142,7 @@ function TNyxCollectionMountBase.MatchesCellFocusProof(
 begin
   { Record comparisons only. In particular, never ask a retained external store
     for its snapshot while deciding whether rollback may move physical focus. }
-  Result := InputLifetimeCurrent and FHasColumnLayout and FCellFocusValid and
+  Result := InputLifetimeCurrent and (FHasColumnLayout or FHasTablePresentation) and FCellFocusValid and
     FEnabled and not FReadOnly and (AStore <> nil) and
     (AStore = FCellFocusStore) and ACell.Defined and ACell.Editing and
     ACell.Focused and FCellFocusDraft.Defined and
@@ -3181,7 +3214,7 @@ begin
     FCellRanges.Clear;
   end;
 
-  if (FInputTrackingPrepared or FHasColumnLayout or (LClipboard <> nil) or
+  if (FInputTrackingPrepared or FHasColumnLayout or FHasTablePresentation or (LClipboard <> nil) or
     (LExport <> nil) or FCellRangeEnabled) and
     (FInputStateObject <> nil) then
   begin

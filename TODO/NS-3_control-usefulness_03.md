@@ -10,6 +10,21 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The presentation-authoring continuation adds typed ordinary spacing/text forms,
+independent set/reset and paired history, bounded semantic reads and grouped
+operations with complete version11 discovery. Authoring05 passes40 per actual
+target; native actual MCP discovery passes221, with clean native heaps and empty
+browser warning/error logs. Target20 separately qualifies64 native/browser checks
+at narrow/desktop allocations, including genuine arrangement absence, composition
+continuity, explicit budget refusal and readable multiline row geometry. These
+focused checks do not replace mounted Studio input or full W1/W2 acceptance.
+The next discovered W2 gap is runtime-only presentation activation: the current
+view explicitly refuses nonempty preferences without authored opt-in, and mounts
+also latch that presence. Extend both layers so initial and post-mount set/reset
+work while preserving saved absence, ordinary input and detached capture
+lifetimes. No silent successful commit was proven. WORK retains exact cohorts
+and negative evidence.
+
 Actual focused Studio04 now passes121 native checks with a complete clean heap
 and119/121 browser checks at measured1280x900/390x900, logs empty. Exact accepted
 project packets match across all three runs. Apply, draft retention, independent

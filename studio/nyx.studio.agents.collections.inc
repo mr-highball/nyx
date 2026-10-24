@@ -192,7 +192,8 @@ end;
 function CollectionViewContext(const ASpec: TNyxCollectionViewSpec;
   AOffset, ALimit: Integer; ATypeAheadSupported,
   AQueryControls, ALayoutControls, AFormatControls: Boolean;
-  AWorkbenchControls: Boolean = False): TNyxDataValue;
+  AWorkbenchControls: Boolean = False;
+  APresentationControls: Boolean = False): TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
   LColumn: TNyxCollectionColumn;
@@ -247,6 +248,13 @@ begin
         NyxField('declared', NyxData(LColumn.HasFormatPolicy)),
         NyxField('policy', LColumn.FormatPolicy.ToData)]), 'formatControls');
     end;
+
+    if APresentationControls then
+    begin
+      LColumns[LIndex] := WithResults(LColumns[LIndex], NyxObject([
+        NyxField('declared', NyxData(LColumn.HasTextPolicy)),
+        NyxField('policy', LColumn.TextPolicy.ToData)]), 'presentationControls');
+    end;
   end;
   { A bounded scalar policy belongs to each requested binding context. Declared
     distinguishes saved intent from the library default; the parent response
@@ -294,6 +302,15 @@ begin
     Result := WithResults(Result, NyxObject([
       NyxField('declared', NyxData(ASpec.HasTableWorkbenchPolicy)),
       NyxField('policy', ASpec.TableWorkbenchPolicy.ToData)]), 'workbenchControls');
+  end;
+
+  if APresentationControls then
+  begin
+    { Bounded authored facts only. Captured live user preferences, text, host
+      metrics and runtime admission receipts belong to separate target APIs. }
+    Result := WithResults(Result, NyxObject([
+      NyxField('declared', NyxData(ASpec.HasTablePresentationPolicy)),
+      NyxField('policy', ASpec.TablePresentationPolicy.ToData)]), 'presentationControls');
   end;
 end;
 
@@ -344,6 +361,7 @@ var
   LLayoutControls: Boolean;
   LFormatControls: Boolean;
   LWorkbenchControls: Boolean;
+  LPresentationControls: Boolean;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentCollectionMode) to High(TNyxAgentCollectionMode) do
@@ -422,10 +440,11 @@ begin
     LLayoutControls := False;
     LFormatControls := False;
     LWorkbenchControls := False;
+    LPresentationControls := False;
 
     if LMode = acmBindings then
     begin
-      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|formatControls|workbenchControls|');
+      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|formatControls|workbenchControls|presentationControls|');
       LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumCollectionFields);
       LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
     end
@@ -434,7 +453,7 @@ begin
       case LMode of
         acmColumn:
           begin
-            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|queryControls|layoutControls|formatControls|');
+            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|queryControls|layoutControls|formatControls|presentationControls|');
           end;
         acmQuery:
           begin
@@ -496,6 +515,11 @@ begin
     begin
       LWorkbenchControls := AArguments.Field('workbenchControls').AsBoolean;
     end;
+
+    if NyxAgentHas(AArguments, 'presentationControls') then
+    begin
+      LPresentationControls := AArguments.Field('presentationControls').AsBoolean;
+    end;
     LName := AArguments.Field('owner').AsText;
     LNode := FSession.Document.Find(LName);
 
@@ -519,7 +543,7 @@ begin
       begin
         LLocal := CollectionViewContext(LNode.CollectionView, LOffset, LLimit,
           (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
-          LLayoutControls, LFormatControls, LWorkbenchControls);
+          LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls);
 
         if (LMode = acmBindings) and not LNode.CollectionView.Defined then
         begin
@@ -529,7 +553,7 @@ begin
           begin
             LRestorable := CollectionViewContext(LSpec, LOffset, LLimit,
               (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
-              LLayoutControls, LFormatControls, LWorkbenchControls);
+              LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls);
           end;
         end;
       end;
@@ -542,7 +566,7 @@ begin
         begin
           LEffective := CollectionViewContext(LProjection.CollectionView, LOffset, LLimit,
             (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
-            LLayoutControls, LFormatControls, LWorkbenchControls);
+            LLayoutControls, LFormatControls, LWorkbenchControls, LPresentationControls);
         end;
       end;
 
@@ -581,6 +605,12 @@ begin
         begin
           Result := WithResults(Result, NyxData(LProjectionName = 'table'),
             'workbenchControlsSupported');
+        end;
+
+        if LPresentationControls then
+        begin
+          Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+            'presentationControlsSupported');
         end;
         Exit;
       end;
@@ -670,6 +700,15 @@ begin
               Result := WithResults(Result, NyxObject([
                 NyxField('declared', NyxData(LColumn.HasFormatPolicy)),
                 NyxField('policy', LColumn.FormatPolicy.ToData)]), 'formatControls');
+            end;
+
+            if LPresentationControls then
+            begin
+              Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+                'presentationControlsSupported');
+              Result := WithResults(Result, NyxObject([
+                NyxField('declared', NyxData(LColumn.HasTextPolicy)),
+                NyxField('policy', LColumn.TextPolicy.ToData)]), 'presentationControls');
             end;
             Exit;
           end;

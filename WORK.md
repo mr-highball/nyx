@@ -6,6 +6,76 @@
 
 ### Current checkpoint — authored workbench policies and runtime integration
 
+This continuation implements typed presentation authoring in the ordinary
+Inspector and semantic collection API: separate density/text forms, four typed
+set/reset intents, two named grouped operations, optional bounded policy reads,
+strict version11 discovery and independent paired history. The preceding
+authority-only reply changed no product state; the current implementation and
+executed checks are product progress. No source-scope approval is required.
+
+Authoring05 passes40 native/browser checks, unchanged workbench authoring passes33
+per target, and native actual MCP discovery passes221. Native heaps are complete
+and clean; browser warning/error logs are empty. Full browser Studio, source
+worker, native Studio and backend compile from the final05-plus-target20 merged
+source. Coherent06 repeats40/33/221 on that same whole native source with clean
+heaps; its actual browser authoring40/workbench33 also pass, logs empty. Earlier
+overlay and merged JavaScript identities differ, so the coherent execution is
+retained independently rather than treating the earlier artifact as identical.
+This is portable form/semantic admission and compilation, not mounted Inspector
+input or full native Studio/performance acceptance. A subsequent constructor
+review adds verified refusal of undefined setter policies so serialization cannot
+silently turn a setter into a reset. Lil' Scooty independently reviews the typed
+presence/reset/baseline, grouped replay, exact field and draft/ownership paths.
+Earlier01 staged an old sibling include,02 used the wrong column oracle, and
+the separate overlay product compile exposed caller-directory source precedence.
+Those receipts stay retained; the coherent merged source resolves the latter
+without changing a library contract or compiler configuration.
+
+Target13 passes81 pure/26 layout browser checks and30 target checks at measured
+390/1280 viewports (actual table350/1240). Its supposed ordinary branch still
+declares column pins, so it proves neither complete arrangement absence nor
+that admission path. Unchanged representation14 and clipboard14 pass25/1073
+browser checks at both widths on that exact predecessor. Target17 adds genuine
+absence and fixes the newly exposed native ordinary-width allocation; native64
+passes at both widths with clean heaps. Browser visual inspection then exposes
+an unreadable1px line height despite correct split text and positive structural
+checks. Its optional capture later times out awaiting Root's acknowledgment;
+that fixture timeout is separate from the observed typography defect. Lil'
+Scooty owns the detached-measurement/typography repair and exact-prefix metric
+verification, with stronger physical span/row assertions. No target visual or
+both-target parity acceptance is inferred from earlier counts.
+
+Target20 repairs unresolved detached-browser font measurement by retaining CSS
+line boxes, with actual multiline physical assertions. Compact visual review
+shows14px font/21px line-height,63px three-line spans and68px aligned cells/rows
+for both arranged and truly presentation-only tables. Browser64 passes at both
+measured widths; shared shaped-metric checks pass27. The exact old17 text metric
+body fails the new shaped-prefix assertion with a complete clean heap, preserving
+its negative evidence. Runtime work limits separately bound lines, UTF8 bytes,
+metric calls and measured cells; unsupported metrics/refusals retain complete RAW.
+Native20 passes64 at both widths plus unchanged representation26/clipboard968,
+with complete clean heaps. Its browser representation25/clipboard1073 pass at
+both measured widths, logs empty. The maintained policy/source function adds
+the shared text-layout consumer: all14 fresh compilers and7 native consumers
+pass171/37/38/81/36/4/27 with complete clean heaps. All7 actual browser consumers
+pass the same counts with empty logs, including independent exact emitted-unit
+compilation. All1852 merged source pins reverify unchanged. The build includes
+the new ordinary authoring consumer in native execution and browser staging.
+There are zero owned compiler warnings; installed RTL warnings remain separate.
+The temporary Pascal19163 host is stopped/joined, its listener is absent, test
+tab closed and viewport reset. Original user tabs are untouched.
+
+Deeper review corrects the separate W2 activation gap: the view currently
+explicitly refuses nonempty runtime presentation preferences without authored
+opt-in, while mounts also latch activation only from authored presence. No
+silent successful commit was executed or proven. The next extension must lift
+that old view precondition and support initial/post-mount activation/reset
+without inventing saved declarations, preserving typed field/serial checks and
+input/composition/capture lifetimes.
+Target20 does not qualify this case. Mounted presentation Inspector/SourceJobs,
+full ordinary native Studio and its own exported application/performance, real
+OS effects and all seven original task03 criteria remain open.
+
 The current continuation qualifies actual mounted workbench authoring and adds
 typed table presentation source support. Focused Studio04 passes121 native
 checks with complete90387766/90387766 clean heap, and119/121 browser checks at
@@ -26,6 +96,16 @@ in the test;04 releases that reference before the next Supports call without
 weakening the retirement assertion. Shared bounded text-layout07 passes21 per
 actual target using substituted metrics, with clean native heap and empty
 browser logs; target text painting/Fit are Lil' Scooty's current implementation.
+
+The first actual target packet now passes18 native controls with a complete
+1165980/1165980 clean heap and15 browser controls with empty logs; updated pure
+text metrics pass24 on both actual targets. These exercise clamped paths,
+pinned-row heights, visible budget refusal, retained numeric drafts and managed
+Fit over the full value. Their fixed900px native/800px browser allocations are
+not compact-table evidence. Lil' Scooty next owns measured390/1280 allocations,
+ordinary tables without arrangement and explicit unsupported-metric refusal.
+All Root test tabs are closed, viewport overrides reset, and the temporary
+loopback host is stopped/joined with no remaining listener.
 
 Root's presentation-source02 passes36 source checks on each actual target.
 The exact emitted Pascal independently compiles and passes4 complete-value

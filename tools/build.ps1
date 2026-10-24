@@ -787,7 +787,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
           -Recurse -File | Where-Object { $_.Extension -in @('.pas', '.pp', '.inc', '.lpr') } |
           ForEach-Object { $_.Name }) + @('nyx.generated.view.pas', 'nyx.generated.presentation.pas')
         foreach ($nyxPolicyConsumer in @('policy', 'source', 'compiled',
-            'presentation', 'presentation-source', 'presentation-compiled')) {
+            'presentation', 'presentation-source', 'presentation-compiled', 'text-layout')) {
           $nyxPolicyProgram = 'nyx_collection_workbench_source_tests'
           $nyxPolicyPass = '(?m)^PASS \d+ typed workbench source checks; no runtime service wiring\s*$'
 
@@ -802,6 +802,9 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
           } elseif ($nyxPolicyConsumer -in @('presentation-source', 'presentation-compiled')) {
             $nyxPolicyProgram = 'nyx_collection_presentation_source_tests'
             $nyxPolicyPass = '(?m)^PASS \d+ presentation source/generated application checks\s*$'
+          } elseif ($nyxPolicyConsumer -eq 'text-layout') {
+            $nyxPolicyProgram = 'nyx_collection_text_layout_tests'
+            $nyxPolicyPass = '(?m)^PASS \d+ bounded table text layout checks; substituted metrics only\s*$'
           }
           foreach ($nyxPolicyTarget in @('native', 'browser')) {
             $output = Join-Path $nyxPolicyRoot ($nyxPolicyConsumer + '-' + $nyxPolicyTarget)
@@ -901,6 +904,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       foreach ($nyxWorkbenchCopyConsumer in @('nyx_collection_range_tests',
           'nyx_collection_range_navigation_tests',
           'nyx_table_workbench_authoring_tests',
+          'nyx_table_presentation_authoring_tests',
           'nyx_collection_identity_tests',
           'nyx_collection_workbench_runtime_tests',
           'nyx_collection_clipboard_commands_tests')) {
@@ -974,6 +978,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       $nyxWorkbenchCopyConsumers = @('nyx_collection_range_tests',
         'nyx_collection_range_navigation_tests',
         'nyx_table_workbench_authoring_tests',
+        'nyx_table_presentation_authoring_tests',
         'nyx_collection_identity_tests',
         'nyx_collection_workbench_runtime_tests',
         'nyx_collection_clipboard_commands_tests')
@@ -1050,6 +1055,7 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
           'nyx_popover_open_lifetime_tests', 'nyx_collection_range_tests',
           'nyx_collection_range_navigation_tests',
           'nyx_table_workbench_authoring_tests',
+          'nyx_table_presentation_authoring_tests',
           'nyx_collection_identity_tests',
           'nyx_collection_workbench_runtime_tests',
           'nyx_collection_clipboard_commands_tests', 'nyx_collection_clipboard_controls')) {
