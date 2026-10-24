@@ -92,7 +92,9 @@ function AllPolicy: TNyxTableWorkbenchPolicy;
 begin
   Result := NyxTableWorkbench.RangeSelection(True)
     .AllowCopy([nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange])
-    .CopyFields(nwcfAllArrangement).Headers(False).LineEnding(nwleCRLF).FocusedDraft(True);
+    .CopyFields(nwcfAllArrangement).Headers(False).LineEnding(nwleCRLF).FocusedDraft(True)
+    .Export(NyxTableExport.Allow([nweaAllFiltered]).Columns(nwcfAllArrangement)
+      .Headers(False).LineEnding(nwleCRLF));
 end;
 
 function Fixture(AWithPolicy: Boolean): TNyxDocument;
@@ -132,7 +134,8 @@ begin
             end;
           2:
             begin
-              LSpec := LSpec.TableWorkbench(NyxTableWorkbench.RangeSelection(True).AllowCopy([]));
+              LSpec := LSpec.TableWorkbench(NyxTableWorkbench.RangeSelection(True).AllowCopy([])
+                .Export(NyxTableExport.Allow([])));
             end;
           3:
             begin
@@ -224,7 +227,7 @@ begin
     LWorkspace.Accept(LDocument, LSource);
     LDocument.Find('source-table-1').SetCollectionView(BaseSpec.TableWorkbench(AllPolicy));
     LDocument.Find('source-table-2').SetCollectionView(BaseSpec.TableWorkbench(
-      NyxTableWorkbench.RangeSelection(True).AllowCopy([])));
+      NyxTableWorkbench.RangeSelection(True).AllowCopy([]).Export(NyxTableExport.Allow([]))));
     LDocument.Find('source-table-3').SetCollectionView(BaseSpec.TableWorkbench(
       NyxTableWorkbench.AllowCopy([nwcaSelectedPage]).Headers(False).FocusedDraft(True)));
     LSource := LWorkspace.Render(LDocument);
@@ -279,6 +282,21 @@ begin
     RefusesSource(LWorkspace, LDocument, ReplaceOnce(LSource, '.FocusedDraft(True)', '.FocusedDraft(1)'),
       'focused draft opt-in cannot use a number');
     GSource := LSource;
+    RefusesSource(LWorkspace, LDocument,
+      ReplaceOnce(LSource, '.Allow([nweaAllFiltered])', '.Allow([nwcaSelectedSource])'),
+      'export rejects a clipboard action from another enum family');
+    RefusesSource(LWorkspace, LDocument,
+      ReplaceOnce(LSource, '.Allow([nweaAllFiltered])', '.Allow([''all-filtered''])'),
+      'export rejects interchange action strings');
+    RefusesSource(LWorkspace, LDocument,
+      ReplaceOnce(LSource, '.Allow([nweaAllFiltered])', '.Allow([nweaAllFiltered, nweaAllFiltered])'),
+      'export rejects duplicate typed actions');
+    RefusesSource(LWorkspace, LDocument,
+      ReplaceOnce(LSource, '.Columns(nwcfAllArrangement)', '.Columns(nweaCurrentPage)'),
+      'export column choices retain their own enum family');
+    RefusesSource(LWorkspace, LDocument,
+      ReplaceOnce(LSource, '.Export(NyxTableExport', '.Export(True'),
+      'an export policy cannot be replaced by an untyped enable flag');
     GDesign := TNyxCodec.Encode(LDocument);
     for LIndex := 0 to 3 do
     begin

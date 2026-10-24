@@ -50,7 +50,9 @@ function TestPolicy: TNyxTableWorkbenchPolicy;
 begin
   Result := NyxTableWorkbench.RangeSelection(True)
     .AllowCopy([nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange])
-    .CopyFields(nwcfAllArrangement).Headers(False).LineEnding(nwleCRLF).FocusedDraft(True);
+    .CopyFields(nwcfAllArrangement).Headers(False).LineEnding(nwleCRLF).FocusedDraft(True)
+    .Export(NyxTableExport.Allow([nweaAllFiltered]).Columns(nwcfAllArrangement)
+      .Headers(False).LineEnding(nwleCRLF));
 end;
 
 { One independent accepted project supplies ordinary controls and a reusable
@@ -159,7 +161,7 @@ begin
     LRows := TNyxDataValue.ParseJSON(TNyxCodec.Encode(LSession.Document)).Field('collections').ToJSON;
     Rebuild;
     Check((LShell.Find(NyxStudioWorkbenchPolicyFormID) <> nil) and
-      (LShell.Find(NyxStudioWorkbenchPolicyFormID).Count = 14),
+      (LShell.Find(NyxStudioWorkbenchPolicyFormID).Count = 20),
       'a bound table exposes one complete typed action form');
     Check(not LSession.Document.Find('records-table').CollectionView.HasTableWorkbenchPolicy,
       'opening the form does not declare resolved defaults');
@@ -170,6 +172,13 @@ begin
     Flag(swpfCopyCellRange, True);
     Flag(swpfHeaders, False);
     Flag(swpfFocusedDraft, True);
+    Flag(swpfExportDeclared, True);
+    Flag(swpfExportPage, False);
+    Flag(swpfExportFiltered, True);
+    Flag(swpfExportHeaders, False);
+    LShell.Find(NyxStudioWorkbenchPolicyFieldID(swpfExportFields)).Configure
+      .Value('All authored columns, including hidden').Done;
+    LShell.Find(NyxStudioWorkbenchPolicyFieldID(swpfExportLineEnding)).Configure.Value('CRLF').Done;
     LShell.Find(NyxStudioWorkbenchPolicyFieldID(swpfCopyFields)).Configure
       .Value('All authored columns, including hidden').Done;
     LShell.Find(NyxStudioWorkbenchPolicyFieldID(swpfLineEnding)).Configure.Value('CRLF').Done;
@@ -206,6 +215,17 @@ begin
     LSession.Redo;
     Check(EncodeNyxProject(LSession.ProjectSnapshot) = LApplied,
       'one Redo restores the same complete accepted pair');
+    Rebuild;
+    Flag(swpfExportDeclared, False);
+    Check(Capture(NyxStudioWorkbenchPolicyApplyID),
+      'the ordinary form can withdraw only saved export choices');
+    LSession.ApplyCollectionIntent(LEdit.Collection);
+    Check(LSession.Document.Find('records-table').CollectionView.TableWorkbenchPolicy.ToData.ToJSON =
+      TestPolicy.UseDefaultExport.ToData.ToJSON,
+      'export reset preserves every other authored workbench option');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LApplied,
+      'one Undo restores the exact policy and source after export-only reset');
     Rebuild;
     { Deliberately corrupt the explicit property boundary: the typed Boolean
       setter correctly refuses text before a complete form can be captured. }

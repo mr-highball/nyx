@@ -2,6 +2,18 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The table-export continuation exposes a remaining generated-consumer build
+qualification gap. Its02 emitted builder compiles independently on both targets
+and passes48 native checks. Later06/07 native compilations of the byte-identical
+unit hit the same240s bound while rebuilding broad dependencies, including Pascal
+analysis units. The policy, generator, confined reader and source fixture inputs
+match02; later runtime admission changes are tracked separately. Inspect actual
+dependency/unit reuse and compiler receipts before another equivalent compile;
+neither increasing the bound nor the earlier successful consumer establishes
+current cold-build responsiveness. [WORK](../WORK.md#active-continuation--authored-table-export)
+owns the exact source cohorts and limits. This serves the existing emitted-source
+compilation criterion; it creates no source-scope or approval restriction.
+
 Focused-source dependency repair now retains complete named diagram/canvas roots,
 exact source IDs and original root partitions when required. Both application
 entry points use typed focus, keeping context pages out of automatic navigation.

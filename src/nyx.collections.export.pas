@@ -38,6 +38,10 @@ type
     means selected rows, and hidden selection never changes export membership. }
   TNyxCollectionExportRows = (ncerCurrentPage, ncerAllFiltered);
 
+  { Closed runtime export permission set. Empty denies both memberships; source
+    selection never implicitly broadens this independently configured authority. }
+  TNyxCollectionExportMemberships = set of TNyxCollectionExportRows;
+
   { Runtime RAW TSV policy is independent of authored defaults. Headers use
     exact typed field names; field order/hidden inclusion is explicit. Text
     values never normalize NUL, Unicode or embedded line endings. }
@@ -49,6 +53,7 @@ type
     FLines: TNyxCollectionCopyLineEnding;
     FLimits: TNyxCollectionClipboardLimits;
     FSave: TNyxFileSaveOptions;
+    FAllowedRows: TNyxCollectionExportMemberships;
   public
     class function Defaults: TNyxCollectionExportOptions; static;
     function Copy: TNyxCollectionExportOptions;
@@ -57,12 +62,15 @@ type
     function LineEnding(AChoice: TNyxCollectionCopyLineEnding): TNyxCollectionExportOptions;
     function Limits(const AValue: TNyxCollectionClipboardLimits): TNyxCollectionExportOptions;
     function SaveAs(const AValue: TNyxFileSaveOptions): TNyxCollectionExportOptions;
+    function AllowRows(AValue: TNyxCollectionExportMemberships): TNyxCollectionExportOptions;
+    function Allows(AMembership: TNyxCollectionExportRows): Boolean;
     procedure Validate;
     property FieldChoice: TNyxCollectionCopyFields read FFields;
     property IncludeHeaders: Boolean read FHeaders;
     property Lines: TNyxCollectionCopyLineEnding read FLines;
     property WorkLimits: TNyxCollectionClipboardLimits read FLimits;
     property SaveOptions: TNyxFileSaveOptions read FSave;
+    property AllowedRows: TNyxCollectionExportMemberships read FAllowedRows;
   end;
 
   { Independently owned immutable RAW output. It retains exact copied item and
@@ -135,6 +143,7 @@ class function TNyxCollectionExportOptions.Defaults: TNyxCollectionExportOptions
 begin
   Result := Default(TNyxCollectionExportOptions);
   Result.FDefined := True;
+  Result.FAllowedRows := [ncerCurrentPage, ncerAllFiltered];
   Result.FFields := nccfVisiblePresentation;
   Result.FHeaders := True;
   Result.FLines := nccleLF;
@@ -150,7 +159,8 @@ begin
   if not FDefined or (Ord(FFields) < Ord(Low(TNyxCollectionCopyFields))) or
     (Ord(FFields) > Ord(High(TNyxCollectionCopyFields))) or
     (Ord(FLines) < Ord(Low(TNyxCollectionCopyLineEnding))) or
-    (Ord(FLines) > Ord(High(TNyxCollectionCopyLineEnding))) then
+    (Ord(FLines) > Ord(High(TNyxCollectionCopyLineEnding))) or
+    (FAllowedRows - [Low(TNyxCollectionExportRows)..High(TNyxCollectionExportRows)] <> []) then
   begin
     raise ENyxCollectionExport.Create('Export requires initialized known RAW TSV options');
   end;
@@ -163,6 +173,22 @@ begin
   Validate;
   Result := Self;
   Result.FSave := FSave.Copy;
+end;
+
+function TNyxCollectionExportOptions.AllowRows(
+  AValue: TNyxCollectionExportMemberships): TNyxCollectionExportOptions;
+begin
+  Result := Copy;
+  Result.FAllowedRows := AValue;
+  Result.Validate;
+end;
+
+function TNyxCollectionExportOptions.Allows(AMembership: TNyxCollectionExportRows): Boolean;
+begin
+  Validate;
+  Result := (Ord(AMembership) >= Ord(Low(TNyxCollectionExportRows))) and
+    (Ord(AMembership) <= Ord(High(TNyxCollectionExportRows))) and
+    (AMembership in FAllowedRows);
 end;
 
 function TNyxCollectionExportOptions.Fields(AChoice: TNyxCollectionCopyFields): TNyxCollectionExportOptions;
@@ -313,7 +339,8 @@ begin
   LOptions := AOptions.Copy;
 
   if (LCapture = nil) or (Ord(AMembership) < Ord(Low(TNyxCollectionExportRows))) or
-    (Ord(AMembership) > Ord(High(TNyxCollectionExportRows))) then
+    (Ord(AMembership) > Ord(High(TNyxCollectionExportRows))) or
+    not LOptions.Allows(AMembership) then
   begin
     raise ENyxCollectionExport.Create('Export needs an explicit captured row membership');
   end;

@@ -29,6 +29,15 @@ uses nyx.collections.view, nyx.collections.export, nyx.collections.clipboard.act
   nyx.files.save, nyx.scheduler, nyx.events;
 
 type
+  { Optional immutable membership discovery for managed menus. Older exporters
+    omit this facet and retain their established page/all-filtered choices.
+    Implementations expose copied flags only, with no application callout. }
+  INyxCollectionExportPermissions = interface(IInterface)
+    ['{9F62CC85-00DE-492C-B1BB-9E673F0C7686}']
+    function GetAllowedRows: TNyxCollectionExportMemberships;
+    property AllowedRows: TNyxCollectionExportMemberships read GetAllowedRows;
+  end;
+
   { A pre-canonical export envelope reserves one original table/input intention.
     Prepare captures actual query/page/columns before callbacks; Complete never
     recaptures newer data. Retire withdraws only an untransferred default. These

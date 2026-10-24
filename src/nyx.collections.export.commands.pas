@@ -124,7 +124,7 @@ type
     Pending fields are detached before every callback/Cancel; raw receiver
     ownership never survives logical retirement. }
   TExports = class(TInterfacedObject, INyxCollectionExportCommands,
-    INyxCollectionExportCapturedSave)
+    INyxCollectionExportCapturedSave, INyxCollectionExportPermissions)
   public
     View: INyxCollectionView;
     Output: INyxCollectionExportView;
@@ -153,6 +153,7 @@ type
     function GetPhase: TNyxCollectionExportPhase;
     function GetLastResult: TNyxFileSaveResult;
     function GetLastPayload: INyxCollectionExportText;
+    function GetAllowedRows: TNyxCollectionExportMemberships;
     function SaveCaptured(const ACapture: INyxCollectionExportCapture;
       AMembership: TNyxCollectionExportRows; const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness; AReply: TNyxFileSaveReply;
@@ -407,11 +408,22 @@ function TExports.BeginExport(AMembership: TNyxCollectionExportRows): INyxCollec
 begin
 
   if Revoked or (Ord(AMembership) < Ord(Low(TNyxCollectionExportRows))) or
-    (Ord(AMembership) > Ord(High(TNyxCollectionExportRows))) then
+    (Ord(AMembership) > Ord(High(TNyxCollectionExportRows))) or
+    not Options.Allows(AMembership) then
   begin
     raise ENyxCollectionExport.Create('Export command requires an active known membership');
   end;
   Result := TExportCommand.Create(Self, AMembership);
+end;
+
+function TExports.GetAllowedRows: TNyxCollectionExportMemberships;
+begin
+  Result := [];
+
+  if not Revoked then
+  begin
+    Result := Options.AllowedRows;
+  end;
 end;
 
 procedure TExports.Observe(AObserver: TNyxCollectionExportObserver);

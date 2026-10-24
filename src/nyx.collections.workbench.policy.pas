@@ -49,6 +49,40 @@ type
     Platform clipboard normalization has its own explicitly weaker result. }
   TNyxWorkbenchLineEnding = (nwleLF, nwleCRLF);
 
+  { Export membership is independent of row selection and clipboard permissions.
+    AllFiltered means the captured filtered/ordered result, including other pages. }
+  TNyxWorkbenchExportAction = (nweaCurrentPage, nweaAllFiltered);
+
+  { Explicit empty permissions disable authored export. This value never grants
+    file authority or changes a host's independent resource/work limits. }
+  TNyxWorkbenchExportActions = set of TNyxWorkbenchExportAction;
+
+  { Immutable authored RAW TSV choices, separate from clipboard formatting and
+    runtime file services. Default records mean absent; the factory is explicit.
+    No file handle, machine path, callback or runtime budget is retained. }
+  TNyxTableExportPolicy = record
+  private
+    FDefined: Boolean;
+    FActions: TNyxWorkbenchExportActions;
+    FFields: TNyxWorkbenchCopyFields;
+    FHeaders: Boolean;
+    FLines: TNyxWorkbenchLineEnding;
+  public
+    function Allow(AValue: TNyxWorkbenchExportActions): TNyxTableExportPolicy;
+    function Columns(AValue: TNyxWorkbenchCopyFields): TNyxTableExportPolicy;
+    function Headers(AEnabled: Boolean): TNyxTableExportPolicy;
+    function LineEnding(AValue: TNyxWorkbenchLineEnding): TNyxTableExportPolicy;
+    function Allows(AAction: TNyxWorkbenchExportAction): Boolean;
+    procedure Validate;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxTableExportPolicy; static;
+    property Defined: Boolean read FDefined;
+    property Actions: TNyxWorkbenchExportActions read FActions;
+    property FieldChoice: TNyxWorkbenchCopyFields read FFields;
+    property IncludeHeaders: Boolean read FHeaders;
+    property Lines: TNyxWorkbenchLineEnding read FLines;
+  end;
+
   { Pure immutable authoring choices, with no host, callback, target, selection,
     draft, receipt or runtime budget. Fluent changes return admitted copies.
     Default records mean absent; an explicit factory-default policy is present.
@@ -68,6 +102,7 @@ type
     FHeaders: Boolean;
     FLines: TNyxWorkbenchLineEnding;
     FFocusedDraft: Boolean;
+    FExport: TNyxTableExportPolicy;
   public
     function RangeSelection(AEnabled: Boolean): TNyxTableWorkbenchPolicy;
     function AllowCopy(AValue: TNyxWorkbenchCopyActions): TNyxTableWorkbenchPolicy;
@@ -75,11 +110,16 @@ type
     function Headers(AEnabled: Boolean): TNyxTableWorkbenchPolicy;
     function LineEnding(AValue: TNyxWorkbenchLineEnding): TNyxTableWorkbenchPolicy;
     function FocusedDraft(AEnabled: Boolean): TNyxTableWorkbenchPolicy;
+    { Presence overrides runtime export presentation choices. Removing only this
+      value restores service defaults without changing authored copy settings. }
+    function Export(const APolicy: TNyxTableExportPolicy): TNyxTableWorkbenchPolicy;
+    function UseDefaultExport: TNyxTableWorkbenchPolicy;
     function AllowsCopy(AAction: TNyxWorkbenchCopyAction): Boolean;
     function Copy: TNyxTableWorkbenchPolicy;
     procedure Validate;
-    { Closed version-one value shape. Null retains absence; scalar coercion,
-      unknown/duplicate actions, missing/extra fields and versions refuse. }
+    { Version one remains exact while export is absent; version two requires a
+      present nested export policy. Null retains whole-policy absence. Scalar
+      coercion, unknown/duplicate actions and missing/extra members refuse. }
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxTableWorkbenchPolicy; static;
     property Defined: Boolean read FDefined;
@@ -90,6 +130,7 @@ type
     property IncludeHeaders: Boolean read FHeaders;
     property Lines: TNyxWorkbenchLineEnding read FLines;
     property HasFocusedDraft: Boolean read FFocusedDraft;
+    property ExportPolicy: TNyxTableExportPolicy read FExport;
   end;
 
 { Explicit defaults match ordinary copy options: cell/source/page permissions,
@@ -97,11 +138,223 @@ type
   Creating this value alone grants no clipboard or filesystem authority. }
 function NyxTableWorkbench: TNyxTableWorkbenchPolicy;
 
+{ Explicit page/all-filtered RAW TSV permissions, visible columns, headers and
+  LF. Merely constructing/saving these choices performs no external operation. }
+function NyxTableExport: TNyxTableExportPolicy;
+
 implementation
 
 const
   CActionNames: array[TNyxWorkbenchCopyAction] of TNyxText =
     ('cell', 'selected-source', 'selected-page', 'cell-range');
+  CExportNames: array[TNyxWorkbenchExportAction] of TNyxText =
+    ('current-page', 'all-filtered');
+
+function NyxTableExport: TNyxTableExportPolicy;
+begin
+  Result := Default(TNyxTableExportPolicy);
+  Result.FDefined := True;
+  Result.FActions := [nweaCurrentPage, nweaAllFiltered];
+  Result.FFields := nwcfVisiblePresentation;
+  Result.FHeaders := True;
+  Result.FLines := nwleLF;
+end;
+
+procedure TNyxTableExportPolicy.Validate;
+begin
+
+  if not FDefined then
+  begin
+    raise EArgumentException.Create('Create a table export policy before configuring it');
+  end;
+
+  if (FActions - [Low(TNyxWorkbenchExportAction)..High(TNyxWorkbenchExportAction)] <> []) or
+    (Ord(FFields) < Ord(Low(TNyxWorkbenchCopyFields))) or
+    (Ord(FFields) > Ord(High(TNyxWorkbenchCopyFields))) or
+    (Ord(FLines) < Ord(Low(TNyxWorkbenchLineEnding))) or
+    (Ord(FLines) > Ord(High(TNyxWorkbenchLineEnding))) then
+  begin
+    raise EArgumentException.Create('Unknown table export choice');
+  end;
+end;
+
+function TNyxTableExportPolicy.Allow(AValue: TNyxWorkbenchExportActions): TNyxTableExportPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FActions := AValue;
+  Result.Validate;
+end;
+
+function TNyxTableExportPolicy.Columns(AValue: TNyxWorkbenchCopyFields): TNyxTableExportPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FFields := AValue;
+  Result.Validate;
+end;
+
+function TNyxTableExportPolicy.Headers(AEnabled: Boolean): TNyxTableExportPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FHeaders := AEnabled;
+end;
+
+function TNyxTableExportPolicy.LineEnding(AValue: TNyxWorkbenchLineEnding): TNyxTableExportPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FLines := AValue;
+  Result.Validate;
+end;
+
+function TNyxTableExportPolicy.Allows(AAction: TNyxWorkbenchExportAction): Boolean;
+begin
+  Validate;
+
+  if (Ord(AAction) < Ord(Low(TNyxWorkbenchExportAction))) or
+    (Ord(AAction) > Ord(High(TNyxWorkbenchExportAction))) then
+  begin
+    raise EArgumentException.Create('Unknown table export action');
+  end;
+  Result := AAction in FActions;
+end;
+
+function TNyxTableExportPolicy.ToData: TNyxDataValue;
+var
+  LAction: TNyxWorkbenchExportAction;
+  LActions: array of TNyxDataValue;
+  LCount: Integer;
+  LFields: TNyxText;
+  LLines: TNyxText;
+begin
+
+  if not FDefined then
+  begin
+    Exit(NyxNull);
+  end;
+  Validate;
+  SetLength(LActions, Ord(High(TNyxWorkbenchExportAction)) + 1);
+  LCount := 0;
+  for LAction := Low(TNyxWorkbenchExportAction) to High(TNyxWorkbenchExportAction) do
+  begin
+
+    if LAction in FActions then
+    begin
+      LActions[LCount] := NyxData(CExportNames[LAction]);
+      Inc(LCount);
+    end;
+  end;
+  SetLength(LActions, LCount);
+  LFields := 'visible-presentation';
+
+  if FFields = nwcfAllArrangement then
+  begin
+    LFields := 'all-arrangement';
+  end;
+  LLines := 'lf';
+
+  if FLines = nwleCRLF then
+  begin
+    LLines := 'crlf';
+  end;
+  Result := NyxObject([NyxField('version', NyxData(1)),
+    NyxField('actions', NyxArray(LActions)), NyxField('fields', NyxData(LFields)),
+    NyxField('headers', NyxData(FHeaders)), NyxField('lineEnding', NyxData(LLines))]);
+end;
+
+class function TNyxTableExportPolicy.FromData(
+  const AData: TNyxDataValue): TNyxTableExportPolicy;
+var
+  LPolicy: TNyxTableExportPolicy;
+  LActions: TNyxDataValue;
+  LAction: TNyxWorkbenchExportAction;
+  LAllowed: TNyxWorkbenchExportActions;
+  LIndex: Integer;
+  LName: TNyxText;
+  LFound: Boolean;
+begin
+  AData.Validate;
+
+  if AData.Kind = ndNull then
+  begin
+    Exit(Default(TNyxTableExportPolicy));
+  end;
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 5) then
+  begin
+    raise EArgumentException.Create('A table export policy requires five exact members');
+  end;
+  for LIndex := 0 to AData.Count - 1 do
+  begin
+
+    if Pos('|' + AData.Key(LIndex) + '|', '|version|actions|fields|headers|lineEnding|') = 0 then
+    begin
+      raise EArgumentException.Create('Unknown table export policy member');
+    end;
+  end;
+
+  if AData.Field('version').AsInteger <> 1 then
+  begin
+    raise EArgumentException.Create('Unsupported table export policy version');
+  end;
+  LPolicy := NyxTableExport.Headers(AData.Field('headers').AsBoolean);
+  LName := AData.Field('fields').AsText;
+
+  if LName = 'all-arrangement' then
+  begin
+    LPolicy := LPolicy.Columns(nwcfAllArrangement);
+  end
+  else if LName <> 'visible-presentation' then
+  begin
+    raise EArgumentException.Create('Unknown saved table export field choice');
+  end;
+  LName := AData.Field('lineEnding').AsText;
+
+  if LName = 'crlf' then
+  begin
+    LPolicy := LPolicy.LineEnding(nwleCRLF);
+  end
+  else if LName <> 'lf' then
+  begin
+    raise EArgumentException.Create('Unknown saved table export line ending');
+  end;
+  LActions := AData.Field('actions');
+
+  if (LActions.Kind <> ndArray) or
+    (LActions.Count > Ord(High(TNyxWorkbenchExportAction)) + 1) then
+  begin
+    raise EArgumentException.Create('Export actions require a bounded closed list');
+  end;
+  LAllowed := [];
+  for LIndex := 0 to LActions.Count - 1 do
+  begin
+    LName := LActions.Item(LIndex).AsText;
+    LFound := False;
+    for LAction := Low(TNyxWorkbenchExportAction) to High(TNyxWorkbenchExportAction) do
+    begin
+
+      if LName = CExportNames[LAction] then
+      begin
+
+        if LAction in LAllowed then
+        begin
+          raise EArgumentException.Create('Duplicate table export action');
+        end;
+        Include(LAllowed, LAction);
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if not LFound then
+    begin
+      raise EArgumentException.Create('Unknown saved table export action');
+    end;
+  end;
+  Result := LPolicy.Allow(LAllowed);
+end;
 
 procedure RequireActions(AValue: TNyxWorkbenchCopyActions);
 begin
@@ -130,6 +383,11 @@ begin
     raise EArgumentException.Create('Create a table workbench policy before configuring it');
   end;
   RequireActions(FCopy);
+
+  if FExport.Defined then
+  begin
+    FExport.Validate;
+  end;
 
   if (Ord(FFields) < Ord(Low(TNyxWorkbenchCopyFields))) or
     (Ord(FFields) > Ord(High(TNyxWorkbenchCopyFields))) or
@@ -183,6 +441,22 @@ begin
   Validate;
   Result := Self;
   Result.FFocusedDraft := AEnabled;
+end;
+
+function TNyxTableWorkbenchPolicy.Export(
+  const APolicy: TNyxTableExportPolicy): TNyxTableWorkbenchPolicy;
+begin
+  Validate;
+  APolicy.Validate;
+  Result := Self;
+  Result.FExport := APolicy;
+end;
+
+function TNyxTableWorkbenchPolicy.UseDefaultExport: TNyxTableWorkbenchPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FExport := Default(TNyxTableExportPolicy);
 end;
 
 function TNyxTableWorkbenchPolicy.AllowsCopy(AAction: TNyxWorkbenchCopyAction): Boolean;
@@ -240,6 +514,14 @@ begin
   begin
     LLines := 'crlf';
   end;
+  if FExport.Defined then
+  begin
+    Exit(NyxObject([NyxField('version', NyxData(2)),
+      NyxField('rangeSelection', NyxData(FRange)), NyxField('copyActions', NyxArray(LActions)),
+      NyxField('copyFields', NyxData(LFields)), NyxField('headers', NyxData(FHeaders)),
+      NyxField('lineEnding', NyxData(LLines)), NyxField('focusedDraft', NyxData(FFocusedDraft)),
+      NyxField('export', FExport.ToData)]));
+  end;
   Result := NyxObject([NyxField('version', NyxData(1)),
     NyxField('rangeSelection', NyxData(FRange)), NyxField('copyActions', NyxArray(LActions)),
     NyxField('copyFields', NyxData(LFields)), NyxField('headers', NyxData(FHeaders)),
@@ -256,6 +538,7 @@ var
   LIndex: Integer;
   LName: TNyxText;
   LFound: Boolean;
+  LVersion: Integer;
 begin
   { Build a complete local candidate. A failed assignment keeps the caller's
     previous policy even when its result destination aliases that same value. }
@@ -266,9 +549,15 @@ begin
     Exit(Default(TNyxTableWorkbenchPolicy));
   end;
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 7) then
+  if AData.Kind <> ndObject then
   begin
-    raise EArgumentException.Create('A table workbench policy requires seven exact members');
+    raise EArgumentException.Create('A table workbench policy requires an exact object');
+  end;
+  LVersion := AData.Field('version').AsInteger;
+
+  if not (LVersion in [1, 2]) or (AData.Count <> 6 + LVersion) then
+  begin
+    raise EArgumentException.Create('Unsupported or incomplete table workbench policy');
   end;
   for LIndex := 0 to AData.Count - 1 do
   begin
@@ -276,13 +565,12 @@ begin
     if Pos('|' + AData.Key(LIndex) + '|',
       '|version|rangeSelection|copyActions|copyFields|headers|lineEnding|focusedDraft|') = 0 then
     begin
-      raise EArgumentException.Create('Unknown table workbench policy member');
-    end;
-  end;
 
-  if AData.Field('version').AsInteger <> 1 then
-  begin
-    raise EArgumentException.Create('Unsupported table workbench policy version');
+      if (LVersion <> 2) or (AData.Key(LIndex) <> 'export') then
+      begin
+        raise EArgumentException.Create('Unknown table workbench policy member');
+      end;
+    end;
   end;
   LPolicy := NyxTableWorkbench.RangeSelection(AData.Field('rangeSelection').AsBoolean)
     .Headers(AData.Field('headers').AsBoolean)
@@ -341,6 +629,11 @@ begin
     end;
   end;
   LPolicy := LPolicy.AllowCopy(LCopy);
+
+  if LVersion = 2 then
+  begin
+    LPolicy := LPolicy.Export(TNyxTableExportPolicy.FromData(AData.Field('export')));
+  end;
   LPolicy.Validate;
   Result := LPolicy;
 end;

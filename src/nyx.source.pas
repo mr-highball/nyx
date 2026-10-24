@@ -902,7 +902,8 @@ type
     vkButtonPresentation, vkGlyphCell, vkButtonContent, vkButtonDensity,
     vkButtonAlignment, vkButtonWeight, vkGlyphTone,
     vkValueFormat, vkFormatLocale, vkFormatterRef, vkFormatDateOrder,
-    vkTableWorkbenchPolicy, vkWorkbenchCopyAction, vkWorkbenchCopyFields,
+    vkTableWorkbenchPolicy, vkTableExportPolicy, vkWorkbenchExportAction,
+    vkWorkbenchCopyAction, vkWorkbenchCopyFields,
     vkWorkbenchLineEnding, vkTablePresentationPolicy, vkColumnTextPolicy,
     vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
     vkColumnVerticalAlignment);
@@ -979,6 +980,7 @@ type
     FormatLocale: TNyxFormatLocale;
     TableLayoutPolicy: TNyxTableLayoutPolicy;
     TableWorkbenchPolicy: TNyxTableWorkbenchPolicy;
+    TableExportPolicy: TNyxTableExportPolicy;
     TablePresentationPolicy: TNyxTablePresentationPolicy;
     ColumnTextPolicy: TNyxColumnTextPolicy;
     ColumnAlignmentPolicy: TNyxColumnAlignmentPolicy;
@@ -1740,6 +1742,8 @@ begin
   RegisterEnum(vkColumnPin, Ord(ncpStart), 'ncpStart');
   RegisterEnum(vkColumnPin, Ord(ncpEnd), 'ncpEnd');
   RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaCell), 'nwcaCell');
+  RegisterEnum(vkWorkbenchExportAction, Ord(nweaCurrentPage), 'nweaCurrentPage');
+  RegisterEnum(vkWorkbenchExportAction, Ord(nweaAllFiltered), 'nweaAllFiltered');
   RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaSelectedSource), 'nwcaSelectedSource');
   RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaSelectedPage), 'nwcaSelectedPage');
   RegisterEnum(vkWorkbenchCopyAction, Ord(nwcaCellRange), 'nwcaCellRange');
@@ -3794,6 +3798,7 @@ begin
           (LName = 'nyxnodomain') or (LName = 'tnyxstatevalue') or
           (LName = 'nyxcollectionview') or (LName = 'nyxcolumnlayout') or
           (LName = 'nyxtablelayout') or (LName = 'nyxtableworkbench') or
+          (LName = 'nyxtableexport') or
           (LName = 'nyxtablepresentation') or (LName = 'nyxcolumntext') or
           (LName = 'nyxcolumnalignment') then
         begin

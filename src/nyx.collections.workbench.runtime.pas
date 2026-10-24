@@ -47,7 +47,8 @@ type
   { Optional file authority extends a runtime service provider without changing
     its original clipboard ABI. Host/options are captured once before partial
     mount configuration. Providers must not retain a renderer, mount or tree.
-    Absence keeps existing export behavior; presence requires an explicit host
+    Absence keeps legacy behavior; authored export without this facet uses an
+    explicit Unavailable host. Presence requires an explicit host
     and configures that exact export controller BEFORE managed cell actions.
     Foreign getters may reenter, so each is followed by the original input fence. }
   INyxTableWorkbenchExportServices = interface(IInterface)
@@ -81,6 +82,12 @@ function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost;
 function NyxTableWorkbenchClipboardOptions(const APolicy: TNyxTableWorkbenchPolicy;
   const ALimits: TNyxCollectionClipboardLimits): TNyxCollectionClipboardOptions;
 
+{ Overlay authored representation on copied runtime options. Host save hints
+  and byte/work bounds survive unchanged. Membership permissions intersect the
+  runtime ceiling; a saved document cannot broaden caller-supplied authority. }
+function NyxTableWorkbenchExportOptions(const APolicy: TNyxTableExportPolicy;
+  const AOptions: TNyxCollectionExportOptions): TNyxCollectionExportOptions;
+
 { Configures one fresh table mount through existing optional contracts. The
   supplied fresh target factory belongs only to this attempt. Preflight refuses
   before changing the mount; after configuration begins, failure disconnects
@@ -95,7 +102,8 @@ procedure ConfigureNyxTableWorkbench(const AMount: INyxCollectionMount;
 
 implementation
 
-uses SysUtils, nyx.clipboard.unavailable, nyx.collections.range.commands,
+uses SysUtils, nyx.clipboard.unavailable, nyx.files.save.unavailable,
+  nyx.collections.range.commands,
   nyx.scheduler;
 
 type
@@ -255,6 +263,47 @@ begin
   end;
 end;
 
+function NyxTableWorkbenchExportOptions(const APolicy: TNyxTableExportPolicy;
+  const AOptions: TNyxCollectionExportOptions): TNyxCollectionExportOptions;
+var
+  LAllowed: TNyxCollectionExportMemberships;
+begin
+  APolicy.Validate;
+  LAllowed := [];
+
+  if APolicy.Allows(nweaCurrentPage) then
+  begin
+    Include(LAllowed, ncerCurrentPage);
+  end;
+
+  if APolicy.Allows(nweaAllFiltered) then
+  begin
+    Include(LAllowed, ncerAllFiltered);
+  end;
+  Result := AOptions.Copy.AllowRows(LAllowed * AOptions.AllowedRows)
+    .Headers(APolicy.IncludeHeaders);
+  case APolicy.FieldChoice of
+    nwcfVisiblePresentation:
+      begin
+        Result := Result.Fields(nccfVisiblePresentation);
+      end;
+    nwcfAllArrangement:
+      begin
+        Result := Result.Fields(nccfAllArrangement);
+      end;
+  end;
+  case APolicy.Lines of
+    nwleLF:
+      begin
+        Result := Result.LineEnding(nccleLF);
+      end;
+    nwleCRLF:
+      begin
+        Result := Result.LineEnding(nccleCRLF);
+      end;
+  end;
+end;
+
 procedure ConfigureNyxTableWorkbench(const AMount: INyxCollectionMount;
   const APolicy: TNyxTableWorkbenchPolicy;
   const AServices: INyxTableWorkbenchServices;
@@ -281,6 +330,7 @@ var
   LLimits: TNyxCollectionClipboardLimits;
   LOptions: TNyxCollectionClipboardOptions;
   LEpoch: Integer;
+  LWantExport: Boolean;
 
   procedure RequireCurrent;
   begin
@@ -296,6 +346,7 @@ var
   var
     LExisting: INyxCollectionClipboardCommands;
     LExistingExport: INyxCollectionExportCommands;
+    LExportMount: INyxCollectionExportMount;
   begin
     LExisting := LClipboard.ClipboardCommands;
     RequireCurrent;
@@ -305,9 +356,11 @@ var
       raise ENyxCollectionClipboard.Create('Authored table actions require an unconfigured clipboard mount');
     end;
 
-    if LExport <> nil then
+    if ((LExport <> nil) or LPolicy.ExportPolicy.Defined) and
+      Supports(LMount, INyxCollectionExportMount, LExportMount) then
     begin
-      LExistingExport := LExport.ExportCommands;
+      RequireCurrent;
+      LExistingExport := LExportMount.ExportCommands;
       RequireCurrent;
 
       if LExistingExport <> nil then
@@ -367,7 +420,9 @@ begin
   RequireCurrent;
   LOptions := NyxTableWorkbenchClipboardOptions(LPolicy, LLimits);
 
-  if Supports(LServices, INyxTableWorkbenchExportServices, LExportServices) then
+  LWantExport := not LPolicy.ExportPolicy.Defined or (LPolicy.ExportPolicy.Actions <> []);
+
+  if LWantExport and Supports(LServices, INyxTableWorkbenchExportServices, LExportServices) then
   begin
     RequireCurrent;
 
@@ -385,6 +440,23 @@ begin
     begin
       raise ENyxCollectionExport.Create('Export services require an explicit file-save host');
     end;
+  end;
+
+  if LPolicy.ExportPolicy.Defined and LWantExport then
+  begin
+
+    if LExport = nil then
+    begin
+
+      if not Supports(LMount, INyxCollectionExportMount, LExport) then
+      begin
+        raise ENyxCollectionExport.Create('This table target does not support authored export');
+      end;
+      RequireCurrent;
+      LSaveHost := NewNyxUnavailableFileSaveHost;
+      LExportOptions := TNyxCollectionExportOptions.Defaults;
+    end;
+    LExportOptions := NyxTableWorkbenchExportOptions(LPolicy.ExportPolicy, LExportOptions);
   end;
   RequireCurrent;
 

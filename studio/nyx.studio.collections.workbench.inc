@@ -27,7 +27,9 @@ const
   CWorkbenchAction = 'studio-workbench-policy-action';
   CWorkbenchFields: array[TNyxStudioWorkbenchPolicyField] of TNyxText =
     ('range-selection', 'copy-cell', 'copy-source', 'copy-page', 'copy-range',
-     'copy-fields', 'headers', 'line-ending', 'focused-draft');
+     'copy-fields', 'headers', 'line-ending', 'focused-draft',
+     'export-declared', 'export-page', 'export-filtered', 'export-fields',
+     'export-headers', 'export-line-ending');
   CWorkbenchFieldChoices: array[TNyxWorkbenchCopyFields] of TNyxText =
     ('Visible columns', 'All authored columns, including hidden');
   CWorkbenchLineChoices: array[TNyxWorkbenchLineEnding] of TNyxText =
@@ -65,6 +67,7 @@ var
   LForm: INyxCard;
   LSection: INyxDisclosure;
   LPolicy: TNyxTableWorkbenchPolicy;
+  LExport: TNyxTableExportPolicy;
   LStatus: TNyxText;
 
   procedure Flag(AField: TNyxStudioWorkbenchPolicyField;
@@ -76,8 +79,14 @@ var
 
 begin
   LPolicy := ASpec.TableWorkbenchPolicy;
+  LExport := LPolicy.ExportPolicy;
+
+  if not LExport.Defined then
+  begin
+    LExport := NyxTableExport;
+  end;
   LSection := NewNyxDisclosure(NyxStudioWorkbenchPolicyFormID + '-section')
-    .WithText('Inspection, selection and copy');
+    .WithText('Inspection, selection, copy and export');
   LSection.Configure.Value(False).Surface(False).Done;
   LForm := NewNyxCard(NyxStudioWorkbenchPolicyFormID);
   LForm.Configure.Padding(8).Gap(6).Surface(True).Done;
@@ -94,7 +103,8 @@ begin
   LForm.Node.Add(NewNyxLabel(LForm.Node.ID + '-status').Configure.Text(LStatus).Done);
   LForm.Node.Add(NewNyxLabel(LForm.Node.ID + '-help').Configure.Text(
     'Inspection remains available when copying is disabled. Range selection and copying ' +
-    'are independent. Clipboard access is supplied separately by the application.').Done);
+    'are independent. Export has separate membership and TSV choices. Clipboard and ' +
+    'file access are supplied separately by the application.').Done);
   Flag(swpfRangeSelection, 'Enable cell-range selection', LPolicy.RangeSelectionEnabled);
   Flag(swpfCopyCell, 'Allow accepted, displayed and explicit draft cell copy',
     LPolicy.AllowsCopy(nwcaCell));
@@ -115,6 +125,21 @@ begin
     .Enabled(not ALocked).Done);
   Flag(swpfFocusedDraft, 'Allow deliberate inspection of unfinished cell text',
     LPolicy.HasFocusedDraft);
+  Flag(swpfExportDeclared, 'Use saved export choices instead of application defaults',
+    LPolicy.ExportPolicy.Defined);
+  Flag(swpfExportPage, 'Allow export of the current page', LExport.Allows(nweaCurrentPage));
+  Flag(swpfExportFiltered, 'Allow export of all filtered rows, including other pages',
+    LExport.Allows(nweaAllFiltered));
+  LForm.Node.Add(NewNyxSelect(NyxStudioWorkbenchPolicyFieldID(swpfExportFields)).Configure
+    .Text('Columns included in RAW TSV export')
+    .Items(CWorkbenchFieldChoices[nwcfVisiblePresentation] + #10 +
+      CWorkbenchFieldChoices[nwcfAllArrangement])
+    .Value(CWorkbenchFieldChoices[LExport.FieldChoice]).Enabled(not ALocked).Done);
+  Flag(swpfExportHeaders, 'Include column headers in export', LExport.IncludeHeaders);
+  LForm.Node.Add(NewNyxSelect(NyxStudioWorkbenchPolicyFieldID(swpfExportLineEnding)).Configure
+    .Text('Export TSV row separator').Items(CWorkbenchLineChoices[nwleLF] + #10 +
+      CWorkbenchLineChoices[nwleCRLF]).Value(CWorkbenchLineChoices[LExport.Lines])
+    .Enabled(not ALocked).Done);
   LForm.Node.Add(NewNyxButton(NyxStudioWorkbenchPolicyApplyID).Configure
     .Text('Apply actions').Enabled(not ALocked).Extension(CWorkbenchAction, CPolicyApply).Done);
   LForm.Node.Add(NewNyxButton(NyxStudioWorkbenchPolicyDefaultID).Configure
@@ -140,6 +165,7 @@ var
   LCopy: TNyxWorkbenchCopyActions;
   LFields: TNyxWorkbenchCopyFields;
   LLines: TNyxWorkbenchLineEnding;
+  LExportActions: TNyxWorkbenchExportActions;
 
   function Role(AField: TNyxStudioWorkbenchPolicyField): TNyxNode;
   var
@@ -147,7 +173,7 @@ var
   begin
     LKind := nkCheckbox;
 
-    if AField in [swpfCopyFields, swpfLineEnding] then
+    if AField in [swpfCopyFields, swpfLineEnding, swpfExportFields, swpfExportLineEnding] then
     begin
       LKind := nkSelect;
     end;
@@ -186,6 +212,36 @@ var
     Result := LText = 'true';
   end;
 
+  function Fields(AField: TNyxStudioWorkbenchPolicyField): TNyxWorkbenchCopyFields;
+  begin
+    LValue := Role(AField).Prop(NyxAttributeName(atValue));
+    Result := nwcfVisiblePresentation;
+
+    if LValue = CWorkbenchFieldChoices[nwcfAllArrangement] then
+    begin
+      Result := nwcfAllArrangement;
+    end
+    else if LValue <> CWorkbenchFieldChoices[nwcfVisiblePresentation] then
+    begin
+      raise ENyxCollection.Create('Choose an exact workbench column set');
+    end;
+  end;
+
+  function Lines(AField: TNyxStudioWorkbenchPolicyField): TNyxWorkbenchLineEnding;
+  begin
+    LValue := Role(AField).Prop(NyxAttributeName(atValue));
+    Result := nwleLF;
+
+    if LValue = CWorkbenchLineChoices[nwleCRLF] then
+    begin
+      Result := nwleCRLF;
+    end
+    else if LValue <> CWorkbenchLineChoices[nwleLF] then
+    begin
+      raise ENyxCollection.Create('Choose an exact workbench row separator');
+    end;
+  end;
+
 begin
   AEdit := Default(TNyxStudioDesignEdit);
   Result := (AButton <> nil) and (AButton.Prop(CWorkbenchAction) <> '');
@@ -207,7 +263,7 @@ begin
     (LEditor.ProjectionKind <> NyxKindName(nkCard)) or
     (LForm.ID <> NyxStudioWorkbenchPolicyFormID) or
     (LEditor.Find(LForm.ID) <> LForm) or (LForm.Kind <> NyxKindName(nkCard)) or
-    (LForm.ProjectionKind <> NyxKindName(nkCard)) or (LForm.Count <> 14) then
+    (LForm.ProjectionKind <> NyxKindName(nkCard)) or (LForm.Count <> 20) then
   begin
     raise ENyxCollection.Create('Use the complete current table workbench form');
   end;
@@ -285,32 +341,30 @@ begin
       begin
         Include(LCopy, nwcaCellRange);
       end;
-      LValue := Role(swpfCopyFields).Prop(NyxAttributeName(atValue));
-      LFields := nwcfVisiblePresentation;
-
-      if LValue = CWorkbenchFieldChoices[nwcfAllArrangement] then
-      begin
-        LFields := nwcfAllArrangement;
-      end
-      else if LValue <> CWorkbenchFieldChoices[nwcfVisiblePresentation] then
-      begin
-        raise ENyxCollection.Create('Choose an exact workbench column set');
-      end;
-      LValue := Role(swpfLineEnding).Prop(NyxAttributeName(atValue));
-      LLines := nwleLF;
-
-      if LValue = CWorkbenchLineChoices[nwleCRLF] then
-      begin
-        LLines := nwleCRLF;
-      end
-      else if LValue <> CWorkbenchLineChoices[nwleLF] then
-      begin
-        raise ENyxCollection.Create('Choose an exact workbench row separator');
-      end;
+      LFields := Fields(swpfCopyFields);
+      LLines := Lines(swpfLineEnding);
       AEdit.Collection.Action := scaTableWorkbench;
       AEdit.Collection.TableWorkbench := NyxTableWorkbench
         .RangeSelection(Flag(swpfRangeSelection)).AllowCopy(LCopy).CopyFields(LFields)
         .Headers(Flag(swpfHeaders)).LineEnding(LLines).FocusedDraft(Flag(swpfFocusedDraft));
+
+      if Flag(swpfExportDeclared) then
+      begin
+        LExportActions := [];
+
+        if Flag(swpfExportPage) then
+        begin
+          Include(LExportActions, nweaCurrentPage);
+        end;
+
+        if Flag(swpfExportFiltered) then
+        begin
+          Include(LExportActions, nweaAllFiltered);
+        end;
+        AEdit.Collection.TableWorkbench := AEdit.Collection.TableWorkbench.Export(
+          NyxTableExport.Allow(LExportActions).Columns(Fields(swpfExportFields))
+            .Headers(Flag(swpfExportHeaders)).LineEnding(Lines(swpfExportLineEnding)));
+      end;
     end;
     ApplyNyxStudioCollectionViewIntent(AEdit.Collection, LSpec, LSchema);
   finally

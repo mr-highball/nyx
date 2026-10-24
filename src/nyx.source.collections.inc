@@ -81,6 +81,7 @@ var
   LMode: TNyxCollectionCellMode;
   LFeatures: TNyxColumnLayoutFeatures;
   LCopyActions: TNyxWorkbenchCopyActions;
+  LExportActions: TNyxWorkbenchExportActions;
   LFeature: TValue;
   LInteger: Integer;
 begin
@@ -283,6 +284,95 @@ begin
     Exit;
   end;
 
+  if SameText(AName, 'NyxTableExport') then
+  begin
+
+    if At('(') then
+    begin
+      LArgs := Arguments;
+
+      if Length(LArgs) <> 0 then
+      begin
+        Fail('NyxTableExport takes no factory arguments');
+      end;
+    end;
+    Result.Kind := vkTableExportPolicy;
+    Result.TableExportPolicy := NyxTableExport;
+    while At('.') do
+    begin
+      Expect('.');
+
+      if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) then
+      begin
+        Fail('Expected a typed table export method');
+      end;
+      LMethod := FTokens[FCursor].Text;
+      Inc(FCursor);
+
+      if SameText(LMethod, 'Allow') then
+      begin
+        Expect('(');
+        Expect('[');
+        LExportActions := [];
+        while not At(']') do
+        begin
+          LFeature := Expression;
+
+          if (LFeature.Kind <> vkWorkbenchExportAction) or
+            (LFeature.Ordinal < Ord(Low(TNyxWorkbenchExportAction))) or
+            (LFeature.Ordinal > Ord(High(TNyxWorkbenchExportAction))) then
+          begin
+            Fail('Export Allow requires typed export action symbols');
+          end;
+
+          if TNyxWorkbenchExportAction(LFeature.Ordinal) in LExportActions then
+          begin
+            Fail('Duplicate table export action');
+          end;
+          Include(LExportActions, TNyxWorkbenchExportAction(LFeature.Ordinal));
+
+          if not At(']') then
+          begin
+            Expect(',');
+
+            if At(']') then
+            begin
+              Fail('A table export action must follow the comma');
+            end;
+          end;
+        end;
+        Expect(']');
+        Expect(')');
+        Result.TableExportPolicy := Result.TableExportPolicy.Allow(LExportActions);
+        Continue;
+      end;
+      LArgs := Arguments;
+
+      if SameText(LMethod, 'Headers') and (Length(LArgs) = 1) and
+        (LArgs[0].Kind = vkBoolean) then
+      begin
+        Result.TableExportPolicy := Result.TableExportPolicy.Headers(LArgs[0].Ordinal <> 0);
+      end
+      else if SameText(LMethod, 'Columns') and (Length(LArgs) = 1) and
+        (LArgs[0].Kind = vkWorkbenchCopyFields) then
+      begin
+        Result.TableExportPolicy := Result.TableExportPolicy.Columns(
+          TNyxWorkbenchCopyFields(LArgs[0].Ordinal));
+      end
+      else if SameText(LMethod, 'LineEnding') and (Length(LArgs) = 1) and
+        (LArgs[0].Kind = vkWorkbenchLineEnding) then
+      begin
+        Result.TableExportPolicy := Result.TableExportPolicy.LineEnding(
+          TNyxWorkbenchLineEnding(LArgs[0].Ordinal));
+      end
+      else
+      begin
+        Fail('Unsupported or ill-typed table export method');
+      end;
+    end;
+    Exit;
+  end;
+
   if SameText(AName, 'NyxTableWorkbench') then
   begin
 
@@ -346,7 +436,7 @@ begin
         Continue;
       end;
 
-      if SameText(LMethod, 'Copy') and not At('(') then
+      if (SameText(LMethod, 'Copy') or SameText(LMethod, 'UseDefaultExport')) and not At('(') then
       begin
         LArgs := nil;
       end
@@ -357,6 +447,19 @@ begin
 
       if SameText(LMethod, 'Copy') and (Length(LArgs) = 0) then
       begin
+        Continue;
+      end;
+
+      if SameText(LMethod, 'Export') and (Length(LArgs) = 1) and
+        (LArgs[0].Kind = vkTableExportPolicy) then
+      begin
+        Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.Export(LArgs[0].TableExportPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultExport') and (Length(LArgs) = 0) then
+      begin
+        Result.TableWorkbenchPolicy := Result.TableWorkbenchPolicy.UseDefaultExport;
         Continue;
       end;
 

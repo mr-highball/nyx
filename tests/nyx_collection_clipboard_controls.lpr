@@ -73,6 +73,10 @@ type
   TKeyMode = (kmObserve, kmConsume, kmMutate, kmDisableABA, kmNested, kmRetire,
     kmCapture);
 
+  { Independent saved export choices enter before ordinary Render. Unavailable
+    omits runtime file authority while retaining an explicitly authored action. }
+  TAuthoredExportChoice = (aeLegacy, aePage, aeFiltered, aeNone, aeUnavailable);
+
   { Test owner outlives every subscription and injected host receiver. }
   TCopyReview = class;
 
@@ -312,6 +316,7 @@ type
     procedure InspectorAction(const AID: TNyxText);
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
+    procedure RunAuthoredExport(AChoice: TAuthoredExportChoice); {$ifdef PAS2JS}async;{$endif}
     procedure RunDisplayed; {$ifdef PAS2JS}async;{$endif}
     procedure RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
     procedure RunDraftActions; {$ifdef PAS2JS}async;{$endif}
@@ -333,7 +338,7 @@ type
       AAuthoredWorkbench: Boolean = False; AUnavailableClipboard: Boolean = False;
       ACopyActions: TNyxWorkbenchCopyActions =
         [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange];
-      AAuthoredExports: Boolean = False);
+      AAuthoredExports: Boolean = False; AExportChoice: TAuthoredExportChoice = aeLegacy);
     destructor Destroy; override;
     procedure Run; {$ifdef PAS2JS}async;{$endif}
   end;
@@ -732,17 +737,46 @@ end;
 
 constructor TCopyReview.Create(AArranged: Boolean; ADraftActions: Boolean;
   AAuthoredWorkbench: Boolean; AUnavailableClipboard: Boolean;
-  ACopyActions: TNyxWorkbenchCopyActions; AAuthoredExports: Boolean);
+  ACopyActions: TNyxWorkbenchCopyActions; AAuthoredExports: Boolean;
+  AExportChoice: TAuthoredExportChoice);
 var
   LCallback: TKeyCallback;
   LAdmission: INyxCollectionInputAdmission;
   LOptionsMount: INyxCollectionCellActionOptionsMount;
   LFactory: INyxCollectionCellPresenterFactory;
+  LSpec: TNyxCollectionViewSpec;
+  LExportPolicy: TNyxTableExportPolicy;
 begin
   inherited Create;
   FAuthoredWorkbench := AAuthoredWorkbench;
   FUnavailableClipboard := AUnavailableClipboard;
   FDocument := Fixture(AArranged, AAuthoredWorkbench, ADraftActions, ACopyActions);
+
+  if AExportChoice <> aeLegacy then
+  begin
+    LExportPolicy := NyxTableExport;
+    case AExportChoice of
+      aePage:
+        begin
+          LExportPolicy := LExportPolicy.Allow([nweaCurrentPage]).Headers(False).LineEnding(nwleCRLF);
+        end;
+      aeFiltered:
+        begin
+          LExportPolicy := LExportPolicy.Allow([nweaAllFiltered]).LineEnding(nwleCRLF);
+        end;
+      aeNone:
+        begin
+          LExportPolicy := LExportPolicy.Allow([]);
+        end;
+      aeLegacy, aeUnavailable:
+        begin
+          { Explicit defaults exercise legacy absence or unavailable authority. }
+        end;
+    end;
+    LSpec := FDocument.Find(CTable).CollectionView;
+    FDocument.Find(CTable).SetCollectionView(
+      LSpec.TableWorkbench(LSpec.TableWorkbenchPolicy.Export(LExportPolicy)));
+  end;
   FAuthored := TNyxCodec.Encode(FDocument);
   FState := FDocument.State.Clone;
   FHost := THost.Create;
@@ -4086,6 +4120,68 @@ begin
     'managed draft presentation/copy leaves all accepted rows and authored source exact');
 end;
 
+procedure TCopyReview.RunAuthoredExport(AChoice: TAuthoredExportChoice); {$ifdef PAS2JS}async;{$endif}
+var
+  LExports: INyxCollectionCellExportActions;
+  LPayload: INyxCollectionExportText;
+  LInspector: INyxPopover;
+begin
+  Check(Supports(FCellActions, INyxCollectionCellExportActions, LExports) and
+    (LExports.ExportEnabled = (AChoice <> aeNone)),
+    'ordinary renderer adopts the exact saved export enablement before cell actions');
+  ExportPaging(True);
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(HasMenuAction(NyxCellActionsExportPageID) = (AChoice in [aePage, aeUnavailable]),
+    'actual managed menu exposes current-page export only when authored');
+  Check(HasMenuAction(NyxCellActionsExportFilteredID) = (AChoice in [aeFiltered, aeUnavailable]),
+    'actual managed menu exposes all-filtered export only when authored');
+
+  if AChoice = aeNone then
+  begin
+    Check((FExport.ExportCommands = nil) and (FSaveHost.Saves = 0),
+      'saved empty export permissions remain disabled despite supplied runtime authority');
+    Exit;
+  end;
+
+  if AChoice = aeFiltered then
+  begin
+    MenuAction(NyxCellActionsExportFilteredID);
+  end
+  else
+  begin
+    MenuAction(NyxCellActionsExportPageID);
+  end;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LPayload := FExport.ExportCommands.LastPayload;
+  Check((LPayload <> nil) and (LPayload.CellValue(0, 0).TextValue = CText),
+    'saved action exports original exact accepted RAW through the real table menu');
+
+  if AChoice = aeUnavailable then
+  begin
+    Check((LExports.LastExportResult.Outcome = nfsoUnavailable) and
+      (LExports.LastExportResult.ByteCount = 0),
+      'authored export without application services visibly refuses with typed Unavailable');
+  end
+  else
+  begin
+    Check((FSaveHost.Saves = 1) and (NyxDecodeUTF8(FSaveHost.Bytes) = LPayload.Text) and
+      (LExports.LastExportResult.Outcome = nfsoWritten),
+      'saved export uses exactly one supplied file request and exact UTF-8 bytes');
+    Check(((AChoice = aeFiltered) and (LPayload.RowCount = 2) and
+      (LPayload.Membership = ncerAllFiltered) and (Pos('Name' + #9, LPayload.Text) = 1)) or
+      ((AChoice = aePage) and (LPayload.RowCount = 1) and
+      (LPayload.Membership = ncerCurrentPage) and (Pos('Name' + #9, LPayload.Text) <> 1)),
+      'authored membership and export headers stay independent from copy defaults');
+  end;
+  LInspector := FCellActions.Inspector;
+  Check((LInspector <> nil) and LInspector.IsOpen and
+    (LInspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState)) <> ''),
+    'actual inspector presents the terminal authored export outcome');
+  Check(TNyxCodec.Encode(FDocument) = FAuthored,
+    'table actions preserve the exact saved export policy and source values');
+end;
+
 procedure TCopyReview.ExportPaging(AEnabled: Boolean);
 var
   LPages: INyxCollectionPages;
@@ -4768,6 +4864,7 @@ end;
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LReview: TCopyReview;
+  LExportChoice: TAuthoredExportChoice;
   {$ifndef PAS2JS}
   LInterruption: TNativeRangeInterruption;
   LArranged: Boolean;
@@ -4868,6 +4965,18 @@ begin
       {$else}LReview.RunAuthoredInspection;{$endif}
     finally
       LReview.Free;
+    end;
+    for LExportChoice := aePage to aeUnavailable do
+    begin
+      LReview := TCopyReview.Create(True, True, True, False,
+        [],
+        LExportChoice <> aeUnavailable, LExportChoice);
+      try
+        {$ifdef PAS2JS}await(LReview.RunAuthoredExport(LExportChoice));
+        {$else}LReview.RunAuthoredExport(LExportChoice);{$endif}
+      finally
+        LReview.Free;
+      end;
     end;
     { Reuse the unchanged real export journey, this time with application
       services supplied before Render. No manual ConfigureExport/CellActions

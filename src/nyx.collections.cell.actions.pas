@@ -486,6 +486,7 @@ type
     procedure RepresentationRefused(const AReason: TNyxText; ASerial: Integer;
       ADraft: Boolean = False);
     procedure QueueExport(AMembership: TNyxCollectionExportRows; ASerial: Integer);
+    function CanExport(AMembership: TNyxCollectionExportRows): Boolean;
     procedure ExportValue(AMembership: TNyxCollectionExportRows; ASerial: Integer);
     procedure Exported(AReply: TCellExportReply; const AResult: TNyxFileSaveResult);
     procedure Received(AReply: TCellReply; const AResult: TNyxClipboardWriteResult);
@@ -1612,13 +1613,22 @@ begin
 
     if (FExporter <> nil) and (LOutput <> nil) then
     begin
-      LPage.Add(NewNyxButton(NyxCellActionsExportPageID).Configure
-        .PartName(NyxPart(NyxCellActionsExportPageID)).Text('Export current page as RAW TSV').Done);
-      LPage.Add(NewNyxButton(NyxCellActionsExportFilteredID).Configure
-        .PartName(NyxPart(NyxCellActionsExportFilteredID)).Text('Export all filtered rows as RAW TSV').Done);
-      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsExportPageID),
-        NyxMenuCommand('export-page'))).Add(NyxMenuAction(NyxPart(NyxCellActionsExportFilteredID),
-        NyxMenuCommand('export-filtered')));
+
+      if CanExport(ncerCurrentPage) then
+      begin
+        LPage.Add(NewNyxButton(NyxCellActionsExportPageID).Configure
+          .PartName(NyxPart(NyxCellActionsExportPageID)).Text('Export current page as RAW TSV').Done);
+        LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsExportPageID),
+          NyxMenuCommand('export-page')));
+      end;
+
+      if CanExport(ncerAllFiltered) then
+      begin
+        LPage.Add(NewNyxButton(NyxCellActionsExportFilteredID).Configure
+          .PartName(NyxPart(NyxCellActionsExportFilteredID)).Text('Export all filtered rows as RAW TSV').Done);
+        LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsExportFilteredID),
+          NyxMenuCommand('export-filtered')));
+      end;
     end;
     LMenu := LFactory.CreateMenu(LDocument, NyxPageRoot(LPage.ID), LItems);
   finally
@@ -2454,6 +2464,35 @@ begin
   end;
 end;
 
+function TCellActions.CanExport(AMembership: TNyxCollectionExportRows): Boolean;
+var
+  LLease: INyxCollectionCellActions;
+  LExporter: INyxCollectionExportCapturedSave;
+  LPermissions: INyxCollectionExportPermissions;
+  LAllowed: TNyxCollectionExportMemberships;
+  LSerial: Integer;
+begin
+  LLease := Self;
+  LExporter := FExporter;
+  LSerial := FPort.Serial;
+  Result := False;
+
+  if LExporter = nil then
+  begin
+    Exit;
+  end;
+  LAllowed := [ncerCurrentPage, ncerAllFiltered];
+
+  if Supports(LExporter, INyxCollectionExportPermissions, LPermissions) then
+  begin
+    LAllowed := LPermissions.AllowedRows;
+  end;
+  { Retain the original exporter through foreign QI/getters, then use only
+    local ownership flags. A replaced/revoked action cannot lend a new slot. }
+  Result := FPort.Active and (FPort.Serial = LSerial) and
+    (FExporter = LExporter) and (AMembership in LAllowed);
+end;
+
 procedure TCellActions.QueueExport(AMembership: TNyxCollectionExportRows;
   ASerial: Integer);
 var
@@ -2463,7 +2502,7 @@ var
   LExecution: INyxExecution;
 begin
 
-  if not Current(ASerial) or (FExporter = nil) or (FOutput = nil) then
+  if not Current(ASerial) or not CanExport(AMembership) or (FOutput = nil) then
   begin
     Exit;
   end;
@@ -2497,7 +2536,7 @@ var
   LSerial: Integer;
 begin
 
-  if not Current(ASerial) or (FExporter = nil) or (FOutput = nil) or
+  if not Current(ASerial) or not CanExport(AMembership) or (FOutput = nil) or
     (FPort.ExportSerial >= High(Integer) - 1) then
   begin
     Exit;
@@ -2759,7 +2798,7 @@ end;
 
 function TCellActions.GetExportEnabled: Boolean;
 begin
-  Result := FPort.Active and (FExporter <> nil);
+  Result := FPort.Active and (CanExport(ncerCurrentPage) or CanExport(ncerAllFiltered));
 end;
 
 function TCellActions.GetLastExportResult: TNyxFileSaveResult;

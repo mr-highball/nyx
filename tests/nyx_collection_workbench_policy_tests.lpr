@@ -484,9 +484,82 @@ begin
   end;
 end;
 
+{ Exhaust independent export choices without lending them clipboard settings.
+  Malformed nested values must fail before replacing an already accepted policy. }
+procedure ExportCases;
+var
+  LMask: Integer;
+  LFields: TNyxWorkbenchCopyFields;
+  LLines: TNyxWorkbenchLineEnding;
+  LHeaders: Boolean;
+  LAllowed: TNyxWorkbenchExportActions;
+  LExport: TNyxTableExportPolicy;
+  LPolicy: TNyxTableWorkbenchPolicy;
+  LDecoded: TNyxTableWorkbenchPolicy;
+  LData: TNyxDataValue;
+  LBaseline: TNyxText;
+begin
+  LBaseline := NyxTableWorkbench.CopyFields(nwcfAllArrangement).Headers(False).ToData.ToJSON;
+  for LMask := 0 to 3 do
+  begin
+    LAllowed := [];
+
+    if (LMask and 1) <> 0 then
+    begin
+      Include(LAllowed, nweaCurrentPage);
+    end;
+
+    if (LMask and 2) <> 0 then
+    begin
+      Include(LAllowed, nweaAllFiltered);
+    end;
+    for LFields := Low(TNyxWorkbenchCopyFields) to High(TNyxWorkbenchCopyFields) do
+    begin
+      for LLines := Low(TNyxWorkbenchLineEnding) to High(TNyxWorkbenchLineEnding) do
+      begin
+        for LHeaders := False to True do
+        begin
+          LExport := NyxTableExport.Allow(LAllowed).Columns(LFields)
+            .Headers(LHeaders).LineEnding(LLines);
+          Check(TNyxTableExportPolicy.FromData(LExport.ToData).ToData.ToJSON = LExport.ToData.ToJSON,
+            'independent export choices have one exact strict portable representation');
+          LPolicy := NyxTableWorkbench.CopyFields(nwcfAllArrangement).Headers(False).Export(LExport);
+          LData := LPolicy.ToData;
+          LDecoded := TNyxTableWorkbenchPolicy.FromData(LData);
+          Check((LData.Field('version').AsInteger = 2) and
+            (LDecoded.ExportPolicy.Actions = LAllowed) and
+            (LDecoded.ExportPolicy.FieldChoice = LFields) and
+            (LDecoded.ExportPolicy.Lines = LLines) and
+            (LDecoded.ExportPolicy.IncludeHeaders = LHeaders),
+            'version two retains explicit export permissions, including an empty set');
+          Check(LDecoded.UseDefaultExport.ToData.ToJSON = LBaseline,
+            'reset only export reproduces the exact version-one clipboard policy');
+        end;
+      end;
+    end;
+  end;
+  LData := NyxTableWorkbench.Export(NyxTableExport).ToData;
+  RefusesPolicy(Replacing(LData, 'export', NyxNull), 'version two requires actual export presence');
+  RefusesPolicy(Without(LData, 'export'), 'missing export is not an implicit default');
+  RefusesPolicy(Replacing(LData, 'version', NyxData(1)), 'version one cannot conceal export data');
+  RefusesPolicy(Replacing(LData, 'export',
+    Replacing(LData.Field('export'), 'actions', NyxArray([NyxData('all-filtered'), NyxData('all-filtered')]))),
+    'duplicate export permissions refuse atomically');
+  RefusesPolicy(Replacing(LData, 'export',
+    Replacing(LData.Field('export'), 'actions', NyxArray([NyxData('selected-source')]))),
+    'clipboard membership cannot masquerade as export membership');
+  RefusesPolicy(Replacing(LData, 'export',
+    Replacing(LData.Field('export'), 'headers', NyxData(1))),
+    'export headers require a Boolean');
+  RefusesPolicy(Replacing(LData, 'export',
+    Replacing(LData.Field('export'), 'lineEnding', NyxData('native'))),
+    'export row separators remain closed portable choices');
+end;
+
 begin
   try
     PolicyCases;
+    ExportCases;
     DescriptorCases;
     ProjectionAndLifetimeCases;
     {$ifdef PAS2JS}

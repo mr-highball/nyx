@@ -10,6 +10,17 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The authored-export continuation adds independent typed page/all-filtered,
+column/header/line-ending choices through saved workbench policy, generated
+Pascal, the existing Studio form and grouped semantic history. Runtime permission
+ceilings and host/save/work bounds stay independent; disabled choices and missing
+file services remain explicit. Native06 passes274/59/47/36 portable policy,
+runtime, source and authoring checks, plus1612/1601 actual table controls at
+desktop/compact widths, with complete clean heaps. Five browser companions
+compile only. Actual mounted Studio input, browser interaction and the complete
+original workbench/application journey still need qualification; WORK owns the
+independent generated-consumer evidence and retained failures.
+
 The W2 pending-stroke continuation now connects its portable model to an
 optional per-message mount envelope. Cached preview and accepted cells remain
 separate; exact-pointer abandonment, original input/focus fences and callback

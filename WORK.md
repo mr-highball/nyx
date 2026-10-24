@@ -9,7 +9,50 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Active continuation — mounted range strokes
+## Active continuation — authored table export
+
+Root continues solo on task03 W2's original inspection/output and authoring
+criteria. Export previously depended on a runtime service choice, without a
+saved per-table policy. The new typed `NyxTableExport` value independently names
+current-page/all-filtered permissions, columns, headers and TSV row separators.
+Nested presence uses workbench policy version2; absence/reset retains exact
+version1 bytes. Host hints/authority and work/byte bounds stay runtime-owned;
+permissions intersect the runtime ceiling. Explicit empty permissions disable
+managed actions, while authored export without services reports Unavailable.
+
+The existing Studio form, grouped semantic operation, paired history, source
+reader and generated Pascal carry the same value. Export-only reset preserves
+copy choices. The current actual native table journey exercises managed menus
+with copying disabled, including page-only, all-filtered, disabled and unavailable
+cases. Final regression06 passes274 policy,59 runtime-service,47 source and36
+authoring native assertions, plus1612 actual native table checks at measured900
+and1601 at390 client widths. All native heaps are complete/clean. The actual
+table heaps account for25384984/1139935403 and25799844/1162195584 blocks/bytes.
+All five browser companions compile with zero owned warnings; all2318 fixed
+working inputs reverify unchanged and every main-cohort reader is joined.
+Independent emitted Pascal from02 compiles on both targets and runs48 native
+checks with a complete clean heap. Its emitted unit is byte-identical to06;
+the repeated06 and coherent-pool07 native compilers each hit240s before producing
+a consumer. Both terminal results are retained, not counted as successful builds.
+The generated unit and its policy/codegen/source-reader inputs are unchanged
+from02. Investigate dependency/unit reuse under the existing
+[codegen task](TODO/NS-1_codegen_01.md) before another equivalent compile. Browser
+execution is unqualified; these generated-consumer checks do not render an
+application. All actual readers are joined and the source freeze has ended.
+
+The first build's reused old unit cache raises an internal compiler exception;
+a clean02 output fixes compilation without toolchain/source changes. Native03
+stops on a missing fixture enum arm, before running those controls. After that
+repair,04 passes1612/1601 native controls. Later05 preflight refuses a supported
+legacy clipboard-only/separately configured exporter and fails with a complete
+clean heap. The correction requires fresh export admission only for explicitly
+authored export or newly supplied export services; the old preservation assertion
+remains intact. Original task03 acceptance, actual Studio input and browser
+qualification remain separate requirements. No helper or unchanged900s run.
+
+<a id="active-continuation--mounted-range-strokes"></a>
+
+## Mounted range strokes — preceding qualification
 
 Root continues alone on existing task03 W2 physical range selection. Native
 Shift-mouse cancellation now reaches the canonical event from the outer grid

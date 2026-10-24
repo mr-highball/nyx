@@ -53,11 +53,13 @@ type
     sfpfDecimal, sfpfGroup, sfpfScale, sfpfRounding, sfpfDateOrder,
     sfpfDateSeparator, sfpfTimePrecision, sfpfFirst, sfpfSecond);
   { Closed roles inside the retained table-defaults draft owner. These are
-    copied authored choices, independently of host clipboard permissions,
+    copied authored choices, independently of host clipboard/file permissions,
     runtime selection, user preferences or unfinished accepted-data edits. }
   TNyxStudioWorkbenchPolicyField = (swpfRangeSelection, swpfCopyCell,
     swpfCopySelectedSource, swpfCopySelectedPage, swpfCopyCellRange,
-    swpfCopyFields, swpfHeaders, swpfLineEnding, swpfFocusedDraft);
+    swpfCopyFields, swpfHeaders, swpfLineEnding, swpfFocusedDraft,
+    swpfExportDeclared, swpfExportPage, swpfExportFiltered, swpfExportFields,
+    swpfExportHeaders, swpfExportLineEnding);
   { Presentation form roles remain typed while incomplete line-count input stays
     an inert draft. Column -1 addresses the independent body-row spacing form. }
   TNyxStudioPresentationPolicyField = (sppfDensity, sppfTextOverflow, sppfMaximumLines);

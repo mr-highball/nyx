@@ -841,9 +841,148 @@ begin
   end;
 end;
 
+{ Authored membership/formatting overlays retain runtime host hints and bounds.
+  These real portable controllers use injected authority, not mounted target UI. }
+procedure AuthoredExports;
+var
+  LFixture: TFixture;
+  LOptions: TNyxCollectionExportOptions;
+  LCommands: INyxCollectionExportCommands;
+  LPermissions: INyxCollectionExportPermissions;
+  LCommand: INyxCollectionExportCommand;
+  LAllowed: TNyxCollectionExportMemberships;
+  LRows: TNyxCollectionExportRows;
+  LExportMount: INyxCollectionExportMount;
+  LCase: Integer;
+  LBefore: Integer;
+  LRefused: Boolean;
+begin
+  for LCase := 0 to 4 do
+  begin
+    LFixture := TFixture.Create;
+    try
+      LFixture.Policy := NyxTableWorkbench.Export(NyxTableExport
+        .Columns(nwcfAllArrangement).Headers(True).LineEnding(nwleCRLF));
+      LAllowed := [ncerCurrentPage, ncerAllFiltered];
+      case LCase of
+        0:
+          begin
+            LFixture.Policy := LFixture.Policy.Export(NyxTableExport.Allow([nweaCurrentPage]));
+            LAllowed := [ncerCurrentPage];
+          end;
+        1:
+          begin
+            LFixture.Policy := LFixture.Policy.Export(NyxTableExport.Allow([nweaAllFiltered]));
+            LAllowed := [ncerAllFiltered];
+          end;
+        2:
+          begin
+            LFixture.Policy := LFixture.Policy.Export(NyxTableExport.Allow([]));
+            LAllowed := [];
+          end;
+        3:
+          begin
+            LFixture.Services := nil;
+          end;
+        4:
+          begin
+            LFixture.ExportOptions := LFixture.ExportOptions.AllowRows([ncerCurrentPage]);
+            LFixture.Services := NewNyxTableWorkbenchServices(nil,
+              LFixture.SaveLease, LFixture.ExportOptions);
+            LAllowed := [ncerCurrentPage];
+          end;
+      end;
+      LOptions := NyxTableWorkbenchExportOptions(LFixture.Policy.ExportPolicy, LFixture.ExportOptions);
+      Check((LOptions.AllowedRows = LAllowed) and
+        (LOptions.WorkLimits.MaximumUTF8Bytes = LFixture.ExportOptions.WorkLimits.MaximumUTF8Bytes) and
+        (LOptions.SaveOptions.ToData.ToJSON = LFixture.ExportOptions.SaveOptions.ToData.ToJSON),
+        'authored options intersect membership authority and preserve exact runtime save hints/bounds');
+      LFixture.Configure;
+      LCommands := LFixture.ExportCommands;
+
+      if LAllowed = [] then
+      begin
+        Check((LCommands = nil) and not LFixture.CellExports.ExportEnabled and
+          (LFixture.SaveHost.Saves = 0), 'explicit empty export disables managed actions without invoking authority');
+        Continue;
+      end;
+      Check(Supports(LCommands, INyxCollectionExportPermissions, LPermissions) and
+        (LPermissions.AllowedRows = LAllowed), 'actual controller exposes only admitted membership flags');
+      LCommands.Observe({$ifdef PAS2JS}@{$endif}LFixture.Receive);
+      for LRows := Low(TNyxCollectionExportRows) to High(TNyxCollectionExportRows) do
+      begin
+        LBefore := LFixture.SaveHost.Saves;
+        LRefused := False;
+        try
+          LCommand := LCommands.BeginExport(LRows);
+          LCommand.Prepare;
+          LCommand.Complete(True);
+        except
+          on E: ENyxCollectionExport do
+          begin
+            LRefused := True;
+          end;
+        end;
+        Check(LRefused = not (LRows in LAllowed), 'denied membership refuses before capture/save authority');
+
+        if LRows in LAllowed then
+        begin
+
+          if LCase = 3 then
+          begin
+            Check((LFixture.LastOutcome = nfsoUnavailable) and
+              (LFixture.SaveHost.Saves = LBefore),
+              'missing services give an observable typed Unavailable result, without inferred access');
+          end
+          else
+          begin
+            Check((LFixture.SaveHost.Saves = LBefore + 1) and
+              (LFixture.LastOutcome = nfsoWritten) and
+              (Pos('Name' + #9 + 'Score', LFixture.LastPayload.Text) = 1),
+              'permitted authored export uses its own headers and the captured exact runtime host');
+          end;
+        end
+        else
+        begin
+          Check(LFixture.SaveHost.Saves = LBefore, 'denied membership creates no external save request');
+        end;
+      end;
+    finally
+      LCommand := nil;
+      LPermissions := nil;
+      LCommands := nil;
+      LFixture.Free;
+    end;
+  end;
+  LFixture := TFixture.Create;
+  try
+    Check(Supports(LFixture.Mount, INyxCollectionExportMount, LExportMount),
+      'preflight fixture uses the actual export-mount contract');
+    LExportMount.ConfigureExport(LFixture.SaveLease, LFixture.Events,
+      LFixture.Events.Scheduler, LFixture.ExportOptions);
+    LFixture.Policy := LFixture.Policy.Export(NyxTableExport.Allow([]));
+    LRefused := False;
+    try
+      LFixture.Configure;
+    except
+      on E: ENyxCollectionExport do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and LFixture.Mount.Connected and (LFixture.Clipboard = nil) and
+      (LFixture.Factory.Retirements = 0) and (LFixture.SaveHost.Saves = 0),
+      'explicit disable refuses a non-fresh exporter before partial action configuration or host effects');
+  finally
+    LExportMount := nil;
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     ServiceValues;
+    AuthoredExports;
     MountedExports;
     AdmissionCases;
     {$ifdef PAS2JS}

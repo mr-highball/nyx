@@ -417,6 +417,31 @@ end;
 
 { Emit actual enum symbols, in a stable order, rather than making generated
   callers reconstruct a policy from interchange strings or ordinal masks. }
+function WorkbenchExportExpression(AActions: TNyxWorkbenchExportActions): TNyxText;
+const
+  CNames: array[TNyxWorkbenchExportAction] of TNyxText =
+    ('nweaCurrentPage', 'nweaAllFiltered');
+var
+  LAction: TNyxWorkbenchExportAction;
+begin
+  Result := '[';
+  for LAction := Low(TNyxWorkbenchExportAction) to High(TNyxWorkbenchExportAction) do
+  begin
+
+    if LAction in AActions then
+    begin
+
+      if Length(Result) > 1 then
+      begin
+        Result := Result + ', ';
+      end;
+      Result := Result + CNames[LAction];
+    end;
+  end;
+  Result := Result + ']';
+end;
+
+{ Emit actual layout feature symbols instead of interchange names. }
 function ColumnLayoutFeatureExpression(const AFeatures: TNyxColumnLayoutFeatures): TNyxText;
 const
   CFeatures: array[TNyxColumnLayoutFeature] of TNyxText =
@@ -717,6 +742,29 @@ begin
     if LWorkbench.HasFocusedDraft then
     begin
       ALines.Add(AIndent + '      .FocusedDraft(True)');
+    end;
+
+    if LWorkbench.ExportPolicy.Defined then
+    begin
+      ALines.Add(AIndent + '      .Export(NyxTableExport');
+      ALines.Add(AIndent + '        .Allow(' +
+        WorkbenchExportExpression(LWorkbench.ExportPolicy.Actions) + ')');
+
+      if LWorkbench.ExportPolicy.FieldChoice = nwcfAllArrangement then
+      begin
+        ALines.Add(AIndent + '        .Columns(nwcfAllArrangement)');
+      end;
+
+      if not LWorkbench.ExportPolicy.IncludeHeaders then
+      begin
+        ALines.Add(AIndent + '        .Headers(False)');
+      end;
+
+      if LWorkbench.ExportPolicy.Lines = nwleCRLF then
+      begin
+        ALines.Add(AIndent + '        .LineEnding(nwleCRLF)');
+      end;
+      ALines[ALines.Count - 1] := ALines[ALines.Count - 1] + ')';
     end;
     ALines[ALines.Count - 1] := ALines[ALines.Count - 1] + ')';
   end;

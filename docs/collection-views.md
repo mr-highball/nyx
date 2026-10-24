@@ -1423,11 +1423,44 @@ still arbitrate through one pending-request slot.
 Application services may additionally provide `INyxTableWorkbenchExportServices`.
 Use the `NewNyxTableWorkbenchServices` overload taking clipboard host, explicit
 `INyxFileSaveHost` and copied `TNyxCollectionExportOptions`, optionally followed
-by copy limits. The bridge configures export before managed actions; absence
-keeps exports absent. A supplied nil save host refuses, and an unavailable host
+by copy limits. The bridge configures export before managed actions. Without
+an authored export policy, absence keeps exports absent. A supplied nil save host refuses, and an unavailable host
 retains its typed outcome. Page and all-filtered exports keep the existing RAW
 producer, cancellation and Written/DownloadRequested distinction. None of these
 runtime services or options enters the saved design.
+
+Authors can save independent export choices alongside the copy policy:
+
+```pascal
+LTable.Binds.Collection(LView.TableWorkbench(NyxTableWorkbench
+  .Export(NyxTableExport
+    .Allow([nweaCurrentPage, nweaAllFiltered])
+    .Columns(nwcfVisiblePresentation)
+    .Headers(True)
+    .LineEnding(nwleCRLF))));
+```
+
+`TNyxTableExportPolicy` describes accepted RAW TSV, independently of clipboard
+headers, columns and row separators. Current-page and all-filtered permissions
+are separate; neither means selected rows. `.Allow([])` explicitly disables both
+managed actions even when the application supplies file authority.
+`.UseDefaultExport` removes only the nested export choices and restores the
+application's existing export configuration, preserving the copy policy.
+
+Runtime membership limits intersect the authored actions. Save hints, file hosts
+and byte/work limits remain application-owned. An explicitly authored action
+without file services remains available and returns `nfsoUnavailable` through
+the ordinary inspector status. It never implies filesystem access. The optional
+`INyxCollectionExportPermissions` exposes copied membership flags to managed
+menus without changing older exporter interfaces; older implementations retain
+their previous page/all-filtered behavior. Denied actions are also refused at
+command/serialization admission, before invoking file authority.
+
+The nested export value has its own strict version-one representation. Its
+presence uses workbench policy version two; removing it reproduces the original
+version-one policy bytes. Version two requires a real export object, including
+explicit empty permissions. Generated Pascal uses typed fluent builders, and
+the confined source reader rejects strings or symbols from another enum family.
 
 Optional `INyxCollectionInputPreparation` synchronizes only the base mount's
 accepted Enabled flags before the bridge reserves its input epoch. It invokes
@@ -1465,9 +1498,12 @@ that handwritten code may still use. The confined source reader round-trips
 the closed enum/Boolean families, explicit defaults, empty permission sets,
 local reusable bindings and masks without executing host callbacks.
 
-Studio's table defaults include a collapsed **Inspection, selection and copy**
+Studio's table defaults include a collapsed **Inspection, selection, copy and export**
 section. Its complete typed form edits range selection, the four copy actions,
 included columns, headers, line endings and deliberate focused-draft inspection.
+The export controls separately choose whether to save export settings, permitted
+memberships, columns, headers and row separators. Clearing **Use saved export
+choices** restores runtime defaults without resetting the other action settings.
 **Apply actions** creates an explicit policy; **Use Nyx defaults** clears only
 its presence. The existing layout draft owner and source queue carry the action,
 and one Undo restores the accepted design/source pair. An old binding/schema,
