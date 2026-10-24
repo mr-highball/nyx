@@ -738,6 +738,16 @@ is released to the helper. The helper's later keyboard07 native consumer passes
 remain separate from this retained-form checkpoint. Full ordinary native Studio performance, its own
 generated application, W1/W2 and every original task03 criterion remain open.
 
+The retained-form/Inspector checkpoint is committed and pushed asd019d18; its
+exact remote hello-nyx identity is verified. All12 original/staged browser
+artifact pairs remain exact. Temporary host45220 is identity-verified stopped,
+wrapper52358 joins0 and port19156 has no listener. Completed tabs121/122/123/124
+are closed; the user's original tabs remain untouched. No LAN/Studio service or
+installed MCP configuration changes. Root returns to the original complete
+native editor performance/application journey after this actual Inspector
+integration. Lil' Scooty's keyboard07 browser/review packet and the separate
+managed range-copy menu remain the helper's next work. No user input or blocker.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy
