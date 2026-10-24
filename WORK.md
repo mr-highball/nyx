@@ -675,6 +675,69 @@ and actual Studio adoption is still pending. The range snapshot excludes those
 current event/form changes, which require joint qualification. All original
 task03/W1/W2 criteria and whole native Studio performance remain open.
 
+#### Retained Inspector integration — current continuation
+
+This goal continuation makes progress through an actual reusable renderer API
+and its stock Studio consumer. Both adapters now expose TryPrepareFormRefresh
+over explicit, disjoint form contexts. A nonnil result owns reversible physical
+preview and old-event fencing; installation keeps controls and registrations
+while retiring old executions. Nil preserves drafts and pending descendants.
+Rollback restores the previous values, source baseline and input before the
+event reservation retires. Generation leases protect restoration across physical
+focus/setter callouts. Same-destination interface assignment cannot prematurely
+release the caller's outstanding preview or participant.
+
+Closed form05 passes58 native/114 browser publication checks and38 native/34
+browser actual form checks. Browser forms run at independently preflighted
+1280x900 and390x900 with empty warning/error logs. Native heaps are complete and
+clean:829/829 publication blocks and118055/118055 physical-form blocks. These
+exercise bound/unbound drafts, busy descendant refusal, abandonment, exact native
+windows, old execution cancellation and subsequent independent store writes.
+All2216 captured sources reverify unchanged. Its Studio browser compilation
+initially refuses a nested Shell name collision; the renamed fixture is retained
+in the later cohorts, without changing the original assertions.
+
+Studio now adopts complete frame-source documents through a prepared participant
+before notification. Independent frame liveness prevents access after teardown;
+old documents survive all installation/notification phases. Form and retained-role
+rollback independently attempt every original role while preserving the first
+exact Pascal/raw failure. Lil' Scooty independently reviews that unwind, frame
+ownership and same-result admission without another concrete defect.
+
+Actual stock Inspector06 then fails after the original85 native assertions and
+same-owner draft checks; the browser fails the same new selected-owner check.
+Focused07/08 diagnostics show that resize grips also carry selected-owner
+metadata outside the initial three forms. These failures remain evidence, with
+complete clean native heaps. The repaired09 scopes name only existing resize/
+position forms and their public owner keys, beside independent property,
+reusable and viewport forms. No arbitrary metadata wildcard is admitted.
+
+Focused09 passes8 native/6 browser checks. The complete ordinary section journey
+then passes93 native checks with a complete42192558/42192558 clean heap and84
+browser checks at each measured1280x900 and390x900, logs empty. Both keep the original tests;
+same-owner changes preserve unrelated unfinished input, while a new selected
+owner resets its own form on the exact retained native window and retires old
+geometry-event authority. The desktop live recovery checkpoint is saved,
+visually inspected and acknowledged through its visible Continue action.
+All2216 fixed09 source pins reverify unchanged. The working adapter include adds
+one required blank line afterward; a separate whitespace-free comparison retains
+its exact compiled token content.
+
+One requested compact viewport affected a separate observer tab; its preflight
+measured1280, so that duplicate is classified as desktop only and earns no compact
+evidence. The subsequent genuine compact run verifies390x900 before startup and
+at its84-check terminal result. Its live checkpoint is also saved and visibly
+acknowledged. These captures exercise the fixture's stock default shell, not the
+complete controller's responsive navigation or a visual-quality acceptance.
+Browser observation timeouts never triggered an application restart or a terminal claim.
+The independent helper's navigation02 adds37 actual browser checks with empty
+logs; its current keyboard controls still require their separate qualification.
+Root's complete native section09 runtime and compiler are joined, and native UI
+is released to the helper. The helper's later keyboard07 native consumer passes
+595 checks with a complete clean heap; browser qualification and Root review
+remain separate from this retained-form checkpoint. Full ordinary native Studio performance, its own
+generated application, W1/W2 and every original task03 criterion remain open.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

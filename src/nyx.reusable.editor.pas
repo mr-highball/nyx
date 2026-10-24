@@ -29,6 +29,12 @@ interface
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.data;
 
+const
+  { Exact ephemeral form context, shared with hosts that explicitly support
+    retained editor publication. These are editor metadata, never source data. }
+  NyxReusableEditorSourceKey = 'nyx.reusable-editor.source';
+  NyxReusableEditorBaselineKey = 'nyx.reusable-editor.baseline';
+
 type
   TNyxReusableIdentities = array of TNyxIdentityAssignment;
   TNyxReusableEditorField = (nrfName, nrfPreview, nrfCreate, nrfSummary);
@@ -100,8 +106,8 @@ type
   TNyxReusableDataValues = array of TNyxDataValue;
 
 const
-  CSource = 'nyx.reusable-editor.source';
-  CBaseline = 'nyx.reusable-editor.baseline';
+  CSource = NyxReusableEditorSourceKey;
+  CBaseline = NyxReusableEditorBaselineKey;
   CEditor = 'nyx.reusable-editor';
   CFields: array[TNyxReusableEditorField] of TNyxText =
     ('name', 'preview', 'create', 'summary');

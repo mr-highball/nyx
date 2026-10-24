@@ -46,6 +46,14 @@ uses nyx.publication, nyx.events;
 function NewNyxProjectionContextPublication(const AEvents: INyxEvents;
   const ATarget: INyxPreparedPublication): INyxPreparedPublication;
 
+{ Validate and reserve the same reversible preview immediately. Nil means old
+  event work is still busy or its scheduler cannot guarantee descendant fences;
+  no target preview has run and old work is neither canceled nor consumed.
+  Invalid/stale participants still raise. A nonnil result owns the reservation
+  until grouped Install/Retire; releasing it restores the target before events. }
+function TryPrepareNyxProjectionContextPublication(const AEvents: INyxEvents;
+  const ATarget: INyxPreparedPublication): INyxPreparedPublication;
+
 implementation
 
 uses SysUtils;
@@ -72,6 +80,7 @@ type
   public
     constructor Create(const AEvents: INyxEvents; const ATarget: INyxPreparedPublication);
     destructor Destroy; override;
+    function TryValidate: Boolean;
     procedure Validate;
     procedure CheckReady;
     procedure Install;
@@ -128,7 +137,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TContextPublication.Validate;
+function TContextPublication.TryValidate: Boolean;
 var
   LLease: INyxPreparedPublication;
   LGroup: INyxPreparedPublication;
@@ -136,6 +145,7 @@ var
   LFailed: Boolean;
 begin
   LLease := Self;
+  Result := False;
 
   if FRetired or FRetireRequested or FEntering then
   begin
@@ -159,7 +169,7 @@ begin
 
         if not LPreview.TryBeginPreview then
         begin
-          raise ENyxPublication.Create('Context refresh waits for old event work to finish');
+          Exit;
         end;
 
         if FRetireRequested then
@@ -169,12 +179,22 @@ begin
         FValidated := True;
       end;
       CheckReady;
+      Result := True;
     except
       LFailed := True;
       raise;
     end;
   finally
     FinishPhase(LFailed);
+  end;
+end;
+
+procedure TContextPublication.Validate;
+begin
+
+  if not TryValidate then
+  begin
+    raise ENyxPublication.Create('Context refresh waits for old event work to finish');
   end;
 end;
 
@@ -315,6 +335,27 @@ function NewNyxProjectionContextPublication(const AEvents: INyxEvents;
   const ATarget: INyxPreparedPublication): INyxPreparedPublication;
 begin
   Result := TContextPublication.Create(AEvents, ATarget);
+end;
+
+function TryPrepareNyxProjectionContextPublication(const AEvents: INyxEvents;
+  const ATarget: INyxPreparedPublication): INyxPreparedPublication;
+var
+  LContext: TContextPublication;
+  LLease: INyxPreparedPublication;
+begin
+  { Keep a same-destination caller's participant alive through construction and
+    admission. FPC may pass its variable as the hidden managed Result slot. }
+  LContext := TContextPublication.Create(AEvents, ATarget);
+  LLease := LContext;
+
+  if LContext.TryValidate then
+  begin
+    Result := LLease;
+  end
+  else
+  begin
+    Result := nil;
+  end;
 end;
 
 end.

@@ -361,6 +361,10 @@ type
       AActive: TJSNode; const AEvents: INyxEvents; ARevision: Integer);
     function CaptureContentFaces: TNyxContentFaceStates;
     procedure RestoreContentFaces(const AStates: TNyxContentFaceStates; AFocus: Boolean);
+    { Public entry keeps the caller's old result alive until this core decides
+      admission, including a same-destination outstanding preview handle. }
+    function PrepareFormRefreshCore(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AForms: TNyxProjectionFormContexts; ADesignMode: Boolean): INyxPreparedPublication;
     procedure RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
       AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
       const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
@@ -523,6 +527,17 @@ type
       stale/mismatched restore groups refuse before any mutation. }
     function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
       ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
+    { Explicit form-owner changes over the same physical controls. Only named
+      metadata keys inside the supplied exact forms may differ; ordinary scalar
+      admission remains strict. Nil refuses before mutation. A nonnil result
+      owns a reversible physical preview and fences old event work until grouped
+      publication or retirement. Unchanged forms preserve independent drafts;
+      changed forms reset accepted faces even when their defaults are unchanged.
+      No caller document is retained. Keep the borrowed host alive through the
+      result's retirement; target failures roll back before propagating. }
+    function TryPrepareFormRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AForms: TNyxProjectionFormContexts;
+      ADesignMode: Boolean = False): INyxPreparedPublication;
     { Copied physical continuity, independent of accepted model values. Capture
       and restore require an idle mounted view; False changes nothing. Records
       retain no renderer, control, model or store. Restore matches exact logical
@@ -773,7 +788,7 @@ uses
   nyx.canvas.browser, nyx.canvas.scene, nyx.tool.canvas.browser,
   nyx.collections, nyx.collections.query.browser,
   nyx.collections.arrangement.browser,
-  nyx.application.resources;
+  nyx.application.resources, nyx.projection.context;
 
 type
   { One exact owned palette shared by the renderer and an entered generation.
@@ -1293,6 +1308,8 @@ begin
     raise ENyxBrowserViewRetired.Create('The browser view was retired');
   end;
 end;
+
+{$I nyx.projection.context.adapter.inc}
 
 constructor TNyxBrowserRenderer.CreateRetirementShell;
 begin
@@ -2632,18 +2649,39 @@ end;
 procedure TNyxBrowserRenderer.RestoreContentFaces(
   const AStates: TNyxContentFaceStates; AFocus: Boolean);
 var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
   LIndex: Integer;
   LSaved: Integer;
   LBinding: TNyxBrowserBinding;
   LUpdating: Boolean;
+
+  procedure RequireCurrent;
+  begin
+
+    if not LGeneration.Current then
+    begin
+      raise ENyxBrowserViewRetired.Create('Browser input generation retired during restoration');
+    end;
+  end;
+
 begin
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LGenerationLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
   LUpdating := FUpdating;
   FUpdating := True;
   try
     for LIndex := 0 to High(FBindings) do
     begin
+      RequireCurrent;
       LBinding := FBindings[LIndex];
       LSaved := NyxContentFaceIndex(LBinding.FNode, AStates);
+      RequireCurrent;
 
       if LSaved < 0 then
       begin
@@ -2657,10 +2695,12 @@ begin
         if LBinding.FInput is TJSHTMLInputElement then
         begin
           TJSHTMLInputElement(LBinding.FInput).value := AStates[LSaved].Text;
+          RequireCurrent;
         end
         else if LBinding.FInput is TJSHTMLTextAreaElement then
         begin
           TJSHTMLTextAreaElement(LBinding.FInput).value := AStates[LSaved].Text;
+          RequireCurrent;
         end;
         LBinding.FLastValue := AStates[LSaved].Accepted;
         LBinding.FHasValueBaseline := True;
@@ -2670,26 +2710,41 @@ begin
         NyxInteractionPolicy(LBinding.FNode).Enabled then
       begin
         NyxFocusWithoutScroll(LBinding.FocusElement);
+        RequireCurrent;
       end;
 
       if (LBinding.FInput <> nil) and AStates[LSaved].Selection.Defined and
         CaptureNyxBrowserSelection(LBinding.FInput).Defined and
         (NyxBrowserInputText(LBinding.FInput) = AStates[LSaved].Text) then
       begin
+        RequireCurrent;
         SelectNyxBrowserText(LBinding.FInput, AStates[LSaved].Selection);
+        RequireCurrent;
       end;
+      RequireCurrent;
       LBinding.FElement.scrollLeft := Round(AStates[LSaved].ScrollLeft);
+      RequireCurrent;
       LBinding.FElement.scrollTop := Round(AStates[LSaved].ScrollTop);
+      RequireCurrent;
 
       if LBinding.FInput <> nil then
       begin
         LBinding.FInput.scrollLeft := Round(AStates[LSaved].InputScrollLeft);
+        RequireCurrent;
         LBinding.FInput.scrollTop := Round(AStates[LSaved].InputScrollTop);
+        RequireCurrent;
       end;
     end;
   finally
-    FUpdating := LUpdating;
+
+    if LGeneration.Current then
+    begin
+      { A focus/setter callback may have cleared, remounted or destroyed this
+        receiver. Its old generation lease protects data, never successor fields. }
+      FUpdating := LUpdating;
+    end;
   end;
+  RequireCurrent;
 end;
 
 function TNyxBrowserRenderer.CaptureInteraction(

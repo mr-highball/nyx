@@ -165,7 +165,9 @@ type
 implementation
 
 uses
-  nyx.text.index;
+  nyx.text.index, nyx.data, nyx.publication, nyx.projection.refresh,
+  nyx.studio.inspector, nyx.studio.inspector.groups, nyx.reusable.editor,
+  nyx.studio.resize, nyx.studio.move;
 
 type
   {$ifdef PAS2JS}
@@ -184,11 +186,20 @@ type
     procedure Changed(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   end;
 
+  { Canonical UI-only frame liveness. Prepared bookkeeping keeps this flag alive
+    without owning the frame or its controls; disposal revokes it before cleanup. }
+  TFrameLifetime = class(TInterfacedObject)
+  public
+    Current: Boolean;
+  end;
+
   { One owned complete shell: core renderer, dedicated role hosts, section leases
     and copied model documents. Children retire before their borrowed core-owned
     parents; Roots is a lookup forest rather than another model-tree owner. }
   TSectionFrame = class
   public
+    Lifetime: TFrameLifetime;
+    LifetimeLease: IInterface;
     Core: TNyxStudioSectionRenderer;
     Host: TNyxStudioSectionHost;
     Hosts: array[TNyxStudioSection] of TNyxStudioSectionHost;
@@ -204,6 +215,104 @@ type
     function View(ASection: TNyxStudioSection): TNyxStudioSectionRenderer;
     procedure UpdateRoots;
   end;
+
+  { Grouped frame-source bookkeeping. Install moves prepared document ownership
+    and updates the fixed lookup slots after section ownership changes, before
+    any notification or old-view retirement. Old documents survive that boundary.
+    A retired frame is detected through an independent flags-only lease. }
+  TPreparedStudioFrame = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPublicationReadiness)
+  private
+    FFrame: TSectionFrame;
+    FLifetime: TFrameLifetime;
+    FLifetimeLease: IInterface;
+    FBefore: TNyxStudioSectionDocuments;
+    FNext: TNyxStudioSectionDocuments;
+    FInstalled: Boolean;
+    FRetired: Boolean;
+  public
+    constructor Create(AFrame: TSectionFrame;
+      var ADocuments: TNyxStudioSectionDocuments);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+constructor TPreparedStudioFrame.Create(AFrame: TSectionFrame;
+  var ADocuments: TNyxStudioSectionDocuments);
+begin
+  inherited Create;
+  FFrame := AFrame;
+  FLifetime := AFrame.Lifetime;
+  FLifetimeLease := AFrame.LifetimeLease;
+  FBefore := AFrame.Documents;
+  FNext := ADocuments;
+  ADocuments := nil;
+end;
+
+destructor TPreparedStudioFrame.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TPreparedStudioFrame.CheckReady;
+begin
+
+  if FRetired or FInstalled or not FLifetime.Current then
+  begin
+    raise ENyxModel.Create('Studio frame retired before context publication');
+  end;
+
+  if FFrame.Documents <> FBefore then
+  begin
+    raise ENyxModel.Create('Studio frame source changed before context publication');
+  end;
+end;
+
+procedure TPreparedStudioFrame.Validate;
+begin
+  CheckReady;
+end;
+
+procedure TPreparedStudioFrame.Install;
+begin
+  FInstalled := True;
+  FFrame.Documents := FNext;
+  FNext := nil;
+  { The frame owns only canonical sections. Their getters and the fixed role
+    slots perform no allocation, managed release or application callback. }
+  FFrame.UpdateRoots;
+end;
+
+procedure TPreparedStudioFrame.Notify;
+begin
+  { All application-visible ownership has already changed during Install. }
+end;
+
+procedure TPreparedStudioFrame.Retire;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+  FFrame := nil;
+
+  if FInstalled then
+  begin
+    FreeAndNil(FBefore);
+  end
+  else
+  begin
+    FreeAndNil(FNext);
+    FBefore := nil; { still owned by the unchanged frame }
+  end;
+end;
 
 function NewFrameHost(AHost: TNyxStudioSectionHost): TNyxStudioSectionHost;
 {$ifndef PAS2JS}
@@ -318,6 +427,9 @@ var
   LChanges: array of INyxViewSectionChange;
 begin
   inherited Create;
+  Lifetime := TFrameLifetime.Create;
+  LifetimeLease := Lifetime;
+  Lifetime.Current := True;
   LChanges := nil;
   SetLength(Sections, Ord(High(TNyxStudioSection)) + 1);
   Documents := TNyxStudioSectionDocuments.Create(ADocument, AOwner.FContext);
@@ -370,6 +482,11 @@ destructor TSectionFrame.Destroy;
 var
   LSection: TNyxStudioSection;
 begin
+
+  if Lifetime <> nil then
+  begin
+    Lifetime.Current := False;
+  end;
 
   if Observer <> nil then
   begin
@@ -732,6 +849,11 @@ var
   LInputs: array[TNyxStudioSection] of TNyxContentFaceStates;
   LRetained: array[TNyxStudioSection] of Boolean;
   LPublished: Boolean;
+  LFormEffect: INyxPreparedPublication;
+  LFrameEffect: INyxPreparedPublication;
+  LEffects: INyxPreparedPublication;
+  LForms: TNyxProjectionFormContexts;
+  LFailed: Boolean;
   {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
   LPhaseStarted: QWord;
 
@@ -748,57 +870,128 @@ var
   end;
   {$endif}
 
-  procedure RestoreRetained;
-  var
-    LRole: TNyxStudioSection;
-    LOwner: TNyxStudioSectionRenderer;
-    LFailure: TNyxText;
-  begin
-    LFailure := '';
-    for LRole := High(TNyxStudioSection) downto Low(TNyxStudioSection) do
+  procedure PrepareInspectorForms;
+
+    procedure Add(const AID: TNyxText; const AKeys: array of TNyxExtensionRef);
+    var
+      LCount: Integer;
     begin
 
-      if not LRetained[LRole] then
+      if (LView.Root.Find(AID) = nil) or
+        (LDocuments[nssInspector].Pages[0].Find(AID) = nil) then
       begin
-        Continue;
+        Exit;
       end;
-      { Recovery attempts each role at most once; a failed recovery must not
-        exchange an already restored runtime tree twice. }
-      LRetained[LRole] := False;
-      LOwner := LFrame.View(LRole);
+      LCount := Length(LForms);
+      SetLength(LForms, LCount + 1);
+      LForms[LCount] := TNyxProjectionFormContext.ForForm(AID, AID, AKeys);
+    end;
 
+  begin
+    LForms := nil;
+    { Separate scopes are essential: a new reusable proposal baseline resets
+      only that compound's input, while independent unfinished property and
+      responsive-form drafts remain unchanged for the same selected owner. }
+    Add(NyxInspectorGroupID(nigProperties),
+      [NyxExtension(NyxStudioInspectorContextKey), NyxExtension(NyxStudioPropertyOwnerKey)]);
+    Add(NyxStudioReusableEditorID,
+      [NyxExtension(NyxReusableEditorSourceKey), NyxExtension(NyxReusableEditorBaselineKey)]);
+    Add('inspector-viewport-rule', [NyxExtension(NyxStudioPropertyOwnerKey)]);
+    { Geometry commands carry the selected owner even when they contain no
+      editable value. Their event authority must advance in the same group as
+      property forms, rather than leaving grips attached to the old selection. }
+    Add('studio-resize-tools', [NyxExtension(NyxStudioResizeOwnerKey)]);
+    Add('studio-position-tools', [NyxExtension(NyxStudioMoveOwnerKey)]);
+  end;
+
+  procedure RestoreRetained;
+  var
+    LFailed: Boolean;
+
+    procedure RestoreRole(ARole: Integer);
+    var
+      LRole: TNyxStudioSection;
+      LOwner: TNyxStudioSectionRenderer;
+      LRoleFailed: Boolean;
+    begin
+
+      if ARole < Ord(Low(TNyxStudioSection)) then
+      begin
+        Exit;
+      end;
+      LRole := TNyxStudioSection(ARole);
+      LRoleFailed := False;
       try
+        try
 
-        if not LOwner.TryRefresh(LFrame.Documents[LRole],
-          LFrame.Documents[LRole].Pages[0], False) then
-        begin
-          raise ENyxModel.Create('Retained rollback context changed');
-        end;
-        { Replay restores the private source/arrangement baseline. The exact
-          realized clone restores runtime properties in that same admitted
-          tree; trusted exchange performs no callbacks/allocation. }
-        LOwner.Root.ExchangeResourceProjection(LBefore[LRole]);
-        LOwner.Sync;
-        { Physical drafts can differ from that restored accepted value. Apply
-          the copied adapter continuity only after source/model replay, while
-          the exact retained controls and their event scopes still belong here. }
+          if LRetained[LRole] then
+          begin
+            { Attempt each retained role once, even if an earlier form or role
+              failed recovery. This fixed-role unwind preserves the first exact
+              Pascal exception or raw platform value without boxing either. }
+            LRetained[LRole] := False;
+            LOwner := LFrame.View(LRole);
 
-        if not LOwner.RestoreInteraction(LInputs[LRole]) then
-        begin
-          raise ENyxModel.Create('Retained rollback input boundary became busy');
+            if not LOwner.TryRefresh(LFrame.Documents[LRole],
+              LFrame.Documents[LRole].Pages[0], False) then
+            begin
+              raise ENyxModel.Create('Retained rollback context changed / ' +
+                NyxStudioSectionRootID(LRole));
+            end;
+            { Replay restores the private source/arrangement baseline. The
+              exact realized clone restores runtime properties in that same
+              admitted tree; trusted exchange performs no callbacks/allocation. }
+            LOwner.Root.ExchangeResourceProjection(LBefore[LRole]);
+            LOwner.Sync;
+
+            if not LOwner.RestoreInteraction(LInputs[LRole]) then
+            begin
+              raise ENyxModel.Create('Retained rollback input boundary became busy / ' +
+                NyxStudioSectionRootID(LRole));
+            end;
+          end;
+        except
+          LRoleFailed := True;
+          raise;
         end;
-      except
-        on LException: Exception do
-        begin
-          LFailure := LFailure + ' / ' + NyxStudioSectionRootID(LRole) + ': ' +
-            LException.Message;
+      finally
+        try
+          RestoreRole(ARole - 1);
+        except
+
+          if not LRoleFailed then
+          begin
+            raise;
+          end;
         end;
       end;
     end;
 
-    if LFailure <> '' then
-    begin
-      raise ENyxModel.Create('Studio section recovery failed' + LFailure);
+  begin
+    LFailed := False;
+    try
+      try
+
+        if LFormEffect <> nil then
+        begin
+          { Its target restores old input while its own event preview is fenced.
+            Its failure must not skip independent previously refreshed roles. }
+          LFormEffect.Retire;
+        end;
+      except
+        LFailed := True;
+        raise;
+      end;
+    finally
+      try
+        RestoreRole(Ord(High(TNyxStudioSection)));
+      except
+
+        if not LFailed then
+        begin
+          raise;
+        end;
+      end;
     end;
   end;
 
@@ -820,6 +1013,8 @@ begin
   {$endif}
   LChanges := nil;
   LPublished := False;
+  LFailed := False;
+  LForms := nil;
   for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
   begin
     LBefore[LSection] := nil;
@@ -900,6 +1095,21 @@ begin
           RecordPhase('retained-refused', LSection);
           {$endif}
           LRetained[LSection] := False; { False promises no admitted changes. }
+
+          if LSection = nssInspector then
+          begin
+            { The stock form explicitly owns only these context keys. Unknown
+              editor metadata, changed contracts or membership still require
+              ordinary detached replacement; no schema check is bypassed. }
+            PrepareInspectorForms;
+            LFormEffect := LView.TryPrepareFormRefresh(LDocuments[LSection],
+              LDocuments[LSection].Pages[0], LForms);
+
+            if LFormEffect <> nil then
+            begin
+              Continue;
+            end;
+          end;
         end;
         {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
         { Static role identity only; authored fields never enter timing output. }
@@ -928,7 +1138,18 @@ begin
       LPhaseStarted := GetTickCount64;
       {$endif}
 
-      if not PublishNyxViewSections(LChanges) then
+      LFrameEffect := TPreparedStudioFrame.Create(LFrame, LDocuments);
+
+      if LFormEffect <> nil then
+      begin
+        LEffects := PrepareNyxGroup([LFormEffect, LFrameEffect]);
+      end
+      else
+      begin
+        LEffects := PrepareNyxGroup([LFrameEffect]);
+      end;
+
+      if not PublishNyxViewSections(LChanges, LEffects, LPublished) then
       begin
         {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
         RecordPhase('publication-refused', nssChrome);
@@ -939,27 +1160,47 @@ begin
       {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
       RecordPhase('publication-accepted', nssChrome);
       {$endif}
-      LPublished := True;
-      LFrame.UpdateRoots;
-      LFrame.Documents.Free;
-      LFrame.Documents := LDocuments;
-      LDocuments := nil;
       Result := True;
     except
+      LFailed := True;
 
       if not LPublished then
       begin
-        RestoreRetained;
+        try
+          RestoreRetained;
+        except
+          { Always attempt recovery, retaining the exact primary Pascal/raw
+            failure when an independent target's recovery also refuses. }
+        end;
       end;
       raise;
     end;
   finally
-    LChanges := nil;
-    LDocuments.Free;
-    for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
-    begin
-      LBefore[LSection].Free;
-      LInputs[LSection] := nil;
+    try
+
+      if LFormEffect <> nil then
+      begin
+        try
+          LFormEffect.Retire;
+        except
+
+          if not LFailed then
+          begin
+            raise;
+          end;
+        end;
+      end;
+    finally
+      LEffects := nil;
+      LFormEffect := nil;
+      LFrameEffect := nil;
+      LChanges := nil;
+      LDocuments.Free;
+      for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+      begin
+        LBefore[LSection].Free;
+        LInputs[LSection] := nil;
+      end;
     end;
   end;
 end;

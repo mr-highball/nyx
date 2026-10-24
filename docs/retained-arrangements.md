@@ -71,10 +71,12 @@ finishes before the event guard retires, so focus/parenting callouts cannot run
 old callbacks against a partly restored form. Successful installation rotates
 one event generation without callbacks; notification follows all installations.
 This explicit preview facility does not change ordinary prepared-view behavior.
-Its ticket proof covers router-owned callback invocations. A callback can have
-scheduled independent descendant work after its own invocation completes; that
-work needs its own target/scheduler admission fence. The current physical
-adapters do not yet qualify that descendant-work boundary.
+Real event generations also own scheduler work domains. A completed or pruned
+callback cannot hide pending descendants posted with its execution as parent.
+Preview refuses while that work remains active, preserving its queued tickets.
+An admitted preview temporarily blocks new work through the old context;
+rollback reopens it and installation retires it permanently. An unsupported
+scheduler refuses this optional path instead of claiming quiescence.
 
 The corresponding `PublishNyxViewSections` overload accepts that prepared effect
 and returns a separate committed flag. It checks the original readiness fence
@@ -90,15 +92,44 @@ This keeps its participant vector alive through target and scheduler callouts;
 retirement during validation refuses before preview, while notification
 retirement preserves already installed data.
 
-This portable publication consumer now passes 54 native checks with a complete
-clean heap and 110 actual browser checks with empty logs. The browser additionally
+This portable publication consumer now passes 58 native checks with a complete
+clean heap and 114 actual browser checks with empty logs. The browser additionally
 checks raw throw values, including undefined, null, false, zero and an object
 whose string conversion refuses. The unchanged event-publication regression
 passes 58 per actual target.
-These use real routers/coordinators and injected target phases. Studio/renderer
-adoption, actual physical-input/focus and worker integration, and whole-Inspector
-performance remain open. The maintained `retained-arrangement` target includes
-both portable form and retained-context publication consumers.
+These use real routers/coordinators and injected target phases. The maintained
+`retained-arrangement` target includes portable form and retained-context
+publication consumers, plus the actual physical form consumer described below.
+
+Both physical renderers expose `TryPrepareFormRefresh(Document, Root, Forms)`.
+Its exact form contexts are the same explicit portable contract. Nil means the
+form cannot be retained or its old event work remains busy; it leaves accepted
+controls, drafts and pending work untouched. The ordinary replacement path is
+still available. Invalid source raises through ordinary document admission.
+
+A nonnil participant has already previewed the new values on the retained
+controls and fenced ordinary dispatch. Include it in `PublishNyxGroup` or the
+effect overload of `PublishNyxViewSections` to install it with other changes.
+Retiring or releasing an uninstalled participant restores the old metadata,
+accepted baseline and copied physical drafts before releasing that event fence.
+An installed participant retains its controls and registrations, while old
+executions become canceled and later input receives the successor context.
+The participant owns its snapshots and a canonical generation lease; it never
+owns its renderer or the caller's document. Renderer retirement makes its
+borrowed target unavailable without reviving the old view.
+
+The actual form consumer passes 38 native checks with a complete clean heap and
+34 browser checks at independently verified desktop and compact widths, with
+empty warning/error logs. It exercises bound/unbound numeric drafts, refusal
+with a real queued descendant, rollback, same-destination interface assignment,
+event retirement and subsequent independent state writes. The authored document
+stays exact. Studio's stock Inspector adoption is qualified separately: its
+complete section consumer now passes 93 native
+checks with a complete clean heap and 84 browser checks at desktop and compact
+widths, with empty logs. Independent property, reusable-copy, viewport and
+geometry contexts keep same-owner drafts and reset only the changed form.
+Complete ordinary editor performance and independent application production
+remain required.
 
 The generic prepared-group notification loop attempts every original receiver
 after an earlier receiver fails. Nested groups retain their original participant
@@ -109,8 +140,8 @@ every captured execution cancellation before reporting its first failure. The
 consumer exercises both direct/nested groups and two actual completed router
 invocations whose cancellation fails before a later target notification.
 Installed data stays committed and all adopted preparations retire. This resolves
-the earlier notification gap; descendant-work admission and actual physical
-renderer/Studio adoption remain prerequisites.
+the earlier notification gap. The actual form path above now uses descendant
+admission; complete Studio adoption and performance remain separate requirements.
 
 The portable `TNyxNode.ArrangeLike` boundary prepares every owner array and actual
 managed implementation anchor before publication. It adopts no candidate node.

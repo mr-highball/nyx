@@ -89,6 +89,9 @@ const
   NyxStudioInspectorMountID = 'studio-inspector-mount';
   NyxStudioResourcesMountID = 'studio-resources-mount';
   NyxStudioDetailsMountID = 'studio-details-mount';
+  { Exact selected owner of the stock Inspector's primary property form.
+    Compound editors retain their own separate proposal/baseline contexts. }
+  NyxStudioInspectorContextKey = 'studio.inspector-context';
 
 { Canonical role-to-root and role-to-host mapping. Chrome is the surrounding
   frame, so it has no child mount ID; undefined role values raise. }

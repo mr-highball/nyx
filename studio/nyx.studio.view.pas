@@ -340,7 +340,7 @@ implementation
 uses
   nyx.studio.sourcefiles,
   nyx.binding, nyx.interaction, nyx.resources, nyx.application.resources,
-  nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
+  nyx.composition, nyx.studio.rootview, nyx.studio.buildview, nyx.studio.sections;
 
 function RestoreNyxStudioSourceActivity(APane: TNyxNode; AWorking: Boolean): Boolean;
 var
@@ -1991,6 +1991,7 @@ begin
         LDataGroup := NewNyxInspectorGroup(nigData, AState.InspectorGroups);
         LResponsiveGroup := NewNyxInspectorGroup(nigResponsive, AState.InspectorGroups);
         LPropertiesGroup := NewNyxInspectorGroup(nigProperties, AState.InspectorGroups);
+        LPropertiesGroup.Configure.Extension(NyxStudioInspectorContextKey, LSelected.ID).Done;
         LPropertyHost := LPropertiesGroup.BodyColumn.Node;
 
         if LSelected.ProjectionKind = 'component' then

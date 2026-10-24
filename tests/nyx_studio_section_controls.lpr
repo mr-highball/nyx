@@ -30,6 +30,7 @@ uses
   nyx.theme, nyx.behavior, nyx.events, nyx.scheduler, nyx.content.mount,
   nyx.studio.session,
   nyx.studio.view, nyx.studio.sections, nyx.studio.section.views,
+  nyx.studio.inspector.groups, nyx.studio.resize,
   nyx.content, nyx.presentations, nyx.resources, nyx.resources.browser,
   nyx.resources.editor,
   nyx.collections, nyx.collections.view, nyx.collections.mount,
@@ -636,6 +637,140 @@ begin
   end;
 end;
 
+{ Stock composition and actual facade, with one extra numeric fixture field in
+  the primary property form. These are private seeded documents, not a source/
+  history or independent generated-application acceptance claim. }
+procedure InspectorFormCases(ATheme: TNyxTheme;
+  AHost: {$ifdef PAS2JS}TJSHTMLElement{$else}TWinControl{$endif});
+  {$ifdef PAS2JS}async;{$endif}
+var
+  LSession: TNyxStudioSession;
+  LViews: TNyxStudioSectionViews;
+  LDocument: TNyxDocument;
+  LNext: TNyxDocument;
+  LRoot: TNyxNode;
+  LBefore: TNyxNode;
+  LField: TNyxStudioSectionControl;
+  LEventBefore: INyxCancellationScope;
+  {$ifndef PAS2JS}
+  LHandle: PtrUInt;
+  {$endif}
+
+  procedure ExplainReplacement(AFrom, ATo: TNyxNode);
+  var
+    LIndex: Integer;
+    LKey: TNyxText;
+  begin
+
+    if (AFrom.ID <> ATo.ID) or (AFrom.Count <> ATo.Count) or
+      (AFrom.Kind <> ATo.Kind) then
+    begin
+      WriteLn('Inspector replacement shape / ', AFrom.ID, ' / ', ATo.ID,
+        ' / children ', AFrom.Count, ' -> ', ATo.Count);
+      Exit;
+    end;
+    for LIndex := 0 to AFrom.Props.Count - 1 do
+    begin
+      LKey := AFrom.Props.Names[LIndex];
+
+      if AFrom.StoredProp(LKey) <> ATo.StoredProp(LKey) then
+      begin
+        { Only copied fixture identities/property names enter this diagnostic;
+          long reusable source baselines and user values are never printed. }
+        WriteLn('Inspector replacement property / ', AFrom.ID, ' / ', LKey);
+      end;
+    end;
+    for LIndex := 0 to AFrom.Count - 1 do
+    begin
+      ExplainReplacement(AFrom.Children[LIndex], ATo.Children[LIndex]);
+    end;
+  end;
+
+  function ComposeInspectorFixture: TNyxDocument;
+  var
+    LInput: INyxInput;
+  begin
+    Result := BuildNyxStudioView(LSession, DefaultNyxStudioViewState);
+    try
+      LInput := NewNyxInput('inspector-form-draft');
+      LInput.Configure.Text('Independent draft').InputType(niNumber).Value(7.0).Done;
+      LInput.Contract.Value(NyxNumberDomain.Range(0, 100));
+      Result.Find(NyxInspectorGroupID(nigProperties)).Part(NyxPart('body')).Add(LInput);
+    except
+      Result.Free;
+      raise;
+    end;
+  end;
+
+begin
+  LSession := TNyxStudioSession.Create;
+  LViews := TNyxStudioSectionViews.Create(ATheme, nscEditorOwnedHierarchy);
+  LDocument := nil;
+  LNext := nil;
+  LBefore := nil;
+  try
+    LSession.Document.Pages[0].Add(NewNyxLabel('form-first').WithText('First label'));
+    LSession.Document.Pages[0].Add(NewNyxLabel('form-second').WithText('Second label'));
+    LSession.Select('form-first');
+    LDocument := ComposeInspectorFixture;
+    LViews.Render(LDocument, LDocument.Pages[0], AHost);
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    LRoot := LViews.SectionRoot(nssInspector);
+    LField := LViews.InputFor('inspector-form-draft');
+    {$ifndef PAS2JS}
+    Check(TWinControl(LField).HandleAllocated, 'stock Inspector fixture owns an allocated numeric window');
+    LHandle := PtrUInt(TWinControl(LField).Handle);
+    {$endif}
+    Draft(LField, '12.75');
+    Check((InputText(LField) = '12.75') and
+      (LRoot.Find('inspector-form-draft').Prop('value') = '7'),
+      'stock Inspector holds an independent unfinished numeric draft');
+    LSession.Document.Find('form-first').Configure.Text('Changed first label').Done;
+    LNext := ComposeInspectorFixture;
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]),
+      'stock Inspector admits a changed reusable baseline through grouped form publication');
+    Check((LViews.SectionRoot(nssInspector) = LRoot) and
+      (LViews.InputFor('inspector-form-draft') = LField) and
+      (InputText(LField) = '12.75'),
+      'same-owner property update retains Inspector controls and unrelated property draft');
+    FreeAndNil(LNext);
+    LBefore := LRoot.Clone;
+    LEventBefore := NyxEventGeneration(LViews.SectionEvents(nssInspector));
+    LSession.Select('form-second');
+    LNext := ComposeInspectorFixture;
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]),
+      'stock Inspector admits another same-kind selected owner without replacing its section');
+
+    if LViews.SectionRoot(nssInspector) <> LRoot then
+    begin
+      ExplainReplacement(LBefore, LViews.SectionRoot(nssInspector));
+    end;
+    Check((LViews.SectionRoot(nssInspector) = LRoot) and
+      (LViews.InputFor('inspector-form-draft') = LField) and
+      (InputText(LField) = '7') and
+      (LRoot.Find(NyxInspectorGroupID(nigProperties)).Prop(NyxStudioInspectorContextKey) = 'form-second'),
+      'new selected owner resets its own property form on the same physical control / retained-root=' +
+      TNyxText(BoolToStr(LViews.SectionRoot(nssInspector) = LRoot, True)) +
+      ' / retained-field=' + TNyxText(BoolToStr(LViews.InputFor('inspector-form-draft') = LField, True)) +
+      ' / current-value=' + InputText(LViews.InputFor('inspector-form-draft')) +
+      ' / current-owner=' + LViews.SectionRoot(nssInspector).Find(
+        NyxInspectorGroupID(nigProperties)).Prop(NyxStudioInspectorContextKey));
+    Check(LEventBefore.Cancelled and
+      (LRoot.Find(NyxStudioResizeWidthID).Prop(NyxStudioResizeOwnerKey) = 'form-second'),
+      'retained geometry commands adopt the new selected owner with retired old event authority');
+    {$ifndef PAS2JS}
+    Check(PtrUInt(TWinControl(LField).Handle) = LHandle,
+      'stock Inspector source and owner changes retain the exact native input window');
+    {$endif}
+  finally
+    LViews.Free;
+    LBefore.Free;
+    LNext.Free;
+    LDocument.Free;
+    LSession.Free;
+  end;
+end;
+
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LSession: TNyxStudioSession;
@@ -675,6 +810,7 @@ var
   LTitleParent: TWinControl;
   {$endif}
 begin
+  GFailBuild := False;
   LSession := TNyxStudioSession.Create;
   LTheme := TNyxTheme.Create;
   LTheme.Accent := '#227766';
@@ -687,6 +823,7 @@ begin
   LBase := nil;
   LNext := nil;
   LFull := nil;
+  LToken := nil;
   {$ifdef PAS2JS}
   LHost := TJSHTMLElement(document.getElementById('studio-sections'));
   LStyle := TJSHTMLElement(document.createElement('style'));
@@ -704,6 +841,18 @@ begin
   LWindow.Show;
   {$endif}
   try
+    {$ifdef NYX_INSPECTOR_FORMS_ONLY}
+    { A named diagnostic build isolates this real stock-Inspector journey. It
+      earns only its own assertions; the ordinary complete regression below is
+      still required after any repair. Both use the same composition and case. }
+    {$ifdef PAS2JS}await(InspectorFormCases(LTheme, LHost));
+    {$else}InspectorFormCases(LTheme, LHost);{$endif}
+    WriteLn('PASS ', GChecks, ' focused stock Inspector form checks');
+    {$ifdef PAS2JS}
+    document.body.setAttribute('data-section-checks', IntToStr(GChecks));
+    document.body.setAttribute('data-test-result', 'passed');
+    {$endif}
+    {$else}
     LBase := Shell(LSession);
     LViews.Render(LBase, LBase.Pages[0], LHost);
     {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
@@ -1109,11 +1258,14 @@ begin
     {$else}StaticMembershipCases(LSession, LTheme, LHost);{$endif}
     {$ifdef PAS2JS}await(ResourceSynchronizationCases(LSession, LTheme, LHost));
     {$else}ResourceSynchronizationCases(LSession, LTheme, LHost);{$endif}
+    {$ifdef PAS2JS}await(InspectorFormCases(LTheme, LHost));
+    {$else}InspectorFormCases(LTheme, LHost);{$endif}
     WriteLn('PASS ', GChecks, ' actual Studio section recovery checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-section-checks', IntToStr(GChecks));
     document.body.setAttribute('data-test-result', 'passed');
     {$endif}
+    {$endif NYX_INSPECTOR_FORMS_ONLY}
   finally
 
     if LToken <> nil then

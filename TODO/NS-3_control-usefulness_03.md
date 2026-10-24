@@ -150,6 +150,19 @@ scheduler and58-per-target observation checks remain passing, with clean native
 heaps and empty browser logs. Actual renderer/form/Studio adoption and complete
 native performance remain required; these outcomes do not close W1 or W2.
 
+The subsequent real form05 consumer passes38 native/34 browser checks, with a
+complete clean native heap and empty browser logs at measured1280x900/390x900.
+Its public reversible renderer preview retains controls, protects pending old
+work and restores independent drafts on abandonment. Same-result aliasing also
+passes through58 native/114 browser publication checks. Stock Inspector09 then
+passes the complete93-check native section journey with a clean heap and84
+browser checks at each measured1280x900/390x900. Selected-owner geometry metadata participates
+in the same prepared update as independent property/reusable/viewport forms;
+same-owner drafts and exact native windows remain retained. Whole native editor
+performance and independently native-owned application
+production remain required. WORK preserves the initial06/07/08 selection failure
+and its concrete resize-owner diagnosis; no original criterion is closed.
+
 Mounted range09 adds explicitly enabled independent cell selection, cached
 highlighting across pinned panes and canonical same-slot Ctrl+C. Range47 and
 command127 pass on both actual targets; native controls393 have a complete clean

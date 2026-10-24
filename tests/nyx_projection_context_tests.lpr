@@ -811,6 +811,42 @@ begin
   end;
 end;
 
+{ The caller's sole target and managed function result can be the same storage
+  on native FPC. Admission must retain that participant before replacing it. }
+procedure FactoryAliasCase;
+var
+  LEvents: INyxEvents;
+  LBefore: INyxCancellationScope;
+  LTarget: TTarget;
+  LOnlyOwner: INyxPreparedPublication;
+  LInspection: INyxPreparedPublication;
+begin
+  LEvents := NewNyxEvents;
+  try
+    LBefore := NyxEventGeneration(LEvents);
+    LTarget := TTarget.Create;
+    LTarget.Ready := True;
+    LTarget.Value := 'original factory participant';
+    LTarget.Events := LEvents;
+    LOnlyOwner := LTarget;
+    LOnlyOwner := TryPrepareNyxProjectionContextPublication(LEvents, LOnlyOwner);
+    Check((LOnlyOwner <> nil) and (LTarget.Validations = 1) and
+      DispatchRefuses(LEvents), 'same-destination factory retains and validates its original target');
+    { The sole-owner admission is complete. Retire detaches the wrapper's target;
+      take this separate inspection lease only now, before reading its rollback. }
+    LInspection := LTarget;
+    LTarget.Value := 'reversible factory preview';
+    LOnlyOwner.Retire;
+    Check((LTarget.Value = 'original factory participant') and
+      (LTarget.Retirements = 1) and not LBefore.Cancelled and
+      not DispatchRefuses(LEvents), 'aliased factory result rolls back before releasing the event fence');
+  finally
+    LOnlyOwner := nil;
+    LInspection := nil;
+    LEvents.Close;
+  end;
+end;
+
 procedure CoupledCases;
 var
   LEvents: INyxEvents;
@@ -1384,6 +1420,7 @@ begin
   try
     UnsupportedSchedulerCase;
     EventPreviewCases;
+    FactoryAliasCase;
     CoupledCases;
     PostPreviewFenceCase;
     ReentrantContextCases;

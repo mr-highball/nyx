@@ -398,6 +398,10 @@ type
     procedure RefreshContent;
     function CaptureContentFaces: TNyxContentFaceStates;
     procedure RestoreContentFaces(const AStates: TNyxContentFaceStates; AFocus: Boolean);
+    { Separate result storage preserves an outstanding caller preview during
+      entry admission rather than retiring it through an aliased hidden Result. }
+    function PrepareFormRefreshCore(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AForms: TNyxProjectionFormContexts; ADesignMode: Boolean): INyxPreparedPublication;
     procedure RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
       AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
       const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
@@ -672,6 +676,17 @@ type
       before mutation. Call on the owning UI thread with the mounted host alive. }
     function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
       ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
+    { Explicit form-owner changes over the same native controls/windows. Only
+      named metadata keys in the exact supplied forms may differ; ordinary
+      scalar refresh remains strict. Nil refuses before mutation. A nonnil
+      publication owns its reversible preview, copied drafts and event fence
+      until grouped installation or retirement. Changed forms reset accepted
+      faces even when defaults are unchanged; unrelated drafts remain intact.
+      No caller document is retained. The host stays borrowed through retirement.
+      Call on the UI thread; a retired generation never writes a successor. }
+    function TryPrepareFormRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
+      const AForms: TNyxProjectionFormContexts;
+      ADesignMode: Boolean = False): INyxPreparedPublication;
     { Copied physical continuity, independent of accepted model values. Capture
       and restore require an idle mounted view; False changes nothing. Records
       retain no renderer, control, model or store. Restore matches exact logical
@@ -939,7 +954,7 @@ uses
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
   nyx.collections, nyx.collections.query.lcl,
   nyx.collections.arrangement.lcl,
-  nyx.application.resources;
+  nyx.application.resources, nyx.projection.context;
 
 type
 
@@ -1432,6 +1447,8 @@ begin
     Result := TNativeBindingGeneration(FGeneration);
   end;
 end;
+
+{$I nyx.projection.context.adapter.inc}
 
 constructor TNyxLCLRenderer.CreateRetirementShell;
 begin
@@ -5772,6 +5789,7 @@ procedure TNyxLCLRenderer.RestoreContentFaces(
   const AStates: TNyxContentFaceStates; AFocus: Boolean);
 var
   LGeneration: INyxLCLBindingGeneration;
+  LPhysicalFrame: INyxNativeGestureFrame;
   LIndex: Integer;
   LSaved: Integer;
   LBinding: TNyxLCLBinding;
@@ -5780,87 +5798,98 @@ var
 begin
   LGeneration := FGeneration;
 
-  if not NativeGenerationCurrent(LGeneration) then
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
   begin
     Exit;
   end;
-
-  LUpdating := FUpdating;
-  FUpdating := True;
+  LPhysicalFrame := FPhysicalFrame;
+  LPhysicalFrame.Enter;
   try
-    for LIndex := 0 to High(FBindings) do
-    begin
-      LBinding := FBindings[LIndex];
-      RequireNativeGeneration(LGeneration);
-      LSaved := NyxContentFaceIndex(LBinding.FNode, AStates);
-      RequireNativeGeneration(LGeneration);
-
-      if LSaved < 0 then
-      begin
-        Continue;
-      end;
-
-      if AStates[LSaved].HasText and (LBinding.FInput is TCustomEdit) and
-        (LBinding.FNode.Prop('value') = AStates[LSaved].Accepted) then
+    LUpdating := FUpdating;
+    FUpdating := True;
+    try
+      for LIndex := 0 to High(FBindings) do
       begin
         RequireNativeGeneration(LGeneration);
-        TCustomEdit(LBinding.FInput).Text := AStates[LSaved].Text;
+        LBinding := FBindings[LIndex];
+        LSaved := NyxContentFaceIndex(LBinding.FNode, AStates);
         RequireNativeGeneration(LGeneration);
-        LBinding.FLastValue := AStates[LSaved].Accepted;
-        RequireNativeGeneration(LGeneration);
-        LBinding.FHasValueBaseline := True;
-      end;
-      RequireNativeGeneration(LGeneration);
-      LFocus := nil;
-      RequireNativeGeneration(LGeneration);
 
-      if LBinding.FInput is TWinControl then
-      begin
-        LFocus := TWinControl(LBinding.FInput);
-        RequireNativeGeneration(LGeneration);
-      end
-      else if LBinding.FControl is TWinControl then
-      begin
-        LFocus := TWinControl(LBinding.FControl);
-        RequireNativeGeneration(LGeneration);
-      end;
+        if LSaved < 0 then
+        begin
+          Continue;
+        end;
 
-      if LFocus <> nil then
-      begin
-
-        if AFocus and AStates[LSaved].Focused and LFocus.CanFocus then
+        if AStates[LSaved].HasText and (LBinding.FInput is TCustomEdit) and
+          (LBinding.FNode.Prop('value') = AStates[LSaved].Accepted) then
         begin
           RequireNativeGeneration(LGeneration);
-          LFocus.SetFocus;
+          TCustomEdit(LBinding.FInput).Text := AStates[LSaved].Text;
           RequireNativeGeneration(LGeneration);
+          LBinding.FLastValue := AStates[LSaved].Accepted;
+          RequireNativeGeneration(LGeneration);
+          LBinding.FHasValueBaseline := True;
         end;
         RequireNativeGeneration(LGeneration);
+        LFocus := nil;
+        RequireNativeGeneration(LGeneration);
 
-        if AStates[LSaved].Selection.Defined and (LFocus is TCustomEdit) and
-          (TNyxText(TCustomEdit(LFocus).Text) = AStates[LSaved].Text) then
+        if LBinding.FInput is TWinControl then
         begin
+          LFocus := TWinControl(LBinding.FInput);
           RequireNativeGeneration(LGeneration);
-          LFocus.HandleNeeded;
-          RequireNativeGeneration(LGeneration);
-          SelectNyxLCLText(LFocus, AStates[LSaved].Selection);
+        end
+        else if LBinding.FControl is TWinControl then
+        begin
+          LFocus := TWinControl(LBinding.FControl);
           RequireNativeGeneration(LGeneration);
         end;
-        RequireNativeGeneration(LGeneration);
-      end;
 
-      if LBinding.FControl is TScrollBox then
+        if LFocus <> nil then
+        begin
+
+          if AFocus and AStates[LSaved].Focused and LFocus.CanFocus then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LFocus.SetFocus;
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+
+          if AStates[LSaved].Selection.Defined and (LFocus is TCustomEdit) and
+            (TNyxText(TCustomEdit(LFocus).Text) = AStates[LSaved].Text) then
+          begin
+            RequireNativeGeneration(LGeneration);
+            LFocus.HandleNeeded;
+            RequireNativeGeneration(LGeneration);
+            SelectNyxLCLText(LFocus, AStates[LSaved].Selection);
+            RequireNativeGeneration(LGeneration);
+          end;
+          RequireNativeGeneration(LGeneration);
+        end;
+
+        if LBinding.FControl is TScrollBox then
+        begin
+          TScrollBox(LBinding.FControl).HorzScrollBar.Position := Round(AStates[LSaved].ScrollLeft);
+          RequireNativeGeneration(LGeneration);
+          TScrollBox(LBinding.FControl).VertScrollBar.Position := Round(AStates[LSaved].ScrollTop);
+          RequireNativeGeneration(LGeneration);
+        end;
+      end;
+      RequireNativeGeneration(LGeneration);
+    finally
+
+      if NativeGenerationCurrent(LGeneration) then
       begin
-        TScrollBox(LBinding.FControl).HorzScrollBar.Position := Round(AStates[LSaved].ScrollLeft);
-        RequireNativeGeneration(LGeneration);
-        TScrollBox(LBinding.FControl).VertScrollBar.Position := Round(AStates[LSaved].ScrollTop);
-        RequireNativeGeneration(LGeneration);
+        { Retained generation/frame leases may outlive this receiver. Restore the
+          guard only while this exact view still owns its physical continuation. }
+        FUpdating := LUpdating;
       end;
     end;
     RequireNativeGeneration(LGeneration);
   finally
-    FUpdating := LUpdating;
+    LPhysicalFrame.Leave;
   end;
-  RequireNativeGeneration(LGeneration);
 end;
 
 
