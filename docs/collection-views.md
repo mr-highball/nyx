@@ -925,6 +925,36 @@ and browser controls, with separate RAW/display arbitration and retirement
 checks. It does not claim real OS clipboard access or full workbench acceptance;
 see [WORK.md](../WORK.md).
 
+## Explicit focused editor drafts
+
+The optional `INyxCollectionFocusedDraftInput` in `nyx.collections.draft` reads
+the actual focused editable text cell through `CaptureFocusedDraft`. Its copied
+value is tagged `nccrExplicitDraft`, with exact accepted RAW scalar, row/field,
+revision and domain beside the unfinished text. A numeric `-` remains text;
+capture does not parse, validate, commit, blur or suspend that editor. The copied
+selection uses Unicode scalar positions. Retaining the value keeps no widget,
+mount, model or store alive.
+
+Capture requires configured managed copy authority and an observed editor/input
+lifetime. Browser mounts and ordinary or arranged renderer-managed native tables
+provide that observation. Unobserved direct native mounts return unavailable;
+dormant, foreign, disabled and composing editors cannot lend focus authority.
+The capture's original input epoch/readiness cannot authorize a replacement
+editor after retirement or an ABA input transition.
+
+Callers deliberately submit this tagged value through the existing represented
+clipboard port and its original request/cancellation slot. Accepted-value copy
+and the platform editor's normal Ctrl+C remain independent defaults. Explicit
+draft menu/inspection actions are the next UI integration step; the API is not
+silently substituted into those routes.
+
+Current qualification passes 90 command and 76 representation checks on each
+actual target, plus 224 native control checks with a clean heap and 283 browser
+control checks at measured desktop/compact widths with empty logs. The control
+journey covers arranged and ordinary tables through the same maintained fixture.
+Effects use injected hosts; real OS clipboard behavior and full workbench
+acceptance remain separate.
+
 ## Exporting captured table results
 
 `nyx.collections.export` prepares immutable RAW TSV from an actual

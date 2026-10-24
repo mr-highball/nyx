@@ -33,7 +33,7 @@ type
   ENyxCollectionRepresentation = class(ENyxCollection);
 
   { RAW is always the default. Display text is an explicit different product;
-    a draft is reserved for deliberate target capture, never guessed from a
+    a draft requires deliberate target capture, never guessed from a
     formatted string or silently substituted for accepted data. }
   TNyxCollectionCellRepresentation = (nccrAcceptedRaw, nccrFormattedDisplay,
     nccrExplicitDraft);
@@ -107,7 +107,7 @@ function CopyNyxCollectionCellText(const AValue: INyxCollectionCellText;
 
 implementation
 
-uses nyx.bytes;
+uses nyx.bytes, nyx.data;
 
 type
   { Private builder is invisible until provenance/format/output admission all
@@ -188,6 +188,7 @@ var
   LSource: INyxCollectionCellText;
   LCell: TCellText;
   LBytes: Integer;
+  LData: TNyxDataValue;
 begin
   LSource := AValue;
 
@@ -248,9 +249,31 @@ begin
       end;
     nccrExplicitDraft:
       begin
-        { The focused-target constructor follows with its capture contract;
-          arbitrary tagged text cannot invent that proof here. }
-        raise ENyxCollectionRepresentation.Create('Explicit draft capture is not available through this boundary yet');
+        { Only the accepted scalar is domain-admitted. The explicit physical
+          draft can be unfinished numeric/date text and is never parsed into a
+          replacement accepted value. Live focus authority is a separate port. }
+
+        if LCell.HasFormatter then
+        begin
+          raise ENyxCollectionRepresentation.Create('Explicit draft cannot acquire display formatter facts');
+        end;
+        LCell.Domain.Validate;
+
+        if LCell.Domain.Defined then
+        begin
+
+          if LCell.Domain.Kind <> LCell.Value.Kind then
+          begin
+            raise ENyxCollectionRepresentation.Create('Draft domain differs from its accepted typed field');
+          end;
+          case LCell.Value.Kind of
+            nskText: LData := NyxData(LCell.Value.TextValue);
+            nskBoolean: LData := NyxData(LCell.Value.BooleanValue);
+            nskInteger: LData := NyxData(LCell.Value.IntegerValue);
+            nskNumber: LData := NyxData(LCell.Value.NumberValue);
+          end;
+          LCell.Domain.Admit(LData);
+        end;
       end;
   end;
   LCell.Item := NyxItem(NyxCollection(LCell.Item.Collection.Name), LCell.Item.ID);

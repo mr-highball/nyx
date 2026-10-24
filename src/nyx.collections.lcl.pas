@@ -33,7 +33,7 @@ uses
   nyx.events, nyx.text, nyx.observation,
   nyx.collections.view,
   nyx.collections.mount,
-  nyx.collections.clipboard.actions;
+  nyx.collections.clipboard.actions, nyx.collections.draft;
 
 type
   { Borrowed synchronous canonical Click port. False covers blocked/rejected,
@@ -112,6 +112,8 @@ uses
   nyx.typeahead,
   nyx.collections.selection,
   nyx.collections.cell.actions,
+  nyx.collections.representation,
+  nyx.scheduler,
   nyx.collections.tree.rows;
 
 type
@@ -375,7 +377,8 @@ type
     the shared physical frame; copied drafts never retain widgets or authority
     to edit, and input/layout commands retain their original admission facts. }
   TNativeMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
-    INyxLCLCollectionObservation, INyxLCLCollectionCellContextInput)
+    INyxLCLCollectionObservation, INyxLCLCollectionCellContextInput,
+    INyxCollectionFocusedDraftInput)
   private
     FList: TListBox;
     FGrid: TStringGrid;
@@ -621,6 +624,7 @@ type
     function EditingDispatching: Boolean;
     function BeginCellContext(Sender: TObject; const APosition: TPoint):
       INyxCollectionClipboardCommand;
+    function CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
     function SuspendCellEdits: INyxCollectionEditsSnapshot;
     procedure ResumeCellEdits(const ASnapshot: INyxCollectionEditsSnapshot;
       AFocus: Boolean);
@@ -631,6 +635,184 @@ type
   end;
 
 {$include nyx.collections.lcl.selection.inc}
+
+function TNativeMount.CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
+var
+  LLease: INyxCollectionMount;
+  LCommands: INyxCollectionClipboardCommands;
+  LEntry: INyxCollectionClipboardCellInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LPrepared: INyxCollectionClipboardPreparedScope;
+  LReady: INyxCancellationReadiness;
+  LFrame: INyxNativeGestureFrame;
+  LInput: INyxCollectionInputLifetime;
+  LGrid: TStringGrid;
+  LEditor: TCustomEdit;
+  LFocus: TControl;
+  LData: INyxCollectionSnapshot;
+  LView: INyxCollectionView;
+  LSpec: TNyxCollectionViewSpec;
+  LField: TNyxColumnIdentity;
+  LItem: TNyxItemRef;
+  LValue: INyxCollectionCellText;
+  LSchema: TNyxCollectionSchema;
+  LText: TNyxText;
+  LSelection: TNyxTextSelection;
+  LEpoch: Integer;
+  LMutation: Integer;
+  LRevision: Integer;
+  LRow: Integer;
+  LPhysical: Integer;
+  LColumn: Integer;
+  LCount: Integer;
+
+  function Original: Boolean;
+  var
+    LParent: TControl;
+    LDepth: Integer;
+  begin
+    Result := GetConnected and GetInputReady and not FUpdating and
+      not FReadOnly and not FEditsSuspended and ClipboardInputAvailable and
+      (FView = LView) and (FRendered = LData) and (FCellMutationSerial = LMutation) and
+      (FArrangedRevision = LRevision) and (FColumnFrame = LFrame) and
+      LInput.Ready and (LInput.Epoch = LEpoch);
+
+    if not Result then
+    begin
+      Exit;
+    end;
+    Result := (Screen <> nil) and (Screen.ActiveControl = LFocus) and
+      (InputGrid(LFocus) = LGrid) and LGrid.EditorMode and
+      (LGrid.Editor = LEditor) and (LGrid.Row = LRow) and
+      (LGrid.Col = LPhysical) and (CanonicalColumn(LGrid, LPhysical) = LColumn) and
+      (not FHasColumnLayout or ((LColumn >= 0) and (LColumn < FColumnLayout.Count) and
+        FColumnLayout.ColumnAt(LColumn).IsVisible));
+
+    if not Result then
+    begin
+      Exit;
+    end;
+    { A toolbar/grid focus is not editor authority. Retain only the actual edit
+      or a bounded descendant belonging to that same edit implementation. }
+    LParent := LFocus;
+    LDepth := 0;
+    while (LParent <> nil) and (LParent <> LEditor) and (LDepth < 32) do
+    begin
+      LParent := LParent.Parent;
+      Inc(LDepth);
+    end;
+    Result := (LParent = LEditor) or LEditor.Focused;
+  end;
+
+begin
+  Result := nil;
+  LLease := Self as INyxCollectionMount;
+  LCommands := FClipboardCommands;
+  LFrame := FColumnFrame;
+  LInput := GetInputLifetime;
+
+  if (LCommands = nil) or (LFrame = nil) or (Screen = nil) or
+    not GetInputReady or FUpdating or FReadOnly or not ClipboardInputAvailable then
+  begin
+    Exit;
+  end;
+  LEpoch := LInput.Epoch;
+  LMutation := FCellMutationSerial;
+  LRevision := FArrangedRevision;
+  LData := FRendered;
+  LView := FView;
+  LFrame.Enter;
+  try
+
+    if not GetInputReady or (FColumnFrame <> LFrame) or
+      not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+    begin
+      Exit;
+    end;
+    { Reserve before any source/native getter. No canonical event or platform
+      copy is synthesized; this method only captures deliberately requested text. }
+    LCommand := LEntry.BeginCellInput;
+    try
+      LFocus := Screen.ActiveControl;
+      LGrid := InputGrid(LFocus);
+
+      if (LGrid = nil) or not LGrid.EditorMode or not (LGrid.Editor is TCustomEdit) then
+      begin
+        Exit;
+      end;
+      LEditor := TCustomEdit(LGrid.Editor);
+      LRow := LGrid.Row;
+      LPhysical := LGrid.Col;
+      LColumn := CanonicalColumn(LGrid, LPhysical);
+
+      if not LCommand.Current or not Original or (LData = nil) or (LColumn < 0) then
+      begin
+        Exit;
+      end;
+      LSpec := LView.Spec;
+      LCount := LData.Count;
+
+      if not LCommand.Current or not Original or (LRow < 1) or
+        (LRow > LCount) or (LColumn >= LSpec.Count) or
+        (LSpec.ColumnAt(LColumn).Mode <> cmEditable) then
+      begin
+        Exit;
+      end;
+      LField := LSpec.ColumnAt(LColumn).Identity;
+      LItem := LData.ItemAt(LRow - 1).Ref;
+
+      if not LCommand.Current or not Original then
+      begin
+        Exit;
+      end;
+      LCommand.ResolveCell(LItem, LField);
+      LCommand.Prepare;
+
+      if not Supports(LCommand, INyxCollectionClipboardPreparedScope, LPrepared) or
+        not LCommand.Current or not Original then
+      begin
+        Exit;
+      end;
+      LReady := LPrepared.Readiness;
+      LSchema := LData.Schema;
+
+      if not LCommand.Current or not Original then
+      begin
+        Exit;
+      end;
+      LText := NyxLCLInputText(LEditor);
+
+      if not LCommand.Current or not Original then
+      begin
+        Exit;
+      end;
+      LSelection := CaptureNyxLCLSelection(LEditor);
+
+      if not LCommand.Current or not Original then
+      begin
+        Exit;
+      end;
+      LValue := NewNyxCollectionCellDraft(LCommand.Payload, LText,
+        NyxCollectionDraftDomain(LSchema, LField));
+
+      if LCommand.Current and Original then
+      begin
+        Result := NewNyxCollectionFocusedDraftCapture(LValue, LEpoch, LSelection, LReady);
+      end;
+
+      if not LCommand.Current or not Original then
+      begin
+        Result := nil;
+      end;
+    finally
+      LCommand.Retire;
+    end;
+  finally
+    { Leave the exact renderer frame last, from locals. Native text/selection
+      messages may retire the mount; this frame keeps its borrowed editor alive. }
+    LFrame.Leave;
+  end;
+end;
 
 constructor TNativeColumnButtonCommand.Create(AOwner: TNativeMount;
   ARequest: TNativeColumnLayoutRequest; const ARequestLease: IInterface);
@@ -5156,6 +5338,16 @@ begin
     begin
       raise ENyxCollection.Create('Column arrangement requires the Nyx native table grid');
     end;
+  end;
+
+  if FHasColumnLayout or ((AControl is TNyxCollectionStringGrid) and
+    (AInputFrame <> nil) and (AInputEvents <> nil) and (AOriginID <> '') and
+    NyxLCLTextHistorySupported) then
+  begin
+    { Observation belongs to renderer-managed editable tables independently of
+      arrangement authoring. Attach before an editor can begin composition; a
+      later copy request must not guess an unobserved IME history. Raw caller
+      mounts lacking this supplied context retain their original behavior. }
     FColumnFrame := AInputFrame;
     FColumnClick := AColumnClick;
 

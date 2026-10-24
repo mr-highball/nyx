@@ -87,6 +87,15 @@ uses captured formatter/domain and a separately tagged result on the original
 copy slot. Strict display refusal preserves a useful accepted-value fallback;
 RAW behavior remains unchanged. Explicit focused-draft capture/transfer is the
 next W2 packet and remains unqualified.
+Focused-draft05 now qualifies readonly capture/explicit same-slot transfer:
+command90/representation76 pass per actual target; native controls224 have a
+complete clean heap and browser controls283 pass at measured desktop/compact
+widths with empty logs. Arranged and ordinary renderer-managed tables are covered;
+unobserved direct native mounts remain unavailable. Explicit draft command UI and
+real OS effects remain open. Root's new typed portable form-context refresh
+passes32 native/browser checks and preserves the unchanged174-check native
+retained-control journey. Physical event/input adoption and whole-Inspector
+performance are still required; the existing strict default API is unchanged.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 

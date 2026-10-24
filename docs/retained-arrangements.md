@@ -37,6 +37,31 @@ and only requested faces reset their accepted-value marker. Other field drafts
 remain untouched. Browser HTML number inputs may sanitize unfinished text to an
 empty physical draft; native edits retain literal trailing decimal text.
 
+For a form whose accepted context changes, the portable
+`TNyxProjectionFormContext.ForForm` contract names its exact runtime/design
+identity and explicit extension metadata keys. `CanRefreshNyxFormProjection`
+and `RefreshNyxFormProjectionProperties` retain the same shape while publishing
+those existing metadata properties with the form's newly accepted values.
+Unchanged defaults also reset inside a changed form; an absent accepted Value
+removes the old runtime property. Unchanged neighboring forms keep their drafts.
+The corresponding Bound APIs require independently coordinator-projected roots,
+as the ordinary exact-binding boundary does.
+
+This is an explicit opt-in portable contract. It does not change the strict
+default APIs or permit arbitrary custom-property changes. Missing properties,
+changed semantic owners, binding changes and duplicate/nested context scopes
+refuse before publication. The host owns its metadata meaning and must fence
+pending actions from the previous context. Before physical adoption it also uses
+`PrepareNyxProjectionFormRestores` to reset the exact input accepted-value
+markers, and preserves ordinary rollback and input lifetimes.
+
+The form contract currently passes 32 shared native/browser checks, with a clean
+native heap and empty browser logs. The existing unchanged native retained-control
+journey passes 174 checks with a clean heap. Studio/renderer adoption and its
+pending-event and physical-input qualification remain the next prerequisite;
+these results do not establish an Inspector performance improvement. The
+maintained `retained-arrangement` target includes the portable form consumer.
+
 The portable `TNyxNode.ArrangeLike` boundary prepares every owner array and actual
 managed implementation anchor before publication. It adopts no candidate node.
 Runtime/source/design identities, instance scopes, complete node set and root stay

@@ -29,6 +29,7 @@ uses
   nyx.collections.query, nyx.collections.arrangement, nyx.collections.mount,
   nyx.collections.clipboard, nyx.collections.clipboard.actions,
   nyx.collections.clipboard.commands, nyx.collections.representation,
+  nyx.collections.draft,
   nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events
   {$ifdef PAS2JS}, Web{$endif};
 
@@ -670,6 +671,7 @@ var
   LRefused: Boolean;
   LProxy: TReentrantValue;
   LProxyLease: INyxCollectionCellText;
+  LDraft: INyxCollectionCellText;
 begin
   LFixture := TFixture.Create(True);
   try
@@ -762,6 +764,16 @@ begin
       (LWriter.RepresentationPhase = nccpCompleted),
       'inline represented observer failure propagates once after terminal detachment');
     LFixture.ThrowRepresentation := False;
+    LDraft := NewNyxCollectionCellDraft(LRaw, '-', LPolicy.Domain);
+    LReplies := LFixture.Replies;
+    LBefore := LFixture.RepresentationReplies;
+    LTicket := LWriter.WriteRepresented(LDraft, LScope, LReady, nil, nil);
+    Check((LFixture.Host.Text = '-') and (LFixture.RepresentationReplies = LBefore + 1) and
+      (LFixture.Replies = LReplies) and
+      (LWriter.LastRepresentation.Representation = nccrExplicitDraft) and
+      (LWriter.LastRepresentationResult.ByteCount = 1) and
+      (LWriter.LastRepresentation.Value.IntegerValue = 1),
+      'explicit draft shares represented arbitration while accepted integer and RAW observer stay intact');
     LBefore := LFixture.Host.Writes;
     Inc(LFixture.Input.EpochValue);
     LRefused := False;

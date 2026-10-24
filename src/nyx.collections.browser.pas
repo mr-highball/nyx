@@ -31,7 +31,7 @@ uses
   JS,
   Web,
   nyx.collections.view,
-  nyx.collections.mount;
+  nyx.collections.mount, nyx.collections.draft;
 
 type
   { Synchronous physical-input envelope. Prepare captures the original model
@@ -156,6 +156,8 @@ uses
   nyx.collections.selection,
   nyx.collections.clipboard.actions,
   nyx.collections.cell.actions,
+  nyx.collections.representation,
+  nyx.scheduler,
   nyx.collections.tree.rows;
 
 { The resize preview uses the same ordinary DOM factory as mounted rows. }
@@ -468,7 +470,7 @@ type
   TBrowserMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
-    INyxBrowserCollectionCellContextInput)
+    INyxBrowserCollectionCellContextInput, INyxCollectionFocusedDraftInput)
   private
     FHost: TJSHTMLElement;
     { A permanent caption survives an empty visible-column map. Opening focus
@@ -647,6 +649,7 @@ type
     function BeginColumnKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginCellContext(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
+    function CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
     function BeginColumnDoubleClick(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
     function BeginColumnClick(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
     function BeginColumnRelease(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
@@ -731,6 +734,168 @@ begin
   if GetInputReady and not FUpdating then
   begin
     Result := TBrowserCellPresentation.Create(Self);
+  end;
+end;
+
+function TBrowserMount.CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
+var
+  LLease: INyxCollectionMount;
+  LCommands: INyxCollectionClipboardCommands;
+  LEntry: INyxCollectionClipboardCellInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LPrepared: INyxCollectionClipboardPreparedScope;
+  LReady: INyxCancellationReadiness;
+  LLifetime: INyxCollectionInputLifetime;
+  LHost: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LCell: TJSHTMLElement;
+  LRowElement: TJSHTMLElement;
+  LRow: TBrowserRow;
+  LView: INyxCollectionView;
+  LData: INyxCollectionSnapshot;
+  LSpec: TNyxCollectionViewSpec;
+  LSchema: TNyxCollectionSchema;
+  LItem: TNyxItemRef;
+  LField: TNyxColumnIdentity;
+  LText: TNyxText;
+  LSelection: TNyxTextSelection;
+  LValue: INyxCollectionCellText;
+  LEpoch: Integer;
+  LMutation: Integer;
+  LIndex: Integer;
+  LColumn: Integer;
+
+  function FlagsCurrent: Boolean;
+  begin
+    Result := GetConnected and GetInputReady and not FUpdating and
+      not FReadOnly and not FEditsSuspended and ClipboardInputAvailable and
+      (FView = LView) and (FRendered = LData) and (FHost = LHost) and
+      (FCellMutationSerial = LMutation) and LLifetime.Ready and
+      (LLifetime.Epoch = LEpoch);
+  end;
+
+  function Original: Boolean;
+  begin
+    Result := FlagsCurrent and (document.activeElement = LInput) and
+      (LIndex >= 0) and (LIndex < Length(FRows)) and (FRows[LIndex] = LRow) and
+      (LColumn >= 0) and (LColumn < Length(LRow.FInputs)) and
+      (LRow.FInputs[LColumn] = LInput) and (LRow.FElement = LRowElement) and
+      (LRow.FRef.ID = LItem.ID) and
+      (LRow.FRef.Collection.Name = LItem.Collection.Name) and
+      (not FHasColumnLayout or ((LColumn < FColumnLayout.Count) and
+        FColumnLayout.ColumnAt(LColumn).IsVisible));
+
+    if Result then
+    begin
+      Result := not LInput.disabled and not LInput.readOnly and
+        (LInput._type = 'text') and not LInput.hasAttribute('hidden') and
+        LHost.contains(LInput);
+    end;
+  end;
+
+begin
+  Result := nil;
+  LLease := Self as INyxCollectionMount;
+  LCommands := FClipboardCommands;
+  LLifetime := GetInputLifetime;
+  LHost := FHost;
+  LView := FView;
+  LData := FRendered;
+
+  if (LCommands = nil) or (LHost = nil) or (LData = nil) or
+    not GetInputReady or FReadOnly or not ClipboardInputAvailable then
+  begin
+    Exit;
+  end;
+  LEpoch := LLifetime.Epoch;
+  LMutation := FCellMutationSerial;
+
+  if not Supports(LCommands, INyxCollectionClipboardCellInput, LEntry) then
+  begin
+    Exit;
+  end;
+  LCommand := LEntry.BeginCellInput;
+  try
+
+    if not LCommand.Current or not FlagsCurrent or (document.activeElement = nil) or
+      (document.activeElement.tagName <> 'INPUT') then
+    begin
+      Exit;
+    end;
+    LInput := TJSHTMLInputElement(document.activeElement);
+    LCell := TJSHTMLElement(LInput.parentElement);
+
+    if (LCell = nil) or not LHost.contains(LInput) or
+      not TryStrToInt(LInput.getAttribute('data-nyx-column'), LColumn) then
+    begin
+      Exit;
+    end;
+    LRowElement := TJSHTMLElement(LCell.closest('[data-nyx-item]'));
+
+    if LRowElement = nil then
+    begin
+      Exit;
+    end;
+    LSpec := LView.Spec;
+    LItem := NyxItem(LSpec.Key, LRowElement.getAttribute('data-nyx-item'));
+    LIndex := LData.IndexOf(LItem);
+
+    if not LCommand.Current or not FlagsCurrent or (LIndex < 0) or
+      (LIndex >= Length(FRows)) or (FRows[LIndex] = nil) or
+      (LColumn < 0) or (LColumn >= LSpec.Count) then
+    begin
+      Exit;
+    end;
+    LRow := FRows[LIndex];
+
+    if not Original or (LSpec.ColumnAt(LColumn).Mode <> cmEditable) then
+    begin
+      Exit;
+    end;
+    { Parsed DOM hints only locate a candidate. Exact private row/input object
+      identity above, plus the copied typed spec, supplies the actual proof. }
+    LField := LSpec.ColumnAt(LColumn).Identity;
+    LCommand.ResolveCell(LItem, LField);
+    LCommand.Prepare;
+
+    if not Supports(LCommand, INyxCollectionClipboardPreparedScope, LPrepared) or
+      not LCommand.Current or not Original then
+    begin
+      Exit;
+    end;
+    LReady := LPrepared.Readiness;
+    LSchema := LData.Schema;
+
+    if not LCommand.Current or not Original then
+    begin
+      Exit;
+    end;
+    LText := LInput.value;
+
+    if not LCommand.Current or not Original then
+    begin
+      Exit;
+    end;
+    LSelection := CaptureNyxBrowserSelection(LInput);
+
+    if not LCommand.Current or not Original then
+    begin
+      Exit;
+    end;
+    LValue := NewNyxCollectionCellDraft(LCommand.Payload, LText,
+      NyxCollectionDraftDomain(LSchema, LField));
+
+    if LCommand.Current and Original then
+    begin
+      Result := NewNyxCollectionFocusedDraftCapture(LValue, LEpoch, LSelection, LReady);
+    end;
+
+    if not LCommand.Current or not Original then
+    begin
+      Result := nil;
+    end;
+  finally
+    LCommand.Retire;
   end;
 end;
 

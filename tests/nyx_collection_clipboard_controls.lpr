@@ -26,16 +26,17 @@ program nyx_collection_clipboard_controls;
 
 uses
   Classes, SysUtils, nyx.text, nyx.types, nyx.state, nyx.model, nyx.controls,
-  nyx.codec, nyx.behavior, nyx.events, nyx.scheduler, nyx.clipboard,
+  nyx.codec, nyx.behavior, nyx.events, nyx.scheduler, nyx.clipboard, nyx.editing,
   nyx.collections, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query, nyx.collections.arrangement,
   nyx.collections.mount, nyx.collections.clipboard, nyx.collections.clipboard.actions
   , nyx.collections.cell.actions, nyx.menu, nyx.popover, nyx.bytes,
   nyx.files.save, nyx.collections.paging, nyx.collections.export,
   nyx.collections.export.actions
-  , nyx.collections.representation, nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
+  , nyx.collections.representation, nyx.collections.draft,
+  nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
-    nyx.menu.browser, nyx.popover.browser
+    nyx.menu.browser, nyx.popover.browser, nyx.editing.browser
   {$else}, Interfaces, Forms, Controls, Grids, StdCtrls, Windows, LCLType, Types,
     nyx.collections.lcl.grid, nyx.render.lcl, nyx.editing.lcl,
     nyx.collections.cell.lcl, nyx.menu.lcl, nyx.popover.lcl{$endif};
@@ -159,6 +160,7 @@ type
     FReplies: Integer;
     FLastPayload: INyxCollectionClipboardText;
     FContextColumn: Integer;
+    FLastDraft: INyxCollectionFocusedDraftCapture;
     {$ifdef PAS2JS}
     FRenderer: TNyxBrowserRenderer;
     FSurface: TJSHTMLElement;
@@ -181,6 +183,7 @@ type
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
     procedure RunDisplayed; {$ifdef PAS2JS}async;{$endif}
+    procedure RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
     procedure ExportPaging(AEnabled: Boolean);
     procedure Semantic(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
@@ -188,7 +191,7 @@ type
     procedure Reply(const APayload: INyxCollectionClipboardText;
       const AResult: TNyxClipboardWriteResult);
   public
-    constructor Create;
+    constructor Create(AArranged: Boolean = True);
     destructor Destroy; override;
     procedure Run; {$ifdef PAS2JS}async;{$endif}
   end;
@@ -277,10 +280,11 @@ begin
   Result := NyxColumnIdentity(NyxTextField('Name'));
 end;
 
-function Fixture: TNyxDocument;
+function Fixture(AArranged: Boolean): TNyxDocument;
 var
   LPage: INyxPage;
   LTable: INyxTable;
+  LSpec: TNyxCollectionViewSpec;
 begin
   Result := TNyxDocument.Create;
   try
@@ -300,14 +304,22 @@ begin
     LPage.Configure.Padding(12).Gap(8).Done;
     LTable := NewNyxTable(CTable);
     LTable.Configure.Height(240).Done;
-    LTable.Binds.Collection(NyxCollectionView(Dataset).Selection(nsmMultiple)
+    LSpec := NyxCollectionView(Dataset).Selection(nsmMultiple)
       .Column(NyxTextField('Name'), 'Name', cmEditable)
         .ColumnFormat(NyxValueFormat.TextAffixes('«', '»').Identified(NyxFormatter('full cell'), 3))
-      .Column(NyxIntegerField('Score'), 'Score')
+      .Column(NyxIntegerField('Score'), 'Score', cmEditable)
+        .ColumnFormat(NyxValueFormat.Decimal(2).Localized(
+          NyxFormatLocale.NumberSeparators(',', '.')))
       .Column(NyxNumberField('Huge'), 'Huge').ColumnFormat(NyxValueFormat.Decimal(2))
       .Column(NyxNumberField('Exact'), 'Exact').ColumnFormat(NyxValueFormat.Decimal(2, ndrExact))
       .Column(NyxTextField('Clock'), 'Clock').ColumnFormat(NyxValueFormat.ClockTime(ntpMinute))
-      .TableLayout(NyxTableLayout));
+      .TableLayout(NyxTableLayout);
+
+    if not AArranged then
+    begin
+      LSpec := LSpec.UseDefaultTableLayout;
+    end;
+    LTable.Binds.Collection(LSpec);
     LPage.Add(LTable);
     Result.AddPage(LPage);
     Result.Validate;
@@ -390,13 +402,13 @@ begin
 end;
 {$endif}
 
-constructor TCopyReview.Create;
+constructor TCopyReview.Create(AArranged: Boolean);
 var
   LCallback: TKeyCallback;
   LAdmission: INyxCollectionInputAdmission;
 begin
   inherited Create;
-  FDocument := Fixture;
+  FDocument := Fixture(AArranged);
   FAuthored := TNyxCodec.Encode(FDocument);
   FState := FDocument.State.Clone;
   {$ifdef PAS2JS}
@@ -1040,6 +1052,160 @@ begin
     'represented actions preserve accepted data/source and detached original displayed bytes');
 end;
 
+{ Capture reads the actual focused editor without the existing suspension
+  protocol. Deliberate public transfer is separate from a physical editor copy
+  key; it preserves the host's ordinary Ctrl+C and never accepts draft input. }
+procedure TCopyReview.RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
+var
+  LDraftInput: INyxCollectionFocusedDraftInput;
+  LWriter: INyxCollectionClipboardRepresentationWrite;
+  LCapture: INyxCollectionFocusedDraftCapture;
+  LScope: INyxCancellationScope;
+  LTicket: INyxClipboardWriteRequest;
+  LSource: INyxCollectionSnapshot;
+  LSelection: TNyxTextSelection;
+  LAfter: TNyxTextSelection;
+  LRaw: INyxCollectionClipboardText;
+  LDisplay: INyxCollectionCellText;
+  LRawReplies: Integer;
+  LWrites: Integer;
+  LKeys: Integer;
+  LColumn: Integer;
+  LText: TNyxText;
+  LRefused: Boolean;
+  {$ifdef PAS2JS}
+  LEditor: TJSHTMLInputElement;
+  {$else}
+  LEditor: TCustomEdit;
+  {$endif}
+begin
+  FContextColumn := 0;
+  FocusCell;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  Check(Supports(FMount, INyxCollectionFocusedDraftInput, LDraftInput) and
+    Supports(FCommands, INyxCollectionClipboardRepresentationWrite, LWriter),
+    'actual table exposes readonly focused draft capture and the same represented write port');
+  Check(LDraftInput.CaptureFocusedDraft = nil,
+    'a focused data cell without an editor cannot invent explicit draft authority');
+  LSource := FView.Store.Snapshot;
+  LRawReplies := FReplies;
+  try
+    for LColumn := 0 to 1 do
+    begin
+      FContextColumn := LColumn;
+      FocusCell;
+      {$ifdef PAS2JS}
+      await(Drain);
+      Key(Cell, 'F2', False);
+      await(Drain);
+      LEditor := TJSHTMLInputElement(Cell.querySelector('input'));
+      Check((LEditor <> nil) and (document.activeElement = LEditor),
+        'readonly draft test enters the actual browser cell editor');
+      {$else}
+      SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+      Drain;
+      Check(FGrid.EditorMode and (FGrid.Editor is TCustomEdit),
+        'readonly draft test enters the actual native cell editor');
+      LEditor := TCustomEdit(FGrid.Editor);
+      {$endif}
+      LText := CDraft;
+
+      if LColumn = 1 then
+      begin
+        LText := '-';
+      end;
+      LSelection := NyxTextSelection(LText, NyxTextScalarCount(LText) - 1,
+        NyxTextScalarCount(LText), {$ifdef PAS2JS}ntdBackward{$else}ntdUnknown{$endif});
+      {$ifdef PAS2JS}
+      LEditor.value := LText;
+      SelectNyxBrowserText(LEditor, LSelection);
+      {$else}
+      RestoreNyxLCLInputText(LEditor, LText);
+      SelectNyxLCLText(LEditor, LSelection);
+      {$endif}
+      LWrites := FHost.Writes;
+      LKeys := FKeys;
+      LCapture := LDraftInput.CaptureFocusedDraft;
+      Check((LCapture <> nil) and (LCapture.InputEpoch = FInput.Epoch) and
+        (LCapture.Value.Representation = nccrExplicitDraft) and
+        not LCapture.Value.HasFormatter and (LCapture.Value.Text = LText) and
+        (LCapture.Value.Item.ID = ItemA.ID) and
+        (LCapture.Value.Revision = LSource.Revision) and
+        LCapture.Selection.SameRange(LSelection),
+        'readonly capture copies exact explicit text, scalar range and accepted row/field/revision');
+      {$ifdef PAS2JS}
+      LAfter := CaptureNyxBrowserSelection(LEditor);
+      Check((document.activeElement = LEditor) and (LEditor.value = LText) and
+        LAfter.SameRange(LSelection), 'browser draft capture leaves focus/text/Unicode caret untouched');
+      {$else}
+      LAfter := CaptureNyxLCLSelection(LEditor);
+      Check(FGrid.EditorMode and (FGrid.Editor = LEditor) and
+        (NyxLCLInputText(LEditor) = LText) and LAfter.SameRange(LSelection),
+        'native draft capture leaves editing/text/supplementary-scalar caret untouched');
+      {$endif}
+      Check((FView.Store.Snapshot = LSource) and (FHost.Writes = LWrites) and
+        (FKeys = LKeys), 'readonly capture does not publish data, keyboard events or clipboard effects');
+
+      if LColumn = 0 then
+      begin
+        Check(LCapture.Value.Field.Same(NameField) and
+          (LCapture.Value.RawText = CText) and (LCapture.Value.Value.TextValue = CText),
+          'supplementary draft remains distinct from the full accepted Unicode/NUL value');
+      end
+      else
+      begin
+        LRaw := NewNyxCollectionClipboardCell(LSource, ItemA,
+          NyxColumnIdentity(NyxIntegerField('Score')), TNyxCollectionClipboardLimits.Defaults);
+        LDisplay := NewNyxCollectionCellDisplay(LRaw, NyxValueFormat.Decimal(2).Localized(
+          NyxFormatLocale.NumberSeparators(',', '.')), NyxNoDomain);
+        Check((LCapture.Value.Value.IntegerValue = 1) and (LCapture.Value.RawText = '1') and
+          (LDisplay.Text = '1,00') and (LCapture.Value.Text = '-') and
+          LCapture.Value.Field.Same(NyxColumnIdentity(NyxIntegerField('Score'))),
+          'unfinished numeric draft is neither accepted integer nor formatted display text');
+      end;
+      Check(Supports(LCapture.Readiness, INyxCancellationScope, LScope),
+        'captured original draft readiness supplies certified host cancellation');
+      LTicket := LWriter.WriteRepresented(LCapture.Value, LScope,
+        LCapture.Readiness, nil, nil);
+      Check((FHost.Writes = LWrites + 1) and (FHost.Text = LText) and
+        (FReplies = LRawReplies) and (FView.Store.Snapshot = LSource) and
+        (LWriter.LastRepresentation.Representation = nccrExplicitDraft),
+        'only deliberate draft transfer writes exact text through the shared slot and separate result');
+      {$ifdef PAS2JS}
+      Check((document.activeElement = LEditor) and (LEditor.value = LText),
+        'inline draft write cannot blur or accept the browser editor');
+      Key(LEditor, 'Escape', False);
+      await(Drain);
+      {$else}
+      Check(FGrid.EditorMode and (NyxLCLInputText(LEditor) = LText),
+        'inline draft write cannot hide or accept the native editor');
+      SendMessage(FGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
+      Drain;
+      {$endif}
+    end;
+  finally
+    FContextColumn := 0;
+  end;
+  FLastDraft := LCapture;
+  LWrites := FHost.Writes;
+  FMount.SetInteraction(False, False);
+  FMount.SetInteraction(True, False);
+  LRefused := False;
+  try
+    LTicket := LWriter.WriteRepresented(LCapture.Value, LScope,
+      LCapture.Readiness, nil, nil);
+  except
+    on E: ENyxCollectionClipboard do LRefused := True;
+  end;
+  Check(LRefused and (FHost.Writes = LWrites) and
+    (LCapture.Value.Text = '-') and (FView.Store.Snapshot = LSource),
+    'retained draft value survives disable ABA while its old input proof cannot write');
+  FocusCell;
+  Check((LDraftInput.CaptureFocusedDraft = nil) and
+    (FView.Store.Snapshot = LSource) and (TNyxCodec.Encode(FDocument) = FAuthored),
+    'an inert retained draft cannot revive active editor authority or alter authored/accepted data');
+end;
+
 procedure TCopyReview.ExportPaging(AEnabled: Boolean);
 var
   LPages: INyxCollectionPages;
@@ -1278,10 +1444,12 @@ begin
   await(RunContext);
   await(RunExport);
   await(RunDisplayed);
+  await(RunFocusedDraft);
   {$else}
   RunContext;
   RunExport;
   RunDisplayed;
+  RunFocusedDraft;
   {$endif}
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LCellIntent),
     'retirement probe retains the actual canonical context facade');
@@ -1292,6 +1460,10 @@ begin
     'canonical callback retirement cannot publish from an old key tail');
   Check(LCellIntent.Intent = 0,
     'retained context facade safely reports terminal intent after actual renderer retirement');
+  Check((FLastDraft <> nil) and (FLastDraft.Value.Text = '-') and
+    (FLastDraft.Value.RawText = '1') and
+    (FLastDraft.Value.Value.IntegerValue = 1),
+    'detached explicit draft remains usable after actual renderer/input retirement');
   Check((LPayload.RowCount = 2) and (LPayload.CellValue(0, 0).TextValue = CText),
     'accepted copied payload survives actual renderer and input retirement');
   {$ifndef PAS2JS}
@@ -1310,6 +1482,21 @@ begin
       await(LReview.Run);
       {$else}
       LReview.Run;
+      {$endif}
+    finally
+      LReview.Free;
+    end;
+    { Same maintained fixture/spec/data and public input path, with only the
+      optional layout controls absent. Renderer-managed native observation must
+      not be a benefit available only to the arrangement authoring feature. }
+    LReview := TCopyReview.Create(False);
+    try
+      Check(not LReview.FView.Spec.HasLayoutControls,
+        'ordinary renderer-managed table genuinely omits arrangement controls');
+      {$ifdef PAS2JS}
+      await(LReview.RunFocusedDraft);
+      {$else}
+      LReview.RunFocusedDraft;
       {$endif}
     finally
       LReview.Free;

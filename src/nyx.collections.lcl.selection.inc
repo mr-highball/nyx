@@ -900,7 +900,7 @@ function TNativeMount.ClipboardInputAvailable: Boolean;
 begin
   Result := (FGrid <> nil) and not FPaneSync and not FLayoutGesture and not FResizePending;
 
-  if Result and FHasColumnLayout then
+  if Result and (FColumnEditing <> nil) then
   begin
     Result := not ColumnInputBusy;
   end;

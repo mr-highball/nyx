@@ -973,9 +973,9 @@ begin
     Exit;
   end;
 
-  if LValue.Representation <> nccrFormattedDisplay then
+  if not (LValue.Representation in [nccrFormattedDisplay, nccrExplicitDraft]) then
   begin
-    raise ENyxCollectionRepresentation.Create('Represented transfer requires an explicit display value');
+    raise ENyxCollectionRepresentation.Create('Represented transfer requires an explicit display or draft value');
   end;
   LCopyScope := TCopyScope.Create(LInput, LEpoch, AReadiness, LCancelReady);
   LScope := LCopyScope;

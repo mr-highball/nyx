@@ -313,6 +313,73 @@ its elapsed times cannot establish a controlled production speedup. Native UI
 is reserved for this pair after helper controls release. Whole900s Studio
 qualification stays separate and open.
 
+The cost pair is now joined: executor17804 returns0 after both declared180s
+observations, exact native50868/49760 are absent and all2274 pins plus the original
+renderer override remain unchanged. Both samples stop during stage2 (158/162
+checks) without a functional pass or complete heap. Matched451-node Inspector
+handle phases remain substantial: one corresponding sample reads3719ms before
+and2219ms after; first-layout work remains about half a second. Early baseline
+browser overlap and inclusive clocks prevent a controlled speedup claim. The
+correction removes a real initialization mismatch but does not remove expensive
+whole-Inspector replacement. Source review also finds exact form-baseline
+properties outside retained projection's refreshable keys; those baselines are
+required stale-command/draft fences. The next Root change must retain more
+Inspector work while atomically updating the same context, without simply
+allowing unknown properties or weakening those fences. No equivalent full900s
+rerun is justified yet. Native UI is released; helper focused-draft work reads
+and edits its own current source cohort independently.
+
+The intervening authority-only reply verified existing committed guidance and
+did not change implementation or acceptance evidence. This continuation resumes
+the available product prerequisites rather than treating that restatement as
+progress. Root adds an explicit portable form-context refresh contract: exact
+runtime/design subtrees and named extension metadata can update together with
+their complete newly accepted input values. Strict default admission, semantic
+owners, binding contracts and unknown properties retain their former meaning.
+Duplicate/nested scopes and metadata removal refuse before any write; unchanged
+neighboring drafts remain independent. The caller still owns old-context event
+retirement, physical accepted-value markers and rollback. No adapter or Studio
+adoption is claimed yet.
+
+Forms02 passes32 native and32 actual browser checks, with a complete clean native
+heap and empty browser logs; both compilers emit zero owned warnings. Initial01
+fixture failures used a nonexistent WithValue convenience and an implicit text
+comparison; those original logs remain. The corrected consumer uses specialized
+INyxInput configuration and explicit portable text. Its unchanged existing
+native retained-projection consumer passes174 checks with a complete clean heap.
+All2275 fixed inputs and the two02 source overlays reverify unchanged. The
+maintained retained-arrangement target now runs/stages the form consumer; its
+script parses without errors. This is a qualified portable prerequisite, not a
+whole-Inspector speedup or a complete task acceptance. Root next integrates the
+typed context with actual event/input publication rather than weakening fences.
+
+Focused-draft05 adds readonly actual editor capture and deliberately tagged
+transfer on the existing clipboard slot. Accepted scalar/domain/provenance stay
+separate from unfinished Unicode text and scalar selection; input epochs prevent
+ABA reuse and detached values outlive retirement without target ownership.
+Native ordinary renderer-managed tables now reuse the existing observed editing
+bridge even without authored arrangement controls. Unobserved direct native
+mounts honestly remain unavailable. Final editor checks use captured layout
+facts instead of a fresh foreign view getter. Pure02 command90/representation76
+pass with complete clean heaps; actual05 native controls pass224 in10.43s with
+4635239 allocations/frees and zero unfreed blocks. Browser03 pure90/76 and05
+controls283 at measured1280x900/390x900 pass with empty warning/error logs.
+Earlier01/03/04 fixture/import/bridge-declaration failures remain retained.
+
+The first wide browser observation preceded the terminal marker and navigation
+ended that application; it is retained as incomplete, not a pass or assertion
+failure. The later desktop run reaches its own283-check PASS. Compact marker
+observation exceeds an observer deadline, then the same running tab returns PASS
+without a restart. Root reviews the portable normalization, target leases and
+same-slot transfer without finding a concrete defect. All11 original/staged
+artifact pairs remain unchanged; exact host57452 is stopped/joined, port19147 has
+no listener, tab111 is closed and the viewport is reset. Both Root and helper
+native jobs are joined and UI is released. These are injected clipboard/save
+effects, not real OS output or complete W2 acceptance. The next helper packet
+first reserves a cell-action intent before outward getters, then adds explicit
+draft-menu/inspection discoverability; its new cell.actions changes are separate
+unqualified working code.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

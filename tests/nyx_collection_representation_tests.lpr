@@ -28,7 +28,7 @@ uses SysUtils, {$ifndef PAS2JS}Classes,{$endif}
   nyx.text, nyx.bytes, nyx.state, nyx.contract, nyx.resources,
   nyx.data, nyx.times, nyx.numbers.decimal, nyx.formatting,
   nyx.collections, nyx.collections.arrangement, nyx.collections.clipboard,
-  nyx.collections.representation
+  nyx.collections.representation, nyx.collections.draft
   , nyx.collections.view, nyx.collections.view.types,
   nyx.collections.query.editor, nyx.model, nyx.types, nyx.codec, nyx.codegen, nyx.source,
   nyx.studio.collectionintent, nyx.studio.collectionedits, nyx.studio.projects,
@@ -665,6 +665,7 @@ var
   LRaw: INyxCollectionClipboardText;
   LRawText: INyxCollectionCellText;
   LDisplay: INyxCollectionCellText;
+  LDraft: INyxCollectionCellText;
   LFormat: TNyxValueFormat;
   LCopy: TNyxValueFormat;
   LValue: TNyxStateValue;
@@ -714,6 +715,20 @@ begin
     'expanded output budget refusal leaves every prior RAW/display snapshot unchanged');
   LRaw := NewNyxCollectionClipboardCell(LSource, LItem, NyxColumnIdentity(NyxNumberField('Price')),
     TNyxCollectionClipboardLimits.Defaults);
+  LDraft := NewNyxCollectionCellDraft(LRaw, '-', NyxNoDomain);
+  LDraft := CopyNyxCollectionCellText(LDraft);
+  Check((LDraft.Representation = nccrExplicitDraft) and (LDraft.Text = '-') and
+    (LDraft.RawText = '1234.5') and (LDraft.Value.NumberValue = 1234.5) and
+    not LDraft.HasFormatter and (LDraft.ByteCount = 1),
+    'explicit unfinished draft normalizes separately without scalar parsing or display substitution');
+  LRefused := False;
+  try
+    NewNyxCollectionCellDraft(LRaw, '-', NyxTextDomain.Definition);
+  except
+    on E: ENyxCollectionRepresentation do LRefused := True;
+  end;
+  Check(LRefused and (LDraft.Text = '-') and (LRaw.Text = '1234.5'),
+    'draft construction refuses a foreign typed domain without mutating prior accepted facts');
   LFormat := TNyxValueFormat.Canonical.Decimal(2)
     .Localized(TNyxFormatLocale.Invariant.Named(NyxLocale('de-DE')).NumberSeparators(',', '.'))
     .Identified(NyxFormatter('price'), 7);
