@@ -16,8 +16,9 @@ Nested paths such as `actions/send` can be hidden independently. The instance
 root stays intact. A part with customized properties or its own override payload
 cannot be silently converted to a removal; the editor explains why Hide is
 unavailable. Dependent child overrides retain ordinary
-full-document validation. Reopen the editor after its instance, definition or
-captured project baseline changes.
+full-document validation. A changed baseline requires a freshly admitted form;
+Studio can retain its controls when its guarded context refresh proves that the
+instance, named paths and action structure remain unchanged.
 
 The public [Parts form](../src/nyx.parts.editor.pas) is composed entirely from
 Nyx controls and returns copied typed intent. It retains no document, renderer,
@@ -25,6 +26,13 @@ Studio session or compiler. A custom host can inspect that intent and submit it
 through its own admission policy; Studio uses the existing shared source-command
 queue for both targets. Pending Pascal must be explicitly resolved before an
 instance part operation can publish.
+
+Custom hosts can declare `NyxPartsEditorBaselineKey` as this form's explicit
+context key through `TNyxProjectionFormContext`. Use the renderer's ordinary
+`TryPrepareFormRefresh` and grouped publication so old queued actions retire
+before the fresh baseline becomes active. Instance/path/action changes and
+unknown metadata still require replacement. A proposal captured before refresh
+remains stale; retaining a button never grants it authority over a newer design.
 
 ```pascal
 LParts := NewNyxPartsEditor('note-parts', LDocument,

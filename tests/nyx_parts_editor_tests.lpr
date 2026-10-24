@@ -26,7 +26,8 @@ program nyx_parts_editor_tests;
 uses
   {$ifdef PAS2JS}Web,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.catalog,
-  nyx.codec, nyx.codegen, nyx.composition, nyx.parts.editor, nyx.studio.edits;
+  nyx.codec, nyx.codegen, nyx.composition, nyx.parts.editor, nyx.studio.edits,
+  nyx.data, nyx.projection.refresh;
 
 var
   GChecks: Integer;
@@ -493,6 +494,132 @@ begin
   end;
 end;
 
+{ Independent chrome owns copied metadata only; the application document is
+  borrowed during construction and never attached to this editor document. }
+function ContextHost(AApplication: TNyxDocument;
+  const AInstance: TNyxControlRef): TNyxDocument;
+var
+  LPage: INyxPage;
+begin
+  Result := TNyxDocument.Create;
+  try
+    LPage := NewNyxPage('context-host');
+    Result.AddPage(LPage);
+    LPage.Add(NewNyxPartsEditor('context-parts', AApplication, AInstance));
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+{ Baseline replacement is narrowly admitted, including metadata-only forms.
+  It grants no new instance/path/action authority and cannot revive an old
+  proposal. Actual mounted Studio separately qualifies event retirement. }
+procedure RetainedContext;
+var
+  LApplication: TNyxDocument;
+  LUpdated: TNyxDocument;
+  LBefore: TNyxDocument;
+  LAfter: TNyxDocument;
+  LOther: TNyxDocument;
+  LExisting: TNyxNode;
+  LCandidate: TNyxNode;
+  LWrong: TNyxNode;
+  LBaseline: TNyxNode;
+  LAction: TNyxNode;
+  LRows: TNyxNode;
+  LIndex: Integer;
+  LForms: TNyxProjectionFormContexts;
+  LRestores: TNyxProjectionValueRestores;
+  LChanged: Boolean;
+  LSnapshot: TNyxText;
+  LProposal: TNyxPartsEditorProposal;
+  LRefused: Boolean;
+begin
+  LApplication := Fixture;
+  LUpdated := nil;
+  LBefore := nil;
+  LAfter := nil;
+  LOther := nil;
+  LExisting := nil;
+  LCandidate := nil;
+  LWrong := nil;
+  LBaseline := nil;
+  LAction := nil;
+  try
+    LUpdated := LApplication.Clone;
+    LUpdated.Find('second').Configure.Hint('An independent change 🌙').Done;
+    LBefore := ContextHost(LApplication, NyxControl('first'));
+    LAfter := ContextHost(LUpdated, NyxControl('first'));
+    LOther := ContextHost(LUpdated, NyxControl('second'));
+    LExisting := RealizeNyxView(LBefore, LBefore.Find('context-parts'));
+    LCandidate := RealizeNyxView(LAfter, LAfter.Find('context-parts'));
+    LWrong := RealizeNyxView(LOther, LOther.Find('context-parts'));
+    LRows := LExisting.Part(NyxPart('rows'));
+    for LIndex := 0 to LRows.Count - 1 do
+    begin
+
+      if LRows.Children[LIndex].Part(NyxPart('path')).Prop('text') = 'title' then
+      begin
+        LAction := LRows.Children[LIndex].Part(NyxPart('action'));
+        Break;
+      end;
+    end;
+    LSnapshot := TNyxCodec.NodeSnapshot(LExisting).ToJSON;
+    SetLength(LForms, 1);
+    LForms[0] := TNyxProjectionFormContext.ForForm('context-parts', 'context-parts',
+      [NyxExtension(NyxPartsEditorBaselineKey)]);
+    Check(LExisting.Prop(NyxPartsEditorBaselineKey) <>
+      LCandidate.Prop(NyxPartsEditorBaselineKey),
+      'An unrelated application edit advances the complete Parts baseline');
+    Check(not CanRefreshNyxProjection(LExisting, LCandidate) and
+      CanRefreshNyxFormProjection(LExisting, LCandidate, LForms),
+      'Only an explicitly declared Parts context admits a baseline refresh');
+    Check(PrepareNyxProjectionFormRestores(LExisting, LCandidate, LForms,
+      LRestores, LChanged) and LChanged and (Length(LRestores) = 0),
+      'A metadata-only Parts form advances context without inventing editable fields');
+    Check((LAction <> nil) and CaptureNyxPartsEditor(LAction,
+      LExisting, LApplication, LProposal), 'The old original form captures its exact proposal');
+    LRefused := False;
+    try
+      ValidateNyxPartsEditorProposal(LUpdated, LProposal);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'A refreshed baseline cannot revive a retained old proposal');
+    Check(not CanRefreshNyxFormProjection(LExisting, LWrong, LForms) and
+      (TNyxCodec.NodeSnapshot(LExisting).ToJSON = LSnapshot),
+      'A different selected instance still refuses without touching the old form');
+    FreeAndNil(LWrong);
+    LWrong := LCandidate.Clone;
+    Check(CanRefreshNyxFormProjection(LExisting, LWrong, LForms),
+      'The independent unchanged candidate is compatible before creator metadata changes');
+    LWrong.Configure.Extension('creator.parts.rule', 'different').Done;
+    Check(not CanRefreshNyxFormProjection(LExisting, LWrong, LForms),
+      'Unknown creator metadata does not inherit the baseline exception');
+    LBaseline := LExisting.Clone;
+    Check(RefreshNyxFormProjectionProperties(LExisting, LCandidate, LBaseline, LForms),
+      'The exact compatible form copies its admitted baseline');
+    Check((LExisting.Prop(NyxPartsEditorBaselineKey) = LCandidate.Prop(NyxPartsEditorBaselineKey)) and
+      CaptureNyxPartsEditor(LAction, LExisting, LUpdated, LProposal),
+      'The retained form captures a fresh valid action against the current document');
+    ValidateNyxPartsEditorProposal(LUpdated, LProposal);
+  finally
+    LBaseline.Free;
+    LWrong.Free;
+    LCandidate.Free;
+    LExisting.Free;
+    LOther.Free;
+    LAfter.Free;
+    LBefore.Free;
+    LUpdated.Free;
+    LApplication.Free;
+  end;
+end;
+
 begin
   try
     HideRestore;
@@ -500,6 +627,7 @@ begin
     OrderedOverrides;
     RetainedForm;
     FocusAnchors;
+    RetainedContext;
     WriteLn('PASS ', GChecks, ' public Parts editor checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-parts-editor', 'passed');

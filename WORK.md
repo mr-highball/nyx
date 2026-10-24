@@ -11,6 +11,60 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Column arrangement W1 — 2026-10-22
 
+### Active prerequisite — native Inspector responsiveness
+
+The preceding goal turn made product progress: guarded pointer endpoints and
+the pending-stroke foundation are committed, and actual focused Studio input
+passes on both targets/widths with four exact accepted project packets. Original
+task03 criteria6/7 still require complete ordinary Studio and its own exported
+application. This batch targets native replacement cost before repeating that
+unchanged900s journey.
+
+The compact focused profile attributes230s of its443s shell-render time to35
+replacement preparations, averaging6.57s; static document splitting is only2.1s
+across57 attempts. The bounded next check compares independently composed and
+realized Inspector forms before/after an ordinary presentation reset, using the
+previously qualified accepted packet. It must identify a strict compatibility
+refusal or rule that hypothesis out. Then repair the actual reusable boundary
+and qualify retained form behavior, drafts, event retirement and rollback; stop
+this investigation if the probe cannot distinguish a cause, rather than starting
+another full editor timing run without a concrete change. No task credit or
+original criterion closure follows from a diagnostic alone.
+
+Compatibility02 identifies the omitted `nyx.parts-editor.baseline`: document
+context remains exact and178 field restores are admitted, while the undeclared
+Parts baseline alone refuses form compatibility. The library now exposes its
+existing wire as `NyxPartsEditorBaselineKey`; Studio declares only that key in
+the Parts form's separate context. Instance/path/action changes and unknown
+metadata stay strict. The stock group still fences old event work and restores
+abandoned previews; no general compatibility exception is added.
+
+The closed parts-context01 cohort captures2317 inputs. All10 native/browser/
+worker compilers complete with zero owned warnings. Actual native Parts73,
+retained-form38 and publication58 checks pass with complete clean heaps. The
+actual pre-reset Inspector comparison now admits all declared forms. A canonical
+old-Studio overlay with the SAME strengthened focused fixture fails the exact
+same-router/input assertion at check90, with a complete clean heap. The repaired
+full native journey passes both new Apply/reset identity and old-scope retirement
+checks, then still reaches its unchanged900s deadline at stage18/check512. The
+actual process is joined and all2317 source pins reverify; this timeout supplies
+no complete full-Studio heap, Save/Open or own-export acceptance.
+
+Reassessment separates user-facing execution from heap-instrumentation cost.
+One same-source full1280 comparison retains assertions, range/overflow/IO checks,
+debug/profile output and the original900s bound, omitting only heap tracing.
+It remains a separate functional/latency observation and can earn no memory
+qualification. The actual process/handle stays in private handoff; preserve that
+run rather than restarting after an observation timeout. Both modes still show
+seconds spent in retained refreshes, so responsiveness remains open.
+
+Browser Parts/forms/publication/full Studio and its matching worker are compiled
+and staged as10 static artifacts. Automatic approval review rejects starting the
+temporary loopback Pascal host before execution, stating only blocked by policy.
+No server or LAN change occurs; existing local endpoint inventory finds no test
+host to reuse. Browser execution of this repair remains unqualified. No repeated
+launch through another mechanism or new source-scope approval gate is added.
+
 ### Current checkpoint — typed column alignment authoring
 
 Column alignment now has independent optional logical horizontal and vertical

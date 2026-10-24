@@ -167,6 +167,7 @@ implementation
 uses
   nyx.text.index, nyx.data, nyx.publication, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.inspector.groups, nyx.reusable.editor,
+  nyx.parts.editor,
   nyx.studio.resize, nyx.studio.move, nyx.studio.collections;
 
 type
@@ -900,6 +901,11 @@ var
       [NyxExtension(NyxStudioInspectorContextKey), NyxExtension(NyxStudioPropertyOwnerKey)]);
     Add(NyxStudioReusableEditorID,
       [NyxExtension(NyxReusableEditorSourceKey), NyxExtension(NyxReusableEditorBaselineKey)]);
+    { The Parts baseline includes the complete authored document, so even an
+      unrelated scalar edit advances it. Its independent scope must participate
+      in the SAME event-fenced publication as the other forms; strict instance,
+      path/action and membership checks still force replacement when needed. }
+    Add(NyxStudioPartsEditorID, [NyxExtension(NyxPartsEditorBaselineKey)]);
     Add('inspector-viewport-rule', [NyxExtension(NyxStudioPropertyOwnerKey)]);
     { Geometry commands carry the selected owner even when they contain no
       editable value. Their event authority must advance in the same group as

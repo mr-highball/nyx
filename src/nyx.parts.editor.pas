@@ -28,6 +28,13 @@ interface
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls;
 
+const
+  { Explicit context-refresh boundary for a retained Parts form. Only this
+    complete document baseline may advance; version, instance, named paths,
+    descriptors and action membership remain strict. A host must fence/retire
+    old event work through the ordinary form publication before adopting it. }
+  NyxPartsEditorBaselineKey = 'nyx.parts-editor.baseline';
+
 type
   { These actions change only one instance's local override. Restore means
     original inheritance, never a cached previous customization or definition edit. }
@@ -111,7 +118,7 @@ const
   CEditor = 'nyx.parts-editor';
   CVersion = 'nyx.parts-editor.version';
   CInstance = 'nyx.parts-editor.instance';
-  CBaseline = 'nyx.parts-editor.baseline';
+  CBaseline = NyxPartsEditorBaselineKey;
   CPath = 'nyx.parts-editor.path';
   CDescriptor = 'nyx.parts-editor.descriptor';
   CRow = 'nyx.parts-editor.row';

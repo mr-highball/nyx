@@ -123,6 +123,16 @@ type
     FWorkbenchFinished: Boolean;
     FWorkbenchInitial: TNyxCollectionViewSpec;
     FWorkbenchAccepted: TNyxText;
+    { An owning router lease prevents a destroyed/recreated router from
+      satisfying identity by address reuse. The face is borrowed only for
+      equality; old callbacks must retire even while its controls stay live. }
+    FRetainedWorkbenchEvents: INyxEvents;
+    FRetainedWorkbenchScope: INyxCancellationScope;
+    {$ifdef PAS2JS}
+    FRetainedWorkbenchInput: TJSHTMLElement;
+    {$else}
+    FRetainedWorkbenchInput: TControl;
+    {$endif}
     { The same ordinary workbench path accepts presentation before Save/Open.
       Retain its complete pair so independent resets and Undo cannot quietly
       substitute a regenerated source or discard another policy's declaration. }
@@ -144,6 +154,8 @@ type
     procedure ExpandLayout(AColumn: Integer);
     function LayoutStep: Boolean; {$ifdef PAS2JS}async;{$endif}
     function WorkbenchStep: Boolean; {$ifdef PAS2JS}async;{$endif}
+    procedure CaptureWorkbenchContinuity;
+    procedure CheckWorkbenchContinuity;
     function Pair: TNyxText;
     { Return a real section root rather than passing the native lookup forest
       to a compound capture that requires an actual owned model tree. }
@@ -1325,6 +1337,31 @@ end;
   begins inherited; its reusable definition, peer and exact collection defaults
   remain independently checked. In the complete journey these choices enter
   the original Save/Open producer before its independently compiled companion. }
+{ Capture before the ordinary Apply/reset. The scope is flags-only; retaining
+  it or the router gives no widget or stale action authority. }
+procedure TReview.CaptureWorkbenchContinuity;
+begin
+  FRetainedWorkbenchEvents := FRenderer.ViewFor(CEditor).Events;
+  FRetainedWorkbenchScope := NyxEventGeneration(FRetainedWorkbenchEvents);
+  FRetainedWorkbenchInput := FRenderer.InputFor(
+    NyxStudioWorkbenchPolicyFieldID(swpfHeaders));
+  Check((FRetainedWorkbenchEvents <> nil) and
+    (FRetainedWorkbenchScope <> nil) and (FRetainedWorkbenchInput <> nil),
+    'capture the actual Inspector router, original event generation and input face');
+end;
+
+{ Control reuse and callback retirement are independent requirements. Compare
+  the borrowed face only after resolving its current owning renderer again. }
+procedure TReview.CheckWorkbenchContinuity;
+begin
+  Check((FRenderer.ViewFor(CEditor).Events = FRetainedWorkbenchEvents) and
+    (FRenderer.InputFor(NyxStudioWorkbenchPolicyFieldID(swpfHeaders)) =
+      FRetainedWorkbenchInput),
+    'ordinary policy admission retains the SAME Inspector router and physical input');
+  Check(FRetainedWorkbenchScope.Cancelled,
+    'retained Inspector controls retire the original action context before publication');
+end;
+
 function TReview.WorkbenchStep: Boolean; {$ifdef PAS2JS}async;{$endif}
 var
   LSection: TNyxNode;
@@ -1377,10 +1414,12 @@ begin
         Change(NyxStudioWorkbenchPolicyFieldID(swpfLineEnding), 'CRLF');
         Change(NyxStudioWorkbenchPolicyFieldID(swpfFocusedDraft), 'true');
         Check(Pair = FBefore, 'actual action inputs stay drafts before the complete Apply');
+        CaptureWorkbenchContinuity;
         Click(NyxStudioWorkbenchPolicyApplyID);
       end;
     1:
       begin
+        CheckWorkbenchContinuity;
         Check((FCommands.State = nssApplied) and Spec.HasTableWorkbenchPolicy and
           (Spec.TableWorkbenchPolicy.ToData.ToJSON = LExpected.ToData.ToJSON),
           'ordinary SourceJobs accepts the complete typed action form: ' + FCommands.Message);
@@ -1410,10 +1449,12 @@ begin
           Click(LSection.Part(NyxPart('header')).ID);
         end;
         FBefore := Pair;
+        CaptureWorkbenchContinuity;
         Click(NyxStudioWorkbenchPolicyDefaultID);
       end;
     2:
       begin
+        CheckWorkbenchContinuity;
         Check((FCommands.State = nssApplied) and not Spec.HasTableWorkbenchPolicy and
           (Spec.ToData.ToJSON = FWorkbenchInitial.UseDefaultTableWorkbench.ToData.ToJSON),
           'ordinary reset removes only workbench presence, preserving earlier table choices: ' +
