@@ -20,11 +20,16 @@ desktop/compact widths, with complete clean heaps. Five browser companions
 compile only. Mounted Studio01 now passes277/279 at desktop/compact widths with
 complete clean heaps, exercising the new controls, exact physical retention,
 export-only reset and paired history. Both complete accepted packets and saved
-Pascal exports match exactly. Its unchanged complete-application consumer compiles
-but refuses that focused packet's missing later query callbacks; preserve the
-assertion and use the complete Save/Open producer. Browser interaction and the
-full original workbench/application journey remain open; WORK owns the separate
-generated-consumer/storage evidence and retained failures.
+Pascal exports match exactly. Its unchanged complete-application consumer first
+refuses that focused packet's missing later query callbacks. The complete
+Save/Open producer then passes1124/1135 actual native Studio assertions with
+byte-identical project/Pascal outputs; its own compiled application passes448
+at each width with complete clean heaps. Full Studio uses the original checked/
+profiled functional configuration without heap tracing; focused Studio and the
+compiled application retain their separate memory evidence. Browser companions
+and the matching worker compile only. Browser interaction, full instrumented
+Studio lifetime, responsiveness and all original workbench criteria remain open;
+WORK owns the exact identities, storage evidence and retained failure.
 
 The W2 pending-stroke continuation now connects its portable model to an
 optional per-message mount envelope. Cached preview and accepted cells remain

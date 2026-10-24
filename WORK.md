@@ -66,6 +66,41 @@ for that application proof. A complete browser authoring/worker package is
 prepared separately from the retained focused-source negative entry; neither
 has executed. All owning readers are joined and source freezes have ended.
 
+The complete Save/Open producer now reuses those ordinary export-input steps,
+including the unchanged later query callback stages. Full01 passes1124 actual
+native Studio assertions at1280 and1135 at390, in690.933s/476.001s within the
+original900s bound. Assertions, range/overflow/I/O checking, debug information
+and phase profiling remain enabled; only heap tracing is omitted for this
+functional profile. This is no claim of complete Studio memory or responsiveness
+qualification. Both15127-byte saved projects and8188-byte Pascal units match
+exactly. Project SHA256 is
+B5CBA6FC5C38CDEA461155D7FDD3909521056B79926AC4EB3D0D0688DCF5CE9A;
+Pascal SHA256 is
+EDFFFE2354823593530E5065FE3048B221A8F749DEA20545C990336FB1429049.
+
+Own01's native/browser compilers explicitly consume that actual saved unit.
+The unchanged full-application consumer now passes448 assertions at each native
+width, with complete clean6749545-block heaps accounting for319065567/319065536
+bytes. The original180s application bound is unchanged. This resolves the
+focused producer/consumer mismatch without changing or bypassing the callback
+assertion. All five compiler logs have zero owned warnings; the three browser
+builds each retain seven installed RTL warnings. The isolated full authoring/
+application browser package contains its matching worker/runtime and exact
+expected project, but has not executed. Evidence roots are
+`.local/qualification/studio-export-full-01` and
+`.local/qualification/studio-export-full-own-01`; every owning job is joined,
+all2318 source pins reverify and their short source freeze has ended. Browser
+interaction, full instrumented Studio lifetime, hardware/raster/OS-effect limits
+and the original workbench criteria remain open.
+
+Existing desktop profile boundaries identify shell rendering as the next
+responsiveness owner:170 paint-shell-render phases total468898ms, with2758ms
+mean and9844ms maximum in this diagnostic journey. Nested retained-section,
+replacement and renderer timings overlap that parent; do not sum them into an
+independent elapsed total. These identify work to inspect, not production or
+unprofiled latency acceptance. Preserve input/history/callback and rollback
+assertions when addressing refresh cost.
+
 The first build's reused old unit cache raises an internal compiler exception;
 a clean02 output fixes compilation without toolchain/source changes. Native03
 stops on a missing fixture enum arm, before running those controls. After that
