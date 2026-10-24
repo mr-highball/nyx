@@ -26,6 +26,18 @@ own-export/performance remain open.
 These separate cohorts close no original criterion; WORK records their exact
 boundaries and remaining checks.
 
+The Parts-context repair declares only the existing public baseline wire in its
+independent retained form, preserving strict owner/path/action and event fencing.
+Native Parts73/form-controls38/publication58 pass with clean heaps; the canonical
+old-Studio control fails the new physical-retention assertion. The complete
+native desktop authoring journey now passes1083 without heap instrumentation,
+with all other safety/assertion checks and the original900s bound retained. Its
+actual saved Pascal independently compiles into an application passing448 at
+both native widths with clean heaps. The same browser companion compiles only.
+Full instrumented Studio still times out at18/512; updated browser execution,
+compact full authoring and responsiveness remain open. This closes no original
+criterion or complete task; WORK preserves the separate exact evidence.
+
 The native responsiveness prerequisite now reuses strictly admitted immutable
 button faces by exact effective wire, preserving resource and callback currentness.
 Configuration03 passes88 on both actual targets; ordinary native Studio chrome

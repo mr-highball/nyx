@@ -58,6 +58,20 @@ qualification. The actual process/handle stays in private handoff; preserve that
 run rather than restarting after an observation timeout. Both modes still show
 seconds spent in retained refreshes, so responsiveness remains open.
 
+That same-source desktop comparison now completes the ENTIRE original journey:
+1083 checks pass in670.1s, including query/events, history, layout authoring,
+Save/Open and its existing runtime proof. Assertions/range/overflow/IO checks
+remain enabled; this build has no heap evidence. Its exact reopened project is
+14897 bytes and saved Pascal8112 bytes. Both exports remain pinned. Independently
+compiled from THAT actual Pascal, the application's native heap-enabled consumer
+passes448 checks at1280 and448 at390, each with complete clean6670398-block heaps.
+The browser companion also compiles from that same own export with zero owned
+warnings. This is now a native-produced own-application proof, rather than reuse
+of an example or a browser-produced packet. A compact full-Studio comparison
+uses the same already-built executable and unchanged900s bound; its live handle
+stays in private handoff. Full instrumented Studio, actual updated browser
+execution, compact authoring and whole-editor responsiveness remain open.
+
 Browser Parts/forms/publication/full Studio and its matching worker are compiled
 and staged as10 static artifacts. Automatic approval review rejects starting the
 temporary loopback Pascal host before execution, stating only blocked by policy.
