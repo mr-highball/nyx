@@ -807,8 +807,19 @@ managed-menu invocation remains the helper's next integration task. All original
 task03 criteria remain open; none is closed by this runtime-only range packet.
 
 Own13's native compiler joins0 after compiling422962 lines with zero warnings.
-The actual ordinary-browser compiler is now live; full native editor execution,
-both own emitted applications and whole-editor performance remain unqualified.
+The ordinary browser and source-worker compilers subsequently join0. Its original
+full native1280 journey is now live, advancing through stage0/check114 at the
+latest checkpoint; the unchanged900s deadline remains. Full native editor
+execution, both own emitted applications and whole-editor performance remain
+unqualified until their actual terminal results.
+
+The keyboard11 implementation, maintained build entry and public documentation
+are committed/pushed as810d8b0, with the exact remote identity verified. Menu02
+stays separate working source while the helper integrates real context/menu
+entry. Review artifacts remain unchanged; exact temporary host40460 is stopped,
+wrapper30719 joins0 and port19157 has no listener. Completed tab127 is closed and
+viewport override reset; the failed temporary navigation tab is left to automatic
+turn cleanup. The user's original tabs and LAN/Studio service are untouched.
 
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
