@@ -197,6 +197,11 @@ type
     procedure InvokePointer(AShift: TShiftState; AX, AY: Integer);
   end;
 
+  { Each interruption begins with a real pending native stroke and qualifies
+    its original cleanup boundary. It is separate from trusted device input. }
+  TNativeRangeInterruption = (nriDirectRetire, nriCallbackRetire, nriCallbackFailure,
+    nriUnconsumedFailure);
+
   { Native callback failures are captured instead of opening a modal dialog. }
   TNativeErrors = class
   public
@@ -244,6 +249,10 @@ type
     FRangeKeySending: Boolean;
     FRangePointerSending: Boolean;
     FRangeStrokeSending: Boolean;
+    { Failure injection belongs to the original synchronous callback only. }
+    FRangeMoveFailure: Boolean;
+    FRangeFailureConsumes: Boolean;
+    FRangeMoveCallbacks: Integer;
     FRangePointers: Integer;
     FRangePointerUps: Integer;
     FPointerCallbackRecorded: Boolean;
@@ -280,6 +289,7 @@ type
     FEditorContexts: Integer;
     procedure NativeRangeSelected(Sender: TObject; AColumn, ARow: Integer);
     procedure RunRangeFocusRetirement;
+    procedure RunNativeRangeInterruption(AKind: TNativeRangeInterruption);
     function RunNativePointerProbe: Boolean;
     procedure PreviousEditorContext(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
@@ -1136,6 +1146,26 @@ begin
 
   if FRangeStrokeSending and (AEvent.Trigger = ntPointerMove) then
   begin
+    Inc(FRangeMoveCallbacks);
+
+    if FRangeMoveFailure then
+    begin
+      FRangeMoveFailure := False;
+
+      if FRangeFailureConsumes then
+      begin
+        Check(Supports(AExecution, INyxEventResponse, LResponse) and LResponse.CanConsume,
+          'Failing callback explicitly chooses whether to cancel its managed default');
+        LResponse.Consume;
+      end;
+      raise Exception.Create('Original range move callback failure');
+    end;
+
+    if FMode = kmRetire then
+    begin
+      FRenderer.Unmount;
+      Exit;
+    end;
 
     if FMode = kmConsume then
     begin
@@ -2436,6 +2466,7 @@ var
   LOriginGrid: TNyxCollectionStringGrid;
   LTargetGrid: TNyxCollectionStringGrid;
   LOriginColumn: Integer;
+  LFocusOriginColumn: Integer;
   LTargetColumn: Integer;
   LCapturedControl: TControl;
 
@@ -2478,7 +2509,12 @@ var
   {$endif}
 
   procedure FocusOrigin;
+  {$ifndef PAS2JS}
+  var
+    LBounds: TRect;
+  {$endif}
   begin
+    LOrigin := NyxCollectionCellIdentity(ItemA, NameField);
     {$ifdef PAS2JS}
     LOriginCell := TJSHTMLElement(FTable.querySelector(
       '[data-nyx-item="a"] [role="gridcell"][data-nyx-column="0"]'));
@@ -2495,6 +2531,21 @@ var
     LOriginGrid.Col := LOriginColumn;
     LOriginGrid.Row := 1;
     LOriginGrid.SetFocus;
+    LFocusOriginColumn := LOriginColumn;
+    LBounds := LTargetGrid.CellRect(LTargetColumn, 2);
+
+    if not Types.IntersectRect(LBounds, LBounds, LTargetGrid.ClientRect) then
+    begin
+      { Reveal before reserving pointer input. Expected origin identity follows
+        the real focus accepted by native horizontal keep-visible scrolling. }
+      LTargetGrid.LeftCol := LTargetColumn;
+      LFocusOriginColumn := LOriginGrid.Col;
+
+      if (LOriginGrid = LTargetGrid) and (LFocusOriginColumn = LTargetColumn) then
+      begin
+        LOrigin := NyxCollectionCellIdentity(ItemA, LScore);
+      end;
+    end;
     Drain;
     {$endif}
   end;
@@ -2542,6 +2593,8 @@ var
       LNode.dispatchEvent(TCellContextEvent.new('click', LOptions));
       {$else}
       LBounds := LTargetGrid.CellRect(LTargetColumn, 2);
+      Check(Types.IntersectRect(LBounds, LBounds, LTargetGrid.ClientRect),
+        'Endpoint press uses the visible part of the native target cell');
       LShift := [];
 
       if AShift then
@@ -2568,7 +2621,7 @@ var
     end;
     {$else}
     Result := (Screen.ActiveControl = LOriginGrid) and
-      (LOriginGrid.Row = 1) and (LOriginGrid.Col = LOriginColumn);
+      (LOriginGrid.Row = 1) and (LOriginGrid.Col = LFocusOriginColumn);
 
     if AEndpoint then
     begin
@@ -2811,7 +2864,7 @@ var
       LRanges.ConfigureCellRange(True);
       FRangePointerSending := True;
       FRangeStrokeSending := True;
-      for LRound := 0 to 8 do
+      for LRound := 0 to 10 do
       begin
         FMode := kmObserve;
         LRanges.ClearCellRange;
@@ -2984,6 +3037,26 @@ var
             'Independent native capture loss cancels preview and restores accepted paint');
           SendUp;
         end
+        else if LRound = 9 then
+        begin
+          RangeKey('Escape', False);
+          Check((GetCaptureControl = nil) and (LRanges.CellRange = nil) and
+            not LAccepted.Current,
+            'Escape during native pending movement releases capture and keeps its range-clear policy');
+          SendUp;
+          Check(LRanges.CellRange = nil,
+            'Release after Escape cannot revive the cancelled native range');
+        end
+        else if LRound = 10 then
+        begin
+          LTargetGrid.Perform(LM_CANCELMODE, 0, 0);
+          Check((GetCaptureControl = nil) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current and LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+            'Native CancelMode during pending movement restores accepted paint and releases capture');
+          SendUp;
+          Check(LRanges.CellRange = LAccepted,
+            'Release after native CancelMode cannot publish the old preview');
+        end
         else if LRound = 4 then
         begin
           FMount.Refresh;
@@ -3006,6 +3079,43 @@ var
       Check((FView.Store.Snapshot = LSource) and
         FView.Selection.Snapshot.SameState(LRows),
         'Native sustained gestures leave accepted RAW and ordinary row selection unchanged');
+      for LRound := 0 to 3 do
+      begin
+        FMode := kmObserve;
+        LRanges.ClearCellRange;
+        FocusOrigin;
+        LDownBounds := LTargetGrid.CellRect(LTargetColumn, 2);
+        LDownPoint := Point(LTargetGrid.ClientWidth,
+          (LDownBounds.Top + LDownBounds.Bottom) div 2);
+        case LRound of
+          1:
+            begin
+              LDownPoint := Point(-1, LDownPoint.Y);
+            end;
+          2:
+            begin
+              LDownPoint := Point(0, LTargetGrid.ClientHeight);
+            end;
+          3:
+            begin
+              LDownPoint := Point(0, -1);
+            end;
+        end;
+        LDownsBefore := FRangePointers;
+        LUpsBefore := FRangePointerUps;
+        LTargetGrid.Perform(LM_LBUTTONDOWN, MK_SHIFT or MK_LBUTTON,
+          MakeLParam(LDownPoint.X, LDownPoint.Y));
+        Check((FRangePointers = LDownsBefore + 1) and
+          (LRanges.CellRange = nil) and FocusMatches(False) and
+          FView.Selection.Snapshot.SameState(LRows),
+          'Outside native press stays claimed without focusing or selecting clamped cells');
+        LSourcePoint := LDownPoint;
+        SendUp;
+        Check((FRangePointerUps = LUpsBefore + 1) and
+          (GetCaptureControl = nil) and (LRanges.CellRange = nil) and
+          FView.Selection.Snapshot.SameState(LRows),
+          'Outside native press releases its ordinary capture without a late range or row default');
+      end;
     finally
       FMode := kmObserve;
       FRangePointerSending := False;
@@ -3133,7 +3243,7 @@ begin
           begin
             Check((LIntent <> nil) and LIntent.Current and
               LIntent.Capture.Anchor.Same(LOrigin) and LIntent.Capture.Focus.Same(LTarget) and
-              LIntent.Capture.Contains(ItemA, NameField) and
+              LIntent.Capture.Contains(LOrigin.Item, LOrigin.Field) and
               LIntent.Capture.Contains(ItemB, LScore) and FocusMatches(True),
               'allowed pointer and benign refresh publish exact original page endpoints and real focus');
           end;
@@ -3490,6 +3600,161 @@ end;
 { Same real editor and managed presenters as the RAW journey. Native context
   uses the actual editor HWND/keyboard-context message; browser context is a
   synthetic cancellable event, with no trusted pointer/OS menu claim. }
+{$ifndef PAS2JS}
+{ Retained public flags/range/data remain observable after renderer retirement.
+  No borrowed widget is inspected or sent another message after that boundary. }
+procedure TCopyReview.RunNativeRangeInterruption(AKind: TNativeRangeInterruption);
+var
+  LRanges: INyxCollectionCellRangeMount;
+  LAccepted: INyxCollectionCellRangeIntent;
+  LSource: INyxCollectionSnapshot;
+  LRows: TNyxCollectionSelectionSnapshot;
+  LMoveToken: INyxEventSubscription;
+  LSiblingToken: INyxEventSubscription;
+  LScore: TNyxColumnIdentity;
+  LColumn: Integer;
+  LIndex: Integer;
+  LBounds: TRect;
+  LDown: TPoint;
+  LMove: TPoint;
+  LFailure: TNyxText;
+  LBeforeCallbacks: Integer;
+begin
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges),
+    'Native interruption owner exposes its real range contract');
+  LRanges.ConfigureCellRange(True);
+  LScore := NyxColumnIdentity(NyxIntegerField('Score'));
+  LColumn := -1;
+  for LIndex := 0 to FGrid.ColCount - 1 do
+  begin
+
+    if Pos('Score', FGrid.DisplayCellText(LIndex, 0)) = 1 then
+    begin
+      LColumn := LIndex;
+      Break;
+    end;
+  end;
+  Check(LColumn >= 0, 'Interruption producer resolves an actual typed Score cell');
+  FGrid.Col := LColumn;
+  FGrid.Row := 1;
+  FGrid.SetFocus;
+  Drain;
+  LSource := FView.Store.Snapshot;
+  LRows := FView.Selection.Snapshot;
+  LBounds := FGrid.CellRect(LColumn, 2);
+  Check(Types.IntersectRect(LBounds, LBounds, FGrid.ClientRect),
+    'Interruption down begins in the visible native data cell');
+  LDown := Point((LBounds.Left + LBounds.Right) div 2,
+    (LBounds.Top + LBounds.Bottom) div 2);
+  LMoveToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime),
+    ntPointerMove).Subscribe(FCallback);
+  LSiblingToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime),
+    ntPointerMove).Subscribe(FCallback);
+  try
+    FMode := kmObserve;
+    FRangePointerSending := True;
+    FRangeStrokeSending := True;
+    FGrid.Perform(LM_LBUTTONDOWN, MK_SHIFT or MK_LBUTTON, MakeLParam(LDown.X, LDown.Y));
+    LAccepted := LRanges.CellRange;
+    Check((GetCaptureControl = FGrid) and (LAccepted <> nil) and LAccepted.Current and
+      LAccepted.Capture.Anchor.Same(NyxCollectionCellIdentity(ItemA, LScore)) and
+      LAccepted.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, LScore)),
+      'Interruption begins with an accepted endpoint and real native capture');
+    LBounds := FGrid.CellRect(LColumn, 1);
+    Check(Types.IntersectRect(LBounds, LBounds, FGrid.ClientRect),
+      'Interruption preview uses the current visible native cell');
+    LMove := Point((LBounds.Left + LBounds.Right) div 2,
+      (LBounds.Top + LBounds.Bottom) div 2);
+    FGrid.Perform(LM_MOUSEMOVE, MK_SHIFT or MK_LBUTTON, MakeLParam(LMove.X, LMove.Y));
+    Check((LRanges.CellRange = LAccepted) and LAccepted.Current and
+      not FGrid.CellRangeSelected(LColumn, 2) and (GetCaptureControl = FGrid),
+      'Interruption observes a private live preview before withdrawing its owner');
+    case AKind of
+      nriDirectRetire:
+        begin
+          FRenderer.Unmount;
+        end;
+      nriCallbackRetire:
+        begin
+          FMode := kmRetire;
+          FGrid.Perform(LM_MOUSEMOVE, MK_SHIFT or MK_LBUTTON, MakeLParam(LMove.X, LMove.Y));
+        end;
+      nriCallbackFailure, nriUnconsumedFailure:
+        begin
+          FRangeMoveFailure := True;
+          FRangeFailureConsumes := AKind = nriCallbackFailure;
+          LBeforeCallbacks := FRangeMoveCallbacks;
+          FGrid.Perform(LM_MOUSEMOVE, MK_SHIFT or MK_LBUTTON, MakeLParam(LMove.X, LMove.Y));
+          FRangeMoveFailure := False;
+          LFailure := LMoveToken.LastExecution.Failure;
+          Check((LMoveToken.LastExecution.Status = nesFailed) and
+            (LFailure = 'Original range move callback failure') and
+            (LSiblingToken.LastExecution.Status = nesSucceeded) and
+            (FRangeMoveCallbacks = LBeforeCallbacks + 2),
+            'Original callback failure stays in its receipt while the ordered sibling still executes');
+
+          if AKind = nriCallbackFailure then
+          begin
+            Check(FInput.Current and FMount.Connected and (GetCaptureControl = nil) and
+              (LRanges.CellRange = LAccepted) and LAccepted.Current and
+              FGrid.CellRangeSelected(LColumn, 2),
+              'Failed consumed move retires preview and capture while preserving accepted cells');
+          end;
+
+          if AKind = nriUnconsumedFailure then
+          begin
+            Check((GetCaptureControl = FGrid) and (LRanges.CellRange = LAccepted) and
+              LAccepted.Current and not FGrid.CellRangeSelected(LColumn, 2),
+              'An isolated unconsumed failure keeps the explicitly allowed pending default');
+          end;
+          FGrid.Perform(LM_LBUTTONUP, MK_SHIFT, MakeLParam(LMove.X, LMove.Y));
+
+          if AKind = nriCallbackFailure then
+          begin
+            Check((LRanges.CellRange = LAccepted) and LAccepted.Current,
+              'Up after a consumed failed move cannot publish the abandoned candidate');
+          end
+          else
+          begin
+            Check((GetCaptureControl = nil) and (LRanges.CellRange <> LAccepted) and
+              LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemA, LScore)),
+              'Up after an unconsumed failure commits only the still-allowed pending endpoint');
+          end;
+          Check((LMoveToken.LastExecution.Status = nesFailed) and
+            (LMoveToken.LastExecution.Failure = LFailure),
+            'Capture and range retirement never replace the original execution diagnostic');
+        end;
+    end;
+
+    if AKind in [nriDirectRetire, nriCallbackRetire] then
+    begin
+      Check(FInput.Retired and not FMount.Connected and (GetCaptureControl = nil) and
+        (LRanges.CellRange = nil) and not LAccepted.Current,
+        'Retirement during an actual pending stroke releases capture and revokes accepted authority');
+      Check(not LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, LScore),
+        NyxCollectionCellIdentity(ItemB, LScore)),
+        'Retained range interface cannot resurrect a retired native owner');
+    end;
+    Check((FView.Store.Snapshot = LSource) and
+      FView.Selection.Snapshot.SameState(LRows) and (TNyxCodec.Encode(FDocument) = FAuthored),
+      'Native interruption leaves exact accepted data, row selection and authored design intact');
+  finally
+    FMode := kmObserve;
+    FRangeMoveFailure := False;
+    FRangeFailureConsumes := False;
+    FRangePointerSending := False;
+    FRangeStrokeSending := False;
+    LMoveToken.Cancel;
+    LSiblingToken.Cancel;
+
+    if FInput.Current and FMount.Connected then
+    begin
+      LRanges.ConfigureCellRange(False);
+    end;
+  end;
+end;
+{$endif}
+
 procedure TCopyReview.RunDraftActions; {$ifdef PAS2JS}async;{$endif}
 var
   LDraftActions: INyxCollectionCellDraftActions;
@@ -4395,6 +4660,10 @@ end;
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LReview: TCopyReview;
+  {$ifndef PAS2JS}
+  LInterruption: TNativeRangeInterruption;
+  LArranged: Boolean;
+  {$endif}
 begin
   try
     LReview := TCopyReview.Create;
@@ -4431,6 +4700,22 @@ begin
     finally
       LReview.Free;
     end;
+    {$ifndef PAS2JS}
+    for LArranged := False to True do
+    begin
+      for LInterruption := Low(TNativeRangeInterruption) to High(TNativeRangeInterruption) do
+      begin
+        LReview := TCopyReview.Create(LArranged, True);
+        try
+          Check(LReview.FView.Spec.HasLayoutControls = LArranged,
+            'Interruption fixture verifies its intended ordinary or arranged table');
+          LReview.RunNativeRangeInterruption(LInterruption);
+        finally
+          LReview.Free;
+        end;
+      end;
+    end;
+    {$endif}
     LReview := TCopyReview.Create(True, True);
     try
       {$ifdef PAS2JS}await(LReview.RunDraftActions);{$else}LReview.RunDraftActions;{$endif}

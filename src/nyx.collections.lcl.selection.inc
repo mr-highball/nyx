@@ -1608,6 +1608,16 @@ begin
     begin
       Exit;
     end;
+    { Captured native presses may carry coordinates outside their source.
+      MouseToCell can still return a clamped data position there. Keep this
+      original range input claimed but unresolved: callbacks are delivered,
+      while neither a range nor ordinary row/editor defaults may borrow it. }
+
+    if not PtInRect(LGrid.ClientRect, Point(AX, AY)) then
+    begin
+      Result := LCommand;
+      Exit;
+    end;
     LData := FRendered;
     LGrid.MouseToCell(AX, AY, LPhysical, LRow);
     LColumn := CanonicalColumn(LGrid, LPhysical);
@@ -1617,6 +1627,12 @@ begin
     if (LData = nil) or (LRow <= 0) or (LOriginRow <= 0) or
       (LColumn < 0) or (LOriginColumn < 0) then
     begin
+      Exit;
+    end;
+
+    if not PtInRect(LGrid.CellRect(LPhysical, LRow), Point(AX, AY)) then
+    begin
+      Result := LCommand;
       Exit;
     end;
 

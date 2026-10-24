@@ -1317,9 +1317,25 @@ tables use actual LCL Down/Move/Up messages, physical hit testing and native
 capture; no OS cursor movement or trusted hardware is claimed. Narrow pin
 suspension remains the existing presentation policy. Tests reveal the launch
 before capture through ordinary horizontal scrolling and use a reachable release
-cell; automatic scrolling and off-page dragging remain unimplemented. Browser
-execution, full pending-input Escape/cancel/teardown and native initial-Down
-client-clip admission remain required before complete gesture/parity acceptance.
+cell; automatic scrolling and off-page dragging remain unimplemented.
+
+Native initial Down now validates the source's client clip and actual cell bounds
+after reserving the original input. An outside press remains claimed but has no
+resolved endpoint: the canonical callback still runs once, while clamped native
+coordinates cannot move focus, install cells or invoke ordinary row/edit defaults.
+Header/editor/default-off behavior remains on its existing route.
+
+The later edge03 journey passes1506 native checks at900 and1504 at390 client
+widths, with complete clean heaps. It adds the four outside edges, Escape and
+native CancelMode during pending movement, and direct/callback retirement of a
+live captured owner. Retained range interfaces cannot revive that owner. Fault
+diagnostics remain on subscription execution receipts, consistent with Nyx's
+ordered fault isolation. A failing callback that consumes input withdraws the
+pending default; a failing callback that leaves it unconsumed allows it, and
+later subscribers still execute. Neither capture nor range cleanup replaces the
+original receipt diagnostic. These are LCL message/hit/cache checks, not trusted
+hardware or raster evidence. Browser execution, canonical cancellation from every
+physical source, pen/touch and full gesture/parity acceptance remain open.
 
 Current range/command fixtures pass 47/127 checks on both actual targets. Real
 controls pass393 native checks with a complete clean heap and465 browser checks

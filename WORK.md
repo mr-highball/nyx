@@ -91,13 +91,40 @@ exact retired-subject notification; its browser companion compiles. Only the
 native adapter comment and control fixture subsequently differ, neither read by
 those command compilers. The current browser control fixture compiles only.
 
-Browser execution, browser/LCL pen/touch, automatic scrolling/off-page extension,
-and full pending-input Escape/cancel/retirement qualification remain open. The
-legacy native Down route also needs an explicit client-clip admission check:
-MouseToCell alone is insufficient evidence for off-viewport captured input.
-No target-parity or original criterion completion follows from these scoped
-checks. WORK's earlier W1/Studio evidence remains separate below; no unchanged
-900s rerun is scheduled. Root continues solo; the helper stays idle.
+The current edge continuation closes native initial-Down clipping. After the
+original reservation, both client-area and actual cell bounds must contain the
+press. Outside input keeps its canonical callback but stays claimed/unresolved,
+so clamped MouseToCell coordinates cannot focus/select data or fall through to
+ordinary row/editor defaults. Compact producers first reveal reachable cells
+and retain the real focus accepted by native keep-visible scrolling.
+
+The strengthened negative02 fixture fails against the old09 native adapter at
+outside-press admission, with a complete clean6969088-block/311119929-byte heap.
+The earlier cold negative01 compiler reaches its unchanged240s timeout before
+producing a test; it provides no behavior result. Subsequent native compilation
+reuses qualified09 unit output with identical safety flags/deadline and actually
+recompiles the changed native adapter. All2316 working inputs remain pinned.
+Positive01 first exposes fixture cleanup calling Configure after disconnect;
+positive02 exposes a fixture assumption that callback failures rethrow through
+the widget. Both failed runtimes retain complete clean heaps. Corrected checks
+use actual subscription execution receipts and respect ordered fault isolation.
+
+Closed edge03 passes1506 at measured900 and1504 at390 client widths, with
+complete clean23295342-block/1048904961-byte and23720828-block/1066546564-byte
+heaps. Native/browser compilers finish with zero owned warnings; all source pins
+reverify and all readers are joined. New real-LCL cases cover four outside edges,
+pending Escape/CancelMode, direct/callback renderer retirement and two ordered
+callbacks after a fault. Explicit consumption cancels the pending default; an
+unconsumed fault remains isolated and permits it. The original failed execution
+diagnostic survives capture/range cleanup. Existing desktop and compact journey
+assertions remain; browser behavior is still compilation only.
+
+Browser execution, browser/LCL pen/touch, auto-scroll/off-page extension and
+complete gesture/parity acceptance remain open. Canonical cancel delivery from
+every pinned native source and full physical/device/visual qualification still
+need evidence; private range cancellation alone does not establish all callbacks.
+No original criterion closes from these scoped checks. Earlier W1/Studio evidence
+stays separate; no unchanged900s rerun is scheduled. Root continues solo.
 
 ## Column arrangement W1 — 2026-10-22
 

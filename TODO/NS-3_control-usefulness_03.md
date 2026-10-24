@@ -23,11 +23,14 @@ native05 preserves1054 existing controls with a complete clean heap, and receipt
 passes271 native commands. The later native adapter qualifies per-message mouse
 movement/release, cached preview, original capture ownership and refresh cleanup.
 Native09 passes1254/1252 at measured900/390 client widths, with complete clean
-heaps; command05 passes273. Its browser control companion compiles only. Actual
-browser execution/trusted capture, pen/touch, auto-scroll/off-page extension,
-pending-input Escape/cancel/retirement and legacy Down client-clip qualification
-remain open alongside original acceptance; [WORK](../WORK.md#active-continuation--mounted-range-strokes)
-owns the separate cohorts, failures and next integration work.
+heaps; command05 passes273. Native edge03 subsequently passes1506/1504, also with
+complete clean heaps, after closing initial-Down client/cell clipping. Its actual
+LCL messages cover outside edges, pending Escape/CancelMode, direct/callback
+retirement, and consumed/unconsumed fault receipts with ordered siblings. Browser
+companions compile only. Browser execution/trusted capture, pen/touch, auto-scroll,
+off-page extension, canonical cancellation from every physical source and full
+original acceptance remain open; [WORK](../WORK.md#active-continuation--mounted-range-strokes)
+owns the separate source cohorts, retained failures and next integration work.
 
 The alignment continuation adds independent typed logical axes, version12 only
 on actual presence, crafted source output, ordinary Inspector capture and grouped
