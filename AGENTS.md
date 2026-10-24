@@ -2,35 +2,27 @@
 
 ## Authority and task flow
 
-The user authorizes development of the Nyx library and Nyx Studio, including
-changes to implementation, adapters, generators, tests, documentation and the
-prerequisites needed to complete the requested work. Do not ask for file-by-file
-permission to do this work.
+The user authorizes development and modification of the Nyx library and Nyx
+Studio, including existing base classes, specialized interfaces, public APIs,
+adapters, shared infrastructure, generators, tests, documentation and necessary
+prerequisites. These are editable development sources. Changing a library file
+or contract does not require renewed approval. Update affected consumers and
+perform appropriate compatibility and target checks as part of the change.
 
-Develop and change Nyx-owned library code as needed, including existing base
-classes, specialized interfaces, public contracts, adapters and shared
-infrastructure. Update affected consumers, tests and documentation together,
-with appropriate compatibility and target checks. This is ordinary authorized
-implementation work. Do not seek renewed approval because a change touches
-library code or a public API. Prior assignments, source inventories and review
-records do not make any Nyx-owned file immutable or require a workaround in
-place of a necessary library change.
+Implement reusable capabilities in the library and its target adapters. Earlier
+file lists do not confine implementation to Studio, tests or helper units, and
+must not force a workaround when the correct fix belongs in the library.
 
-When a capability belongs in the reusable library, implement it in the library
-and its target adapters. Do not confine necessary changes to Studio, tests or
-helper units because an earlier task listed only those files. Existing classes
-and interfaces are implementation starting points, not fixed boundaries.
+Assignments, source inventories, review records and planned scopes coordinate
+work; they do not make files immutable or establish permission allowlists. Root
+may adjust ownership and include necessary prerequisite files directly. A short
+validation freeze lasts only while actual readers need that source snapshot;
+it does not prevent changing the library after those readers finish.
 
-File assignments, source inventories, review checkpoints and planned task scopes
-coordinate concurrent work; they are not permission allowlists. Root may adjust
-assignments and include necessary prerequisite files without another user
-approval. Temporary ownership and validation freezes end when their actual
-concurrency condition ends. They must not become persistent source restrictions.
-
-Earlier file-scope restrictions and approval gates are superseded by this
-authorization. Historical receipts remain evidence of past work, not instructions
-for new work. Do not recreate these gates in this file, task records or private
-handoff state.
+Earlier file-scope restrictions and approval gates are superseded. Historical
+receipts document past work, not restrictions on new work. Do not recreate such
+gates in instructions, task records or private handoff state, or request
+file-by-file permission for this authorized development.
 
 Start with [PROJECT.md](PROJECT.md), the current task in [TODO](TODO/README.md)
 and the current entry in [WORK.md](WORK.md). Apply [TASKFLOW.MD](TASKFLOW.MD) and
