@@ -1222,6 +1222,16 @@ still delivers its callback once while preserving independent row membership.
 These endpoint routes do not yet implement sustained drag selection or native
 touch admission; those remain separate adapter requirements.
 
+`nyx.collections.range.stroke` supplies the portable pending lifecycle for those
+future adapters. A typed pointer identity and copied original-input facts keep
+mouse, pen and touch releases distinct. `Stage` admits a complete RAW candidate
+and exposes an immutable preview without publishing it. `PrepareRelease` reserves
+the last candidate; its first `Complete` can publish only after unconsumed
+canonical input and exact endpoint focus. Cancellation, capture loss, changed
+source/page or input generation preserve the accepted range. Retained previews
+keep no renderer, mounted entry or live view/store owner alive. This model does
+not establish physical capture authority or install drag handlers by itself.
+
 Current range/command fixtures pass 47/127 checks on both actual targets. Real
 controls pass393 native checks with a complete clean heap and465 browser checks
 at measured1280x900 and390x900, with empty logs. These include exact Unicode/NUL,

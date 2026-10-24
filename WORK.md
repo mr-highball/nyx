@@ -5,9 +5,9 @@
 ## Current collaboration — 2026-10-24
 
 The user requested single-agent operation after Lil' Scooty's pending-stroke
-foundation. That is the helper's final assignment; after its handoff, Root
-continues alone until the user explicitly changes this preference. Do not refill
-the helper queue. Necessary reruns of that same final task remain part of it.
+foundation. That final assignment is handed off with all helper jobs joined;
+Lil' Scooty is idle. Root continues alone until the user explicitly changes this
+preference. Do not refill the helper queue or start another helper.
 
 ## Column arrangement W1 — 2026-10-22
 
@@ -131,6 +131,32 @@ compile with zero owned warnings from2245 fixed inputs; the later capture-fence
 target consumers independently compile both changed renderer implementations.
 Sustained drag/touch integration, full Studio responsiveness/own-export and all
 original acceptance remain open.
+
+The final helper stroke02 handoff qualifies39 portable pending-lifecycle checks
+on native and actual browser, with a clean82801-block native heap and empty
+browser warning/error logs. Unchanged pointer33/commands239 also pass. A private
+old tuple-copy control fails the exact getter-poisoned caller assertion and
+finishes with a clean58086-block heap. All1943 captured inputs and three owned
+sources reverify; all helper jobs are joined. Root's source review expands the
+two new files' abbreviated MIT notices without changing Pascal tokens. Maintained
+workbench checks now include the pointer and pending-stroke consumers. Physical
+drag/capture/move/release and native touch remain unimplemented adapter work.
+Root04 freshly compiles all three consumers for both targets and executes native
+39/33/239 with complete clean heaps and zero owned warnings. All1943 closed inputs
+remain unchanged; its three browser programs are byte-identical to the already
+executed02 artifacts. The first Root03 orchestration was refused before launching
+a compiler because its argument array was malformed; that runner evidence is
+retained separately from the successful corrected04 cohort.
+
+For the open ordinary Studio criterion, the browser title-only diagnostic now
+establishes that construction returns at check63. The next bounded investigation
+marks the first exchange, readiness and accepted-pair inspection boundaries in
+this SAME fixture; stop after locating its next stalled synchronous call, then
+repair that call or retain the concrete frontier. No timeout/reload alone earns
+interaction credit. The earlier failed DOM/console observations and original
+source remain retained. This switches from unproductive repeated observation to
+one decision-producing diagnostic while keeping the native responsiveness and
+full own-export gates unchanged.
 
 ### Earlier checkpoint — native button admission and runtime table presentation
 

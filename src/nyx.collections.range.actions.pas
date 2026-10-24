@@ -86,7 +86,7 @@ function NewNyxCollectionCellRangeSelection: INyxCollectionCellRangeSelection;
 implementation
 
 uses SysUtils, nyx.collections.range.navigation, nyx.collections.range.pointer,
-  nyx.publication;
+  nyx.collections.range.stroke, nyx.publication;
 
 type
   { The concrete intent is private so the selection owner can retire its known
@@ -144,7 +144,8 @@ type
     The selection owner never retains it. Claiming completion before readiness
     prevents consumed/reentrant attempts from installing the original candidate
     later; retained proposal values contain no selection or mounted authority. }
-  TPointerCommand = class(TInterfacedObject, INyxCollectionCellRangePointerCommand)
+  TPointerCommand = class(TInterfacedObject, INyxCollectionCellRangePointerCommand,
+    INyxCollectionCellRangePointerPreview)
   private
     FProposal: INyxCollectionRangePointer;
     FPlan: INyxPreparedPublication;
@@ -156,6 +157,7 @@ type
   public
     destructor Destroy; override;
     function GetProposal: INyxCollectionRangePointer;
+    function GetPreview: INyxCollectionCellRangeCapture;
     function GetCurrent: Boolean;
     function Complete(AAllowDefault: Boolean): Boolean;
     procedure Retire;
@@ -349,6 +351,16 @@ end;
 function TPointerCommand.GetProposal: INyxCollectionRangePointer;
 begin
   Result := FProposal;
+end;
+
+function TPointerCommand.GetPreview: INyxCollectionCellRangeCapture;
+begin
+  Result := nil;
+
+  if GetCurrent and (FObject.FCandidate <> nil) then
+  begin
+    Result := FObject.FCandidate.Capture;
+  end;
 end;
 
 function TPointerCommand.PlanCurrent: Boolean;
