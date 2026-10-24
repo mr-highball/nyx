@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # NEW packet for typed Kanban moves, mounted controls and emitted companions.
   [string]$KanbanEvidenceDirectory = 'build/kanban/maintained',
@@ -81,6 +81,8 @@ param(
   [string]$SelectionInspectorEvidenceDirectory = 'build/selection-inspector/maintained',
   # NEW palette packet; exact SelectionSourceDirectory supplies its MCP seed.
   [string]$ButtonPaletteEvidenceDirectory = 'build/button-palette/maintained',
+  # NEW output for independent button forms and ordinary native Studio history.
+  [string]$ButtonEditorEvidenceDirectory = 'build/button-editor/maintained',
   # Exact MCP-authored task-progress seed and a fresh actual-control packet.
   [string]$ProgressSourceDirectory,
   [string]$ProgressEvidenceDirectory = 'build/progress-activity/maintained',
@@ -404,6 +406,96 @@ if (Test-Path -LiteralPath $nyxLocalConfig) {
   $nyxConfig = Get-Content -LiteralPath $nyxLocalConfig -Raw | ConvertFrom-Json -AsHashtable
 }
 
+function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
+  [int]$TimeoutSeconds, [bool]$TraceHeap) {
+  function Get-ClosedProcessLogHash([string]$Path) {
+    # A killed compiler family can exit before Start-Process's redirected-file
+    # writer releases its sharing handle. Wait only for that bounded teardown,
+    # after the process has joined; never hash a still-writable partial stream.
+    $hashDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    while ($true) {
+      try {
+        return (Get-FileHash -LiteralPath $Path -Algorithm SHA256 -ErrorAction Stop).Hash
+      } catch [System.IO.IOException] {
+        if ([DateTime]::UtcNow -ge $hashDeadline) { throw }
+        Start-Sleep -Milliseconds 50
+      }
+    }
+  }
+  foreach ($argument in $Arguments) {
+    if ($argument -match '[\s"]') { throw 'Reviewed arguments contain no spaces or quotes' }
+  }
+  $stdout = Join-Path $output ($Tag + '-stdout.log')
+  $stderr = Join-Path $output ($Tag + '-stderr.log')
+  $heap = Join-Path $output ($Tag + '-heap.log')
+  foreach ($path in @($stdout,$stderr,$heap)) {
+    if (Test-Path -LiteralPath $path) { throw 'Owned process logs must be fresh' }
+  }
+  $inheritedTrace = [Environment]::GetEnvironmentVariable('HEAPTRC','Process')
+  if ($TraceHeap -and -not [string]::IsNullOrEmpty($inheritedTrace)) {
+    throw 'Native qualification requires no inherited HeapTrc options'
+  }
+  if ($TraceHeap -and (-not [IO.Path]::IsPathFullyQualified($heap) -or
+      $heap -match '[^\x21-\x7E]' -or [Text.Encoding]::ASCII.GetByteCount($heap) -gt 255)) {
+    throw 'Heap path must be absolute ASCII without spaces, at most255bytes'
+  }
+  $start = @{FilePath=$Executable;RedirectStandardOutput=$stdout;
+    RedirectStandardError=$stderr;PassThru=$true;WindowStyle='Hidden';
+    WorkingDirectory=(Get-Location).Path}
+  if ($Arguments.Count -gt 0) { $start.ArgumentList=$Arguments }
+  $started = [DateTime]::UtcNow.ToString('o')
+  try {
+    if ($TraceHeap) { [Environment]::SetEnvironmentVariable('HEAPTRC','log='+$heap,'Process') }
+    $process = Start-Process @start
+  } finally {
+    if ($TraceHeap) { [Environment]::SetEnvironmentVariable('HEAPTRC',$inheritedTrace,'Process') }
+  }
+  # Persist actual launch identity before waiting, including if a later capture
+  # step fails. Root joins this exact reader; a receipt alone is not liveness.
+  $launchPath = Join-Path $output ($Tag + '-launch-private.json')
+  [ordered]@{pid=$process.Id;executable=$Executable;arguments=$Arguments;
+    startedUTC=$started;stdout=$stdout;stderr=$stderr;heap=$heap;
+    traceHeap=$TraceHeap;timeoutSeconds=$TimeoutSeconds} |
+    ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $launchPath -Encoding utf8
+  $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+  $timedOut = $false
+  while (-not $process.WaitForExit(1000)) {
+    if ([DateTime]::UtcNow -ge $deadline) {
+      $timedOut = $true
+      $process.Kill($true)
+      $process.WaitForExit()
+      break
+    }
+  }
+  $process.WaitForExit()
+  $finishedPID = $process.Id
+  $finishedExit = $process.ExitCode
+  $process.Dispose()
+  $result = [ordered]@{pid=$finishedPID;executable=$Executable;
+    executableSHA256=(Get-FileHash -LiteralPath $Executable -Algorithm SHA256).Hash;
+    arguments=$Arguments;exit=$finishedExit;timedOut=$timedOut;
+    timeoutSeconds=$TimeoutSeconds;startedUTC=$started;finishedUTC=[DateTime]::UtcNow.ToString('o');
+    stdout=$stdout;stdoutSHA256=(Get-ClosedProcessLogHash $stdout);
+    stderr=$stderr;stderrSHA256=(Get-ClosedProcessLogHash $stderr);
+    launch=$launchPath;launchSHA256=(Get-FileHash -LiteralPath $launchPath -Algorithm SHA256).Hash}
+  if ($TraceHeap) {
+    $heapText = if (Test-Path -LiteralPath $heap) { [IO.File]::ReadAllText($heap) } else { '' }
+    $allocated = [regex]::Match($heapText,'(?m)^(\d+) memory blocks allocated : (\d+)\s*$')
+    $freed = [regex]::Match($heapText,'(?m)^(\d+) memory blocks freed : (\d+)\s*$')
+    $result.heap=$heap
+    $result.heapSHA256=if(Test-Path -LiteralPath $heap){Get-ClosedProcessLogHash $heap}else{$null}
+    $result.inheritedHEAPTRC=$inheritedTrace
+    $result.restoredHEAPTRC=[Environment]::GetEnvironmentVariable('HEAPTRC','Process')
+    $result.heapComplete=$allocated.Success -and $freed.Success -and
+      $allocated.Groups[1].Value -eq $freed.Groups[1].Value -and
+      $allocated.Groups[2].Value -eq $freed.Groups[2].Value -and
+      $heapText -match '(?m)^0 unfreed memory blocks : 0\s*$' -and
+      $heapText -match '(?m)^True heap size : \d+ \(\d+ used in System startup\)\s*$' -and
+      $heapText -match '(?m)^True free heap : \d+\s*$'
+  }
+  return $result
+}
+
 function Resolve-NyxTool([string]$Explicit, [string]$Key, [string]$Command) {
   $nyxCandidate = $Explicit
 
@@ -619,95 +711,7 @@ try {
     if ($Target -eq 'query-authoring' -and $QueryAuthoringProfile) {
       $nyxWorkbenchFlags += @('-dNYX_STUDIO_PROFILE', '-dNYX_LCL_LAYOUT_PROFILE')
     }
-function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
-  [int]$TimeoutSeconds, [bool]$TraceHeap) {
-  function Get-ClosedProcessLogHash([string]$Path) {
-    # A killed compiler family can exit before Start-Process's redirected-file
-    # writer releases its sharing handle. Wait only for that bounded teardown,
-    # after the process has joined; never hash a still-writable partial stream.
-    $hashDeadline = [DateTime]::UtcNow.AddSeconds(5)
-    while ($true) {
-      try {
-        return (Get-FileHash -LiteralPath $Path -Algorithm SHA256 -ErrorAction Stop).Hash
-      } catch [System.IO.IOException] {
-        if ([DateTime]::UtcNow -ge $hashDeadline) { throw }
-        Start-Sleep -Milliseconds 50
-      }
-    }
-  }
-  foreach ($argument in $Arguments) {
-    if ($argument -match '[\s"]') { throw 'Reviewed arguments contain no spaces or quotes' }
-  }
-  $stdout = Join-Path $output ($Tag + '-stdout.log')
-  $stderr = Join-Path $output ($Tag + '-stderr.log')
-  $heap = Join-Path $output ($Tag + '-heap.log')
-  foreach ($path in @($stdout,$stderr,$heap)) {
-    if (Test-Path -LiteralPath $path) { throw 'Owned process logs must be fresh' }
-  }
-  $inheritedTrace = [Environment]::GetEnvironmentVariable('HEAPTRC','Process')
-  if ($TraceHeap -and -not [string]::IsNullOrEmpty($inheritedTrace)) {
-    throw 'Native qualification requires no inherited HeapTrc options'
-  }
-  if ($TraceHeap -and (-not [IO.Path]::IsPathFullyQualified($heap) -or
-      $heap -match '[^\x21-\x7E]' -or [Text.Encoding]::ASCII.GetByteCount($heap) -gt 255)) {
-    throw 'Heap path must be absolute ASCII without spaces, at most255bytes'
-  }
-  $start = @{FilePath=$Executable;RedirectStandardOutput=$stdout;
-    RedirectStandardError=$stderr;PassThru=$true;WindowStyle='Hidden';
-    WorkingDirectory=(Get-Location).Path}
-  if ($Arguments.Count -gt 0) { $start.ArgumentList=$Arguments }
-  $started = [DateTime]::UtcNow.ToString('o')
-  try {
-    if ($TraceHeap) { [Environment]::SetEnvironmentVariable('HEAPTRC','log='+$heap,'Process') }
-    $process = Start-Process @start
-  } finally {
-    if ($TraceHeap) { [Environment]::SetEnvironmentVariable('HEAPTRC',$inheritedTrace,'Process') }
-  }
-  # Persist actual launch identity before waiting, including if a later capture
-  # step fails. Root joins this exact reader; a receipt alone is not liveness.
-  $launchPath = Join-Path $output ($Tag + '-launch-private.json')
-  [ordered]@{pid=$process.Id;executable=$Executable;arguments=$Arguments;
-    startedUTC=$started;stdout=$stdout;stderr=$stderr;heap=$heap;
-    traceHeap=$TraceHeap;timeoutSeconds=$TimeoutSeconds} |
-    ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $launchPath -Encoding utf8
-  $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
-  $timedOut = $false
-  while (-not $process.WaitForExit(1000)) {
-    if ([DateTime]::UtcNow -ge $deadline) {
-      $timedOut = $true
-      $process.Kill($true)
-      $process.WaitForExit()
-      break
-    }
-  }
-  $process.WaitForExit()
-  $finishedPID = $process.Id
-  $finishedExit = $process.ExitCode
-  $process.Dispose()
-  $result = [ordered]@{pid=$finishedPID;executable=$Executable;
-    executableSHA256=(Get-FileHash -LiteralPath $Executable -Algorithm SHA256).Hash;
-    arguments=$Arguments;exit=$finishedExit;timedOut=$timedOut;
-    timeoutSeconds=$TimeoutSeconds;startedUTC=$started;finishedUTC=[DateTime]::UtcNow.ToString('o');
-    stdout=$stdout;stdoutSHA256=(Get-ClosedProcessLogHash $stdout);
-    stderr=$stderr;stderrSHA256=(Get-ClosedProcessLogHash $stderr);
-    launch=$launchPath;launchSHA256=(Get-FileHash -LiteralPath $launchPath -Algorithm SHA256).Hash}
-  if ($TraceHeap) {
-    $heapText = if (Test-Path -LiteralPath $heap) { [IO.File]::ReadAllText($heap) } else { '' }
-    $allocated = [regex]::Match($heapText,'(?m)^(\d+) memory blocks allocated : (\d+)\s*$')
-    $freed = [regex]::Match($heapText,'(?m)^(\d+) memory blocks freed : (\d+)\s*$')
-    $result.heap=$heap
-    $result.heapSHA256=if(Test-Path -LiteralPath $heap){Get-ClosedProcessLogHash $heap}else{$null}
-    $result.inheritedHEAPTRC=$inheritedTrace
-    $result.restoredHEAPTRC=[Environment]::GetEnvironmentVariable('HEAPTRC','Process')
-    $result.heapComplete=$allocated.Success -and $freed.Success -and
-      $allocated.Groups[1].Value -eq $freed.Groups[1].Value -and
-      $allocated.Groups[2].Value -eq $freed.Groups[2].Value -and
-      $heapText -match '(?m)^0 unfreed memory blocks : 0\s*$' -and
-      $heapText -match '(?m)^True heap size : \d+ \(\d+ used in System startup\)\s*$' -and
-      $heapText -match '(?m)^True free heap : \d+\s*$'
-  }
-  return $result
-}
+
     if ($Target -eq 'query-authoring') {
       $nyxWorkbenchFlags += @('-uPAS2JS')
       # Defines affect owned units throughout the native dependency closure,
@@ -7083,6 +7087,70 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPaletteBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/button-palette.html') -Destination $nyxPaletteBrowser
     Write-Host 'Native palette/source execution passed; browser HTTP execution remains explicit.'
+    exit 0
+  }
+
+  if ($Target -eq 'button-editor') {
+    # Pascal owns exact form admission, actual controls and callback/history
+    # assertions. This seed-independent regression only orchestrates compilers
+    # and native jobs, and stages the matching pure browser fixture.
+    $nyxEditorRoot = [IO.Path]::GetFullPath($ButtonEditorEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxEditorRoot) { throw 'ButtonEditorEvidenceDirectory must be new' }
+    $nyxEditorNative = Join-Path $nyxEditorRoot 'native'
+    $nyxEditorBrowser = Join-Path $nyxEditorRoot 'browser'
+    New-Item -ItemType Directory -Path $nyxEditorNative, $nyxEditorBrowser | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxEditorPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxEditorFlags = @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc',
+      "-Fu$nyxLazarus/lcl/units/$nyxEditorPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxEditorPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxEditorPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxEditorPlatform",
+      "-FU$nyxEditorNative", "-FE$nyxEditorNative")
+    $output = $nyxEditorNative
+    foreach ($nyxEditorProgram in @('nyx_button_configuration_tests', 'nyx_studio_chrome_controls')) {
+      $nyxEditorCompile = RunOwned $nyxLclFpc ($nyxEditorFlags + @("tests/$nyxEditorProgram.lpr")) `
+        ($nyxEditorProgram + '-compiler') 240 $false
+      $nyxEditorCompile | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath `
+        (Join-Path $output ($nyxEditorProgram + '-compiler-private.json')) -Encoding UTF8
+      if ($nyxEditorCompile.exit -ne 0 -or $nyxEditorCompile.timedOut -or
+          ([IO.File]::ReadAllText($nyxEditorCompile.stdout) -match 'Warning:')) {
+        Get-Content -LiteralPath $nyxEditorCompile.stdout -Tail 20
+        throw 'Button editor native compiler failed or warned'
+      }
+      $nyxEditorWidths = if ($nyxEditorProgram -eq 'nyx_studio_chrome_controls') { @(1280,390) } else { @(0) }
+      foreach ($nyxEditorWidth in $nyxEditorWidths) {
+        $nyxEditorArguments = @()
+        if ($nyxEditorWidth -gt 0) {
+          $nyxEditorArguments = @((Join-Path $nyxEditorRoot ("project-$nyxEditorWidth")),
+            [string]$nyxEditorWidth, (Join-Path $nyxEditorRoot ("capture-$nyxEditorWidth")))
+        }
+        $nyxEditorTag = $nyxEditorProgram + '-' + $nyxEditorWidth
+        $nyxEditorRun = RunOwned (Join-Path $nyxEditorNative ($nyxEditorProgram + '.exe')) `
+          $nyxEditorArguments $nyxEditorTag 240 $true
+        $nyxEditorRun | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath `
+          (Join-Path $output ($nyxEditorTag + '-private.json')) -Encoding UTF8
+        Get-Content -LiteralPath $nyxEditorRun.stdout -Tail 2
+        if ($nyxEditorRun.exit -ne 0 -or $nyxEditorRun.timedOut -or
+            -not $nyxEditorRun.heapComplete -or
+            ([IO.File]::ReadAllText($nyxEditorRun.stdout) -notmatch '(?m)^PASS ')) {
+          throw 'Button editor native regression failed or lacks a complete clean heap'
+        }
+      }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', '-Fisrc', "-FE$nyxEditorBrowser", 'tests/nyx_button_configuration_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxEditorBrowser 'rtl.js')
+    $nyxEditorHTML = [IO.File]::ReadAllText((Join-Path $nyxRoot 'studio/web/text-lookup.html'))
+    $nyxEditorHTML = $nyxEditorHTML.Replace('nyx_text_lookup_tests.js', 'nyx_button_configuration_tests.js')
+    $nyxEditorHTML = $nyxEditorHTML.Replace('Exact text lookup', 'Button editor admission')
+    [IO.File]::WriteAllText((Join-Path $nyxEditorBrowser 'button-editor.html'), $nyxEditorHTML,
+      [Text.UTF8Encoding]::new($false))
+    Write-Host 'Button editor native checks/history pass; browser execution remains unqualified until run over HTTP.'
     exit 0
   }
 

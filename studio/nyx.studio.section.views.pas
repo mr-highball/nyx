@@ -167,7 +167,7 @@ implementation
 uses
   nyx.text.index, nyx.data, nyx.publication, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.inspector.groups, nyx.reusable.editor,
-  nyx.parts.editor,
+  nyx.parts.editor, nyx.button.editor,
   nyx.studio.resize, nyx.studio.move, nyx.studio.collections;
 
 type
@@ -906,6 +906,13 @@ var
       in the SAME event-fenced publication as the other forms; strict instance,
       path/action and membership checks still force replacement when needed. }
     Add(NyxStudioPartsEditorID, [NyxExtension(NyxPartsEditorBaselineKey)]);
+    { Button style captures both the authored/effective baseline and accepted
+      presentation, including localized image references. Advance them together
+      in their own scope; owner, marker and undeclared metadata remain strict.
+      Apply/history reset this form's defaults and fence old event work while
+      unrelated Inspector fields retain their independent unfinished drafts. }
+    Add('inspector-button', [NyxExtension(NyxButtonEditorBaselineKey),
+      NyxExtension(NyxButtonEditorValueKey)]);
     Add('inspector-viewport-rule', [NyxExtension(NyxStudioPropertyOwnerKey)]);
     { Geometry commands carry the selected owner even when they contain no
       editable value. Their event authority must advance in the same group as

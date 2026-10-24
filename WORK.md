@@ -13,12 +13,12 @@ preference. Do not refill the helper queue or start another helper.
 
 ### Active prerequisite — native Inspector responsiveness
 
-The preceding goal turn made product progress: guarded pointer endpoints and
-the pending-stroke foundation are committed, and actual focused Studio input
-passes on both targets/widths with four exact accepted project packets. Original
-task03 criteria6/7 still require complete ordinary Studio and its own exported
-application. This batch targets native replacement cost before repeating that
-unchanged900s journey.
+The current batch repairs unnecessary button-style Inspector replacement through
+Apply and paired history. It serves shared Studio authoring/performance; original
+table task03 criteria6/7 remain open. Complete native desktop/compact authoring
+and its own exported application now have the separate functional evidence
+below, while full instrumented Studio and current browser execution still need
+qualification. Do not repeat an unchanged900s journey without a relevant repair.
 
 The compact focused profile attributes230s of its443s shell-render time to35
 replacement preparations, averaging6.57s; static document splitting is only2.1s
@@ -91,6 +91,37 @@ compiler outputs. No product compiler failure is hidden. This experiment earns
 no completion credit or full-editor responsiveness claim. Next inspect actual
 native synchronization/control churn; do not repeat the unchanged900s editor
 run without a concrete repair.
+
+The native-sync01 diagnostic runs the existing actual Studio chrome journey:
+48 checks pass in50.0s, without heap instrumentation, using a private renderer
+overlay that only separates existing Sync timing categories. Across that journey
+metadata totals138ms, glyphs916ms, literal items1671ms and layout4707ms; collection
+HandleNeeded spans8391ms inclusively across surrounding native trees. It also
+exposes three refused retained Inspector refreshes during button style/history.
+The button form's existing baseline AND captured accepted value were omitted
+from Studio's declared independent contexts. The current repair exports those
+two existing wires and declares exactly them for that form. Owner/marker/unknown
+metadata remain strict. New pure checks cover typed recapture and every input
+reset; the SAME mounted chrome fixture asserts physical/router retention and
+old callback-scope retirement through Apply/Undo/Redo. Old Studio fails that
+exact assertion after39 checks with a complete clean heap. The repaired journey
+passes57 native checks at1280 and61 at390, with complete clean10767208- and
+8156008-block heaps. The pure button suite passes95 natively with a clean heap;
+its browser companion compiles. Actual native/browser Studio products compile
+with zero owned warnings. Native captures retain usable compact controls; this
+is emulated native allocation, not phone or assistive-input qualification.
+The scoped change eliminates three style/history Inspector replacements in this
+journey; it supplies no full-table journey latency or browser-runtime claim.
+The maintained seed-independent `button-editor` target now stages that browser
+fixture and executes the native pure and two-width Studio checks. Its initial
+runner failed before compiler launch because RunOwned was initialized only by
+the query target; its identical body now resides with shared build helpers.
+The complete maintained02 rerun passes the same95/57/61 checks with complete
+clean heaps and stages the matching browser fixture. All2317 closed inputs,
+503 positive-Studio files and2316 working build inputs reverify unchanged;
+the moved process helper body is exact. The build target's initial method-chain
+line-break parse error was fixed before execution and remains noted separately
+from product behavior. Original criteria remain open.
 
 Browser Parts/forms/publication/full Studio, matching worker and own application
 are compiled and staged. Automatic approval review rejects starting the

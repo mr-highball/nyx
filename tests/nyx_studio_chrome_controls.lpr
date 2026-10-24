@@ -9,7 +9,7 @@ uses Interfaces, Classes, SysUtils, Forms, Controls, Graphics, StdCtrls,
   nyx.codec, nyx.codegen, nyx.design.tokens, nyx.studio.projects,
   nyx.studio.lcl, nyx.studio.view, nyx.studio.glyphs, nyx.studio.chrome,
   nyx.studio.session, nyx.studio.commands, nyx.schema, nyx.resources,
-  nyx.disclosure, nyx.studio.presentation;
+  nyx.disclosure, nyx.studio.presentation, nyx.behavior, nyx.events, nyx.scheduler;
 
 type
   { Invoke the existing native widget entry point, never a Studio mutation.
@@ -239,6 +239,31 @@ var
   LFace: TNyxButtonPresentation;
   LAssets: TNyxNode;
   LAssetHeader: TNyxText;
+  LStyleEvents: INyxEvents;
+  LStyleScope: INyxCancellationScope;
+  LStyleInput: TControl;
+
+  { Keep the old router alive so address reuse cannot fake retention. The
+    borrowed input is compared only with a fresh current-owner lookup; its old
+    event generation must retire even though the physical field survives. }
+  procedure CaptureStyleContinuity;
+  begin
+    LStyleEvents := GStudio.ShellView.ViewFor('inspector-button').Events;
+    LStyleScope := NyxEventGeneration(LStyleEvents);
+    LStyleInput := GStudio.ShellView.InputFor(
+      NyxButtonEditorFieldID('inspector-button', befDensity));
+    Check((LStyleEvents <> nil) and (LStyleScope <> nil) and (LStyleInput <> nil),
+      'Capture the actual button-style router, generation and physical input');
+  end;
+
+  procedure CheckStyleContinuity;
+  begin
+    Check((GStudio.ShellView.ViewFor('inspector-button').Events = LStyleEvents) and
+      (GStudio.ShellView.InputFor(NyxButtonEditorFieldID('inspector-button', befDensity)) =
+        LStyleInput), 'Button style admission retains the SAME Inspector router and input');
+    Check(LStyleScope.Cancelled,
+      'Retained button-style fields retire their old action generation');
+  end;
 begin
   LDocument := TNyxDocument.Create;
   try
@@ -318,7 +343,9 @@ begin
   Check(LField is TComboBox, 'Density uses a closed choice control');
   TComboBox(LField).ItemIndex := TComboBox(LField).Items.IndexOf('Touch');
   TComboBox(LField).OnChange(LField);
+  CaptureStyleContinuity;
   Click('inspector-button-apply');
+  CheckStyleContinuity;
   LButton := GStudio.Session.Document.Find('project-button');
   LFace := NyxButtonPresentationOf(LButton);
   Check(LFace.ControlDensity = nbdTouch, 'Apply changes the selected button through the paired source queue');
@@ -326,10 +353,14 @@ begin
     'Generated presentation remains typed Pascal');
   Check(GStudio.ProjectSnapshot.Design <> LBefore, 'One accepted style command changes design');
   Check(NyxStudioGlyphAtlas.ToWire = LAtlasBefore, 'Style edits preserve shared original image bytes');
+  CaptureStyleContinuity;
   Click('action-undo');
+  CheckStyleContinuity;
   Check((GStudio.ProjectSnapshot.Design = LBefore) and
     (GStudio.ProjectSnapshot.Source = LSourceBefore), 'One Undo restores the exact design/source pair');
+  CaptureStyleContinuity;
   Click('action-redo');
+  CheckStyleContinuity;
   Check(NyxButtonPresentationOf(GStudio.Session.Document.Find('project-button')).ControlDensity = nbdTouch,
     'Redo restores the same typed style');
   Capture(ParamStr(3) + '-inspector.png');

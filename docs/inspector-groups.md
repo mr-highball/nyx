@@ -40,6 +40,24 @@ inspector tree without caching mutable document facts or changing authored
 visibility. Allocation receipts from checked fixtures are diagnostic evidence;
 they do not establish production latency, frame budgets or complete performance.
 
+Button style uses an independent retained form inside Component options. Its
+copied baseline and accepted presentation advance together, so Apply and paired
+Undo/Redo can refresh its values while preserving the physical inputs. The
+publication retires the old callback generation before the fresh context becomes
+active. Other forms keep independent unfinished drafts. Custom hosts composing
+the public [button editor](../src/nyx.button.editor.pas) can declare
+`NyxButtonEditorBaselineKey` and `NyxButtonEditorValueKey` together through
+`TNyxProjectionFormContext` and the renderer's grouped form publication. Changing
+the owner, form structure or undeclared creator metadata still requires a fresh
+view; retaining controls grants no stale action authority.
+
+Run `tools/build.ps1 -Target button-editor` with the configured FPC/Lazarus and
+pas2js toolchains to check the public form and ordinary native Studio history at
+desktop and compact allocations. `-ButtonEditorEvidenceDirectory` selects a new
+output directory. The command retains checked native process/heap evidence and
+stages the pure browser fixture; executing that fixture over HTTP remains a
+separate check.
+
 Qualification covers exact migration/copy ownership, actual browser/LCL headers,
 collapsed shell refresh, retained form drafts and unchanged paired history.
 The ordinary browser controller additionally preserves an unfinished Pascal

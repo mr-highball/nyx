@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The shared button-style form repair now preserves actual Inspector controls and
+event-router identity through Apply/Undo/Redo, while retiring old callbacks.
+Its strict owner/unknown-metadata boundaries, native57/61 and pure95 checks,
+clean heaps and product compilation are recorded in [WORK](../WORK.md#active-prerequisite--native-inspector-responsiveness).
+The maintained `button-editor` regression repeats the same checks with clean
+heaps and stages its browser fixture. This is a scoped authoring fix;
+full Studio latency, browser execution and every original criterion remain open.
+
 The presented-source guard now qualifies locally: unchanged full native Studio
 PASS107 includes reload/stale-command/disposal; unchanged source-input PASS38/38
 preserves typing/IME/history/modal behavior at both host allocations. Current

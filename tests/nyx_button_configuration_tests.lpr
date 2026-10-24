@@ -27,7 +27,7 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.data, nyx.bytes,
   nyx.images, nyx.resources, nyx.resource.sources,
   nyx.button.presentation, nyx.button.configuration,
-  nyx.button.view,
+  nyx.button.view, nyx.button.editor, nyx.projection.refresh,
   nyx.responsive, nyx.presentations, nyx.containers, nyx.composition, nyx.contract,
   nyx.codec, nyx.codegen, nyx.source, nyx.schema, nyx.event.payload, nyx.platform
   {$ifdef PAS2JS}, Web{$endif};
@@ -641,6 +641,117 @@ begin
   end;
 end;
 
+{ Editor chrome borrows application nodes only while copying its admission
+  context. Each host owns its own form; none retains the application document. }
+function ButtonContextHost(AApplication: TNyxDocument;
+  const AOwnerID: TNyxText): TNyxDocument;
+var
+  LPage: INyxPage;
+begin
+  Result := TNyxDocument.Create;
+  try
+    LPage := NewNyxPage('button-context-host');
+    Result.AddPage(LPage);
+    LPage.Add(NewNyxButtonEditor('button-context-form', AApplication.Find(AOwnerID),
+      AApplication.Find(AOwnerID)));
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+{ Both copied context wires advance together. Ordinary scalar admission stays
+  strict, all editable defaults reset, and a different owner or undeclared
+  creator rule must still refuse without changing the accepted form. }
+procedure EditorContextCases;
+var
+  LApplication: TNyxDocument;
+  LUpdated: TNyxDocument;
+  LBefore: TNyxDocument;
+  LAfter: TNyxDocument;
+  LOther: TNyxDocument;
+  LPage: INyxPage;
+  LExisting: TNyxNode;
+  LCandidate: TNyxNode;
+  LWrong: TNyxNode;
+  LBaseline: TNyxNode;
+  LForms: TNyxProjectionFormContexts;
+  LRestores: TNyxProjectionValueRestores;
+  LChanged: Boolean;
+  LSnapshot: TNyxText;
+  LOwner: TNyxText;
+  LCapturedBaseline: TNyxText;
+  LValue: TNyxButtonPresentation;
+begin
+  LApplication := TNyxDocument.Create;
+  LUpdated := nil;
+  LBefore := nil;
+  LAfter := nil;
+  LOther := nil;
+  LExisting := nil;
+  LCandidate := nil;
+  LWrong := nil;
+  LBaseline := nil;
+  try
+    LPage := NewNyxPage('home');
+    LPage.Add(NewNyxButton('first-button').WithText('First'));
+    LPage.Add(NewNyxButton('other-button').WithText('Other'));
+    LApplication.AddPage(LPage);
+    LUpdated := LApplication.Clone;
+    LUpdated.Find('first-button').Configure.ButtonPresentation(
+      NyxButtonPresentation.Density(nbdTouch)).Done;
+    LBefore := ButtonContextHost(LApplication, 'first-button');
+    LAfter := ButtonContextHost(LUpdated, 'first-button');
+    LOther := ButtonContextHost(LUpdated, 'other-button');
+    LExisting := RealizeNyxView(LBefore, LBefore.Find('button-context-form'));
+    LCandidate := RealizeNyxView(LAfter, LAfter.Find('button-context-form'));
+    LWrong := RealizeNyxView(LOther, LOther.Find('button-context-form'));
+    LSnapshot := TNyxCodec.NodeSnapshot(LExisting).ToJSON;
+    SetLength(LForms, 1);
+    LForms[0] := TNyxProjectionFormContext.ForForm('button-context-form',
+      'button-context-form', [NyxExtension(NyxButtonEditorBaselineKey),
+        NyxExtension(NyxButtonEditorValueKey)]);
+    Check((LExisting.Prop(NyxButtonEditorBaselineKey) <>
+      LCandidate.Prop(NyxButtonEditorBaselineKey)) and
+      (LExisting.Prop(NyxButtonEditorValueKey) <> LCandidate.Prop(NyxButtonEditorValueKey)),
+      'A changed presentation advances both copied button context wires');
+    Check(not CanRefreshNyxProjection(LExisting, LCandidate) and
+      CanRefreshNyxFormProjection(LExisting, LCandidate, LForms),
+      'Only the explicitly declared button form context admits this refresh');
+    Check(PrepareNyxProjectionFormRestores(LExisting, LCandidate, LForms,
+      LRestores, LChanged) and LChanged and
+      (Length(LRestores) = Ord(High(TNyxButtonEditorField)) + 1),
+      'The changed button form restores every editable default as one group');
+    Check(not CanRefreshNyxFormProjection(LExisting, LWrong, LForms) and
+      (TNyxCodec.NodeSnapshot(LExisting).ToJSON = LSnapshot),
+      'A different selected owner refuses without touching the old form');
+    FreeAndNil(LWrong);
+    LWrong := LCandidate.Clone;
+    LWrong.Configure.Extension('creator.button.rule', 'changed').Done;
+    Check(not CanRefreshNyxFormProjection(LExisting, LWrong, LForms),
+      'Undeclared creator metadata remains strict');
+    LBaseline := LExisting.Clone;
+    Check(RefreshNyxFormProjectionProperties(LExisting, LCandidate, LBaseline,
+      LForms, LRestores), 'The admitted form applies both context wires and fresh defaults');
+    Check(CaptureNyxButtonEditor(LExisting.Find('button-context-form-apply'),
+      LExisting, LOwner, LCapturedBaseline, LValue) and
+      (LOwner = 'first-button') and
+      (LCapturedBaseline = LCandidate.Prop(NyxButtonEditorBaselineKey)) and
+      (LValue.ControlDensity = nbdTouch),
+      'The retained Apply captures the current baseline and typed presentation');
+  finally
+    LBaseline.Free;
+    LWrong.Free;
+    LCandidate.Free;
+    LExisting.Free;
+    LOther.Free;
+    LAfter.Free;
+    LBefore.Free;
+    LUpdated.Free;
+    LApplication.Free;
+  end;
+end;
+
 begin
   try
     ScopeAndOrderCases;
@@ -652,6 +763,7 @@ begin
     GrammarAndEventCases;
     RealizedAdmissionCases;
     EffectivePresentationCases;
+    EditorContextCases;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-button-configuration', 'passed');
     document.body.setAttribute('data-checks', IntToStr(GChecks));

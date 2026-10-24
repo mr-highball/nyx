@@ -7,6 +7,15 @@ interface
 
 uses nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.button.presentation;
 
+const
+  { These two existing wires form the editor's copied admission context. Hosts
+    may refresh them together in this form's independent, event-fenced scope.
+    Owner, marker and arbitrary creator metadata remain strict identities. }
+  NyxButtonEditorBaselineKey = 'button-editor-baseline';
+  { The complete accepted presentation preserves localized resource choices
+    during Capture. It must advance with the baseline, never as an input draft. }
+  NyxButtonEditorValueKey = 'button-editor-value';
+
 type
   { Ordinary form roles. Behavior is decoded into closed presentation enums;
     only image locations and resource identities remain open caller data. }
@@ -48,8 +57,8 @@ const
   CMarker = 'nyx.button-editor';
   CMarkerKey = 'button-editor';
   COwnerKey = 'button-editor-owner';
-  CBaselineKey = 'button-editor-baseline';
-  CValueKey = 'button-editor-value';
+  CBaselineKey = NyxButtonEditorBaselineKey;
+  CValueKey = NyxButtonEditorValueKey;
   CKeys: array[TNyxButtonEditorField] of TNyxText =
     ('image', 'resource', 'content', 'density', 'alignment', 'weight', 'tone',
       'size', 'gap', 'columns', 'rows', 'column', 'row');
