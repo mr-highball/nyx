@@ -25,7 +25,7 @@ program nyx_resource_import_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, nyx.text, nyx.data, nyx.bytes, nyx.resources,
-  nyx.resource.sources, nyx.studio.glyphs
+  nyx.resource.sources, nyx.resource.context, nyx.studio.glyphs
   {$ifdef PAS2JS}, Web{$endif};
 
 const
@@ -480,6 +480,92 @@ begin
     'mutating a caller snapshot cannot change another shell or startup glyph catalog');
 end;
 
+{ Runtime contexts may share privately admitted immutable definitions, while
+  every exported catalog keeps independent mutable membership. A foreign Clone
+  cannot certify admission; its exact wire still controls the captured result. }
+procedure RuntimeContextAdmission;
+var
+  LSource: INyxResources;
+  LSnapshot: INyxResources;
+  LAnother: INyxResources;
+  LContext: INyxResourceContext;
+  LPeer: INyxResourceContext;
+  LDefinition: INyxResourceDefinition;
+  LForeign: TSuppliedCatalog;
+  LForeignLease: INyxResources;
+  LBacking: INyxResources;
+  LRejectedContext: INyxResourceContext;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+begin
+  LSource := NyxStudioGlyphResources;
+  LSource.Define(NyxResourceRef(CNotesName), NyxTextResource(CAcceptedText));
+  LSource.Define(NyxResourceRef(CNotesName), NyxLocale('en-US'),
+    NyxTextResource('English 🌙'));
+  LBefore := LSource.ToData.ToJSON;
+  LDefinition := LSource.Definition(NyxStudioGlyphResource, NyxDefaultLocale);
+  LContext := NewNyxResourceContext(LSource, NyxLocale('en-US'), NyxLocale('en'));
+  LSnapshot := LContext.Snapshot;
+  Check(LSnapshot.Definition(NyxStudioGlyphResource, NyxDefaultLocale) = LDefinition,
+    'runtime capture shares the already admitted immutable atlas definition');
+  Check((LSnapshot.ToData.ToJSON = LBefore) and
+    (LContext.Locale.Name = 'en-US') and (LContext.Fallback.Name = 'en'),
+    'runtime capture retains exact catalog wire and independent locale choices');
+  LPeer := NewNyxResourceContext(LSource, NyxDefaultLocale, NyxDefaultLocale);
+  LSource.Remove(NyxStudioGlyphResource, NyxDefaultLocale);
+  LSource.Define(NyxResourceRef(CNotesName), NyxTextResource('Changed source'));
+  LSnapshot.Remove(NyxResourceRef(CNotesName), NyxDefaultLocale);
+  LSnapshot.Define(NyxResourceRef('snapshot-only'), NyxTextResource('Independent'));
+  LAnother := LContext.Snapshot;
+  Check((LAnother.ToData.ToJSON = LBefore) and
+    (LPeer.Snapshot.ToData.ToJSON = LBefore),
+    'source/export membership edits cannot change either captured runtime');
+  Check(LAnother.Definition(NyxResourceRef(CNotesName), NyxDefaultLocale).Text =
+    CAcceptedText, 'captured text retains supplementary Unicode and embedded NUL');
+  Check(LAnother.Definition(NyxStudioGlyphResource, NyxDefaultLocale).Image.ToWire =
+    NyxStudioGlyphAtlas.ToWire, 'captured immutable image retains its exact bytes');
+  LBacking := NewNyxResources.Define(NyxResourceRef('foreign'),
+    NyxTextResource(CForeignText));
+  LForeign := TSuppliedCatalog.Create(LBacking);
+  LForeignLease := LForeign;
+  LBefore := LBacking.ToData.ToJSON;
+  LContext := NewNyxResourceContext(LForeignLease, NyxDefaultLocale, NyxDefaultLocale);
+  Check((LForeign.WireReads = 1) and (LContext.Snapshot.ToData.ToJSON = LBefore),
+    'foreign runtime source crosses the strict wire boundary exactly once');
+  LForeign.Supply(NewNyxResources.Define(NyxResourceRef('foreign'),
+    NyxTextResource('Changed wire')).ToData);
+  LBacking.Define(NyxResourceRef('foreign'), NyxTextResource('Changed backing'));
+  Check(LContext.Snapshot.ToData.ToJSON = LBefore,
+    'lying foreign Clone and later membership/wire edits cannot change a runtime');
+  LForeign.Supply(NyxObject([NyxField('version', NyxData(99)),
+    NyxField('entries', NyxArray([]))]));
+  LRejected := False;
+  try
+    LRejectedContext := NewNyxResourceContext(LForeignLease,
+      NyxDefaultLocale, NyxDefaultLocale);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LRejectedContext = nil) and
+    (LContext.Snapshot.ToData.ToJSON = LBefore),
+    'invalid foreign runtime wire refuses without a context or prior mutation');
+  LRejected := False;
+  try
+    LRejectedContext := NewNyxResourceContext(nil, NyxDefaultLocale, NyxDefaultLocale);
+  except
+    on ENyxResource do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LRejectedContext = nil), 'nil runtime resources still refuse');
+  LContext := NewNyxResourceContext(NewNyxResources, NyxDefaultLocale, NyxDefaultLocale);
+  Check(LContext.Snapshot.Count = 0, 'an independently owned empty runtime catalog stays valid');
+end;
+
 {$ifndef PAS2JS}
 { Optional diagnostic of the exact former shell operation versus catalog import.
   It times public asset admission only; no ratio is an editor latency claim and
@@ -529,6 +615,7 @@ begin
     ReentrantReceiverLease;
     CapacityAndRollback;
     StudioGlyphComposition;
+    RuntimeContextAdmission;
     {$ifndef PAS2JS}
 
     if (ParamCount = 1) and (ParamStr(1) = '--glyph-costs') then

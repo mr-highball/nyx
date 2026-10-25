@@ -21,12 +21,27 @@ type
     Error: String;
     procedure Failed(ASender: TObject; AException: Exception);
   end;
+  {$ifdef NYX_CHROME_LATENCY}
+  { Copied command intervals retain no control or Studio owner. Reveal,
+    synchronous dispatch and deferred settling are consecutive elapsed times,
+    not nested sums. The fixture emits them only after its complete journey. }
+  TCommandLatency = record
+    ID: TNyxText;
+    RevealMilliseconds: QWord;
+    DispatchMilliseconds: QWord;
+    SettleMilliseconds: QWord;
+  end;
+  {$endif}
 
 var
   GForm: TForm;
   GStudio: TNyxNativeStudio;
   GFailure: TFailureObserver;
   GChecks: Integer;
+  {$ifdef NYX_CHROME_LATENCY}
+  GLatencies: array[0..31] of TCommandLatency;
+  GLatencyCount: Integer;
+  {$endif}
 
 procedure TFailureObserver.Failed(ASender: TObject; AException: Exception);
 begin
@@ -72,14 +87,57 @@ end;
 procedure Click(const AID: TNyxText);
 var
   LFace: TControl;
+  {$ifdef NYX_CHROME_LATENCY}
+  LStarted: QWord;
+  LRevealed: QWord;
+  LDispatched: QWord;
+  {$endif}
 begin
   LFace := GStudio.ShellView.ControlFor(AID);
   Check(LFace <> nil, 'A command is mounted: ' + AID);
+  {$ifdef NYX_CHROME_LATENCY}
+  LStarted := GetTickCount64;
+  {$endif}
   GStudio.ShellView.ViewFor(AID).Reveal(AID, niRuntime);
   Check(LFace.IsVisible and LFace.Enabled, 'A command remains usable: ' + AID);
+  {$ifdef NYX_CHROME_LATENCY}
+  LRevealed := GetTickCount64;
+  {$endif}
   TControlAccess(LFace).Click;
+  {$ifdef NYX_CHROME_LATENCY}
+  LDispatched := GetTickCount64;
+  {$endif}
   AwaitChanges;
+  {$ifdef NYX_CHROME_LATENCY}
+
+  if GLatencyCount >= Length(GLatencies) then
+  begin
+    raise Exception.Create('The bounded native command timing vector is full');
+  end;
+  GLatencies[GLatencyCount].ID := AID;
+  GLatencies[GLatencyCount].RevealMilliseconds := LRevealed - LStarted;
+  GLatencies[GLatencyCount].DispatchMilliseconds := LDispatched - LRevealed;
+  GLatencies[GLatencyCount].SettleMilliseconds := GetTickCount64 - LDispatched;
+  Inc(GLatencyCount);
+  {$endif}
 end;
+
+{$ifdef NYX_CHROME_LATENCY}
+{ Output cannot block a measured command: all command intervals are closed
+  before this fixture-only report. No production profiler is enabled. }
+procedure PrintLatencies;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to GLatencyCount - 1 do
+  begin
+    WriteLn('LATENCY,', GLatencies[LIndex].ID, ',',
+      GLatencies[LIndex].RevealMilliseconds, ',',
+      GLatencies[LIndex].DispatchMilliseconds, ',',
+      GLatencies[LIndex].SettleMilliseconds);
+  end;
+end;
+{$endif}
 
 procedure Capture(const APath: String);
 var
@@ -383,6 +441,9 @@ begin
     GuardedStyleCases;
     GStudio := TNyxNativeStudio.Create(GForm, ParamStr(1));
     Journey;
+    {$ifdef NYX_CHROME_LATENCY}
+    PrintLatencies;
+    {$endif}
     WriteLn('PASS ', GChecks, ' native Studio chrome checks at ', GForm.ClientWidth);
   except
     on E: Exception do

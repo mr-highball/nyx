@@ -18,6 +18,14 @@ inside painting. `TNyxLCLButton.PaintBufferStats` copies UI-thread diagnostics;
 it grants no window or control lifetime lease. This is native adapter behavior,
 independent of a design's output selection.
 
+Runtime resource contexts reuse already admitted immutable asset definitions,
+with independent catalog membership. This avoids decoding Studio's embedded
+glyph atlas again during view synchronization. Foreign catalog implementations
+still cross strict wire admission; this changes neither their trust boundary nor
+the resource frame's ownership. Focused command timings show lower native refresh
+cost, while compact Inspector presentation still has several seconds of deferred
+work on the recorded host. Full editor responsiveness remains an open outcome.
+
 ```powershell
 ./tools/build.ps1 -Target native-studio
 ./build/native-studio/controller/nyx_studio_native.exe

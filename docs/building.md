@@ -929,6 +929,12 @@ counts. Pair `-dNYX_LCL_LAYOUT_PROFILE` when diagnosing measurement traversal.
 Source command couriers additionally report worker preparation, UI admission and
 notification separately. Worker timings are copied values; output stays on the
 UI receiver, with no shared source-profile clock or authored payloads.
+The focused `nyx_studio_chrome_controls` fixture separately supports
+`-dNYX_CHROME_LATENCY`: it records consecutive reveal, synchronous command dispatch
+and deferred-settle intervals in milliseconds, then prints its bounded vector
+after the complete journey. Disable both phase profilers for this comparison so
+stdout cannot block inside a measured command. These native command timings do
+not measure physical input or compositor/display completion.
 Keep release (`-O2 -Xs`, without `-gl -gh`) and heap-traced checked timings in
 separate evidence; retain assertions and range/overflow checks in both.
 Ordinary builds contain no profiling clocks or output. The compiled

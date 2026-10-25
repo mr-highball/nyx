@@ -137,6 +137,12 @@ and methods unchanged; a destination without it refuses explicitly. Callers
 coordinate this synchronous mutation with catalog readers as they do for Define.
 Studio uses independent snapshots of its startup glyph catalog through this
 same public contract, avoiding atlas re-admission on each shell composition.
+Runtime context construction also uses this admission boundary. A built-in
+catalog's already admitted definitions remain shared instead of parsing JSON and
+decoding embedded image bytes again during view synchronization. Catalog entries
+and locale choices remain independently owned; source or exported-snapshot edits
+cannot change the captured frame. Foreign catalogs still cross strict wire
+admission once, even if their own `Clone` claims to provide a snapshot.
 
 Text retains Unicode scalars, NUL and line endings. JSON preserves original file
 bytes and decimal spelling; read `.AsDecimal.Text` for exact numeric tokens.

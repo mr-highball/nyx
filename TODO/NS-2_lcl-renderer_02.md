@@ -124,3 +124,16 @@ WORK owns source identities, diagnostic limits and the discarded painting trials
   and compact Inspector redraws are inspected. Original display, whole-editor,
   full lifetime, application and broader platform requirements remain open;
   neither this task nor workbench03 is moved to DONE.
+- Ordinary Studio commands now have a fixture-only bounded timing vector emitted
+  after the journey, with both phase profilers disabled. Stack sampling identifies
+  repeated resource JSON/image admission during refresh. Runtime contexts now use
+  the existing atomic catalog import: independent mutable membership, shared
+  privately admitted immutable definitions, strict foreign wire normalization.
+  The final checked/O2/heap-traced journeys retain all 57/61 assertions at 1280/390
+  with clean heaps. In one matched pair, compact Inspector deferred settling falls
+  from 6,860 to 5,203 ms and compact Undo/Redo from 1,078/1,015 to 609/609 ms.
+  Resource import/foundation fixtures pass 42/70 with clean heaps; both browser
+  consumers compile only. A separate no-heap-tracing checked profile retains the
+  same Studio assertions and still observes 4,735 ms Inspector settling. WORK
+  retains all intervals, the old-constructor negative control and remaining costs;
+  this bounded improvement does not accept whole-editor or browser responsiveness.

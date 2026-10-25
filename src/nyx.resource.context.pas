@@ -67,6 +67,9 @@ function NewNyxResourceContext(const AResources: INyxResources;
 implementation
 
 type
+  { Owns independent catalog membership and locale values. Atomic import shares
+    only privately admitted immutable entries; a foreign catalog still crosses
+    strict wire admission. Exported snapshots never expose this owned catalog. }
   TResourceContext = class(TInterfacedObject, INyxResourceContext)
   private
     FResources: INyxResources;
@@ -82,6 +85,8 @@ type
 
 constructor TResourceContext.Create(const AResources: INyxResources;
   const ALocale, AFallback: TNyxLocaleRef);
+var
+  LResources: INyxResources;
 begin
   inherited Create;
 
@@ -89,7 +94,14 @@ begin
   begin
     raise ENyxResource.Create('A runtime resource context requires a catalog');
   end;
-  FResources := NyxResourcesFromData(AResources.ToData);
+  { Reuse the catalog's existing admission boundary. Round-tripping an already
+    admitted catalog through JSON decodes embedded images again on every view
+    synchronization. Import copies membership and shares its immutable entries;
+    alternative implementations retain strict ToData admission. Prepare locally
+    before publishing fields so refusal leaves no partial context. }
+  LResources := NewNyxResources;
+  NyxResourceCatalogImport(LResources).Import(AResources);
+  FResources := LResources;
   FLocale := ALocale;
   FFallback := AFallback;
 end;

@@ -9,7 +9,75 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — bounded native button painting — 2026-10-25
+## Current checkpoint — avoid repeated runtime asset admission — 2026-10-25
+
+The preceding turn is PROGRESS: f85843b limits native button paint buffers and
+is remote-verified. Root continues alone under
+[geometry02](TODO/NS-2_lcl-renderer_02.md), serving workbench03's ordinary native
+authoring responsiveness without changing either task's original criteria.
+
+The ordinary chrome fixture now optionally records consecutive reveal, command
+dispatch and deferred-settle intervals, printing only after its complete journey.
+Both production phase profilers are disabled. A matched checked/O2/heap-traced
+baseline retains all 57/61 assertions at 1280/390. A separate private sampler of
+the same compact Inspector command observes resource JSON/image admission among
+native creation, realization and traversal work; it is diagnostic, not a timing
+comparison or exclusive attribution. Its own UI-thread sampler is joined before
+exit and retains all 61 checks with a clean heap.
+
+`NewNyxResourceContext` now uses the existing atomic catalog import instead of
+round-tripping an already admitted built-in catalog through JSON/base64 again.
+Independent entry membership and locale choices remain captured. Only privately
+admitted immutable definitions are shared; foreign implementations retain strict
+wire normalization. No new cache, public GUID, schema, transport or source format
+is introduced. The regression verifies exact Unicode/NUL/image bytes, shared
+immutable identity, source/peer/export independence, foreign Clone deception,
+later foreign mutation, malformed-wire/nil refusal and valid empty contexts.
+The archived old constructor fails the same new identity assertion with a clean
+heap. The final import suite passes 42 and resource foundation passes 70, both
+with complete clean heaps; both matching pas2js consumers compile only.
+
+The final matched checked/O2/heap-traced Studio journeys preserve all 57/61
+assertions, native controls and paired style/history behavior. Both heaps are
+complete and clean. These are deferred-settle milliseconds from one pair:
+
+| Ordinary command | Desktop before/after | Compact before/after |
+| --- | --- | --- |
+| Project pane | Not used | 4,156 / 2,391 |
+| Open project assets | 2,281 / 1,125 | 1,234 / 625 |
+| Close project assets | 2,297 / 1,078 | 1,235 / 687 |
+| Inspector pane | Not used | 6,860 / 5,203 |
+| Apply button style | 5,172 / 3,516 | 2,141 / 1,297 |
+| Undo | 2,594 / 1,672 | 1,078 / 609 |
+| Redo | 2,516 / 1,735 | 1,015 / 609 |
+
+Synchronous dispatch also decreases: compact Inspector 234/47 ms, compact
+Undo/Redo 250/47 and 250/63 ms. Complete reveal/dispatch/settle vectors are
+retained privately; these consecutive intervals are not nested phase sums.
+A separate checked/O2/debug application-oriented profile removes only heap
+tracing, keeps every assertion and passes 57/61. It observes 4,735 ms compact
+Inspector settling and 328/343 ms compact Undo/Redo. It has no pre-fix matched
+counterpart and provides no clean-heap evidence or release-build claim.
+
+The application-profile tool result was lost during output truncation. Its
+terminal owned receipts establish exit zero for both compilers and both runtimes,
+with no timeout; exact recorded PIDs are no longer alive. A fresh complete check
+reverifies all 2,323 pinned sources unchanged. No second copy was launched.
+All actual readers are joined; their source freeze is over. Native compiler
+warning counts, exact source/receipt hashes and retained samples belong to the
+private `ordinary-studio-latency-01` evidence packet. The desktop Design and
+compact Inspector PaintTo captures are inspected; diagnostic redraws do not
+qualify actual display/clipping or physical input.
+
+The next meaningful performance step is the remaining compact Inspector deferred
+presentation cost, using the existing ordinary journey with phase output off.
+Do not repeat asset admission experiments or infer broad acceptance from these
+bounded numbers. Original full Studio lifetime, generated-application/display,
+browser and broader platform requirements stay open. No task is moved to DONE,
+no completion credit is assigned, no service/SDK configuration is changed, and
+no cleanup or deletion is performed.
+
+## Bounded native button painting — 2026-10-25
 
 The preceding turn is PROGRESS: 2bbcf42 repairs native splitter release and is
 remote-verified. Its original external-context question remains optional/pending;
