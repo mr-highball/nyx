@@ -9,7 +9,71 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — avoid repeated runtime asset admission — 2026-10-25
+## Current checkpoint — public service-monitor workbench — 2026-10-25
+
+The preceding turn is PROGRESS: 2918e45 avoids repeated runtime resource admission
+and is remote-verified. Root remains solo. The ordinary compact Inspector still
+settles in about five seconds, so [geometry02](TODO/NS-2_lcl-renderer_02.md) and
+all seven [workbench03](TODO/NS-3_control-usefulness_03.md) criteria remain open.
+
+A current sampled journey passes 61 with a clean heap. A separately linked
+private construction guard balances native autosizing before grouped publication;
+it retains all 57/61 assertions and clean heaps but produces no material gain.
+Compact Inspector settling is 5,312/5,266 ms in the matched checked/O2/heap pair.
+That guard is rejected and is not copied into product code. Subsequent private
+frame/renderer clocks buffer copied values until the complete journey ends,
+without phase stdout inside native work. Their clean 61-check journeys place
+about 3.3 seconds in Inspector section preparation: the later renderer sample
+records 1,875 ms in build/collection setup, 109 ms in first layout and 485 ms in
+first synchronization. Per-control construction counters cover only about 124 ms;
+collection HandleNeeded can initialize the surrounding native tree. These are
+diagnostic inclusive phases, not exclusive attribution or a new speedup claim.
+
+Task-flow reassessment: at least three consecutive geometry/workbench batches
+(button buffering, resource frames and this investigation) have closed no original
+criterion. The investigation sequence stops here. Do not add another equivalent
+profile or construction-guard variant. The changed next action is a usable public
+workbench packet with its own generated-application evidence, serving W1 and the
+original public-example criterion; it does not shrink the original task.
+
+`examples/service-monitor` now composes specialized controls, independent typed
+sample records, column query/arrangement, editable pins at both logical edges,
+wrapping/ellipsis and managed inspection/copy/export policy. The entry explicitly
+supplies target clipboard/save hosts independently of saved intent. All starter
+text is English. No real OS service or active Studio document is changed. The
+available semantic document connector reports no connected sessions, so this is
+public code-first composition rather than an MCP-authored Studio project.
+
+The initial mounted fixture passes 15 at 1280/390, both handwritten and from its
+exact generated companion, with clean heaps. Diagnostic redraws then expose
+initial fixed pin widths that collapse the Status pane at 390. A new physical
+pane visibility assertion passes at 1280 and fails at 390 against those defaults,
+with a clean heap. Narrower authored initial widths preserve both pins and the
+scrollable center. Final qualification06 passes 16 at each width for BOTH the
+handwritten and generated applications, with complete clean heaps. Both actual
+application entries and both corresponding browser entries compile; the four
+native compiler logs are warning-free. Each browser compiler has seven installed
+RTL warnings and no owned warning. The exact 7,004-byte generated unit is retained.
+
+The checks exercise mounted edits to both pinned fields, exact supplementary
+Unicode, read-only PID refusal, independent stores, unchanged document/defaults
+and retirement. They are mounted contract commands, not physical keyboard or
+pointer input. Final diagnostic redraw companions preserve all 16 checks at both
+widths with clean heaps; compact output visibly retains both pins. Earlier raw-DC
+BMP redraws are unusable and retained; the corrected Canvas/PNG path is explicitly
+diagnostic. Neither proves actual display/clipping. The large native header band
+is recorded for the existing table usability work, not declared visually accepted.
+
+All actual readers are joined. Qualification06 revalidates all 2,328 source inputs;
+private sources, failed compiler/setup attempts, the negative pin case, complete
+receipts/heaps and images are retained in the `ordinary-studio-latency-02` and
+`service-monitor-01` evidence packets. No task/DONE/credit or overall goal closure
+follows. Next: continue the public W1 workflow and saved application's actual
+input/browser validation using existing tools; investigate the header's space
+budget as part of that usability outcome. Full lifetime, source/history, actions,
+visual and broader platform acceptance remain with their original criteria.
+
+## Avoid repeated runtime asset admission — 2026-10-25
 
 The preceding turn is PROGRESS: f85843b limits native button paint buffers and
 is remote-verified. Root continues alone under

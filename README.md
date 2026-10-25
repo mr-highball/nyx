@@ -20,6 +20,9 @@ A Pascal-first, fluent UI library for Free Pascal/Lazarus and pas2js. One owned
 UI document describes pages and reusable components; native and browser adapters
 produce real target controls. Nyx Studio uses that same contract for visual
 editing, adjacent Pascal generation and delegated HTTP compilation.
+The [service monitor example](examples/service-monitor/README.md) composes typed
+table filtering, column arrangement, editable pins, inspection, copying and export
+into a portable sample application, with independently owned runtime data.
 Studio's shell is a shared Pascal Nyx document, including reusable public
 `code-editor` and `design-surface` components; the same shell is exercised by LCL.
 Studio also exposes [semantic MCP tools](docs/studio-agents.md) for inspecting

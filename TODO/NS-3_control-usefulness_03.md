@@ -14,6 +14,23 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The public [service monitor](../examples/service-monitor/README.md) now supplies
+an English, typed code-first workbench with editable Service/Status pins, query,
+arrangement, long-value presentation and explicit target copy/save services.
+Its exact generated companion and handwritten document each pass 16 mounted
+native checks at 1280/390 with clean heaps, including both physical pin panes,
+read-only refusal, Unicode, independent stores/defaults and disposal. Both actual
+entries and browser companions compile. The initial compact pin visibility
+failure is retained and repaired through authored width defaults. These are
+mounted commands and diagnostic redraws; physical input, real display/clipping,
+browser execution and the complete original workflow remain open.
+
+The native query header reserves a large three-line band plus column-launcher
+space. Review its useful density and tunability during the public W1 journey;
+the diagnostic image does not establish actual-display defects or full visual
+acceptance. Geometry02's repeated profiling sequence is stopped after task-flow
+reassessment; continue this public workflow rather than another equivalent probe.
+
 **Reconfiguration compatibility — projection admission:**
 
 The accepted [Kanban query repair](DONE/NS-3_control-usefulness_05.md) preserves

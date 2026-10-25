@@ -137,3 +137,13 @@ WORK owns source identities, diagnostic limits and the discarded painting trials
   same Studio assertions and still observes 4,735 ms Inspector settling. WORK
   retains all intervals, the old-constructor negative control and remaining costs;
   this bounded improvement does not accept whole-editor or browser responsiveness.
+- A fresh compact journey still passes 61 with a clean heap. A private balanced
+  frame-construction guard preserves 57/61 and clean heaps but changes Inspector
+  settling only from 5,312 to 5,266 ms; it is rejected. Deferred-output diagnostics
+  put about 3.3 seconds in Inspector preparation, mainly collection/window setup
+  rather than document composition. These are diagnostics, not acceptance.
+- The task-flow checkpoint stops this profiling sequence after at least three
+  consecutive geometry/workbench batches without original criterion closure.
+  Root returns to the public W1 workbench packet and actual application evidence.
+  Do not repeat the guard or add equivalent profiles; WORK preserves its source,
+  matched results and the materially different next action. All criteria remain.
