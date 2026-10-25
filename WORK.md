@@ -9,7 +9,53 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Kanban query declarations preserved — 2026-10-25
+## Current checkpoint — required List-role admission — 2026-10-25
+
+The preceding turn is PROGRESS: b1e030e preserves explicit query declarations.
+The proposed presentation follow-up was misclassified by descriptor-only review:
+all six investigated later families, plus value formatting, require a Table
+projection. Standard Kanban lanes are Lists. The first full-candidate probe
+correctly refuses that unsupported combination; no projection rule is loosened
+and no new presentation capability is claimed. Those probe sources and failures
+are retained separately from qualification.
+
+A narrower real defect was reproduced in the public required-role helper: a raw
+descriptor with a Table-only choice was accepted and silently lost that choice
+while rebuilding a List. The old implementation fails the refusal assertion at
+check 176, with a complete clean 3,851,023-block/165,712,910-byte heap. The helper
+now invokes the existing List projection validator after its established shape
+checks and before constructing a replacement. Its formerly unreachable Table
+format-copying branch is removed; public comments state the required projection.
+Shared descriptor/projection validation, valid lane behavior and the accepted
+query-preservation contract stay intact.
+
+The current helper fixture passes 212 native assertions with a complete clean
+5,160,951-block/225,382,298-byte heap. It covers all seven Table-only families,
+explicit default-valued incompatibilities, unchanged caller values and a missing
+alignment axis, alongside all prior supported policies and legacy/default cases.
+The ordinary candidate fixture passes 173 with a complete clean
+4,896,226-block/224,603,821-byte heap, retaining valid reconfiguration/Disable/
+Inherit and invalid-source refusal without mutation. Matching browser fixtures
+compile; no rendered input or browser execution follows. Native compilers have
+zero warnings; each browser compiler retains seven installed RTL warnings and
+no owned warning. The generated 46-lane source is byte-identical to the earlier
+FPC/pas2js-qualified unit, so an unchanged compilation was not repeated.
+
+Evidence is `.local/qualification/kanban-presentation-01`. The earlier unsupported
+probe and its invalid-codec snapshot attempt are retained; the final helper
+regression, rather than those setup failures, proves the repaired defect.
+All actual readers are joined and their source freeze has ended. Workbench03's
+scope and query05's follow-up link now distinguish preservation from admission.
+No broad workbench/DONE or completion credit is assigned.
+
+Root stays solo. Next pull is the user's existing
+[splitter snap-back bug](TODO/NS-2_split-platform_02.md): establish a minimal
+public consumer reproduction before changing drag/state behavior. Preserve its
+original application/device/target and cancellation criteria; do not infer a
+cause from the report alone. Other native geometry, browser, display and full
+Studio lifetime outcomes remain with their original owners.
+
+## Kanban query declarations preserved — 2026-10-25
 
 The preceding turn is PROGRESS: 6e66898 qualifies the full native Studio and
 own-application journeys with explicit lifetime/display limits. Root then

@@ -14,22 +14,29 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
-**Reconfiguration compatibility — next source-derived prerequisite:**
+**Reconfiguration compatibility — projection admission:**
 
 The accepted [Kanban query repair](DONE/NS-3_control-usefulness_05.md) preserves
-explicit v7 query metadata. Source review of `NyxKanbanEditorLaneSpec` still finds
-no transfer of the later column layout/text/alignment or table layout,
-presentation and workbench declarations. Their shared descriptor contracts
-already admit these values; this is a preservation gap under criterion six,
-not a new List header UI or a new query engine. No execution failure is asserted
-for these later families yet.
+explicit v7 query metadata. Descriptor-only review initially misclassified the
+later layout/text/alignment/presentation/workbench fields as another valid-lane
+preservation gap. Execution and the shared projection validator establish that
+these families are Table-only; standard Kanban lanes are Lists. Do not copy them
+into a List or broaden projection support to make that probe pass.
 
-Reproduce the loss through the public lane builder and ordinary candidate path,
-preserve applicable declarations and absence during field/collection rebinding,
-and retain complete admission, source/codec compatibility and independent-owner
-behavior. Do not copy resolved defaults or narrow descriptor admission to hide
-the loss. This follow-up preserves every original workbench criterion and adds
-no separate completion credit.
+The public lane helper accepted an incompatible raw descriptor and silently
+discarded its Table-only choice while rebuilding a List role. The old helper
+fails the new refusal assertion at check 176 with a clean heap. It now applies
+the existing List projection validator before constructing a replacement;
+unreachable Table-format copying is removed. No shared projection rule changes.
+
+The helper regression passes 212 native checks with a clean heap, including all
+seven incompatible families, unchanged caller descriptors, partial alignment
+axes and all prior valid query/default/legacy cases. The ordinary candidate
+regression passes 173 with a clean heap, checking invalid-source refusal and
+unchanged original node snapshots. Both browser companions compile only. The
+emitted 46-lane Pascal fixture is byte-identical to its previously compiled
+FPC/pas2js counterpart. This qualifies the narrow admission repair; every original
+workbench criterion and the broader UI/parity/lifetime outcomes remain open.
 
 The authored-export continuation adds independent typed page/all-filtered,
 column/header/line-ending choices through saved workbench policy, generated

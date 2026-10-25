@@ -80,6 +80,8 @@ separate source owner and its actual required checks visible.
   and the source freeze has ended. This accepts saved metadata preservation on
   a List lane, adds no table-header UI and earns no separate completion credit.
 
-The later layout/text/alignment/presentation/workbench fields have a separate
-source-derived preservation follow-up under [workbench03](../NS-3_control-usefulness_03.md).
-This query repair does not accept that broader authoring/reuse outcome.
+The later-family follow-up under [workbench03](../NS-3_control-usefulness_03.md)
+was refined after projection validation showed those choices are Table-only.
+It now covers early refusal of incompatible raw descriptors, rather than new
+presentation support on List lanes. This query repair does not accept that
+broader authoring/reuse outcome.

@@ -31,6 +31,7 @@ uses
   nyx.collections, nyx.collections.view.types, nyx.collections.query,
   nyx.collections.selection, nyx.collections.columns, nyx.collections.paging,
   nyx.collections.query.policy,
+  nyx.collections.workbench.policy,
   nyx.typeahead
   {$ifdef PAS2JS}, Web{$endif};
 
@@ -356,6 +357,65 @@ begin
     Scoped(csInstance).Selection(nsmSingle).
     TypeAhead(NyxTypeAhead.WindowMilliseconds(1700).Match(ntmExact)).
     Paged(NyxCollectionPaging.PageSize(5).InitialPage(2));
+end;
+
+{ A malformed List binding must not become valid merely because rebuilding its
+  lane silently erases an unsupported Table-only declaration. The source stays
+  untouched whether admission refuses before or after candidate preparation. }
+procedure UnsupportedLanePolicyCase;
+var
+  LFixture: TBoardDesign;
+  LCandidate: TNyxDocument;
+  LSpec: TNyxCollectionViewSpec;
+  LBefore: TNyxText;
+  LRefused: Boolean;
+begin
+  LFixture := TBoardDesign.Create(True);
+  LCandidate := nil;
+  try
+    LSpec := LFixture.Definition.Node.Part(NyxPart('lane-0/items')).CollectionView.
+      TableWorkbench(NyxTableWorkbench);
+    LFixture.First.Node.OverridePart(NyxPart('lane-0/items'), noProperties).
+      Named('unsupported-workbench').SetCollectionView(LSpec);
+    LBefore := TNyxCodec.NodeSnapshot(LFixture.First.Node).ToJSON;
+    LRefused := False;
+    try
+      ValidateNyxDocumentProperties(LFixture.Document);
+    except
+      on LError: Exception do
+      begin
+
+        if Pos('Authored workbench actions require a table projection', LError.Message) = 0 then
+        begin
+          raise;
+        end;
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'the source List explicitly refuses Table-only workbench metadata');
+    LRefused := False;
+    try
+      LCandidate := Candidate(LFixture.Document, 'first-board',
+        TNyxKanbanIntent.Configured(OptionsB));
+    except
+      on LError: Exception do
+      begin
+
+        if Pos('Authored workbench actions require a table projection', LError.Message) = 0 then
+        begin
+          raise;
+        end;
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LCandidate = nil),
+      'reconfiguration refuses invalid source instead of erasing its unsupported metadata');
+    Check(TNyxCodec.NodeSnapshot(LFixture.First.Node).ToJSON = LBefore,
+      'unsupported metadata refusal leaves the original source exact');
+  finally
+    LCandidate.Free;
+    LFixture.Free;
+  end;
 end;
 
 procedure ReconfigureAndInherit;
@@ -748,6 +808,7 @@ begin
       DirectCase;
       ReusablePayloadCases;
       ReconfigureAndInherit;
+      UnsupportedLanePolicyCase;
       InheritStatic;
       NamedAndNestedCases;
       RefusalCases;

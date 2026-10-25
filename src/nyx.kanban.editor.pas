@@ -94,9 +94,10 @@ function NyxKanbanEditorChange(ADocument: TNyxDocument;
   const AIntent: TNyxKanbanIntent): TNyxKanbanEditorChange;
 procedure ValidateNyxKanbanEditorChange(ADocument: TNyxDocument;
   const AChange: TNyxKanbanEditorChange);
-{ Pure required-role rewrite. A prior single text column retains its caption,
-  sizing, explicit typeahead and paging. Behavioral key/field/scope/query change
-  together; incompatible column shapes refuse rather than discard metadata. }
+{ Pure required-List-role rewrite. A prior single text column retains its
+  caption, sizing and explicit query/typeahead/paging choices. Behavioral
+  key/field/scope/query change together. The prior descriptor must admit a List
+  projection; Table-only choices refuse instead of being silently discarded. }
 function NyxKanbanEditorLaneSpec(const AOptions: TNyxKanbanOptions;
   AIndex: Integer; const APrevious: TNyxCollectionViewSpec): TNyxCollectionViewSpec;
 function NyxKanbanEditorFieldID(const AID: TNyxText;
@@ -116,7 +117,7 @@ implementation
 uses
   SysUtils, nyx.codec, nyx.composition, nyx.collections, nyx.collections.registry,
   nyx.collections.codec, nyx.collections.query, nyx.collections.selection,
-  nyx.state, nyx.menu.editor;
+  nyx.state, nyx.menu.editor, nyx.collections.view;
 
 const
   CEditor = 'nyx.kanban-editor';
@@ -413,6 +414,10 @@ begin
     begin
       raise ENyxKanban.Create('Reconfigure a single text-column lane without losing other columns');
     end;
+    { Data-shape validity alone admits policy families belonging to other
+      projections. Enforce the same List contract as document/runtime admission
+      before a fresh descriptor could accidentally erase an incompatible choice. }
+    ValidateNyxCollectionViewProjection(LPrevious, cpList);
     LColumn := LPrevious.ColumnAt(0);
     LCaption := LColumn.Title;
   end;
@@ -427,11 +432,6 @@ begin
     if LColumn.Sizing.Defined then
     begin
       Result := Result.ColumnSizing(LColumn.Sizing);
-    end;
-
-    if LColumn.HasFormatPolicy then
-    begin
-      Result := Result.ColumnFormat(LColumn.FormatPolicy);
     end;
 
     { Preserve declarations, including explicit opt-outs. Resolved defaults

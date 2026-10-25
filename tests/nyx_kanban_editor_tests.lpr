@@ -30,6 +30,9 @@ uses
   nyx.collections, nyx.collections.view.types, nyx.collections.selection,
   nyx.collections.query, nyx.collections.columns, nyx.collections.paging,
   nyx.collections.query.policy,
+  nyx.collections.workbench.policy, nyx.collections.arrangement,
+  nyx.collections.presentation, nyx.collections.alignment, nyx.formatting,
+  nyx.collections.view,
   nyx.typeahead, nyx.state, nyx.codegen, nyx.source
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
@@ -47,6 +50,10 @@ type
     constructor Create;
     destructor Destroy; override;
   end;
+  { Each family is valid on a Table but incompatible with a required Kanban
+    List role, including explicit choices equal to today's effective default. }
+  TLaneUnsupportedPolicy = (lupColumnLayout, lupColumnText, lupAlignment,
+    lupTableLayout, lupDensity, lupWorkbench, lupFormat);
 
 var
   GChecks: Integer;
@@ -646,6 +653,61 @@ begin
   end;
 end;
 
+{ A descriptor can carry Table-only choices, but this public builder promises
+  List roles. Reject incompatibility instead of silently removing the choice. }
+procedure LaneProjectionCases;
+var
+  LPrevious: TNyxCollectionViewSpec;
+  LBefore: TNyxText;
+  LRefused: Boolean;
+  LPolicy: TLaneUnsupportedPolicy;
+  LReason: TNyxText;
+begin
+  for LPolicy := Low(TLaneUnsupportedPolicy) to High(TLaneUnsupportedPolicy) do
+  begin
+    LPrevious := NyxCollectionView(Cards).Column(TitleField, 'Unsupported lane');
+    case LPolicy of
+      lupColumnLayout: LPrevious := LPrevious.ColumnLayout(NyxColumnLayout);
+      lupColumnText: LPrevious := LPrevious.ColumnText(NyxColumnText);
+      lupAlignment: LPrevious := LPrevious.ColumnAlignment(NyxColumnAlignment.Horizontal(nchaStart));
+      lupTableLayout: LPrevious := LPrevious.TableLayout(NyxTableLayout);
+      lupDensity: LPrevious := LPrevious.TablePresentation(NyxTablePresentation);
+      lupWorkbench: LPrevious := LPrevious.TableWorkbench(NyxTableWorkbench);
+      lupFormat: LPrevious := LPrevious.ColumnFormat(TNyxValueFormat.Canonical);
+    end;
+    case LPolicy of
+      lupColumnLayout, lupTableLayout: LReason := 'Column arrangement requires a table projection';
+      lupColumnText, lupAlignment, lupDensity: LReason := 'Table text and density policies require a table projection';
+      lupWorkbench: LReason := 'Authored workbench actions require a table projection';
+      lupFormat: LReason := 'Column display policies require a table projection';
+    end;
+    ValidateNyxCollectionViewProjection(LPrevious, cpTable);
+    LBefore := LPrevious.ToData.ToJSON;
+    LRefused := False;
+    try
+      NyxKanbanEditorLaneSpec(OptionsFor(TitleField), 0, LPrevious);
+    except
+      on LError: Exception do
+      begin
+
+        if Pos(LReason, LError.Message) = 0 then
+        begin
+          raise;
+        end;
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'the public List-role builder refuses unsupported Table-only choices');
+    Check(LPrevious.ToData.ToJSON = LBefore, 'projection refusal preserves the caller descriptor');
+
+    if LPolicy = lupAlignment then
+    begin
+      Check(not LPrevious.ColumnAt(0).AlignmentPolicy.HasVertical,
+        'refusal does not manufacture an unconfigured alignment axis');
+    end;
+  end;
+end;
+
 function ActionNode(const AForm: INyxCard; AField: TNyxKanbanEditorField): TNyxNode;
 begin
   Result := AForm.Node.Find(NyxKanbanEditorFieldID(AForm.ID, AField));
@@ -842,6 +904,7 @@ begin
     BaselineCases;
     LaneSpecCases;
     LaneQueryPolicyCases;
+    LaneProjectionCases;
     FormCases;
     EmptyCases;
     {$ifdef PAS2JS}
