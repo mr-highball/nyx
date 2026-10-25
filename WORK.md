@@ -9,7 +9,53 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — required List-role admission — 2026-10-25
+## Current checkpoint — native splitter release — 2026-10-25
+
+The preceding turn is PROGRESS: 430911a admits required Kanban List projection
+before rebuilding it. Root then pulled the existing
+[splitter snap-back regression](TODO/NS-2_split-platform_02.md), without changing
+its original acceptance criteria or adding another task/credit owner.
+
+A public native consumer reproduces a matching release defect. LCL's default
+`csCaptureMouse` handler releases capture before calling the grip's `MouseUp`.
+Nyx's capture-loss handler consequently cancels the still-active gesture and
+restores its initial position. The former fixture bypassed that path by calling
+protected mouse handlers directly. The grip now disables automatic capture and
+retains its existing explicit acquire/commit/release sequence. Genuine capture
+loss, cancellation and permission withdrawal still restore the baseline.
+
+The strengthened fixture injects actual Win32 window messages into owned LCL
+controls. The final pre-fix negative control fails the release-retention assertion
+with a complete clean heap; it uses the same final fixture and an archived old
+split adapter. The fixed run passes 145 assertions with a complete clean
+129,064-block/5,359,733-byte heap and zero compiler warnings. It exercises both
+orientations, repeated/nested drags, in-drag/post-release Sync, host reflow,
+independent runtime/authored ownership, deliberate replacement configuration,
+child-content input, bounds/minima, retained Unicode drafts/ranges, keyboard
+callbacks, disabled/read-only gates, Escape, capture loss and active unmount.
+
+The intermediate Escape failure was a test-driver error: direct `Perform` delivered
+only LCL's after-interface key notification. Native window delivery with focus
+exercises the actual key preprocessing and cancellation, without another product
+change. The earlier protected-property compiler failure and both input-driver
+versions remain retained separately from qualification.
+
+The matching browser fixture compiles with seven installed RTL warnings and no
+owned warning. No browser execution or physical mouse/touch testing is claimed.
+The originally reported external application/adapter remains unidentified; a
+concise optional context question is pending. The ticket remains open against its
+unchanged original criteria, with no broad parity or completion credit.
+
+Evidence is `.local/qualification/splitter-snapback-01`: `windows-before`,
+`windows-final` and `browser-current` are the final cohort. All actual readers
+are joined and their source freeze has ended. Root remains solo. Next action is
+the ticket's remaining external/browser input qualification when the original
+context or a permitted runtime is available; do not repeat its unchanged native
+cohort or retry a denied preview-host launch. Independent work returns to
+[workbench03](TODO/NS-3_control-usefulness_03.md)'s original remaining criteria.
+Existing full Studio lifetime, display and broader platform outcomes stay open.
+
+## Required List-role admission — 2026-10-25
 
 The preceding turn is PROGRESS: b1e030e preserves explicit query declarations.
 The proposed presentation follow-up was misclassified by descriptor-only review:

@@ -2,12 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-**Status:** Open bug; queued for later investigation at the user's request.
+**Status:** Open regression; native release defect reproduced and repaired.
+External-application reproduction and remaining platform criteria stay open.
 
 **Reported:** 2026-10-20, during external Nyx testing. The user reports that a
-splitter snaps back to its original position when dragged anywhere. This report
-has not yet been independently reproduced. The affected application, build,
-adapter, orientation and input device are not established.
+splitter snaps back to its original position when dragged anywhere. A matching
+release defect is now reproduced in a public Win32/LCL consumer. The originally
+affected application, build, adapter, orientation and input device remain
+unestablished; this narrower reproduction does not identify that application.
 
 **Expected behavior:**
 
@@ -55,5 +57,26 @@ NS-2 renderer/runtime regression, consumed by NS-4 Studio. The prior
 evidence; this ticket tracks the newly reported regression independently. See the
 [browser](NS-2_browser-renderer_01.md), [LCL](NS-2_lcl-renderer_01.md) and
 [parity](NS-2_parity-accessibility_01.md) owners for broader requirements.
-Planning adds no completion credit or counter change. Implementation is deferred;
-continue the current product task after filing this ticket.
+Planning adds no completion credit or counter change. The original filing
+deferred implementation; the current WORK entry now owns active investigation.
+
+**Native progress — 2026-10-25:**
+
+- The former fixture called protected mouse handlers directly. Complete native
+  message delivery exposes LCL's automatic capture release before `MouseUp`:
+  Nyx interprets it as capture loss, cancels the drag and restores its baseline.
+  The retained pre-fix run fails the release-position assertion with a clean
+  heap. The grip now disables automatic capture and uses its existing explicit
+  acquire/commit/release sequence; genuine loss still cancels.
+- The current fixture passes 145 checked native assertions through injected
+  Win32 window messages. It exercises repeated drags in both orientations,
+  nested independence, in-drag/post-release Sync, host reflow, authored/runtime
+  separation, explicit replacement configuration, child-content input, bounds,
+  pane minima, Unicode drafts/ranges, read-only/disabled policy, Escape, capture
+  loss, keyboard callbacks and unmount during capture. Its complete heap is clean.
+- Qualification and earlier test-driver failures are retained under ignored
+  `.local/qualification/splitter-snapback-01`. Native message injection is distinct
+  from physical mouse/touch testing. Browser compilation does not establish
+  rendered browser behavior. The unchanged original acceptance criteria above
+  remain the conditions for DONE; this bounded native repair adds no broad parity
+  or completion credit.

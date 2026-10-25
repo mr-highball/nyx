@@ -61,6 +61,21 @@ Disabled, read-only or non-resizable splits reject resize gestures. A completed
 change emits `OnChange` with an owned integer percentage; normal multiple
 registrations and execution policies apply.
 
+Native grips manage mouse capture explicitly. A normal button release commits
+the accepted position before releasing capture; it is not a cancellation. LCL's
+automatic capture handling releases before `MouseUp`, so enabling it on this
+grip would restore the starting value on every completed drag. Genuine capture
+loss still restores the baseline. Native regressions inject window messages
+through the widgetset, including that release path, rather than calling protected
+mouse handlers directly. This proves injected Win32/LCL behavior, not physical
+touch or browser interaction.
+
+User resizing changes the mounted runtime copy. Ordinary `Sync` and host reflow
+retain that position and the existing children; they do not reapply the original
+authored percentage. A caller can deliberately change the authored configuration
+and replace the mount with `Render`; that replacement uses the newly configured
+position. Interactive resizing does not rewrite the authored document.
+
 The divider also publishes the complete typed focus and keyboard family.
 Sequential before/main key hooks run before the platform resizing default and
 may consume it; after hooks observe Nyx dispatch. `FocusFor` borrows the grip

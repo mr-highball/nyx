@@ -31,11 +31,15 @@ uses
   nyx.text, nyx.types, nyx.model, nyx.split;
 
 type
+  { Forward reference to the owning host; the grip borrows it for its entire
+    lifetime and is destroyed before the host releases its split state. }
   TNyxLCLSplitView = class;
 
   { LCL provides capture, focus, accessibility and widget ownership. The small
     custom grip adds keyboard resizing to the separator behavior missing from
-    its nonfocusable TSplitter. All sizing/cancellation uses the shared state. }
+    its nonfocusable TSplitter. All sizing/cancellation uses the shared state.
+    Capture is explicit: LCL's automatic release precedes MouseUp and would
+    otherwise cancel a successful drag before the grip can commit it. }
   TNyxLCLSplitGrip = class(TCustomControl)
   private
     FSplit: TNyxLCLSplitView;
@@ -97,6 +101,11 @@ constructor TNyxLCLSplitGrip.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FSplit := TNyxLCLSplitView(AOwner);
+  { This control already acquires capture after admitting a drag and releases
+    it after EndDrag(False). LCL's csCaptureMouse releases before MouseUp,
+    invoking CaptureChanged while the gesture is still active. Keep genuine
+    external capture loss cancellable without misclassifying normal release. }
+  ControlStyle := ControlStyle - [csCaptureMouse];
   TabStop := True;
   AccessibleName := 'Resize panes';
   AccessibleDescription := 'Arrow keys resize; Shift adjusts by ten percent; Home and End use the limits.';

@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+[Splitter snap-back02](NS-2_split-platform_02.md) has a reproduced and repaired
+native release defect, qualified by 145 injected Win32/LCL checks and a clean
+heap. The original external context, physical input and browser interaction
+remain open; the ticket retains its original acceptance criteria and no new
+completion credit. Root continues solo; WORK owns the remaining qualification
+and return to workbench03.
+
 [Kanban query-policy preservation](DONE/NS-3_control-usefulness_05.md) is accepted
 on 2026-10-25 for lossless explicit declarations and absent defaults. This adds
 no List filter UI or separate completion credit. Related newer presentation
