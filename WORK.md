@@ -9,7 +9,86 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — reusable collection feedback — 2026-10-25
+## Current checkpoint — background refresh admission — 2026-10-25
+
+The previous checkpoint db9ec45 is remote-verified. Root continues SOLO; Lil'
+Scooty's last assignment is complete and idle. This is the sixth original04 L1
+checkpoint without original criterion closure. All original04/03 criteria,
+collection02's browser gate and completion-credit assessment remain open. The
+useful result is the public demo's asynchronous Retry/Cancel journey, including
+newer edits, supersession and retiring controls, using existing query/scheduler/
+collection owners rather than another feed engine.
+
+Try again captures independent rows, typed identity and immutable text on UI.
+The selector reads no live store, context or widget on a worker. Native async
+uses workers; browser async uses its event loop. Supersession and explicit Cancel
+close result/outcome ports before cooperative cancellation. Closing the binding
+revokes both before releasing its other leases. No application UI waits for a
+worker. The retained PendingFeed receipt conveys status, not view authority.
+Feedback callbacks may cancel/replace an entered request; exact receiver identity
+prevents the older call from submitting afterward or cancelling its replacement.
+A stale source revision reports failure and retains the newer accepted dataset.
+Pause remains an independent display choice, including during a successful retry.
+
+Full results preserve ordinary Assign semantics, including row incarnation
+replacement for a changed dataset. They do not infer a stable-ID incremental
+merge. The existing nine-step row-churn replay still uses explicit collection
+edits. Queue/capability admission remains the existing typed scheduler policy;
+rejection reports failure without partial source replacement or a hidden queue.
+The public demo does not yet qualify its visible overload presentation or scale.
+
+Discovered prerequisite collection03 is linked before returning to04: a source
+validator could close the query receiver or cancel its generation, yet the old
+Assign path still installed. The negative fixture reproduces that bug. The
+receiver now captures prepared-publication and cancellation readiness before
+validation, then checks noncalling fences before installing. Alternative stores
+must expose INyxAtomicCollection and final INyxPublicationReadiness; supplied
+generations must expose INyxCancellationReadiness. Missing capabilities refuse.
+The owned prepared collection supplies its private reservation/revision fence.
+Close/cancel during validation discards; cancellation after final admission cannot
+roll back committed data. Notification failures retain ordinary committed meaning.
+Entered publication retains its own port and preparation through reentrant release.
+
+Native handwritten/generated live-control journeys pass82 checks per width at
+1280/390, plus a fresh-output guard in handwritten1280. These include actual
+Retry/Cancel buttons, stale source edits, superseded requests, close-before-delivery
+and zero actual workers after widget disposal. Unfinished-edit recovery still
+passes24 per width/variant. Focused receiver checks pass7, ordinary collections162,
+coordinated publication43, feedback18, actual query/control delivery192 and bounded
+native scheduler118. The latter retains overload/capacity/worker termination
+assertions; this does not substitute for mounted overload presentation. All native
+runtime receipts have complete, zero-unfreed heap dumps. Browser model/public/
+generated/example consumers compile; execution and screenshots remain unqualified.
+
+Private live-producer-01 evidence retains controls-02 (16 successful receipts,
+8 clean heaps), receiver-04, regressions-01's successful native collection checks,
+regressions-02 and scheduler-03. Each records exact source pins, actual executable/
+log/heap identities and owned deadlines. All jobs are joined. Later changes to
+the demo are contract comments only; receiver04 qualifies its final nil-safe
+fixture teardown. Scheduler03 qualifies the final explicit TNyxText diagnostic
+constant, removing an observed implicit Unicode conversion warning without
+weakening its exact-value assertion. No final owned compiler warnings remain;
+installed pas2js RTL warnings are recorded separately.
+
+Retained failures include the original validator-closure bug, absent owned
+preparation readiness during its first repair, a pas2js await needing the matched
+TJSPromise.resolve bridge, and a private regression command missing -Fustudio.
+Corrected runs preserve the original assertions. The receiver fixture is in the
+maintained workbench native compile/runtime/browser lists; orchestration parses.
+No server/LAN replacement, cleanup, dependency/compiler install or helper occurs.
+Current document-control discovery reports no connected session. The available
+in-app browser's existing local preview tabs point to a stopped host; no denied
+host or alternate-protocol workaround is attempted. Hardware/AT/visual evidence
+is not inferred from injected native commands or compilation.
+
+Next: original04's Tree find/reveal and hidden-selection explanation, reusing
+existing hierarchy/query/selection owners rather than another equivalent producer
+variant. Hard recovered-draft memory, saved-policy/Studio/catalog/source/MCP
+adoption and L2 measured scale/paint/input/memory remain open. Browser execution,
+visual/AT/hardware and complete acceptance remain separate requirements. No task
+moves to DONE and no percentage or completion credit changes.
+
+## Reusable collection feedback — 2026-10-25
 
 The previous goal turn is PROGRESS: d669db0 is remote-verified. Root remains solo;
 Lil' Scooty is idle. This is the fifth original04 L1 checkpoint without original

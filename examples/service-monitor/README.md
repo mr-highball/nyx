@@ -61,13 +61,18 @@ privileged generated-code path.
 
 The [retention contract](../../docs/collection-views.md#pausing-live-inspection)
 describes payload/removed-ID bounds, overflow and current limitations. This demo
-does not yet qualify Tree physical anchors, background producers, browser input
+does not yet qualify Tree physical anchors, browser input
 or Studio policy authoring.
 
 The reusable `INyxCollectionFeedbackPanel` supplies current headings/counts,
 unknown-duration progress and context-dependent Try again/Reset/Resume actions.
-Try again performs a real revision-checked sample update (or loads a sample
-record when empty). Reset clears only this demo's query-owner contribution and
+Try again submits an independently owned sample result through Nyx's existing
+LINQ/scheduler pipeline (or loads a sample record when empty). Native computation
+uses a worker; browser computation uses the event loop. **Cancel refresh** revokes
+its destination before cooperative cancellation. Starting a newer refresh closes
+the old result and outcome ports first. A concurrent source edit refuses stale
+delivery and exposes failure while keeping the newer accepted data. No UI call
+waits for a worker. Reset clears only this demo's query-owner contribution and
 then withdraws its button; a different surface's accepted filter remains intact.
 Resume is deliberate, including after retrying a failed producer while paused.
 The card's accessible name follows its current state. It expands to ordinary
@@ -75,6 +80,20 @@ Nyx parts in generated Pascal and uses the same runtime binding afterward.
 Callers can customize headings/action text or rebind parts to resources and
 typed count expressions. See the [feedback contract](../../docs/collection-views.md#collection-feedback-and-feed-states)
 for ownership, atomic admission and the separate producer responsibilities.
+
+`RefreshFeed`, `CancelFeed` and the readonly `PendingFeed` receipt expose the same
+runtime operations for application harnesses. The selector captures only copied
+rows, a typed item reference and immutable text; it reads no control, context or
+live collection on a worker. Closing the binding revokes queued results and
+outcomes before cancellation. Full-result retries use ordinary collection
+`Assign` semantics, including replacement of changed datasets, rather than an
+implicit incremental merge. The deterministic row-churn replay continues to use
+explicit collection edits for stable-row changes. Scheduler capacity rejection
+reports failure without replacing accepted data; there is no hidden retry queue.
+Native handwritten/generated journeys exercise stale revisions, supersession,
+actual Cancel/Retry buttons, close-before-delivery and worker retirement after
+widget disposal at both widths. Browser builds pass; browser execution remains
+an explicit gate.
 
 **Follow last visible** reveals the final row of the current filtered/sorted page
 without selecting it. Later changed tail identities follow; unrelated value

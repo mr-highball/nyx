@@ -14,6 +14,7 @@ uses
   nyx.collections, nyx.collections.view, nyx.collections.inspection,
   nyx.collections.position, nyx.collections.query,
   nyx.collections.feedback, nyx.collections.query.session, nyx.publication,
+  nyx.linq.execution, nyx.scheduler,
   nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.arrangement, nyx.collections.range,
   nyx.collections.range.commands, nyx.collections.range.actions,
@@ -43,7 +44,11 @@ begin
   end;
 end;
 
+{$ifdef PAS2JS}
+function Journey(AWidth: Integer): JSValue; async;
+{$else}
 procedure Journey(AWidth: Integer);
+{$endif}
 var
   LDocument: TNyxDocument;
   LDemo: TNyxLiveInspectionDemo;
@@ -61,6 +66,7 @@ var
   LRefused: Boolean;
   LRefreshCount: Integer;
   LFeedback: INyxCollectionFeedback;
+  LClosingRun: INyxQueryRun;
   {$ifdef PAS2JS}
   LApplication: TNyxBrowserApplication;
   LHost: TJSHTMLElement;
@@ -68,6 +74,9 @@ var
   LApplication: TNyxLCLApplication;
   LStream: TFileStream;
   LBytes: UTF8String;
+  LScheduler: INyxScheduler;
+  LMonitor: INyxSchedulerMonitor;
+  LRetirementPolls: Integer;
   {$endif}
 
   procedure Click(const AID: TNyxText);
@@ -78,6 +87,41 @@ var
     SendMessage(TWinControl(LApplication.View.ControlFor(AID)).Handle, BM_CLICK, 0, 0);
     Application.ProcessMessages;
     {$endif}
+  end;
+
+  {$ifdef PAS2JS}
+  function WaitForFeed: JSValue; async;
+  {$else}
+  procedure WaitForFeed;
+  {$endif}
+  var
+    LPolls: Integer;
+  begin
+    {$ifdef PAS2JS}Result := Undefined;{$endif}
+    LPolls := 0;
+    while (LDemo.PendingFeed <> nil) and
+      (LDemo.Feedback.Capture.Activity in [ncaLoading, ncaRefreshing]) do
+    begin
+      Inc(LPolls);
+
+      if LPolls > 1000 then
+      begin
+        Check(False, 'asynchronous feed completion stays within its observation bound');
+      end;
+      {$ifdef PAS2JS}
+      await(TJSPromise.resolve(TJSPromise.new(procedure(AResolve, AReject: TJSPromiseResolver)
+        begin
+          window.setTimeout(procedure begin AResolve(Undefined); end, 10);
+        end)));
+      {$else}
+      Application.ProcessMessages;
+      CheckSynchronize(1);
+      Sleep(1);
+      {$endif}
+    end;
+    Check((LDemo.PendingFeed <> nil) and
+      (LDemo.PendingFeed.Phase in [nqpSucceeded, nqpDiscarded, nqpCancelled, nqpFailed]),
+      'the feed completes through a nonblocking terminal receipt');
   end;
 
   procedure PositionCases;
@@ -275,7 +319,50 @@ var
       'resuming never silently turns a stopped follow policy back on');
   end;
 
+  {$ifdef PAS2JS}
+  function ProducerCases: JSValue; async;
+  {$else}
+  procedure ProducerCases;
+  {$endif}
+  var
+    LBefore: INyxCollectionSnapshot;
+    LCurrent: INyxCollectionSnapshot;
+    LFirstRun: INyxQueryRun;
+  begin
+    {$ifdef PAS2JS}Result := Undefined;{$endif}
+    LBefore := LFirst.View.Store.Snapshot;
+    LDemo.RefreshFeed;
+    LFirstRun := LDemo.PendingFeed;
+    LFirst.View.Store.Update(NyxCollectionItem(LBefore.ItemAt(0).Ref)
+      .WithValue(NyxTextField('notes'), 'A newer user edit while the producer computes'));
+    LCurrent := LFirst.View.Store.Snapshot;
+    {$ifdef PAS2JS}await(WaitForFeed);{$else}WaitForFeed;{$endif}
+    Check((LFirstRun.Phase = nqpFailed) and (LFirst.View.Store.Snapshot = LCurrent) and
+      (LDemo.Feedback.Capture.Kind = ncfkFailed),
+      'a late background result cannot overwrite a newer source revision and exposes useful failure');
+    LBefore := LCurrent;
+    LDemo.RefreshFeed;
+    LFirstRun := LDemo.PendingFeed;
+    LDemo.RefreshFeed;
+    Check((LFirstRun <> LDemo.PendingFeed) and (LFirstRun.Phase = nqpCancelled),
+      'a newer request revokes/cancels the old destination before either queued result can publish');
+    {$ifdef PAS2JS}await(WaitForFeed);{$else}WaitForFeed;{$endif}
+    Check((LDemo.PendingFeed.Phase = nqpSucceeded) and
+      (LFirst.View.Store.Snapshot.Revision = LBefore.Revision + 1),
+      'only the newest asynchronous request installs one whole admitted result');
+    LBefore := LFirst.View.Store.Snapshot;
+    LDemo.RefreshFeed;
+    LFirstRun := LDemo.PendingFeed;
+    Click(InspectionCancelFeedID);
+    Check((LFirstRun.Phase = nqpCancelled) and (LDemo.PendingFeed = nil) and
+      (LFirst.View.Store.Snapshot = LBefore), 'the actual Cancel refresh button revokes delivery without changing accepted data');
+  end;
+
+  {$ifdef PAS2JS}
+  function FeedbackCases: JSValue; async;
+  {$else}
   procedure FeedbackCases;
+  {$endif}
   var
     LParts: TNyxCollectionFeedbackParts;
     LBefore: INyxCollectionSnapshot;
@@ -294,6 +381,7 @@ var
     end;
 
   begin
+    {$ifdef PAS2JS}Result := Undefined;{$endif}
     LParts := NyxCollectionFeedbackParts(InspectionFeedbackName);
     LFeedback := LDemo.Feedback;
     LBefore := LFirst.View.Store.Snapshot;
@@ -315,6 +403,7 @@ var
       not PartVisible(LParts.ProgressID) and (LFirst.View.Store.Snapshot = LBefore),
       'failure reveals the ordinary bound Retry button without discarding current records');
     Click(LParts.RetryID);
+    {$ifdef PAS2JS}await(WaitForFeed);{$else}WaitForFeed;{$endif}
     Check((LFeedback.Capture.Kind = ncfkReady) and
       (LFirst.View.Store.Snapshot.Revision > LBefore.Revision) and not PartVisible(LParts.RetryID),
       'the actual Retry button reconnects the sample feed and publishes a real data update');
@@ -352,6 +441,7 @@ var
       not PartVisible(LParts.ResetID) and (LPeer.View.Snapshot.Count = 0),
       'a genuinely empty source differs from a filter and its live peer also sees the empty dataset');
     Click(LParts.RetryID);
+    {$ifdef PAS2JS}await(WaitForFeed);{$else}WaitForFeed;{$endif}
     Check((LFeedback.Capture.Kind = ncfkReady) and (LFirst.View.Snapshot.Count = 1) and
       (LPeer.View.Snapshot.Count = 1), 'retrying an empty source loads a real record in both independent views');
     Click(InspectionPauseID);
@@ -359,6 +449,7 @@ var
     Check((LFeedback.Capture.Kind = ncfkPaused) and PartVisible(LParts.ResumeID) and
       PartVisible(LParts.RetryID), 'pause and producer failure expose separate meaningful Resume and Retry actions');
     Click(LParts.RetryID);
+    {$ifdef PAS2JS}await(WaitForFeed);{$else}WaitForFeed;{$endif}
     Check((LFeedback.Capture.Kind = ncfkPaused) and (LFeedback.Capture.PendingPublications > 0),
       'retrying the producer while paused does not silently resume the inspection');
     Click(LParts.ResumeID);
@@ -370,6 +461,7 @@ var
   end;
 
 begin
+  {$ifdef PAS2JS}Result := Undefined;{$endif}
   {$ifdef NYX_INSPECTION_GENERATED}
   LDocument := BuildNyxDocument;
   {$else}
@@ -395,6 +487,7 @@ begin
     LApplication := TNyxLCLApplication.Create;
     LApplication.View.TableWorkbenchServices := NewNyxTableWorkbenchServices;
     LApplication.Mount(LDocument);
+    LScheduler := LApplication.Context.Scheduler;
     LApplication.Window.ClientWidth := AWidth;
     LApplication.Window.ClientHeight := 900;
     LApplication.Window.Show;
@@ -473,8 +566,14 @@ begin
     Check(not LRange.Current and not LCopy.Current, 'resume revokes old range and copied-cell authority');
     Check(TNyxCodec.Encode(LDocument) = LSaved, 'runtime inspection never changes the authored design');
     PositionCases;
-    FeedbackCases;
+    {$ifdef PAS2JS}await(ProducerCases);{$else}ProducerCases;{$endif}
+    {$ifdef PAS2JS}await(FeedbackCases);{$else}FeedbackCases;{$endif}
+    LOriginal := LFirst.View.Store.Snapshot;
+    LDemo.RefreshFeed;
+    LClosingRun := LDemo.PendingFeed;
     LDemo.Close;
+    Check((LClosingRun.Phase = nqpCancelled) and (LFirst.View.Store.Snapshot = LOriginal),
+      'closing the public binding revokes a queued producer before application teardown');
     Check(not LFeedback.Capture.Active, 'retained feedback data loses publication authority when the demo binding closes');
     LOriginal := LFirst.View.Store.Snapshot;
     Click(InspectionStepID);
@@ -490,7 +589,35 @@ begin
     LFirst := nil;
     LPeer := nil;
     LApplication.Free;
+    LApplication := nil;
     LDocument.Free;
+    {$ifndef PAS2JS}
+    { A cancelled receipt can precede worker retirement. Only this test teardown
+      pumps the UI until retained worker inputs retire; the application never
+      blocks its UI waiting for a producer. Widgets have already been disposed. }
+
+    if LScheduler <> nil then
+    begin
+      LScheduler.Shutdown;
+      Check(Supports(LScheduler, INyxSchedulerMonitor, LMonitor),
+        'native producer scheduler exposes actual worker retirement');
+      LRetirementPolls := 0;
+      while LMonitor.WorkerLoad.ActiveWorkers <> 0 do
+      begin
+        Inc(LRetirementPolls);
+
+        if LRetirementPolls > 1000 then
+        begin
+          Check(False, 'native producer workers retire within the teardown bound');
+        end;
+        CheckSynchronize(1);
+        Application.ProcessMessages;
+        Sleep(1);
+      end;
+      Check(LMonitor.WorkerLoad.ActiveWorkers = 0,
+        'no native producer worker survives disposed application controls');
+    end;
+    {$endif}
     {$ifdef PAS2JS}LHost.remove;{$endif}
   end;
 end;
@@ -653,29 +780,40 @@ begin
 end;
 {$endif}
 
+{$ifdef PAS2JS}
+function BrowserChecks: JSValue; async;
 begin
+  Result := Undefined;
   try
-    {$ifdef PAS2JS}
-    Journey(1280);
-    Journey(390);
+    await(Journey(1280));
+    await(Journey(390));
     document.body.setAttribute('data-live-inspection-checks', IntToStr(GChecks));
-    {$else}
+  except
+    on E: Exception do
+    begin
+      document.body.setAttribute('data-live-inspection-error', E.Message);
+    end;
+  end;
+end;
+{$endif}
+
+begin
+  {$ifdef PAS2JS}
+  BrowserChecks;
+  {$else}
+  try
     Application.Initialize;
     Journey(StrToInt(ParamStr(1)));
     NativeFlatPositionCases(StrToInt(ParamStr(1)), False);
     NativeFlatPositionCases(StrToInt(ParamStr(1)), True);
     WriteLn('PASS ', GChecks, ' live inspection control checks at ', ParamStr(1));
-    {$endif}
   except
     on E: Exception do
     begin
-      {$ifdef PAS2JS}
-      document.body.setAttribute('data-live-inspection-error', E.Message);
-      {$else}
       WriteLn('FAIL ', E.Message);
       DumpExceptionBackTrace(Output);
       ExitCode := 1;
-      {$endif}
     end;
   end;
+  {$endif}
 end.

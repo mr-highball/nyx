@@ -50,6 +50,12 @@ resume actions. Native handwritten/generated journeys and model admission/
 retirement checks qualify this progress; browser, AT/visual, producer, Tree and
 full original acceptance remain open in WORK.
 
+Its refresh action now submits immutable results through the existing LINQ/
+scheduler path, with cancel, supersession and stale-source refusal. Native
+handwritten/generated controls exercise these cases. [Final receiver admission](NS-1_state-collections_03.md)
+tracks the discovered validator-revocation defect and remaining browser gate;
+it adds no separate store or scheduling engine.
+
 The 2026-10-18 request adds an optional client-side pas2js compiler for WEB and
 a static client-only Studio edition suitable for GitHub Pages. It must require
 no Nyx backend, account, server compiler or cloud storage for local authoring;
@@ -1947,6 +1953,7 @@ blockers rather than filename order.
 | NS-1 | [Persistence and state](DONE/NS-1_persistence-state_01.md) | Accepted version-1 data, scalar bindings and commands | Pending assessment |
 | NS-1 | [Observable structured state](DONE/NS-1_state-collections_01.md) | Accepted typed stores, persisted/source bindings, runtime scopes and Studio/control consumers | Pending assessment |
 | NS-1 | [Equal-value row replacement](NS-1_state-collections_02.md) | Preserve explicit row retirement through net-value equality; discovered live-inspection prerequisite | Pending assessment |
+| NS-1 | [Final query-delivery admission](NS-1_state-collections_03.md) | Refuse validator-revoked producer delivery using prepared publication and captured readiness | Pending assessment |
 | NS-1 | [Portable resources and bindings](DONE/NS-1_resources_01.md) | Accepted image/JSON/text/data resources, typed bindings, localization, hosted caches and ordinary Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |

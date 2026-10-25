@@ -138,7 +138,10 @@ type
     function GetBusy: Boolean;
   end;
 
-  TPreparedCollection = class(TInterfacedObject, INyxPreparedPublication)
+  { Retains one reserved store and admitted immutable candidate. Final readiness
+    checks only private reservation/revision flags after all outward validation;
+    it does not call providers or repeat validators before noncalling install. }
+  TPreparedCollection = class(TInterfacedObject, INyxPreparedPublication, INyxPublicationReadiness)
   private
     FOwner: TCollectionStore; { retained through FLease, no cycle back from store }
     FLease: INyxCollection;
@@ -160,6 +163,7 @@ type
       const ASteps: TCollectionSteps);
     destructor Destroy; override;
     procedure Validate;
+    procedure CheckReady;
     procedure Install;
     procedure Notify;
     procedure Retire;
@@ -1569,6 +1573,16 @@ begin
     begin
       Retire;
     end;
+  end;
+end;
+
+procedure TPreparedCollection.CheckReady;
+begin
+  RequireActive;
+
+  if not FValidated or FInstalled or (FOwner.FCurrent <> FBefore) then
+  begin
+    raise ENyxCollection.Create('Prepared collection is not ready for its reserved revision');
   end;
 end;
 

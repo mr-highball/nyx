@@ -1078,7 +1078,19 @@ it in one ordinary atomic collection publication. Stale revisions, duplicate
 identities, schema/budget failures and validator failures preserve accepted data.
 Observers retain ordinary committed-notification semantics: an observer error
 can report failure after the collection has committed. No asynchronous wrapper
-can undo a receiver that already entered or committed.
+can undo a receiver that has already committed. Closure or generation cancellation
+during validation refuses the result before installation. Final admission uses
+captured noncalling readiness, so it never asks an application getter to restore
+withdrawn authority. Cancellation after that admission does not roll back commit.
+
+Alternative stores must expose `INyxAtomicCollection`, whose preparations expose
+`INyxPublicationReadiness`; supplied generations must expose
+`INyxCancellationReadiness`. Missing capabilities refuse explicitly. Nyx's owned
+implementations supply these facets. Readiness checks must inspect owned flags
+without application callbacks. The complete result retains ordinary `Assign`
+semantics: a changed dataset replaces rows, including their incarnation receipts.
+This receiver does not infer an incremental merge from repeated IDs. Use ordinary
+revision-checked collection edits when the producer knows stable-row changes.
 
 Keep the receiver lease while its owning view is active. Close it on UI before
 navigation/disposal, or release its last lease there. Retained queued ports then

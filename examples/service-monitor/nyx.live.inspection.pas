@@ -6,7 +6,8 @@ unit nyx.live.inspection;
 interface
 
 uses nyx.model, nyx.application.context, nyx.events, nyx.collections.view,
-  nyx.collections.position, nyx.collections.recovery, nyx.collections.feedback;
+  nyx.collections.position, nyx.collections.recovery, nyx.collections.feedback,
+  nyx.linq.execution;
 
 const
   InspectionPeerID = 'live-service-peer';
@@ -18,6 +19,7 @@ const
   InspectionKeepID = 'keep-reading-position';
   InspectionCanFollowID = 'inspection-can-follow';
   InspectionFeedbackName = 'service-feedback';
+  InspectionCancelFeedID = 'cancel-feed-refresh';
   RecoverySummaryID = 'recovered-draft-summary';
   RecoveryTextID = 'recovered-draft-text';
   RecoveryVisibleID = 'recovered-drafts-visible';
@@ -29,7 +31,9 @@ const
 type
   { Own this UI-only binding beside the mounted application. Close before page
     replacement/application disposal. Its callbacks hold no application, router
-    or document; the revocable context/generation refuses late invocations. }
+    or document; the revocable context/generation refuses late invocations.
+    Refresh owns immutable inputs and explicit result/outcome leases. Close
+    withdraws both before cancellation without waiting for worker retirement. }
   TNyxLiveInspectionDemo = class
   private
     FCallback: INyxEventCallback;
@@ -43,6 +47,15 @@ type
     destructor Destroy; override;
     procedure Close;
     function Feedback: INyxCollectionFeedback;
+    { Latest receipt, including a terminal outcome; nil after explicit cancel or
+      close. Retaining it grants no authority over the former view or receiver. }
+    function PendingFeed: INyxQueryRun;
+    { Supersedes the previous request and captures source revision on UI. The
+      asynchronous result replaces a whole admitted dataset; failure keeps data. }
+    procedure RefreshFeed;
+    { Revokes result/outcome delivery before cooperative cancel. Does not wait,
+      roll back committed data, clear a query or resume a paused inspection. }
+    procedure CancelFeed;
   end;
 
 { Ordinary portable Nyx controls share one runtime collection. Only runtime
@@ -55,9 +68,21 @@ implementation
 uses SysUtils, nyx.text, nyx.types, nyx.controls, nyx.state, nyx.behavior, nyx.responsive,
   nyx.scheduler, nyx.collections, nyx.collections.inspection, nyx.service.monitor,
   nyx.collections.feedback.controls, nyx.collections.query, nyx.collections.query.session,
-  nyx.publication;
+  nyx.publication, nyx.linq, nyx.linq.collections, nyx.linq.publication;
 
 type
+  { Worker-safe replay transformation owns only a copied stable reference and
+    immutable text. It never captures a context, scheduler, live view or control. }
+  TReconnectSelector = class(TInterfacedObject,
+    INyxSelector<TNyxCollectionItem, TNyxCollectionItem>)
+  private
+    FTarget: TNyxItemRef;
+    FText: TNyxText;
+  public
+    constructor Create(const ATarget: TNyxItemRef; const AText: TNyxText);
+    function Project(const AValue: TNyxCollectionItem): TNyxCollectionItem;
+  end;
+
   { Router registrations retain this callback, never their owning binding.
     The status token has the ordinary weak receiver lifetime. Closing disconnects
     that token before clearing managed view/context leases, so no cycle or raw
@@ -73,6 +98,11 @@ type
     FFeedbackParts: TNyxCollectionFeedbackParts;
     FQuerySession: INyxCollectionQuerySession;
     FQueryOwner: INyxCollectionQueryOwner;
+    FFeedRun: INyxQueryRun;
+    FFeedReceiver: INyxCollectionQueryReceiver;
+    FFeedOutcome: INyxQueryRun;
+    FFeedOutcomeReceiver: INyxQueryReceiver<TNyxQueryOutcome>;
+    FFeedSerial: Integer;
     FStatusToken: INyxCollectionViewSubscription;
     FPosition: INyxCollectionPositionState;
     FPositionSerial: Integer;
@@ -86,6 +116,9 @@ type
       ACause: TNyxCollectionInspectionCause);
     procedure AdvanceFeed;
     procedure RetryFeed;
+    procedure RetireFeed;
+    procedure CancelFeed;
+    procedure FeedFinished(const AValues: TNyxSequenceArray<TNyxQueryOutcome>);
     procedure SetDemoFilter(AEnabled: Boolean);
     procedure PublishState(const AStatus: TNyxText);
     procedure RecoveryAction(const AID: TNyxText);
@@ -108,6 +141,7 @@ var
   LStep: INyxButton;
   LFollow: INyxButton;
   LKeep: INyxButton;
+  LCancel: INyxButton;
   LStatus: INyxLabel;
   LPeerTitle: INyxLabel;
   LPeer: INyxTable;
@@ -151,6 +185,8 @@ begin
     LFollow.Binds.Enabled(NyxBooleanState(InspectionCanFollowID)).Done;
     LKeep := NewNyxButton(InspectionKeepID).WithText('Keep reading position');
     LCommands.Add(LKeep);
+    LCancel := NewNyxButton(InspectionCancelFeedID).WithText('Cancel refresh');
+    LCommands.Add(LCancel);
     LStatus := NewNyxLabel(InspectionStatusID);
     LPage.Insert(3, LStatus);
     LStatus.Binds.Text(NyxTextState(InspectionStatusID)).Done;
@@ -248,6 +284,7 @@ end;
 
 procedure TInspectionCallback.Close;
 begin
+  RetireFeed;
 
   if FQueryOwner <> nil then
   begin
@@ -592,11 +629,24 @@ end;
 
 procedure TInspectionCallback.RetryFeed;
 var
+  LLease: INyxEventCallback;
   LStore: INyxCollection;
   LSource: INyxCollectionSnapshot;
   LItem: TNyxItemRef;
+  LRows: INyxSequence<TNyxCollectionItem>;
+  LScheduler: INyxScheduler;
+  LReceiver: INyxCollectionQueryReceiver;
 begin
-  FFeedback.Refreshing;
+  LLease := Self;
+  { Supersession revokes the old destination/outcome before cooperative cancel.
+    Capacity failure of the new request leaves existing accepted data intact. }
+
+  if FFeedSerial = High(Integer) then
+  begin
+    raise ENyxQuery.Create('Sample feed request serial is exhausted');
+  end;
+  RetireFeed;
+  Inc(FFeedSerial);
 
   if not Active then
   begin
@@ -604,25 +654,139 @@ begin
   end;
   LStore := FPeer.Store;
   LSource := LStore.Snapshot;
+  LScheduler := FContext.Scheduler;
+  try
+    LReceiver := NyxCollectionQueryReceiver(LScheduler, LStore, FGeneration);
+    FFeedReceiver := LReceiver;
 
-  if LSource.Count = 0 then
-  begin
-    LItem := NyxItem(LSource.Key, 'gateway');
-    LStore.Apply([NyxInsert(0, NyxCollectionItem(LItem)
-      .WithValue(NyxTextField('name'), 'Request gateway')
-      .WithValue(NyxTextField('status'), 'Running')
-      .WithValue(NyxTextField('notes'), 'Reloaded from the sample feed'))], LSource.Revision);
-  end
-  else
-  begin
-    LItem := LSource.ItemAt(0).Ref;
-    LStore.Apply([NyxUpdate(NyxCollectionItem(LItem)
-      .WithValue(NyxTextField('notes'), 'Reconnected to the sample feed'))], LSource.Revision);
+    if LSource.Count = 0 then
+    begin
+      FFeedback.Loading;
+      LItem := NyxItem(LSource.Key, 'gateway');
+      LRows := TNyxSequence<TNyxCollectionItem>.From([NyxCollectionItem(LItem)
+        .WithValue(NyxTextField('name'), 'Request gateway')
+        .WithValue(NyxTextField('status'), 'Running')
+        .WithValue(NyxTextField('notes'), 'Reloaded from the sample feed')]);
+    end
+    else
+    begin
+      FFeedback.Refreshing;
+      LItem := LSource.ItemAt(0).Ref;
+      LRows := LSource.AsNyx;
+    end;
+    { Feedback publication can run application receivers. An entered cancel or
+      replacement withdraws this exact lease before it may submit any work. }
+
+    if not Active or (FFeedReceiver <> LReceiver) then
+    begin
+      Exit;
+    end;
+    LRows := LRows.Select(TReconnectSelector.Create(LItem,
+      'Reconnected to the sample feed / reload ' + TNyxText(IntToStr(FFeedSerial))));
+    FFeedOutcomeReceiver := TNyxQueryReceiver<TNyxQueryOutcome>.Bind(LScheduler, FeedFinished, FGeneration);
+    FFeedRun := TNyxQuery<TNyxCollectionItem>.Submit(LRows, LScheduler,
+      FFeedReceiver.Port, neAsynchronous, FGeneration);
+    FFeedOutcome := TNyxQueryObservation.Observe(FFeedRun, LScheduler,
+      FFeedOutcomeReceiver.Port, TNyxQueryObservationOptions.Defaults, FGeneration);
+  except
+    on LException: Exception do
+    begin
+      { An older outward call cannot cancel or diagnose a replacement request. }
+
+      if FFeedReceiver = LReceiver then
+      begin
+        RetireFeed;
+
+        if Active then
+        begin
+          FFeedback.Failed(NyxQueryDiagnostic(LException));
+        end;
+      end;
+    end;
   end;
+end;
+
+constructor TReconnectSelector.Create(const ATarget: TNyxItemRef; const AText: TNyxText);
+begin
+  inherited Create;
+  FTarget := ATarget;
+  FText := AText;
+end;
+
+function TReconnectSelector.Project(const AValue: TNyxCollectionItem): TNyxCollectionItem;
+begin
+  Result := AValue.Copy;
+
+  if (AValue.Ref.ID = FTarget.ID) and (AValue.Ref.Collection.Name = FTarget.Collection.Name) then
+  begin
+    Result := Result.WithValue(NyxTextField('notes'), FText);
+  end;
+end;
+
+procedure TInspectionCallback.RetireFeed;
+begin
+
+  if FFeedReceiver <> nil then
+  begin
+    FFeedReceiver.Close;
+  end;
+
+  if FFeedOutcomeReceiver <> nil then
+  begin
+    FFeedOutcomeReceiver.Close;
+  end;
+
+  if FFeedRun <> nil then
+  begin
+    FFeedRun.Cancel;
+  end;
+
+  if FFeedOutcome <> nil then
+  begin
+    FFeedOutcome.Cancel;
+  end;
+  FFeedReceiver := nil;
+  FFeedOutcomeReceiver := nil;
+  FFeedRun := nil;
+  FFeedOutcome := nil;
+end;
+
+procedure TInspectionCallback.CancelFeed;
+var
+  LLease: INyxEventCallback;
+begin
+  LLease := Self;
+  RetireFeed;
 
   if Active then
   begin
     FFeedback.Ready;
+  end;
+end;
+
+procedure TInspectionCallback.FeedFinished(const AValues: TNyxSequenceArray<TNyxQueryOutcome>);
+var
+  LLease: INyxEventCallback;
+begin
+  LLease := Self;
+
+  if not Active or (Length(AValues) <> 1) then
+  begin
+    Exit;
+  end;
+  case AValues[0].Phase of
+    nqpSucceeded:
+      FFeedback.Ready;
+    nqpFailed:
+      FFeedback.Failed(AValues[0].Failure);
+    nqpDiscarded:
+      FFeedback.Failed('This reload was superseded. Current records were kept; try again for fresh data.');
+    nqpCancelled:
+      FFeedback.Ready;
+  else
+    begin
+      { The terminal observer never supplies computing or pending phases. }
+    end;
   end;
 end;
 
@@ -640,9 +804,12 @@ begin
 
   if (FStep = 0) and not LSource.Has(LGateway) then
   begin
-    { After the empty-source step, another replay cycle can seed itself. Retry
-      remains a separate visible action and no query contribution is cleared. }
-    RetryFeed;
+    { After the empty-source step, seed the next deterministic replay
+      synchronously. Try again remains a separate asynchronous action and no
+      query contribution is cleared by restarting this replay. }
+    LStore.Apply([NyxInsert(0, NyxCollectionItem(LGateway)
+      .WithValue(NyxTextField('name'), 'Request gateway')
+      .WithValue(NyxTextField('status'), 'Running'))], LSource.Revision);
 
     if not Active then
     begin
@@ -722,6 +889,10 @@ begin
   begin
     SetDemoFilter(False);
   end
+  else if AEvent.OriginID = InspectionCancelFeedID then
+  begin
+    CancelFeed;
+  end
   else if (AEvent.OriginID = RecoveryPreviousID) or (AEvent.OriginID = RecoveryNextID) or
     (AEvent.OriginID = RecoveryDiscardID) then
   begin
@@ -744,7 +915,7 @@ begin
   LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition, ARecovery);
   FCallback := LCallback;
   FCallbackObject := LCallback;
-  SetLength(FSubscriptions, 11);
+  SetLength(FSubscriptions, 12);
   FSubscriptions[0] := AEvents.On(NyxControlEvents(InspectionPauseID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[1] := AEvents.On(NyxControlEvents(InspectionResumeID), ntClick)
@@ -766,6 +937,8 @@ begin
   FSubscriptions[9] := AEvents.On(NyxControlEvents(LCallback.FFeedbackParts.ResetID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[10] := AEvents.On(NyxControlEvents(LCallback.FFeedbackParts.ResumeID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[11] := AEvents.On(NyxControlEvents(InspectionCancelFeedID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
 end;
 
@@ -804,6 +977,34 @@ begin
   if FCallback <> nil then
   begin
     Result := TInspectionCallback(FCallbackObject).FFeedback;
+  end;
+end;
+
+function TNyxLiveInspectionDemo.PendingFeed: INyxQueryRun;
+begin
+  Result := nil;
+
+  if FCallback <> nil then
+  begin
+    Result := TInspectionCallback(FCallbackObject).FFeedRun;
+  end;
+end;
+
+procedure TNyxLiveInspectionDemo.RefreshFeed;
+begin
+
+  if FCallback <> nil then
+  begin
+    TInspectionCallback(FCallbackObject).RetryFeed;
+  end;
+end;
+
+procedure TNyxLiveInspectionDemo.CancelFeed;
+begin
+
+  if FCallback <> nil then
+  begin
+    TInspectionCallback(FCallbackObject).CancelFeed;
   end;
 end;
 

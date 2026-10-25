@@ -216,7 +216,13 @@ Producer results must separately follow the existing scheduler, cancellation,
 generation and expected-revision rules. This feedback binding does not make a
 stale worker result safe to install. The deterministic nine-step example simulates
 activity without a timer/network service and performs real collection mutations
-for retry, empty data and row churn. Background-producer proof, Tree-specific
+for empty data and row churn. Retry submits immutable rows using the existing
+LINQ/scheduler pipeline, with native workers or the browser event loop. The public
+demo's native handwritten/generated controls exercise stale-revision refusal,
+supersession, cancellation and close-before-delivery; actual worker retirement
+is observed after widget disposal. Complete results use ordinary collection
+`Assign` replacement semantics, rather than an inferred stable-ID merge.
+Tree-specific
 match/context counts, saved feedback policy/Studio/MCP adoption and browser/
 visual/full live-inspection acceptance remain open. Native handwritten/generated
 applications exercise all seven feedback states and independent filter ownership

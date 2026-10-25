@@ -120,6 +120,8 @@ query snapshots alone do not establish the user-facing result or performance.
   owners remain the implementation foundation.
 - [Equal-value row replacement](NS-1_state-collections_02.md) closes a reproduced
   no-op folding gap that otherwise transfers an old draft to a replacement ID.
+- [Final query-delivery admission](NS-1_state-collections_03.md) prevents a
+  validator-revoked receiver from installing a late producer result.
 
 L1 now includes a data-only unfinished-draft recovery journal, native Table
 capture and public Nyx recovery review. Handwritten/generated native applications
@@ -152,3 +154,14 @@ only. Model checks qualify veto, reentrant refusal, post-commit receiver failure
 and retirement. This advances feed presentations above without accepting the
 whole criterion: screen-reader/visual/browser proof, background producer rules,
 Tree-specific context, memory/scale and saved/Studio/MCP adoption remain open.
+
+The public retry now submits copied rows through the existing query/scheduler
+pipeline. Native handwritten/generated controls exercise stale-source refusal,
+supersession, actual cancellation and close-before-delivery at desktop/compact
+widths. Worker retirement is observed after widget disposal; ordinary query and
+bounded native scheduler regressions still pass. A source validator could revoke
+the query receiver before its former Assign call installed anyway: collection03
+records the reproduced defect, final readiness repair and remaining browser gate.
+This advances producer/lifecycle behavior without accepting the full criterion.
+Browser execution, overload presentation in the demo, authoring/AT/visual/Tree
+and measured scale/memory remain open under the original criteria.

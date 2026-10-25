@@ -39,7 +39,12 @@ type
     retain their ordinary semantics, including errors AFTER committed notification.
     An unchanged result is a collection no-op, although the run succeeds.
     Optional AGeneration provides automatic navigation/disposal revocation, even
-    for direct Port.Publish callers. It retains no UI owner. Pair it with the same
+    for direct Port.Publish callers. Final admission after validators also refuses
+    reentrant Close/cancellation. Stores must supply prepared publication and its
+    final readiness facet; a generation must supply cancellation readiness. These
+    captured noncalling fences replace a late application getter. Cancellation
+    after final admission cannot roll back installation/notification.
+    The generation retains no UI owner. Pair it with the same
     generation on Submit to stop obsolete computation too. Close remains useful
     for a receiver that retires earlier than its view; nil preserves existing
     explicit receiver ownership for application-wide stores. }
@@ -56,19 +61,29 @@ function NyxCollectionQueryReceiver(const AScheduler: INyxScheduler;
 
 implementation
 
+uses SysUtils, nyx.publication;
+
 type
+  { UI-only receiver owns its exact source/revision and captured flag-only
+    generation readiness. Close withdraws authority before releasing managed
+    source leases; an entered call retains itself and its preparation locally. }
   TCollectionPort = class(TInterfacedObject, INyxQueryResultPort<TNyxCollectionItem>)
   private
     FScheduler: INyxScheduler;
     FCollection: INyxCollection;
     FRevision: Integer;
-    FGeneration: INyxCancellationScope;
+    FAtomic: INyxAtomicCollection;
+    FGenerationReady: INyxCancellationReadiness;
+    FClosed: Boolean;
+    function Ready: Boolean;
   public
     constructor Create(const AScheduler: INyxScheduler; const ACollection: INyxCollection;
       const AGeneration: INyxCancellationScope);
     procedure Close;
     function Publish(const AValues: TNyxSequenceArray<TNyxCollectionItem>): Boolean;
   end;
+  { Explicit lease closes the independently retained port before release.
+    Neither object retains a UI receiver, renderer, view or callback. }
   TCollectionLease = class(TInterfacedObject, INyxCollectionQueryReceiver)
   private
     FPort: TCollectionPort;
@@ -92,36 +107,74 @@ begin
   end;
   AScheduler.RequireUI;
   FScheduler := AScheduler;
+
+  if not Supports(ACollection, INyxAtomicCollection, FAtomic) then
+  begin
+    raise ENyxQuery.Create('Collection query delivery requires prepared collection publication');
+  end;
+
+  if (AGeneration <> nil) and not Supports(AGeneration, INyxCancellationReadiness, FGenerationReady) then
+  begin
+    raise ENyxQuery.Create('Collection query generation requires noncalling cancellation readiness');
+  end;
   FCollection := ACollection;
   FRevision := ACollection.Snapshot.Revision;
-  FGeneration := AGeneration;
 end;
 
 procedure TCollectionPort.Close;
 begin
   FScheduler.RequireUI;
+  FClosed := True;
   FCollection := nil;
+  FAtomic := nil;
+end;
+
+function TCollectionPort.Ready: Boolean;
+begin
+  Result := not FClosed;
+
+  if Result and (FGenerationReady <> nil) then
+  begin
+    try
+      FGenerationReady.CheckReady;
+    except
+      Result := False;
+    end;
+  end;
+  Result := Result and not FClosed;
 end;
 
 function TCollectionPort.Publish(const AValues: TNyxSequenceArray<TNyxCollectionItem>): Boolean;
 var
-  LCollection, LCandidate: INyxCollection;
+  LKeepAlive: INyxQueryResultPort<TNyxCollectionItem>;
+  LCollection: INyxCollection;
+  LCandidate: INyxCollection;
+  LAtomic: INyxAtomicCollection;
   LBefore: INyxCollectionSnapshot;
+  LPlan: INyxPreparedPublication;
+  LReady: INyxPublicationReadiness;
 begin
+  LKeepAlive := Self;
   FScheduler.RequireUI;
+  Result := False;
 
-  if (FGeneration <> nil) and FGeneration.Cancelled then
+  if not Ready then
   begin
-    Close;
+    Exit;
   end;
   LCollection := FCollection;
-  Result := LCollection <> nil;
+  LAtomic := FAtomic;
 
-  if not Result then
+  if (LCollection = nil) or (LAtomic = nil) then
   begin
     Exit;
   end;
   LBefore := LCollection.Snapshot;
+
+  if not Ready then
+  begin
+    Exit;
+  end;
 
   if LBefore.Revision <> FRevision then
   begin
@@ -130,7 +183,33 @@ begin
   { Full candidate admission occurs on UI, away from the accepted store. Assign
     performs ordinary revision/validator checks before one atomic publication. }
   LCandidate := NewNyxCollection(LBefore.Key, LBefore.Schema, AValues);
-  LCollection.Assign(LCandidate.Snapshot, FRevision);
+
+  if not Ready then
+  begin
+    Exit;
+  end;
+  LPlan := LAtomic.PrepareAssign(LCandidate.Snapshot, FRevision);
+  try
+
+    if not Supports(LPlan, INyxPublicationReadiness, LReady) then
+    begin
+      raise ENyxQuery.Create('Collection query preparation requires final admission readiness');
+    end;
+    LPlan.Validate;
+    LReady.CheckReady;
+
+    if not Ready then
+    begin
+      Exit;
+    end;
+    { Only captured noncalling fences precede the admitted install. Observers
+      run after commit; closing there cannot turn committed data into rollback. }
+    LPlan.Install;
+    Result := True;
+    LPlan.Notify;
+  finally
+    LPlan.Retire;
+  end;
 end;
 
 constructor TCollectionLease.Create(const AScheduler: INyxScheduler;

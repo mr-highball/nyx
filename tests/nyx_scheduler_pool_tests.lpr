@@ -255,6 +255,8 @@ begin
 end;
 
 procedure Run;
+const
+  CCapacityFailure: TNyxText = 'Capacity / 🌙';
 var
   LOptions: TNyxSchedulerOptions;
   LConfigured: TNyxSchedulerOptions;
@@ -326,8 +328,8 @@ begin
     end;
     Check(LRefused, 'invalid explicit configuration refuses');
   end;
-  LTicket := NewNyxFailedExecution('Capacity / 🌙');
-  Check((LTicket.Status = nesFailed) and (LTicket.Failure = 'Capacity / 🌙'),
+  LTicket := NewNyxFailedExecution(CCapacityFailure);
+  Check((LTicket.Status = nesFailed) and (LTicket.Failure = CCapacityFailure),
     'admission failure owns its exact supplementary Unicode diagnostic');
   LTicket.Cancel;
   Check((LTicket.Status = nesFailed) and not LTicket.Cancelled,
