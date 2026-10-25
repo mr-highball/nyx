@@ -96,3 +96,13 @@ WORK owns source identities, diagnostic limits and the discarded painting trials
 - Actual callback/incarnation/fallback checks, ordinary retained/scrolling/Studio
   regressions and saved-application qualification are recorded in WORK.md as
   they finish. Full original interaction/platform/Studio criteria remain open.
+- The original full native Studio journey now passes 1,124/1,135 assertions at
+  1280/390 within its unchanged bounds, without heap tracing. Both produce the
+  same accepted project/Pascal bytes. The exact exported application's fresh
+  native build passes 448 assertions at each width with complete clean heaps;
+  its browser companion compiles only. These establish the functional journey,
+  not full instrumented Studio lifetime or a whole-editor speedup.
+- The separate capture companion preserves the foreground guard: actual-display
+  attempts refuse in this automation context. Explicit diagnostic redraws are
+  inspected at both widths with clean heaps; they do not qualify displayed
+  clipping. The remaining visual/platform/lifetime outcomes stay open.

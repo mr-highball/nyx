@@ -9,7 +9,52 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — grouped native geometry — 2026-10-25
+## Current checkpoint — complete native Studio/application journeys — 2026-10-25
+
+The preceding turn is PROGRESS: ea2ad53 groups native sibling publication and
+qualifies its bounded performance/ownership improvement. The same original full
+Studio journey now passes 1,124 checks at 1280 and 1,135 at 390, including actual
+Inspector edits/events, paired history, named Save/Open and own-source export.
+Both retain assertions/range/overflow/I/O/debug/profile instrumentation and the
+original 900-second bound. Heap tracing is absent in these full functional runs;
+their 753.143/460.395 seconds establish completion within that bound, not memory
+qualification or a matched whole-editor speedup.
+
+Both widths export identical 15,127-byte project and 8,188-byte Pascal packets,
+also matching the earlier accepted producer. The exact exported Pascal compiles
+fresh for native and browser. Its native application passes all 448 assertions
+at each width with complete clean heaps (13.467/12.058 seconds). The two native
+compilers have no warnings; the browser compiler has the existing seven installed
+RTL warnings and no owned warning. Browser execution is still unqualified.
+
+A small Pascal capture companion now builds beside that exact exported module.
+It owns only its application/form, checks the authored document stays unchanged,
+and never captures a desktop or foreign window. Actual display capture refused
+its foreground guard, including after ordinary LCL focus activation; both failed
+attempts and clean cleanup evidence are retained. There is no silent fallback.
+An explicit diagnostic-print mode produces inspected redraws at both widths with
+complete clean heaps. This is a warm visual companion using the known checked
+own-application PPUs; it is not a cold build, input test or displayed-clipping
+qualification. The redraw's header/toolbar spacing needs actual display review
+before any visual-defect conclusion. The CLI admits names only at its typed
+capture-mode boundary. Its initial Unicode string-case compile failure and
+repair remain in evidence.
+
+Evidence remains `.local/qualification/native-geometry-group-01`, under
+`studio-full`, `studio-own` and the separately named `application-visual*`
+cohorts. All actual jobs are joined; frozen library and original fixture inputs
+remain unchanged. The new capture companion is separate from those original
+assertions. No full instrumented Studio lifetime, actual-display quality,
+other-widgetset/browser parity, original task/DONE or completion credit follows.
+
+Root remains solo. Do not repeat the unchanged full journey. Continue the
+existing [Kanban policy preservation task](TODO/NS-3_control-usefulness_05.md):
+source inspection confirms its lane builder still omits explicit table/column
+query policies. Its shared policy prerequisites already exist. Preserve all
+original native-geometry/workbench criteria, and keep their outstanding display,
+instrumented lifetime, platform and browser outcomes visible with their owners.
+
+## Grouped native geometry checkpoint — 2026-10-25
 
 Root continues alone. The owned raw layout panel now publishes bounded,
 compatible Win32 siblings together during LCL's synchronous realization walk.

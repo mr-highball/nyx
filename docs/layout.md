@@ -351,6 +351,16 @@ input drafts/selection. Explicit parent-window recreation is compared against
 ordinary LCL, including its focus behavior; it does not promise focus survives
 destruction of the focused input's native ancestry.
 
+The full Studio table-workbench journey exports its own
+`nyx.fixture.table.query.studio` module. The native
+[capture companion](../tests/nyx_table_query_application_capture.lpr) can be built
+beside that exact module using the same checked LCL dependencies. It accepts a
+client width (`1280` or `390`), a fresh PNG path and optional `display`/`print`
+mode. Display is the default and requires the owned form in foreground. Print
+is an explicit diagnostic redraw; it does not prove displayed clipping or input
+behavior. Neither mode silently substitutes for the other or mutates the authored
+document. The ordinary compiled-application regression remains the input owner.
+
 Native label measurement lazily borrows one screen drawing context during each
 synchronous layout pass. LCL's canvas state is saved/restored around each label;
 current font, caption, wrapping and bidirectional settings are still copied for
