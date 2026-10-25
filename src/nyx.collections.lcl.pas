@@ -4873,7 +4873,10 @@ begin
     begin
       FPreviousHeaderHeight := FGrid.RowHeights[0];
       FQueryHeaderAdjusted := True;
-      FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FGrid.DefaultRowHeight * 3);
+      { Body presentation can already have changed DefaultRowHeight. Reserve
+        query chrome from the captured native baseline, so an authored density
+        choice cannot enlarge headers while a runtime density choice does not. }
+      FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FPreviousDefaultRowHeight * 3);
     end;
     { The launcher belongs to the logical table, never a visible field/pin
       group. Its row-zero band survives all-hidden and narrow presentations. }
@@ -4881,7 +4884,7 @@ begin
     if FColumnManager <> nil then
     begin
       FColumnToolbarHeight := Max(Round(36 * LScale),
-        FGrid.DefaultRowHeight + Round(8 * LScale));
+        FPreviousDefaultRowHeight + Round(8 * LScale));
       FGrid.RowHeights[0] := FGrid.RowHeights[0] + FColumnToolbarHeight;
       FColumnToolbarApplied := True;
       LOuter.ColumnToolbarHeight := FColumnToolbarHeight;
@@ -4982,7 +4985,7 @@ begin
       begin
         FPreviousHeaderHeight := FGrid.RowHeights[0];
         FQueryHeaderAdjusted := True;
-        FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FGrid.DefaultRowHeight * 3);
+        FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FPreviousDefaultRowHeight * 3);
       end;
       for LIndex := 0 to High(FMainColumns) do
       begin
@@ -7391,7 +7394,7 @@ begin
       begin
         FPreviousHeaderHeight := FGrid.RowHeights[0];
         FQueryHeaderAdjusted := True;
-        FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FGrid.DefaultRowHeight * 3);
+        FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FPreviousDefaultRowHeight * 3);
       end;
 
       if FQueries <> nil then

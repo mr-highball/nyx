@@ -5,6 +5,7 @@ program nyx_service_monitor_controls;
 
 uses Interfaces, Classes, SysUtils, Forms, Controls, Grids,
   nyx.text, nyx.model, nyx.codec, nyx.codegen, nyx.controls,
+  nyx.collections.presentation,
   nyx.collections, nyx.collections.mount, nyx.application.lcl,
   nyx.service.monitor
   {$ifdef NYX_SERVICE_GENERATED}, nyx.generated.view{$endif};
@@ -19,6 +20,35 @@ begin
   if not ACondition then
   begin
     raise Exception.Create('Service monitor: ' + AReason);
+  end;
+end;
+
+{ Compare independently mounted body-density choices on real native grids.
+  A runtime density update already preserves headers; authored initial density
+  must do the same. The probe owns its cloned document until its host retires. }
+function HeaderHeightWithDensity(ADocument: TNyxDocument; AWidth: Integer;
+  ADensity: TNyxTableRowDensity): Integer;
+var
+  LDocument: TNyxDocument;
+  LApplication: TNyxLCLApplication;
+  LTable: TNyxNode;
+begin
+  LDocument := ADocument.Clone;
+  LApplication := nil;
+  try
+    LTable := LDocument.Find(ServiceTableID);
+    LTable.SetCollectionView(LTable.CollectionView.TablePresentation(
+      NyxTablePresentation.Density(ADensity)));
+    LApplication := TNyxLCLApplication.Create;
+    LApplication.Mount(LDocument);
+    LApplication.Window.ClientWidth := AWidth;
+    LApplication.Window.ClientHeight := 760;
+    LApplication.Window.Show;
+    Application.ProcessMessages;
+    Result := TStringGrid(LApplication.View.ControlFor(ServiceTableID)).RowHeights[0];
+  finally
+    LApplication.Free;
+    LDocument.Free;
   end;
 end;
 
@@ -124,6 +154,9 @@ begin
       'the table is visible at the requested native width');
     Check(VisibleTablePanes(LApplication.View.ControlFor(ServiceTableID)) = 3,
       'both pinned panes remain visible beside the center at this width');
+    Check(HeaderHeightWithDensity(LDocument, AWidth, ntrdCompact) =
+      TStringGrid(LApplication.View.ControlFor(ServiceTableID)).RowHeights[0],
+      'initial body density leaves the independent query/column header unchanged');
     Check(LApplication.Collections.Collection(NyxCollection(ServiceCollectionName)) <>
       LPeer.Collections.Collection(NyxCollection(ServiceCollectionName)),
       'two applications own independent runtime collections');

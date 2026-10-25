@@ -17,7 +17,7 @@ Both packets serve the original seven criteria below and remain open.
 The public [service monitor](../examples/service-monitor/README.md) now supplies
 an English, typed code-first workbench with editable Service/Status pins, query,
 arrangement, long-value presentation and explicit target copy/save services.
-Its exact generated companion and handwritten document each pass 16 mounted
+Its exact generated companion and handwritten document each pass 17 mounted
 native checks at 1280/390 with clean heaps, including both physical pin panes,
 read-only refusal, Unicode, independent stores/defaults and disposal. Both actual
 entries and browser companions compile. The initial compact pin visibility
@@ -30,6 +30,17 @@ space. Review its useful density and tunability during the public W1 journey;
 the diagnostic image does not establish actual-display defects or full visual
 acceptance. Geometry02's repeated profiling sequence is stopped after task-flow
 reassessment; continue this public workflow rather than another equivalent probe.
+
+Initial native body density previously enlarged that header, unlike a later
+runtime density update. A new independently mounted density comparison fails
+against the old adapter with a clean heap. Query reservation and the launcher now
+use the captured native baseline. The handwritten/generated mounted checks pass
+17 at each width with clean heaps; actual native presentation and column activation
+pass 161/243 per width with clean heaps. The full query suite remains unqualified
+here: Windows.GetCursorPos fails before its physical launcher click at both widths.
+Browser compilation and Canvas/PNG redraws do not close real input/display gates.
+Explicit typed header line/space budgets remain part of the presentation/usability
+continuation; the current fix preserves independent body/header ownership.
 
 **Reconfiguration compatibility — projection admission:**
 

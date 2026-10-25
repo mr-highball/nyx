@@ -9,7 +9,61 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — public service-monitor workbench — 2026-10-25
+## Current checkpoint — independent native table headers — 2026-10-25
+
+The preceding goal turn is PROGRESS: 529b788 publishes the portable service
+monitor and is remote-verified. Root remains solo. This continuation serves
+workbench03's presentation and real-application criteria; every original criterion
+and full browser/input/lifetime requirement remains in place.
+
+The public mounted fixture now compares independently created Compact and
+Comfortable body-density choices. The previous native adapter fails that exact
+header-independence assertion with a complete clean heap. Runtime density changes
+already preserved the header, but initial authored choices used the changed body
+DefaultRowHeight for query reservation and the column launcher. Both table layout
+paths and ordinary query refresh now use the captured native baseline instead.
+This preserves the initial native header minimum and the existing scaled launcher
+minimum, without adding a wire version, interface, source format or target flag.
+
+The actual handwritten and generated applications each pass 17 mounted checks at
+1280/390, with complete clean heaps. Their four native compiler logs are warning-
+free. Both corresponding browser applications compile with seven installed RTL
+warnings each and no owned warnings; browser execution is not claimed. The exact
+7,004-byte generated unit is byte-identical to the prior accepted source packet.
+Canvas/PNG companions preserve all 17 checks at both widths with clean heaps and
+record a 114-pixel native header at each width. The compact redraw is inspected;
+it remains a diagnostic, not actual display/clipping or physical input evidence.
+
+Broader actual native presentation controls pass 161 per width, including density
+changes during editing and independent header allocation. Native column activation
+passes 243 per width, including failure and callback retirement cases. All four
+heaps are complete and clean; all three regression compiler logs are warning-free.
+The unchanged complete table-query suite stops at Windows.GetCursorPos before its
+physical launcher click at BOTH widths. Both failed runs have complete clean heaps.
+No cursor assertion, input gate or original case is skipped or weakened; these
+failures do not establish whole-suite or physical workflow qualification.
+
+The computer-use skill is read, but its supported node_repl initialization fails
+before any desktop action: kernel assets cannot be written because a path is
+missing. Browser inventory contains only older unreachable loopback tabs; no
+existing Nyx preview service is observed on the recorded endpoints. Browser
+security review rejects a local-file preview because file: is disallowed. No
+alternate server/port/protocol workaround is launched. A concise optional request
+for an existing allowed HTTP(S) preview URL is pending; useful library work can
+continue independently. These are tool/runtime limits, not new approval gates.
+
+All actual readers are joined, and positive source pins are revalidated. The
+private native-table-header-01 packet retains old/final sources, negative and
+positive receipts, unchanged full-query failures, clean heaps, diagnostics and
+tool rejection details. No task, goal, percentage or completion credit closes.
+Equivalent performance profiling stays stopped. Next: continue the public W1
+workflow when real input/browser delivery is available, and implement an explicit
+typed header line/space budget through the existing presentation contract rather
+than coupling it to body density. Header tunability, full visual usability and
+the rest of workbench03 remain open. New large outputs use provisioned E: storage;
+no cleanup, deletion, compiler installation or service replacement is performed.
+
+## Public service-monitor workbench — 2026-10-25
 
 The preceding turn is PROGRESS: 2918e45 avoids repeated runtime resource admission
 and is remote-verified. Root remains solo. The ordinary compact Inspector still

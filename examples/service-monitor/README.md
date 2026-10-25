@@ -9,6 +9,9 @@ reordering, visibility, pinning and restoring defaults. Service starts pinned at
 the logical start and Status at the logical end. Both remain editable; Process ID
 is read-only. Notes wrap and long command lines retain their complete raw value
 for inspection and copying. Cell actions expose inspection, copy and TSV export.
+Body-row density is independent of the query/column header reservation, both at
+initial mount and during runtime updates. Native headers use their captured
+native metric rather than multiplying the selected body-row height.
 
 The application explicitly supplies clipboard and file-save hosts through the
 public renderer service contract. Authored export intent and runtime permission
@@ -52,7 +55,8 @@ widgetsets use their corresponding installed LCL unit directories.
 `tests/nyx_service_monitor_controls.lpr` mounts the public document in two native
 applications. It checks editable pinned fields, read-only refusal, exact Unicode,
 independent stores, unchanged authored defaults and mount retirement at an explicit
-width. Its optional second argument writes a fresh UTF-8 generated companion;
+width. An independently mounted body-density comparison also protects header
+allocation. Its optional second argument writes a fresh UTF-8 generated companion;
 `NYX_SERVICE_GENERATED` selects that companion for the same checks.
 
 These are mounted contract checks, not physical keyboard/pointer qualification.
