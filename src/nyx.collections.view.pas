@@ -47,6 +47,7 @@ uses
   nyx.collections.arrangement,
   nyx.collections.presentation,
   nyx.collections.alignment,
+  nyx.collections.inspection,
   nyx.scheduler,
   nyx.collections.selection;
 
@@ -234,6 +235,26 @@ type
     property Connected: Boolean read GetConnected;
   end;
 
+  { Optional UI-owner inspection preserves the original view interface. Pause
+    retains its immutable displayed frame while the same atomic store and peer
+    views keep publishing. Incoming revisions are coalesced, not queued as extra
+    snapshots. Resume reprojects the latest store and reports lost context.
+    Editing a paused view refuses; selection/query inspection remains local to
+    its frozen source. Status notifications share the existing weak token owner
+    but never pretend that a pending update changed the displayed dataset.
+    Callers disconnect their status token before freeing its receiver. }
+  INyxCollectionInspection = interface(IInterface)
+    ['{A4B59572-6705-4D80-9937-7EF2939FB2C4}']
+    function GetInspectionPolicy: TNyxCollectionInspectionPolicy;
+    procedure ConfigureInspection(const APolicy: TNyxCollectionInspectionPolicy);
+    function CaptureInspection: TNyxCollectionInspectionObservation;
+    function GetDisplayedSource: INyxCollectionSnapshot;
+    procedure PauseInspection;
+    procedure ResumeInspection;
+    function SubscribeInspection(AObserver: TNyxCollectionInspectionObserver):
+      INyxCollectionViewSubscription;
+  end;
+
   { Optional tree capability, obtained with NyxTreeHierarchy. It retains the
     runtime view, never a document or host widget. Closed branches are the default.
     Exact scoped identities retain disclosure through moves, reparenting and
@@ -377,6 +398,9 @@ function NyxCollectionPages(const AView: INyxCollectionView): INyxCollectionPage
 { Unsupported alternatives/non-table views refuse explicitly. The optional
   facet never manufactures a toolkit-specific column engine or data copy. }
 function NyxCollectionColumns(const AView: INyxCollectionView): INyxCollectionColumns;
+{ Query the optional runtime owner without changing an existing view or source.
+  Unsupported alternatives return nil; a captured source is immutable data only. }
+function NyxCollectionInspection(const AView: INyxCollectionView): INyxCollectionInspection;
 { Retains an optional UI-thread text/density command owner. Unsupported or
   non-table alternatives refuse; no host-specific control API is exposed. }
 function NyxCollectionTablePresentation(const AView: INyxCollectionView):
@@ -431,7 +455,7 @@ function PrepareNyxCollectionColumnTransfer(const AFormer,
 implementation
 
 uses
-  Math;
+  Math, nyx.text.index;
 
 type
   { Private forward declarations join source projection and query preparation
@@ -460,11 +484,15 @@ type
       const AColumns: TNyxColumnPreferences;
       const APresentation: TNyxTablePresentationPreferences): INyxPreparedPublication;
   end;
+  { A caller-owned token borrows its view and exactly one receiver kind. The
+    view borrows token pointers; detachment clears both callbacks before either
+    receiver can be freed. Inspection-only changes do not invoke data observers. }
   TViewSubscription = class(TInterfacedObject, INyxCollectionViewSubscription)
   public
     Owner: TView;
     Serial: Integer;
     Observer: TNyxCollectionViewObserver;
+    InspectionObserver: TNyxCollectionInspectionObserver;
     destructor Destroy; override;
     function GetConnected: Boolean;
     procedure Disconnect;
@@ -501,12 +529,16 @@ type
 
   { Live projection owns accepted query/page/selection state and subscriptions.
     Optional detached row-copy witnesses are retired before state installation
-    and final release, and never retain this owner through a captured menu. }
+    and final release, and never retain this owner through a captured menu.
+    Optional inspection retains the displayed frame and bounded removed-ID facts,
+    never a backlog or a second store. Its prepared state uses the SAME atomic
+    reservation as normal projection, query and column publications. }
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
     INyxCollectionTablePresentation, IColumnPresentationTransferTarget,
-    INyxCollectionColumnSampling, INyxCollectionExportView, INyxCollectionSelectedRowsView)
+    INyxCollectionColumnSampling, INyxCollectionExportView, INyxCollectionSelectedRowsView,
+    INyxCollectionInspection)
   private
     FRowCopyReadiness: INyxCancellationReadiness;
     FRowCopyReadinessObject: TRowCopyReadiness;
@@ -558,6 +590,12 @@ type
     FTokens: array of TViewSubscription;
     FNextSerial: Integer;
     FNotifying: Boolean;
+    FInspectionPolicy: TNyxCollectionInspectionPolicy;
+    FInspectionStatus: TNyxCollectionInspectionObservation;
+    FInspectionRemoved: TNyxItemRefs;
+    FInspectionIndex: TNyxTextIndex;
+    FInspectionPendingOnly: Boolean;
+    FInspectionTransition: Boolean;
     procedure RetireRowCopy;
     procedure Writable;
     procedure ValidateDataset(const AData: INyxCollectionSnapshot;
@@ -570,9 +608,16 @@ type
       const AChanges: INyxCollectionChanges);
     procedure RetireCandidate;
     procedure ProjectChanges(const AChanges: INyxCollectionChanges);
+    procedure ProjectSnapshot(const AData: INyxCollectionSnapshot;
+      const AChanges: INyxCollectionChanges);
+    procedure CopyProjectionTo(ATarget: TView);
+    procedure PrepareInspectionUpdate(ATarget: TView;
+      const AData: INyxCollectionSnapshot; const AChanges: INyxCollectionChanges);
     procedure StoreChanged(const AStore: INyxCollection;
       const AChanges: INyxCollectionChanges);
-    procedure Notify(const AChanges: INyxCollectionChanges);
+    procedure Notify(const AChanges: INyxCollectionChanges;
+      AInspectionOnly: Boolean = False;
+      ACause: TNyxCollectionInspectionCause = ncicViewChanged);
     procedure Disconnect(AToken: TViewSubscription);
     function ReconcileSelection(const ASource, AResult,
       APrevious: INyxCollectionSnapshot): INyxCollectionSelection;
@@ -589,6 +634,14 @@ type
     constructor Create(const AStore: INyxCollection;
       const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
     destructor Destroy; override;
+    function GetInspectionPolicy: TNyxCollectionInspectionPolicy;
+    procedure ConfigureInspection(const APolicy: TNyxCollectionInspectionPolicy);
+    function CaptureInspection: TNyxCollectionInspectionObservation;
+    function GetDisplayedSource: INyxCollectionSnapshot;
+    procedure PauseInspection;
+    procedure ResumeInspection;
+    function SubscribeInspection(AObserver: TNyxCollectionInspectionObserver):
+      INyxCollectionViewSubscription;
     function GetSpec: TNyxCollectionViewSpec;
     function GetSnapshot: INyxCollectionSnapshot;
     function GetStore: INyxCollection;
@@ -1679,6 +1732,8 @@ end;
 
 procedure TViewSubscription.Disconnect;
 begin
+  Observer := nil;
+  InspectionObserver := nil;
 
   if Owner <> nil then
   begin
@@ -1811,6 +1866,8 @@ begin
   FSpec := ASpec.Copy;
   FProjection := AProjection;
   FSource := FStore.Snapshot;
+  FInspectionStatus.DisplayRevision := FSource.Revision;
+  FInspectionStatus.IncomingRevision := FInspectionStatus.DisplayRevision;
   FQuery := ASpec.QueryPolicy;
   FQuerySession := TQuerySessionState.Create;
   FQuerySessionLease := FQuerySession;
@@ -1845,6 +1902,7 @@ begin
   if Supports(FStore, INyxAtomicCollection, LAtomic) then
   begin
     FAtomic := LAtomic;
+    FInspectionStatus.Supported := True;
     FStoreToken := FAtomic.SubscribePrepared(StoreChanged, PrepareCandidate,
       InstallCandidate, RetireCandidate);
   end
@@ -1878,12 +1936,16 @@ begin
   for LIndex := 0 to Length(FTokens) - 1 do
   begin
     FTokens[LIndex].Owner := nil;
+    FTokens[LIndex].Observer := nil;
+    FTokens[LIndex].InspectionObserver := nil;
   end;
   FTokens := nil;
   FSnapshot := nil;
   FSource := nil;
   FAtomic := nil;
   FStore := nil;
+  FreeAndNil(FInspectionIndex);
+  FInspectionRemoved := nil;
   inherited Destroy;
 end;
 
@@ -1997,7 +2059,7 @@ var
   LBusy: Boolean;
 begin
 
-  if FNotifying or (FPrepared <> nil) or (FQueryPreparation <> nil) or
+  if FInspectionTransition or FNotifying or (FPrepared <> nil) or (FQueryPreparation <> nil) or
     (FColumnPreparation <> nil) then
   begin
     raise ENyxCollection.Create('Reentrant collection view mutation is not supported');
@@ -2012,7 +2074,7 @@ begin
     Recheck every canonical reservation AFTER it returns, so such a callback
     cannot acquire a column plan then let an older query/selection command pass. }
 
-  if LBusy or FNotifying or (FPrepared <> nil) or
+  if FInspectionTransition or LBusy or FNotifying or (FPrepared <> nil) or
     (FQueryPreparation <> nil) or (FColumnPreparation <> nil) then
   begin
     raise ENyxCollection.Create('Reentrant collection view mutation is not supported');
@@ -2159,10 +2221,12 @@ begin
   if FAtomic = nil then
   begin
     ProjectChanges(AChanges);
+    FInspectionStatus.DisplayRevision := AChanges.After.Revision;
+    FInspectionStatus.IncomingRevision := FInspectionStatus.DisplayRevision;
   end;
   { Built-in stores already installed every prepared view before the first
     observer. Notifications perform target synchronization, never admission. }
-  Notify(AChanges);
+  Notify(AChanges, FInspectionStatus.Mode = ncimPaused, ncicSourceChanged);
 end;
 
 procedure TView.PrepareCandidate(const AData: INyxCollectionSnapshot;
@@ -2175,22 +2239,25 @@ begin
     through admission even when application code retires its rendered host. }
   LKeepAlive := Self as INyxCollectionView;
 
-  if (FQueryPreparation <> nil) or (FColumnPreparation <> nil) then
+  if FInspectionTransition or (FQueryPreparation <> nil) or (FColumnPreparation <> nil) then
   begin
     raise ENyxCollection.Create('Source row publication conflicts with a prepared view command');
   end;
   RetireCandidate;
   LCandidate := TView.CreateValidator(FSpec, FProjection);
   try
-    LCandidate.FQuery := FQuery;
-    LCandidate.FSource := FSource;
-    LCandidate.FSnapshot := FSnapshot;
-    LCandidate.FUnpaged := FUnpaged;
-    LCandidate.FPaging := FPaging;
-    LCandidate.FPage := FPage;
-    LCandidate.FSelection := FSelection;
-    LCandidate.FExpanded := Copy(FExpanded, 0, Length(FExpanded));
-    LCandidate.ProjectChanges(AChanges);
+    CopyProjectionTo(LCandidate);
+
+    if FInspectionStatus.Mode = ncimPaused then
+    begin
+      PrepareInspectionUpdate(LCandidate, AData, AChanges);
+    end
+    else
+    begin
+      LCandidate.ProjectChanges(AChanges);
+      LCandidate.FInspectionStatus.DisplayRevision := AData.Revision;
+      LCandidate.FInspectionStatus.IncomingRevision := AData.Revision;
+    end;
     FPrepared := LCandidate;
   except
     LCandidate.Free;
@@ -2200,9 +2267,22 @@ end;
 
 procedure TView.InstallCandidate(const AData: INyxCollectionSnapshot;
   const AChanges: INyxCollectionChanges);
+var
+  LPreviousIndex: TNyxTextIndex;
 begin
   { Private installation is a nonallocating adoption of immutable references
     and detached vectors. No user callback, query or selection command runs. }
+  FInspectionStatus := FPrepared.FInspectionStatus;
+  FInspectionRemoved := FPrepared.FInspectionRemoved;
+  LPreviousIndex := FInspectionIndex;
+  FInspectionIndex := FPrepared.FInspectionIndex;
+  FPrepared.FInspectionIndex := LPreviousIndex;
+
+  if FPrepared.FInspectionPendingOnly then
+  begin
+    RetireCandidate;
+    Exit;
+  end;
   RetireRowCopy;
   FSource := FPrepared.FSource;
   FSnapshot := FPrepared.FSnapshot;
@@ -2223,6 +2303,12 @@ begin
 end;
 
 procedure TView.ProjectChanges(const AChanges: INyxCollectionChanges);
+begin
+  ProjectSnapshot(AChanges.After, AChanges);
+end;
+
+procedure TView.ProjectSnapshot(const AData: INyxCollectionSnapshot;
+  const AChanges: INyxCollectionChanges);
 var
   LParents: TParentIndexes;
   LResultParents: TParentIndexes;
@@ -2234,8 +2320,8 @@ var
   LUnpaged: INyxCollectionSnapshot;
   LWindow: TNyxCollectionPageWindow;
 begin
-  ValidateDataset(AChanges.After, LParents);
-  LResult := NyxQuerySnapshot(AChanges.After, FQuery, LParents, LResultParents);
+  ValidateDataset(AData, LParents);
+  LResult := NyxQuerySnapshot(AData, FQuery, LParents, LResultParents);
   LUnpaged := LResult;
   LWindow := Default(TNyxCollectionPageWindow);
 
@@ -2244,17 +2330,17 @@ begin
     LWindow := NyxCollectionPageWindow(LResult.Count, FPaging.ItemsPerPage, FPage);
     LResult := NyxPageSnapshot(LResult, LWindow);
   end;
-  LSelection := ReconcileSelection(AChanges.After, LResult, FSnapshot);
+  LSelection := ReconcileSelection(AData, LResult, FSnapshot);
   LExpanded := nil;
   { Disclosure follows exact surviving source identity, including rows currently
     filtered out. A new item with a previously removed ID starts closed. }
 
   if FProjection = cpTree then
   begin
-    SetLength(LExpanded, AChanges.After.Count);
-    for LIndex := 0 to AChanges.After.Count - 1 do
+    SetLength(LExpanded, AData.Count);
+    for LIndex := 0 to AData.Count - 1 do
     begin
-      LPrevious := FSource.IndexOf(AChanges.After.ItemAt(LIndex).Ref);
+      LPrevious := FSource.IndexOf(AData.ItemAt(LIndex).Ref);
 
       if LPrevious >= 0 then
       begin
@@ -2263,22 +2349,25 @@ begin
     end;
     { A grouped remove/reinsert can keep the final ID while replacing its runtime
       instance. Honor the admitted operation log instead of resurrecting state. }
-    for LIndex := 0 to AChanges.Count - 1 do
+    if AChanges <> nil then
     begin
-
-      if AChanges.Kind(LIndex) = nceRemove then
+      for LIndex := 0 to AChanges.Count - 1 do
       begin
-        LPrevious := AChanges.After.IndexOf(AChanges.ItemRef(LIndex));
 
-        if LPrevious >= 0 then
+        if AChanges.Kind(LIndex) = nceRemove then
         begin
-          LExpanded[LPrevious] := False;
+          LPrevious := AData.IndexOf(AChanges.ItemRef(LIndex));
+
+          if LPrevious >= 0 then
+          begin
+            LExpanded[LPrevious] := False;
+          end;
         end;
       end;
     end;
   end;
   RetireRowCopy;
-  FSource := AChanges.After;
+  FSource := AData;
   FSnapshot := LResult;
   FUnpaged := LUnpaged;
 
@@ -2447,7 +2536,7 @@ var
   LBusy: Boolean;
 begin
   LLease := Self;
-  Result := not FNotifying and (FPrepared = nil) and (FQueryPreparation = nil) and
+  Result := not FInspectionTransition and not FNotifying and (FPrepared = nil) and (FQueryPreparation = nil) and
     (FColumnPreparation = nil) and
     (FAtomic <> nil);
 
@@ -2456,7 +2545,7 @@ begin
     LBusy := FAtomic.Busy;
     { Readiness is not a reservation. An alternate getter may acquire one;
       report the canonical state after it returns and retain Self throughout. }
-    Result := not LBusy and not FNotifying and (FPrepared = nil) and
+    Result := not FInspectionTransition and not LBusy and not FNotifying and (FPrepared = nil) and
       (FQueryPreparation = nil) and (FColumnPreparation = nil);
   end;
 end;
@@ -3177,6 +3266,11 @@ var
   LItem: TNyxCollectionItem;
 begin
   Writable;
+
+  if FInspectionStatus.Mode = ncimPaused then
+  begin
+    raise ENyxCollectionInspection.Create('Resume this inspection before editing live data');
+  end;
   LColumn := FSpec.ColumnAt(AColumn);
 
   if LColumn.Mode <> cmEditable then
@@ -3245,6 +3339,11 @@ procedure TView.Apply(const AEdits: array of TNyxCollectionEdit;
   AExpectedRevision: Integer);
 begin
   Writable;
+
+  if FInspectionStatus.Mode = ncimPaused then
+  begin
+    raise ENyxCollectionInspection.Create('Resume this inspection before editing live data');
+  end;
   FStore.Apply(AEdits, AExpectedRevision);
 end;
 
@@ -3293,13 +3392,16 @@ begin
   LToken.Owner := Self;
 end;
 
-procedure TView.Notify(const AChanges: INyxCollectionChanges);
+procedure TView.Notify(const AChanges: INyxCollectionChanges;
+  AInspectionOnly: Boolean; ACause: TNyxCollectionInspectionCause);
 var
   LKeepAlive: INyxCollectionView;
   LSerials: array of Integer;
   LIndex: Integer;
   LCurrent: Integer;
   LObserver: TNyxCollectionViewObserver;
+  LInspectionObserver: TNyxCollectionInspectionObserver;
+  LInspection: TNyxCollectionInspectionObservation;
   LError: TNyxText;
   LHasError: Boolean;
 begin
@@ -3308,12 +3410,16 @@ begin
     a callback drops the last application's view reference. }
   LKeepAlive := Self as INyxCollectionView;
 
-  RetireRowCopy;
-
-  if FColumnSampleSerial < High(Integer) then
+  if not AInspectionOnly then
   begin
-    Inc(FColumnSampleSerial);
+    RetireRowCopy;
+
+    if FColumnSampleSerial < High(Integer) then
+    begin
+      Inc(FColumnSampleSerial);
+    end;
   end;
+  LInspection := FInspectionStatus;
   LError := '';
   LHasError := False;
   SetLength(LSerials, Length(FTokens));
@@ -3331,8 +3437,17 @@ begin
         if FTokens[LCurrent].Serial = LSerials[LIndex] then
         begin
           LObserver := FTokens[LCurrent].Observer;
+          LInspectionObserver := FTokens[LCurrent].InspectionObserver;
           try
-            LObserver(LKeepAlive, AChanges);
+
+            if Assigned(LInspectionObserver) then
+            begin
+              LInspectionObserver(LInspection, ACause);
+            end
+            else if not AInspectionOnly and Assigned(LObserver) then
+            begin
+              LObserver(LKeepAlive, AChanges);
+            end;
           except
             on LException: Exception do
             begin
@@ -3358,5 +3473,7 @@ begin
       LError);
   end;
 end;
+
+{$i nyx.collections.inspection.implementation.inc}
 
 end.

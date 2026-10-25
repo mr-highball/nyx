@@ -9,7 +9,76 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — viewport range keys — 2026-10-25
+## Current checkpoint — paused live inspection foundation — 2026-10-25
+
+The preceding checkpoint is PROGRESS: 11d2a2f is remote-verified. Root continues
+solo; Lil' Scooty is finished and idle until the user changes this preference.
+This is the first runtime/public-application packet for independently eligible
+[04 L1](TODO/NS-3_control-usefulness_04.md), whose collection/review prerequisites
+are accepted. Every original 04 criterion and the existing 03 gates remain open;
+no task/DONE, percentage or completion credit closes.
+
+An optional typed inspection facet now pauses one owned List/Table/Tree view's
+immutable displayed source while the SAME atomic store and peer views advance.
+The default remains absent. A fluent retention policy bounds logical retained
+DataBytes and removed-ID facts; no snapshot queue, second store or feed engine
+is introduced. Incoming updates contribute pending/revision status through the
+existing prepared publication reservation. Only deliberate resume reprojects
+latest data. Surviving selection/disclosure is preserved; removed/reinserted IDs
+cannot inherit old state, and tracking overflow reports conservative context
+reset. Status-only notifications do not refresh displayed rows or retire their
+copy/range proof. Paused edits refuse; frozen-source copying, range capture and
+query counts use the displayed frame. Following copy commands retain their
+original source-callout guards. Weak caller-owned status tokens and transition
+reservations keep lifetime/reentrancy explicit.
+
+The public live service inspection example composes two Nyx tables, bound status,
+ordinary pause/resume/update buttons and a deterministic three-step atomic feed.
+One application collection supplies independent views. Below 560 logical pixels,
+the command row becomes a column through typed viewport configuration. Runtime
+behavior never changes the saved document; its exact 10,901-byte generated Pascal
+uses the same public runtime binding. The reusable binding retains no application,
+router or document and closes subscriptions before releasing its view/context.
+
+Current checked native model/view/prepared-query/query-session/copy-command
+fixtures pass 34/12429/89/93/273, with complete clean heaps. Their browser consumers
+compile only. The public handwritten and exact generated examples each pass 18
+mounted checks at 1280/390; the handwritten 1280 run additionally checks fresh source
+output. Actual native button messages exercise pause, peer churn, pending bound
+status, frozen copying/query counts, range lifetime, no paused row rebuild, stale
+edit refusal, replaced-record recovery, unchanged design and closed-binding
+refusal. All four heaps are complete and clean. Both real application entries
+compile. The unchanged workbench/context suite passes 116; broader clipboard/range
+controls pass 1658/1647 at 900/390, with complete clean heaps. No OS clipboard effect,
+physical pointer/keyboard, actual pixels or browser execution is claimed. Successful
+native compiler logs have zero warnings; browser builds retain seven installed
+RTL warnings each and no owned warnings. The model fixture is now registered in
+the maintained query-workbench native/browser consumer lists; that orchestration
+edit is syntax-checked, not a claim that its entire target ran.
+
+Retained failures include an early broad compile-order/cache failure, repaired
+by a coherent rebuild/cache order; two mistaken demo source-key getters, repaired
+to use the captured snapshot's key; and the initial following-copy source guard
+regression, repaired without weakening its 273 assertions. The broad regression
+orchestrator's final whole-inventory check detects an edited README after its
+successful readers join. All actual compiler/runtime inputs remain unchanged;
+its private cohort delta separately records later unread example/test/docs and
+build-list changes. Other successful cohorts retain their own exact pins. New
+artifacts, receipts and qualified source live on provisioned E: storage; all actual
+compiler/runtime jobs are joined. The existing private direct-file runner retains
+900-second compiler  / 240-second runtime bounds; the shared capture-tool gap remains
+under NS-6_delivery_01.
+
+Next: continue 04 L1 with stable physical scroll anchors and explicit unfinished/
+orphaned draft recovery, then deliberate follow-newest, feed presentations and
+saved policy/Studio/source/semantic adoption. These remain original requirements,
+as do the List/Tree find/reveal journey and L2 mounted scale qualification. Runtime
+inspection is not yet a semantic MCP operation. Current connector discovery again
+reports no connected document; existing browser URL/desktop/cursor limitations
+remain recorded below. No alternate host, service replacement, repeated approval,
+cleanup, compiler install, SDK edit or further helper is introduced.
+
+## Viewport range keys — 2026-10-25
 
 The preceding goal turn is PROGRESS: 51f99ea is remote-verified. Root remains
 solo until the user changes that preference. This packet serves workbench03's

@@ -25,7 +25,7 @@ unit nyx.collections.clipboard.commands;
 
 interface
 
-uses nyx.collections.view, nyx.collections.mount,
+uses nyx.collections.view, nyx.collections.inspection, nyx.collections.mount,
   nyx.collections.clipboard.actions, nyx.events, nyx.clipboard, nyx.scheduler;
 
 { Mounts provide the ORIGINAL canonical input port and a borrowed synchronous
@@ -613,6 +613,7 @@ end;
 function TCommand.CheckProof(ACompleting: Boolean): Boolean;
 var
   LStore: INyxCollection;
+  LInspection: INyxCollectionInspection;
   LSource: INyxCollectionSnapshot;
   LPage: INyxCollectionSnapshot;
   LSelection: INyxCollectionSelection;
@@ -642,7 +643,35 @@ begin
   begin
     Exit;
   end;
-  LSource := LStore.Snapshot;
+  LInspection := NyxCollectionInspection(FView);
+
+  if not OriginalFlags(ACompleting) then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+
+    if LInspection.CaptureInspection.Mode <> ncimPaused then
+    begin
+      LInspection := nil;
+    end;
+  end;
+
+  if not OriginalFlags(ACompleting) then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+    LSource := LInspection.GetDisplayedSource;
+  end
+  else
+  begin
+    LSource := LStore.Snapshot;
+  end;
 
   if not OriginalFlags(ACompleting) or (LSource <> FSource) then
   begin
@@ -782,6 +811,7 @@ end;
 
 procedure TCommand.Prepare;
 var
+  LInspection: INyxCollectionInspection;
   LCapture: INyxCollectionColumnsCapture;
   LObservation: TNyxColumnLayoutObservation;
   LFields: TNyxCollectionClipboardFields;
@@ -820,7 +850,35 @@ begin
   begin
     Exit;
   end;
-  FSource := FStore.Snapshot;
+  LInspection := NyxCollectionInspection(FView);
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+
+    if LInspection.CaptureInspection.Mode <> ncimPaused then
+    begin
+      LInspection := nil;
+    end;
+  end;
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+    FSource := LInspection.GetDisplayedSource;
+  end
+  else
+  begin
+    FSource := FStore.Snapshot;
+  end;
 
   if not OriginalFlags or (FSource = nil) then
   begin

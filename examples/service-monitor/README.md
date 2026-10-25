@@ -33,6 +33,43 @@ remain separate. Unavailable, cancelled and download-requested outcomes retain
 their existing typed meaning. A requested browser download is not a confirmed
 disk write. No clipboard or save operation runs merely by opening the example.
 
+## Live inspection
+
+`live_inspection.lpr` uses the same public table and four English service records
+in two independent views of one application collection. Pause the upper table,
+then choose **Next feed update**: the lower table changes while the upper frame
+and its inspected values remain readable. The bound status shows the pending
+publication count. **Resume latest** adopts current data and explains an inspected
+record that was removed/replaced, including reuse of its original ID.
+The command row becomes a column below 560 logical pixels through Nyx's ordinary
+typed viewport configuration; no adapter-specific UI construction is needed.
+
+The replay groups a change/insert, a removal, and a gateway replacement into
+three successive atomic updates. It runs only on request, without an external
+process or timer. Copy and cell-range commands read the paused frame; editing
+that frame refuses until resumed. The application explicitly supplies its target
+clipboard host; merely opening or advancing the demo does not write a clipboard.
+Runtime policy and pause status never change the saved document/history.
+
+`TNyxLiveInspectionDemo` attaches through public collection, context and event
+contracts after mounting. Its reference-counted callbacks retain no application,
+router or document. Own the binding beside the application and close/free it
+before navigation or application disposal. Retired contexts/generations refuse
+late calls. Generated documents use that same runtime attachment, with no
+privileged generated-code path.
+
+The [retention contract](../../docs/collection-views.md#pausing-live-inspection)
+describes payload/removed-ID bounds, overflow and current limitations. This demo
+does not yet qualify stable physical scroll anchors, lost-draft recovery, full
+feed states, automatic follow-newest or Studio policy authoring.
+
+`tests/nyx_live_inspection_controls.lpr` exercises actual native button messages
+at desktop/compact widths, shared-source peer behavior, pending status, frozen
+query counts, copying, range lifetime, refused stale edits, replacement recovery,
+unchanged designs and binding retirement. The exact emitted Pascal companion
+runs the same journey. Browser fixture/example consumers compile; browser input
+and visual acceptance remain separate.
+
 ## Build
 
 From the repository root, using the existing `.local/toolchain.json` configuration
@@ -63,6 +100,8 @@ Run `service_monitor.exe` from the native output. Serve the browser directory
 with a Pascal HTTP host, then open `service-monitor.html`. Compilation does not
 establish browser interaction or browser clipboard/file permissions. Other native
 widgetsets use their corresponding installed LCL unit directories.
+For the live inspection variant, use `live_inspection.lpr` in both compiler
+commands and copy/open `live-inspection.html` beside the generated script/runtime.
 
 ## Qualification
 

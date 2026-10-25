@@ -33,7 +33,7 @@ uses
   nyx.editing,
   nyx.collections,
   nyx.collections.arrangement,
-  nyx.collections.view,
+  nyx.collections.view, nyx.collections.inspection,
   nyx.collections.selection,
   nyx.collections.refresh,
   nyx.typeahead,
@@ -948,6 +948,7 @@ procedure TCellStrokeEntry.Prepare;
 var
   LLease: INyxCollectionCellRangeStrokeEntry;
   LStore: INyxCollection;
+  LInspection: INyxCollectionInspection;
   LSource: INyxCollectionSnapshot;
   LPage: INyxCollectionSnapshot;
   LColumns: INyxCollectionColumns;
@@ -970,7 +971,35 @@ begin
   begin
     Exit;
   end;
-  LSource := LStore.Snapshot;
+  LInspection := NyxCollectionInspection(FGuard.FView);
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+
+    if LInspection.CaptureInspection.Mode <> ncimPaused then
+    begin
+      LInspection := nil;
+    end;
+  end;
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+    LSource := LInspection.GetDisplayedSource;
+  end
+  else
+  begin
+    LSource := LStore.Snapshot;
+  end;
 
   if not GetCurrent or (LSource = nil) then
   begin
@@ -1385,6 +1414,7 @@ procedure TCellRangeKeyCommand.Prepare;
 var
   LLease: INyxCollectionCellRangeKeyCommand;
   LStore: INyxCollection;
+  LInspection: INyxCollectionInspection;
   LSource: INyxCollectionSnapshot;
   LPage: INyxCollectionSnapshot;
   LColumns: INyxCollectionColumns;
@@ -1443,7 +1473,35 @@ begin
     begin
       Exit;
     end;
-    LSource := LStore.Snapshot;
+    LInspection := NyxCollectionInspection(FView);
+
+    if not GetCurrent then
+    begin
+      Exit;
+    end;
+
+    if LInspection <> nil then
+    begin
+
+      if LInspection.CaptureInspection.Mode <> ncimPaused then
+      begin
+        LInspection := nil;
+      end;
+    end;
+
+    if not GetCurrent then
+    begin
+      Exit;
+    end;
+
+    if LInspection <> nil then
+    begin
+      LSource := LInspection.GetDisplayedSource;
+    end
+    else
+    begin
+      LSource := LStore.Snapshot;
+    end;
 
     if not GetCurrent or (LSource = nil) then
     begin
@@ -2464,6 +2522,7 @@ var
   LView: INyxCollectionView;
   LInput: INyxCollectionInputLifetime;
   LStore: INyxCollection;
+  LInspection: INyxCollectionInspection;
   LSource: INyxCollectionSnapshot;
   LPage: INyxCollectionSnapshot;
   LColumns: INyxCollectionColumns;
@@ -2521,7 +2580,35 @@ begin
   begin
     Exit;
   end;
-  LSource := LStore.Snapshot;
+  LInspection := NyxCollectionInspection(LView);
+
+  if not Current then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+
+    if LInspection.CaptureInspection.Mode <> ncimPaused then
+    begin
+      LInspection := nil;
+    end;
+  end;
+
+  if not Current then
+  begin
+    Exit;
+  end;
+
+  if LInspection <> nil then
+  begin
+    LSource := LInspection.GetDisplayedSource;
+  end
+  else
+  begin
+    LSource := LStore.Snapshot;
+  end;
 
   if not Current or (LSource = nil) then
   begin

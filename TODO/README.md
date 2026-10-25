@@ -31,7 +31,10 @@ open. Coordinate snapshots through WORK.md; necessary library changes are author
 After six geometry/workbench packets without original criterion closure, the
 next independent core packet is [live inspection04 L1](NS-3_control-usefulness_04.md):
 preserve a user's place while data changes, with visible follow/pause/resume and
-independent views. Its collection/review prerequisites are accepted; it does not
+independent views. Its runtime pause/retention foundation and public two-view
+demo now have focused native mounted/generated evidence; physical scroll/draft
+recovery, remaining feed/authoring behavior and browser execution stay open in
+WORK.md. Its collection/review prerequisites are accepted; it does not
 require declaring03 complete. Existing03 gates remain intact. This is product
 development, not a host/config or rollout release.
 

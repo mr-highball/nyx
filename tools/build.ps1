@@ -1002,6 +1002,7 @@ try {
       if ($nyxWorkbenchLifetimeExit -ne 0) { throw 'Actual popover open-lifetime checks failed' }
       $nyxWorkbenchCopyConsumers = @('nyx_collection_range_tests',
         'nyx_collection_range_navigation_tests',
+        'nyx_collection_inspection_tests',
         'nyx_collection_range_pointer_tests',
         'nyx_collection_range_stroke_tests',
         'nyx_table_workbench_authoring_tests',
@@ -1081,6 +1082,7 @@ try {
       foreach ($nyxWorkbenchCompanion in @('nyx_column_activation_controls',
           'nyx_popover_open_lifetime_tests', 'nyx_collection_range_tests',
           'nyx_collection_range_navigation_tests',
+          'nyx_collection_inspection_tests',
           'nyx_collection_range_pointer_tests',
           'nyx_collection_range_stroke_tests',
           'nyx_table_workbench_authoring_tests',

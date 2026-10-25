@@ -39,6 +39,65 @@ source rows preserve local edits, and later scopes use the installed seed.
 See [saved row recipes](resources.md#saved-row-recipes)
 for crafted source, ownership, materialization and current qualification limits.
 
+## Pausing live inspection
+
+The optional `INyxCollectionInspection` capability pauses an individual view's
+display while its **same authoritative store** and independent peer views keep
+receiving updates. Obtain it with `NyxCollectionInspection(LView)` from
+`nyx.collections.view`; alternative implementations may return nil. The owned
+List, Table and Tree views support this when their source provides prepared
+atomic publication. Ordinary views keep their previous behavior until configured.
+
+```pascal
+LInspection := NyxCollectionInspection(LView);
+
+if LInspection <> nil then
+begin
+  LInspection.ConfigureInspection(NyxInspectionPolicy
+    .PausedBytes(16 * 1024 * 1024).RemovedIdentities(2048));
+  LInspection.PauseInspection;
+end;
+```
+
+Declare `LInspection: INyxCollectionInspection` and import
+`nyx.collections.inspection` for the typed retention policy and observations.
+`GetDisplayedSource` retains immutable data without a view/store back-reference.
+Selection, local queries, disclosure and supported cell copying use this frozen
+frame. View edits refuse while paused so stale values cannot overwrite newer
+producer values. Deliberate application writes through the independent source
+store remain possible; pause never stops or cancels that source.
+
+`NyxInspectionPolicy` defaults to 32 MiB of logical displayed `DataBytes` and
+4096 removed identities; callers can raise or lower either bound, including zero.
+The byte limit is checked before pause. It excludes widget/query/index overhead
+and is not a total-memory guarantee. Pause retains one existing displayed source,
+not every intervening snapshot or a change queue. Incoming publications coalesce
+into the latest source revision and a saturating pending-publication count.
+Removed-ID tracking prevents a removed/reinserted ID from inheriting its old
+selection or Tree disclosure. Overflow, including a lowered tracking budget,
+requires conservative context reset on resume and is reported explicitly.
+
+`CaptureInspection` returns detached scalar status. `SubscribeInspection` sends
+those facts and a typed cause without pretending that pending data changed the
+display. Receivers own their subscription and disconnect it before destruction.
+Notifications are synchronous on the UI owner; receiver failures are reported
+after commitment and do not suppress independent receivers or roll back data.
+`ResumeInspection` reprojects the latest source through the existing query/page
+policies, retains surviving stable selection and reports lost selection/focus.
+Repeated pause/resume is idempotent. Resume before disabling the policy or
+reducing its byte budget below the already retained frame.
+
+The [live service inspection example](../examples/service-monitor/README.md#live-inspection)
+composes two actual Nyx tables, pause/resume buttons, bound status and a
+deterministic three-step feed. Its saved/generated document contains controls
+and normal collection defaults; the runtime binding supplies inspection behavior.
+Native mounted input and the exact generated companion qualify that boundary;
+browser consumers currently compile only. This is runtime foundation, not full
+[live-inspection task acceptance](../TODO/NS-3_control-usefulness_04.md).
+Automatic following of newest rows, stable physical scroll anchors, orphaned
+draft recovery, feed loading/error presentations, saved policy/Studio authoring
+and the complete List/Tree search journeys remain open.
+
 ## Typed construction
 
 ```pascal

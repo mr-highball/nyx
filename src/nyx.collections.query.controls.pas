@@ -48,7 +48,8 @@ type
   TNyxQueryWorkbenchEvent = (nqweBeforeChange, nqweChanged);
 
   { Value-only accepted observation. Matching rows are counted before paging;
-    SourceRows counts the source dataset, not rows eligible under the baseline.
+    SourceRows counts the displayed source dataset, not the advancing producer
+    behind a paused view or rows eligible under the baseline.
     Contributions and owner information are immutable capture-time values. }
   TNyxQueryWorkbenchObservation = record
   private
@@ -289,6 +290,7 @@ class function TNyxQueryWorkbenchObservation.Read(
 var
   LView: INyxCollectionView;
   LSession: INyxCollectionQuerySessionSnapshot;
+  LInspection: INyxCollectionInspection;
   LIndex: Integer;
 begin
   LView := AView;
@@ -312,7 +314,16 @@ begin
     Result.FContributions[LIndex] := LSession.ContributionAt(LIndex);
   end;
   Result.FMatchedRows := NyxCollectionPages(LView).Window.Total;
-  Result.FSourceRows := LView.Store.Snapshot.Count;
+  LInspection := NyxCollectionInspection(LView);
+
+  if LInspection <> nil then
+  begin
+    Result.FSourceRows := LInspection.GetDisplayedSource.Count;
+  end
+  else
+  begin
+    Result.FSourceRows := LView.Store.Snapshot.Count;
+  end;
   Result.FPageRows := LView.Snapshot.Count;
 end;
 
