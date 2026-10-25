@@ -710,10 +710,16 @@ try {
       'examples/service-monitor/process_tree.lpr')) 'example-native-compiler'
     Invoke-NyxTreeCheck $nyxTreePas2js ($nyxTreeBrowserFlags + @("-FE$nyxTreeExample",
       'examples/service-monitor/process_tree.lpr')) 'example-browser-compiler'
+    Invoke-NyxTreeCheck $nyxTreeFpc ($nyxTreeFlags + @("-FU$nyxTreeNative", "-FE$nyxTreeNative",
+      'tests/nyx_tree_reveal_tests.lpr')) 'reveal-model-compiler'
+    Invoke-NyxTreeCheck (Join-Path $nyxTreeNative 'nyx_tree_reveal_tests.exe') @() 'reveal-model-runtime' $true
+    Invoke-NyxTreeCheck $nyxTreePas2js ($nyxTreeBrowserFlags + @("-FE$nyxTreeBrowser",
+      'tests/nyx_tree_reveal_tests.lpr')) 'reveal-model-browser-compiler'
     foreach ($nyxTreeDirectory in @($nyxTreeBrowser, $nyxTreeGeneratedBrowser)) {
       Copy-Item -LiteralPath $nyxTreeRuntime -Destination (Join-Path $nyxTreeDirectory 'rtl.js')
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-inspection.html') -Destination $nyxTreeDirectory
     }
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-reveal.html') -Destination $nyxTreeBrowser
     Copy-Item -LiteralPath $nyxTreeRuntime -Destination (Join-Path $nyxTreeExample 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/service-monitor/process-tree.html') -Destination $nyxTreeExample
     Write-Host 'Tree inspection native/generated checks passed; browser artifacts staged, execution remains explicit.'

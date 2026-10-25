@@ -275,7 +275,9 @@ type
     and the caller retains an interface owner; target factories do this before
     activating. Active commands retain their own call frames through callbacks.
     Optional cell-range selection owns independent immutable generation facts;
-    it never changes the view's ordinary row-selection owner. UI-thread
+    it never changes the view's ordinary row-selection owner. Explicit Tree
+    viewport intent uses this same input incarnation and success-only refresh
+    acknowledgement, without keeping physical callbacks in its request. UI-thread
     confinement is inherited from the view/store contract. Position recovery is
     a detached observation only; it cannot select rows or revive target input. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
@@ -340,6 +342,13 @@ type
     FView: INyxCollectionView;
     FPositionRecovery: TNyxCollectionPositionRecovery;
     FFollowRequestSerial: Integer;
+    { Exact view facet only; it owns no physical target. Admission is sampled
+      before the refresh shield. Success alone acknowledges a physical request. }
+    FTreeReveal: INyxTreeReveal;
+    FTreeRevealSerial: Integer;
+    FPendingTreeRevealSerial: Integer;
+    FTreeRevealEpoch: Integer;
+    FTreeRevealAllowed: Boolean;
     FPendingFollowRequestSerial: Integer;
     FUpdating: Boolean;
     FInputGate: INyxCollectionInputGate;
@@ -502,6 +511,12 @@ type
       out ALoss: TNyxCollectionDraftLoss; AHasDraft: Boolean = True): Boolean;
     function ResolvePosition(const ABefore, AAfter: INyxCollectionSnapshot;
       AIndex: Integer): TNyxCollectionPositionRecovery;
+    { Capture current intent with retained view/lifetime checks. Pending excludes
+      consumed requests; Current also qualifies browser measurement corrections.
+      No target callback, selection or query mutation occurs here. }
+    function CurrentTreeReveal: TNyxTreeRevealRequest;
+    function PendingTreeReveal: TNyxTreeRevealRequest;
+    procedure TreeRevealApplied(ASerial: Integer);
     procedure RenderDataset; virtual; abstract;
     procedure DetachTarget; virtual; abstract;
   public
@@ -3359,6 +3374,8 @@ begin
 end;
 
 procedure TNyxCollectionMountBase.Activate;
+var
+  LReveal: INyxTreeReveal;
 begin
 
   if FConnected then
@@ -3372,6 +3389,14 @@ begin
   end;
   FToken := FView.Subscribe(Changed);
   FSelection := FView.Selection;
+  LReveal := nil;
+
+  if Supports(FView, INyxTreeReveal, LReveal) then
+  begin
+    FTreeReveal := LReveal;
+    { A new physical generation never replays a former target's command. }
+    FTreeRevealSerial := LReveal.CaptureTreeReveal.Serial;
+  end;
   FConnected := True;
 
   if FPositionStateObject <> nil then
@@ -3704,6 +3729,8 @@ begin
     FColumnLayout := Default(TNyxColumnLayoutObservation);
     FTablePresentation := Default(TNyxTablePresentationObservation);
     FView := nil;
+    FTreeReveal := nil;
+    FTreeRevealAllowed := False;
     FInputGate := nil;
     FInputStateObject := nil;
     FInputLifetime := nil;
@@ -3724,6 +3751,14 @@ var
   LRangeIntent: INyxCollectionCellRangeIntent;
 begin
   LKeepAlive := Self as INyxCollectionMount;
+  { Sample before Refresh temporarily shields otherwise accepted input. A
+    request issued while disabled/suspended cannot be revived by enable. }
+  FTreeRevealAllowed := GetInputReady and FEnabled;
+
+  if FInputLifetime <> nil then
+  begin
+    FTreeRevealEpoch := FInputLifetime.Epoch;
+  end;
   FCellFocusValid := False;
   CancelCellRangeStroke;
 
@@ -3936,6 +3971,53 @@ begin
   end;
 end;
 
+function TNyxCollectionMountBase.CurrentTreeReveal: TNyxTreeRevealRequest;
+var
+  LReveal: INyxTreeReveal;
+  LView: INyxCollectionView;
+  LMutation: Integer;
+begin
+  Result := Default(TNyxTreeRevealRequest);
+  LReveal := FTreeReveal;
+  LView := FView;
+  LMutation := FCellMutationSerial;
+
+  if not InputLifetimeCurrent or (LReveal = nil) then
+  begin
+    Exit;
+  end;
+  Result := LReveal.CaptureTreeReveal;
+
+  if InputLifetimeCurrent and (FView = LView) and (FCellMutationSerial <> LMutation) then
+  begin
+    raise ENyxCollection.Create('Collection changed during Tree viewport capture');
+  end;
+
+  if not InputLifetimeCurrent or (FView <> LView) or (FTreeReveal <> LReveal) or
+    (FCellMutationSerial <> LMutation) or not FTreeRevealAllowed or not FEnabled or
+    (FInputLifetime.Epoch <> FTreeRevealEpoch) then
+  begin
+    Result := Default(TNyxTreeRevealRequest);
+  end;
+end;
+
+function TNyxCollectionMountBase.PendingTreeReveal: TNyxTreeRevealRequest;
+begin
+  Result := CurrentTreeReveal;
+
+  if Result.Serial <= FTreeRevealSerial then
+  begin
+    Result := Default(TNyxTreeRevealRequest);
+  end;
+end;
+
+procedure TNyxCollectionMountBase.TreeRevealApplied(ASerial: Integer);
+begin
+  { Local proposed acknowledgement only. Refresh adopts it after target success;
+    a thrown/deferred render leaves the same request available to a retry. }
+  FPendingTreeRevealSerial := ASerial;
+end;
+
 procedure TNyxCollectionMountBase.Refresh;
 var
   LKeepAlive: INyxCollectionMount;
@@ -3974,6 +4056,7 @@ begin
   LInputState := nil;
   LCompleted := False;
   FPendingFollowRequestSerial := FFollowRequestSerial;
+  FPendingTreeRevealSerial := FTreeRevealSerial;
   FUpdating := True;
   try
     { A complete target refresh withdraws an unfinished physical gesture. Its
@@ -4058,6 +4141,7 @@ begin
     begin
       FLastSnapshot := LSnapshot;
       FFollowRequestSerial := FPendingFollowRequestSerial;
+      FTreeRevealSerial := FPendingTreeRevealSerial;
     end;
     Inc(FRefreshCount);
     LCompleted := True;

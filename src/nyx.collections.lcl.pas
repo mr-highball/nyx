@@ -7360,6 +7360,7 @@ end;
 procedure TNativeMount.RenderDataset;
 var
   LPosition: TNyxCollectionPositionRecovery;
+  LReveal: TNyxTreeRevealRequest;
   LData: INyxCollectionSnapshot;
   LHierarchy: INyxTreeHierarchy;
   LIndex: Integer;
@@ -7887,6 +7888,31 @@ begin
   end;
   FRendered := LData;
   FCellRefreshPending := False;
+  LReveal := PendingTreeReveal;
+
+  if InputLifetimeCurrent and (FTree <> nil) and LReveal.Item.Defined then
+  begin
+    LIndex := LData.IndexOf(LReveal.Item);
+
+    if (LIndex >= 0) and (LIndex < Length(FNodes)) then
+    begin
+      { Setting the same Selected node is a host no-op. MakeVisible is the
+        explicit viewport effect, after disclosure and EndUpdate have settled. }
+      FNodes[LIndex].MakeVisible;
+
+      if not InputLifetimeCurrent then
+      begin
+        Exit;
+      end;
+      TreeRevealApplied(LReveal.Serial);
+
+      if (LReveal.Focus = ntrfTake) and FTree.CanFocus then
+      begin
+        { Last borrowed target call: OnEnter may retire this renderer. }
+        FTree.SetFocus;
+      end;
+    end;
+  end;
 end;
 
 procedure TNativeMount.DetachTarget;

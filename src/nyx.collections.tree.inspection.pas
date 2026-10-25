@@ -79,17 +79,19 @@ type
   not just one search owner's text. O(result rows + selected rows + hierarchy). }
 function CaptureNyxTreeInspection(const AView: INyxCollectionView): INyxTreeInspectionCapture;
 
-{ Explicit UI navigation through the ordinary view command. Opens ancestors and
+{ Explicit UI navigation through INyxTreeReveal. Opens ancestors and
   focuses the admitted item while preserving exact selection membership/anchor.
+  Each admitted call requests viewport movement even at unchanged logical focus.
+  Preserve is the default host-focus policy; Take explicitly transfers focus.
   Never clears filters, selects a substitute, mutates a source or restores an old
   disclosure snapshot. Foreign/undefined identities and non-Tree views refuse.
   The caller owns its normal view/generation authority; this helper grants none. }
 function RevealNyxTreeItem(const AView: INyxCollectionView;
-  const AItem: TNyxItemRef): TNyxTreeRevealResult;
+  const AItem: TNyxItemRef; AFocus: TNyxTreeRevealFocus = ntrfPreserve): TNyxTreeRevealResult;
 
 implementation
 
-uses nyx.collections.query, nyx.collections.selection, nyx.collections.tree.rows;
+uses SysUtils, nyx.collections.query, nyx.collections.selection, nyx.collections.tree.rows;
 
 type
   { Detached data projection owns no outward method receiver. Immutable arrays
@@ -239,12 +241,10 @@ begin
 end;
 
 function RevealNyxTreeItem(const AView: INyxCollectionView;
-  const AItem: TNyxItemRef): TNyxTreeRevealResult;
+  const AItem: TNyxItemRef; AFocus: TNyxTreeRevealFocus): TNyxTreeRevealResult;
 var
   LCapture: INyxTreeInspectionCapture;
-  LSelection: INyxCollectionSelection;
-  LItems: TNyxItemRefs;
-  LIndex: Integer;
+  LReveal: INyxTreeReveal;
 begin
   LCapture := CaptureNyxTreeInspection(AView);
 
@@ -262,13 +262,11 @@ begin
         { The normal view command admits all selection and ancestry before commit. }
       end;
   end;
-  LSelection := AView.Selection;
-  SetLength(LItems, LSelection.Count);
-  for LIndex := 0 to LSelection.Count - 1 do
+  if not Supports(AView, INyxTreeReveal, LReveal) then
   begin
-    LItems[LIndex] := LSelection.ItemAt(LIndex);
+    raise ENyxCollection.Create('Tree view does not support explicit viewport reveal');
   end;
-  AView.SetSelection(LItems, AItem, LSelection.Anchor);
+  LReveal.RevealTreeItem(AItem, AFocus);
   Result := ntrrRevealed;
 end;
 

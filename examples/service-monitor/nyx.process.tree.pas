@@ -334,7 +334,7 @@ begin
   if FView.Selection.Count > 0 then
   begin
     LItem := FView.Selection.ItemAt(0);
-    case RevealNyxTreeItem(FView, LItem) of
+    case RevealNyxTreeItem(FView, LItem, ntrfTake) of
       ntrrMissing:
         LMessage := 'That process was removed. Current selection is kept.';
       ntrrFiltered:
@@ -408,7 +408,7 @@ begin
 
     if LCapture.Observation.MatchedRows > 0 then
     begin
-      RevealNyxTreeItem(FView, LCapture.MatchAt(LNext));
+      RevealNyxTreeItem(FView, LCapture.MatchAt(LNext), ntrfTake);
     end;
   end;
 end;

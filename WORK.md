@@ -9,7 +9,93 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — inspect and reveal Tree search results — 2026-10-25
+## Current checkpoint — explicit Tree viewport reveal — 2026-10-25
+
+The previous checkpoint7188611 is remote-verified and PROGRESS. Root remains
+SOLO; Lil' Scooty is idle until the user changes that preference. This is the
+eighth original04 L1 checkpoint without closing an original criterion. The useful
+outcome is explicit physical Tree reveal, including repeated navigation to the
+same focused row after a user scrolls away. All original04/03 criteria and the
+existing collection02/03 browser gates remain open; no completion credit changes.
+
+The optional INyxTreeReveal leaves the existing view/hierarchy interfaces intact.
+An admitted request opens ancestors, installs logical focus and fresh typed
+viewport intent together, preserving selected membership and range anchor.
+Repeating the same item still publishes a new serial. Default ntrfPreserve keeps
+actual keyboard focus in the caller; ntrfTake deliberately transfers it to the
+Tree. Copied request records own no host or callback. Captures read owned facts
+only. Source revision, query intent (including ABA) and later Tree/focus commands
+invalidate old intent. The revision comes from Nyx's canonical selection snapshot,
+so installation introduces no late provider getter. Observer failure retains an
+already committed request rather than pretending navigation rolled back.
+
+Existing mount input/epoch and refresh owners govern consumption. New activation
+baselines historical serials; a new physical generation cannot replay a former
+one's command. Disabled/suspended admission does not become a future focus request
+through enable/resume. A failed or deferred target pass leaves an admitted request
+available; acknowledgement installs only after successful target refresh. Later
+ordinary refresh never repeats a consumed request or pulls a reader back.
+Alternative capture callouts which mutate the view refuse before map adoption.
+No second hierarchy, query engine, scheduler, store or retained viewport queue.
+
+Native target work calls the existing Tree node MakeVisible after disclosure and
+EndUpdate, then optionally transfers focus as its last borrowed target call.
+Browser target work realizes the path/row, uses the existing own-plane reveal
+plus nearest instant scroll through surrounding containers, and optionally takes
+focus. The small standard options bridge corrects the matched Web declaration's
+behaviour spelling without changing SDK files. Measurement corrections retain
+only item/serial intent and recheck it; scrolling away or newer intent revokes
+old correction. Browser correction and mount-consumption serials have distinct
+names/roles. Target retirement withdraws their ordinary lifetime before cleanup.
+
+Native handwritten/generated public journeys now pass42 checks per1280/390 width,
+plus a fresh-generation guard in handwritten1280. The same public demo receives
+200 additional process rows through a test-only collection batch; its authored
+starter remains seven English records. Checks include the actual node viewport
+AND all surrounding native parent client bounds, repeat reveal after scrolling,
+ordinary-refresh non-pullback, caller/Tree focus, retained membership/anchor,
+disclosure/source invalidation and disabled-target refusal. Existing search,
+scoped clear, saved-default invariance and retirement assertions remain intact.
+
+Portable model tests pass21, covering atomic observer facts, exact supplementary
+identity, independent peers, silent later focus, query ABA, same-ID replacement,
+post-commit failure, detached records, remount, failed/proposed acknowledgement,
+deferral/retry, suspension/resumption and disconnected targets. Broader existing
+regressions pass12429 collection-view,83 Tree hierarchy,64 inspection and14
+model-mounted recovery checks. Their source cohort predates the final defensive
+capture-mutation guard/canonical-revision read; final public/model runs qualify
+current request ownership and physical behavior. No unchanged broad rerun is
+claimed as a different source cohort.
+
+Private tree-reveal-01 retains controls-01, regressions-01, maintained-02,
+viewport-03 and final maintained-04. The final maintained target logic passes13
+owned jobs with5 complete zero-unfreed native heaps and all1851 pinned inputs
+unchanged. It rebuilds handwritten/generated/public/model consumers and stages
+matching RTL plus browser test/example HTML. Exact command logic uses the already
+established direct log-output transport replacing only RunOwned's asynchronous
+PowerShell writer; standard redirected-writer behavior is not newly qualified.
+All actual jobs are joined. No final owned compiler warnings; installed pas2js
+RTL warnings are retained. There were no failed final jobs or weakened assertions.
+Browser programs/assertions compile and stage only: actual browser scrolling,
+transforms, focus, AT/pixels, physical input and native non-Win32 widgetsets remain
+separate unqualified outcomes. These data/geometry checks are not screenshots or
+production scale/paint/input/memory measurements.
+
+Current document-control discovery has no session. No Studio project, listener,
+LAN process, cleanup, compiler/dependency install or helper is changed. Existing
+browser/HTTP/physical-pointer evidence limits remain; no denied host/protocol
+workaround is attempted. Task04/catalog/docs link the actual native progress and
+remaining target/authoring gates without accepting the original criteria.
+
+Next: original04's saved inspection defaults and authoring integration: public
+typed defaults through portable saved/source contracts and Studio properties/
+help/revision-aware semantic edits. Current view-spec/codegen inspection defaults
+are still absent; runtime configuration alone does not deliver that requirement.
+Hard recovered-draft memory, producer overload presentation, Tree live context/
+edit recovery, browser/AT/visual and L2 measured scale/paint/input/memory remain
+open. Do not create another equivalent reveal/geometry variant or declare04 DONE.
+
+## Inspect and reveal Tree search results — 2026-10-25
 
 The previous checkpoint977ff9a is remote-verified and PROGRESS. Root remains
 SOLO; Lil' Scooty is idle until the user changes that preference. This is the

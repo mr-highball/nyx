@@ -276,6 +276,33 @@ type
     function CaptureDisplayContinuity: INyxCollectionDisplayContinuity;
   end;
 
+  { Explicit navigation may reveal a row while leaving keyboard focus in the
+    caller, or deliberately transfer it to the Tree. Ordinary updates do neither. }
+  TNyxTreeRevealFocus = (ntrfPreserve, ntrfTake);
+
+  { Copied one-shot viewport intent. Serial is local to its exact runtime view;
+    zero/undefined Item means no current request. No host or command authority is
+    retained. Source/query/disclosure/later focus changes invalidate old intent. }
+  TNyxTreeRevealRequest = record
+    Serial: Integer;
+    Item: TNyxItemRef;
+    Focus: TNyxTreeRevealFocus;
+  end;
+
+  { Optional explicit Tree navigation, separate from selection and disclosure.
+    Reveal admits focus/ancestor opening and a fresh viewport request together,
+    even at the same focused row. Exact selection membership/anchor are retained.
+    Mounted targets consume only requests admitted during their active input
+    incarnation; a newly attached target does not replay historical commands.
+    CaptureTreeReveal reads owned facts only, with no application callbacks.
+    UI-only; notification errors report an already committed request. }
+  INyxTreeReveal = interface(IInterface)
+    ['{5BDDB331-87C3-4401-A9B8-54FBF9B1440A}']
+    procedure RevealTreeItem(const AItem: TNyxItemRef;
+      AFocus: TNyxTreeRevealFocus = ntrfPreserve);
+    function CaptureTreeReveal: TNyxTreeRevealRequest;
+  end;
+
   { Optional tree capability, obtained with NyxTreeHierarchy. It retains the
     runtime view, never a document or host widget. Closed branches are the default.
     Exact scoped identities retain disclosure through moves, reparenting and
@@ -556,8 +583,10 @@ type
     and final release, and never retain this owner through a captured menu.
     Optional inspection retains the displayed frame and bounded removed-ID facts,
     never a backlog or a second store. Its prepared state uses the SAME atomic
-    reservation as normal projection, query and column publications. }
-  TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
+    reservation as normal projection, query and column publications. Explicit
+    Tree reveal adds copied one-shot intent to ordinary selection admission;
+    source revision, query intent and later Tree commands fence its lifetime. }
+  TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy, INyxTreeReveal,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
     INyxCollectionTablePresentation, IColumnPresentationTransferTarget,
@@ -609,6 +638,10 @@ type
     FFirstChild: TParentIndexes;
     FNextSibling: TParentIndexes;
     FTreeCommandSerial: Integer;
+    FTreeReveal: TNyxTreeRevealRequest;
+    FTreeRevealCommand: Integer;
+    FTreeRevealRevision: Integer;
+    FTreeRevealQueryIntent: Integer;
     FSelection: INyxCollectionSelection;
     FStoreToken: INyxCollectionSubscription;
     FTokens: array of TViewSubscription;
@@ -653,6 +686,9 @@ type
     procedure ReconcileTreeFocus;
     function RevealAncestors(const AFocus: TNyxItemRef): Boolean;
     procedure AdvanceTreeCommand;
+    procedure SetSelectionCore(const AItems: array of TNyxItemRef;
+      const AFocus, AAnchor: TNyxItemRef; AReveal: Boolean;
+      ARevealFocus: TNyxTreeRevealFocus);
   public
     { TView is an implementation-only type. The temporary validator has no
       subscriptions and remains owned solely by its unit-local caller. }
@@ -752,6 +788,9 @@ type
     function ExpandAll: INyxTreeHierarchy;
     function CollapseAll: INyxTreeHierarchy;
     function VisibleItems: TNyxItemRefs;
+    procedure RevealTreeItem(const AItem: TNyxItemRef;
+      AFocus: TNyxTreeRevealFocus = ntrfPreserve);
+    function CaptureTreeReveal: TNyxTreeRevealRequest;
   end;
 
   { Private proof is independent of policy equality, source revision and caller
@@ -3032,6 +3071,13 @@ end;
 
 procedure TView.SetSelection(const AItems: array of TNyxItemRef;
   const AFocus, AAnchor: TNyxItemRef);
+begin
+  SetSelectionCore(AItems, AFocus, AAnchor, False, ntrfPreserve);
+end;
+
+procedure TView.SetSelectionCore(const AItems: array of TNyxItemRef;
+  const AFocus, AAnchor: TNyxItemRef; AReveal: Boolean;
+  ARevealFocus: TNyxTreeRevealFocus);
 var
   LSelection: INyxCollectionSelection;
   LItems: array of TNyxItemRef;
@@ -3065,17 +3111,34 @@ begin
     end;
   end;
   LSelection := NewNyxCollectionSelection(FSource, LItems, AFocus, AAnchor);
+
+  if AReveal and (FTreeReveal.Serial = High(Integer)) then
+  begin
+    raise ENyxCollection.Create('Tree reveal request serial is exhausted');
+  end;
   AdvanceTreeCommand;
   { Admission above must finish before disclosure changes. Explicit application
     focus opens ancestors; a later structural/collapse publication never does. }
   LRevealed := RevealAncestors(AFocus);
 
-  if FSelection.SameState(LSelection) and not LRevealed then
+  if FSelection.SameState(LSelection) and not LRevealed and not AReveal then
   begin
     Exit;
   end;
   RetireRowCopy;
   FSelection := LSelection;
+
+  if AReveal then
+  begin
+    Inc(FTreeReveal.Serial);
+    FTreeReveal.Item := AFocus;
+    FTreeReveal.Focus := ARevealFocus;
+    FTreeRevealCommand := FTreeCommandSerial;
+    { Selection is our canonical owned snapshot. Its copied revision avoids a
+      provider getter after focus/disclosure/request installation has begun. }
+    FTreeRevealRevision := LSelection.DataRevision;
+    FTreeRevealQueryIntent := FQueryIntent;
+  end;
   Notify(nil);
 end;
 

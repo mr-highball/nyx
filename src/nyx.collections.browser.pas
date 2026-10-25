@@ -231,6 +231,15 @@ type
   TFocusOptions = class external name 'Object' (TJSObject)
     preventScroll: Boolean;
   end;
+
+  { Standard Element.scrollIntoView options, allocated per explicit navigation.
+    The matched Web unit spells behavior as behaviour; this bridge preserves
+    the platform key. Modern browser API only; it retains no borrowed element. }
+  TTreeViewportScroll = class external name 'Object' (TJSObject)
+    behavior: String;
+    block: String;
+    inline_: String; external name 'inline';
+  end;
   TFocusable = class external name 'HTMLElement' (TJSHTMLElement)
     procedure focus(AOptions: TFocusOptions); reintroduce;
   end;
@@ -741,6 +750,9 @@ type
       stable geometry consumes it. Values retain no DOM or document owner. }
     FRevealItem: TNyxItemRef;
     FRevealScrollTop: Double;
+    { Positive only for an explicit Tree request. Keyboard reveal uses zero;
+      stale source/query/command intent withdraws queued measurement correction. }
+    FTreeRevealCorrectionSerial: Integer;
     FWindowFrame: Integer;
     FWindowQueued: Boolean;
     FWindowObserver: TJSHTMLResizeObserver;
@@ -6337,6 +6349,7 @@ begin
     Exit;
   end;
   FRevealItem := NyxItem(FView.Spec.Key, AOption.getAttribute('data-nyx-item'));
+  FTreeRevealCorrectionSerial := 0;
   LFace := AOption;
 
   if FView.Projection = cpTree then

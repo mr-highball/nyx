@@ -51,6 +51,7 @@ var
   LAncestor: TJSHTMLElement;
   LAnchor: TJSNode;
   LOptions: TFocusOptions;
+  LViewportScroll: TTreeViewportScroll;
   LRow: TNyxTreeRow;
   LIndex: Integer;
   LSource: Integer;
@@ -65,6 +66,8 @@ var
   LRealize: Boolean;
   LMeasured: Boolean;
   LChanged: Boolean;
+  LReveal: TNyxTreeRevealRequest;
+  LCurrentReveal: TNyxTreeRevealRequest;
   LOffset: Double;
   LExtent: Double;
   LHeight: Double;
@@ -234,6 +237,20 @@ begin
     Exit;
   end;
   LRows := TreeRows;
+  LCurrentReveal := CurrentTreeReveal;
+
+  if (FTreeRevealCorrectionSerial > 0) and (LCurrentReveal.Serial <> FTreeRevealCorrectionSerial) then
+  begin
+    FRevealItem := Default(TNyxItemRef);
+    FTreeRevealCorrectionSerial := 0;
+  end;
+  LReveal := PendingTreeReveal;
+
+  if LReveal.Item.Defined and (LRows.IndexOf(LReveal.Item) >= 0) then
+  begin
+    FRevealItem := LReveal.Item;
+    FTreeRevealCorrectionSerial := LReveal.Serial;
+  end;
   LChanged := FTreeGeometryRows <> LRows;
 
   if FEditingItem.Defined and
@@ -496,11 +513,31 @@ begin
       FHost.contains(FRows[LSource].FElement) then
     begin
       RevealListOption(FRows[LSource].FCells[0]);
+
+      if FTreeRevealCorrectionSerial > 0 then
+      begin
+        { Explicit navigation may reveal through surrounding scroll containers
+          as well as the Tree itself. Instant nearest movement has no later
+          smooth-scroll animation which could outlive cancellation/navigation. }
+        LViewportScroll := TTreeViewportScroll.new;
+        LViewportScroll.behavior := 'instant';
+        LViewportScroll.block := 'nearest';
+        LViewportScroll.inline_ := 'nearest';
+        FRows[LSource].FCells[0].scrollIntoView(LViewportScroll);
+
+        if not InputLifetimeCurrent then
+        begin
+          Exit;
+        end;
+        FRevealScrollTop := TScrollableElement(FHost).scrollTopPixels;
+        TreeRevealApplied(FTreeRevealCorrectionSerial);
+      end;
     end;
 
     if (LRows.IndexOf(FRevealItem) < 0) or not LMeasured then
     begin
       FRevealItem := Default(TNyxItemRef);
+      FTreeRevealCorrectionSerial := 0;
     end;
   end;
 
@@ -523,6 +560,17 @@ begin
     if LNextFocus = nil then
     begin
       LNextFocus := FHost;
+    end;
+  end;
+
+  if LReveal.Item.Defined and (LReveal.Focus = ntrfTake) and
+    (LReveal.Serial = CurrentTreeReveal.Serial) then
+  begin
+    LSource := LData.IndexOf(LReveal.Item);
+
+    if (LSource >= 0) and (FRows[LSource] <> nil) then
+    begin
+      LNextFocus := FRows[LSource].FCells[0];
     end;
   end;
 

@@ -22,6 +22,7 @@
 program nyx_tree_inspection_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
 uses
   {$ifdef PAS2JS}
@@ -34,6 +35,15 @@ uses
   nyx.collections.query, nyx.collections.query.session, nyx.collections.tree.inspection,
   nyx.publication, nyx.process.tree
   {$ifdef NYX_PROCESS_GENERATED}, nyx.generated.view{$endif};
+
+{$ifdef PAS2JS}
+type
+  { CSSOM scroll offsets are fractional pixels. This standard HTMLElement bridge
+    borrows the mounted Tree only within the fixture; no external host is owned. }
+  TTreeScrollElement = class external name 'HTMLElement'(TJSHTMLElement)
+    scrollTopPixels: Double; external name 'scrollTop';
+  end;
+{$endif}
 
 var
   GChecks: Integer;
@@ -48,7 +58,11 @@ begin
   end;
 end;
 
+{$ifdef PAS2JS}
+function Journey(AWidth: Integer): JSValue; async;
+{$else}
 procedure Journey(AWidth: Integer);
+{$endif}
 var
   LDocument: TNyxDocument;
   LBinding: TNyxProcessTreeDemo;
@@ -114,7 +128,184 @@ var
     {$endif}
   end;
 
+  {$ifdef PAS2JS}
+  function ViewportCases: JSValue; async;
+  {$else}
+  procedure ViewportCases;
+  {$endif}
+  var
+    LMount: INyxCollectionMount;
+    LReveal: INyxTreeReveal;
+    LBefore: INyxCollectionSnapshot;
+    LChanges: array of TNyxCollectionEdit;
+    LIndex: Integer;
+    LFirst: Integer;
+    LSerial: Integer;
+    LTarget: TNyxItemRef;
+    {$ifdef PAS2JS}
+    LFace: TJSHTMLElement;
+    LButton: TJSHTMLElement;
+    {$else}
+    LFace: TTreeView;
+    LButton: TWinControl;
+    LNode: TTreeNode;
+    {$endif}
+
+    {$ifdef PAS2JS}
+    function Settle: JSValue; async;
+    begin
+      Result := Undefined;
+      await(TJSPromise.resolve(TJSPromise.new(procedure(AResolve, AReject: TJSPromiseResolver)
+        begin
+          window.setTimeout(procedure begin AResolve(Undefined); end, 50);
+        end)));
+    end;
+    {$endif}
+
+    function InViewport: Boolean;
+    {$ifdef PAS2JS}
+    var
+      LRow: TJSHTMLElement;
+      LBounds: TJSDOMRect;
+      LClip: TJSDOMRect;
+    {$else}
+    var
+      LBounds: TRect;
+      LPoint: TPoint;
+      LRowTop: Integer;
+      LRowBottom: Integer;
+      LParent: TWinControl;
+    {$endif}
+    begin
+      {$ifdef PAS2JS}
+      LRow := TJSHTMLElement(LFace.querySelector('[data-nyx-item="' + LTarget.ID + '"]'));
+      Result := LRow <> nil;
+
+      if Result then
+      begin
+        LBounds := LRow.querySelector('summary').getBoundingClientRect;
+        LClip := LFace.getBoundingClientRect;
+        Result := (LBounds.bottom > LBounds.top) and (LBounds.top >= LClip.top - 1) and
+          (LBounds.bottom <= LClip.bottom + 1) and (LBounds.top >= -1) and
+          (LBounds.bottom <= window.innerHeight + 1);
+      end;
+      {$else}
+      LBounds := LNode.DisplayRect(False);
+      Result := (LBounds.Bottom > LBounds.Top) and (LBounds.Top >= 0) and
+        (LBounds.Bottom <= LFace.ClientHeight);
+      LPoint.X := 0;
+      LPoint.Y := LBounds.Top;
+      LRowTop := LFace.ClientToScreen(LPoint).Y;
+      LPoint.Y := LBounds.Bottom;
+      LRowBottom := LFace.ClientToScreen(LPoint).Y;
+      LParent := LFace.Parent;
+      while Result and (LParent <> nil) do
+      begin
+        LPoint.Y := 0;
+        Result := LRowTop >= LParent.ClientToScreen(LPoint).Y;
+        LPoint.Y := LParent.ClientHeight;
+        Result := Result and (LRowBottom <= LParent.ClientToScreen(LPoint).Y);
+        LParent := LParent.Parent;
+      end;
+      {$endif}
+    end;
+
+    function CallerFocused: Boolean;
+    begin
+      {$ifdef PAS2JS}Result := document.activeElement = LButton;
+      {$else}Result := LApplication.Window.ActiveControl = LButton;{$endif}
+    end;
+
+    procedure ScrollAway;
+    begin
+      {$ifdef PAS2JS}
+      LButton.focus;
+      TTreeScrollElement(LFace).scrollTopPixels := 0;
+      LFace.dispatchEvent(TJSEvent.new('scroll'));
+      {$else}
+      LButton.SetFocus;
+      LFace.TopItem := LFace.Items.GetFirstNode;
+      Application.ProcessMessages;
+      {$endif}
+    end;
+
+  begin
+    {$ifdef PAS2JS}Result := Undefined;{$endif}
+    Click(ProcessClearSearchID);
+    LMount := LApplication.View.CollectionMount(ProcessTreeID);
+    Check(Supports(LView, INyxTreeReveal, LReveal), 'the ordinary Tree exposes typed explicit viewport intent');
+    LBefore := LView.Store.Snapshot;
+    LFirst := LBefore.Count;
+    SetLength(LChanges, 200);
+    for LIndex := 0 to High(LChanges) do
+    begin
+      LChanges[LIndex] := NyxInsert(LFirst + LIndex,
+        NyxCollectionItem(Item('viewport-' + TNyxText(IntToStr(LIndex))))
+          .WithValue(NyxTextField('name'), 'Process worker ' + TNyxText(IntToStr(LIndex)))
+          .WithValue(NyxTextField('parent'), 'workers'));
+    end;
+    LView.Store.Apply(LChanges, LBefore.Revision);
+    LTree.ExpandAll;
+    LView.Select(Item('archive'));
+    LBefore := LView.Store.Snapshot;
+    LTarget := Item('viewport-199');
+    {$ifdef PAS2JS}
+    LFace := LApplication.View.ElementFor(ProcessTreeID);
+    LButton := LApplication.View.ElementFor(ProcessFindID);
+    await(Settle);
+    {$else}
+    LFace := TTreeView(LApplication.View.ControlFor(ProcessTreeID));
+    LButton := TWinControl(LApplication.View.ControlFor(ProcessFindID));
+    LNode := LFace.Items.FindNodeWithText('Process worker 199');
+    Check(LNode <> nil, 'the long native Tree contains its exact target');
+    {$endif}
+    ScrollAway;
+    {$ifdef PAS2JS}await(Settle);{$endif}
+    Check(not InViewport, 'the long Tree target starts outside the actual viewport');
+    Check(RevealNyxTreeItem(LView, LTarget) = ntrrRevealed, 'a typed reveal is admitted');
+    {$ifdef PAS2JS}await(Settle);{$else}Application.ProcessMessages;{$endif}
+    Check(InViewport and CallerFocused, 'default reveal moves the actual viewport while preserving caller focus');
+    Check((LView.Selection.Count = 1) and LView.Selection.Contains(Item('archive')) and
+      (LView.Selection.Anchor.ID = 'archive'), 'viewport reveal preserves selected membership and anchor');
+    LSerial := LReveal.CaptureTreeReveal.Serial;
+    ScrollAway;
+    {$ifdef PAS2JS}await(Settle);{$endif}
+    Check(not InViewport, 'the reader can deliberately scroll away after the first reveal');
+    RevealNyxTreeItem(LView, LTarget);
+    {$ifdef PAS2JS}await(Settle);{$else}Application.ProcessMessages;{$endif}
+    Check(InViewport and (LReveal.CaptureTreeReveal.Serial > LSerial),
+      'repeating reveal at unchanged logical focus performs a fresh physical request');
+    ScrollAway;
+    {$ifdef PAS2JS}await(Settle);{$endif}
+    LMount.Refresh;
+    {$ifdef PAS2JS}await(Settle);{$endif}
+    Check(not InViewport, 'an ordinary refresh does not replay a consumed reveal and pull the reader back');
+    RevealNyxTreeItem(LView, LTarget, ntrfTake);
+    {$ifdef PAS2JS}await(Settle);{$else}Application.ProcessMessages;{$endif}
+    {$ifdef PAS2JS}
+    Check(InViewport and LFace.contains(document.activeElement), 'opt-in reveal transfers actual browser focus to the Tree');
+    {$else}
+    Check(InViewport and (LApplication.Window.ActiveControl = LFace), 'opt-in reveal transfers actual native focus to the Tree');
+    {$endif}
+    LTree.SetExpanded(Item('workers'), False);
+    {$ifdef PAS2JS}await(Settle);{$endif}
+    Check(not LReveal.CaptureTreeReveal.Item.Defined,
+      'a later disclosure command invalidates old viewport intent before queued geometry can reuse it');
+    LTree.ExpandAll;
+    ScrollAway;
+    LMount.SetInteraction(False, False);
+    RevealNyxTreeItem(LView, LTarget, ntrfTake);
+    LMount.SetInteraction(True, False);
+    {$ifdef PAS2JS}await(Settle);{$else}Application.ProcessMessages;{$endif}
+    Check(CallerFocused, 'enabling a target cannot revive a focus request issued while it was disabled');
+    Check(LView.Store.Snapshot = LBefore, 'viewport requests do not alter accepted source data');
+    LView.Store.Update(NyxCollectionItem(Item('archive')).WithValue(NyxTextField('name'), 'Archive worker updated'));
+    Check(not LReveal.CaptureTreeReveal.Item.Defined,
+      'a newer source revision invalidates a former request even when its target ID survives');
+  end;
+
 begin
+  {$ifdef PAS2JS}Result := Undefined;{$endif}
   {$ifdef NYX_PROCESS_GENERATED}
   LDocument := BuildNyxDocument;
   {$else}
@@ -242,6 +433,7 @@ begin
     Check(TNyxCodec.Encode(LDocument) = LSaved, 'runtime navigation never mutates saved defaults/history');
     Check(LView.Store.Snapshot.Revision = LSource.Revision + 1,
       'all inspection operations leave the source unchanged except the deliberate deletion');
+    {$ifdef PAS2JS}await(ViewportCases);{$else}ViewportCases;{$endif}
     LBinding.Close;
     LQuery := LView.Snapshot;
     LApplication.State.SetValue(NyxTextState(ProcessSearchID), 'gateway');
@@ -259,12 +451,27 @@ begin
   end;
 end;
 
+{$ifdef PAS2JS}
+function BrowserChecks: JSValue; async;
+begin
+  Result := Undefined;
+  try
+    await(Journey(1280));
+    await(Journey(390));
+    document.body.setAttribute('data-tree-inspection-checks', IntToStr(GChecks));
+  except
+    on E: Exception do
+    begin
+      document.body.setAttribute('data-tree-inspection-error', E.Message);
+    end;
+  end;
+end;
+{$endif}
+
 begin
   try
     {$ifdef PAS2JS}
-    Journey(1280);
-    Journey(390);
-    document.body.setAttribute('data-tree-inspection-checks', IntToStr(GChecks));
+    BrowserChecks;
     {$else}
     Application.Initialize;
     Journey(StrToInt(ParamStr(1)));

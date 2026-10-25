@@ -2213,14 +2213,40 @@ released; they retain no live view, store, widget, receiver or command authority
 Their logical source payload remains retained even after the application closes.
 
 `RevealNyxTreeItem` explicitly focuses an admitted item and opens its ancestors
-through the ordinary view command, preserving exact membership and range anchor.
+through the optional `INyxTreeReveal` view facet, preserving exact membership and range anchor.
 Its typed outcome reports missing/filtered/revealed. It never relaxes a filter,
 selects a substitute or restores an older disclosure/selection snapshot. A foreign
 or undefined identity refuses. The caller still owns its normal UI/generation
-authority, and observers retain ordinary post-commit semantics. Physical viewport
-scrolling/focus delivery follows the adapters; this helper does not claim that
-every disclosed row is currently onscreen. Long-tree viewport qualification
-remains separate, especially for browser commands issued outside the Tree.
+authority, and observers retain ordinary post-commit semantics. Each admitted
+call includes fresh viewport intent even when logical focus/disclosure are
+unchanged. The default `ntrfPreserve` keeps keyboard focus in the caller;
+`ntrfTake` deliberately transfers it to the Tree:
+
+```pascal
+LOutcome := RevealNyxTreeItem(LProcessView, LProcess, ntrfTake);
+```
+
+`INyxTreeReveal.CaptureTreeReveal` returns copied one-shot intent. Its serial
+belongs to that exact view, never another instance or mounted generation. The
+capture must read owned facts without application callbacks. Source revisions,
+query changes (including ABA), later disclosure and ordinary focus commands
+withdraw old intent. Notification failure follows committed navigation. A
+disabled/suspended target does not gain authority by later enabling/resuming;
+new target activation ignores historical requests. Existing input epochs and
+successful refresh acknowledgement govern consumption. Failed/deferred target
+work can retry the same admitted request; ordinary later refresh does not replay
+success or pull a reader back after deliberate scrolling.
+
+Native explicit requests call the standard Tree node's `MakeVisible` after
+disclosure/EndUpdate, then optionally take focus. Browser requests realize the
+target/path and use nearest instant scrolling through the Tree and surrounding
+scroll containers. Queued measurement corrections check the same current intent;
+scrolling away or superseding it withdraws them. Raw DOM option keys remain
+inside the adapter. These operations establish navigation intent and target
+delivery, not an eternal onscreen lock against later user/application changes.
+Native long-tree checks execute; browser long-tree assertions compile/stage but
+still require execution. Broader transforms/scroll containers, AT and physical
+input remain distinct qualification.
 
 The public [process-tree example](../examples/service-monitor/README.md#process-tree-inspection)
 uses ordinary Nyx Input/Label/Button/Tree controls, one explicit search owner and
@@ -2230,7 +2256,7 @@ disclosure choices and surviving selected identities; another owner's accepted
 filter can still hide a selected process. The separate Clear-and-reveal command
 makes relaxation deliberate. Input labels distinguish membership search from the
 Tree's keyboard typeahead. Native handwritten/generated controls exercise both
-widths; matching browser artifacts build, while browser/AT/pixel/long-scroll and
+widths; matching browser artifacts build, while browser/AT/pixel and
 full live-inspection acceptance remain open.
 
 ## Immutable tree rows and browser windows

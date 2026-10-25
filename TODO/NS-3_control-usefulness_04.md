@@ -176,3 +176,14 @@ path, peer ownership, later branch changes, deletion and binding retirement at
 both widths. Browser execution, physical long-tree viewport reveal/scrolling,
 AT/visual/Studio and the unchanged original criteria remain open. These bounded
 checks do not accept the whole Tree checklist or04.
+
+Explicit Tree viewport intent now has a separate typed facet, per-view serial
+and caller-preserving/Tree-taking focus policy. Source/query/later navigation
+invalidate old intent. Existing mount epochs and success-only acknowledgement
+prevent stale request revival and ordinary-refresh pullback. Native public/
+generated journeys add 200 process rows and check actual Tree/parent clipping,
+repeat reveal, focus policy and disabled-target refusal at both widths. Portable
+model checks additionally exercise failure/deferral/retry, suspension and remount
+ownership. Browser assertions compile/stage; execution, broader visual/AT/physical
+input and complete criterion acceptance remain open. The next authoring outcome
+is portable saved inspection defaults through typed source and Studio/MCP.

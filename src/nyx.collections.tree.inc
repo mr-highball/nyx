@@ -91,6 +91,38 @@ begin
   Result := FTreeCommandSerial;
 end;
 
+function TView.CaptureTreeReveal: TNyxTreeRevealRequest;
+begin
+  Result := Default(TNyxTreeRevealRequest);
+
+  if (FProjection = cpTree) and (FTreeRevealCommand = FTreeCommandSerial) and
+    (FTreeRevealRevision = FSelection.DataRevision) and (FTreeRevealQueryIntent = FQueryIntent) then
+  begin
+    Result := FTreeReveal;
+  end;
+end;
+
+procedure TView.RevealTreeItem(const AItem: TNyxItemRef; AFocus: TNyxTreeRevealFocus);
+var
+  LItems: TNyxItemRefs;
+  LIndex: Integer;
+begin
+  Writable;
+  TreeIndex(AItem);
+
+  if (Ord(AFocus) < Ord(Low(TNyxTreeRevealFocus))) or
+    (Ord(AFocus) > Ord(High(TNyxTreeRevealFocus))) then
+  begin
+    raise ENyxCollection.Create('Unknown Tree reveal focus policy');
+  end;
+  SetLength(LItems, FSelection.Count);
+  for LIndex := 0 to FSelection.Count - 1 do
+  begin
+    LItems[LIndex] := FSelection.ItemAt(LIndex);
+  end;
+  SetSelectionCore(LItems, AItem, FSelection.Anchor, True, AFocus);
+end;
+
 procedure TView.AdvanceTreeCommand;
 begin
 

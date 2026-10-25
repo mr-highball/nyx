@@ -186,6 +186,13 @@ context ancestors, disclosed rows and source rows. A selected row hidden by a
 filter has a different count from one inside a closed branch. These counts
 describe the complete accepted query, not just this search box's predicate.
 
+The example's explicit reveal buttons opt into Tree keyboard focus. Application
+code can use `RevealNyxTreeItem` with its default focus-preserving policy instead.
+Repeating reveal at the same logical row issues a fresh viewport request, so it
+works after scrolling away. Successful requests are consumed once; ordinary
+refresh does not keep pulling the reader back. Source/query/later navigation
+invalidate old requests, and target retirement cannot lend them new authority.
+
 **Reveal first selected** explains a filter obstruction. **Clear my search and
 reveal** is the explicit relaxation choice; other owners' filters remain active.
 **Clear my search** clears its input and predicate in one grouped publication,
@@ -217,8 +224,13 @@ entry, and stages both browser test variants plus the runnable example. It start
 no server. The browser test HTML reports `data-tree-inspection-checks` or
 `data-tree-inspection-error` on the body. Native command injection is not physical
 keyboard/pointer evidence; compilation is not browser execution or visual/AT
-qualification. Long-tree viewport reveal/scrolling remains an explicit adapter
-gate, rather than being inferred from the short sample's open path.
+qualification. The same handwritten/generated test adds 200 process rows through
+the public collection API, then checks actual native viewport bounds, repeated
+reveal, caller/Tree focus policies and absence of refresh pullback at both widths.
+The additional rows are test inputs; the starter document remains seven English
+records. Browser long-tree assertions are staged for execution, not counted as
+native/browser parity. The model companion additionally covers atomic observation,
+invalidation, target failure/deferral/retry, suspension and remount refusal.
 
 ## Qualification
 
