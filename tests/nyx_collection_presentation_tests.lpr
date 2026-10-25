@@ -25,7 +25,7 @@ program nyx_collection_presentation_tests;
 
 uses SysUtils, nyx.text, nyx.data, nyx.collections, nyx.collections.arrangement,
   nyx.collections.presentation, nyx.collections.view.types, nyx.collections.view,
-  nyx.collections.workbench.policy, nyx.publication
+  nyx.collections.workbench.policy, nyx.publication, nyx.layout.constraints
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -169,6 +169,100 @@ begin
   end;
   Check(LRefused and (LPreferences.ToData.ToJSON = LBefore),
     'preference admission retains the exact previous vector on refusal');
+end;
+
+{ Header configuration remains independent of body spacing, runtime density
+  overrides and legacy policy bytes. No rendering or target metric is inferred. }
+procedure HeaderPolicies;
+var
+  LHeader: TNyxTableHeaderPolicy;
+  LCopy: TNyxTableHeaderPolicy;
+  LPolicy: TNyxTablePresentationPolicy;
+  LResolved: TNyxTablePresentationPolicy;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+begin
+  LHeader := Default(TNyxTableHeaderPolicy);
+  Check(not LHeader.Defined and (LHeader.ToData.Kind = ndNull),
+    'absent header preserves the legacy target choice');
+  LHeader := NyxTableHeader;
+  Check((LHeader.ReservedLines = 1) and (LHeader.MinimumLogicalHeight = 0),
+    'explicit header defaults reserve one natural caption line');
+  LCopy := LHeader.Lines(2).MinimumHeight(37);
+  Check((LHeader.ReservedLines = 1) and (LHeader.MinimumLogicalHeight = 0),
+    'fluent header configuration cannot mutate an earlier scalar value');
+  Check((LCopy.HeightFor(12) = 37) and (LCopy.HeightFor(12, 1.25) = 46),
+    'line metrics are already pixels and only the logical minimum scales');
+  Check(LCopy.HeightFor(30) = 60, 'caption line reservation can exceed the minimum');
+  Check(LCopy.HeightFor(12, 1E250) = MaximumNyxLayoutBound,
+    'extreme caller scaling saturates before floating multiplication');
+  Check(NyxTableHeader.Lines(MaximumNyxLayoutBound).HeightFor(2) = MaximumNyxLayoutBound,
+    'line multiplication saturates before checked Integer overflow');
+  Check(TNyxTableHeaderPolicy.FromData(LCopy.ToData).ToData.ToJSON = LCopy.ToData.ToJSON,
+    'header strict wire round-trips exact line and minimum choices');
+  LBefore := NyxTablePresentation.ToData.ToJSON;
+  Check(LBefore = NyxObject([NyxField('version', NyxData(1)),
+    NyxField('density', NyxData('normal'))]).ToJSON,
+    'legacy explicit body policy retains its exact version-one bytes');
+  LPolicy := NyxTablePresentation.Density(ntrdComfortable).Header(LCopy);
+  Check(LPolicy.HasHeader and (LPolicy.ToData.Field('version').AsInteger = 2),
+    'only a present header opts the nested table policy into version two');
+  Check(TNyxTablePresentationPolicy.FromData(LPolicy.ToData).ToData.ToJSON =
+    LPolicy.ToData.ToJSON, 'table density and independent header round-trip together');
+  LResolved := NyxTablePresentationPreferences.Density(ntrdCompact).ResolveTable(LPolicy);
+  Check((LResolved.RowDensity = ntrdCompact) and
+    (LResolved.HeaderPolicy.ToData.ToJSON = LCopy.ToData.ToJSON) and
+    (LPolicy.RowDensity = ntrdComfortable),
+    'runtime density override preserves authored header and the original policy');
+  LResolved := LPolicy.UseDefaultHeader;
+  Check(not LResolved.HasHeader and
+    (LResolved.ToData.ToJSON = NyxTablePresentation.Density(ntrdComfortable).ToData.ToJSON),
+    'header reset restores legacy bytes while keeping body density');
+  LBefore := LHeader.ToData.ToJSON;
+  LRejected := False;
+  try
+    LHeader := LHeader.Lines(0);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LHeader.ToData.ToJSON = LBefore),
+    'invalid line count refuses before replacing caller configuration');
+  LRejected := False;
+  try
+    LCopy := LHeader.MinimumHeight(-1);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'negative header minimum refuses');
+  LRejected := False;
+  try
+    LHeader.HeightFor(0);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'zero target line metric refuses');
+  LRejected := False;
+  try
+    LHeader.HeightFor(12, 0);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'zero target scale refuses');
+  RefuseTable('{"version":2,"density":"normal","header":null}');
+  RefuseTable('{"version":2,"density":"normal","header":{"version":1,"lines":0,"minimumHeight":0}}');
+  RefuseTable('{"version":2,"density":"normal","header":{"version":1,"lines":1,"minimumHeight":0,"extra":true}}');
 end;
 
 procedure AuthoredValues;
@@ -792,6 +886,7 @@ end;
 
 begin
   try
+    HeaderPolicies;
     AuthoredValues;
     WireRefusals;
     RuntimeWork;

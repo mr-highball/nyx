@@ -687,6 +687,7 @@ type
       AActivatesButton: Boolean = False): INyxBrowserColumnCommand;
     function ColumnFitInput(AEvent: TJSMouseEvent): Boolean;
     procedure RefreshQueryHeaders;
+    procedure ApplyHeaderPresentation;
     procedure QueryColumn(AColumn: Integer; AFilter, AAppend: Boolean);
     function QueryClick(AEvent: TEventListenerEvent): Boolean;
     function QueryKey(AEvent: TJSKeyboardEvent): Boolean;
@@ -7960,6 +7961,78 @@ begin
         begin
           FHeaderCells[LColumn].setAttribute('aria-sort', 'descending');
         end;
+      end;
+    end;
+  end;
+  ApplyHeaderPresentation;
+end;
+
+{ Caption clamping owns only private header labels. Sort/filter buttons retain
+  their complete accessible captions and natural interactive allocation; the
+  minimum is not a maximum for the entire header or its management toolbar. }
+procedure TBrowserMount.ApplyHeaderPresentation;
+var
+  LHeader: TNyxTableHeaderPolicy;
+  LColumn: Integer;
+  LIndex: Integer;
+  LLabel: TJSHTMLElement;
+begin
+  LHeader := Default(TNyxTableHeaderPolicy);
+
+  if FHasTablePresentation then
+  begin
+    LHeader := FTablePresentation.TablePolicy.HeaderPolicy;
+  end;
+  for LColumn := 0 to High(FHeaderCells) do
+  begin
+
+    if LHeader.Defined then
+    begin
+      FHeaderCells[LColumn].style.setProperty('height',
+        IntToStr(LHeader.MinimumLogicalHeight) + 'px');
+      FHeaderCells[LColumn].setAttribute('data-nyx-header-lines',
+        IntToStr(LHeader.ReservedLines));
+    end
+    else
+    begin
+      FHeaderCells[LColumn].style.removeProperty('height');
+      FHeaderCells[LColumn].removeAttribute('data-nyx-header-lines');
+    end;
+    for LIndex := 0 to 1 do
+    begin
+
+      if LIndex = 0 then
+      begin
+        LLabel := FHeaderLabels[LColumn];
+      end
+      else
+      begin
+        LLabel := FHeaderSorts[LColumn];
+      end;
+
+      if LHeader.Defined then
+      begin
+        LLabel.setAttribute('title', QueryHeader(LColumn));
+        LLabel.style.setProperty('overflow', 'hidden');
+        LLabel.style.setProperty('max-width', '100%');
+        LLabel.style.setProperty('min-height', 'calc(1lh * ' +
+          IntToStr(LHeader.ReservedLines) + ')');
+        LLabel.style.setProperty('-webkit-line-clamp', IntToStr(LHeader.ReservedLines));
+        LLabel.style.setProperty('-webkit-box-orient', 'vertical');
+
+        if LLabel.style.getPropertyValue('display') <> 'none' then
+        begin
+          LLabel.style.setProperty('display', '-webkit-box');
+        end;
+      end
+      else
+      begin
+        LLabel.removeAttribute('title');
+        LLabel.style.removeProperty('overflow');
+        LLabel.style.removeProperty('max-width');
+        LLabel.style.removeProperty('min-height');
+        LLabel.style.removeProperty('-webkit-line-clamp');
+        LLabel.style.removeProperty('-webkit-box-orient');
       end;
     end;
   end;

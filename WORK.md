@@ -9,7 +9,77 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — independent native table headers — 2026-10-25
+## Current checkpoint — typed table headers — 2026-10-25
+
+The preceding checkpoint is PROGRESS: b43f904 is remote-verified. Root remains
+solo; Lil' Scooty is finished and idle. This packet serves the existing
+workbench03 presentation, authoring and public-application outcomes. Every
+original criterion remains open; this is no task/DONE or completion-credit move.
+
+The portable presentation contract now accepts an independent `NyxTableHeader`
+with typed caption lines and minimum logical height. Omission retains the exact
+old nested version-one wire construction; presence adds strict nested version
+two. `UseDefaultHeader` removes only that choice, and authored/runtime density
+updates retain it. Height resolution rejects invalid metrics, scales the logical
+minimum once and saturates before overflow without line-proportional allocation.
+Native measurement uses the actual title font and keeps the existing native
+minimum and column toolbar. Both pinned panes receive the same geometry.
+Browser captions reserve/clamp their own lines while retaining full accessible
+text and natural interactive controls; browser execution remains unqualified.
+
+Studio's Table presentation form now exposes density, optional header settings
+and independent reset through the existing typed capture/publication path.
+Inactive unfinished header numbers cannot block reset. Source reading and crafted
+Pascal generation preserve the same fluent policy. Existing bounded semantic
+reads and grouped undoable mutations carry it without a new tool or endpoint.
+The connector currently reports no connected document session; no active design
+is replaced. The public service-monitor example and documentation use the policy.
+
+Checked native policy/source/Studio-authoring fixtures pass 108/46/58; the exact
+emitted presentation companion independently compiles and passes five checks.
+Their complete heaps are clean; browser companions compile only. Handwritten
+and exact generated service monitors each pass 19 mounted checks at 1280/390,
+with complete clean heaps, including smaller headers, independent density,
+larger title fonts, editable visible pins, Unicode and retirement. Their four
+native compiler logs are warning-free, and both actual browser entries compile.
+The generated public companion is 7,082 UTF-8 bytes. Actual native presentation
+and column activation pass 167/243 per width, also with complete clean heaps and
+warning-free native compiler logs. Browser companions compile with the existing
+seven installed RTL warnings each and no owned warnings.
+
+Failure evidence is retained: an early mixed unit cache crashes the compiler;
+a coherent rebuild repairs that cache. Fixture wire-format/Boolean mistakes and
+the old five-control Studio form guard are corrected without dropping assertions.
+Short compiler budgets expire during dependency rebuilding. A later owned link
+attempt also loses its terminal receipt to a locked redirected log, and a cached
+retry is stopped after link completion stalls. The successful private runner
+lets cmd open the output files directly, preserves process-family ownership and
+explicit host identity, and retains 900-second compiler / 240-second runtime
+bounds. All positive runs exit normally with closed-log hashes. The accidental
+native invocation of the browser-only activation fixture is retained separately;
+the proper native fixture then passes unchanged. This private capture repair is
+not a product performance claim or a fix to the shared build helper; its remaining
+delivery gap is recorded in NS-6_delivery_01.
+
+All actual readers are joined. Final source cohorts verify 2,328 unchanged inputs;
+the private table-header-policy-01 packet retains sources, receipts and failures.
+Physical input, actual display/clipping, browser execution, ordinary mounted
+Studio header editing and the complete original workbench journey remain open.
+The earlier native full-query cursor gate and desktop-tool initialization failure
+remain unchanged; browser security review rejects local-file previews. No alternate
+server/protocol workaround is launched. The optional existing HTTP(S) endpoint
+question remains pending. These are concrete validation limits, not source
+permission gates or reasons to stop independent core development.
+
+Task-flow reassessment: at least five successive geometry/workbench packets have
+closed no original criterion. Stop equivalent header/performance probes after this
+bounded qualification. Next serve the public W1 workflow and remaining workbench
+interaction outcomes, with the existing input/browser gates preserved. New large
+artifacts remain on provisioned E: storage; no cleanup, compiler installation,
+SDK edit or service replacement occurs.
+
+
+## Independent native table headers — 2026-10-25
 
 The preceding goal turn is PROGRESS: 529b788 publishes the portable service
 monitor and is remote-verified. Root remains solo. This continuation serves

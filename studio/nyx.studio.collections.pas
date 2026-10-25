@@ -60,9 +60,10 @@ type
     swpfCopyFields, swpfHeaders, swpfLineEnding, swpfFocusedDraft,
     swpfExportDeclared, swpfExportPage, swpfExportFiltered, swpfExportFields,
     swpfExportHeaders, swpfExportLineEnding);
-  { Presentation form roles remain typed while incomplete line-count input stays
-    an inert draft. Column -1 addresses the independent body-row spacing form. }
-  TNyxStudioPresentationPolicyField = (sppfDensity, sppfTextOverflow, sppfMaximumLines);
+  { Presentation form roles remain typed while incomplete numeric input stays
+    an inert draft. Column -1 addresses the independent body/header policy form. }
+  TNyxStudioPresentationPolicyField = (sppfDensity, sppfTextOverflow, sppfMaximumLines,
+    sppfHeaderEnabled, sppfHeaderLines, sppfHeaderMinimumHeight);
   { Independent optional logical axes in the existing layout draft owner.
     Transport column positions never replace the captured full typed field. }
   TNyxStudioColumnAlignmentField = (scafHorizontal, scafVertical);

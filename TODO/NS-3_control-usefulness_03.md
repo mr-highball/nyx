@@ -14,6 +14,20 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The typed header continuation adds independent caption lines and minimum logical
+height through public policy, strict wire, source/generation, Studio forms and
+existing grouped semantic edits. Omitted headers retain the exact old nested
+wire. Runtime density and header-only reset preserve unrelated choices. Native
+measurement follows title fonts and retains management space and aligned pins.
+Policy/source/authoring pass 108/46/58 native checks; the independently compiled
+presentation companion passes five. The public handwritten/generated examples
+each pass 19 mounted checks at both widths, and native presentation/activation
+pass 167/243 per width, with complete clean heaps. Browser companions compile
+only. Ordinary mounted Studio header editing, physical input, actual display and
+the complete original journey remain open. The current
+[checkpoint](../WORK.md#current-checkpoint--typed-table-headers--2026-10-25)
+retains source identities, capture failures and precise qualification limits.
+
 The public [service monitor](../examples/service-monitor/README.md) now supplies
 an English, typed code-first workbench with editable Service/Status pins, query,
 arrangement, long-value presentation and explicit target copy/save services.
@@ -39,8 +53,8 @@ use the captured native baseline. The handwritten/generated mounted checks pass
 pass 161/243 per width with clean heaps. The full query suite remains unqualified
 here: Windows.GetCursorPos fails before its physical launcher click at both widths.
 Browser compilation and Canvas/PNG redraws do not close real input/display gates.
-Explicit typed header line/space budgets remain part of the presentation/usability
-continuation; the current fix preserves independent body/header ownership.
+The later typed header continuation above adds explicit line/space budgets while
+preserving independent body/header ownership; full visual/input acceptance stays open.
 
 **Reconfiguration compatibility — projection admission:**
 

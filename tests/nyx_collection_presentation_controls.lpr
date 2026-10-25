@@ -275,6 +275,12 @@ begin
     if AArranged then
     begin
       LSpec := LSpec.TableLayout(NyxTableLayout);
+
+      if APresentation then
+      begin
+        LSpec := LSpec.TablePresentation(LSpec.TablePresentationPolicy
+          .Header(NyxTableHeader.Lines(1).MinimumHeight(32)));
+      end;
     end;
     LTable.Binds.Collection(LSpec);
     LPage.Add(LTable);
@@ -471,6 +477,9 @@ begin
        ((LExpectedAdmission = nttaCellLimit) and (LLabel.getAttribute('data-nyx-text-layout-admission') = 'cell-limit'))),
       'actual browser work refusal stays visible and separately typed');
     LHeader := Round(TJSHTMLElement(LTable.querySelector('thead')).offsetHeight);
+    LLabel := TJSHTMLElement(LTable.querySelector('thead th'));
+    Check((LLabel.getAttribute('data-nyx-header-lines') = '1') = AArranged,
+      'browser captions apply the explicit header budget only to its authored table');
     LCompact := Round(TJSHTMLElement(LTable.querySelector('[data-nyx-item="two"]')).offsetHeight);
 
     if not ARestrictedWork then
@@ -507,6 +516,9 @@ begin
     Check((LNameGrid.RowHeights[1] = LGrid.RowHeights[1]) and
       (LNotesGrid.RowHeights[1] = LGrid.RowHeights[1]), 'both logical pin edges share exact outer variable row geometry');
     LHeader := LGrid.RowHeights[0];
+    Check((LNameGrid.RowHeights[0] = LHeader) and
+      (LNotesGrid.RowHeights[0] = LHeader),
+      'both logical pin headers retain the same independently reserved space');
     LCompact := LGrid.RowHeights[2];
 
     if not ARestrictedWork and (ParamCount > 1) then
@@ -533,6 +545,8 @@ begin
     {$endif}
     ApplyPresentation(LView, NyxTablePresentationPreferences.Density(ntrdComfortable));
     {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LView.Spec.TablePresentationPolicy.HasHeader = AArranged,
+      'runtime body density preserves explicit header presence and legacy absence');
     {$ifdef PAS2JS}
     Check((LCell.querySelector('input') = LInput) and
       (document.activeElement = LInput) and (LInput.value = '-') and

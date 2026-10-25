@@ -313,7 +313,8 @@ LServicesTable.Binds.Collection(
       .ColumnText(NyxColumnText.Wrap(4))
     .Column(NyxTextField('status'), 'Status')
       .ColumnText(NyxColumnText.Ellipsis)
-    .TablePresentation(NyxTablePresentation.Density(ntrdComfortable)));
+    .TablePresentation(NyxTablePresentation.Density(ntrdComfortable)
+      .Header(NyxTableHeader.Lines(1).MinimumHeight(32))));
 ```
 
 `Clip`, `Ellipsis` and `Wrap` affect presentation only. Wrap honors hard breaks
@@ -322,6 +323,20 @@ There is no arbitrary authoring ceiling below `High(Integer)`. Runtime hosts
 have separate, adjustable work limits with typed refusal outcomes. An accepted
 saved policy does not promise that every host can admit its requested work.
 Raw values, unfinished drafts and explicitly represented copy remain distinct.
+
+`NyxTableHeader` independently configures caption lines and a minimum logical
+height. The explicit factory reserves one natural caption line and no additional
+minimum. `Lines` accepts positive values and `MinimumHeight` accepts zero or
+positive values within Nyx's geometry domain. Targets scale the logical minimum
+once and retain their own space for interactive filtering, sorting and column
+management. Body-density changes, including runtime preferences, preserve the
+header choice. Native and browser font metrics can produce different pixel sizes.
+
+Omit `.Header` to preserve legacy target headers. `.UseDefaultHeader` removes
+only the header choice, retaining body density. Existing table-presentation wire
+objects remain version one byte-for-byte when no header is present; an explicit
+header adds nested version two. Generated Pascal uses the same typed fluent
+construction, and source reading retains it.
 
 Absence preserves the former host behavior. Explicit Clip and Normal density
 remain present choices. `UseDefaultColumnText` and
@@ -343,7 +358,7 @@ presentation defaults. Reset removes that runtime override without inventing a
 saved declaration. Native/browser activation and reset have focused control
 checks; full Studio integration remains tracked in the workbench task.
 
-Studio's **Table defaults** includes collapsed **Body row spacing** and per-column
+Studio's **Table defaults** includes collapsed **Table presentation** and per-column
 **Text layout** sections. Apply captures one typed policy through the ordinary
 source queue; each reset clears only its own declaration. A partial wrap count
 stays an unsubmitted draft. Clip, Ellipsis and reset ignore that inactive count,

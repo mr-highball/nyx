@@ -906,7 +906,7 @@ type
     vkWorkbenchCopyAction, vkWorkbenchCopyFields,
     vkWorkbenchLineEnding, vkTablePresentationPolicy, vkColumnTextPolicy,
     vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
-    vkColumnVerticalAlignment);
+    vkColumnVerticalAlignment, vkTableHeaderPolicy);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -982,6 +982,7 @@ type
     TableWorkbenchPolicy: TNyxTableWorkbenchPolicy;
     TableExportPolicy: TNyxTableExportPolicy;
     TablePresentationPolicy: TNyxTablePresentationPolicy;
+    TableHeaderPolicy: TNyxTableHeaderPolicy;
     ColumnTextPolicy: TNyxColumnTextPolicy;
     ColumnAlignmentPolicy: TNyxColumnAlignmentPolicy;
     CollectionPaging: TNyxCollectionPaging;
@@ -3799,7 +3800,8 @@ begin
           (LName = 'nyxcollectionview') or (LName = 'nyxcolumnlayout') or
           (LName = 'nyxtablelayout') or (LName = 'nyxtableworkbench') or
           (LName = 'nyxtableexport') or
-          (LName = 'nyxtablepresentation') or (LName = 'nyxcolumntext') or
+          (LName = 'nyxtablepresentation') or (LName = 'nyxtableheader') or
+          (LName = 'nyxcolumntext') or
           (LName = 'nyxcolumnalignment') then
         begin
           Exit(CollectionConstructor(LName));

@@ -11,7 +11,18 @@ is read-only. Notes wrap and long command lines retain their complete raw value
 for inspection and copying. Cell actions expose inspection, copy and TSV export.
 Body-row density is independent of the query/column header reservation, both at
 initial mount and during runtime updates. Native headers use their captured
-native metric rather than multiplying the selected body-row height.
+native metric rather than multiplying the selected body-row height. This example
+also requests a compact caption area through the portable typed policy:
+
+```pascal
+.TablePresentation(NyxTablePresentation.Density(ntrdComfortable)
+  .Header(NyxTableHeader.Lines(1).MinimumHeight(32)))
+```
+
+The header minimum is in logical pixels. Targets preserve their separate space
+for filtering and column management. Change the line count or minimum to suit
+your captions; `.UseDefaultHeader` restores target defaults while retaining body
+density. Omit `.Header` altogether to preserve older header behavior.
 
 The application explicitly supplies clipboard and file-save hosts through the
 public renderer service contract. Authored export intent and runtime permission

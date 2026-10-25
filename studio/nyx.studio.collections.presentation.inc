@@ -27,7 +27,8 @@ const
   CPresentationAction = 'studio-presentation-policy-action';
   CPresentationColumn = 'studio-presentation-policy-column';
   CPresentationFields: array[TNyxStudioPresentationPolicyField] of TNyxText =
-    ('density', 'overflow', 'maximum-lines');
+    ('density', 'overflow', 'maximum-lines', 'header-enabled', 'header-lines',
+      'header-minimum-height');
   CPresentationDensities: array[TNyxTableRowDensity] of TNyxText =
     ('Compact', 'Normal', 'Comfortable');
   CPresentationOverflows: array[TNyxColumnTextOverflow] of TNyxText =
@@ -49,7 +50,8 @@ begin
 
   if (Ord(AField) < Ord(Low(TNyxStudioPresentationPolicyField))) or
     (Ord(AField) > Ord(High(TNyxStudioPresentationPolicyField))) or
-    ((AColumn = -1) <> (AField = sppfDensity)) then
+    ((AColumn = -1) <> (AField in [sppfDensity, sppfHeaderEnabled,
+      sppfHeaderLines, sppfHeaderMinimumHeight])) then
   begin
     raise ENyxCollection.Create('Unknown presentation form role');
   end;
@@ -73,6 +75,7 @@ var
   LSection: INyxDisclosure;
   LColumn: TNyxCollectionColumn;
   LTablePolicy: TNyxTablePresentationPolicy;
+  LHeaderPolicy: TNyxTableHeaderPolicy;
   LTextPolicy: TNyxColumnTextPolicy;
   LIndex: Integer;
 
@@ -117,10 +120,26 @@ begin
   begin
     LTablePolicy := ASpec.TablePresentationPolicy;
   end;
-  BeginForm(-1, 'Body row spacing', ASpec.HasTablePresentationPolicy);
+  LHeaderPolicy := NyxTableHeader;
+
+  if LTablePolicy.HasHeader then
+  begin
+    LHeaderPolicy := LTablePolicy.HeaderPolicy;
+  end;
+  BeginForm(-1, 'Table presentation', ASpec.HasTablePresentationPolicy);
   LForm.Node.Add(NewNyxSelect(NyxStudioPresentationPolicyFieldID(-1, sppfDensity)).Configure
     .Text('Row density').Items('Compact' + #10 + 'Normal' + #10 + 'Comfortable')
     .Value(CPresentationDensities[LTablePolicy.RowDensity]).Enabled(not ALocked).Done);
+  LForm.Node.Add(NewNyxCheckbox(NyxStudioPresentationPolicyFieldID(-1, sppfHeaderEnabled))
+    .Configure.Text('Customize header').Value(LTablePolicy.HasHeader).Enabled(not ALocked).Done);
+  LForm.Node.Add(NewNyxInput(NyxStudioPresentationPolicyFieldID(-1, sppfHeaderLines))
+    .Configure.Text('Header caption lines').Value(TNyxText(IntToStr(LHeaderPolicy.ReservedLines)))
+    .Enabled(not ALocked).Done);
+  LForm.Node.Add(NewNyxInput(NyxStudioPresentationPolicyFieldID(-1, sppfHeaderMinimumHeight))
+    .Configure.Text('Minimum header height (px)')
+    .Value(TNyxText(IntToStr(LHeaderPolicy.MinimumLogicalHeight))).Enabled(not ALocked).Done);
+  LForm.Node.Add(NewNyxLabel(NyxStudioPresentationPolicyFormID(-1) + '-header-help')
+    .WithText('Uncheck to inherit target header defaults. Header values are independent of body rows; interactive controls keep their own space.'));
   EndForm(-1);
   for LIndex := 0 to ASpec.Count - 1 do
   begin
@@ -165,6 +184,10 @@ var
   LValue: TNyxText;
   LDensity: TNyxTableRowDensity;
   LFound: Boolean;
+  LTablePolicy: TNyxTablePresentationPolicy;
+  LHeaderEnabled: Boolean;
+  LHeaderLines: Integer;
+  LHeaderMinimum: Integer;
 
   function Role(const AID: TNyxText; AKind: TNyxKind): TNyxNode;
   begin
@@ -183,9 +206,13 @@ var
   begin
     LKind := nkSelect;
 
-    if AField = sppfMaximumLines then
+    if AField in [sppfMaximumLines, sppfHeaderLines, sppfHeaderMinimumHeight] then
     begin
       LKind := nkInput;
+    end
+    else if AField = sppfHeaderEnabled then
+    begin
+      LKind := nkCheckbox;
     end;
     Result := Role(NyxStudioPresentationPolicyFieldID(LColumnIndex, AField), LKind)
       .Prop(NyxAttributeName(atValue));
@@ -238,10 +265,14 @@ begin
   if LColumnIndex < 0 then
   begin
     Value(sppfDensity);
+    Value(sppfHeaderEnabled);
+    Value(sppfHeaderLines);
+    Value(sppfHeaderMinimumHeight);
+    Role(LForm.ID + '-header-help', nkLabel);
 
-    if LForm.Count <> 5 then
+    if LForm.Count <> 9 then
     begin
-      raise ENyxCollection.Create('Use the complete body spacing form');
+      raise ENyxCollection.Create('Use the complete table presentation form');
     end;
   end
   else
@@ -294,6 +325,12 @@ begin
 
       if LAction = CPolicyApply then
       begin
+        LTablePolicy := NyxTablePresentation;
+
+        if LSpec.HasTablePresentationPolicy then
+        begin
+          LTablePolicy := LSpec.TablePresentationPolicy;
+        end;
         LValue := Value(sppfDensity);
         LFound := False;
         for LDensity := Low(TNyxTableRowDensity) to High(TNyxTableRowDensity) do
@@ -302,7 +339,7 @@ begin
           if LValue = CPresentationDensities[LDensity] then
           begin
             LFound := True;
-            AEdit.Collection.TablePresentation := NyxTablePresentation.Density(LDensity);
+            LTablePolicy := LTablePolicy.Density(LDensity);
             Break;
           end;
         end;
@@ -311,6 +348,34 @@ begin
         begin
           raise ENyxCollection.Create('Choose an exact body row spacing');
         end;
+
+        { This is the private checkbox transport boundary. Decode its exact
+          canonical Boolean wire before constructing any typed policy. }
+        LValue := Value(sppfHeaderEnabled);
+
+        if (LValue <> 'true') and (LValue <> 'false') then
+        begin
+          raise ENyxCollection.Create('Choose whether to customize the header');
+        end;
+        LHeaderEnabled := LValue = 'true';
+
+        if LHeaderEnabled then
+        begin
+
+          if not TryNyxStateInteger(Value(sppfHeaderLines), LHeaderLines) or
+            not TryNyxStateInteger(Value(sppfHeaderMinimumHeight), LHeaderMinimum) then
+          begin
+            raise ENyxCollection.Create('Header lines and minimum height require whole numbers');
+          end;
+          LTablePolicy := LTablePolicy.Header(NyxTableHeader.Lines(LHeaderLines)
+            .MinimumHeight(LHeaderMinimum));
+        end
+        else
+        begin
+          { Inactive unfinished numeric drafts cannot prevent legacy reset. }
+          LTablePolicy := LTablePolicy.UseDefaultHeader;
+        end;
+        AEdit.Collection.TablePresentation := LTablePolicy;
         AEdit.Collection.Action := scaTablePresentation;
       end;
     end

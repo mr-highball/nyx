@@ -25,8 +25,8 @@ unit nyx.collections.presentation;
 
 interface
 
-uses SysUtils, nyx.text, nyx.data, nyx.collections, nyx.collections.arrangement,
-  nyx.collections.alignment;
+uses SysUtils, Math, nyx.text, nyx.data, nyx.collections, nyx.collections.arrangement,
+  nyx.collections.alignment, nyx.layout.constraints;
 
 type
   { Closed body-row spacing choices. Headers retain their existing management
@@ -43,22 +43,58 @@ type
     No policy method removes, normalizes or rewrites a caller's text. }
   TNyxColumnTextOverflow = (nctoClip, nctoEllipsis, nctoWrap);
 
+  { Optional caption-line reservation and logical minimum height. Absence keeps
+    legacy header metrics. Targets retain separate space for interactive filter,
+    sort and column-management controls; this value cannot clip their authority.
+    Copies own scalar values only, and height resolution saturates at the shared
+    geometry bound without allocating storage proportional to the line count. }
+  TNyxTableHeaderPolicy = record
+  private
+    FDefined: Boolean;
+    FLines: Integer;
+    FMinimumHeight: Integer;
+    function GetLines: Integer;
+    function GetMinimumHeight: Integer;
+  public
+    function Lines(AValue: Integer): TNyxTableHeaderPolicy;
+    function MinimumHeight(AValue: Integer): TNyxTableHeaderPolicy;
+    function Copy: TNyxTableHeaderPolicy;
+    procedure Validate;
+    { Natural line pixels already belong to the target. Scale only the logical
+      minimum once; reject invalid metrics and round positive halves upward. }
+    function HeightFor(ANaturalLinePixels: Integer;
+      APixelsPerUnit: Double = 1): Integer;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxTableHeaderPolicy; static;
+    property Defined: Boolean read FDefined;
+    property ReservedLines: Integer read GetLines;
+    property MinimumLogicalHeight: Integer read GetMinimumHeight;
+  end;
+
   { Optional authored body spacing, independent of column geometry and services.
     The default record is absent and keeps legacy host metrics unchanged. The
-    explicit factory is present Normal, even when no fluent change follows it. }
+    explicit factory is present Normal, even when no fluent change follows it.
+    An optional independent header adds version two only while actually present. }
   TNyxTablePresentationPolicy = record
   private
     FDefined: Boolean;
     FDensity: TNyxTableRowDensity;
+    FHeader: TNyxTableHeaderPolicy;
     function GetDensity: TNyxTableRowDensity;
+    function GetHasHeader: Boolean;
+    function GetHeader: TNyxTableHeaderPolicy;
   public
     function Density(AValue: TNyxTableRowDensity): TNyxTablePresentationPolicy;
+    function Header(const APolicy: TNyxTableHeaderPolicy): TNyxTablePresentationPolicy;
+    function UseDefaultHeader: TNyxTablePresentationPolicy;
     function Copy: TNyxTablePresentationPolicy;
     procedure Validate;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxTablePresentationPolicy; static;
     property Defined: Boolean read FDefined;
     property RowDensity: TNyxTableRowDensity read GetDensity;
+    property HasHeader: Boolean read GetHasHeader;
+    property HeaderPolicy: TNyxTableHeaderPolicy read GetHeader;
   end;
 
   { Optional per-column text layout. Absence preserves legacy host behavior;
@@ -189,6 +225,9 @@ type
     property AlignmentCount: Integer read GetAlignmentCount;
   end;
 
+{ Explicit header defaults reserve one natural caption line, with no additional
+  logical minimum. Omit the value entirely to retain the legacy target header. }
+function NyxTableHeader: TNyxTableHeaderPolicy;
 function NyxTablePresentation: TNyxTablePresentationPolicy;
 function NyxColumnText: TNyxColumnTextPolicy;
 function NyxColumnTextPreference(const AField: TNyxColumnIdentity;
@@ -231,7 +270,7 @@ begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> Length(AKeys)) then
   begin
-    raise EArgumentException.Create('Presentation requires a complete version-one object');
+    raise EArgumentException.Create('Presentation requires a complete declared object');
   end;
   for I := 0 to AData.Count - 1 do
   begin
@@ -285,6 +324,111 @@ begin
   end;
 end;
 
+function NyxTableHeader: TNyxTableHeaderPolicy;
+begin
+  Result := Default(TNyxTableHeaderPolicy);
+  Result.FDefined := True;
+  Result.FLines := 1;
+end;
+
+procedure TNyxTableHeaderPolicy.Validate;
+begin
+
+  if not FDefined then
+  begin
+    raise EArgumentException.Create('Create a table header before configuring it');
+  end;
+
+  if (FLines < 1) or (FLines > MaximumNyxLayoutBound) or
+    (FMinimumHeight < 0) or (FMinimumHeight > MaximumNyxLayoutBound) then
+  begin
+    raise EArgumentException.Create('Header lines and minimum must fit the geometry domain');
+  end;
+end;
+
+function TNyxTableHeaderPolicy.GetLines: Integer;
+begin
+  Validate;
+  Result := FLines;
+end;
+
+function TNyxTableHeaderPolicy.GetMinimumHeight: Integer;
+begin
+  Validate;
+  Result := FMinimumHeight;
+end;
+
+function TNyxTableHeaderPolicy.Lines(AValue: Integer): TNyxTableHeaderPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FLines := AValue;
+  Result.Validate;
+end;
+
+function TNyxTableHeaderPolicy.MinimumHeight(AValue: Integer): TNyxTableHeaderPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FMinimumHeight := AValue;
+  Result.Validate;
+end;
+
+function TNyxTableHeaderPolicy.Copy: TNyxTableHeaderPolicy;
+begin
+  Result := Self;
+end;
+
+function TNyxTableHeaderPolicy.HeightFor(ANaturalLinePixels: Integer;
+  APixelsPerUnit: Double): Integer;
+var
+  LMinimum: Double;
+begin
+  Validate;
+
+  if (ANaturalLinePixels < 1) or (ANaturalLinePixels > MaximumNyxLayoutBound) or
+    IsNan(APixelsPerUnit) or IsInfinite(APixelsPerUnit) or (APixelsPerUnit <= 0) then
+  begin
+    raise EArgumentException.Create('Header resolution requires valid target metrics');
+  end;
+  { Check before multiplication, including unusually large caller scales. The
+    saved intent remains exact even when a target's geometry cannot grow more. }
+
+  if (FLines > MaximumNyxLayoutBound div ANaturalLinePixels) or
+    ((FMinimumHeight > 0) and (APixelsPerUnit > MaximumNyxLayoutBound / FMinimumHeight)) then
+  begin
+    Exit(MaximumNyxLayoutBound);
+  end;
+  Result := FLines * ANaturalLinePixels;
+  LMinimum := FMinimumHeight * APixelsPerUnit;
+  Result := Max(Result, Trunc(LMinimum + 0.5));
+end;
+
+function TNyxTableHeaderPolicy.ToData: TNyxDataValue;
+begin
+
+  if not FDefined then
+  begin
+    Exit(NyxNull);
+  end;
+  Validate;
+  Result := NyxObject([NyxField('version', NyxData(1)),
+    NyxField('lines', NyxData(FLines)), NyxField('minimumHeight', NyxData(FMinimumHeight))]);
+end;
+
+class function TNyxTableHeaderPolicy.FromData(const AData: TNyxDataValue): TNyxTableHeaderPolicy;
+begin
+  AData.Validate;
+
+  if AData.Kind = ndNull then
+  begin
+    Exit(Default(TNyxTableHeaderPolicy));
+  end;
+  RequireShape(AData, ['version', 'lines', 'minimumHeight']);
+  Result := NyxTableHeader.Lines(AData.Field('lines').AsInteger)
+    .MinimumHeight(AData.Field('minimumHeight').AsInteger);
+end;
+
 function NyxTablePresentation: TNyxTablePresentationPolicy;
 begin
   Result := Default(TNyxTablePresentationPolicy);
@@ -300,6 +444,11 @@ begin
     raise EArgumentException.Create('Create a table presentation before configuring it');
   end;
   RequireDensity(FDensity);
+
+  if FHeader.Defined then
+  begin
+    FHeader.Validate;
+  end;
 end;
 
 function TNyxTablePresentationPolicy.GetDensity: TNyxTableRowDensity;
@@ -324,6 +473,31 @@ begin
   Result := Self;
 end;
 
+function TNyxTablePresentationPolicy.GetHasHeader: Boolean;
+begin
+  Result := FHeader.Defined;
+end;
+
+function TNyxTablePresentationPolicy.GetHeader: TNyxTableHeaderPolicy;
+begin
+  Result := FHeader.Copy;
+end;
+
+function TNyxTablePresentationPolicy.Header(const APolicy: TNyxTableHeaderPolicy): TNyxTablePresentationPolicy;
+begin
+  Validate;
+  APolicy.Validate;
+  Result := Self;
+  Result.FHeader := APolicy.Copy;
+end;
+
+function TNyxTablePresentationPolicy.UseDefaultHeader: TNyxTablePresentationPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FHeader := Default(TNyxTableHeaderPolicy);
+end;
+
 function TNyxTablePresentationPolicy.ToData: TNyxDataValue;
 begin
 
@@ -332,6 +506,12 @@ begin
     Exit(NyxNull);
   end;
   Validate;
+
+  if FHeader.Defined then
+  begin
+    Exit(NyxObject([NyxField('version', NyxData(2)),
+      NyxField('density', NyxData(CDensityNames[FDensity])), NyxField('header', FHeader.ToData)]));
+  end;
   Result := NyxObject([NyxField('version', NyxData(1)),
     NyxField('density', NyxData(CDensityNames[FDensity]))]);
 end;
@@ -339,12 +519,21 @@ end;
 class function TNyxTablePresentationPolicy.FromData(const AData: TNyxDataValue): TNyxTablePresentationPolicy;
 var
   LPolicy: TNyxTablePresentationPolicy;
+  LHeader: TNyxTableHeaderPolicy;
 begin
   AData.Validate;
 
   if AData.Kind = ndNull then
   begin
     Exit(Default(TNyxTablePresentationPolicy));
+  end;
+
+  if AData.Field('version').AsInteger = 2 then
+  begin
+    RequireShape(AData, ['version', 'density', 'header'], 2);
+    LHeader := TNyxTableHeaderPolicy.FromData(AData.Field('header'));
+    LHeader.Validate;
+    Exit(NyxTablePresentation.Density(ReadDensity(AData.Field('density'))).Header(LHeader));
   end;
   RequireShape(AData, ['version', 'density']);
   LPolicy := NyxTablePresentation.Density(ReadDensity(AData.Field('density')));
@@ -955,7 +1144,12 @@ begin
 
     if FHasDensity then
     begin
-      LPolicy := NyxTablePresentation.Density(FDensity);
+
+      if not LPolicy.Defined then
+      begin
+        LPolicy := NyxTablePresentation;
+      end;
+      LPolicy := LPolicy.Density(FDensity);
     end;
   end;
   Result := LPolicy;

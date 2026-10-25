@@ -737,10 +737,15 @@ type
     FColumnApplying: Boolean;
     FPreviousHeaderHeight: Integer;
     FQueryHeaderAdjusted: Boolean;
+    { Captions reuse the body pass's target font measurement, never body density.
+      Flags/scalars own no native object; legacy headers keep their old path. }
+    FHeaderLinePixels: Integer;
+    FCustomHeaderApplied: Boolean;
     FPreviousGridHint: String;
     FPreviousGridShowHint: Boolean;
     function TreeRows: INyxTreeRows;
     procedure SizeGridColumns;
+    procedure ReserveHeader;
     procedure GridResized(Sender: TObject);
     procedure ListSelected(Sender: TObject; User: Boolean);
     procedure GridSelected(Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
@@ -4869,14 +4874,11 @@ begin
     FGrid.RowCount := Max(2, AData.Count + 1);
     FGrid.FixedRows := 1;
 
-    if (FQueries <> nil) and not FQueryHeaderAdjusted then
+    ReserveHeader;
+
+    if not InputLifetimeCurrent then
     begin
-      FPreviousHeaderHeight := FGrid.RowHeights[0];
-      FQueryHeaderAdjusted := True;
-      { Body presentation can already have changed DefaultRowHeight. Reserve
-        query chrome from the captured native baseline, so an authored density
-        choice cannot enlarge headers while a runtime density choice does not. }
-      FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FPreviousDefaultRowHeight * 3);
+      Exit;
     end;
     { The launcher belongs to the logical table, never a visible field/pin
       group. Its row-zero band survives all-hidden and narrow presentations. }
@@ -4981,11 +4983,11 @@ begin
       FGrid.RowCount := Max(2, AData.Count + 1);
       FGrid.FixedRows := 1;
 
-      if (FQueries <> nil) and not FQueryHeaderAdjusted then
+      ReserveHeader;
+
+      if not InputLifetimeCurrent then
       begin
-        FPreviousHeaderHeight := FGrid.RowHeights[0];
-        FQueryHeaderAdjusted := True;
-        FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FPreviousDefaultRowHeight * 3);
+        Exit;
       end;
       for LIndex := 0 to High(FMainColumns) do
       begin
@@ -5125,6 +5127,72 @@ begin
       LOuter.EndColumnTransition;
     end;
   end;
+end;
+
+{ The title band is independent of management controls. Capture the caller's
+  native minimum once, and include an already installed launcher exactly once.
+  Legacy mounts remain unchanged after their original reservation; an explicit
+  header can be refreshed from current copied presentation/font observations. }
+procedure TNativeMount.ReserveHeader;
+var
+  LHeader: TNyxTableHeaderPolicy;
+  LHeight: Integer;
+  LLines: Integer;
+begin
+  LHeader := Default(TNyxTableHeaderPolicy);
+
+  if FHasTablePresentation then
+  begin
+    LHeader := FTablePresentation.TablePolicy.HeaderPolicy;
+  end;
+
+  if not FQueryHeaderAdjusted then
+  begin
+
+    if (FQueries = nil) and not LHeader.Defined then
+    begin
+      Exit;
+    end;
+    FPreviousHeaderHeight := FGrid.RowHeights[0];
+    FQueryHeaderAdjusted := True;
+  end
+  else if not LHeader.Defined and not FCustomHeaderApplied then
+  begin
+    Exit;
+  end;
+  LHeight := FPreviousHeaderHeight;
+
+  if LHeader.Defined then
+  begin
+    LLines := FHeaderLinePixels;
+
+    if LLines < 1 then
+    begin
+      { Provisional construction precedes the shared font measurement pass. }
+      LLines := Max(1, FPreviousDefaultRowHeight);
+    end;
+    LHeight := Max(LHeight, LHeader.HeightFor(LLines,
+      Max(1, FGrid.Font.PixelsPerInch) / 96));
+  end
+  else if FQueries <> nil then
+  begin
+    LHeight := Max(LHeight, FPreviousDefaultRowHeight * 3);
+  end;
+
+  if FColumnToolbarApplied then
+  begin
+
+    if FColumnToolbarHeight > MaximumNyxLayoutBound - LHeight then
+    begin
+      LHeight := MaximumNyxLayoutBound;
+    end
+    else
+    begin
+      Inc(LHeight, FColumnToolbarHeight);
+    end;
+  end;
+  FCustomHeaderApplied := LHeader.Defined;
+  FGrid.RowHeights[0] := LHeight;
 end;
 
 procedure TNativeMount.SynchronizePaneRows;
@@ -6790,6 +6858,10 @@ begin
     end;
     LBitmap := TBitmap.Create;
     LBitmap.SetSize(1, 1);
+    { Header fonts may differ from body fonts. Borrow the same measurement
+      canvas for the caption metric before restoring it for body text layout. }
+    LBitmap.Canvas.Font.Assign(FGrid.TitleFont);
+    FHeaderLinePixels := Max(1, LBitmap.Canvas.TextHeight('Ag'));
     LBitmap.Canvas.Font.Assign(FGrid.Font);
     LMetricSupported := (FGrid.Font.Orientation = 0) and
       not FGrid.DefaultTextStyle.SystemFont and not Assigned(FPreviousPrepare) and
@@ -6797,6 +6869,16 @@ begin
     FTextMeasureCanvas := LBitmap.Canvas;
     LLineHeight := Max(1, LBitmap.Canvas.TextHeight('Ag'));
     LDensity := FTablePresentation.TablePolicy;
+
+    if LDensity.HasHeader or FCustomHeaderApplied then
+    begin
+      ReserveHeader;
+
+      if not InputLifetimeCurrent then
+      begin
+        Exit;
+      end;
+    end;
     LDefault := FPreviousDefaultRowHeight;
     LPadding := Max(0, (LDefault - LLineHeight) div 2);
 
@@ -7390,11 +7472,11 @@ begin
         Counts/markers wrap within it; detailed removable chips live in the
         shared Nyx form. This is not an overlaid toolbar hiding data rows. }
 
-      if (FQueries <> nil) and not FQueryHeaderAdjusted then
+      ReserveHeader;
+
+      if not InputLifetimeCurrent then
       begin
-        FPreviousHeaderHeight := FGrid.RowHeights[0];
-        FQueryHeaderAdjusted := True;
-        FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FPreviousDefaultRowHeight * 3);
+        Exit;
       end;
 
       if FQueries <> nil then

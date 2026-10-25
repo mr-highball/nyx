@@ -177,7 +177,8 @@ begin
     Exit;
   end;
 
-  if SameText(AName, 'NyxTablePresentation') or SameText(AName, 'NyxColumnText') then
+  if SameText(AName, 'NyxTablePresentation') or SameText(AName, 'NyxTableHeader') or
+    SameText(AName, 'NyxColumnText') then
   begin
 
     if At('(') then
@@ -195,6 +196,11 @@ begin
       Result.Kind := vkTablePresentationPolicy;
       Result.TablePresentationPolicy := NyxTablePresentation;
     end
+    else if SameText(AName, 'NyxTableHeader') then
+    begin
+      Result.Kind := vkTableHeaderPolicy;
+      Result.TableHeaderPolicy := NyxTableHeader;
+    end
     else
     begin
       Result.Kind := vkColumnTextPolicy;
@@ -211,9 +217,10 @@ begin
       LMethod := FTokens[FCursor].Text;
       Inc(FCursor);
 
-      if (Result.Kind = vkColumnTextPolicy) and not At('(') and
+      if not At('(') and (((Result.Kind = vkColumnTextPolicy) and
         (SameText(LMethod, 'Clip') or SameText(LMethod, 'Ellipsis') or
-          SameText(LMethod, 'Wrap')) then
+          SameText(LMethod, 'Wrap'))) or ((Result.Kind = vkTablePresentationPolicy) and
+          SameText(LMethod, 'UseDefaultHeader'))) then
       begin
         LArgs := nil;
       end
@@ -225,6 +232,20 @@ begin
       if Result.Kind = vkTablePresentationPolicy then
       begin
 
+        if SameText(LMethod, 'UseDefaultHeader') and (Length(LArgs) = 0) then
+        begin
+          Result.TablePresentationPolicy := Result.TablePresentationPolicy.UseDefaultHeader;
+          Continue;
+        end;
+
+        if SameText(LMethod, 'Header') and (Length(LArgs) = 1) and
+          (LArgs[0].Kind = vkTableHeaderPolicy) then
+        begin
+          Result.TablePresentationPolicy := Result.TablePresentationPolicy.Header(
+            LArgs[0].TableHeaderPolicy);
+          Continue;
+        end;
+
         if not SameText(LMethod, 'Density') or (Length(LArgs) <> 1) or
           (LArgs[0].Kind <> vkTableRowDensity) then
         begin
@@ -232,6 +253,40 @@ begin
         end;
         Result.TablePresentationPolicy := Result.TablePresentationPolicy.Density(
           TNyxTableRowDensity(LArgs[0].Ordinal));
+        Continue;
+      end;
+
+      if Result.Kind = vkTableHeaderPolicy then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkInteger) or
+          not TryNyxStateInteger(LArgs[0].Text, LInteger) then
+        begin
+          Fail('Header settings require one portable Integer');
+        end;
+
+        if SameText(LMethod, 'Lines') then
+        begin
+
+          if LInteger < 1 then
+          begin
+            Fail('Header caption lines must be positive');
+          end;
+          Result.TableHeaderPolicy := Result.TableHeaderPolicy.Lines(LInteger);
+        end
+        else if SameText(LMethod, 'MinimumHeight') then
+        begin
+
+          if LInteger < 0 then
+          begin
+            Fail('Header minimum height cannot be negative');
+          end;
+          Result.TableHeaderPolicy := Result.TableHeaderPolicy.MinimumHeight(LInteger);
+        end
+        else
+        begin
+          Fail('Unsupported typed header method');
+        end;
         Continue;
       end;
 

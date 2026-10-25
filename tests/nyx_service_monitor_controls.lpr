@@ -25,27 +25,44 @@ end;
 
 { Compare independently mounted body-density choices on real native grids.
   A runtime density update already preserves headers; authored initial density
-  must do the same. The probe owns its cloned document until its host retires. }
+  must do the same. An optional title-font probe checks actual caption metrics.
+  The probe owns its cloned document until its host retires. }
 function HeaderHeightWithDensity(ADocument: TNyxDocument; AWidth: Integer;
-  ADensity: TNyxTableRowDensity): Integer;
+  ADensity: TNyxTableRowDensity; AUseLegacyHeader: Boolean = False;
+  ATitlePixels: Integer = 0): Integer;
 var
   LDocument: TNyxDocument;
   LApplication: TNyxLCLApplication;
   LTable: TNyxNode;
+  LPolicy: TNyxTablePresentationPolicy;
+  LGrid: TStringGrid;
 begin
   LDocument := ADocument.Clone;
   LApplication := nil;
   try
     LTable := LDocument.Find(ServiceTableID);
-    LTable.SetCollectionView(LTable.CollectionView.TablePresentation(
-      NyxTablePresentation.Density(ADensity)));
+    LPolicy := LTable.CollectionView.TablePresentationPolicy.Density(ADensity);
+
+    if AUseLegacyHeader then
+    begin
+      LPolicy := LPolicy.UseDefaultHeader;
+    end;
+    LTable.SetCollectionView(LTable.CollectionView.TablePresentation(LPolicy));
     LApplication := TNyxLCLApplication.Create;
     LApplication.Mount(LDocument);
     LApplication.Window.ClientWidth := AWidth;
     LApplication.Window.ClientHeight := 760;
     LApplication.Window.Show;
     Application.ProcessMessages;
-    Result := TStringGrid(LApplication.View.ControlFor(ServiceTableID)).RowHeights[0];
+    LGrid := TStringGrid(LApplication.View.ControlFor(ServiceTableID));
+
+    if ATitlePixels > 0 then
+    begin
+      LGrid.TitleFont.Height := -ATitlePixels;
+      LApplication.View.CollectionMount(ServiceTableID).Refresh;
+      Application.ProcessMessages;
+    end;
+    Result := LGrid.RowHeights[0];
   finally
     LApplication.Free;
     LDocument.Free;
@@ -157,6 +174,12 @@ begin
     Check(HeaderHeightWithDensity(LDocument, AWidth, ntrdCompact) =
       TStringGrid(LApplication.View.ControlFor(ServiceTableID)).RowHeights[0],
       'initial body density leaves the independent query/column header unchanged');
+    Check(TStringGrid(LApplication.View.ControlFor(ServiceTableID)).RowHeights[0] <
+      HeaderHeightWithDensity(LDocument, AWidth, ntrdComfortable, True),
+      'the explicit single-line header releases space while preserving its toolbar');
+    Check(HeaderHeightWithDensity(LDocument, AWidth, ntrdComfortable, False, 48) >
+      TStringGrid(LApplication.View.ControlFor(ServiceTableID)).RowHeights[0],
+      'explicit header reservation follows the actual title font independently of body text');
     Check(LApplication.Collections.Collection(NyxCollection(ServiceCollectionName)) <>
       LPeer.Collections.Collection(NyxCollection(ServiceCollectionName)),
       'two applications own independent runtime collections');

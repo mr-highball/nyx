@@ -4,6 +4,17 @@
 
 **Description:**
 
+Current qualification gap (2026-10-25): the shared `RunOwned` redirected-output
+path stalls during a native link and can lose the terminal receipt when its
+closed-log hash encounters a lingering writer. Launch identity survives, but
+terminal status must be retained independently of later log hashing. The same
+source passes through a private direct-file capture host with owned process
+families, explicit host identity and unchanged runtime assertions/bounds. This
+does not repair or qualify the shared helper. A durable capture repair must
+preserve argument safety, bounded teardown, complete output, exit/timeout facts
+and heap evidence, including failed capture. See the current
+[work record](../WORK.md#current-checkpoint--typed-table-headers--2026-10-25).
+
 Deliver clean setup, ci and packaging as part of the user's full Nyx and Nyx Studio outcome.
 Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-6.

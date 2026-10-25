@@ -706,7 +706,19 @@ begin
           LLine := 'ntrdComfortable';
         end;
     end;
-    ALines.Add(AIndent + '    .TablePresentation(NyxTablePresentation.Density(' + LLine + '))');
+
+    if LView.TablePresentationPolicy.HasHeader then
+    begin
+      ALines.Add(AIndent + '    .TablePresentation(NyxTablePresentation.Density(' + LLine + ')');
+      ALines.Add(AIndent + '      .Header(NyxTableHeader.Lines(' +
+        TNyxText(IntToStr(LView.TablePresentationPolicy.HeaderPolicy.ReservedLines)) + ')');
+      ALines.Add(AIndent + '        .MinimumHeight(' +
+        TNyxText(IntToStr(LView.TablePresentationPolicy.HeaderPolicy.MinimumLogicalHeight)) + ')))');
+    end
+    else
+    begin
+      ALines.Add(AIndent + '    .TablePresentation(NyxTablePresentation.Density(' + LLine + '))');
+    end;
   end;
 
   if LView.HasTableWorkbenchPolicy then

@@ -175,17 +175,34 @@ begin
     LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
     LRows := TNyxDataValue.ParseJSON(TNyxCodec.Encode(LSession.Document)).Field('collections').ToJSON;
     Rebuild;
-    Check((LShell.Find(NyxStudioPresentationPolicyFormID(-1)).Count = 5) and
+    Check((LShell.Find(NyxStudioPresentationPolicyFormID(-1)).Count = 9) and
       (LShell.Find(NyxStudioPresentationPolicyFormID(0)).Count = 6),
       'bound tables expose complete independent spacing and per-column text forms');
     Check(not LSession.Document.Find('records-table').CollectionView.HasPresentationPolicy,
       'opening forms preserves raw absence and legacy target behavior');
     Value(-1, sppfDensity, 'Comfortable');
+    LShell.Find(NyxStudioPresentationPolicyFieldID(-1, sppfHeaderEnabled))
+      .Configure.Value(True).Done;
+    Value(-1, sppfHeaderLines, '2');
+    Value(-1, sppfHeaderMinimumHeight, '41');
     Check(Capture(-1) and (LEdit.Collection.Action = scaTablePresentation) and
       (LEdit.Collection.TablePresentation.RowDensity = ntrdComfortable) and
+      LEdit.Collection.TablePresentation.HasHeader and
+      (LEdit.Collection.TablePresentation.HeaderPolicy.ReservedLines = 2) and
+      (LEdit.Collection.TablePresentation.HeaderPolicy.MinimumLogicalHeight = 41) and
       (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
       'spacing capture returns a typed proposal without publishing');
     ApplyCaptured;
+    Rebuild;
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    LShell.Find(NyxStudioPresentationPolicyFieldID(-1, sppfHeaderEnabled))
+      .Configure.Value(False).Done;
+    Value(-1, sppfHeaderLines, '-');
+    Value(-1, sppfHeaderMinimumHeight, 'unfinished');
+    Check(Capture(-1) and not LEdit.Collection.TablePresentation.HasHeader and
+      (LEdit.Collection.TablePresentation.RowDensity = ntrdComfortable) and
+      (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+      'inactive header drafts cannot block a typed reset proposal or mutate the pair');
     Rebuild;
     Value(0, sppfTextOverflow, 'Wrap');
     Value(0, sppfMaximumLines, '-');
@@ -407,13 +424,13 @@ begin
     LIntent.Value := 'Grouped 🌙';
     Apply('presentation-group', [NyxCollectionIntentChange(NyxBindingOwner('records-table'), LIntent),
       NyxSetCollectionTablePresentation(NyxBindingOwner('records-table'), LKey, cpTable,
-        NyxTablePresentation.Density(ntrdCompact)),
+        NyxTablePresentation.Density(ntrdCompact).Header(NyxTableHeader.MinimumHeight(32))),
       NyxSetCollectionColumnText(NyxBindingOwner('records-table'), LKey, cpTable,
         LIntent.Field, NyxColumnText.Wrap(4))]);
     LApplied := Pair;
     LReply := ReadBinding('records-table', True);
     Check((LReply.Field('local').Field('presentationControls').Field('policy').ToJSON =
-      NyxTablePresentation.Density(ntrdCompact).ToData.ToJSON) and
+      NyxTablePresentation.Density(ntrdCompact).Header(NyxTableHeader.MinimumHeight(32)).ToData.ToJSON) and
       (LReply.Field('local').Field('columns').Item(0).Field('presentationControls')
         .Field('policy').ToJSON = NyxColumnText.Wrap(4).ToData.ToJSON),
       'ordered semantic group derives the baseline after each preceding change');

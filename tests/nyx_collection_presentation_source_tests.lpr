@@ -92,7 +92,9 @@ begin
             end;
           ntrdComfortable:
             begin
-              LSpec := LSpec.ColumnText(NyxColumnText.Wrap(High(Integer)));
+              LSpec := LSpec.ColumnText(NyxColumnText.Wrap(High(Integer)))
+                .TablePresentation(NyxTablePresentation.Density(LDensity)
+                  .Header(NyxTableHeader.Lines(2).MinimumHeight(41)));
             end;
         end;
       end;
@@ -220,6 +222,19 @@ begin
       'all presentation choices replay exact data and workbench coexistence');
     FreeAndNil(LCandidate);
     Check(LWorkspace.Render(LDocument) = LSource, 'presentation synchronization is idempotent');
+    Check((Pos('.Header(NyxTableHeader.Lines(2)', LSource) > 0) and
+      (Pos('.MinimumHeight(41)))', LSource) > 0),
+      'independent header settings generate typed readable fluent blocks');
+    LChanged := ReplaceOnce(LSource, '.MinimumHeight(41)))',
+      '.MinimumHeight(41)).UseDefaultHeader)');
+    LCandidate := LWorkspace.Candidate(LDocument, LChanged);
+    Check(not LCandidate.Find('service-table-2').CollectionView.TablePresentationPolicy.HasHeader and
+      (LCandidate.Find('service-table-2').CollectionView.TablePresentationPolicy.RowDensity = ntrdComfortable),
+      'parameterless header reset preserves body density and the remaining view policy');
+    FreeAndNil(LCandidate);
+    Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, '.MinimumHeight(41)', '.MinimumHeight(-1)'));
+    Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, '.Lines(2)', '.Lines(''2'')'));
+    Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, '.Lines(2)', '.Lines(ntrdNormal)'));
     { The reset belongs to the view, outside the policy argument. }
     LChanged := ReplaceOnce(LSource, '.ColumnText(NyxColumnText.Clip)',
       '.ColumnText(NyxColumnText().Clip()).UseDefaultColumnText');
@@ -305,6 +320,10 @@ begin
       'explicit Ellipsis remains present');
     Check(LDocument.Find('service-table-2').CollectionView.ColumnAt(0).TextPolicy.MaximumLines = High(Integer),
       'large authored Wrap count remains exact without implying runtime admission');
+    Check(LDocument.Find('service-table-2').CollectionView.TablePresentationPolicy.HasHeader and
+      (LDocument.Find('service-table-2').CollectionView.TablePresentationPolicy.HeaderPolicy.ReservedLines = 2) and
+      (LDocument.Find('service-table-2').CollectionView.TablePresentationPolicy.HeaderPolicy.MinimumLogicalHeight = 41),
+      'the independently compiled companion retains the complete header policy');
     {$ifndef PAS2JS}
     {$ifndef NYX_COMPILED_PRESENTATION}
 
