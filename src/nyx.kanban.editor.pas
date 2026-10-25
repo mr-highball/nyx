@@ -434,6 +434,20 @@ begin
       Result := Result.ColumnFormat(LColumn.FormatPolicy);
     end;
 
+    { Preserve declarations, including explicit opt-outs. Resolved defaults
+      must remain absent so older bindings do not acquire version-7 metadata
+      merely because the author reconfigures a lane's collection or title. }
+
+    if LColumn.HasQueryPolicy then
+    begin
+      Result := Result.ColumnQuery(LColumn.QueryPolicy);
+    end;
+
+    if LPrevious.HasTableQueryPolicy then
+    begin
+      Result := Result.TableQuery(LPrevious.TableQueryPolicy);
+    end;
+
     if LPrevious.HasTypeAhead then
     begin
       Result := Result.TypeAhead(LPrevious.TypeAheadPolicy);

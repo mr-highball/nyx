@@ -30,6 +30,7 @@ uses
   nyx.kanban, nyx.kanban.intent, nyx.kanban.editor, nyx.studio.edits,
   nyx.collections, nyx.collections.view.types, nyx.collections.query,
   nyx.collections.selection, nyx.collections.columns, nyx.collections.paging,
+  nyx.collections.query.policy,
   nyx.typeahead
   {$ifdef PAS2JS}, Web{$endif};
 
@@ -349,6 +350,9 @@ function FancySpec: TNyxCollectionViewSpec;
 begin
   Result := NyxCollectionView(KeyA).Column(NyxTextField('title'), 'Our card caption').
     ColumnSizing(NyxColumnSizing.Flex(2).Minimum(91).Maximum(351)).
+    ColumnQuery(NyxColumnQuery.Filtering(False).Operators([]).Sorting(False).
+      TextComparison(nqtAsciiInsensitive)).
+    TableQuery(NyxTableQuery.Enabled(False).SortMode(nqsmSingle)).
     Scoped(csInstance).Selection(nsmSingle).
     TypeAhead(NyxTypeAhead.WindowMilliseconds(1700).Match(ntmExact)).
     Paged(NyxCollectionPaging.PageSize(5).InitialPage(2));
@@ -407,6 +411,10 @@ begin
         (LActual.TypeAheadPolicy.ToData.ToJSON = LSpec.TypeAheadPolicy.ToData.ToJSON) and
         (LActual.PagingPolicy.ToData.ToJSON = LSpec.PagingPolicy.ToData.ToJSON),
         'field/key/schema reconfiguration preserves each legal column policy and caption');
+      Check(LActual.HasTableQueryPolicy and LActual.ColumnAt(0).HasQueryPolicy and
+        (LActual.TableQueryPolicy.ToData.ToJSON = LSpec.TableQueryPolicy.ToData.ToJSON) and
+        (LActual.ColumnAt(0).QueryPolicy.ToData.ToJSON = LSpec.ColumnAt(0).QueryPolicy.ToData.ToJSON),
+        'the ordinary reusable candidate keeps explicit query choices on each rewritten lane');
     end;
     Check((LBoard.Part(NyxPart('lane-1/title')).Prop(NyxAttributeName(atText)) =
       'Team-specific heading') and
@@ -420,6 +428,10 @@ begin
     Check((GetNyxKanbanIntent(LBoard).Mode = nkiDisabled) and
       (LBoard.Part(NyxPart('lane-0/items')).CollectionView.Key.Name = KeyB.Name),
       'Disable is extension-only and preserves the formerly configured roles');
+    LActual := LBoard.Part(NyxPart('lane-0/items')).CollectionView;
+    Check((LActual.TableQueryPolicy.ToData.ToJSON = LSpec.TableQueryPolicy.ToData.ToJSON) and
+      (LActual.ColumnAt(0).QueryPolicy.ToData.ToJSON = LSpec.ColumnAt(0).QueryPolicy.ToData.ToJSON),
+      'Disable preserves the existing role query declarations');
     FreeAndNil(LContext);
     LInherited := Candidate(LDisabled, 'first-board', Default(TNyxKanbanIntent));
     Check(not HasNyxKanbanIntent(LInherited.Find('first-board')),
@@ -431,6 +443,11 @@ begin
       (LBoard.Part(NyxPart('lane-1/items')).CollectionView.ColumnAt(0).Title =
         'Our card caption'),
       'inherited A reconciles former B behavior while preserving local column presentation');
+    LActual := LBoard.Part(NyxPart('lane-1/items')).CollectionView;
+    Check(LActual.HasTableQueryPolicy and LActual.ColumnAt(0).HasQueryPolicy and
+      (LActual.TableQueryPolicy.ToData.ToJSON = LSpec.TableQueryPolicy.ToData.ToJSON) and
+      (LActual.ColumnAt(0).QueryPolicy.ToData.ToJSON = LSpec.ColumnAt(0).QueryPolicy.ToData.ToJSON),
+      'Inherit reconciles the recipe without losing local query declarations');
     FreeAndNil(LContext);
     Check((TNyxCodec.NodeSnapshot(LInherited.Find('board-definition')).ToJSON = LDefinition) and
       (TNyxCodec.NodeSnapshot(LInherited.Find('second-board')).ToJSON = LSibling) and

@@ -14,6 +14,23 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+**Reconfiguration compatibility — next source-derived prerequisite:**
+
+The accepted [Kanban query repair](DONE/NS-3_control-usefulness_05.md) preserves
+explicit v7 query metadata. Source review of `NyxKanbanEditorLaneSpec` still finds
+no transfer of the later column layout/text/alignment or table layout,
+presentation and workbench declarations. Their shared descriptor contracts
+already admit these values; this is a preservation gap under criterion six,
+not a new List header UI or a new query engine. No execution failure is asserted
+for these later families yet.
+
+Reproduce the loss through the public lane builder and ordinary candidate path,
+preserve applicable declarations and absence during field/collection rebinding,
+and retain complete admission, source/codec compatibility and independent-owner
+behavior. Do not copy resolved defaults or narrow descriptor admission to hide
+the loss. This follow-up preserves every original workbench criterion and adds
+no separate completion credit.
+
 The authored-export continuation adds independent typed page/all-filtered,
 column/header/line-ending choices through saved workbench policy, generated
 Pascal, the existing Studio form and grouped semantic history. Runtime permission

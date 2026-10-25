@@ -9,7 +9,49 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — complete native Studio/application journeys — 2026-10-25
+## Current checkpoint — Kanban query declarations preserved — 2026-10-25
+
+The preceding turn is PROGRESS: 6e66898 qualifies the full native Studio and
+own-application journeys with explicit lifetime/display limits. Root then
+completed [query preservation05](TODO/DONE/NS-3_control-usefulness_05.md) against
+its four original criteria, with no separate completion credit or new List UI.
+`NyxKanbanEditorLaneSpec` now copies column/table policies only when their
+declaration flags are present, preserving opt-outs and explicit default values
+while leaving resolved defaults absent. Validation and intended lane behavior
+remain unchanged.
+
+The old implementation fails the strengthened preservation assertion at check
+33. The first harness failure retained its active exception because it called
+Halt inside the handler; normal ExitCode handling fixes that cleanup without
+changing the assertion. The final old-source negative control has a complete
+clean 2,447,875-block/109,671,543-byte heap. Compiler repairs and both failures
+remain preserved, separately from positive qualification.
+
+The current editor regression passes 197 native assertions with a complete clean
+heap. It covers legacy versions 1–6, fresh/absent policies, explicit defaults,
+opt-outs, empty/restricted operators, text comparison, independent declarations
+and unchanged caller options/specifications. Its 46-lane document survives codec
+and crafted-source admission exactly; the actual generated unit compiles for
+FPC and pas2js. The ordinary Studio candidate regression passes 170 with a
+complete clean 4,878,560-block/223,717,666-byte heap, preserving policies through
+reconfiguration, Disable and Inherit while retaining original definition/sibling,
+source and refusal assertions. Matching browser assertions compile. Native
+compilers are warning-free; browser compilers retain seven installed RTL warnings
+each and no owned warning. No browser execution or added header behavior follows.
+
+Evidence is `.local/qualification/kanban-query-policy-01`. All actual readers
+are joined and the source freeze has ended. The accepted task and catalog links
+are updated. Earlier full Studio/browser/platform/lifetime limitations remain
+with their original owners; no unchanged full journey was repeated.
+
+Root stays solo. The next concrete source-derived gap is under
+[workbench03 criterion six](TODO/NS-3_control-usefulness_03.md): the same lane
+rebuild omits later layout/text/alignment/presentation/workbench declarations.
+Reproduce that separate loss before repairing it, preserve absence and complete
+admission during field/schema changes, and retain independent reusable owners.
+Do not treat the accepted v7 query repair as acceptance of these later families.
+
+## Complete native Studio/application journeys — 2026-10-25
 
 The preceding turn is PROGRESS: ea2ad53 groups native sibling publication and
 qualifies its bounded performance/ownership improvement. The same original full
@@ -37,7 +79,7 @@ complete clean heaps. This is a warm visual companion using the known checked
 own-application PPUs; it is not a cold build, input test or displayed-clipping
 qualification. The redraw's header/toolbar spacing needs actual display review
 before any visual-defect conclusion. The CLI admits names only at its typed
-capture-mode boundary. Its initial Unicode string-case compile failure and
+capture-mode boundary. Its initial string-case compile failure and
 repair remain in evidence.
 
 Evidence remains `.local/qualification/native-geometry-group-01`, under
@@ -48,7 +90,7 @@ assertions. No full instrumented Studio lifetime, actual-display quality,
 other-widgetset/browser parity, original task/DONE or completion credit follows.
 
 Root remains solo. Do not repeat the unchanged full journey. Continue the
-existing [Kanban policy preservation task](TODO/NS-3_control-usefulness_05.md):
+existing [Kanban policy preservation task](TODO/DONE/NS-3_control-usefulness_05.md):
 source inspection confirms its lane builder still omits explicit table/column
 query policies. Its shared policy prerequisites already exist. Preserve all
 original native-geometry/workbench criteria, and keep their outstanding display,
@@ -6348,7 +6390,7 @@ Preserve only raw declarations, not resolved defaults; retain exact field/family
 identity, all survivors and inherited effective policy in a selected local owner.
 Fresh bind/new columns/last-column clear keep their current intentional behavior.
 A second lane-specific builder is separately tracked in
-[usefulness05](TODO/NS-3_control-usefulness_05.md), with no new filter UI or silent
+[usefulness05](TODO/DONE/NS-3_control-usefulness_05.md), with no new filter UI or silent
 source expansion. Task02 now has granular P4A/B/C finish lines, preserving all
 seven original acceptance bullets exactly.
 

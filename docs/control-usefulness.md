@@ -47,7 +47,7 @@ The user's process/service-debugger report is covered by these existing owners:
 | Arrange columns, inspect long values and copy/export useful selections | [Table workbench03](../TODO/NS-3_control-usefulness_03.md): W1 owns resize/choose/reorder/hide/pin/reset; W2 owns full-value/cell actions, copy/export and preference lifetime. Both remain open. |
 | Keep context while services/logs change and recognize paused/failed/empty states | [Live inspection04](../TODO/NS-3_control-usefulness_04.md): L1 owns follow/pause, context and recovery; L2 owns measured mounted responsiveness. Both remain open. |
 | Find a nested process in a List/Tree and understand matches, ancestor context and hidden selection | [Live inspection04](../TODO/NS-3_control-usefulness_04.md) owns context; existing [DataToolbar search](../TODO/NS-3_data-toolbar_02.md) targets List/Table, while Tree find/reveal stays with components01/hierarchy and04. Typeahead and membership filtering are distinct; Table-only workbench behavior is not inferred. |
-| Preserve explicit query choices during unrelated lane reconfiguration | [Kanban preservation05](../TODO/NS-3_control-usefulness_05.md): retains declared policies without adding a lane filter UI. Open. |
+| Preserve explicit query choices during unrelated lane reconfiguration | [Kanban preservation05](../TODO/DONE/NS-3_control-usefulness_05.md): accepted 2026-10-25 with native editor/candidate 197/170 and clean heaps; matching browser assertions compile. Retains explicit declarations and absent defaults without adding a lane filter UI. |
 
 The 2026-10-22 backlog refinement adds explicit user journeys to the existing
 tasks, preserving this historical80-kind baseline. Task02 now includes an

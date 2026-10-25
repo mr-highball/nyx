@@ -707,7 +707,7 @@ or selecting a fallback. Scheduler support is a distinct check and cannot supply
 event-policy admission for a declared stream with zero callbacks/routes.
 
 A separate previous-spec rebuild in the Kanban editor has the same preservation
-gap and is tracked in [usefulness05](../NS-3_control-usefulness_05.md). It adds no
+gap and is tracked in [usefulness05](NS-3_control-usefulness_05.md). It adds no
 hard dependency or implicit P4 source ownership; no new Kanban filter UI follows.
 The P3 browser artifacts and existing loopback host are prepared/verified. A
 specific user override for actual browser tests and same-regression reruns is

@@ -29,8 +29,9 @@ uses
   nyx.kanban, nyx.kanban.intent, nyx.kanban.editor, nyx.codec, nyx.composition,
   nyx.collections, nyx.collections.view.types, nyx.collections.selection,
   nyx.collections.query, nyx.collections.columns, nyx.collections.paging,
-  nyx.typeahead, nyx.state
-  {$ifdef PAS2JS}, Web{$endif};
+  nyx.collections.query.policy,
+  nyx.typeahead, nyx.state, nyx.codegen, nyx.source
+  {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
 type
   { Real authored boards, independent reusable roots and a named board
@@ -404,6 +405,9 @@ begin
   LOptions := OptionsFor(NyxTextField('summary')).Scoped(csApplication);
   LOld := NyxCollectionView(Cards).Column(TitleField, 'Our customer cards').
     ColumnSizing(NyxColumnSizing.Fixed(193).Minimum(101).Maximum(300)).
+    ColumnQuery(NyxColumnQuery.Filtering(False).Sorting(False).Operators([]).
+      TextComparison(nqtAsciiInsensitive)).
+    TableQuery(NyxTableQuery.Enabled(False).Filtering(False).SortMode(nqsmSingle)).
     Scoped(csInstance).Selection(nsmSingle).
     TypeAhead(NyxTypeAhead.WindowMilliseconds(2300).Match(ntmExact)).
     Paged(NyxCollectionPaging.PageSize(7).InitialPage(2));
@@ -422,11 +426,16 @@ begin
       (LNew.TypeAheadPolicy.ToData.ToJSON = LOld.TypeAheadPolicy.ToData.ToJSON) and
       (LNew.PagingPolicy.ToData.ToJSON = LOld.PagingPolicy.ToData.ToJSON),
       'each lane preserves title, sizing, search and page cosmetics/policies');
+    Check(LNew.HasTableQueryPolicy and LNew.ColumnAt(0).HasQueryPolicy and
+      (LNew.TableQueryPolicy.ToData.ToJSON = LOld.TableQueryPolicy.ToData.ToJSON) and
+      (LNew.ColumnAt(0).QueryPolicy.ToData.ToJSON = LOld.ColumnAt(0).QueryPolicy.ToData.ToJSON),
+      'each lane preserves explicit query opt-outs, empty operators and text comparison');
   end;
   Check(LOld.ToData.ToJSON = LBefore, 'role rewrites preserve the earlier immutable specification');
   LNew := NyxKanbanEditorLaneSpec(LOptions, 0, Default(TNyxCollectionViewSpec));
   Check((LNew.ColumnAt(0).Title = 'Card') and not LNew.HasTypeAhead and
-    not LNew.PagingPolicy.Defined and not LNew.ColumnAt(0).Sizing.Defined,
+    not LNew.PagingPolicy.Defined and not LNew.ColumnAt(0).Sizing.Defined and
+    not LNew.HasTableQueryPolicy and not LNew.ColumnAt(0).HasQueryPolicy,
     'an initially unbound lane receives only ordinary missing defaults');
   LRejected := False;
   try
@@ -459,6 +468,182 @@ begin
     end;
   end;
   Check(LRejected, 'a nontext previous column is not relabeled as text');
+end;
+
+{ One shared document admits every rebuilt lane through codec and crafted
+  source. The optional native output is the exact generated unit for separate
+  compiler checks; it is written as UTF-8 bytes, never through ANSI text files. }
+procedure LaneQueryPolicyCases;
+var
+  LDocument: TNyxDocument;
+  LDecoded: TNyxDocument;
+  LParsed: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LPage: INyxPage;
+  LList: INyxList;
+  LOptions: TNyxKanbanOptions;
+  LOld: TNyxCollectionViewSpec;
+  LNew: TNyxCollectionViewSpec;
+  LIndependent: TNyxCollectionViewSpec;
+  LBefore: TNyxText;
+  LOptionsBefore: TNyxText;
+  LIndependentBefore: TNyxText;
+  LSource: TNyxText;
+  LWire: TNyxText;
+  LVersion: Integer;
+  LTableChoice: Integer;
+  LColumnChoice: Integer;
+  LLane: Integer;
+  LCase: Integer;
+  {$ifndef PAS2JS}
+  LStream: TFileStream;
+  {$endif}
+
+  procedure AddLane(const ASpec: TNyxCollectionViewSpec);
+  begin
+    LList := NewNyxList('policy-lane-' + IntToStr(LCase));
+    Inc(LCase);
+    LPage.Add(LList);
+    LList.Binds.Collection(ASpec).Done;
+  end;
+
+begin
+  LDocument := TNyxDocument.Create;
+  LDecoded := nil;
+  LParsed := nil;
+  LWorkspace := nil;
+  try
+    LDocument.Collections.Define(Cards, NyxCollectionSchema.Text(TitleField, '').
+      Text(NyxTextField('summary'), '').Text(LaneField, 'ready'), []);
+    LPage := NewNyxPage('lane-policies');
+    LDocument.AddPage(LPage);
+    LCase := 0;
+    LOptions := OptionsFor(NyxTextField('summary')).Scoped(csApplication);
+    LOptionsBefore := TNyxKanbanIntent.Configured(LOptions).ToData.ToJSON;
+    LOld := NyxCollectionView(Cards).Column(TitleField, 'Original lane');
+    for LVersion := 1 to 6 do
+    begin
+      case LVersion of
+        2: LOld := LOld.Selection(nsmMultiple);
+        3: LOld := LOld.Query(NyxCollectionQuery.OrderBy(TitleField));
+        4: LOld := LOld.TypeAhead(NyxTypeAhead.WindowMilliseconds(1900));
+        5: LOld := LOld.ColumnSizing(NyxColumnSizing.Fixed(171));
+        6: LOld := LOld.Paged(NyxCollectionPaging.PageSize(5));
+      else
+        { The first version uses the original, unadorned descriptor. }
+      end;
+      Check(LOld.ToData.Field('version').AsInteger = LVersion,
+        'legacy fixture covers its actual complete descriptor version');
+      LOld := TNyxCollectionViewSpec.FromData(LOld.ToData);
+      LBefore := LOld.ToData.ToJSON;
+      { Reading an effective default must not create an authored declaration. }
+      Check(LOld.TableQueryPolicy.IsEnabled and LOld.ColumnAt(0).QueryPolicy.FilterEnabled,
+        'ordinary query defaults remain available on legacy descriptors');
+      for LLane := 0 to 2 do
+      begin
+        LNew := NyxKanbanEditorLaneSpec(LOptions, LLane, LOld);
+        Check(not LNew.HasTableQueryPolicy and not LNew.ColumnAt(0).HasQueryPolicy and
+          (LNew.ToData.Field('version').AsInteger < 7),
+          'legacy reconfiguration never promotes resolved defaults to version seven');
+        AddLane(LNew);
+      end;
+      Check(LOld.ToData.ToJSON = LBefore, 'legacy source is unchanged by every lane rebuild');
+    end;
+
+    LIndependent := NyxCollectionView(Cards).Column(TitleField, 'Independent lane').
+      ColumnQuery(NyxColumnQuery.TextComparison(nqtExact).Operators([nqcStartsWith])).
+      TableQuery(NyxTableQuery.SortMode(nqsmSingle));
+    LIndependentBefore := LIndependent.ToData.ToJSON;
+    for LTableChoice := 0 to 2 do
+    begin
+      for LColumnChoice := 0 to 2 do
+      begin
+        LOld := NyxCollectionView(Cards).Column(TitleField, 'Chosen lane');
+        case LTableChoice of
+          1: LOld := LOld.TableQuery(NyxTableQuery.Enabled(False).Filtering(False).
+            Sorting(False).SortMode(nqsmSingle));
+          2: LOld := LOld.TableQuery(NyxTableQuery.Filtering(False).SortMode(nqsmMultiple));
+        else
+          { Absence must be independent of the column declaration. }
+        end;
+        case LColumnChoice of
+          1: LOld := LOld.ColumnQuery(NyxColumnQuery.Filtering(False).Sorting(False).
+            Operators([]).TextComparison(nqtAsciiInsensitive));
+          2: LOld := LOld.ColumnQuery(NyxColumnQuery.Operators([nqcEqual, nqcContains,
+            nqcEndsWith]).Sorting(False).TextComparison(nqtAsciiInsensitive));
+        else
+          { Absence must be independent of the table declaration. }
+        end;
+        LBefore := LOld.ToData.ToJSON;
+        for LLane := 0 to 2 do
+        begin
+          LNew := NyxKanbanEditorLaneSpec(LOptions, LLane, LOld);
+          Check((LNew.HasTableQueryPolicy = (LTableChoice <> 0)) and
+            (LNew.ColumnAt(0).HasQueryPolicy = (LColumnChoice <> 0)) and
+            (LNew.TableQueryPolicy.ToData.ToJSON = LOld.TableQueryPolicy.ToData.ToJSON) and
+            (LNew.ColumnAt(0).QueryPolicy.ToData.ToJSON = LOld.ColumnAt(0).QueryPolicy.ToData.ToJSON),
+            'independent table/column choices retain their exact admitted values');
+          Check((LNew.ColumnAt(0).FieldName = 'summary') and
+            (LNew.ColumnAt(0).Mode = cmReadOnly) and (LNew.Scope = csApplication) and
+            (LNew.SelectionMode = nsmSingle) and
+            (LNew.QueryPolicy.ToData.ToJSON = NyxCollectionQuery.Where(NyxWhere(LaneField).
+              EqualTo(LOptions.LaneAt(LLane).Name, nqtExact)).ToData.ToJSON),
+            'policy preservation retains the intended new lane behavior');
+          AddLane(LNew);
+          LWire := LNew.ToData.ToJSON;
+          NyxKanbanEditorLaneSpec(LOptions, (LLane + 1) mod 3, LIndependent);
+          Check((LNew.ToData.ToJSON = LWire) and
+            (LIndependent.ToData.ToJSON = LIndependentBefore),
+            'another lane cannot mutate the rebuilt result or its independent source');
+        end;
+        Check(LOld.ToData.ToJSON = LBefore, 'explicit caller specification remains immutable');
+      end;
+    end;
+    { Explicit default-valued declarations differ from absence even when the
+      current resolved values happen to match. Future defaults cannot erase
+      the author's deliberate decision to pin today's behavior. }
+    LOld := NyxCollectionView(Cards).Column(TitleField, 'Declared defaults').
+      ColumnQuery(NyxColumnQuery).TableQuery(NyxTableQuery);
+    LNew := NyxKanbanEditorLaneSpec(LOptions, 0, LOld);
+    Check(LNew.HasTableQueryPolicy and LNew.ColumnAt(0).HasQueryPolicy and
+      (LNew.TableQueryPolicy.ToData.ToJSON = LOld.TableQueryPolicy.ToData.ToJSON) and
+      (LNew.ColumnAt(0).QueryPolicy.ToData.ToJSON = LOld.ColumnAt(0).QueryPolicy.ToData.ToJSON),
+      'explicit default-valued policies remain authored declarations');
+    AddLane(LNew);
+    Check(TNyxKanbanIntent.Configured(LOptions).ToData.ToJSON = LOptionsBefore,
+      'caller recipe options remain immutable');
+    LWire := TNyxCodec.Encode(LDocument);
+    LDecoded := TNyxCodec.Decode(LWire);
+    Check(TNyxCodec.Encode(LDecoded) = LWire, 'all rebuilt lane declarations persist exactly');
+    LSource := TNyxCodegen.Generate(LDocument, 'nyx.fixture.kanban.query');
+    Check((Pos('.ColumnQuery(', LSource) > 0) and (Pos('.TableQuery(', LSource) > 0) and
+      (Pos('.Operators([])', LSource) > 0) and (Pos('SetProp(', LSource) = 0),
+      'crafted lane source retains typed policies, including empty disabled operators');
+    LParsed := TNyxSourceWorkspace.PrepareDraft(LSource, LWorkspace);
+    Check(TNyxCodec.Encode(LParsed) = LWire, 'crafted-source admission retains every lane policy');
+    {$ifndef PAS2JS}
+
+    if ParamCount = 1 then
+    begin
+
+      if FileExists(ParamStr(1)) then
+      begin
+        raise Exception.Create('Generated lane-policy unit needs a fresh output path');
+      end;
+      LStream := TFileStream.Create(ParamStr(1), fmCreate);
+      try
+        LStream.WriteBuffer(LSource[1], Length(LSource));
+      finally
+        LStream.Free;
+      end;
+    end;
+    {$endif}
+  finally
+    LWorkspace.Free;
+    LParsed.Free;
+    LDecoded.Free;
+    LDocument.Free;
+  end;
 end;
 
 function ActionNode(const AForm: INyxCard; AField: TNyxKanbanEditorField): TNyxNode;
@@ -656,6 +841,7 @@ begin
     WireCases;
     BaselineCases;
     LaneSpecCases;
+    LaneQueryPolicyCases;
     FormCases;
     EmptyCases;
     {$ifdef PAS2JS}
@@ -675,7 +861,7 @@ begin
         ': ' + LException.Message;
       {$else}
       WriteLn('FAIL at check count ', GChecks, ': ', LException.Message);
-      Halt(1);
+      ExitCode := 1;
       {$endif}
     end;
   end;

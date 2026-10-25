@@ -3,6 +3,13 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Kanban query-policy preservation](NS-3_control-usefulness_05.md) was accepted
+on 2026-10-25. Explicit column/table declarations survive lane reconfiguration,
+Disable and Inherit; absent defaults stay absent. Native editor/candidate checks
+pass 197/170 with clean heaps, matching browser assertions compile, and the
+exact generated policy fixture compiles for FPC/pas2js. This is saved metadata
+preservation on List lanes, with no new header UI or separate completion credit.
+
 [Table filtering and sorting](NS-3_control-usefulness_02.md) was accepted
 on2026-10-22 for all seven unchanged criteria. Actual P3 native782/782 and
 browser712/712, active-cell browser75/75, own Studio native755/759+compiled426/426

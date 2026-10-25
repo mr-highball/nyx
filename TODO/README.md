@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+[Kanban query-policy preservation](DONE/NS-3_control-usefulness_05.md) is accepted
+on 2026-10-25 for lossless explicit declarations and absent defaults. This adds
+no List filter UI or separate completion credit. Related newer presentation
+metadata remains under workbench03's authoring/reuse criterion below.
+
 [Table filtering and sorting](DONE/NS-3_control-usefulness_02.md) is accepted
 on2026-10-22 against all seven unchanged criteria and its accepted blockers.
 Typed policies and ordinary native/browser controls include safe query ownership,
