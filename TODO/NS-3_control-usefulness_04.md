@@ -140,3 +140,15 @@ model checks cover empty results, pause refusal, query/source distinctions and
 failure/retry. This advances the follow portion above; remaining feed-state
 presentations, Tree, memory/scale, browser execution and saved/Studio/source/MCP
 adoption remain open under the unchanged original criteria.
+
+Public flat-view feedback now composes all seven requested primary states from
+existing view/paging/inspection facts and explicit producer activity. Its typed
+specialized card exposes replaceable parts and atomic scalar/count bindings;
+Retry/Reset/Resume callbacks remain application-owned. The nine-step public
+replay executes real retry/empty-source mutations and owner-scoped filter reset,
+preserving a peer's predicate and a paused frame. Native handwritten/generated
+journeys qualify these interactions at both widths; browser consumers compile
+only. Model checks qualify veto, reentrant refusal, post-commit receiver failure
+and retirement. This advances feed presentations above without accepting the
+whole criterion: screen-reader/visual/browser proof, background producer rules,
+Tree-specific context, memory/scale and saved/Studio/MCP adoption remain open.

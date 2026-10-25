@@ -13,6 +13,7 @@ uses
   SysUtils, Math, nyx.text, nyx.model, nyx.controls, nyx.codec, nyx.codegen, nyx.state,
   nyx.collections, nyx.collections.view, nyx.collections.inspection,
   nyx.collections.position, nyx.collections.query,
+  nyx.collections.feedback, nyx.collections.query.session, nyx.publication,
   nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.arrangement, nyx.collections.range,
   nyx.collections.range.commands, nyx.collections.range.actions,
@@ -59,6 +60,7 @@ var
   LSaved: TNyxText;
   LRefused: Boolean;
   LRefreshCount: Integer;
+  LFeedback: INyxCollectionFeedback;
   {$ifdef PAS2JS}
   LApplication: TNyxBrowserApplication;
   LHost: TJSHTMLElement;
@@ -273,6 +275,100 @@ var
       'resuming never silently turns a stopped follow policy back on');
   end;
 
+  procedure FeedbackCases;
+  var
+    LParts: TNyxCollectionFeedbackParts;
+    LBefore: INyxCollectionSnapshot;
+    LSession: INyxCollectionQuerySession;
+    LPeerOwner: INyxCollectionQueryOwner;
+    LPlan: INyxPreparedPublication;
+
+    function PartVisible(const AID: TNyxText): Boolean;
+    begin
+      {$ifdef PAS2JS}
+      Result := not LApplication.View.ElementFor(AID).hasAttribute('hidden') and
+        (LApplication.View.ElementFor(AID).style.getPropertyValue('display') <> 'none');
+      {$else}
+      Result := LApplication.View.ControlFor(AID).Visible;
+      {$endif}
+    end;
+
+  begin
+    LParts := NyxCollectionFeedbackParts(InspectionFeedbackName);
+    LFeedback := LDemo.Feedback;
+    LBefore := LFirst.View.Store.Snapshot;
+    Click(InspectionStepID);
+    Check((LFeedback.Capture.Kind = ncfkLoading) and PartVisible(LParts.ProgressID) and
+      (LFirst.View.Store.Snapshot = LBefore), 'a real replay step presents loading activity while retaining current records');
+    {$ifdef PAS2JS}
+    Check(LApplication.View.ElementFor(LParts.RootID).getAttribute('aria-label') =
+      LApplication.State.GetValue(LParts.Caption), 'browser feedback exposes its current state as its accessible name');
+    {$else}
+    Check(TNyxText(LApplication.View.ControlFor(LParts.RootID).AccessibleName) =
+      LApplication.State.GetValue(LParts.Caption), 'native feedback exposes its current state as its accessible name');
+    {$endif}
+    Click(InspectionStepID);
+    Check((LFeedback.Capture.Kind = ncfkRefreshing) and PartVisible(LParts.ProgressID) and
+      (LFirst.View.Store.Snapshot = LBefore), 'refreshing has a distinct heading and keeps the displayed dataset');
+    Click(InspectionStepID);
+    Check((LFeedback.Capture.Kind = ncfkFailed) and PartVisible(LParts.RetryID) and
+      not PartVisible(LParts.ProgressID) and (LFirst.View.Store.Snapshot = LBefore),
+      'failure reveals the ordinary bound Retry button without discarding current records');
+    Click(LParts.RetryID);
+    Check((LFeedback.Capture.Kind = ncfkReady) and
+      (LFirst.View.Store.Snapshot.Revision > LBefore.Revision) and not PartVisible(LParts.RetryID),
+      'the actual Retry button reconnects the sample feed and publishes a real data update');
+    Click(InspectionStepID);
+    Click(InspectionStepID);
+    Check((LFeedback.Capture.Kind = ncfkFilteredEmpty) and PartVisible(LParts.ResetID) and
+      not PartVisible(LParts.RetryID) and (LFeedback.Capture.SourceRows > 0),
+      'a scoped no-match filter displays filtered-empty and offers Reset rather than reload; kind=' +
+      TNyxText(IntToStr(Ord(LFeedback.Capture.Kind))) + ', source=' +
+      TNyxText(IntToStr(LFeedback.Capture.SourceRows)) + ', matched=' +
+      TNyxText(IntToStr(LFeedback.Capture.MatchedRows)) + ', reset=' +
+      TNyxText(BoolToStr(PartVisible(LParts.ResetID), True)) + ', live rows=' +
+      TNyxText(IntToStr(LFirst.View.Snapshot.Count)) + ', active=' +
+      TNyxText(BoolToStr(LFeedback.Capture.Active, True)));
+    LSession := NyxCollectionQuerySession(LFirst.View);
+    LPeerOwner := LSession.AcquireOwner(NyxQueryOrigin('feedback-test-peer'), 'Independent filter');
+    try
+      LPlan := LSession.PrepareSession(LSession.Capture, LPeerOwner,
+        NyxQuerySessionEdits.Filter(NyxQueryChannel('peer'),
+          NyxWhere(NyxTextField('name')).EqualTo('Another unavailable service')));
+      PublishNyxGroup([LPlan]);
+      Click(LParts.ResetID);
+      Check((LFeedback.Capture.Kind = ncfkFilteredEmpty) and (LFeedback.Capture.SourceRows > 0) and
+        not PartVisible(LParts.ResetID),
+        'Reset this filter preserves a different surface owner''s accepted predicate');
+      LPlan := LSession.PrepareSession(LSession.Capture, LPeerOwner, NyxQuerySessionEdits.ClearOwner);
+      PublishNyxGroup([LPlan]);
+      Check((LFeedback.Capture.Kind = ncfkReady) and (LFeedback.Capture.PageRows > 0),
+        'clearing that peer independently confirms the demo removed only its own predicate');
+    finally
+      LPeerOwner.Revoke;
+    end;
+    Click(InspectionStepID);
+    Check((LFeedback.Capture.Kind = ncfkEmpty) and PartVisible(LParts.RetryID) and
+      not PartVisible(LParts.ResetID) and (LPeer.View.Snapshot.Count = 0),
+      'a genuinely empty source differs from a filter and its live peer also sees the empty dataset');
+    Click(LParts.RetryID);
+    Check((LFeedback.Capture.Kind = ncfkReady) and (LFirst.View.Snapshot.Count = 1) and
+      (LPeer.View.Snapshot.Count = 1), 'retrying an empty source loads a real record in both independent views');
+    Click(InspectionPauseID);
+    LFeedback.Failed('The paused sample producer needs another try.');
+    Check((LFeedback.Capture.Kind = ncfkPaused) and PartVisible(LParts.ResumeID) and
+      PartVisible(LParts.RetryID), 'pause and producer failure expose separate meaningful Resume and Retry actions');
+    Click(LParts.RetryID);
+    Check((LFeedback.Capture.Kind = ncfkPaused) and (LFeedback.Capture.PendingPublications > 0),
+      'retrying the producer while paused does not silently resume the inspection');
+    Click(LParts.ResumeID);
+    Check((LFeedback.Capture.Kind = ncfkReady) and not PartVisible(LParts.ResumeID) and
+      (LFeedback.Capture.DisplayRevision = LFeedback.Capture.IncomingRevision),
+      'the feedback panel''s own Resume action adopts the current source deliberately');
+    Check(TNyxCodec.Encode(LDocument) = LSaved,
+      'feedback, scoped reset and replay actions never alter the authored design');
+  end;
+
 begin
   {$ifdef NYX_INSPECTION_GENERATED}
   LDocument := BuildNyxDocument;
@@ -377,12 +473,15 @@ begin
     Check(not LRange.Current and not LCopy.Current, 'resume revokes old range and copied-cell authority');
     Check(TNyxCodec.Encode(LDocument) = LSaved, 'runtime inspection never changes the authored design');
     PositionCases;
+    FeedbackCases;
     LDemo.Close;
+    Check(not LFeedback.Capture.Active, 'retained feedback data loses publication authority when the demo binding closes');
     LOriginal := LFirst.View.Store.Snapshot;
     Click(InspectionStepID);
     Check(LFirst.View.Store.Snapshot = LOriginal, 'closing the binding withdraws actual button authority');
   finally
     LDemo.Free;
+    LFeedback := nil;
     LCopy := nil;
     LClipboard := nil;
     LRange := nil;

@@ -6,7 +6,7 @@ unit nyx.live.inspection;
 interface
 
 uses nyx.model, nyx.application.context, nyx.events, nyx.collections.view,
-  nyx.collections.position, nyx.collections.recovery;
+  nyx.collections.position, nyx.collections.recovery, nyx.collections.feedback;
 
 const
   InspectionPeerID = 'live-service-peer';
@@ -17,6 +17,7 @@ const
   InspectionFollowID = 'follow-last-visible';
   InspectionKeepID = 'keep-reading-position';
   InspectionCanFollowID = 'inspection-can-follow';
+  InspectionFeedbackName = 'service-feedback';
   RecoverySummaryID = 'recovered-draft-summary';
   RecoveryTextID = 'recovered-draft-text';
   RecoveryVisibleID = 'recovered-drafts-visible';
@@ -41,6 +42,7 @@ type
       const ARecovery: INyxCollectionDraftRecovery = nil);
     destructor Destroy; override;
     procedure Close;
+    function Feedback: INyxCollectionFeedback;
   end;
 
 { Ordinary portable Nyx controls share one runtime collection. Only runtime
@@ -51,7 +53,9 @@ function BuildLiveInspectionDocument: TNyxDocument;
 implementation
 
 uses SysUtils, nyx.text, nyx.types, nyx.controls, nyx.state, nyx.behavior, nyx.responsive,
-  nyx.scheduler, nyx.collections, nyx.collections.inspection, nyx.service.monitor;
+  nyx.scheduler, nyx.collections, nyx.collections.inspection, nyx.service.monitor,
+  nyx.collections.feedback.controls, nyx.collections.query, nyx.collections.query.session,
+  nyx.publication;
 
 type
   { Router registrations retain this callback, never their owning binding.
@@ -65,6 +69,10 @@ type
     FInspection: INyxCollectionInspection;
     FFollowing: INyxCollectionFollowing;
     FPeer: INyxCollectionView;
+    FFeedback: INyxCollectionFeedback;
+    FFeedbackParts: TNyxCollectionFeedbackParts;
+    FQuerySession: INyxCollectionQuerySession;
+    FQueryOwner: INyxCollectionQueryOwner;
     FStatusToken: INyxCollectionViewSubscription;
     FPosition: INyxCollectionPositionState;
     FPositionSerial: Integer;
@@ -77,6 +85,8 @@ type
     procedure StatusChanged(const AStatus: TNyxCollectionInspectionObservation;
       ACause: TNyxCollectionInspectionCause);
     procedure AdvanceFeed;
+    procedure RetryFeed;
+    procedure SetDemoFilter(AEnabled: Boolean);
     procedure PublishState(const AStatus: TNyxText);
     procedure RecoveryAction(const AID: TNyxText);
   public
@@ -108,6 +118,8 @@ var
   LPreviousDraft: INyxButton;
   LNextDraft: INyxButton;
   LDiscardDraft: INyxButton;
+  LFeedbackParts: TNyxCollectionFeedbackParts;
+  LFeedback: INyxCollectionFeedbackPanel;
 begin
   Result := BuildServiceMonitorDocument;
   try
@@ -149,8 +161,14 @@ begin
     LPage.Insert(6, LPeer);
     LPeer.Configure.Height(160).AccessibleName('Live service records').Done;
     LPeer.Binds.Collection(Result.Find(ServiceTableID).CollectionView).Done;
+    LFeedbackParts := NyxCollectionFeedbackParts(InspectionFeedbackName);
+    LFeedbackParts.Define(Result.State);
+    LFeedback := NewNyxCollectionFeedbackPanel(LFeedbackParts, TNyxCollectionFeedbackText.Defaults);
+    LPage.Insert(4, LFeedback);
     Result.Find('service-help').Configure.Text(
       'Each click replays one atomic update: change and insert, remove, then replace a record. ' +
+      'Later steps show loading, refreshing, failure, a filter with no matches and an empty source. ' +
+      'Retry reloads a sample record when empty; Reset this filter removes only the sample filter. ' +
       'Paused values can be selected, filtered and copied; edits refuse until Resume. ' +
       'A removed or replaced selection is explained when you resume. No timer or external service is involved.').Done;
     LRecovery := NewNyxCard('recovered-drafts');
@@ -207,6 +225,11 @@ begin
   FPosition := APosition;
   FRecovery := ARecovery;
   FInspection.ConfigureInspection(NyxInspectionPolicy);
+  FFeedbackParts := NyxCollectionFeedbackParts(InspectionFeedbackName);
+  FFeedback := BindNyxCollectionFeedback(AContext, AInspection, FFeedbackParts,
+    TNyxCollectionFeedbackText.Defaults, [ncfaRetry, ncfaResume]);
+  FQuerySession := NyxCollectionQuerySession(AInspection);
+  FQueryOwner := FQuerySession.AcquireOwner(NyxQueryOrigin(InspectionFeedbackName), 'Sample feed filter');
   FStatusToken := FInspection.SubscribeInspection(StatusChanged);
   StatusChanged(FInspection.CaptureInspection, ncicPolicyChanged);
 end;
@@ -225,6 +248,19 @@ end;
 
 procedure TInspectionCallback.Close;
 begin
+
+  if FQueryOwner <> nil then
+  begin
+    FQueryOwner.Revoke;
+  end;
+  FQueryOwner := nil;
+  FQuerySession := nil;
+
+  if FFeedback <> nil then
+  begin
+    FFeedback.Close;
+  end;
+  FFeedback := nil;
   FStatusToken := nil;
   FInspection := nil;
   FFollowing := nil;
@@ -514,6 +550,82 @@ begin
   end;
 end;
 
+procedure TInspectionCallback.SetDemoFilter(AEnabled: Boolean);
+var
+  LEdits: TNyxQuerySessionEdits;
+  LPlan: INyxPreparedPublication;
+begin
+  { An explicit legacy query replacement may retire the former session scope.
+    Acquire a fresh actor rather than lending a retired token new authority. }
+
+  if (FQueryOwner = nil) or not FQueryOwner.Connected then
+  begin
+    FQueryOwner := FQuerySession.AcquireOwner(NyxQueryOrigin(InspectionFeedbackName), 'Sample feed filter');
+  end;
+  LEdits := NyxQuerySessionEdits;
+
+  if AEnabled then
+  begin
+    LEdits := LEdits.Filter(NyxQueryChannel('sample-no-match'),
+      NyxWhere(NyxTextField('name')).EqualTo('No sample service has this name'));
+  end
+  else
+  begin
+    LEdits := LEdits.ClearOwner;
+  end;
+  LPlan := FQuerySession.PrepareSession(FQuerySession.Capture, FQueryOwner, LEdits);
+  PublishNyxGroup([LPlan]);
+
+  if Active then
+  begin
+
+    if AEnabled then
+    begin
+      FFeedback.Actions([ncfaRetry, ncfaReset, ncfaResume]);
+    end
+    else
+    begin
+      FFeedback.Actions([ncfaRetry, ncfaResume]);
+    end;
+  end;
+end;
+
+procedure TInspectionCallback.RetryFeed;
+var
+  LStore: INyxCollection;
+  LSource: INyxCollectionSnapshot;
+  LItem: TNyxItemRef;
+begin
+  FFeedback.Refreshing;
+
+  if not Active then
+  begin
+    Exit;
+  end;
+  LStore := FPeer.Store;
+  LSource := LStore.Snapshot;
+
+  if LSource.Count = 0 then
+  begin
+    LItem := NyxItem(LSource.Key, 'gateway');
+    LStore.Apply([NyxInsert(0, NyxCollectionItem(LItem)
+      .WithValue(NyxTextField('name'), 'Request gateway')
+      .WithValue(NyxTextField('status'), 'Running')
+      .WithValue(NyxTextField('notes'), 'Reloaded from the sample feed'))], LSource.Revision);
+  end
+  else
+  begin
+    LItem := LSource.ItemAt(0).Ref;
+    LStore.Apply([NyxUpdate(NyxCollectionItem(LItem)
+      .WithValue(NyxTextField('notes'), 'Reconnected to the sample feed'))], LSource.Revision);
+  end;
+
+  if Active then
+  begin
+    FFeedback.Ready;
+  end;
+end;
+
 procedure TInspectionCallback.AdvanceFeed;
 var
   LStore: INyxCollection;
@@ -525,7 +637,20 @@ begin
   LSource := LStore.Snapshot;
   LGateway := NyxItem(LSource.Key, 'gateway');
   LHealth := NyxItem(LSource.Key, 'health');
-  { A fixed three-step replay, not an unbounded snapshot queue. Admission uses
+
+  if (FStep = 0) and not LSource.Has(LGateway) then
+  begin
+    { After the empty-source step, another replay cycle can seed itself. Retry
+      remains a separate visible action and no query contribution is cleared. }
+    RetryFeed;
+
+    if not Active then
+    begin
+      Exit;
+    end;
+    LSource := LStore.Snapshot;
+  end;
+  { A fixed nine-step replay, not an unbounded snapshot queue. Admission uses
     the captured authoritative revision, independent of the paused display. }
   case FStep of
     0:
@@ -540,8 +665,20 @@ begin
       LStore.Apply([NyxRemove(LGateway), NyxInsert(0, NyxCollectionItem(LGateway)
         .WithValue(NyxTextField('name'), 'Replacement request gateway')
         .WithValue(NyxTextField('status'), 'Restarted'))], LSource.Revision);
+    3:
+      FFeedback.Loading;
+    4:
+      FFeedback.Refreshing;
+    5:
+      FFeedback.Failed('The sample connection was interrupted. Choose Try again to reconnect.');
+    6:
+      FFeedback.Ready;
+    7:
+      SetDemoFilter(True);
+    8:
+      LStore.Assign(NewNyxCollection(LSource.Key, LSource.Schema, []).Snapshot, LSource.Revision);
   end;
-  FStep := (FStep + 1) mod 3;
+  FStep := (FStep + 1) mod 9;
 end;
 
 procedure TInspectionCallback.Invoke(const AEvent: TNyxEventInfo;
@@ -561,7 +698,7 @@ begin
   begin
     FInspection.PauseInspection;
   end
-  else if AEvent.OriginID = InspectionResumeID then
+  else if (AEvent.OriginID = InspectionResumeID) or (AEvent.OriginID = FFeedbackParts.ResumeID) then
   begin
     FInspection.ResumeInspection;
   end
@@ -576,6 +713,14 @@ begin
   else if (AEvent.OriginID = InspectionKeepID) and (FFollowing <> nil) then
   begin
     FFollowing.KeepReading;
+  end
+  else if AEvent.OriginID = FFeedbackParts.RetryID then
+  begin
+    RetryFeed;
+  end
+  else if AEvent.OriginID = FFeedbackParts.ResetID then
+  begin
+    SetDemoFilter(False);
   end
   else if (AEvent.OriginID = RecoveryPreviousID) or (AEvent.OriginID = RecoveryNextID) or
     (AEvent.OriginID = RecoveryDiscardID) then
@@ -599,7 +744,7 @@ begin
   LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition, ARecovery);
   FCallback := LCallback;
   FCallbackObject := LCallback;
-  SetLength(FSubscriptions, 8);
+  SetLength(FSubscriptions, 11);
   FSubscriptions[0] := AEvents.On(NyxControlEvents(InspectionPauseID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[1] := AEvents.On(NyxControlEvents(InspectionResumeID), ntClick)
@@ -615,6 +760,12 @@ begin
   FSubscriptions[6] := AEvents.On(NyxControlEvents(InspectionFollowID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[7] := AEvents.On(NyxControlEvents(InspectionKeepID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[8] := AEvents.On(NyxControlEvents(LCallback.FFeedbackParts.RetryID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[9] := AEvents.On(NyxControlEvents(LCallback.FFeedbackParts.ResetID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[10] := AEvents.On(NyxControlEvents(LCallback.FFeedbackParts.ResumeID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
 end;
 
@@ -644,6 +795,16 @@ begin
   FSubscriptions := nil;
   FCallbackObject := nil;
   FCallback := nil;
+end;
+
+function TNyxLiveInspectionDemo.Feedback: INyxCollectionFeedback;
+begin
+  Result := nil;
+
+  if FCallback <> nil then
+  begin
+    Result := TInspectionCallback(FCallbackObject).FFeedback;
+  end;
 end;
 
 end.

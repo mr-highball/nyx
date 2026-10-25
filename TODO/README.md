@@ -37,13 +37,18 @@ positions also have native pinned/plain/List and generated evidence. Incompatibl
 unfinished Table drafts now have native handwritten/generated recovery review
 and exact-entry discard checks. Deliberate follow/keep-reading commands also have
 native generated/public and List/plain-grid evidence. Hard journal-memory policy,
-native Tree editors/
-physical anchors, remaining feed/authoring behavior and browser execution stay
+native Tree editors/physical anchors, producer/authoring behavior and browser execution stay
 open in WORK.md. [Equal-value replacement](NS-1_state-collections_02.md) records
 the discovered identity-publication correction and its remaining browser gate.
 The accepted collection/review foundation remains the starting point; 04 does not
 require declaring03 complete. Existing03 gates remain intact. This is product
 development, not a host/config or rollout release.
+
+The same public demo now includes reusable feedback for loading, refreshing,
+empty, filtered-empty, failed and paused states, with real retry/scoped reset/
+resume actions. Native handwritten/generated journeys and model admission/
+retirement checks qualify this progress; browser, AT/visual, producer, Tree and
+full original acceptance remain open in WORK.
 
 The 2026-10-18 request adds an optional client-side pas2js compiler for WEB and
 a static client-only Studio edition suitable for GitHub Pages. It must require

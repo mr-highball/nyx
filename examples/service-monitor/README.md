@@ -44,8 +44,9 @@ record that was removed/replaced, including reuse of its original ID.
 The command row becomes a column below 560 logical pixels through Nyx's ordinary
 typed viewport configuration; no adapter-specific UI construction is needed.
 
-The replay groups a change/insert, a removal, and a gateway replacement into
-three successive atomic updates. It runs only on request, without an external
+The replay begins with a change/insert, a removal and a gateway replacement in
+three atomic updates, then shows loading, refreshing, failure, ready, a scoped
+filter with no matches and an empty source. It runs only on request, without an external
 process or timer. Copy and cell-range commands read the paused frame; editing
 that frame refuses until resumed. The application explicitly supplies its target
 clipboard host; merely opening or advancing the demo does not write a clipboard.
@@ -60,8 +61,20 @@ privileged generated-code path.
 
 The [retention contract](../../docs/collection-views.md#pausing-live-inspection)
 describes payload/removed-ID bounds, overflow and current limitations. This demo
-does not yet qualify Tree physical anchors, full feed states or Studio policy
-authoring.
+does not yet qualify Tree physical anchors, background producers, browser input
+or Studio policy authoring.
+
+The reusable `INyxCollectionFeedbackPanel` supplies current headings/counts,
+unknown-duration progress and context-dependent Try again/Reset/Resume actions.
+Try again performs a real revision-checked sample update (or loads a sample
+record when empty). Reset clears only this demo's query-owner contribution and
+then withdraws its button; a different surface's accepted filter remains intact.
+Resume is deliberate, including after retrying a failed producer while paused.
+The card's accessible name follows its current state. It expands to ordinary
+Nyx parts in generated Pascal and uses the same runtime binding afterward.
+Callers can customize headings/action text or rebind parts to resources and
+typed count expressions. See the [feedback contract](../../docs/collection-views.md#collection-feedback-and-feed-states)
+for ownership, atomic admission and the separate producer responsibilities.
 
 **Follow last visible** reveals the final row of the current filtered/sorted page
 without selecting it. Later changed tail identities follow; unrelated value

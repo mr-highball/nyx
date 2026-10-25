@@ -144,6 +144,84 @@ retained-port retirement. Browser fixtures compile; actual browser input, pixel
 validation and complete task acceptance remain open. Native Tree physical
 scrolling remains a separate unfinished L1 requirement.
 
+## Collection feedback and feed states
+
+`nyx.collections.feedback` observes an existing flat List/Table view and combines
+its displayed counts/pause status with caller-supplied producer activity. It does
+not create a store, query engine, loader, update queue or data-admission authority.
+The optional compound card in `nyx.collections.feedback.controls` uses ordinary
+Nyx labels, an indeterminate progress control and Retry/Reset/Resume buttons.
+
+```pascal
+LParts := NyxCollectionFeedbackParts('service-feedback');
+LParts.Define(LDocument.State);
+LPanel := NewNyxCollectionFeedbackPanel(LParts,
+  TNyxCollectionFeedbackText.Defaults);
+LPage.Add(LPanel);
+
+// After mounting, using this application's actual context and view:
+LFeedback := BindNyxCollectionFeedback(LContext, LView, LParts,
+  TNyxCollectionFeedbackText.Defaults, [ncfaRetry, ncfaResume]);
+LFeedback.Refreshing;
+```
+
+Declare the parts as `TNyxCollectionFeedbackParts`, the panel as
+`INyxCollectionFeedbackPanel`, and its runtime binding as
+`INyxCollectionFeedback`. The specialized panel derives from `INyxCard`; its
+named child controls remain replaceable through the normal Nyx contract. Export
+expands the recipe into portable typed controls and scalar bindings; attach the
+runtime behavior using the same parts descriptor in the generated application.
+
+`Loading`, `Refreshing`, `Ready` and `Failed(ADiagnostic)` signal producer activity
+without changing records. Ready feedback distinguishes a truly empty displayed
+source from a nonempty source with no filter matches. `Capture` returns bounded
+copied facts: kind/activity, exact diagnostic, source/matched/page counts, source
+revisions, pending publications, affordances and an observing serial. Paused
+feedback keeps displayed-source counts while incoming revisions advance. Pause
+takes visual precedence, but activity/failure remains visible independently;
+resuming does not invent a successful retry or clear the producer diagnostic.
+
+Actions are opt-in **affordances**, with Resume alone enabled by default.
+Register ordinary Nyx event callbacks for `LParts.RetryID`, `ResetID` and
+`ResumeID`. The application owns the actual retry, scoped query command or resume
+authority. The library never clears all filters, resumes implicitly or reloads
+data merely because an action is visible. `Actions([ncfaRetry, ncfaResume])` can
+withdraw Reset after this surface's contribution is cleared, even when a peer
+filter still hides records. This availability changes atomically with its labels
+and count state. The service demo uses a live query owner, reacquiring only when
+an explicit legacy query replacement retired its former scope.
+
+Heading/action text is freely configurable with
+`TNyxCollectionFeedbackText.Defaults.WithHeading(...)` and the typed button-text
+builders. Rebind named parts to resource or computed expressions for other
+presentations/localization. Typed `SourceRows`, `MatchedRows` and `PageRows` state
+references are updated in the same scalar publication as heading, detail, busy
+and action visibility. The default detail is an English count summary. Labels
+and the card expose current accessible names; indeterminate progress does not
+claim a percentage. Actual screen-reader/live-announcement qualification remains
+open; a name assertion is not that evidence.
+
+The binding uses the current application's context/generation and existing weak
+view subscriptions. Close it on UI before application disposal. No widget,
+renderer, router or document is retained. A closed binding cannot publish again;
+retained observations stay inert and readable. Validation refusal leaves both
+scalar state and cached facts unchanged. A receiver failure after installation
+reports committed state without rolling metadata back. Reentrant view changes
+during validation refuse mixed facts before installation; `Refresh` reconciles
+current facts afterward. Caller-supplied diagnostics retain exact Unicode/NUL/
+line endings in state/observation; physical rendering of control characters is
+still target-dependent.
+
+Producer results must separately follow the existing scheduler, cancellation,
+generation and expected-revision rules. This feedback binding does not make a
+stale worker result safe to install. The deterministic nine-step example simulates
+activity without a timer/network service and performs real collection mutations
+for retry, empty data and row churn. Background-producer proof, Tree-specific
+match/context counts, saved feedback policy/Studio/MCP adoption and browser/
+visual/full live-inspection acceptance remain open. Native handwritten/generated
+applications exercise all seven feedback states and independent filter ownership
+at desktop/compact widths; browser consumers compile only.
+
 ## Following the last visible row
 
 Receiving source updates and following a viewport are separate choices.

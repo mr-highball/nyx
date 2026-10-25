@@ -9,7 +9,90 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — deliberate flat-view following — 2026-10-25
+## Current checkpoint — reusable collection feedback — 2026-10-25
+
+The previous goal turn is PROGRESS: d669db0 is remote-verified. Root remains solo;
+Lil' Scooty is idle. This is the fifth original04 L1 checkpoint without original
+criterion closure. All original04/03 criteria, the existing collection02 browser
+gate and completion-credit assessment remain open. The delivered outcome is a
+public reusable feedback card/binding and the same public/generated application's
+native loading-to-retry/filter-reset/empty-reload/paused-resume journey.
+
+New portable feedback observes the existing flat List/Table view's displayed
+source, filtered total, page counts and inspection status. Caller activity is
+separate: Loading, Refreshing, Ready and Failed do not fetch, assign, cancel or
+roll back records. Primary presentation distinguishes ready, loading, refreshing,
+empty, filtered-empty, failure and pause. During pause, displayed counts remain
+frozen while incoming revisions/pending publications and producer activity/failure
+remain separately visible. The binding is not a loader or producer admission
+engine; scheduler/generation/cancellation/expected-revision rules still apply.
+
+The specialized INyxCollectionFeedbackPanel composes ordinary Nyx card/labels,
+indeterminate progress and Retry/Reset/Resume buttons. Named parts, localizable
+heading/action text and typed numeric count states support replacement/resource/
+computed bindings. Export expands the recipe into portable typed controls and
+uses the same explicit runtime attachment afterward. Current accessible names
+and unknown-duration activity are exercised; no screen-reader/live-announcement,
+hardware, actual pixels or visual-quality acceptance is claimed.
+
+One prepared scalar publication installs labels/counts/busy/action visibility
+and cached metadata before observers. A validation veto leaves both unchanged;
+a post-commit receiver failure reports committed state without rolling metadata
+back. Reentrant view changes during validation refuse mixed facts; Refresh
+reconciles afterward. Context/generation and weak subscriptions retain no
+renderer/router/document/widget. Close withdraws tokens before other leases,
+requires UI ownership when its scheduler exists, and refuses later publication.
+Retained observations remain copied inert facts. Capture on UI before workers.
+
+Actions are opt-in affordances, never source/query authority. The application
+registers their normal Nyx callbacks. Actions(...) can withdraw Reset while a
+peer's filter still hides data. The service demo's nine-step replay adds loading,
+refreshing, connection failure, ready, a scoped no-match predicate and empty data
+after its original three row-churn steps. Try again performs a real revision-
+checked update or loads an empty source. Reset clears only this demo's current
+query-owner contribution; Resume is explicit, even after retry while paused.
+A legacy query replacement had retired the demo's earlier actor: the repaired
+demo acquires a fresh actor rather than reviving stale authority. No query engine
+or collection implementation is changed by this work.
+
+Native handwritten/generated application journeys pass 70 checks each at1280/390,
+plus one fresh-output guard in handwritten1280. They exercise all seven feedback
+states, actual bound actions/activity/accessibility names, retained rows on
+failure, real retry/reload, independent peer filtering and paused producer retry.
+The same current applications also pass24 recovery-editor checks per variant/
+width. Model checks pass18 with exact supplementary/NUL/line-ending diagnostic
+storage, localizable-copy isolation, action changes, veto, reentrant refusal,
+post-commit receiver failure and retired resolver refusal. Authored documents stay
+unchanged throughout these runtime operations. No background producer is claimed.
+
+Private live-feedback-01 evidence retains models-12 and controls-09:19 successful
+owned receipts and9 complete clean native heaps, closed artifact hashes and exact
+per-cohort source pins. All actual jobs are joined. Native compiler logs have no
+warnings; matching browser model/demo/generated/application consumers compile
+only, with installed RTL warnings and no owned warnings. After controls09, only
+the model notification-failure assertion, explicit Unicode test constant, test
+registration/docs/purpose comments and the UI-owner Close precondition changed.
+The final model qualifies current UI close/admission; no UI presentation behavior
+changed. The manifest distinguishes snapshots without assigning stale hashes.
+
+Preserved failures: missing editing-unit scalar-validation import; class-level
+Configure/Binds property use instead of their public accessors; stale actor after
+explicit legacy query replacement; and an implicit UTF8/Unicode test-literal
+conversion warning. All are corrected, diagnostics retained, assertions preserved.
+The maintained workbench native compile/runtime/browser lists now include the
+new model fixture and orchestration parses. No extra broad regression rerun is
+needed for unchanged library/query/store implementations. No server, LAN change,
+cleanup, compiler/dependency install or helper is introduced. Current connected-
+document discovery again has no session; browser/preview/cursor gates persist.
+
+Next: original04's background-producer submission/cancellation/stale-result and
+lifecycle proof, reusing existing scheduler/query/collection publication owners.
+Tree/find/reveal, hard recovered-draft memory policy, saved-policy/Studio/catalog/
+source/MCP adoption and L2 measured scale/paint/input/memory stay open. Browser,
+AT/visual/hardware and full original acceptance remain separate unmet outcomes.
+No task moves to DONE and no percentage or completion credit changes.
+
+## Deliberate flat-view following — 2026-10-25
 
 The previous goal turn is PROGRESS: 8f5b840 is remote-verified. Root remains solo;
 Lil' Scooty stays idle. This is the fourth consecutive original04 L1 checkpoint
