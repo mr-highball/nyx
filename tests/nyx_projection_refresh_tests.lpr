@@ -26,7 +26,7 @@ program nyx_projection_refresh_tests;
 uses
   {$ifndef PAS2JS}Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls,
     LCLIntf, LCLType, Math,{$endif}
-  SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
+  SysUtils, fpjson, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.state, nyx.behavior, nyx.projection.refresh, nyx.codec, nyx.json,
   nyx.presentations, nyx.resources, nyx.collections
   {$ifdef NYX_ARRANGEMENT_MCP}, nyx.generated.view{$endif}
@@ -513,6 +513,101 @@ begin
   RejectContext(nil, 'context construction preserves the original nil-document refusal');
 end;
 
+{ The complete encoder and the decoder's formatter must agree before a context
+  can reuse already formatted text. Exercise both class-wide fpjson preferences,
+  exact number spellings, controls and supplementary Unicode through the frozen
+  full-value oracle; restore process preferences even after an assertion fails. }
+procedure ProjectionFormatterCompatibility;
+var
+  LDocument: TNyxDocument;
+  LCompressed: Boolean;
+  LStrict: Boolean;
+  LCompressedCase: Integer;
+  LStrictCase: Integer;
+  LOriginal: TNyxText;
+  LAdmitted: TJSONData;
+begin
+  LDocument := TNyxDocument.Create;
+  LCompressed := TJSONData.CompressedJSON;
+  LStrict := TJSONString.StrictEscaping;
+  try
+    LDocument.Title := TNyxText('Formatting / 🌙') + #0 + #9 + #10;
+    LDocument.AddPage(NewNyxPage('formatting-page'));
+    LDocument.Pages[0].Add(NewNyxLabel('formatting-label')
+      .WithText(TNyxText('A / "quote" / 🌙') + #0 + #8 + #12 + #13));
+    LDocument.Extensions.SetValue(NyxExtension('exact / values'),
+      TNyxDataValue.ParseJSON('{"precise":9007199254740993,"decimal":1.2300e+4,' +
+        '"negativeZero":-0,"fraction":0.000001,"emptyArray":[],"emptyObject":{},' +
+        '"nested":[true,false,null,{"value":"\u0000\/\uD83C\uDF19"}]}'));
+    for LCompressedCase := 0 to 1 do
+    begin
+      TJSONData.CompressedJSON := LCompressedCase = 1;
+      for LStrictCase := 0 to 1 do
+      begin
+        TJSONString.StrictEscaping := LStrictCase = 1;
+        LOriginal := TNyxCodec.Encode(LDocument);
+        LAdmitted := DecodeNyxJSON(LOriginal);
+        try
+          Check(LAdmitted.AsJSON = LOriginal,
+            'complete owned encoding is already the exact admitted formatter packet');
+        finally
+          LAdmitted.Free;
+        end;
+        CheckContext(LDocument,
+          'context preserves compressed/strict formatter choices and exact values');
+      end;
+    end;
+  finally
+    TJSONString.StrictEscaping := LStrict;
+    TJSONData.CompressedJSON := LCompressed;
+    LDocument.Free;
+  end;
+end;
+
+{$if defined(NYX_CONTEXT_BENCHMARK) and not defined(PAS2JS)}
+{ Optional same-source diagnostic workload. Use checked optimized builds on
+  both sides of a change; the ordinary assertions remain enabled. These static
+  counts describe repeated admission of a large control tree, not UI latency. }
+procedure ProjectionContextBenchmark;
+const
+  CControls = 512;
+  CCalls = 64;
+var
+  LDocument: TNyxDocument;
+  LIndex: Integer;
+  LExpected: TNyxText;
+  LContext: TNyxText;
+  LStarted: QWord;
+  LElapsed: QWord;
+begin
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.AddPage(NewNyxPage('context-workload'));
+    for LIndex := 0 to CControls - 1 do
+    begin
+      LDocument.Pages[0].Add(NewNyxLabel('caption-' + IntToStr(LIndex))
+        .WithText(TNyxText('English caption / 🌙 ') + StringOfChar('x', 128) + #0 + #10));
+    end;
+    LDocument.Extensions.SetValue(NyxExtension('exact-workload'),
+      TNyxDataValue.ParseJSON('{"identity":9007199254740993,"decimal":1.2300e+4}'));
+    LExpected := LegacyProjectionContext(LDocument);
+    Check(NyxProjectionContext(LDocument) = LExpected,
+      'large-tree workload matches the independent complete-value oracle');
+    LStarted := GetTickCount64;
+    for LIndex := 1 to CCalls do
+    begin
+      LContext := NyxProjectionContext(LDocument);
+      Check(LContext = LExpected, 'every large-tree context retains the exact result');
+    end;
+    LElapsed := GetTickCount64 - LStarted;
+    WriteLn('PROFILE context controls=', CControls, ' calls=', CCalls,
+      ' elapsed-ms=', LElapsed, ' exported-bytes=', Length(TNyxCodec.Encode(LDocument)));
+  finally
+    LDocument.Free;
+  end;
+end;
+{$endif}
+
 procedure Run;
 var
   LDocument: TNyxDocument;
@@ -851,6 +946,10 @@ begin
     {$endif}
 
     ProjectionContextCompatibility;
+    ProjectionFormatterCompatibility;
+    {$if defined(NYX_CONTEXT_BENCHMARK) and not defined(PAS2JS)}
+    ProjectionContextBenchmark;
+    {$endif}
     WriteLn('PASS ', GChecks, ' actual retained projection checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-projection-refresh', 'passed');

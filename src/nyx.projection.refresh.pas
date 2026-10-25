@@ -162,8 +162,9 @@ function PrepareNyxProjectionFormRestores(ABefore, ACandidate: TNyxNode;
   collection registries and creator extension data. Requested-root realization
   separately checks structure and every node. Unrelated authored roots may
   change only when the requested realized view retains identical semantics.
-  The codec reuses its fully admitted temporary JSON tree for this projection;
-  no excluded source tree is decoded/indexed a second time or retained here. }
+  The codec reuses its fully admitted temporary JSON tree and already formatted
+  packet for this projection. No excluded source tree is formatted, decoded or
+  indexed a second time, or retained after this synchronous operation. }
 function NyxProjectionContext(ADocument: TNyxDocument): TNyxText;
 
 implementation

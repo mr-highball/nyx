@@ -9,6 +9,41 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Active prerequisite — repeated context formatting
+
+The previous goal turn is PROGRESS: complete native Studio Save/Open and its
+own saved application now have terminal functional evidence, changing the next
+action to measured refresh cost. Under task03's ordinary authoring/public-view
+outcome, the codec now reuses its complete already formatted packet during
+projection-context admission. Full export admission, formatted UTF-8 read limits,
+exact decimal/Unicode values and the independent full-value oracle remain intact.
+The new formatter matrix checks compression/strict escaping, exact numbers,
+controls and supplementary Unicode, restoring process preferences in finally.
+Only the private packet argument and its call change executable library behavior;
+the public refresh comment changes alongside it. No persistent cache is added.
+
+The same expanded native fixture passes251 assertions before and after with
+complete clean heaps. In one matched checked/O2/heap-traced comparison,512 controls
+and64 context calls take2469ms before/2094ms after. Whole-fixture cumulative
+allocation falls from3895078 blocks/365745108 bytes to3455282/284262080:22.3% fewer
+bytes and15.2% less measured workload time. These are isolated admission results;
+peak/retained memory and whole-Studio latency remain unqualified. Exact input and
+126594-byte exported workload agree. The unchanged actual Studio section recovery
+consumer passes100 with a complete clean21388176-block/16205002301-byte heap,
+covering input retention, independent contexts, stale authority and rollback.
+Its captured native fixture is inspected; it is no full Studio visual review.
+
+Both browser test companions and ordinary native/browser Studio, backend and
+matching source worker compile successfully. All nine compiler jobs have zero
+owned warnings; four browser builds each retain seven installed RTL warnings.
+Browser execution remains pending the existing preview endpoint condition.
+`.local/qualification/context-packet-reuse-01/qualified-private.json` retains
+the exact comparison, source identities and terminal receipts. All2318 current
+source pins reverify, every reader is joined and the short source freeze ends.
+No original criterion/task/DONE closes. Return to section/Inspector refresh cost
+from the complete Studio profile; no unchanged full900s rerun is needed for this
+isolated codec transformation. Root remains solo.
+
 ## Active continuation — authored table export
 
 Root continues solo on task03 W2's original inspection/output and authoring

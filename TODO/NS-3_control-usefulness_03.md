@@ -97,6 +97,15 @@ separate native101/browser95 target evidence pending its collection checkpoint;
 typed logical alignment value01 passes53 per actual target, with integration in
 progress. None of these focused results closes an original criterion.
 
+The following context prerequisite reuses the codec's already formatted complete
+export during the unchanged read-budget check. Both pre/post native consumers
+pass251 with clean heaps, including a formatter matrix and64 repeated context
+calls on512 controls. One matched pair measures2469ms/2094ms and cumulative
+365745108/284262080 allocated bytes. Actual native Studio section recovery passes
+100 with a clean heap. Both browser consumers and all four product builds compile;
+browser execution, peak memory and whole-editor latency remain open. WORK owns
+the exact source cohorts; these isolated savings do not close an original criterion.
+
 The presentation-authoring continuation adds typed ordinary spacing/text forms,
 independent set/reset and paired history, bounded semantic reads and grouped
 operations with complete version11 discovery. Authoring05 passes40 per actual

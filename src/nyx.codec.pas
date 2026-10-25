@@ -465,7 +465,7 @@ begin
 end;
 
 function ProjectionContextFromAdmitted(ADocument: TNyxDocument;
-  AAdmitted: TJSONData): TNyxText;
+  AAdmitted: TJSONData; const AFormatted: TNyxText): TNyxText;
 var
   LObject: TJSONObject;
   LFields: array of TNyxDataField;
@@ -473,10 +473,14 @@ var
   LCount: Integer;
   LKey: TNyxText;
 begin
-  { This DOM belongs to the complete export's DecodeNyxJSON, not a new reduced
-    admission. Reuse its exact canonical formatter before touching members; only
-    retained values need a closed TNyxDataValue and its immediate-member index. }
-  RequireProjectionContextReadBudget(AAdmitted.AsJSON);
+  { Both inputs belong to this complete export: AFormatted is the owned codec's
+    AsJSON packet just admitted by DecodeNyxJSON. It already has the same exact
+    formatter spelling as AAdmitted, including current compression/escaping and
+    decimal lexemes. Reuse that immutable text for the unchanged read budget;
+    formatting the full admitted tree again copies every discarded page/control.
+    No caller-provided DOM, unformatted input or persistent admission cache is
+    accepted here. Retained members still receive their ordinary closed values. }
+  RequireProjectionContextReadBudget(AFormatted);
   LObject := TJSONObject(AAdmitted);
   SetLength(LFields, LObject.Count);
   LCount := 0;
@@ -751,7 +755,7 @@ begin
 
       if APurpose = nepProjectionContext then
       begin
-        Result := ProjectionContextFromAdmitted(ADocument, LAdmitted);
+        Result := ProjectionContextFromAdmitted(ADocument, LAdmitted, Result);
       end;
     finally
       LAdmitted.Free;

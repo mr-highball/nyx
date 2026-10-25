@@ -11,6 +11,15 @@ keeps the same realized nodes, physical controls, event bindings and emitter sco
 Unchanged authored values retain independent runtime drafts. Actual authored deltas
 and explicit field restorations still follow runtime identity.
 
+Projection context still admits the complete current design before excluding
+unrelated authored roots. Within that synchronous operation, the codec reuses
+its already formatted export packet for the formatted UTF-8 read limit, rather
+than formatting the admitted tree again. Exact decimal spellings, Unicode,
+formatter preferences and all original byte/depth/member refusals remain
+significant. This is temporary value reuse, with no persistent document cache
+or skipped admission. The [current measurement](../WORK.md#active-prerequisite--repeated-context-formatting)
+keeps isolated allocation/timing evidence separate from whole-editor latency.
+
 Scalar state bindings can also retain that lifetime. The owning
 `TNyxLiveBindings.TryPrepareRefresh` validates independent candidate and baseline
 copies against the same current runtime store. Ordered binding descriptors,
