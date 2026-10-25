@@ -9,7 +9,90 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — explicit Tree viewport reveal — 2026-10-25
+## Current checkpoint — saved inspection defaults and authoring — 2026-10-25
+
+Parent27c808b is remote-verified. Root remains SOLO; Lil' Scooty is idle until
+requested otherwise. This ninth original04 L1 checkpoint remains PROGRESS and
+closes no original criterion or completion credit. All04/03 criteria and the
+existing collection02/03 browser gates stay open. Current useful outcome: an
+author can save inspection defaults through public Nyx, Studio and semantic
+operations, then run the same generated application with independent readers.
+
+TNyxCollectionViewSpec.Inspection accepts the existing typed scalar policy;
+UseDefaultInspection removes only raw presence. Descriptor13 carries the complete
+nullable column/policy envelope and closed version1 inspection values. Exact
+nonnegative Integer bounds include zero/High(Integer). Older absent descriptors
+retain their bytes. Ordinary runtime construction applies a copied declaration;
+subsequent pause/follow/configuration never rewrites Spec or design history.
+Tree admits pause/keep-position and refuses follow-last before mounting. No new
+store, query engine, scheduler or retained viewport queue is introduced.
+
+Generated Pascal conditionally imports the public inspection unit and emits a
+readable fluent policy. Source reading admits the typed constructor, enum and
+methods. Uninstantiated reusable definitions also request the import. Existing
+column/scope/parent reconstruction now preserves inspection rather than silently
+losing the new defaults. Exact supplementary/NUL/CRLF fixtures retain source,
+codec and paired history meaning.
+
+Studio's ordinary Nyx-built Live inspection disclosure exposes initial follow,
+paused-payload bytes and removed-ID limits. Inputs retain unfinished notation;
+Apply validates exact integers, reset ignores inactive drafts. Full schema/spec
+baseline, current selected owner, complete typed roles, pending locks and Pascal
+drafts guard capture/admission. Private intent wire retains copied scalar values
+only. No live paused snapshot, scroll position, token or callback is saved.
+
+The existing nyx_collections dispatcher accepts a bounded inspection partial
+operation. Ordered replay derives each current effective binding after earlier
+same-owner edits and uses ordinary session admission. Expected revision,
+idempotent retry, single paired Undo/Redo, failure atomicity and reusable local
+ownership remain with established owners. Binding reads include only declared/
+policy scalars. Discovery appends new commands while preserving former positions;
+v13 needs no unrelated alignment/presentation declaration. Native server
+MCP discovery is native-only because it imports synchronization; the portable
+agent dispatcher has separate native/pas2js fixture compilation.
+
+The public monitoring document now declares inspection defaults. Callback
+attachment preserves an already configured caller override. Native handwritten/
+generated visible controls pass87 checks per1280/390 variant, plus one fresh
+output guard in handwritten1280. Saved defaults apply before runtime attachment;
+caller override survives attachment. Actual native List/plain-grid initial
+follow-last and existing pause/follow/copy/feed/retirement cases remain asserted.
+These are injected control journeys, not physical-input, pixel or scale proof.
+
+Final maintained inspection-authoring logic passes19 owned jobs with8 complete
+zero-unfreed native heaps; all1965 compiler/orchestration inputs remain unchanged.
+Authoring12, ordinary Studio/semantic22, actual MCP discovery236 and prior
+presentation authoring58 pass. Full native LCL and browser Studio also compile
+in a separately pinned/joined packet. No owned compiler warnings; installed
+pas2js RTL warnings remain in logs. The established direct log-output transport
+replaces only RunOwned's asynchronous PowerShell writer; standard writer behavior
+is not newly qualified. Matching RTL/HTML and five browser fixtures/control
+variants are staged only; browser interaction, observing Studio input, AT/pixels,
+hardware and non-Win32 widgetsets are unqualified.
+
+Private inspection-authoring-01/final-evidence-private.json links maintained-03
+and studio-build-02, all joined. Earlier models-05 also passes12429 collection-view,
+64 inspection and21 Tree reveal checks. controls-01 passes24 recovery checks per
+handwritten/generated width alongside its public journey. Their final snapshot
+receipts refused a README edit, and their source cohort precedes later schema/
+build changes; current maintained checks do not erase those failures. Other
+retained failures cover source constructor dispatch, unfinished scalar input,
+old discovery counts and accidentally attempting native server discovery on the
+browser compiler. Assertions were repaired/extended without relaxing bounds or
+removing old cases. A failed scratch Studio launcher lacked its runner function;
+the corrected launcher completed both compiler jobs.
+
+No connected document-control session is available. No project, listener, LAN
+process, cleanup, dependency/compiler installation or helper is changed. Existing
+host/physical-browser evidence limits remain; no denied protocol/host workaround.
+The maintained tools/build.ps1 -Target inspection-authoring starts no server.
+
+Next: original04's hard recovered-draft journal memory policy and safe pressure
+behavior, using the existing recovery owner; then remaining live-inspection/
+Tree and measured L2 outcomes. Browser/observing Studio/AT/visual qualification
+and full original acceptance remain required, without equivalent planning work.
+
+## Checkpoint — explicit Tree viewport reveal — 2026-10-25
 
 The previous checkpoint7188611 is remote-verified and PROGRESS. Root remains
 SOLO; Lil' Scooty is idle until the user changes that preference. This is the

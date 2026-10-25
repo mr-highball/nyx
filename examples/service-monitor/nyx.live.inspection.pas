@@ -170,6 +170,8 @@ begin
     Result.Find('service-introduction').Configure.Text(
       'Pause the upper table, then advance the sample feed. The lower table stays live.').Done;
     Result.Find(ServiceTableID).Configure.Height(160).Done;
+    Result.Find(ServiceTableID).Binds.Collection(
+      Result.Find(ServiceTableID).CollectionView.Inspection(NyxInspectionPolicy)).Done;
     LCommands := NewNyxRow('inspection-commands');
     LPage.Insert(2, LCommands);
     LCommands.Configure.Gap(8).Done;
@@ -260,7 +262,13 @@ begin
   FFollowing := NyxCollectionFollowing(AInspection);
   FPosition := APosition;
   FRecovery := ARecovery;
-  FInspection.ConfigureInspection(NyxInspectionPolicy);
+  { A designer/caller's saved defaults already initialized this view. The
+    fallback keeps older unconfigured documents usable without replacing them. }
+
+  if not FInspection.GetInspectionPolicy.Defined then
+  begin
+    FInspection.ConfigureInspection(NyxInspectionPolicy);
+  end;
   FFeedbackParts := NyxCollectionFeedbackParts(InspectionFeedbackName);
   FFeedback := BindNyxCollectionFeedback(AContext, AInspection, FFeedbackParts,
     TNyxCollectionFeedbackText.Defaults, [ncfaRetry, ncfaResume]);

@@ -37,6 +37,9 @@ uses
   nyx.studio.collectionintent;
 
 type
+  { Scalar roles in the independent inspection-defaults draft. They describe
+    authored startup behavior, never a current reader's paused frame/viewport. }
+  TNyxStudioInspectionField = (sifFollow, sifPausedBytes, sifRemovedIdentities);
   { Stable logical roles for the ordinary query-policy form. Column -1 names
     the table; nonnegative columns are transport positions whose copied field
     and scalar family are independently rechecked during capture. }
@@ -134,6 +137,17 @@ function NyxStudioQueryPolicyDefaultID(AColumn: Integer): TNyxText;
 const
   NyxStudioQueryEditorID = 'inspector-collection-query';
   NyxStudioLayoutEditorID = 'inspector-collection-layout';
+  NyxStudioInspectionEditorID = 'inspector-collection-inspection';
+  NyxStudioInspectionApplyID = 'inspector-collection-inspection-apply';
+  NyxStudioInspectionDefaultID = 'inspector-collection-inspection-default';
+
+{ Stable ordinary Nyx form roles for shared inspector consumers and tests. }
+function NyxStudioInspectionFieldID(AField: TNyxStudioInspectionField): TNyxText;
+{ Capture a complete current form through ordinary typed session intent.
+  Exact schema/binding, selected owner, pending locks and drafts are rechecked. }
+function CaptureNyxStudioInspection(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 
 { Stable source IDs locate ordinary inspector parts. Metadata independently
   qualifies their exact owner, typed field and accepted schema/binding. }
@@ -256,6 +270,7 @@ uses
   nyx.collections.view.types,
   nyx.collections.columns,
   nyx.collections.paging,
+  nyx.collections.inspection,
   nyx.collections.selection,
   nyx.collections.query.editor,
   nyx.collections.query.policy,
@@ -285,7 +300,7 @@ const
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
      'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
-     'column-alignment', 'default-column-alignment');
+     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection');
   CQueryEditor = NyxStudioQueryEditorID;
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
@@ -343,6 +358,7 @@ begin
     fields, owner identities and unknown metadata remain strict contracts. }
   Add(CQueryEditor);
   Add(NyxStudioLayoutEditorID);
+  Add(NyxStudioInspectionEditorID);
 end;
 
 function NyxStudioQueryPolicyFormID(AColumn: Integer): TNyxText;
@@ -451,6 +467,7 @@ end;
 {$include nyx.studio.collections.workbench.inc}
 {$include nyx.studio.collections.presentation.inc}
 {$include nyx.studio.collections.alignment.inc}
+{$include nyx.studio.collections.inspection.inc}
 
 procedure AddLayoutPolicyForms(AParent: TNyxNode; const AOwner: TNyxText;
   const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
@@ -964,7 +981,8 @@ begin
          scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
          scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
          scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-         scaColumnAlignment, scaDefaultColumnAlignment]) then
+         scaColumnAlignment, scaDefaultColumnAlignment,
+         scaInspection, scaDefaultInspection]) then
     begin
       try
         LSchema := ASession.Document.Collections.Snapshot(
@@ -1091,6 +1109,8 @@ begin
         .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
     end;
     LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
+    AddInspectionForm(LPanel, ASession.SelectedID, LSchema, LSpec,
+      NyxCollectionProjectionForNode(AProjection), LLocked);
     LQueryEditor := NewNyxQueryEditor(NyxStudioQueryEditorID,
       NyxControl(ASession.SelectedID), LSchema, LSpec);
     LQueryEditor.Configure.Enabled(not LLocked).Done;
@@ -1668,6 +1688,11 @@ var
 
 begin
 
+  if CaptureNyxStudioInspection(ASession, AButton, AShellRoot, APending, AEdit) then
+  begin
+    Exit(True);
+  end;
+
   if CaptureNyxStudioColumnAlignment(ASession, AButton, AShellRoot, APending, AEdit) then
   begin
     Exit(True);
@@ -2003,7 +2028,7 @@ begin
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection] then
   begin
     raise ENyxCollection.Create('Use the current complete query or layout policy form');
   end;

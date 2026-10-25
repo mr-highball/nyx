@@ -470,6 +470,9 @@ begin
   LApplication := nil;
   LDemo := nil;
   try
+    Check(LDocument.Find(ServiceTableID).CollectionView.InspectionPolicy.Defined and
+      (LDocument.Find(ServiceTableID).CollectionView.InspectionPolicy.DefaultFollow = ncfKeepPosition),
+      'the public handwritten/generated document carries typed saved inspection defaults');
     LSaved := TNyxCodec.Encode(LDocument);
     {$ifndef PAS2JS}
 
@@ -509,9 +512,16 @@ begin
     LPeer := LApplication.View.CollectionMount(InspectionPeerID);
     Check((LFirst <> nil) and (LPeer <> nil) and (LFirst.View <> LPeer.View) and
       (LFirst.View.Store = LPeer.View.Store), 'independent views share the actual application store');
+    LInspection := NyxCollectionInspection(LFirst.View);
+    Check(LInspection.CaptureInspection.Configured and
+      (LInspection.GetInspectionPolicy.ToData.ToJSON =
+        LDocument.Find(ServiceTableID).CollectionView.InspectionPolicy.ToData.ToJSON),
+      'normal application mounting consumes saved inspection defaults without a runtime attachment');
+    LInspection.ConfigureInspection(LInspection.GetInspectionPolicy.PausedBytes(8 * 1024 * 1024));
     LDemo := TNyxLiveInspectionDemo.Create(LApplication.Context, LApplication.View.Events,
       LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), NyxCollectionDraftRecovery(LFirst));
-    LInspection := NyxCollectionInspection(LFirst.View);
+    Check(LInspection.GetInspectionPolicy.MaximumPausedBytes = 8 * 1024 * 1024,
+      'attaching demo callbacks preserves an application caller''s runtime policy override');
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     LField := NyxColumnIdentity(NyxTextField('status'));
     Check(LFirst.Select(LGateway), 'select an inspected service through its mounted owner');
@@ -706,7 +716,8 @@ begin
     end;
     LPage.Add(LControl);
     LControl.Configure.Height(180).Done;
-    LControl.Binds.Collection(NyxCollectionView(LKey).Column(NyxTextField('name'), 'Service')).Done;
+    LControl.Binds.Collection(NyxCollectionView(LKey).Column(NyxTextField('name'), 'Service')
+      .Inspection(NyxInspectionPolicy.Follow(ncfLastVisible))).Done;
     LApplication := TNyxLCLApplication.Create;
     LApplication.Mount(LDocument);
     LApplication.Window.ClientWidth := AWidth;
@@ -716,7 +727,10 @@ begin
     LWidget := TWinControl(LApplication.View.ControlFor('flat-target'));
     LMount := LApplication.View.CollectionMount('flat-target');
     LInspection := NyxCollectionInspection(LMount.View);
-    LInspection.ConfigureInspection(NyxInspectionPolicy);
+    Check(LInspection.CaptureInspection.Configured and LastRowVisible and
+      (LInspection.CaptureInspection.FollowMode = ncfLastVisible),
+      'authored follow-last reveals the initial tail through ordinary native mounting');
+    NyxCollectionFollowing(LMount.View).KeepReading;
     Check(Supports(LMount, INyxCollectionPositionObservation, LObservation) and LWidget.IsVisible,
       'the public flat control is visible with typed recovery observation');
     LState := LObservation.CapturePositionState;

@@ -25,7 +25,7 @@ unit nyx.collections.inspection;
 
 interface
 
-uses nyx.collections;
+uses nyx.collections, nyx.text, nyx.data;
 
 type
   { An unavailable capability or refused transition leaves the displayed frame
@@ -47,7 +47,7 @@ type
   TNyxCollectionInspectionCause = (ncicPolicyChanged, ncicPaused, ncicResumed,
     ncicSourceChanged, ncicViewChanged, ncicFollowChanged);
 
-  { Runtime retention intent owns only scalars. Pause retains one existing
+  { Authored defaults or runtime retention intent own only scalars. Pause retains one existing
     immutable displayed source, not a queue of source snapshots or change logs.
     MaximumPausedBytes counts its logical DataBytes, excluding query/index and
     widget overhead. IdentityLimit bounds removed-ID tracking for safe resume;
@@ -66,6 +66,10 @@ type
     function RemovedIdentities(AValue: Integer): TNyxCollectionInspectionPolicy;
     function Copy: TNyxCollectionInspectionPolicy;
     procedure Validate;
+    { Closed scalar persistence. Null means absent; runtime paused frames,
+      revisions, active follow commands and target/callback leases are excluded. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxCollectionInspectionPolicy; static;
     property Defined: Boolean read FDefined;
     property MaximumPausedBytes: Integer read FMaximumPausedBytes;
     property IdentityLimit: Integer read FIdentityLimit;
@@ -108,6 +112,9 @@ type
 function NyxInspectionPolicy: TNyxCollectionInspectionPolicy;
 
 implementation
+
+const
+  CFollowNames: array[TNyxCollectionFollowMode] of TNyxText = ('keep-position', 'last-visible');
 
 function NyxInspectionPolicy: TNyxCollectionInspectionPolicy;
 begin
@@ -158,6 +165,63 @@ begin
   Result := Self;
   Result.FIdentityLimit := AValue;
   Result.Validate;
+end;
+
+function TNyxCollectionInspectionPolicy.ToData: TNyxDataValue;
+begin
+
+  if not FDefined then
+  begin
+    Exit(NyxNull);
+  end;
+  Validate;
+  Result := NyxObject([NyxField('version', NyxData(1)),
+    NyxField('follow', NyxData(CFollowNames[FDefaultFollow])),
+    NyxField('maximumPausedBytes', NyxData(FMaximumPausedBytes)),
+    NyxField('removedIdentityLimit', NyxData(FIdentityLimit))]);
+end;
+
+class function TNyxCollectionInspectionPolicy.FromData(const AData: TNyxDataValue):
+  TNyxCollectionInspectionPolicy;
+var
+  LPolicy: TNyxCollectionInspectionPolicy;
+  LIndex: Integer;
+  LFollow: TNyxText;
+begin
+  LPolicy := Default(TNyxCollectionInspectionPolicy);
+  AData.Validate;
+
+  if AData.Kind <> ndNull then
+  begin
+
+    if (AData.Kind <> ndObject) or (AData.Count <> 4) or
+      (AData.Field('version').AsInteger <> 1) then
+    begin
+      raise ENyxCollectionInspection.Create('Unsupported inspection policy descriptor');
+    end;
+    for LIndex := 0 to AData.Count - 1 do
+    begin
+
+      if Pos('|' + AData.Key(LIndex) + '|', '|version|follow|maximumPausedBytes|removedIdentityLimit|') = 0 then
+      begin
+        raise ENyxCollectionInspection.Create('Unknown inspection policy field');
+      end;
+    end;
+    LFollow := AData.Field('follow').AsText;
+    LPolicy := NyxInspectionPolicy;
+
+    if LFollow = CFollowNames[ncfLastVisible] then
+    begin
+      LPolicy := LPolicy.Follow(ncfLastVisible);
+    end
+    else if LFollow <> CFollowNames[ncfKeepPosition] then
+    begin
+      raise ENyxCollectionInspection.Create('Unknown inspection follow mode');
+    end;
+    LPolicy := LPolicy.PausedBytes(AData.Field('maximumPausedBytes').AsInteger)
+      .RemovedIdentities(AData.Field('removedIdentityLimit').AsInteger);
+  end;
+  Result := LPolicy;
 end;
 
 end.

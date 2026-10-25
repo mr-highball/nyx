@@ -43,7 +43,8 @@ uses
   nyx.collections.paging,
   nyx.collections.workbench.policy,
   nyx.collections.presentation,
-  nyx.collections.alignment;
+  nyx.collections.alignment,
+  nyx.collections.inspection;
 
 const
   { Reserved only by design version 3. Earlier designs may retain an opaque
@@ -137,6 +138,7 @@ type
     live view so invalid edits reject before the store publishes them.
     Optional workbench choices contain values only and never grant a runtime
     service. Their absence preserves legacy wire bytes and unconfigured input.
+    Inspection defaults own only retention/follow values, never a paused frame.
     The default record means no binding, rather than an invalid collection key. }
   TNyxCollectionViewSpec = record
   private
@@ -149,6 +151,7 @@ type
     FHasTypeAhead: Boolean;
     FTypeAhead: TNyxTypeAheadOptions;
     FPaging: TNyxCollectionPaging;
+    FInspection: TNyxCollectionInspectionPolicy;
     FTableQuery: TNyxTableQueryPolicy;
     FTableLayout: TNyxTableLayoutPolicy;
     FWorkbench: TNyxTableWorkbenchPolicy;
@@ -249,6 +252,11 @@ type
       during projection admission until hierarchy-aware paging is supported. }
     function Paged(const APolicy: TNyxCollectionPaging): TNyxCollectionViewSpec;
     function UseDefaultPaging: TNyxCollectionViewSpec;
+    { Configure initial runtime retention/follow intent without saving transient
+      pause, source snapshots or user navigation. Explicit defaults stay declared. }
+    function Inspection(const APolicy: TNyxCollectionInspectionPolicy): TNyxCollectionViewSpec;
+    { Remove only this authored declaration; a new view uses ordinary behavior. }
+    function UseDefaultInspection: TNyxCollectionViewSpec;
     function ColumnAt(AIndex: Integer): TNyxCollectionColumn;
     function ColumnIndex(const AField: TNyxColumnIdentity): Integer;
     function ResolveColumnOrder(const APreferences: TNyxColumnPreferences): TNyxCollectionColumnOrder;
@@ -274,6 +282,7 @@ type
     { True when any column carries an explicit policy, selecting descriptor v5. }
     property HasColumnSizing: Boolean read GetHasColumnSizing;
     property PagingPolicy: TNyxCollectionPaging read FPaging;
+    property InspectionPolicy: TNyxCollectionInspectionPolicy read FInspection;
     property HasQueryControls: Boolean read GetHasQueryControls;
     property HasTableQueryPolicy: Boolean read GetHasTableQueryPolicy;
     property TableQueryPolicy: TNyxTableQueryPolicy read GetTableQueryPolicy;
@@ -898,6 +907,29 @@ begin
   Result.FColumns[Count - 1].FSizing := Default(TNyxColumnSizing);
 end;
 
+function TNyxCollectionViewSpec.Inspection(const APolicy: TNyxCollectionInspectionPolicy): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before configuring inspection');
+  end;
+  APolicy.Validate;
+  Result := Copy;
+  Result.FInspection := APolicy.Copy;
+end;
+
+function TNyxCollectionViewSpec.UseDefaultInspection: TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before restoring inspection behavior');
+  end;
+  Result := Copy;
+  Result.FInspection := Default(TNyxCollectionInspectionPolicy);
+end;
+
 function TNyxCollectionViewSpec.Paged(const APolicy: TNyxCollectionPaging): TNyxCollectionViewSpec;
 begin
 
@@ -991,6 +1023,7 @@ begin
   Result.FHasTypeAhead := FHasTypeAhead;
   Result.FTypeAhead := FTypeAhead;
   Result.FPaging := FPaging;
+  Result.FInspection := FInspection.Copy;
   Result.FTableQuery := FTableQuery;
   Result.FTableLayout := FTableLayout.Copy;
   Result.FWorkbench := FWorkbench.Copy;
@@ -1166,13 +1199,18 @@ begin
 
     if (Count <> 0) or (FParent <> '') or FQuery.Defined or FHasTypeAhead or
       FPaging.Defined or FTableQuery.Defined or FTableLayout.Defined or FWorkbench.Defined or
-      FTablePresentation.Defined then
+      FTablePresentation.Defined or FInspection.Defined then
     begin
       raise ENyxCollection.Create('Absent collection view contains a descriptor');
     end;
     Exit;
   end;
   LReference := NyxCollection(FKey.Name);
+
+  if FInspection.Defined then
+  begin
+    FInspection.Validate;
+  end;
 
   if FTablePresentation.Defined then
   begin
@@ -1280,6 +1318,7 @@ end;
 function TNyxCollectionViewSpec.ToData: TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
   LIndex: Integer;
   LScope: TNyxText;
   LSelection: TNyxText;
@@ -1359,7 +1398,7 @@ begin
         NyxField('display', FColumns[LIndex].FFormatPolicy.ToData)]);
     end;
 
-    if HasPresentationPolicy then
+    if HasPresentationPolicy or FInspection.Defined then
     begin
       { Version eleven adds independent nullable text layout. All older shapes
         are untouched when neither table nor column presentation is authored. }
@@ -1375,7 +1414,7 @@ begin
         NyxField('textPresentation', FColumns[LIndex].FTextPolicy.ToData)]);
     end;
 
-    if HasColumnAlignment then
+    if HasColumnAlignment or FInspection.Defined then
     begin
       { Version twelve adds nullable logical axes only when a column declares
         them. All version1..11 column shapes remain byte-for-byte unchanged. }
@@ -1575,7 +1614,7 @@ begin
       NyxField('workbench', FWorkbench.ToData)]);
   end;
 
-  if HasPresentationPolicy then
+  if HasPresentationPolicy or FInspection.Defined then
   begin
     LSelection := 'single';
 
@@ -1598,6 +1637,24 @@ begin
       NyxField('layoutControls', FTableLayout.ToData),
       NyxField('workbench', FWorkbench.ToData),
       NyxField('tablePresentation', FTablePresentation.ToData)]);
+  end;
+
+  if FInspection.Defined then
+  begin
+    { Version thirteen owns the complete nullable column/policy shape. Earlier
+      versions and their exact absence remain untouched when inspection is absent. }
+    SetLength(LFields, Result.Count + 1);
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+
+      if Result.Key(LIndex) = 'version' then
+      begin
+        LFields[LIndex] := NyxField('version', NyxData(13));
+      end;
+    end;
+    LFields[High(LFields)] := NyxField('inspection', FInspection.ToData);
+    Result := NyxObject(LFields);
   end;
 end;
 
@@ -1634,7 +1691,8 @@ begin
       ((AData.Count = 10) and (AData.Field('version').AsInteger = 7)) or
       ((AData.Count = 11) and (AData.Field('version').AsInteger in [8, 9])) or
       ((AData.Count = 12) and (AData.Field('version').AsInteger = 10)) or
-      ((AData.Count = 13) and (AData.Field('version').AsInteger in [11, 12]))) then
+      ((AData.Count = 13) and (AData.Field('version').AsInteger in [11, 12])) or
+      ((AData.Count = 14) and (AData.Field('version').AsInteger = 13))) then
   begin
     raise ENyxCollection.Create('Unsupported collection view descriptor');
   end;
@@ -1654,22 +1712,23 @@ begin
     end;
   end;
 
-  if LVersion in [8, 9, 10, 11, 12] then
+  if LVersion in [8, 9, 10, 11, 12, 13] then
   begin
     for LFieldIndex := 0 to AData.Count - 1 do
     begin
 
       if (Pos('|' + AData.Key(LFieldIndex) + '|',
         '|version|key|scope|parent|columns|selection|query|typeAhead|paging|queryControls|layoutControls|') = 0) and
-        not ((LVersion in [10, 11, 12]) and (AData.Key(LFieldIndex) = 'workbench')) and
-        not ((LVersion in [11, 12]) and (AData.Key(LFieldIndex) = 'tablePresentation')) then
+        not ((LVersion in [10, 11, 12, 13]) and (AData.Key(LFieldIndex) = 'workbench')) and
+        not ((LVersion in [11, 12, 13]) and (AData.Key(LFieldIndex) = 'tablePresentation')) and
+        not ((LVersion = 13) and (AData.Key(LFieldIndex) = 'inspection')) then
       begin
         raise ENyxCollection.Create('Unknown arranged collection view field');
       end;
     end;
   end;
 
-  if LVersion in [3, 4, 5, 6, 7, 8, 9, 10, 11, 12] then
+  if LVersion in [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] then
   begin
     Result := Result.Query(TNyxCollectionQuery.FromData(AData.Field('query')));
 
@@ -1693,7 +1752,7 @@ begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
 
-  if (LVersion in [5, 6, 7, 8, 9, 10, 11, 12]) and (AData.Field('typeAhead').Kind <> ndNull) then
+  if (LVersion in [5, 6, 7, 8, 9, 10, 11, 12, 13]) and (AData.Field('typeAhead').Kind <> ndNull) then
   begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
@@ -1740,7 +1799,7 @@ begin
         ((LVersion = 8) and (LColumn.Count = 7)) or
         ((LVersion in [9, 10]) and (LColumn.Count = 8)) or
         ((LVersion = 11) and (LColumn.Count = 9)) or
-        ((LVersion = 12) and (LColumn.Count = 10))) then
+        ((LVersion in [12, 13]) and (LColumn.Count = 10))) then
     begin
       raise ENyxCollection.Create('Invalid collection view column descriptor');
     end;
@@ -1816,7 +1875,7 @@ begin
   { Layout v8 is deliberately decoded separately from all earlier column
     shapes, preserving their original closed-member admission rules. }
 
-  if LVersion in [8, 9, 10, 11, 12] then
+  if LVersion in [8, 9, 10, 11, 12, 13] then
   begin
     for LIndex := 0 to LColumns.Count - 1 do
     begin
@@ -1826,9 +1885,9 @@ begin
 
         if (Pos('|' + LColumn.Key(LFieldIndex) + '|',
           '|field|kind|title|editable|sizing|queryControls|layoutControls|') = 0) and
-          not ((LVersion in [9, 10, 11, 12]) and (LColumn.Key(LFieldIndex) = 'display')) and
-          not ((LVersion in [11, 12]) and (LColumn.Key(LFieldIndex) = 'textPresentation')) and
-          not ((LVersion = 12) and (LColumn.Key(LFieldIndex) = 'alignment')) then
+          not ((LVersion in [9, 10, 11, 12, 13]) and (LColumn.Key(LFieldIndex) = 'display')) and
+          not ((LVersion in [11, 12, 13]) and (LColumn.Key(LFieldIndex) = 'textPresentation')) and
+          not ((LVersion in [12, 13]) and (LColumn.Key(LFieldIndex) = 'alignment')) then
         begin
           raise ENyxCollection.Create('Unknown arranged collection column field');
         end;
@@ -1840,17 +1899,17 @@ begin
       Result.FColumns[LIndex].FQueryPolicy := TNyxColumnQueryPolicy.FromData(LColumn.Field('queryControls'));
       Result.FColumns[LIndex].FLayoutPolicy := TNyxColumnLayoutPolicy.FromData(LColumn.Field('layoutControls'));
 
-      if LVersion in [9, 10, 11, 12] then
+      if LVersion in [9, 10, 11, 12, 13] then
       begin
         Result.FColumns[LIndex].FFormatPolicy := TNyxValueFormat.FromData(LColumn.Field('display'));
       end;
 
-      if LVersion in [11, 12] then
+      if LVersion in [11, 12, 13] then
       begin
         Result.FColumns[LIndex].FTextPolicy := TNyxColumnTextPolicy.FromData(LColumn.Field('textPresentation'));
       end;
 
-      if LVersion = 12 then
+      if LVersion in [12, 13] then
       begin
         Result.FColumns[LIndex].FAlignmentPolicy := TNyxColumnAlignmentPolicy.FromData(LColumn.Field('alignment'));
       end;
@@ -1862,7 +1921,7 @@ begin
     raise ENyxCollection.Create('Version-five collection views require an explicit column sizing');
   end;
 
-  if (LVersion = 6) or ((LVersion in [7, 8, 9, 10, 11, 12]) and (AData.Field('paging').Kind <> ndNull)) then
+  if (LVersion = 6) or ((LVersion in [7, 8, 9, 10, 11, 12, 13]) and (AData.Field('paging').Kind <> ndNull)) then
   begin
     Result := Result.Paged(TNyxCollectionPaging.FromData(AData.Field('paging')));
   end;
@@ -1881,7 +1940,7 @@ begin
     end;
   end;
 
-  if LVersion in [8, 9, 10, 11, 12] then
+  if LVersion in [8, 9, 10, 11, 12, 13] then
   begin
     Result.FTableQuery := TNyxTableQueryPolicy.FromData(AData.Field('queryControls'));
     Result.FTableLayout := TNyxTableLayoutPolicy.FromData(AData.Field('layoutControls'));
@@ -1897,7 +1956,7 @@ begin
     raise ENyxCollection.Create('Version-nine views require an explicit display choice');
   end;
 
-  if LVersion in [10, 11, 12] then
+  if LVersion in [10, 11, 12, 13] then
   begin
     Result.FWorkbench := TNyxTableWorkbenchPolicy.FromData(AData.Field('workbench'));
 
@@ -1907,11 +1966,11 @@ begin
     end;
   end;
 
-  if LVersion in [11, 12] then
+  if LVersion in [11, 12, 13] then
   begin
     Result.FTablePresentation := TNyxTablePresentationPolicy.FromData(AData.Field('tablePresentation'));
 
-    if not Result.HasPresentationPolicy then
+    if (LVersion < 13) and not Result.HasPresentationPolicy then
     begin
       raise ENyxCollection.Create('Version-eleven views require explicit text or density presentation');
     end;
@@ -1920,6 +1979,11 @@ begin
   if (LVersion = 12) and not Result.HasColumnAlignment then
   begin
     raise ENyxCollection.Create('Version-twelve views require explicit column alignment');
+  end;
+
+  if LVersion = 13 then
+  begin
+    Result := Result.Inspection(TNyxCollectionInspectionPolicy.FromData(AData.Field('inspection')));
   end;
   Result.Validate;
 end;

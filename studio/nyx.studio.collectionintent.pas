@@ -32,7 +32,8 @@ uses
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
   nyx.studio.authoring, nyx.collections.columns, nyx.collections.paging,
   nyx.collections.query.policy, nyx.collections.arrangement, nyx.formatting,
-  nyx.collections.workbench.policy, nyx.collections.presentation, nyx.collections.alignment;
+  nyx.collections.workbench.policy, nyx.collections.presentation, nyx.collections.alignment,
+  nyx.collections.inspection;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -47,7 +48,7 @@ type
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment);
+    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -128,6 +129,11 @@ type
       Empty is reserved for the explicit default action, never a setter. }
     ColumnAlignment: TNyxColumnAlignmentPolicy;
     LayoutBaseline: TNyxText;
+    { Saved initial follow/retention choices are detached scalars. The exact
+      effective binding/schema baseline prevents an old form from replacing a
+      newer declaration. Runtime pause, position and drafts are never authored. }
+    Inspection: TNyxCollectionInspectionPolicy;
+    InspectionBaseline: TNyxText;
     procedure Validate;
     function SameIntent(const AOther: TNyxStudioCollectionIntent): Boolean;
     { Strict private descriptor. Null is not an intent. Unknown/extra members,
@@ -305,7 +311,7 @@ begin
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment];
+    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
@@ -316,7 +322,7 @@ begin
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment];
+    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection];
 end;
 
 procedure TNyxStudioCollectionIntent.Validate;
@@ -324,6 +330,22 @@ var
   LKey: TNyxText;
 begin
   LKey := Key.Name;
+
+  if ((Action in [scaInspection, scaDefaultInspection]) <> (InspectionBaseline <> '')) or
+    ((Action = scaInspection) <> Inspection.Defined) then
+  begin
+    raise ENyxCollection.Create('Inspection intent requires its own exact baseline and policy');
+  end;
+
+  if Action = scaInspection then
+  begin
+    Inspection.Validate;
+
+    if (Projection = cpTree) and (Inspection.DefaultFollow = ncfLastVisible) then
+    begin
+      raise ENyxCollection.Create('Tree inspection supports keep-position, not follow-last');
+    end;
+  end;
 
   if ((Action in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery]) and (QueryBaseline = '')) or
@@ -518,7 +540,9 @@ begin
     (TableWorkbench.ToData.ToJSON = AOther.TableWorkbench.ToData.ToJSON) and
     (TablePresentation.ToData.ToJSON = AOther.TablePresentation.ToData.ToJSON) and
     (ColumnText.ToData.ToJSON = AOther.ColumnText.ToData.ToJSON) and
-    (ColumnAlignment.ToData.ToJSON = AOther.ColumnAlignment.ToData.ToJSON);
+    (ColumnAlignment.ToData.ToJSON = AOther.ColumnAlignment.ToData.ToJSON) and
+    (InspectionBaseline = AOther.InspectionBaseline) and
+    (Inspection.ToData.ToJSON = AOther.Inspection.ToData.ToJSON);
 
   if Result and Item.Defined then
   begin
@@ -548,6 +572,23 @@ begin
     NyxField('mode', NyxData(Ord(Mode))), NyxField('scope', NyxData(Ord(Scope))),
     NyxField('selection', NyxData(Ord(SelectionMode))),
     NyxField('projection', NyxData(Ord(Projection)))]);
+
+  if Action in [scaInspection, scaDefaultInspection] then
+  begin
+    SetLength(LFields, 12);
+    for LIndex := 0 to 10 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[11] := NyxField('baseline', NyxData(InspectionBaseline));
+
+    if Action = scaInspection then
+    begin
+      SetLength(LFields, 13);
+      LFields[12] := NyxField('inspection', Inspection.ToData);
+    end;
+    Result := NyxObject(LFields);
+  end;
 
   if Action in [scaQuery, scaTableQuery, scaColumnQuery,
     scaDefaultTableQuery, scaDefaultColumnQuery] then
@@ -775,6 +816,21 @@ begin
     end;
   end;
 
+  if AIntent.Action in [scaInspection, scaDefaultInspection] then
+  begin
+
+    if AIntent.InspectionBaseline <> NyxQueryEditorBaseline(ASchema, ASpec) then
+    begin
+      raise ENyxCollection.Create('Inspection binding/schema changed; reopen its inspector');
+    end;
+
+    if AIntent.Action = scaInspection then
+    begin
+      Exit(ASpec.Inspection(AIntent.Inspection));
+    end;
+    Exit(ASpec.UseDefaultInspection);
+  end;
+
   if AIntent.Action = scaClear then
   begin
     Exit(Default(TNyxCollectionViewSpec));
@@ -844,6 +900,11 @@ begin
   if ASpec.PagingPolicy.Defined then
   begin
     Result := Result.Paged(ASpec.PagingPolicy);
+  end;
+
+  if ASpec.InspectionPolicy.Defined then
+  begin
+    Result := Result.Inspection(ASpec.InspectionPolicy);
   end;
 
   if ASpec.HasTableQueryPolicy then
@@ -1124,18 +1185,19 @@ begin
 
   if ((Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
       scaTableLayout, scaColumnLayout, scaColumnFormat, scaTableWorkbench,
-      scaTablePresentation, scaColumnText, scaColumnAlignment]) and
+      scaTablePresentation, scaColumnText, scaColumnAlignment, scaInspection]) and
       (AData.Count <> 13)) or
     ((Result.Action in [scaDefaultTableQuery, scaDefaultColumnQuery,
       scaDefaultTableLayout, scaDefaultColumnLayout, scaDefaultColumnFormat,
-      scaDefaultTableWorkbench, scaDefaultTablePresentation, scaDefaultColumnText, scaDefaultColumnAlignment]) and
+      scaDefaultTableWorkbench, scaDefaultTablePresentation, scaDefaultColumnText,
+      scaDefaultColumnAlignment, scaDefaultInspection]) and
       (AData.Count <> 12)) or
     (not (Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
       scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
       scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
       scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-      scaColumnAlignment, scaDefaultColumnAlignment]) and
+      scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection]) and
       (AData.Count <> 11)) then
   begin
     raise ENyxCollection.Create('Policy intent requires its exact extended descriptor');
@@ -1144,6 +1206,16 @@ begin
   if Result.Action = scaQuery then
   begin
     Result.Query := TNyxCollectionQuery.FromData(AData.Field('query'));
+  end;
+
+  if Result.Action in [scaInspection, scaDefaultInspection] then
+  begin
+    Result.InspectionBaseline := AData.Field('baseline').AsText;
+
+    if Result.Action = scaInspection then
+    begin
+      Result.Inspection := TNyxCollectionInspectionPolicy.FromData(AData.Field('inspection'));
+    end;
   end;
 
   if Result.Action = scaTableQuery then

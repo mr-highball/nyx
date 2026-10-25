@@ -22,8 +22,11 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('inspection-authoring', 'tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
+  # NEW packet for saved inspection defaults, Studio/semantic admission and
+  # the public native monitoring journey plus its own generated application.
+  [string]$InspectionAuthoringEvidenceDirectory = 'build/inspection-authoring/maintained',
   # NEW packet for public Tree search/reveal and its own generated application.
   [string]$TreeInspectionEvidenceDirectory = 'build/tree-inspection/maintained',
   # NEW packet for typed Kanban moves, mounted controls and emitted companions.
@@ -651,6 +654,104 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
 Push-Location $nyxRoot
 try {
   $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+  if ($Target -eq 'inspection-authoring') {
+    $nyxInspectionRoot = [IO.Path]::GetFullPath($InspectionAuthoringEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxInspectionRoot) { throw 'Inspection authoring evidence directory must be NEW' }
+    $nyxInspectionNative = Join-Path $nyxInspectionRoot 'native'
+    $nyxInspectionGenerated = Join-Path $nyxInspectionRoot 'generated'
+    $nyxInspectionGeneratedNative = Join-Path $nyxInspectionRoot 'generated-native'
+    $nyxInspectionBrowser = Join-Path $nyxInspectionRoot 'browser'
+    $nyxInspectionGeneratedBrowser = Join-Path $nyxInspectionRoot 'generated-browser'
+    foreach ($nyxInspectionDirectory in @($nyxInspectionNative, $nyxInspectionGenerated,
+        $nyxInspectionGeneratedNative, $nyxInspectionBrowser, $nyxInspectionGeneratedBrowser)) {
+      New-Item -ItemType Directory -Path $nyxInspectionDirectory | Out-Null
+    }
+    # Freeze only compiler/orchestration readers. Product documentation is not
+    # an input to these compilers. Receipts stay in the caller's ignored packet.
+    $nyxInspectionPins = foreach ($nyxInspectionRelative in (git ls-files --cached --others --exclude-standard -- src studio tests tools examples/service-monitor)) {
+      if ([IO.Path]::GetExtension($nyxInspectionRelative) -in @('.pas', '.pp', '.inc', '.lpr', '.lfm', '.lrs', '.cfg', '.ps1')) {
+        [pscustomobject]@{path=$nyxInspectionRelative;sha256=(Get-FileHash -LiteralPath $nyxInspectionRelative).Hash}
+      }
+    }
+    $nyxInspectionPins | ConvertTo-Json -Depth 5 |
+      Set-Content -LiteralPath (Join-Path $nyxInspectionRoot 'source-pins-private.json') -Encoding UTF8
+    $nyxInspectionFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxInspectionLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxInspectionPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxInspectionRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxInspectionPlatform = "$((& $nyxInspectionFpc '-iTP').Trim())-$((& $nyxInspectionFpc '-iTO').Trim())"
+    $nyxInspectionFlags = @('-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      "-Fu$nyxInspectionNative", '-Fusrc', '-Fisrc', '-Futests', '-Fustudio', '-Fuexamples/service-monitor',
+      "-Fu$nyxInspectionLazarus/lcl/units/$nyxInspectionPlatform",
+      "-Fu$nyxInspectionLazarus/lcl/units/$nyxInspectionPlatform/$Widgetset",
+      "-Fu$nyxInspectionLazarus/components/lazutils/lib/$nyxInspectionPlatform",
+      "-Fu$nyxInspectionLazarus/packager/units/$nyxInspectionPlatform")
+    function Invoke-NyxInspectionCheck([string]$Executable, [string[]]$Arguments,
+        [string]$Tag, [bool]$Heap = $false) {
+      $output = $nyxInspectionRoot
+      $nyxInspectionBudget = if ($Heap) { 240 } else { 900 }
+      $nyxInspectionResult = RunOwned $Executable $Arguments $Tag $nyxInspectionBudget $Heap
+      $nyxInspectionResult | ConvertTo-Json -Depth 12 |
+        Set-Content -LiteralPath (Join-Path $nyxInspectionRoot ($Tag + '-private.json')) -Encoding UTF8
+      if ($nyxInspectionResult.exit -ne 0 -or $nyxInspectionResult.timedOut -or
+          ($Heap -and -not $nyxInspectionResult.heapComplete)) {
+        Get-Content -LiteralPath $nyxInspectionResult.stdout -Tail 12
+        throw ('Inspection authoring check failed: ' + $Tag)
+      }
+      if ($Heap) { Get-Content -LiteralPath $nyxInspectionResult.stdout -Tail 2 }
+    }
+    $nyxInspectionCold = @('-B')
+    foreach ($nyxInspectionProgram in @('nyx_collection_inspection_authoring_tests',
+        'nyx_collection_inspection_studio_tests', 'nyx_agent_collection_schema',
+        'nyx_table_presentation_authoring_tests')) {
+      Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + $nyxInspectionCold + @(
+        "-FU$nyxInspectionNative", "-FE$nyxInspectionNative", "tests/$nyxInspectionProgram.lpr")) ($nyxInspectionProgram + '-compiler')
+      $nyxInspectionCold = @()
+      Invoke-NyxInspectionCheck (Join-Path $nyxInspectionNative ($nyxInspectionProgram + '.exe')) @() ($nyxInspectionProgram + '-runtime') $true
+      # HTTP/MCP discovery imports native synchronization. Its portable agent
+      # dispatcher is exercised by the Studio fixture above on both compilers;
+      # the server-discovery executable itself is deliberately native-only.
+      if ($nyxInspectionProgram -eq 'nyx_agent_collection_schema') { continue }
+      $nyxInspectionStage = Join-Path $nyxInspectionBrowser $nyxInspectionProgram
+      New-Item -ItemType Directory -Path $nyxInspectionStage | Out-Null
+      Invoke-NyxInspectionCheck $nyxInspectionPas2js @('-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fisrc', '-Futests', '-Fustudio', "-FE$nyxInspectionStage", "tests/$nyxInspectionProgram.lpr") ($nyxInspectionProgram + '-browser')
+      Copy-Item -LiteralPath $nyxInspectionRuntime -Destination (Join-Path $nyxInspectionStage 'rtl.js')
+      $nyxInspectionHTML = '<!doctype html><html lang="en"><meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+        '<title>Nyx inspection authoring checks</title><body><script src="rtl.js"></script>' +
+        '<script src="' + $nyxInspectionProgram + '.js"></script><script>rtl.run();</script></body></html>'
+      [IO.File]::WriteAllText((Join-Path $nyxInspectionStage 'index.html'), $nyxInspectionHTML, [Text.UTF8Encoding]::new($false))
+    }
+    $nyxInspectionProgram = 'tests/nyx_live_inspection_controls.lpr'
+    Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + @(
+      "-FU$nyxInspectionNative", "-FE$nyxInspectionNative", $nyxInspectionProgram)) 'controls-compiler'
+    $nyxInspectionExe = Join-Path $nyxInspectionNative 'nyx_live_inspection_controls.exe'
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('1280', (Join-Path $nyxInspectionGenerated 'nyx.generated.view.pas')) 'controls-1280' $true
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('390') 'controls-390' $true
+    Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + @('-dNYX_INSPECTION_GENERATED',
+      "-Fu$nyxInspectionGenerated", "-FU$nyxInspectionGeneratedNative", "-FE$nyxInspectionGeneratedNative", $nyxInspectionProgram)) 'generated-compiler'
+    $nyxInspectionExe = Join-Path $nyxInspectionGeneratedNative 'nyx_live_inspection_controls.exe'
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('1280') 'generated-1280' $true
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('390') 'generated-390' $true
+    foreach ($nyxInspectionStage in @($nyxInspectionBrowser, $nyxInspectionGeneratedBrowser)) {
+      $nyxInspectionBrowserFlags = @('-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fisrc',
+        '-Fuexamples/service-monitor', "-FE$nyxInspectionStage")
+      if ($nyxInspectionStage -eq $nyxInspectionGeneratedBrowser) {
+        $nyxInspectionBrowserFlags += @('-dNYX_INSPECTION_GENERATED', "-Fu$nyxInspectionGenerated")
+      }
+      Invoke-NyxInspectionCheck $nyxInspectionPas2js ($nyxInspectionBrowserFlags + @($nyxInspectionProgram)) ((Split-Path $nyxInspectionStage -Leaf) + '-compiler')
+      Copy-Item -LiteralPath $nyxInspectionRuntime -Destination (Join-Path $nyxInspectionStage 'rtl.js')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/service-monitor/live-inspection.html') -Destination $nyxInspectionStage
+    }
+    foreach ($nyxInspectionPin in $nyxInspectionPins) {
+      if ((Get-FileHash -LiteralPath $nyxInspectionPin.path).Hash -ne $nyxInspectionPin.sha256) {
+        throw ('Compiler input changed: ' + $nyxInspectionPin.path)
+      }
+    }
+    Write-Host 'Inspection defaults native/Studio/semantic/generated checks passed; browser artifacts staged, execution remains explicit.'
+    return
+  }
   if ($Target -eq 'tree-inspection') {
     $nyxTreeRoot = [IO.Path]::GetFullPath($TreeInspectionEvidenceDirectory)
     if (Test-Path -LiteralPath $nyxTreeRoot) { throw 'Tree inspection evidence directory must be NEW' }

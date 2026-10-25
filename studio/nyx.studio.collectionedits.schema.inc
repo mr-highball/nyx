@@ -51,6 +51,8 @@ var
   LSpecTen: TNyxText;
   LSpecEleven: TNyxText;
   LSpecTwelve: TNyxText;
+  LSpecThirteen: TNyxText;
+  LInspection: TNyxText;
   LColumnFormat: TNyxText;
   LTableQuery: TNyxText;
   LColumnQuery: TNyxText;
@@ -308,6 +310,12 @@ begin
     '"required":["version","horizontal","vertical"],"additionalProperties":false,' +
     '"anyOf":[{"properties":{"horizontal":{"type":"string"}}},' +
     '{"properties":{"vertical":{"type":"string"}}}]}';
+  LInspection := '{"type":"object","properties":{"version":{"const":1},' +
+    '"follow":{"enum":["keep-position","last-visible"]},' +
+    '"maximumPausedBytes":{"type":"integer","minimum":0,"maximum":2147483647},' +
+    '"removedIdentityLimit":{"type":"integer","minimum":0,"maximum":2147483647}},' +
+    '"required":["version","follow","maximumPausedBytes","removedIdentityLimit"],' +
+    '"additionalProperties":false}';
   LSpecEleven := StringReplace(LSpecNine, '"const":9', '"const":11', []);
   LSpecEleven := StringReplace(LSpecEleven, '"editable":{"type":"boolean"}',
     '"editable":{"type":"boolean"},"textPresentation":{"anyOf":[{"type":"null"},' + LColumnText + ']}', []);
@@ -327,6 +335,14 @@ begin
     '"editable":{"type":"boolean"},"alignment":{"anyOf":[{"type":"null"},' + LColumnAlignment + ']}', []);
   LSpecTwelve := StringReplace(LSpecTwelve,
     '"display","textPresentation"]', '"display","textPresentation","alignment"]', []);
+  { Inspection uses the complete nullable column shape without requiring an
+    unrelated table/alignment declaration. Older absent policies retain their
+    previous exact descriptors and discriminators. }
+  LSpecThirteen := StringReplace(LSpecTwelve, '"const":12', '"const":13', []);
+  LSpecThirteen := StringReplace(LSpecThirteen, '"parent":{"type":"string"}',
+    '"inspection":' + LInspection + ',"parent":{"type":"string"}', []);
+  LSpecThirteen := StringReplace(LSpecThirteen, '"workbench","tablePresentation"]',
+    '"workbench","tablePresentation","inspection"]', []);
   Delete(LSpecTwelve, Length(LSpecTwelve), 1);
   LSpecTwelve := LSpecTwelve + ',"allOf":[{"properties":{"columns":{"contains":{' +
     '"properties":{"alignment":{"type":"object"}},"required":["alignment"]}}}}]}';
@@ -349,7 +365,7 @@ begin
     '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
     LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ',' +
-    LSpecNine + ',' + LSpecTen + ',' + LSpecEleven + ',' + LSpecTwelve + ']}';
+    LSpecNine + ',' + LSpecTen + ',' + LSpecEleven + ',' + LSpecTwelve + ',' + LSpecThirteen + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"',
@@ -418,6 +434,18 @@ begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
       CCollectionActions[LAction] + '"},"key":{"type":"string","minLength":1}';
     LRequired := '"op","action","key"';
+
+    if LAction in [scaInspection, scaDefaultInspection] then
+    begin
+      LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
+      LRequired := LRequired + ',"baseline"';
+
+      if LAction = scaInspection then
+      begin
+        LProperties := LProperties + ',"inspection":' + LInspection;
+        LRequired := LRequired + ',"inspection"';
+      end;
+    end;
 
     if LAction = scaQuery then
     begin
@@ -598,6 +626,14 @@ begin
     end;
     Branch(LProperties, LRequired);
   end;
+  { Append new named commands after former intent branches as well, preserving
+    existing discovery order. Runtime semantic dispatch remains name-based. }
+  Branch('"op":{"const":"inspection"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"enum":["list","table","tree"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LInspection + ']}',
+    '"op","owner","key","projection","policy"',
+    ',"if":{"properties":{"projection":{"const":"tree"}}},' +
+    '"then":{"properties":{"policy":{"properties":{"follow":{"const":"keep-position"}}}}}');
   Result := TNyxDataValue.ParseJSON('{"type":"object","$defs":' +
     QueryAgentDefinitions.ToJSON + ',"oneOf":[' +
     '{"properties":{"mode":{"const":"list"},"offset":{"type":"integer","minimum":0},' +

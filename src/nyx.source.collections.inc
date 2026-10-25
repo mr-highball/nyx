@@ -755,7 +755,7 @@ begin
         SameText(LMethod, 'UseDefaultTablePresentation') or
         SameText(LMethod, 'UseDefaultColumnText') or
         SameText(LMethod, 'UseDefaultColumnAlignment') or
-        SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
+        SameText(LMethod, 'UseDefaultPaging') or SameText(LMethod, 'UseDefaultInspection')) and not At('(') then
       begin
         LArgs := nil;
       end
@@ -772,6 +772,28 @@ begin
           Fail('TypeAhead requires a typed NyxTypeAhead policy');
         end;
         Result.CollectionView := Result.CollectionView.TypeAhead(LArgs[0].TypeAheadOptions);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'Inspection') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkInspectionPolicy) then
+        begin
+          Fail('Inspection requires a typed NyxInspectionPolicy');
+        end;
+        Result.CollectionView := Result.CollectionView.Inspection(LArgs[0].InspectionPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultInspection') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('UseDefaultInspection takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultInspection;
         Continue;
       end;
 

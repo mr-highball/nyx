@@ -30,7 +30,8 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.state, nyx.contract, nyx.collections,
   nyx.collections.registry,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
-  nyx.typeahead, nyx.collections.query.policy, nyx.collections.arrangement, nyx.formatting,
+  nyx.typeahead, nyx.collections.inspection,
+  nyx.collections.query.policy, nyx.collections.arrangement, nyx.formatting,
   nyx.collections.workbench.policy, nyx.collections.presentation, nyx.collections.alignment,
   nyx.studio.authoring,
   nyx.studio.collectionintent, nyx.studio.stateedits, nyx.studio.projects;
@@ -44,7 +45,7 @@ type
   TNyxCollectionChangeKind = (ccDefine, ccField, ccRemoveField, ccAppend,
     ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery, ccTypeAhead,
     ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat,
-    ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment);
+    ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment, ccInspection);
 
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
@@ -69,6 +70,10 @@ type
       reset at replay, never collection inheritance or a live search engine. }
     FTypeAheadDeclared: Boolean;
     FTypeAhead: TNyxTypeAheadOptions;
+    { Raw presence differs from explicitly choosing the default policy. These
+      values contain no paused snapshot, receiver, viewport or runtime state. }
+    FInspectionDeclared: Boolean;
+    FInspection: TNyxCollectionInspectionPolicy;
     { Command policies own only scalar flags and an operator set. An explicit
       default object stays declared; only the separate reset factories clear
       presence. No baseline, projected node or runtime query owner is retained. }
@@ -162,6 +167,17 @@ function NyxSetCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
 function NyxUseDefaultCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
   const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
   TNyxCollectionChange;
+{ Apply only saved follow/retention defaults to the exact effective binding.
+  Ordered replay derives that binding after preceding group edits, so another
+  policy in the same transaction cannot be overwritten. Tree supports pause
+  and keep-position; follow-last is refused. Runtime inspection is untouched. }
+function NyxSetCollectionInspection(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxCollectionInspectionPolicy): TNyxCollectionChange;
+{ Clear only inspection's raw declaration, retaining an independent local
+  effective binding. Restoring reusable inheritance is a separate operation. }
+function NyxUseDefaultCollectionInspection(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection): TNyxCollectionChange;
 { Replace only a table's authored filter/sort command policy. Each ordered
   candidate derives the current schema/binding baseline internally and reuses
   ordinary intent admission; agents need only the exact revision/owner/key.
@@ -293,7 +309,7 @@ const
      'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
      'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
      'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
-     'column-alignment', 'default-column-alignment');
+     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -521,6 +537,38 @@ begin
   Result := NyxUseDefaultCollectionTypeAhead(AOwner, AKey, AProjection);
   Result.FTypeAheadDeclared := True;
   Result.FTypeAhead := APolicy;
+end;
+
+function NyxUseDefaultCollectionInspection(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
+  TNyxCollectionChange;
+begin
+
+  if not (AProjection in [cpList, cpTable, cpTree]) then
+  begin
+    raise ENyxCollection.Create('Inspection requires a valid collection projection');
+  end;
+  Result := Default(TNyxCollectionChange);
+  Result.FKind := ccInspection;
+  Result.FOwner := NyxBindingOwner(AOwner.ID);
+  Result.FKey := NyxCollection(AKey.Name);
+  Result.FProjection := AProjection;
+  Result.FInspectionDeclared := False;
+end;
+
+function NyxSetCollectionInspection(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxCollectionInspectionPolicy): TNyxCollectionChange;
+begin
+  APolicy.Validate;
+
+  if (AProjection = cpTree) and (APolicy.DefaultFollow = ncfLastVisible) then
+  begin
+    raise ENyxCollection.Create('Tree inspection supports keep-position, not follow-last');
+  end;
+  Result := NyxUseDefaultCollectionInspection(AOwner, AKey, AProjection);
+  Result.FInspectionDeclared := True;
+  Result.FInspection := APolicy;
 end;
 
 function NyxUseDefaultCollectionTableQuery(const AOwner: TNyxStudioBindingOwner;
@@ -884,6 +932,35 @@ begin
               else
               begin
                 LSpec := LSpec.UseDefaultTypeAhead;
+              end;
+              { Use ordinary Studio binding admission in this independent
+                candidate. The agent layer owns the single final paired Undo. }
+              LSession.SetCollectionView(LSpec);
+            finally
+              LProjected.Free;
+            end;
+          end;
+        ccInspection:
+          begin
+            SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
+            LProjected := LSession.SelectedProjection;
+            try
+
+              if (LProjected = nil) or not LProjected.HasCollectionView or
+                not LProjected.CollectionView.Defined or
+                (LProjected.CollectionView.Key.Name <> LChange.FKey.Name) then
+              begin
+                raise ENyxCollection.Create('Inspection edit requires the exact bound collection');
+              end;
+              LSpec := LProjected.CollectionView;
+
+              if LChange.FInspectionDeclared then
+              begin
+                LSpec := LSpec.Inspection(LChange.FInspection);
+              end
+              else
+              begin
+                LSpec := LSpec.UseDefaultInspection;
               end;
               { Use ordinary Studio binding admission in this independent
                 candidate. The agent layer owns the single final paired Undo. }
@@ -1421,6 +1498,15 @@ begin
   Add('action', NyxData(CCollectionActions[LIntent.Action]));
   Add('key', NyxData(LIntent.Key.Name));
 
+  if LIntent.Action in [scaInspection, scaDefaultInspection] then
+  begin
+    Add('baseline', NyxData(LIntent.InspectionBaseline));
+
+    if LIntent.Action = scaInspection then
+    begin
+      Add('inspection', LIntent.Inspection.ToData);
+    end;
+  end;
   if LIntent.Action = scaQuery then
   begin
     Add('query', LIntent.Query.ToData);
@@ -1609,6 +1695,19 @@ begin
   LAllowed := '|op|action|key|';
   LRequired := 3;
 
+  if LIntent.Action in [scaInspection, scaDefaultInspection] then
+  begin
+    LAllowed := LAllowed + 'baseline|';
+    Inc(LRequired);
+    LIntent.InspectionBaseline := AData.Field('baseline').AsText;
+
+    if LIntent.Action = scaInspection then
+    begin
+      LAllowed := LAllowed + 'inspection|';
+      Inc(LRequired);
+      LIntent.Inspection := TNyxCollectionInspectionPolicy.FromData(AData.Field('inspection'));
+    end;
+  end;
   if LIntent.Action = scaQuery then
   begin
     LAllowed := LAllowed + 'query|';
@@ -1946,6 +2045,20 @@ begin
             NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
             NyxField('policy', LPolicy)]);
         end;
+      ccInspection:
+        begin
+          LPolicy := NyxNull;
+
+          if LChange.FInspectionDeclared then
+          begin
+            LPolicy := LChange.FInspection.ToData;
+          end;
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('inspection')),
+            NyxField('owner', NyxData(LChange.FOwner.ID)),
+            NyxField('key', NyxData(LChange.FKey.Name)),
+            NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
+            NyxField('policy', LPolicy)]);
+        end;
       ccQuery:
         begin
           LValues[LIndex] := NyxObject([NyxField('op', NyxData('query')),
@@ -2136,6 +2249,39 @@ begin
           NyxCollection(LData.Field('key').AsText),
           ReadProjection(LData.Field('projection')),
           TNyxTypeAheadOptions.FromData(LData.Field('policy')));
+      end;
+      Continue;
+    end;
+
+    if LOp = 'query' then
+    begin
+      Fields(LData, '|op|owner|key|projection|query|', 5);
+      LChanges[LIndex] := NyxSetCollectionQuery(
+        NyxBindingOwner(LData.Field('owner').AsText),
+        NyxCollection(LData.Field('key').AsText),
+        ReadProjection(LData.Field('projection')),
+        TNyxCollectionQuery.FromData(LData.Field('query')));
+      Continue;
+    end;
+
+    if LOp = 'inspection' then
+    begin
+      Fields(LData, '|op|owner|key|projection|policy|', 5);
+
+      if LData.Field('policy').Kind = ndNull then
+      begin
+        LChanges[LIndex] := NyxUseDefaultCollectionInspection(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')));
+      end
+      else
+      begin
+        LChanges[LIndex] := NyxSetCollectionInspection(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')),
+          TNyxCollectionInspectionPolicy.FromData(LData.Field('policy')));
       end;
       Continue;
     end;

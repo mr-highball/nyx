@@ -61,8 +61,12 @@ captures, plus a public process-tree search/reveal example. Native handwritten/
 generated journeys exercise scoped clearing, deliberate relaxation and retained
 selection/disclosure at both widths. Typed explicit viewport requests now have
 native handwritten/generated long-Tree scroll/repeat/focus and lifetime evidence.
-Browser execution, AT/visual, saved-policy/Studio adoption and full04 acceptance
-remain open in WORK.
+Saved inspection defaults now also flow through typed view/source contracts,
+ordinary Studio forms and revision-aware semantic patches. Native handwritten/
+generated monitoring, inspector/history/reuse and native MCP discovery checks
+pass; full native/browser Studio builds succeed. Browser execution, observed
+Studio interaction, AT/visual, hard recovered-draft memory, measured scale and
+full04 acceptance remain open in WORK.
 
 The 2026-10-18 request adds an optional client-side pas2js compiler for WEB and
 a static client-only Studio edition suitable for GitHub Pages. It must require

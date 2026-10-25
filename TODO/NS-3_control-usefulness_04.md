@@ -185,5 +185,24 @@ generated journeys add 200 process rows and check actual Tree/parent clipping,
 repeat reveal, focus policy and disabled-target refusal at both widths. Portable
 model checks additionally exercise failure/deferral/retry, suspension and remount
 ownership. Browser assertions compile/stage; execution, broader visual/AT/physical
-input and complete criterion acceptance remain open. The next authoring outcome
-is portable saved inspection defaults through typed source and Studio/MCP.
+input and complete criterion acceptance remain open.
+
+Saved inspection defaults now pass through the public fluent view specification,
+closed descriptor13, codec, generated Pascal/source reading, ordinary Studio
+form and revision-aware semantic edits. Explicit defaults differ from absence;
+runtime pause/follow/retention overrides never enter design history. Ordered
+partial patches preserve earlier edits, reusable parts gain independent local
+defaults and stale forms/revisions or pending Pascal refuse without publication.
+Tree supports pause/keep-position and rejects follow-last before mounting.
+
+The maintained `inspection-authoring` target passes19 owned jobs with8 complete
+zero-unfreed native heaps and1965 unchanged compiler/orchestration inputs.
+Portable authoring passes12, ordinary Studio/semantic admission22, actual native
+MCP discovery236 and prior presentation authoring58. Native public handwritten/
+generated monitoring journeys pass87 checks per width/variant, plus a fresh
+output guard in handwritten1280. Actual mounted List/plain-grid initial follow
+and public Table saved defaults/caller overrides are included. Full Studio builds
+for native LCL and pas2js also succeed. Browser assertions compile/stage only;
+observed Studio interaction, screenshots, AT, hardware input, non-Win32 widgetsets,
+measured scale and complete original acceptance remain open. WORK retains earlier
+failed fixtures/receipts and distinguishes the relevant source cohorts.

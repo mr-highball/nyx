@@ -281,7 +281,10 @@ begin
     NyxField('offset', NyxData(AOffset)),
     NyxField('nextOffset', NyxData(Min(AOffset + Length(LColumns), ASpec.Count))),
     NyxField('total', NyxData(ASpec.Count)), NyxField('columns', NyxArray(LColumns)),
-    NyxField('typeAhead', LTypeAhead)]);
+    NyxField('typeAhead', LTypeAhead),
+    NyxField('inspection', NyxObject([
+      NyxField('declared', NyxData(ASpec.InspectionPolicy.Defined)),
+      NyxField('policy', ASpec.InspectionPolicy.ToData)]))]);
   { Capability reads are opt-in and share the existing column page/byte budget.
     Serialize the admitted policy itself: disabled filtering must not erase an
     explicit operator set. Saved declarations remain useful on non-table views;

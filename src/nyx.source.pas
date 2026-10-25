@@ -769,6 +769,7 @@ uses
   nyx.collections.query.policy,
   nyx.collections.query.controls,
   nyx.collections.paging,
+  nyx.collections.inspection,
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens,
@@ -841,7 +842,7 @@ type
 
   { Closed literal-reader value families preserve Pascal argument types during
     admission. A textual number or enum name never substitutes for its family.
-    Workbench permissions and presentation choices remain separate families. }
+    Workbench permissions, presentation and retention choices remain separate families. }
   TValueKind = (vkText, vkInteger, vkNumber, vkBoolean, vkKind, vkAttribute,
     vkLayout, vkVariant, vkAction, vkOverride, vkInput, vkPart, vkEvent,
     vkComponent, vkStyle, vkCustomKind, vkStateRef, vkBindingProperty,
@@ -906,7 +907,7 @@ type
     vkWorkbenchCopyAction, vkWorkbenchCopyFields,
     vkWorkbenchLineEnding, vkTablePresentationPolicy, vkColumnTextPolicy,
     vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
-    vkColumnVerticalAlignment, vkTableHeaderPolicy);
+    vkColumnVerticalAlignment, vkTableHeaderPolicy, vkInspectionPolicy, vkCollectionFollow);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -986,6 +987,7 @@ type
     ColumnTextPolicy: TNyxColumnTextPolicy;
     ColumnAlignmentPolicy: TNyxColumnAlignmentPolicy;
     CollectionPaging: TNyxCollectionPaging;
+    InspectionPolicy: TNyxCollectionInspectionPolicy;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
     KanbanIntent: TNyxKanbanIntent;
@@ -1797,6 +1799,8 @@ begin
   RegisterEnum(vkExpressionTextComparison, Ord(netAsciiInsensitive), 'netAsciiInsensitive');
   RegisterEnum(vkCollectionCellMode, Ord(cmReadOnly), 'cmReadOnly');
   RegisterEnum(vkCollectionCellMode, Ord(cmEditable), 'cmEditable');
+  RegisterEnum(vkCollectionFollow, Ord(ncfKeepPosition), 'ncfKeepPosition');
+  RegisterEnum(vkCollectionFollow, Ord(ncfLastVisible), 'ncfLastVisible');
 
   RegisterEnum(vkConstruction, Ord(ncoDefault), 'ncoDefault');
   RegisterEnum(vkImageFormat, Ord(nimPNG), 'nimPNG');
@@ -3769,6 +3773,7 @@ begin
           (LName = 'newnyxmenubardefinition') or (LName = 'nyxmenubar') or
           (LName = 'nyxpopover') or (LName = 'nyxtypeahead') or
           (LName = 'nyxcolumnsizing') or (LName = 'nyxcollectionpaging') or
+          (LName = 'nyxinspectionpolicy') or
           (LName = 'nyxcolumnquery') or (LName = 'nyxtablequery') then
         begin
           Exit(MenuConstructor(LName));

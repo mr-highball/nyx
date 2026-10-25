@@ -74,6 +74,7 @@ uses
   nyx.collections.workbench.policy,
   nyx.collections.presentation,
   nyx.collections.alignment,
+  nyx.collections.inspection,
   nyx.formatting,
   nyx.layout.constraints,
   nyx.root.types,
@@ -4380,6 +4381,11 @@ begin
     if ADocument.HasCollectionViews then
     begin
       LLines.Add('  nyx.collections.view.types,');
+
+      if NeedsCollectionInspectionUnits(ADocument) then
+      begin
+        LLines.Add('  nyx.collections.inspection,');
+      end;
 
       if ADocument.HasCollectionPaging then
       begin

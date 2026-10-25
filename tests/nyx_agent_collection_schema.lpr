@@ -33,7 +33,7 @@ uses
   nyx.collections, nyx.collections.view.types, nyx.collections.columns,
   nyx.collections.paging, nyx.collections.query, nyx.collections.query.policy,
   nyx.collections.arrangement, nyx.formatting, nyx.collections.workbench.policy,
-  nyx.collections.presentation, nyx.collections.alignment,
+  nyx.collections.presentation, nyx.collections.alignment, nyx.collections.inspection,
   nyx.studio.collectionedits,
   { END QUERY_CONTROL_DISCOVERY_IMPORTS }
   SysUtils, nyx.text, nyx.data, nyx.studio.mcp, nyx.studio.agents;
@@ -340,8 +340,8 @@ begin
   { Version eight appends authored layout without changing any earlier wire
     envelope. Exercise the actual bind decoder with independent policy data;
     discovery alone cannot prove that saved declarations are admitted. }
-  Check((LSpecs.Count = 12) and (LAlignmentCount = 2),
-    'all eleven former descriptor versions and alignment v12 remain discoverable with two read modes');
+  Check((LSpecs.Count = 13) and (LAlignmentCount = 2),
+    'all twelve former descriptors remain discoverable beside inspection v13 with two alignment read modes');
   LSpecSchema := LSpecs.Item(7);
   LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
   Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 8) and
@@ -475,6 +475,22 @@ begin
   RefusesView(Replacing(LData, 'columns', NyxArray([Replacing(LColumn, 'alignment', NyxNull)])),
     'v12 cannot manufacture presence from an entirely null alignment slot');
 
+  LSpecSchema := LSpecs.Item(12);
+  LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
+  LPolicy := LSpecSchema.Field('properties').Field('inspection');
+  Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 13) and
+    (LSpecSchema.Field('required').Count = 14) and (LColumnSchema.Field('required').Count = 10) and
+    Required(LSpecSchema, 'inspection') and (LPolicy.Field('required').Count = 4) and
+    (LPolicy.Field('properties').Field('maximumPausedBytes').Field('minimum').AsInteger = 0) and
+    (LPolicy.Field('properties').Field('removedIdentityLimit').Field('maximum').AsInteger = High(Integer)) and
+    not LPolicy.Field('additionalProperties').AsBoolean and not NyxAgentHas(LSpecSchema, 'allOf'),
+    'inspection discovery has complete nullable columns, exact bounds and no unrelated alignment requirement');
+  LData := LBase.Inspection(NyxInspectionPolicy.RemovedIdentities(0)).ToData;
+  LDecoded := TNyxCollectionViewSpec.FromData(LData);
+  Check(LDecoded.InspectionPolicy.Defined and not LDecoded.HasPresentationPolicy and
+    (LDecoded.InspectionPolicy.IdentityLimit = 0), 'inspection-only v13 retains unrelated absent defaults');
+  RefusesView(Replacing(LData, 'inspection', NyxNull), 'v13 cannot manufacture a policy from null presence');
+
   LSpecSchema := LSpecs.Item(10);
   LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
   Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 11) and
@@ -564,10 +580,10 @@ end;
 { BEGIN EXPANDED_ACTION_NAMES }
 { The two scalar-edit actions each have four mutually exclusive family branches.
   Check their identities independently rather than treating enum length as the
-  number of schema branches. Named operations keep sixteen separate closed shapes. }
+  number of schema branches. Named operations retain separate closed shapes. }
 function ExactChangeBranches(const AChanges: TNyxDataValue): Boolean;
 const
-  CActions: array[0..44] of TNyxText = (
+  CActions: array[0..46] of TNyxText = (
     'create', 'remove', 'add-field', 'default', 'add-row', 'remove-row', 'cell',
     'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
     'add-column', 'clear', 'inherit', 'selection', 'query',
@@ -577,12 +593,12 @@ const
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
     'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
-    'column-alignment', 'default-column-alignment');
-  CNamed: array[0..16] of TNyxText = (
+    'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection');
+  CNamed: array[0..17] of TNyxText = (
     'define', 'field', 'remove-field', 'append/update-row', 'move-row',
     'bind', 'query', 'typeahead', 'table-query', 'column-query', 'table-layout', 'column-layout',
-    'column-format', 'table-workbench', 'table-presentation', 'column-text', 'column-alignment');
-  CRequired: array[0..16] of TNyxText = (
+    'column-format', 'table-workbench', 'table-presentation', 'column-text', 'column-alignment', 'inspection');
+  CRequired: array[0..17] of TNyxText = (
     '|op|key|fields|rows|', '|op|key|definition|', '|op|key|field|kind|',
     '|op|key|item|values|', '|op|key|item|index|', '|op|owner|projection|spec|',
     '|op|owner|key|projection|query|', '|op|owner|key|projection|policy|',
@@ -590,13 +606,13 @@ const
     '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
     '|op|owner|key|projection|field|kind|policy|', '|op|owner|key|projection|policy|',
     '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
-    '|op|owner|key|projection|field|kind|policy|');
+    '|op|owner|key|projection|field|kind|policy|', '|op|owner|key|projection|policy|');
   CFamilies: array[0..3] of TNyxText = ('text', 'boolean', 'integer', 'number');
   CScalars: array[0..3] of TNyxText = ('string', 'boolean', 'integer', 'number');
 var
-  LCounts: array[0..44] of Integer;
-  LFamilies: array[0..44, 0..3] of Boolean;
-  LNamed: array[0..16] of Boolean;
+  LCounts: array[0..46] of Integer;
+  LFamilies: array[0..46, 0..3] of Boolean;
+  LNamed: array[0..17] of Boolean;
   LBranch, LProperties, LOperation, LChoices: TNyxDataValue;
   LIndex, LAt, LFamily, LAction, LShape: Integer;
   LName, LKind, LExpected: TNyxText;
@@ -832,7 +848,7 @@ begin
   LColumn := LChanges.Item(9);
   Check((LTable.Field('properties').Field('op').Field('const').AsText = 'table-query') and
     (LColumn.Field('properties').Field('op').Field('const').AsText = 'column-query') and
-    (LChanges.Item(5).Field('properties').Field('spec').Field('oneOf').Count = 12) and
+    (LChanges.Item(5).Field('properties').Field('spec').Field('oneOf').Count = 13) and
     (LChanges.Item(7).Field('properties').Field('op').Field('const').AsText = 'typeahead'),
     'query policy commands retain their positions beside the appended layout binding version');
   Check((LTable.Field('required').Count = 5) and (LColumn.Field('required').Count = 7) and
@@ -968,9 +984,9 @@ begin
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 68, 'seventeen named commands and all forty-five typed ordinary actions');
+    Check(LChanges.Count = 71, 'eighteen named commands and all forty-seven typed ordinary actions');
     { BEGIN EXPANDED_ACTION_CHECK }
-    Check(ExactChangeBranches(LChanges), 'seventeen named shapes and every typed action/family occur exactly once');
+    Check(ExactChangeBranches(LChanges), 'eighteen named shapes and every typed action/family occur exactly once');
     { END EXPANDED_ACTION_CHECK }
     LDefinition := LChanges.Item(1).Field('properties').Field('definition').Field('oneOf');
     Check((LDefinition.Count = 4) and
@@ -981,7 +997,7 @@ begin
       .Field('properties').Field('choices').Field('maxItems').AsInteger = 128,
       'bounded typed domain choices');
     LDefinition := LChanges.Item(5).Field('properties').Field('spec').Field('oneOf');
-    Check((LDefinition.Count = 12) and
+    Check((LDefinition.Count = 13) and
       (LDefinition.Item(0).Field('properties').Field('version').Field('const').AsInteger = 1) and
       (LDefinition.Item(1).Field('required').Count = 6) and
       (LDefinition.Item(1).Field('properties').Field('selection').Field('const').AsText = 'multiple'),

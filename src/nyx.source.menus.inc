@@ -61,7 +61,7 @@ begin
 
   if SameText(AName, 'NyxTypeAhead') or SameText(AName, 'NyxColumnSizing') or
     SameText(AName, 'NyxCollectionPaging') or SameText(AName, 'NyxColumnQuery') or
-    SameText(AName, 'NyxTableQuery') then
+    SameText(AName, 'NyxTableQuery') or SameText(AName, 'NyxInspectionPolicy') then
   begin
     LArgs := nil;
 
@@ -87,6 +87,12 @@ begin
     begin
       Result.Kind := vkCollectionPaging;
       Result.CollectionPaging := NyxCollectionPaging;
+    end;
+
+    if SameText(AName, 'NyxInspectionPolicy') then
+    begin
+      Result.Kind := vkInspectionPolicy;
+      Result.InspectionPolicy := NyxInspectionPolicy;
     end;
 
     if SameText(AName, 'NyxColumnQuery') then
@@ -258,6 +264,32 @@ begin
             else
             begin
               Fail('Unknown table query control method');
+            end;
+          end;
+        end;
+      vkInspectionPolicy:
+        begin
+
+          if LMethod = 'follow' then
+          begin
+            Require(1, vkCollectionFollow);
+            Result.InspectionPolicy := Result.InspectionPolicy.Follow(TNyxCollectionFollowMode(LArgs[0].Ordinal));
+          end
+          else
+          begin
+            Require(1, vkInteger);
+
+            if LMethod = 'pausedbytes' then
+            begin
+              Result.InspectionPolicy := Result.InspectionPolicy.PausedBytes(IntegerAt(0));
+            end
+            else if LMethod = 'removedidentities' then
+            begin
+              Result.InspectionPolicy := Result.InspectionPolicy.RemovedIdentities(IntegerAt(0));
+            end
+            else
+            begin
+              Fail('Unknown inspection policy method');
             end;
           end;
         end;

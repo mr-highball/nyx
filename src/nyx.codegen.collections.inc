@@ -200,6 +200,46 @@ begin
   Result := False;
 end;
 
+function NeedsCollectionInspectionUnits(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+
+  function ContainsInspection(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.InspectionPolicy.Defined;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := ContainsInspection(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if ContainsInspection(ADocument.Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if ContainsInspection(ADocument.Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 function NeedsColumnFormatUnits(ADocument: TNyxDocument): Boolean;
 var
   LIndex: Integer;
@@ -833,6 +873,20 @@ begin
       LLine := LLine + '.InitialPage(' + IntToStr(LView.PagingPolicy.FirstPage) + ')';
     end;
     ALines.Add(LLine + ')');
+  end;
+
+  if LView.InspectionPolicy.Defined then
+  begin
+    ALines.Add(AIndent + '    .Inspection(NyxInspectionPolicy');
+    ALines.Add(AIndent + '      .PausedBytes(' + IntToStr(LView.InspectionPolicy.MaximumPausedBytes) + ')');
+    ALines.Add(AIndent + '      .RemovedIdentities(' + IntToStr(LView.InspectionPolicy.IdentityLimit) + ')');
+    LLine := 'ncfKeepPosition';
+
+    if LView.InspectionPolicy.DefaultFollow = ncfLastVisible then
+    begin
+      LLine := 'ncfLastVisible';
+    end;
+    ALines.Add(AIndent + '      .Follow(' + LLine + '))');
   end;
 
   if LView.HasTypeAhead then

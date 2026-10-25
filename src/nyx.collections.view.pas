@@ -1907,6 +1907,12 @@ begin
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
   end;
 
+  if ASpec.InspectionPolicy.Defined and (AProjection = cpTree) and
+    (ASpec.InspectionPolicy.DefaultFollow = ncfLastVisible) then
+  begin
+    raise ENyxCollection.Create('Tree physical following is not supported');
+  end;
+
   if ASpec.HasTableWorkbenchPolicy and (AProjection <> cpTable) then
   begin
     raise ENyxCollection.Create('Authored workbench actions require a table projection');
@@ -1980,6 +1986,13 @@ begin
     { An alternative store may retain the original single-store contract. It
       cannot join a coordinated publication without the optional capability. }
     FStoreToken := FStore.Subscribe(StoreChanged, ValidateCandidate);
+  end;
+
+  if ASpec.InspectionPolicy.Defined then
+  begin
+    { No view observers exist during construction. Runtime defaults are copied
+      through the same validated policy path used by application overrides. }
+    ConfigureInspection(ASpec.InspectionPolicy);
   end;
 end;
 
@@ -2079,6 +2092,12 @@ begin
     { Shared document admission runs before target mounts are created. Reject
       an unsupported authored policy here as well as in live view construction. }
     raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
+  end;
+
+  if ASpec.InspectionPolicy.Defined and (AProjection = cpTree) and
+    (ASpec.InspectionPolicy.DefaultFollow = ncfLastVisible) then
+  begin
+    raise ENyxCollection.Create('Tree physical following is not supported');
   end;
 
   if ASpec.HasTableWorkbenchPolicy and (AProjection <> cpTable) then

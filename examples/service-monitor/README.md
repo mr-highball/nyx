@@ -51,6 +51,10 @@ process or timer. Copy and cell-range commands read the paused frame; editing
 that frame refuses until resumed. The application explicitly supplies its target
 clipboard host; merely opening or advancing the demo does not write a clipboard.
 Runtime policy and pause status never change the saved document/history.
+The public document declares inspection defaults through
+`.Inspection(NyxInspectionPolicy)`. Ordinary mounting initializes independent
+views from those saved values; attaching feed callbacks preserves a caller's
+already configured runtime override. Generated Pascal uses the same policy.
 
 `TNyxLiveInspectionDemo` attaches through public collection, context and event
 contracts after mounting. Its reference-counted callbacks retain no application,
@@ -61,8 +65,9 @@ privileged generated-code path.
 
 The [retention contract](../../docs/collection-views.md#pausing-live-inspection)
 describes payload/removed-ID bounds, overflow and current limitations. This demo
-does not yet qualify Tree physical anchors, browser input
-or Studio policy authoring.
+does not yet qualify browser input, full Studio physical interaction or measured
+production-scale performance. Portable inspector/semantic policy admission has
+separate focused tests; it does not substitute for those target journeys.
 
 The reusable `INyxCollectionFeedbackPanel` supplies current headings/counts,
 unknown-duration progress and context-dependent Try again/Reset/Resume actions.
@@ -145,6 +150,18 @@ own paths and retained-port retirement. These are input/contract checks, not a
 scale benchmark or physical-device/screen qualification.
 
 ## Build
+
+The maintained inspection-policy journey builds and executes portable/Studio/
+semantic checks and native handwritten/generated controls at 1280 and 390 logical
+pixels. It stages matching browser artifacts without starting a preview server:
+
+```powershell
+& tools/build.ps1 -Target inspection-authoring `
+  -InspectionAuthoringEvidenceDirectory build/inspection-authoring/review-01
+```
+
+Use a fresh evidence directory for each run. Browser compilation/staging does
+not establish browser interaction, screenshots or accessibility acceptance.
 
 From the repository root, using the existing `.local/toolchain.json` configuration
 and installed Win32 LCL units:

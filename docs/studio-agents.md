@@ -2290,6 +2290,25 @@ owns copied proposals; it retains no mutable document, control or runtime store.
   Reset does not remove a reusable override or restore inheritance; use the
   existing `inherit` intent for that separate operation. Missing/unbound owners,
   changed keys/projections, tables and malformed policies refuse atomically.
+- `inspection`: exact authored `owner`, bound `key`, expected `projection:
+  list/table/tree` and `policy` from `TNyxCollectionInspectionPolicy.ToData`.
+  Its closed object contains `version: 1`, `follow: keep-position/last-visible`,
+  `maximumPausedBytes` and `removedIdentityLimit` (exact Integers 0..2147483647).
+  Tree accepts keep-position and refuses follow-last. Null clears only the raw
+  declaration; an explicit default policy remains declared. Each ordered edit
+  copies the current effective binding, preserving earlier same-owner changes
+  in the group. A reusable part acquires independent local defaults. The caller's
+  expected revision, operation retry and paired Undo guards apply normally.
+
+Every defined binding context also contains `inspection: {declared, policy}`.
+Absent policies report null and do not enable inspection. These are bounded
+saved scalars, never live paused snapshots, viewport positions, draft text or
+runtime overrides. A declared inspection policy selects view descriptor 13,
+with the complete nullable column/policy shape. Source generation uses the
+public fluent policy and source admission reconstructs it without stringly
+typed authoring. The inspector's own `inspection/default-inspection` intents
+add their exact effective-binding/schema baseline; partial semantic edits
+derive this context within isolated replay instead of requesting a whole document.
 
 Each defined list/tree binding context contains `typeAhead: {declared, policy}`.
 `declared: false` reports the library default; explicit equivalent options remain

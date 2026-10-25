@@ -48,6 +48,36 @@ receiving updates. Obtain it with `NyxCollectionInspection(LView)` from
 List, Table and Tree views support this when their source provides prepared
 atomic publication. Ordinary views keep their previous behavior until configured.
 
+Authored defaults use the same public policy on the view specification:
+
+```pascal
+LServices.Binds.Collection(NyxCollectionView(NyxCollection('services'))
+  .Column(NyxTextField('name'), 'Service')
+  .Inspection(NyxInspectionPolicy
+    .PausedBytes(16 * 1024 * 1024)
+    .RemovedIdentities(2048)
+    .Follow(ncfKeepPosition))).Done;
+```
+
+Normal application construction copies this policy into each independent view.
+`ncfLastVisible` is supported by flat List/Table views; Tree supports pause and
+keep-position and refuses follow-last before mounting. Runtime configuration,
+follow commands and pause state never rewrite these saved defaults.
+`UseDefaultInspection` removes only the declaration. Absence leaves inspection
+unconfigured; explicitly applying `NyxInspectionPolicy` enables its default
+bounds. Existing descriptors retain their exact earlier shape when absent;
+version 13 carries the complete binding and declared inspection scalars.
+
+Studio's bound-control inspector includes a **Live inspection** section with
+follow mode and exact nonnegative byte/identity limits. Apply creates one paired
+design/Pascal history entry; reset clears only this policy. Unfinished inputs
+stay drafts, and stale binding/schema forms or pending Pascal refuse admission.
+Reusable parts acquire independent local defaults. The same semantic
+[`inspection` operation](studio-agents.md#structured-collection-context-and-authoring)
+derives the current binding after earlier changes in a revision-guarded group.
+
+Applications can still override defaults directly at runtime:
+
 ```pascal
 LInspection := NyxCollectionInspection(LView);
 
@@ -89,14 +119,13 @@ reducing its byte budget below the already retained frame.
 
 The [live service inspection example](../examples/service-monitor/README.md#live-inspection)
 composes two actual Nyx tables, pause/resume buttons, bound status and a
-deterministic three-step feed. Its saved/generated document contains controls
-and normal collection defaults; the runtime binding supplies inspection behavior.
-Native mounted input and the exact generated companion qualify that boundary;
-browser consumers currently compile only. This is runtime foundation, not full
+deterministic feed. Its saved/generated document carries typed inspection defaults;
+the runtime binding attaches feed/status actions without replacing an already
+configured policy. Native mounted input and the exact generated companion
+exercise that boundary; browser consumers currently compile only. This is progress toward
 [live-inspection task acceptance](../TODO/NS-3_control-usefulness_04.md).
-Automatic following of newest rows, Tree physical scroll anchors, orphaned
-draft recovery, feed loading/error presentations, saved policy/Studio authoring
-and the complete List/Tree search journeys remain open.
+Full browser interaction, AT/visual qualification, measured scale/memory/input
+budgets, native Tree editors and the remaining original criteria stay open.
 
 ### Stable reading positions
 
