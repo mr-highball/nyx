@@ -45,6 +45,78 @@ begin
   Result := InputLifetimeCurrent and FDraftRecoveryHeld;
 end;
 
+function TNyxCollectionMountBase.ReadRecoveryDraft(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean;
+begin
+  ACell := Default(TNyxCollectionCellEdit);
+  Result := False;
+end;
+
+function TNyxCollectionMountBase.DiscardRecoveryDraft(
+  const ACell: TNyxCollectionCellEdit): Boolean;
+begin
+  Result := False;
+end;
+
+function TNyxCollectionMountBase.CapturePendingDraft: INyxPendingCollectionDraft;
+var
+  LKeepAlive: INyxCollectionMount;
+  LCell: TNyxCollectionCellEdit;
+  LFrame: TNyxDraftRecoveryFrame;
+begin
+  Result := nil;
+  LKeepAlive := Self as INyxCollectionMount;
+
+  if not GetDraftRecoveryHeld or FUpdating or FEditsSuspended or
+    not FRecoveryPendingFrame.Defined then
+  begin
+    Exit;
+  end;
+  LFrame := FRecoveryPendingFrame;
+
+  if ReadRecoveryDraft(FRecoveryPendingItem, FRecoveryPendingField, LCell) and
+    GetDraftRecoveryHeld and not FUpdating and not FEditsSuspended and
+    LFrame.Same(FRecoveryPendingFrame) then
+  begin
+    Result := NewNyxPendingCollectionDraft(LCell, LFrame);
+  end;
+end;
+
+function TNyxCollectionMountBase.DiscardPendingDraft(
+  const AExpected: INyxPendingCollectionDraft): Boolean;
+var
+  LKeepAlive: INyxCollectionMount;
+  LCurrent: INyxPendingCollectionDraft;
+  LFrame: TNyxDraftRecoveryFrame;
+  LCell: TNyxCollectionCellEdit;
+begin
+  Result := False;
+  LKeepAlive := Self as INyxCollectionMount;
+
+  if (AExpected = nil) or not GetDraftRecoveryHeld or FUpdating or FEditsSuspended then
+  begin
+    Exit;
+  end;
+  { Alternative receipt getters may call out. Copy both values before checking
+    the current original mount/frame again; no borrowed target is held here. }
+  LFrame := AExpected.Frame;
+  LCell := AExpected.Cell;
+  LCurrent := CapturePendingDraft;
+
+  if (LCurrent = nil) or not LFrame.Same(FRecoveryPendingFrame) or
+    not NyxSameCollectionDraft(LCell, LCurrent.Cell) or not GetDraftRecoveryHeld then
+  begin
+    Exit;
+  end;
+  Result := DiscardRecoveryDraft(LCell);
+
+  if Result then
+  begin
+    FRecoveryPendingFrame := Default(TNyxDraftRecoveryFrame);
+    FRecoveryPendingItem := Default(TNyxItemRef);
+  end;
+end;
+
 function TNyxCollectionMountBase.RecoverCell(const ACell: TNyxCollectionCellEdit;
   const ABefore, AAfter: INyxCollectionSnapshot;
   out ALoss: TNyxCollectionDraftLoss; AHasDraft: Boolean): Boolean;
@@ -217,14 +289,32 @@ begin
       FRecoveryFrame := NewNyxDraftRecoveryFrame;
     end;
 
-    if Supports(FRecoveryWriter, INyxCollectionDraftRecoveryScopedWriter, LScoped) then
-    begin
-      LReceipt := LScoped.PreserveInFrame(ACell, LReason, ABefore.Revision,
-        LSource.Revision, FRecoveryFrame);
-    end
-    else
-    begin
-      LReceipt := FRecoveryWriter.Preserve(ACell, LReason, ABefore.Revision, LSource.Revision);
+    try
+
+      if Supports(FRecoveryWriter, INyxCollectionDraftRecoveryScopedWriter, LScoped) then
+      begin
+        LReceipt := LScoped.PreserveInFrame(ACell, LReason, ABefore.Revision,
+          LSource.Revision, FRecoveryFrame);
+      end
+      else
+      begin
+        LReceipt := FRecoveryWriter.Preserve(ACell, LReason, ABefore.Revision, LSource.Revision);
+      end;
+    except
+      on LPressure: ENyxDraftRecoveryPressure do
+      begin
+
+        if not FRecoveryPendingFrame.Defined or
+          (FRecoveryPendingItem.Collection.Name <> ACell.Item.Collection.Name) or
+          (FRecoveryPendingItem.ID <> ACell.Item.ID) or
+          not FRecoveryPendingField.Same(ACell.Field) then
+        begin
+          FRecoveryPendingFrame := NewNyxDraftRecoveryFrame;
+        end;
+        FRecoveryPendingItem := ACell.Item;
+        FRecoveryPendingField := ACell.Field;
+        raise;
+      end;
     end;
   end;
   ALoss := LReason;

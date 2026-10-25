@@ -195,10 +195,29 @@ type
       const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
   end;
 
+  { Detached review of one refused physical draft. Frame is an inert identity,
+    not a mount lease. Text/caret/provenance remain readable after retirement;
+    only the originating live mount can compare and discard its current draft.
+    Reviewing/exporting never admits this value to the bounded journal. }
+  INyxPendingCollectionDraft = interface(IInterface)
+    ['{6D04D597-F281-4118-AC07-95B92F8D12BF}']
+    function GetCell: TNyxCollectionCellEdit;
+    function GetFrame: TNyxDraftRecoveryFrame;
+    property Cell: TNyxCollectionCellEdit read GetCell;
+    property Frame: TNyxDraftRecoveryFrame read GetFrame;
+  end;
+
 { Advisory defaults are 64 retained entries or 8MiB text. They never silently
   remove or truncate a user's draft. Applications can choose other thresholds. }
 function NyxDraftRecoveryWarnings: TNyxDraftRecoveryWarnings;
 function NewNyxDraftRecoveryFrame: TNyxDraftRecoveryFrame;
+{ Detached review data for adapter authors. This never authorizes source writes
+  or journal admission. Undefined frames and invalid cells refuse. }
+function NewNyxPendingCollectionDraft(const ACell: TNyxCollectionCellEdit;
+  const AFrame: TNyxDraftRecoveryFrame): INyxPendingCollectionDraft;
+{ Compare reviewable text/provenance, ignoring focus/editing flags because a
+  review button may legitimately take focus. Caret changes invalidate review. }
+function NyxSameCollectionDraft(const ALeft, ARight: TNyxCollectionCellEdit): Boolean;
 { Finite defaults: 256 entries and 16MiB logical retained text/provenance. }
 function NyxDraftRecoveryLimits: TNyxDraftRecoveryLimits;
 { Exact retained text metric, without constructing another entry. Overflow is
@@ -216,6 +235,19 @@ implementation
 uses SysUtils, nyx.bytes, nyx.text, nyx.state;
 
 type
+  { Owns exact review data and an inert frame marker; no target/source/callback
+    survives through this receipt. Cell getters detach managed scalar records. }
+  TPendingDraft = class(TInterfacedObject, INyxPendingCollectionDraft)
+  private
+    FCell: TNyxCollectionCellEdit;
+    FFrame: TNyxDraftRecoveryFrame;
+  public
+    constructor Create(const ACell: TNyxCollectionCellEdit;
+      const AFrame: TNyxDraftRecoveryFrame);
+    function GetCell: TNyxCollectionCellEdit;
+    function GetFrame: TNyxDraftRecoveryFrame;
+  end;
+
   { Owns one validated inert value. Interface getters copy records so callers
     cannot change the journal's stored text/provenance/caret. }
   TRecovered = class(TInterfacedObject, INyxRecoveredCollectionDraft)
@@ -287,6 +319,50 @@ type
       const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
     procedure Retire;
   end;
+
+constructor TPendingDraft.Create(const ACell: TNyxCollectionCellEdit;
+  const AFrame: TNyxDraftRecoveryFrame);
+begin
+  inherited Create;
+  ACell.Validate;
+
+  if not AFrame.Defined then
+  begin
+    raise ENyxCollection.Create('A pending draft requires its physical frame');
+  end;
+  FCell := ACell.Copy;
+  FFrame := AFrame;
+end;
+
+function TPendingDraft.GetCell: TNyxCollectionCellEdit;
+begin
+  Result := FCell.Copy;
+end;
+
+function TPendingDraft.GetFrame: TNyxDraftRecoveryFrame;
+begin
+  Result := FFrame;
+end;
+
+function NewNyxPendingCollectionDraft(const ACell: TNyxCollectionCellEdit;
+  const AFrame: TNyxDraftRecoveryFrame): INyxPendingCollectionDraft;
+begin
+  Result := TPendingDraft.Create(ACell, AFrame);
+end;
+
+function NyxSameCollectionDraft(const ALeft, ARight: TNyxCollectionCellEdit): Boolean;
+begin
+  Result := ALeft.Defined and ARight.Defined and
+    (ALeft.Item.Collection.Name = ARight.Item.Collection.Name) and
+    (ALeft.Item.ID = ARight.Item.ID) and ALeft.Field.Same(ARight.Field) and
+    ALeft.Accepted.SameValue(ARight.Accepted) and (ALeft.Text = ARight.Text) and
+    (ALeft.Selection.Defined = ARight.Selection.Defined);
+
+  if Result and ALeft.Selection.Defined then
+  begin
+    Result := ALeft.Selection.SameRange(ARight.Selection);
+  end;
+end;
 
 function NyxDraftRecoveryWarnings: TNyxDraftRecoveryWarnings;
 begin

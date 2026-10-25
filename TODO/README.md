@@ -68,6 +68,12 @@ pass; full native/browser Studio builds succeed. Browser execution, observed
 Studio interaction, AT/visual, complete pressure UX, measured scale and
 full04 acceptance remain open in WORK.
 
+Explicit pending-draft review/export/confirmed cancellation now complements the
+bounded journal, with native handwritten/generated control evidence. Stale
+confirmations cannot discard newer text; source/peers and design history remain
+independent. Exports above the existing 4 MiB direct file-save cap, browser
+execution, saved recovery tooling and original scale/acceptance remain open.
+
 Journal ownership now has finite entry/payload admission and a safe held-display
 path, qualified by native public/generated pressure/discard/retry controls.
 The affected source and peer remain live. Copy/export and confirmed cancellation

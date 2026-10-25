@@ -786,6 +786,9 @@ type
       const AValue: TNyxText): TNyxText;
   protected
     procedure PrepareTablePresentation; override;
+    function ReadRecoveryDraft(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean; override;
+    function DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean; override;
     procedure RenderCellRange; override;
     procedure RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke); override;
     function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
@@ -3597,6 +3600,126 @@ begin
       (InputGrid(Screen.ActiveControl) = LGrid);
   end;
   Result.Active := True;
+end;
+
+function TNativeMount.ReadRecoveryDraft(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean;
+var
+  LLease: TColumnEditLease;
+  LIndex: Integer;
+  LMutation: Integer;
+begin
+  Result := False;
+  ACell := Default(TNyxCollectionCellEdit);
+
+  if not InputLifetimeCurrent or FEditsSuspended or (FColumnEditing = nil) or
+    FColumnEditing.Composing then
+  begin
+    Exit;
+  end;
+  LMutation := FCellMutationSerial;
+  LLease := ReadColumnEditor;
+
+  if not InputLifetimeCurrent or (FCellMutationSerial <> LMutation) then
+  begin
+    Exit;
+  end;
+
+  if LLease.Active and (LLease.Item.Collection.Name = AItem.Collection.Name) and
+    (LLease.Item.ID = AItem.ID) and LLease.Field.Same(AField) then
+  begin
+    ACell := NyxCollectionCellEdit(LLease.Item, LLease.Field, LLease.Accepted,
+      TNyxText(LLease.Text), LLease.Selection, False, False);
+    Result := ACell.Text <> ColumnValueDisplay(ACell.Accepted);
+    Exit;
+  end;
+  for LIndex := 0 to High(FDormantColumnEdits) do
+  begin
+
+    if (FDormantColumnEdits[LIndex].Item.Collection.Name = AItem.Collection.Name) and
+      (FDormantColumnEdits[LIndex].Item.ID = AItem.ID) and
+      FDormantColumnEdits[LIndex].Field.Same(AField) then
+    begin
+      ACell := FDormantColumnEdits[LIndex].Copy;
+      Result := ACell.Text <> ColumnValueDisplay(ACell.Accepted);
+      Exit;
+    end;
+  end;
+end;
+
+function TNativeMount.DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean;
+var
+  LCurrent: TNyxCollectionCellEdit;
+  LLease: TColumnEditLease;
+  LGrid: TStringGrid;
+  LPhysical: Integer;
+  LIndex: Integer;
+  LMove: Integer;
+  LUpdating: Boolean;
+begin
+  Result := False;
+
+  if not ReadRecoveryDraft(ACell.Item, ACell.Field, LCurrent) or
+    not NyxSameCollectionDraft(LCurrent, ACell) or not GetDraftRecoveryHeld then
+  begin
+    Exit;
+  end;
+
+  LLease := ReadColumnEditor;
+
+  if not InputLifetimeCurrent or not GetDraftRecoveryHeld then
+  begin
+    Exit;
+  end;
+
+  if LLease.Active and (LLease.Item.ID = ACell.Item.ID) and
+    LLease.Field.Same(ACell.Field) then
+  begin
+    LCurrent := NyxCollectionCellEdit(LLease.Item, LLease.Field, LLease.Accepted,
+      TNyxText(LLease.Text), LLease.Selection, False, False);
+
+    if not NyxSameCollectionDraft(LCurrent, ACell) then
+    begin
+      Exit;
+    end;
+
+    if FColumnEdit.Active then
+    begin
+      FColumnEdit := Default(TColumnEditLease);
+      Exit(True);
+    end;
+    LGrid := GridForColumn(FColumnLayout.Spec.ColumnIndex(ACell.Field), LPhysical);
+
+    if (LGrid = nil) or not LGrid.EditorMode or not (LGrid.Editor is TCustomEdit) then
+    begin
+      Exit;
+    end;
+    { Revert only the reviewed physical value. The ordinary explicit Refresh
+      subsequently installs latest source data; no EditCell or validation runs.
+      Use the cached physical spec, with no new outward getter after comparison. }
+    LUpdating := FUpdating;
+    FUpdating := True;
+    try
+      TCustomEdit(LGrid.Editor).Text := String(ColumnValueDisplay(ACell.Accepted));
+      Result := True;
+    finally
+      FUpdating := LUpdating;
+    end;
+    Exit;
+  end;
+  for LIndex := 0 to High(FDormantColumnEdits) do
+  begin
+
+    if NyxSameCollectionDraft(FDormantColumnEdits[LIndex], ACell) then
+    begin
+      for LMove := LIndex to High(FDormantColumnEdits) - 1 do
+      begin
+        FDormantColumnEdits[LMove] := FDormantColumnEdits[LMove + 1];
+      end;
+      SetLength(FDormantColumnEdits, Length(FDormantColumnEdits) - 1);
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNativeMount.SuspendCellEdits: INyxCollectionEditsSnapshot;

@@ -7,7 +7,7 @@ interface
 
 uses nyx.model, nyx.application.context, nyx.events, nyx.collections.view,
   nyx.collections.position, nyx.collections.recovery, nyx.collections.feedback,
-  nyx.linq.execution, nyx.collections.mount;
+  nyx.linq.execution, nyx.collections.mount, nyx.files.save;
 
 const
   InspectionPeerID = 'live-service-peer';
@@ -30,6 +30,11 @@ const
   RecoveryRetryID = 'retry-recovery-display';
   RecoveryRetryVisibleID = 'recovery-retry-visible';
   RecoveryRetryEnabledID = 'recovery-retry-enabled';
+  RecoveryReviewPendingID = 'review-pending-draft';
+  RecoveryExportPendingID = 'export-pending-draft';
+  RecoveryDiscardPendingID = 'discard-pending-draft';
+  RecoveryPendingCaptionID = 'pending-draft-discard-caption';
+  RecoveryPendingReviewedID = 'pending-draft-reviewed';
 
 type
   { Own this UI-only binding beside the mounted application. Close before page
@@ -47,7 +52,8 @@ type
       const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
       const APosition: INyxCollectionPositionState = nil;
       const ARecovery: INyxCollectionDraftRecovery = nil;
-      const ARecoveryMount: INyxCollectionMount = nil);
+      const ARecoveryMount: INyxCollectionMount = nil;
+      const ASaveHost: INyxFileSaveHost = nil);
     destructor Destroy; override;
     procedure Close;
     function Feedback: INyxCollectionFeedback;
@@ -72,7 +78,8 @@ implementation
 uses SysUtils, nyx.text, nyx.types, nyx.controls, nyx.state, nyx.behavior, nyx.responsive,
   nyx.scheduler, nyx.collections, nyx.collections.inspection, nyx.service.monitor,
   nyx.collections.feedback.controls, nyx.collections.query, nyx.collections.query.session,
-  nyx.publication, nyx.linq, nyx.linq.collections, nyx.linq.publication;
+  nyx.publication, nyx.linq, nyx.linq.collections, nyx.linq.publication,
+  nyx.bytes, nyx.files;
 
 type
   { Worker-safe replay transformation owns only a copied stable reference and
@@ -114,6 +121,15 @@ type
     { Optional mounted command authority is separate from the inert journal.
       Close releases it before application disposal; retired mounts cannot act. }
     FRecoveryMount: INyxCollectionMount;
+    { Explicit user review owns one detached pending value. It is not admitted
+      to the journal, and normal source ticks never copy an oversized draft. }
+    FPendingReview: INyxPendingCollectionDraft;
+    FPendingConfirm: Boolean;
+    FPendingStatus: TNyxText;
+    FSaveHost: INyxFileSaveHost;
+    FSaveRequest: INyxFileSaveRequest;
+    FSaveBytes: Integer;
+    FSavePending: Boolean;
     FRecoveryIndex: Integer;
     FRecovered: INyxRecoveredCollectionDraft;
     FDiscard: INyxRecoveredCollectionDraft;
@@ -129,10 +145,13 @@ type
     procedure SetDemoFilter(AEnabled: Boolean);
     procedure PublishState(const AStatus: TNyxText);
     procedure RecoveryAction(const AID: TNyxText);
+    procedure PendingAction(const AID: TNyxText);
+    procedure DraftSaved(const AResult: TNyxFileSaveResult);
   public
     constructor Create(const AContext: INyxApplicationContext;
       const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState;
-      const ARecovery: INyxCollectionDraftRecovery; const ARecoveryMount: INyxCollectionMount);
+      const ARecovery: INyxCollectionDraftRecovery; const ARecoveryMount: INyxCollectionMount;
+      const ASaveHost: INyxFileSaveHost);
     destructor Destroy; override;
     procedure Close;
     procedure Invoke(const AEvent: TNyxEventInfo;
@@ -172,6 +191,8 @@ begin
     Result.State.SetValue(NyxBooleanState(RecoveryVisibleID), False);
     Result.State.SetValue(NyxBooleanState(RecoveryRetryVisibleID), False);
     Result.State.SetValue(NyxBooleanState(RecoveryRetryEnabledID), False);
+    Result.State.SetValue(NyxBooleanState(RecoveryPendingReviewedID), False);
+    Result.State.SetValue(NyxTextState(RecoveryPendingCaptionID), 'Discard pending draft');
     Result.State.SetValue(NyxBooleanState(InspectionCanFollowID), True);
     LPage := Result.Find('services');
     LPage.Configure.Gap(8).Done;
@@ -245,6 +266,16 @@ begin
     LRecoveryCommands.Node.Find(RecoveryRetryID).Binds
       .Visible(NyxBooleanState(RecoveryRetryVisibleID))
       .Enabled(NyxBooleanState(RecoveryRetryEnabledID)).Done;
+    LRecoveryCommands.Add(NewNyxButton(RecoveryReviewPendingID).WithText('Review held draft'));
+    LRecoveryCommands.Node.Find(RecoveryReviewPendingID).Binds
+      .Visible(NyxBooleanState(RecoveryRetryVisibleID)).Done;
+    LRecoveryCommands.Add(NewNyxButton(RecoveryExportPendingID).WithText('Export reviewed draft'));
+    LRecoveryCommands.Node.Find(RecoveryExportPendingID).Binds
+      .Visible(NyxBooleanState(RecoveryPendingReviewedID)).Done;
+    LRecoveryCommands.Add(NewNyxButton(RecoveryDiscardPendingID));
+    LRecoveryCommands.Node.Find(RecoveryDiscardPendingID).Binds
+      .Visible(NyxBooleanState(RecoveryPendingReviewedID))
+      .Text(NyxTextState(RecoveryPendingCaptionID)).Done;
   except
     Result.Free;
     raise;
@@ -253,9 +284,11 @@ end;
 
 constructor TInspectionCallback.Create(const AContext: INyxApplicationContext;
   const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState;
-  const ARecovery: INyxCollectionDraftRecovery; const ARecoveryMount: INyxCollectionMount);
+  const ARecovery: INyxCollectionDraftRecovery; const ARecoveryMount: INyxCollectionMount;
+  const ASaveHost: INyxFileSaveHost);
 begin
   inherited Create;
+  FSaveHost := ASaveHost;
 
   if (AContext = nil) or not AContext.Active or (AInspection = nil) or
     (APeer = nil) or (AInspection = APeer) or (AInspection.Store <> APeer.Store) then
@@ -312,6 +345,16 @@ end;
 
 procedure TInspectionCallback.Close;
 begin
+  { Detach the borrowed file-save reply before releasing its callback owner.
+    Cancellation preserves the original draft; export never consumes it. }
+
+  if FSaveRequest <> nil then
+  begin
+    FSaveRequest.Cancel;
+  end;
+  FSaveRequest := nil;
+  FSaveHost := nil;
+  FPendingReview := nil;
   RetireFeed;
 
   if FQueryOwner <> nil then
@@ -463,6 +506,7 @@ var
   LBudget: INyxCollectionDraftRecoveryBudget;
   LCapacity: TNyxDraftRecoveryBudgetObservation;
   LPressure: Boolean;
+  LPendingCaption: TNyxText;
 begin
   LJournal := FRecovery;
   LObservation := Default(TNyxDraftRecoveryObservation);
@@ -555,12 +599,37 @@ begin
   if LPressure then
   begin
     LSummary := LSummary + ' Recovery capacity reached. The affected display is held and its unfinished ' +
-      'draft was kept. Review/copy retained entries, discard deliberately or raise limits, then Retry display.';
+      'draft was kept. Review held draft to export or deliberately discard it; ' +
+      'you can also free journal capacity or raise limits, then Retry display.';
+  end
+  else
+  begin
+    FPendingReview := nil;
+    FPendingConfirm := False;
+  end;
+
+  if FPendingReview <> nil then
+  begin
+    LText := DraftPreview(FPendingReview.Cell.Text);
+    LSummary := 'Reviewing held draft / ' + FPendingReview.Cell.Item.ID + ' / ' +
+      FPendingReview.Cell.Field.Name + '. The original remains in its control. ' +
+      'Export keeps exact UTF-8, including null characters. ' + FPendingStatus;
+
+    if FPendingConfirm then
+    begin
+      LSummary := LSummary + ' Discard this unfinished value without changing source? Confirm to continue.';
+    end;
   end;
 
   if not Active then
   begin
     Exit;
+  end;
+  LPendingCaption := 'Discard pending draft';
+
+  if FPendingConfirm then
+  begin
+    LPendingCaption := 'Confirm discard pending';
   end;
   FContext.State.Apply([
     NyxStateValue(NyxTextState(InspectionStatusID), AStatus),
@@ -572,7 +641,129 @@ begin
     { Retry also rechecks a limit raised by application code. Capacity changes
       do not grant this data journal a callback back into a physical target. }
     NyxStateValue(NyxBooleanState(RecoveryRetryEnabledID), LPressure and (FRecoveryMount <> nil)),
+    NyxStateValue(NyxBooleanState(RecoveryPendingReviewedID), FPendingReview <> nil),
+    NyxStateValue(NyxTextState(RecoveryPendingCaptionID), LPendingCaption),
     NyxStateValue(NyxBooleanState(InspectionCanFollowID), LCanFollow)]);
+end;
+
+procedure TInspectionCallback.DraftSaved(const AResult: TNyxFileSaveResult);
+var
+  LLease: INyxEventCallback;
+begin
+  LLease := Self;
+
+  if not Active or not FSavePending then
+  begin
+    Exit;
+  end;
+  FSavePending := False;
+  ValidateNyxFileSaveResult(AResult, FSaveBytes);
+  FPendingStatus := 'Export: ' + NyxFileSaveOutcomeName(AResult.Outcome) +
+    '. The original draft has not been discarded.';
+  PublishState(FContext.State.GetValue(NyxTextState(InspectionStatusID)));
+end;
+
+procedure TInspectionCallback.PendingAction(const AID: TNyxText);
+var
+  LMount: INyxCollectionPendingDraftMount;
+  LStatus: TNyxText;
+  LBytes: TNyxBytes;
+  LOptions: TNyxFileSaveOptions;
+  LRequest: INyxFileSaveRequest;
+begin
+
+  if not Active or not Supports(FRecoveryMount, INyxCollectionPendingDraftMount, LMount) then
+  begin
+    Exit;
+  end;
+  LStatus := FContext.State.GetValue(NyxTextState(InspectionStatusID));
+
+  if AID = RecoveryReviewPendingID then
+  begin
+    FPendingReview := LMount.CapturePendingDraft;
+    FPendingConfirm := False;
+    FPendingStatus := '';
+  end
+  else if (AID = RecoveryDiscardPendingID) and (FPendingReview <> nil) then
+  begin
+
+    if FPendingConfirm then
+    begin
+
+      if LMount.DiscardPendingDraft(FPendingReview) then
+      begin
+        FPendingReview := nil;
+        FPendingStatus := '';
+        FRecoveryMount.Refresh;
+      end
+      else
+      begin
+        FPendingReview := LMount.CapturePendingDraft;
+        FPendingStatus := 'The draft changed. Review it and confirm again.';
+      end;
+      FPendingConfirm := False;
+    end
+    else
+    begin
+      FPendingConfirm := True;
+    end;
+  end
+  else if (AID = RecoveryExportPendingID) and (FPendingReview <> nil) then
+  begin
+    FPendingConfirm := False;
+
+    if FSaveHost = nil then
+    begin
+      FPendingStatus := 'No file-save service is configured. Your text remains available for review.';
+    end
+    else
+    begin
+
+      if FSaveRequest <> nil then
+      begin
+        FSaveRequest.Cancel;
+      end;
+      FSaveRequest := nil;
+      FSavePending := False;
+      try
+        LOptions := NyxFileSaveOptions('unfinished-draft.txt').Title('Export unfinished draft')
+          .MediaType(NyxMediaType(nfmtText)).Allow('txt').MaximumBytes(NyxTextFileMaximumBytes);
+        { Check before allocating bytes or opening a picker. Oversized exports
+          refuse explicitly; the reviewed/original values are never truncated. }
+
+        if NyxUTF8ByteCount(FPendingReview.Cell.Text) > LOptions.ByteLimit then
+        begin
+          raise ENyxFile.Create('This file-save host accepts at most 4 MiB per request');
+        end;
+        LBytes := NyxEncodeUTF8(FPendingReview.Cell.Text);
+        FSaveBytes := Length(LBytes);
+        FSavePending := True;
+        FPendingStatus := 'Export pending; the original remains in its control.';
+        LRequest := FSaveHost.BeginSave(LOptions, LBytes, FContext.Scheduler,
+          FGeneration, DraftSaved);
+
+        if Active then
+        begin
+          FSaveRequest := LRequest;
+        end
+        else if LRequest <> nil then
+        begin
+          LRequest.Cancel;
+        end;
+      except
+        on LError: Exception do
+        begin
+          FSavePending := False;
+          FPendingStatus := TNyxText(LError.Message) + '. The draft is unchanged.';
+        end;
+      end;
+    end;
+  end;
+
+  if Active then
+  begin
+    PublishState(LStatus);
+  end;
 end;
 
 procedure TInspectionCallback.RecoveryAction(const AID: TNyxText);
@@ -602,8 +793,17 @@ begin
     Exit;
   end;
 
-  if not Active or (LCount = 0) then
+  if not Active then
   begin
+    Exit;
+  end;
+  FPendingReview := nil;
+  FPendingConfirm := False;
+  FPendingStatus := '';
+
+  if LCount = 0 then
+  begin
+    PublishState(LStatus);
     Exit;
   end;
 
@@ -962,6 +1162,11 @@ begin
   begin
     CancelFeed;
   end
+  else if (AEvent.OriginID = RecoveryReviewPendingID) or
+    (AEvent.OriginID = RecoveryExportPendingID) or (AEvent.OriginID = RecoveryDiscardPendingID) then
+  begin
+    PendingAction(AEvent.OriginID);
+  end
   else if (AEvent.OriginID = RecoveryPreviousID) or (AEvent.OriginID = RecoveryNextID) or
     (AEvent.OriginID = RecoveryDiscardID) or (AEvent.OriginID = RecoveryRetryID) then
   begin
@@ -972,7 +1177,7 @@ end;
 constructor TNyxLiveInspectionDemo.Create(const AContext: INyxApplicationContext;
   const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
   const APosition: INyxCollectionPositionState; const ARecovery: INyxCollectionDraftRecovery;
-  const ARecoveryMount: INyxCollectionMount);
+  const ARecoveryMount: INyxCollectionMount; const ASaveHost: INyxFileSaveHost);
 var
   LCallback: TInspectionCallback;
 begin
@@ -982,10 +1187,11 @@ begin
   begin
     raise ENyxCollectionInspection.Create('The demo needs its mounted event router');
   end;
-  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition, ARecovery, ARecoveryMount);
+  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition,
+    ARecovery, ARecoveryMount, ASaveHost);
   FCallback := LCallback;
   FCallbackObject := LCallback;
-  SetLength(FSubscriptions, 13);
+  SetLength(FSubscriptions, 16);
   FSubscriptions[0] := AEvents.On(NyxControlEvents(InspectionPauseID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[1] := AEvents.On(NyxControlEvents(InspectionResumeID), ntClick)
@@ -1011,6 +1217,12 @@ begin
   FSubscriptions[11] := AEvents.On(NyxControlEvents(InspectionCancelFeedID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[12] := AEvents.On(NyxControlEvents(RecoveryRetryID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[13] := AEvents.On(NyxControlEvents(RecoveryReviewPendingID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[14] := AEvents.On(NyxControlEvents(RecoveryExportPendingID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[15] := AEvents.On(NyxControlEvents(RecoveryDiscardPendingID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
 end;
 

@@ -744,6 +744,14 @@ try {
       Invoke-NyxInspectionCheck $nyxInspectionPas2js ($nyxInspectionBrowserFlags + @($nyxInspectionProgram)) ((Split-Path $nyxInspectionStage -Leaf) + '-compiler')
       Copy-Item -LiteralPath $nyxInspectionRuntime -Destination (Join-Path $nyxInspectionStage 'rtl.js')
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/service-monitor/live-inspection.html') -Destination $nyxInspectionStage
+      Invoke-NyxInspectionCheck $nyxInspectionPas2js ($nyxInspectionBrowserFlags + @(
+        'tests/nyx_collection_recovery_browser.lpr')) ((Split-Path $nyxInspectionStage -Leaf) + '-recovery-compiler')
+      $nyxRecoveryHTML = '<!doctype html><html lang="en"><meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+        '<title>Nyx pending draft recovery checks</title><body><script src="rtl.js"></script>' +
+        '<script src="nyx_collection_recovery_browser.js"></script><script>rtl.run();</script></body></html>'
+      [IO.File]::WriteAllText((Join-Path $nyxInspectionStage 'pending-recovery.html'),
+        $nyxRecoveryHTML, [Text.UTF8Encoding]::new($false))
     }
     # This native Win32 journey drives the same public recovery controls and
     # emitted document through capacity pressure, deliberate discard and retry.

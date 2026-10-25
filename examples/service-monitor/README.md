@@ -56,6 +56,14 @@ exhausted, the affected display holds its dirty editor while the shared source
 and peer keep advancing. The recovery panel explains the pressure. Review/copy
 retained text and discard deliberately, or raise limits through the typed budget
 facet, then choose **Retry display**. A premature retry preserves the held draft.
+When one pending value cannot fit, **Review held draft** reads it directly from
+the original control. Export saves the reviewed text as exact UTF-8 through an
+injected file-save service and leaves the original intact. **Discard pending
+draft** requires confirmation against the exact current text/caret and resumes
+the latest display without writing source data. A stale confirmation reviews the
+changed value and asks again. The existing direct save service has a 4 MiB
+request cap; larger export refuses explicitly without truncation. Streaming
+export and full pressure/memory qualification remain open.
 This demo passes its exact inspected mount separately from the inert journal;
 Close releases that command authority before application disposal.
 The public document declares inspection defaults through
@@ -124,12 +132,17 @@ discarding the exact reviewed entry. Changing entries cancels a pending discard.
 The runtime binding accepts an optional `NyxCollectionDraftRecovery(LMount)` data
 port without retaining the mount. NUL is shown as `\0` in the memo; the journal's
 raw text is unchanged. See [draft recovery](../../docs/collection-views.md#recovering-unfinished-cell-drafts)
-for advisory warnings, lifetime and the remaining hard-memory/browser gates.
+for advisory warnings, finite admission limits, lifetime and remaining browser/
+whole-workload memory gates.
 
-`tests/nyx_collection_recovery_controls.lpr` passes 24 actual native control
+`tests/nyx_collection_recovery_controls.lpr` passes 57 actual native control
 checks at each width in both handwritten and generated applications. It types
 unfinished supplementary text, changes a producer value, replaces a same-ID row,
-filters the edited row out and exercises the two-step discard. These injected
+filters the edited row out and exercises saved/pending two-step discard,
+capacity retry, exact export, cancelled export and stale-confirmation refusal.
+The browser companion `nyx_collection_recovery_browser.lpr` stages the same
+pending workflow with exact NUL/supplementary text at both widths; compilation
+alone does not establish executed browser behavior. These injected
 native interactions do not establish browser, trusted hardware or pixel quality.
 
 Opted-in Lists and Tables recover their reading row independently of ordinary

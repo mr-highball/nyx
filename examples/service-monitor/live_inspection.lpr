@@ -5,9 +5,9 @@ program live_inspection;
 
 uses
   {$ifdef PAS2JS}
-  Web, nyx.application.browser, nyx.clipboard.browser,
+  Web, nyx.application.browser, nyx.clipboard.browser, nyx.files.save.browser,
   {$else}
-  Interfaces, Forms, nyx.application.lcl, nyx.clipboard.lcl,
+  Interfaces, Forms, nyx.application.lcl, nyx.clipboard.lcl, nyx.files.save.lcl,
   {$endif}
   nyx.model, nyx.service.monitor, nyx.live.inspection, nyx.collections.workbench.runtime,
   nyx.collections.position, nyx.collections.mount;
@@ -40,7 +40,8 @@ begin
       GApplication.View.CollectionMount(InspectionPeerID).View,
       NyxCollectionPositionState(GApplication.View.CollectionMount(ServiceTableID)),
       NyxCollectionDraftRecovery(GApplication.View.CollectionMount(ServiceTableID)),
-      GApplication.View.CollectionMount(ServiceTableID));
+      GApplication.View.CollectionMount(ServiceTableID),
+      {$ifdef PAS2JS}NewNyxBrowserFileSaveHost{$else}NewNyxLCLFileSaveHost{$endif});
     {$ifdef PAS2JS}
     document.body.setAttribute('data-nyx-live-inspection-ready', 'passed');
     { The page owns this demo for its lifetime. Embedded hosts call Close/Free

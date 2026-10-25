@@ -159,6 +159,17 @@ type
     function GetDraftRecoveryHeld: Boolean;
     property DraftRecoveryHeld: Boolean read GetDraftRecoveryHeld;
   end;
+
+  { UI-owner commands for the original refused draft, independently of journal
+    capacity. Capture returns inert review data without hiding/focusing editors.
+    Discard requires the same frame and exact text/caret/accepted value; a stale
+    confirmation returns false. It never writes source or evicts saved entries.
+    Successful discard does not claim Refresh succeeded. Retired mounts refuse. }
+  INyxCollectionPendingDraftMount = interface(IInterface)
+    ['{0D01B9F9-C392-472A-9010-0CE372DE0632}']
+    function CapturePendingDraft: INyxPendingCollectionDraft;
+    function DiscardPendingDraft(const AExpected: INyxPendingCollectionDraft): Boolean;
+  end;
   { Immutable copied drafts from one exact runtime store. No document, mount,
     widget or callback is retained. Store is retained for identity comparison;
     it does not grant a replacement the former view's query/selection state.
@@ -297,7 +308,8 @@ type
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
     INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
     INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation,
-    INyxCollectionDraftRecoveryMount, INyxCollectionDraftRecoveryStatus)
+    INyxCollectionDraftRecoveryMount, INyxCollectionDraftRecoveryStatus,
+    INyxCollectionPendingDraftMount)
   private
     FToken: INyxCollectionViewSubscription;
     FPositionState: INyxCollectionPositionState;
@@ -306,6 +318,11 @@ type
     { Inert recovery scope persists across failed target passes and is released
       after a successful install. Journal copies retain no reference to us. }
     FRecoveryFrame: TNyxDraftRecoveryFrame;
+    { Coordinates only: rejected text remains solely in the physical target.
+      A review request copies that current value through the target adapter. }
+    FRecoveryPendingItem: TNyxItemRef;
+    FRecoveryPendingField: TNyxColumnIdentity;
+    FRecoveryPendingFrame: TNyxDraftRecoveryFrame;
     FConnected: Boolean;
     FDisconnecting: Boolean;
     FQueryFactory: INyxQueryFormPresenterFactory;
@@ -516,6 +533,12 @@ type
       pass. A target may refuse unsupported direct mounts; failure does not
       claim activation or make an old physical surface authoritative. }
     procedure PrepareTablePresentation; virtual;
+    { Recovery-only physical access bypasses stale source input admission, never
+      writes source, and must recheck exact data before the final target change.
+      Alternatives without editors retain these refusing defaults. }
+    function ReadRecoveryDraft(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean; virtual;
+    function DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean; virtual;
     { Flags/weak-receiver retirement only, before query/observer cleanup can
       enter external code. Actual target API/hook cleanup remains DetachTarget. }
     procedure RetireTargetInput; virtual;
@@ -550,6 +573,8 @@ type
     function GetPositionRecovery: TNyxCollectionPositionRecovery;
     function GetDraftRecovery: INyxCollectionDraftRecovery;
     function GetDraftRecoveryHeld: Boolean;
+    function CapturePendingDraft: INyxPendingCollectionDraft;
+    function DiscardPendingDraft(const AExpected: INyxPendingCollectionDraft): Boolean;
     function CapturePositionState: INyxCollectionPositionState;
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
     procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
@@ -3176,6 +3201,7 @@ var
 begin
   inherited Create;
   FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
+  FRecoveryPendingFrame := Default(TNyxDraftRecoveryFrame);
   FTextLimits := TNyxTableTextWorkLimits.Defaults;
   FClipboardOptions := TNyxCollectionClipboardOptions.Defaults;
 
@@ -3475,6 +3501,8 @@ begin
     FRecoveryWriter.Retire;
   end;
   FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
+  FRecoveryPendingFrame := Default(TNyxDraftRecoveryFrame);
+  FRecoveryPendingItem := Default(TNyxItemRef);
 
   if FPositionStateObject <> nil then
   begin
@@ -4182,6 +4210,8 @@ begin
       FTreeRevealSerial := FPendingTreeRevealSerial;
       FDraftRecoveryHeld := False;
       FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
+      FRecoveryPendingFrame := Default(TNyxDraftRecoveryFrame);
+      FRecoveryPendingItem := Default(TNyxItemRef);
     end;
     Inc(FRefreshCount);
     LCompleted := True;

@@ -225,3 +225,23 @@ process memory or full original criterion acceptance. Portable copy/export and
 confirmed cancellation of an oversized pending draft still need a useful
 end-user path; saved recovery limits/Studio/MCP, Tree editors, actual browser/
 AT/visual and measured L2 behavior remain open.
+
+Pending-draft review now has a separate optional public mount capability. It
+copies the original refused physical value on explicit request and confirms
+discard against its exact frame/text/caret/accepted scalar, without journal
+admission, source writes or saved-history changes. The ordinary live-inspection
+panel exposes review, exact UTF-8 export through an injected file-save service,
+cancelled delivery and two-step discard with stale-confirmation refusal.
+Native handwritten/generated controls exercise this at both widths; the browser
+companion includes exact NUL/supplementary text and retirement, staged separately
+for actual execution. The direct file-save service's existing 4 MiB request cap
+still refuses larger exports without truncation. Portable streaming export,
+saved recovery policy/Studio/MCP, native Tree editors, actual browser/AT/visual
+and L2 scale/whole-workload memory remain required. No original criterion or
+task acceptance is inferred from this bounded progress.
+Final maintained checks pass33 jobs/14 complete zero-unfreed native heaps with
+1966 unchanged compiler/orchestration inputs: mounted recovery25 and actual
+native recovery57 per width/variant, alongside the unchanged public/generated
+inspection and authoring regressions. Both full Studio compilers pass with814
+unchanged inputs. No new owned warnings. Browser access to the existing review
+tab was denied by its URL policy; fixture compilation is not execution evidence.

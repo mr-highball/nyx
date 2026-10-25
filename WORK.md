@@ -9,7 +9,81 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — bounded recovery and safe pressure retry — 2026-10-25
+## Current checkpoint — pending draft review, export and exact cancellation — 2026-10-25
+
+Parentc600aee is remote-verified. Previous goal turn: PROGRESS. Root remains
+SOLO; Lil' Scooty is idle until the user requests otherwise. This eleventh
+original04 L1 checkpoint advances the actual held-draft recovery path. It does
+not close an original criterion, move a task to DONE or claim full acceptance.
+All04/03 criteria and the existing collection02/03 browser gates remain open.
+
+The optional INyxCollectionPendingDraftMount reads the exact refused physical
+cell on explicit user request, independently of journal entry/payload capacity.
+INyxPendingCollectionDraft owns inert copied cell/text/caret and an opaque frame
+marker, with no source, mount, widget, document or callback reference. The mount
+retains coordinates/marker only, never a hidden queue of refused text. Normal
+producer ticks do not capture a large pending value into another store.
+
+Discard compares the original live pending frame and exact typed cell, accepted
+scalar, text and caret. Focus can move to a review button. Changed text/caret,
+retirement, another frame or active composition refuses; source data and saved
+journal entries are never changed. Native cancellation reverts the physical
+editor under its existing update shield; browser cancellation assigns only the
+original DOM value. An explicit normal Refresh installs latest accepted data.
+If another cell then refuses, it remains independently held. Retired owners
+refuse before consulting even an alternative receipt's getters.
+
+The public handwritten/generated live-inspection panel now provides Review held
+draft, Export reviewed draft and two-step Discard pending draft. A stale UI
+confirmation reviews changed text and asks again. Saved-entry navigation leaves
+pending-review mode without discarding its original. Captions/status publish in
+one state transaction. All are ordinary Nyx controls/bindings and runtime state;
+saved design/Pascal history remains unchanged.
+
+Export takes an explicitly injected INyxFileSaveHost, encodes exact pending wire
+text as UTF-8, and reports typed completion/cancellation without consuming the
+original. Close cancels the borrowed reply before disposing its owner. The
+existing direct file-save request cap is still4MiB. Larger exports refuse before
+byte allocation/host effects and never truncate. A portable streaming/chunked
+file-save path remains required for drafts above that cap; exposing raw copied
+text is not acceptance of that broader end-user export requirement.
+
+Qualification is recorded in private pending-recovery-01. Maintained-01 passes
+31 jobs before the final navigation/retired-receipt refinements. Maintained-02
+adds handwritten/generated browser pending fixtures and passes33 jobs. Final
+maintained-03 and studio-build-02 are the authoritative source cohort; their
+terminal receipts/input checks are recorded in final-evidence-private.json.
+Final maintained33 jobs pass with14 complete zero-unfreed native heaps and1966
+unchanged compiler/orchestration inputs. Recovery37, mounted recovery25,
+authoring12, Studio/semantic22, native MCP discovery236 and presentation58 pass.
+Public handwritten/generated monitoring remains87 per width/variant plus one
+fresh-output guard handwritten1280. Native recovery passes57 per width/variant.
+Full native LCL/pas2js Studio builds pass with814 unchanged inputs. No owned
+compiler warnings; installed RTL warnings remain recorded. All jobs/readers are
+joined. Maintained logic uses the established direct RunOwned log transport;
+standard asynchronous redirection is not newly qualified.
+Native evidence is injected Win32/LCL control interaction, not trusted hardware,
+pixels, AT, non-Win32 behavior or production-scale responsiveness.
+
+Browser fixture nyx_collection_recovery_browser includes both1280/390 geometry,
+actual DOM dirty inputs, zero journal capacity, exact NUL/supplementary text,
+UTF-8 export, cancelled export, stale confirmation, explicit cancellation and
+retirement. Both handwritten/generated variants compile/stage with matched RTL.
+Execution is unverified: current document-control discovery finds no connected
+session, and CUA rejected acquiring the existing unreachable review tab because
+its protocol was not allowed. No alternate browser surface, raw CDP, indirect
+browser command or other bypass was attempted. A read-only Pascal preview host
+was compiled only; no listener/server was started or user project changed.
+
+Next: finish the oversized pending-value export requirement through a portable
+streaming file-save contract, with bounded ownership/cancellation and both target
+adapters; use existing task04/03 ownership instead of another journal/queue. Also
+retain saved recovery policy/Studio/MCP, native Tree editors, actual browser/
+observing Studio/AT/visual and measured L2/whole-workload memory as open original
+work. Browser interaction needs an admitted browser review surface; historical
+records are evidence, not new source-scope or file-by-file approval gates.
+
+## Checkpoint — bounded recovery and safe pressure retry — 2026-10-25
 
 Parentc8a1558 is remote-verified. Root remains SOLO; Lil' Scooty is idle. The
 previous goal turn is PROGRESS. This tenth original04 L1 checkpoint remains

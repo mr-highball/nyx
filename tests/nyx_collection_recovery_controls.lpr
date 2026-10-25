@@ -27,13 +27,60 @@ uses Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Windows,
   nyx.text, nyx.model, nyx.codec, nyx.state, nyx.application.lcl,
   nyx.collections, nyx.collections.mount, nyx.collections.recovery,
   nyx.collections.position, nyx.collections.query, nyx.live.inspection,
-  nyx.service.monitor
+  nyx.service.monitor, nyx.files.save, nyx.bytes, nyx.scheduler
   {$ifdef NYX_INSPECTION_GENERATED}, nyx.generated.view{$endif};
 
 const
   CFirstDraft: TNyxText = 'A careful unfinished note 🌙';
   CSecondDraft: TNyxText = 'Another unfinished note 🌙';
   CThirdDraft: TNyxText = 'Keep this while the record is hidden 🌙';
+
+type
+  { Inline deterministic save host qualifies the UI's exact bytes and typed
+    completion, without pretending that injected dialogs wrote a real file. }
+  TReviewSaveHost = class(TInterfacedObject, INyxFileSaveHost)
+  public
+    Bytes: TNyxBytes;
+    Outcome: TNyxFileSaveOutcome;
+    Calls: Integer;
+    function BeginSave(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
+      const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
+      AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+  end;
+
+  { Uses the production request lifetime and receipt validation with an inline
+    terminal outcome; it owns copied bytes and no mount/editor references. }
+  TReviewSaveRequest = class(TNyxFileSaveRequest)
+  public
+    procedure Finish(AOutcome: TNyxFileSaveOutcome);
+  end;
+
+procedure TReviewSaveRequest.Finish(AOutcome: TNyxFileSaveOutcome);
+var
+  LCount: Integer;
+begin
+  LCount := 0;
+
+  if AOutcome = nfsoWritten then
+  begin
+    LCount := Length(FBytes);
+  end;
+  Complete(AOutcome, FOptions.SuggestedName, LCount);
+end;
+
+function TReviewSaveHost.BeginSave(const AOptions: TNyxFileSaveOptions;
+  const ABytes: TNyxBytes; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+var
+  LRequest: TReviewSaveRequest;
+begin
+  AOptions.Admit(ABytes);
+  Bytes := Copy(ABytes, 0, Length(ABytes));
+  Inc(Calls);
+  LRequest := TReviewSaveRequest.Create(AOptions, ABytes, AScheduler, ACancellation, AReply);
+  Result := LRequest;
+  LRequest.Finish(Outcome);
+end;
 
 var
   GChecks: Integer;
@@ -78,6 +125,10 @@ var
   LBudget: INyxCollectionDraftRecoveryBudget;
   LCapacity: TNyxDraftRecoveryBudgetObservation;
   LInput: INyxCollectionInputAdmission;
+  LSave: TReviewSaveHost;
+  LSaveHost: INyxFileSaveHost;
+  LPending: INyxCollectionPendingDraftMount;
+  LReview: INyxPendingCollectionDraft;
 
   procedure Click(const AID: TNyxText);
   begin
@@ -140,8 +191,11 @@ begin
     LPeer := LApplication.View.CollectionMount(InspectionPeerID);
     LStore := LFirst.View.Store;
     LJournal := NyxCollectionDraftRecovery(LFirst);
+    LSave := TReviewSaveHost.Create;
+    LSaveHost := LSave;
+    LSave.Outcome := nfsoWritten;
     LDemo := TNyxLiveInspectionDemo.Create(LApplication.Context, LApplication.View.Events,
-      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), LJournal, LFirst);
+      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), LJournal, LFirst, LSaveHost);
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     Check(not LApplication.View.ControlFor('recovered-drafts').Visible,
       'the ordinary bound recovery card starts hidden');
@@ -259,6 +313,49 @@ begin
       (LJournal.Capture.Count = 3) and (LBudget.CaptureBudget.LastRefusal <> ncrpNone) and
       not LApplication.State.GetValue(NyxBooleanState(RecoveryRetryVisibleID)),
       'deliberately reverting a draft releases the display without misreading an old refusal as current pressure');
+    BeginDraft(CFirstDraft);
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('notes'), 'Accepted while draft is pending'));
+    LBefore := LStore.Snapshot;
+    Supports(LFirst, INyxCollectionPendingDraftMount, LPending);
+    LReview := LPending.CapturePendingDraft;
+    Check((LReview <> nil) and (LReview.Cell.Text = CFirstDraft) and
+      LReview.Cell.Selection.Defined and (LReview.Cell.Selection.Start = 2) and
+      (LJournal.Capture.Count = 3) and not LInput.InputReady,
+      'bounded pending capture reads exact real editor text/caret without journal admission');
+    Click(RecoveryReviewPendingID);
+    Check(LApplication.State.GetValue(NyxBooleanState(RecoveryPendingReviewedID)) and
+      (Pos(CFirstDraft, TNyxText(TMemo(LApplication.View.InputFor(RecoveryTextID)).Text)) > 0),
+      'ordinary review controls show the still-pending draft independently of saved journal entries');
+    Click(RecoveryNextID);
+    Check(not LApplication.State.GetValue(NyxBooleanState(RecoveryPendingReviewedID)) and
+      NyxCollectionDraftRecoveryHeld(LFirst),
+      'saved-entry navigation leaves pending review without discarding the original');
+    Click(RecoveryReviewPendingID);
+    Click(RecoveryExportPendingID);
+    Check((LSave.Calls = 1) and (NyxDecodeUTF8(LSave.Bytes) = CFirstDraft) and
+      (LJournal.Capture.Count = 3) and LGrid.EditorMode and (TNyxText(LEditor.Text) = CFirstDraft),
+      'inline file export uses exact UTF-8 and never consumes or reapplies the original pending draft');
+    LSave.Outcome := nfsoCancelled;
+    Click(RecoveryExportPendingID);
+    Check((LSave.Calls = 2) and NyxCollectionDraftRecoveryHeld(LFirst) and
+      (Pos('cancelled', LApplication.State.GetValue(NyxTextState(RecoverySummaryID))) > 0),
+      'save cancellation is visible and keeps the original unfinished editor');
+    Click(RecoveryDiscardPendingID);
+    Check((TNyxText(LEditor.Text) = CFirstDraft) and not LInput.InputReady,
+      'pending discard first warns without touching original text');
+    LEditor.Text := CSecondDraft;
+    Click(RecoveryDiscardPendingID);
+    Check((TNyxText(LEditor.Text) = CSecondDraft) and NyxCollectionDraftRecoveryHeld(LFirst) and
+      (Pos('draft changed', LApplication.State.GetValue(NyxTextState(RecoverySummaryID))) > 0),
+      'a stale UI confirmation refuses newer typing and requires a new review/confirmation');
+    Click(RecoveryDiscardPendingID);
+    Click(RecoveryDiscardPendingID);
+    Check(LInput.InputReady and not NyxCollectionDraftRecoveryHeld(LFirst) and
+      (LJournal.Capture.Count = 3) and (LStore.Snapshot = LBefore),
+      'confirmed pending discard resumes the latest display with zero journal capacity and no source write');
+    Check(not LPending.DiscardPendingDraft(LReview) and
+      (LReview.Cell.Text = CFirstDraft) and (TNyxCodec.Encode(LDocument) = LSaved),
+      'an old review remains inert and cannot discard a later frame or alter saved design');
     LDemo.Close;
     LApplication.Free;
     LApplication := nil;

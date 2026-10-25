@@ -421,11 +421,37 @@ retirement, capacity refusal/retry and failed-refresh input refusal. Browser Tab
 compile but still require actual browser execution. Native Tree inline-editor
 recovery, saved recovery policy, Studio/MCP inspection and full parity remain
 open. A compilation pass does not qualify those interactions.
-An end-user action to copy/export or deliberately cancel an oversized **pending**
-draft through a portable mount contract remains separate work. The current
-panel reviews already retained entries; applications can raise limits through
-the runtime budget facet. This is not a claim of complete pressure UX or total
-application memory acceptance.
+An oversized **pending** draft is different from an already retained entry.
+`INyxCollectionPendingDraftMount.CapturePendingDraft` explicitly reads the exact
+refused physical draft without hiding it or admitting another journal entry.
+It returns an inert `INyxPendingCollectionDraft`: copied text, typed cell and
+Unicode scalar caret, plus an opaque physical-frame identity. The mount retains
+coordinates only; normal producer updates never queue rejected text. A caller
+may retain this review independently after the target retires.
+
+`DiscardPendingDraft(LReview)` requires that original live frame and the exact
+reviewed text/caret/accepted scalar. Focus may move to the review controls.
+Newer typing, a different frame, retirement or active composition refuses. A
+successful discard changes only that physical draft; it never writes source or
+discards journal entries. Call the existing mount's `Refresh` afterward to
+install the latest source display. If another dirty cell also exceeds capacity,
+that cell remains held and can be reviewed separately. Applications must obtain
+deliberate confirmation before invoking this destructive command.
+
+The example's **Review held draft** button exposes the pending value in its
+ordinary read-only memo. **Export reviewed draft** uses an explicitly injected
+`INyxFileSaveHost`, exact UTF-8 bytes (including NUL), cancellation and typed
+delivery outcomes. Export never consumes the original or silently reapplies it.
+**Discard pending draft** requires two clicks; if text/caret changed, a new
+review and confirmation are required. Saved-entry navigation/discard remains a
+separate action. These are runtime controls, not authored history.
+
+The existing direct file-save contract accepts at most 4 MiB per request. Larger
+exports refuse before byte allocation or host effects, leaving both reviewed
+and original text intact. The raw pending interface remains available to caller
+export services. A portable streaming/chunked file-save path, complete pressure
+UX, browser execution and total application memory acceptance remain open;
+bounded journal ownership must not be presented as those broader outcomes.
 
 ## Typed construction
 

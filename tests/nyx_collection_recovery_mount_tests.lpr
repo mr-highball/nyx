@@ -43,8 +43,20 @@ type
     Fail: Boolean;
     Loss: TNyxCollectionDraftLoss;
     Position: TNyxCollectionPositionRecovery;
+    function ReadRecoveryDraft(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean; override;
+    function DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean; override;
     procedure RenderDataset; override;
     procedure DetachTarget; override;
+  end;
+
+  { An alternative receipt counts getter calls. Retired command owners must
+    refuse before consulting caller-supplied values or invoking their code. }
+  TReceiptProbe = class(TInterfacedObject, INyxPendingCollectionDraft)
+  public
+    Reads: Integer;
+    function GetCell: TNyxCollectionCellEdit;
+    function GetFrame: TNyxDraftRecoveryFrame;
   end;
 
 var
@@ -58,6 +70,35 @@ begin
   begin
     raise Exception.Create(AMessage);
   end;
+end;
+
+function TRecoveryTarget.ReadRecoveryDraft(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean;
+begin
+  ACell := Draft.Copy;
+  Result := Draft.Defined and (Draft.Item.ID = AItem.ID) and Draft.Field.Same(AField);
+end;
+
+function TRecoveryTarget.DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean;
+begin
+  Result := NyxSameCollectionDraft(Draft, ACell);
+
+  if Result then
+  begin
+    Draft := Default(TNyxCollectionCellEdit);
+  end;
+end;
+
+function TReceiptProbe.GetCell: TNyxCollectionCellEdit;
+begin
+  Inc(Reads);
+  Result := Default(TNyxCollectionCellEdit);
+end;
+
+function TReceiptProbe.GetFrame: TNyxDraftRecoveryFrame;
+begin
+  Inc(Reads);
+  Result := Default(TNyxDraftRecoveryFrame);
 end;
 
 procedure TRecoveryTarget.RenderDataset;
@@ -118,6 +159,10 @@ var
   LBytes: Integer;
   LSaturated: Boolean;
   LFirstCapture: INyxRecoveredCollectionDraft;
+  LPending: INyxCollectionPendingDraftMount;
+  LReview: INyxPendingCollectionDraft;
+  LProbe: TReceiptProbe;
+  LProbeLease: INyxPendingCollectionDraft;
 begin
   LKey := NyxCollection('pressure');
   LItem := NyxItem(LKey, 'reader');
@@ -151,6 +196,16 @@ begin
   LMount.Refresh;
   Check((LTarget.Frame = LFrame) and LTarget.Draft.Defined and not LInput.InputReady,
     'repeated premature retry preserves the original held frame and exact text');
+  Supports(LMount, INyxCollectionPendingDraftMount, LPending);
+  LReview := LPending.CapturePendingDraft;
+  Check((LReview <> nil) and (LReview.Cell.Text = CDraft) and
+    (LJournal.Capture.Count = 0) and not LInput.InputReady,
+    'explicit pending review retains exact supplementary/NUL text without journal admission or refresh');
+  LTarget.Draft := NyxCollectionCellEdit(LItem, LReview.Cell.Field,
+    LReview.Cell.Accepted, CDraft + 'newer', NyxTextSelection(CDraft + 'newer', 1, 4), True, True);
+  Check(not LPending.DiscardPendingDraft(LReview) and LTarget.Draft.Defined,
+    'a pending confirmation cannot discard newer text in the same held physical frame');
+  LTarget.Draft := LReview.Cell;
   LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(1).PayloadBytes(LBytes));
   Check(not LSaturated and LBudget.CaptureBudget.CanRetry and not LInput.InputReady,
     'raising exact capacity does not silently claim that old target input is ready');
@@ -180,6 +235,12 @@ begin
     (LFirstCapture.Reason = ncdlValueChanged),
     'retry coalesces an already stored physical draft even when later provenance is only unknown');
   LMount.Disconnect;
+  Check((LPending.CapturePendingDraft = nil) and not LPending.DiscardPendingDraft(LReview) and
+    (LReview.Cell.Text = CDraft), 'pending receipts stay readable but grant no retired mount authority');
+  LProbe := TReceiptProbe.Create;
+  LProbeLease := LProbe;
+  Check(not LPending.DiscardPendingDraft(LProbeLease) and (LProbe.Reads = 0),
+    'a retired command refuses before invoking alternative receipt getters');
 end;
 
 procedure Run;

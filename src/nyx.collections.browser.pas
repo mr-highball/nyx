@@ -788,6 +788,9 @@ type
       AFocusOnly: Boolean = False);
   protected
     procedure RenderCellRange; override;
+    function ReadRecoveryDraft(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean; override;
+    function DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean; override;
     procedure RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke); override;
     function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
     function ClipboardInputAvailable: Boolean; override;
@@ -4581,6 +4584,120 @@ begin
     AEvent.preventDefault;
     AEvent.stopImmediatePropagation;
     Result := False;
+  end;
+end;
+
+function TBrowserMount.ReadRecoveryDraft(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean;
+var
+  LWork: Integer;
+  LColumn: Integer;
+  LRow: TBrowserRow;
+  LInput: TJSHTMLInputElement;
+  LText: TNyxText;
+  LAccepted: TNyxStateValue;
+  LData: INyxCollectionSnapshot;
+  LMutation: Integer;
+  LSelection: TNyxTextSelection;
+begin
+  Result := False;
+  ACell := Default(TNyxCollectionCellEdit);
+
+  if not InputLifetimeCurrent or FEditsSuspended or (FRendered = nil) or
+    (FComposingInput <> nil) then
+  begin
+    Exit;
+  end;
+  LData := FRendered;
+  LMutation := FCellMutationSerial;
+  LColumn := FColumnLayout.Spec.ColumnIndex(AField);
+
+  if not InputLifetimeCurrent or (LColumn < 0) then
+  begin
+    Exit;
+  end;
+  for LWork := 0 to High(FResidentRows) do
+  begin
+    LRow := FRows[FResidentRows[LWork]];
+
+    if (LRow = nil) or (LRow.FRef.Collection.Name <> AItem.Collection.Name) or
+      (LRow.FRef.ID <> AItem.ID) or (LColumn > High(LRow.FInputs)) then
+    begin
+      Continue;
+    end;
+    LInput := LRow.FInputs[LColumn];
+
+    if LInput = nil then
+    begin
+      Exit;
+    end;
+    LText := LInput.value;
+
+    if LInput._type = 'checkbox' then
+    begin
+      LText := 'false';
+
+      if LInput.checked then
+      begin
+        LText := 'true';
+      end;
+    end;
+    LSelection := CaptureNyxBrowserSelection(LInput);
+    LAccepted := FColumnLayout.Spec.ColumnAt(LColumn).Read(LData.Item(AItem));
+
+    if not InputLifetimeCurrent or (FRendered <> LData) or
+      (FCellMutationSerial <> LMutation) then
+    begin
+      Exit;
+    end;
+    ACell := NyxCollectionCellEdit(AItem, AField, LAccepted, LText,
+      LSelection, False, False);
+    Result := LText <> NyxCellEditWireText(LAccepted);
+    Exit;
+  end;
+end;
+
+function TBrowserMount.DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean;
+var
+  LCurrent: TNyxCollectionCellEdit;
+  LColumn: Integer;
+  LWork: Integer;
+  LRow: TBrowserRow;
+  LInput: TJSHTMLInputElement;
+begin
+  Result := False;
+
+  if not ReadRecoveryDraft(ACell.Item, ACell.Field, LCurrent) or
+    not NyxSameCollectionDraft(LCurrent, ACell) or not GetDraftRecoveryHeld then
+  begin
+    Exit;
+  end;
+  { Cached physical columns cannot reenter a user getter between the exact
+    comparison above and the final DOM write. }
+  LColumn := FColumnLayout.Spec.ColumnIndex(ACell.Field);
+
+  if not InputLifetimeCurrent or (LColumn < 0) then
+  begin
+    Exit;
+  end;
+  for LWork := 0 to High(FResidentRows) do
+  begin
+    LRow := FRows[FResidentRows[LWork]];
+
+    if (LRow <> nil) and (LRow.FRef.ID = ACell.Item.ID) and
+      (LColumn <= High(LRow.FInputs)) then
+    begin
+      LInput := LRow.FInputs[LColumn];
+
+      if LInput <> nil then
+      begin
+        { Programmatic DOM value assignment emits no input/change event. No
+          source write, synthetic click or focus transfer is necessary. }
+        LInput.value := NyxCellEditWireText(ACell.Accepted);
+        LInput.checked := LInput.value = 'true';
+        Exit(True);
+      end;
+    end;
   end;
 end;
 
