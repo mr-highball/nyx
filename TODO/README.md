@@ -35,7 +35,9 @@ independent views. Its runtime pause/retention foundation and public two-view
 demo now have focused native mounted/generated evidence. Flat List/Table reading
 positions also have native pinned/plain/List and generated evidence. Incompatible
 unfinished Table drafts now have native handwritten/generated recovery review
-and exact-entry discard checks. Hard journal-memory policy, native Tree editors/
+and exact-entry discard checks. Deliberate follow/keep-reading commands also have
+native generated/public and List/plain-grid evidence. Hard journal-memory policy,
+native Tree editors/
 physical anchors, remaining feed/authoring behavior and browser execution stay
 open in WORK.md. [Equal-value replacement](NS-1_state-collections_02.md) records
 the discovered identity-publication correction and its remaining browser gate.

@@ -26,12 +26,13 @@ program nyx_collection_recovery_mount_tests;
 uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   nyx.collections.arrangement, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.recovery, nyx.collections.inspection,
-  nyx.collections.query
+  nyx.collections.query, nyx.collections.position
   {$ifdef PAS2JS}, Web{$endif};
 
 type
   { Model-only target exercises the actual mount notification, recovery and
-    input-lifetime machinery. Its copied frame/draft are values, not widgets.
+    input-lifetime machinery, including follow acknowledgement after success.
+    Its copied frame/draft/position are values, not widgets.
     Actual native/browser controls remain separate qualification. }
   TRecoveryTarget = class(TNyxCollectionMountBase)
   public
@@ -39,6 +40,7 @@ type
     Draft: TNyxCollectionCellEdit;
     Fail: Boolean;
     Loss: TNyxCollectionDraftLoss;
+    Position: TNyxCollectionPositionRecovery;
     procedure RenderDataset; override;
     procedure DetachTarget; override;
   end;
@@ -60,12 +62,13 @@ procedure TRecoveryTarget.RenderDataset;
 var
   LNext: INyxCollectionSnapshot;
 begin
+  LNext := FView.Snapshot;
+  Position := ResolvePosition(Frame, LNext, 0);
 
   if Fail then
   begin
     raise ENyxCollection.Create('Expected physical refresh failure');
   end;
-  LNext := FView.Snapshot;
 
   if Draft.Defined and RecoverCell(Draft, Frame, LNext, Loss) then
   begin
@@ -90,6 +93,7 @@ var
   LInput: INyxCollectionInputAdmission;
   LJournal: INyxCollectionDraftRecovery;
   LInspection: INyxCollectionInspection;
+  LFollowing: INyxCollectionFollowing;
   LTarget: TRecoveryTarget;
   LKey: TNyxCollectionRef;
   LItem: TNyxItemRef;
@@ -172,9 +176,32 @@ begin
   LMount.Refresh;
   Check(LInput.InputReady and (LTarget.Frame = LView.Snapshot),
     'successful retry releases the same input shield only after current data is installed');
+  LFollowing := NyxCollectionFollowing(LView);
+  LBefore := LStore.Snapshot;
+  LTarget.Fail := True;
+  LRefused := False;
+  try
+    LFollowing.FollowLatest;
+  except
+    on LException: ENyxCollectionNotification do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and not LInput.InputReady and (LStore.Snapshot = LBefore) and
+    (LTarget.Position.Kind = ncpLatest),
+    'a failed follow render blocks input without consuming a source revision');
+  LTarget.Fail := False;
+  LMount.Refresh;
+  Check(LInput.InputReady and (LTarget.Position.Kind = ncpLatest),
+    'an explicit follow request survives render failure and is proposed again on retry');
+  LMount.Refresh;
+  Check(LTarget.Position.Kind = ncpUnavailable,
+    'successful physical installation acknowledges the request instead of replaying it on every refresh');
   LMount.Disconnect;
   LInput := nil;
   LMount := nil;
+  LFollowing := nil;
   Check(not LJournal.Capture.Active and (LJournal.Capture.Count = 4) and
     (LJournal.EntryAt(0).Cell.Text = CDraft),
     'a retained journal survives physical target disposal without retaining its authority');

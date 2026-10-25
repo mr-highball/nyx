@@ -60,8 +60,18 @@ privileged generated-code path.
 
 The [retention contract](../../docs/collection-views.md#pausing-live-inspection)
 describes payload/removed-ID bounds, overflow and current limitations. This demo
-does not yet qualify Tree physical anchors, full feed states,
-automatic follow-newest or Studio policy authoring.
+does not yet qualify Tree physical anchors, full feed states or Studio policy
+authoring.
+
+**Follow last visible** reveals the final row of the current filtered/sorted page
+without selecting it. Later changed tail identities follow; unrelated value
+updates retain the reading anchor. Repeating Follow deliberately reveals the
+current tail again. **Keep reading position** stops following, including while
+paused. Follow is disabled during pause and never resumes implicitly. Manual
+scrolling does not itself stop follow mode; choose Keep reading before inspecting
+older arrivals. There is no assumed timestamp/order field. These choices use
+`INyxCollectionFollowing` and ordinary Nyx buttons/state bindings, including in
+the generated application. See [follow semantics](../../docs/collection-views.md#following-the-last-visible-row).
 
 If an unfinished Table edit loses its original row/value, a recovery card keeps
 the exact draft separate from live data. It explains the reason, provides a
@@ -91,7 +101,10 @@ for fallback, skipped-history and physical clamping limits.
 at desktop/compact widths, shared-source peer behavior, pending status, frozen
 query counts, copying, range lifetime, refused stale edits, replacement recovery,
 unchanged designs and binding retirement. The exact emitted Pascal companion
-runs the same journey. Browser fixture/example consumers compile; browser input
+runs the same journey. It now also exercises both follow buttons, physical tail
+visibility, value-only updates, repeated same-revision requests, peer isolation
+and pause disablement. Native List/plain-grid cases exercise fluent initial
+following and selected-row independence. Browser fixture/example consumers compile; browser input
 and visual acceptance remain separate.
 The fixture adds 64 runtime records, moves the visible viewport away from the
 selected gateway and checks insertion, deletion, sorting, pause/resume and ID

@@ -144,6 +144,66 @@ retained-port retirement. Browser fixtures compile; actual browser input, pixel
 validation and complete task acceptance remain open. Native Tree physical
 scrolling remains a separate unfinished L1 requirement.
 
+## Following the last visible row
+
+Receiving source updates and following a viewport are separate choices.
+`NyxInspectionPolicy` defaults to `ncfKeepPosition`. To supply a different initial
+intent, configure `NyxInspectionPolicy.Follow(ncfLastVisible)`. Runtime commands
+use an optional specialized interface from `nyx.collections.view`:
+
+```pascal
+LFollowing := NyxCollectionFollowing(LView);
+
+if LFollowing <> nil then
+begin
+  LFollowing.FollowLatest;
+end;
+```
+
+Declare `LFollowing: INyxCollectionFollowing`. `FollowLatest` immediately requests
+the current last row, including when no source revision changed. Repeating the
+command deliberately reveals it again. Later source publications follow only
+when the last displayed row identity changes. Updating an unrelated value does
+not repeatedly pull a reader away. An exact removal receipt also recognizes a
+replacement which reuses that last row's ID and values. Missing, skipped or
+overflowed evidence never invents a new incarnation from an equal ID; an explicit
+Follow request remains available. The default retains the reading anchor through
+those same publications. `KeepReading` stops following and preserves that place.
+Neither command selects a row, changes source values, modifies query/page choices,
+rewrites authored policy defaults or changes an independent peer's follow mode.
+
+"Last" means the final row of the current filtered, sorted, paged projection.
+It does not assume insertion time or a timestamp field. Authors choose an
+appropriate sort for a log or monitor. Local query/page changes retain ordinary
+anchor recovery; they are not treated as incoming source publications. Use
+`FollowLatest` again to reveal the new current tail deliberately. Physical targets
+may clamp near the end of their viewport; the last row need not become its first.
+
+Following remains enabled until `KeepReading` or an explicit policy change.
+Manually scrolling elsewhere does not change that mode: unrelated value updates
+preserve the new anchor, but another changed tail will follow. The demo exposes
+both choices visibly so users can stop movement before inspecting older rows.
+Automatic suspension on user scroll is not implemented by this contract.
+
+Pause retains the viewport and incoming updates continue in the authoritative
+store. `FollowLatest` refuses while paused; it never resumes implicitly. The demo
+disables that button through an ordinary Nyx Boolean binding. `KeepReading` can
+stop following while paused, and resume honors that choice. An explicit follow
+request is acknowledged only after successful target refresh; failure/defer keeps
+it available for retry. Observation reports runtime `FollowMode` and a monotonic
+`FollowRequestSerial`, separately from update-delivery `Mode`. These describe
+intent; a failed/deferred physical target has not necessarily reached the proposal.
+
+Current owned flat List/Table views support this optional runtime capability;
+configure inspection first. Tree physical following refuses explicitly. Existing
+view/inspection method lists and GUIDs remain unchanged. Their policy/observation
+value records gain follow fields, so rebuild dependent compiled units. The public
+demo's handwritten
+and generated native applications exercise arranged/pinned Tables at both widths;
+visible native List/plain-grid cases and model failure/retry tests cover those
+paths. Browser consumers compile only. Browser execution, full visual/input
+parity and saved-policy/Studio/source/MCP adoption remain open.
+
 ## Recovering unfinished cell drafts
 
 Mounted editable Tables preserve incompatible unfinished text before replacing

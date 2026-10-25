@@ -339,6 +339,8 @@ type
   protected
     FView: INyxCollectionView;
     FPositionRecovery: TNyxCollectionPositionRecovery;
+    FFollowRequestSerial: Integer;
+    FPendingFollowRequestSerial: Integer;
     FUpdating: Boolean;
     FInputGate: INyxCollectionInputGate;
     { A full-render edit handoff pauses this adapter's physical refresh and
@@ -3838,6 +3840,7 @@ var
   LPosition: INyxCollectionPositionView;
   LContinuity: INyxCollectionDisplayContinuity;
   LPolicy: TNyxCollectionInspectionPolicy;
+  LStatus: TNyxCollectionInspectionObservation;
   LMutation: Integer;
 
   function Current: Boolean;
@@ -3856,7 +3859,7 @@ begin
   LView := FView;
   LMutation := FCellMutationSerial;
 
-  if not Current or (LMutation = High(Integer)) or (ABefore = nil) or (ABefore = AAfter) then
+  if not Current or (LMutation = High(Integer)) or (AAfter = nil) then
   begin
     Exit;
   end;
@@ -3872,8 +3875,15 @@ begin
   begin
     Exit;
   end;
+  LStatus := LInspection.CaptureInspection;
 
-  if Supports(LView, INyxCollectionPositionView, LPosition) then
+  if not Current then
+  begin
+    Exit;
+  end;
+
+  if (ABefore <> nil) and (ABefore <> AAfter) and
+    Supports(LView, INyxCollectionPositionView, LPosition) then
   begin
 
     if not Current then
@@ -3887,12 +3897,34 @@ begin
   begin
     Exit;
   end;
-  Result := NyxCollectionPositionRecovery(ABefore, AAfter, AIndex, LContinuity);
+
+  if (LStatus.Mode = ncimFollowing) and (LStatus.FollowMode = ncfLastVisible) then
+  begin
+    Result := NyxCollectionLatestPosition(ABefore, AAfter, AIndex,
+      LStatus.FollowRequestSerial <> FFollowRequestSerial, LContinuity);
+  end;
+
+  if (Result.Kind = ncpUnavailable) and (ABefore <> nil) and (ABefore <> AAfter) then
+  begin
+    Result := NyxCollectionPositionRecovery(ABefore, AAfter, AIndex, LContinuity);
+  end;
 
   if not Current then
   begin
     Result := Default(TNyxCollectionPositionRecovery);
     Result.Index := -1;
+    Exit;
+  end;
+
+  if LStatus.Mode = ncimFollowing then
+  begin
+    { A physical refresh must finish before acknowledging an explicit request.
+      Failed/deferred target work leaves it available to a later retry. }
+    FPendingFollowRequestSerial := LStatus.FollowRequestSerial;
+  end;
+
+  if Result.Kind = ncpUnavailable then
+  begin
     Exit;
   end;
   Result.ObservationSerial := LMutation;
@@ -3941,6 +3973,7 @@ begin
   LInputLease := nil;
   LInputState := nil;
   LCompleted := False;
+  FPendingFollowRequestSerial := FFollowRequestSerial;
   FUpdating := True;
   try
     { A complete target refresh withdraws an unfinished physical gesture. Its
@@ -4024,6 +4057,7 @@ begin
     if InputLifetimeCurrent then
     begin
       FLastSnapshot := LSnapshot;
+      FFollowRequestSerial := FPendingFollowRequestSerial;
     end;
     Inc(FRefreshCount);
     LCompleted := True;

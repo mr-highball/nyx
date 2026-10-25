@@ -9,7 +9,82 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — unfinished Table draft recovery — 2026-10-25
+## Current checkpoint — deliberate flat-view following — 2026-10-25
+
+The previous goal turn is PROGRESS: 8f5b840 is remote-verified. Root remains solo;
+Lil' Scooty stays idle. This is the fourth consecutive original04 L1 checkpoint
+without closing an original criterion. All original04/03 acceptance, the
+same-value replacement02 browser gate and completion-credit assessment stay open.
+Next work advances visible feed states rather than another equivalent follow
+variant. Necessary implementation/interface/adapter changes remain authorized.
+
+Flat List/Table inspection now separates receiving updates from viewport intent.
+The typed policy defaults to ncfKeepPosition; .Follow(ncfLastVisible) supplies an
+explicit initial choice. Optional INyxCollectionFollowing exposes fluent
+FollowLatest/KeepReading runtime commands. Existing view/inspection method lists
+and GUIDs remain intact; policy/observation records gain fields and consumers
+must rebuild. Following means the last row of the current filtered/sorted/paged
+projection, never an assumed timestamp or silent query/page change. It does not
+select that row, change source values, rewrite authored defaults or enable peers.
+
+FollowLatest deliberately reveals the current tail even at the same source
+revision. Subsequent publications move only for changed tail identities. Exact
+continuity receipts identify removal/reuse even with identical ID/values; absent
+or overflowed evidence never invents an incarnation from an equal ID. Value-only
+updates retain a reader's anchor. Local query/page changes keep normal position
+recovery until another explicit request or changed source tail. KeepReading
+stops following; manual scrolling alone does not disable the mode. Pause refuses
+FollowLatest without resuming, while KeepReading can stop follow during pause.
+Native Tree physical following refuses explicitly.
+
+Mounts acknowledge a request only after successful target refresh. Failure or
+composition defer leaves it available for retry; successful refresh consumes it
+once. Browser same-frame navigation and empty-to-populated body realization use
+the same proposal, preserving attached/visible-host guards. Browser paths compile
+only. No hardware, AT, actual pixels, benchmark or full parity is claimed.
+
+The public Nyx-built demo adds Follow last visible and Keep reading position
+buttons. Ordinary Boolean binding disables Follow during pause, and ordinary
+status text explains runtime mode. Its callbacks retain a local inspection
+interface and recheck authority after its getter, protecting retirement during an
+alternative implementation. The exact fresh generated application shares this
+same public runtime attachment. Handwritten/generated native journeys each pass
+55 checks per width at 1280/390, plus one fresh-output guard in handwritten1280.
+They qualify physical tail visibility, source/selection/peer independence,
+unrelated updates, repeated requests and same-ID replacement. Visible native
+List/plain-grid cases exercise initial fluent policy and selected-row restoration.
+The four current-application recovery journeys also pass 24 checks each.
+
+Shared inspection fixtures pass 64 checks; model-mounted recovery passes 14,
+including a failed render after position resolution and one-time retry admission.
+A retained negative fixture fails the new equal-value reused-tail assertion
+before its receipt-aware fix; no assertion is weakened. The current public graph
+was cold rebuilt after the changed public helper/record contracts. Matching
+browser model/demo/generated consumers and actual application entries compile.
+Broader default-mode view/prepared-query/query-session/copy-command fixtures pass
+12429/89/93/273; workbench/context passes 116; native mounted clipboard controls
+pass 1658/1647 at900/390. No OS pointer or clipboard effect is claimed.
+
+Private live-following-01 evidence retains models-08, controls-09 and regression-05,
+with 40 successful owned receipts and 17 complete clean native heaps. Closed
+stdout/stderr/launch/heap hashes and per-cohort source identities are retained.
+All actual jobs are joined. Native compiler logs have no warnings; browser logs
+retain installed RTL warnings and no owned warnings. Regression05 predates the
+final same-ID follow-only branch and demo getter lifetime fix; its default-mode
+path is unchanged by those edits. Final model/public/recovery consumers qualify
+those changes directly, rather than claiming an unchanged cohort has new hashes.
+The final private manifest distinguishes those snapshots. No functional source
+change follows models08/controls09. Existing preview/tool/cursor gates remain;
+connector discovery again reports no connected document session.
+
+No server, LAN change, cleanup, dependency/compiler install or helper was added.
+Next: original04 L1's loading/refreshing/empty/filtered-empty/failed/paused
+presentations and useful retry/reset/resume actions through the same public feed.
+Tree/find/reveal, hard recovery-journal memory policy, background producer/lifetime
+proof, saved policy/Studio/source/MCP adoption and L2 scale/paint/input/memory
+qualification remain open. No DONE, percentage or completion-credit changes.
+
+## Unfinished Table draft recovery — 2026-10-25
 
 The preceding goal turn is PROGRESS: cce7132 is remote-verified. Root remains
 solo; Lil' Scooty's final assignment is finished and no helper is refilled.

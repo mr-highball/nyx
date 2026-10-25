@@ -14,6 +14,9 @@ const
   InspectionPauseID = 'pause-inspection';
   InspectionResumeID = 'resume-inspection';
   InspectionStepID = 'next-feed-update';
+  InspectionFollowID = 'follow-last-visible';
+  InspectionKeepID = 'keep-reading-position';
+  InspectionCanFollowID = 'inspection-can-follow';
   RecoverySummaryID = 'recovered-draft-summary';
   RecoveryTextID = 'recovered-draft-text';
   RecoveryVisibleID = 'recovered-drafts-visible';
@@ -60,6 +63,7 @@ type
     FContext: INyxApplicationContext;
     FGeneration: INyxCancellationScope;
     FInspection: INyxCollectionInspection;
+    FFollowing: INyxCollectionFollowing;
     FPeer: INyxCollectionView;
     FStatusToken: INyxCollectionViewSubscription;
     FPosition: INyxCollectionPositionState;
@@ -92,6 +96,8 @@ var
   LPause: INyxButton;
   LResume: INyxButton;
   LStep: INyxButton;
+  LFollow: INyxButton;
+  LKeep: INyxButton;
   LStatus: INyxLabel;
   LPeerTitle: INyxLabel;
   LPeer: INyxTable;
@@ -111,6 +117,7 @@ begin
     Result.State.SetValue(NyxTextState(RecoveryTextID), '');
     Result.State.SetValue(NyxTextState(RecoveryDiscardTextID), 'Discard draft');
     Result.State.SetValue(NyxBooleanState(RecoveryVisibleID), False);
+    Result.State.SetValue(NyxBooleanState(InspectionCanFollowID), True);
     LPage := Result.Find('services');
     LPage.Configure.Gap(8).Done;
     Result.Find('service-title').Configure.Text('Keep your place while services change').Done;
@@ -127,6 +134,11 @@ begin
     LCommands.Add(LResume);
     LStep := NewNyxButton(InspectionStepID).WithText('Next feed update');
     LCommands.Add(LStep);
+    LFollow := NewNyxButton(InspectionFollowID).WithText('Follow last visible');
+    LCommands.Add(LFollow);
+    LFollow.Binds.Enabled(NyxBooleanState(InspectionCanFollowID)).Done;
+    LKeep := NewNyxButton(InspectionKeepID).WithText('Keep reading position');
+    LCommands.Add(LKeep);
     LStatus := NewNyxLabel(InspectionStatusID);
     LPage.Insert(3, LStatus);
     LStatus.Binds.Text(NyxTextState(InspectionStatusID)).Done;
@@ -191,6 +203,7 @@ begin
     raise ENyxCollectionInspection.Create('The inspected view has no inspection capability');
   end;
   FPeer := APeer;
+  FFollowing := NyxCollectionFollowing(AInspection);
   FPosition := APosition;
   FRecovery := ARecovery;
   FInspection.ConfigureInspection(NyxInspectionPolicy);
@@ -214,6 +227,7 @@ procedure TInspectionCallback.Close;
 begin
   FStatusToken := nil;
   FInspection := nil;
+  FFollowing := nil;
   FPeer := nil;
   FPosition := nil;
   FRecovery := nil;
@@ -246,6 +260,15 @@ begin
   else
   begin
     LText := 'Following live updates - revision ' + TNyxText(IntToStr(AStatus.DisplayRevision)) + '.';
+
+    if AStatus.FollowMode = ncfLastVisible then
+    begin
+      LText := LText + ' Following the last visible row when its identity changes. Choose Keep reading position to stop.';
+    end
+    else
+    begin
+      LText := LText + ' Your reading position is retained.';
+    end;
 
     if AStatus.ContextResetOnResume then
     begin
@@ -333,6 +356,8 @@ var
   LSummary: TNyxText;
   LText: TNyxText;
   LCaption: TNyxText;
+  LCanFollow: Boolean;
+  LInspection: INyxCollectionInspection;
 begin
   LJournal := FRecovery;
   LObservation := Default(TNyxDraftRecoveryObservation);
@@ -344,6 +369,20 @@ begin
   begin
     LObservation := LJournal.Capture;
   end;
+
+  if not Active then
+  begin
+    Exit;
+  end;
+  { An alternative inspection getter may retire this binding while returning
+    its value. Keep that exact interface alive and recheck authority afterward. }
+  LInspection := FInspection;
+
+  if LInspection = nil then
+  begin
+    Exit;
+  end;
+  LCanFollow := LInspection.CaptureInspection.Mode <> ncimPaused;
 
   if not Active then
   begin
@@ -401,7 +440,8 @@ begin
     NyxStateValue(NyxTextState(RecoverySummaryID), LSummary),
     NyxStateValue(NyxTextState(RecoveryTextID), LText),
     NyxStateValue(NyxTextState(RecoveryDiscardTextID), LCaption),
-    NyxStateValue(NyxBooleanState(RecoveryVisibleID), LObservation.Count > 0)]);
+    NyxStateValue(NyxBooleanState(RecoveryVisibleID), LObservation.Count > 0),
+    NyxStateValue(NyxBooleanState(InspectionCanFollowID), LCanFollow)]);
 end;
 
 procedure TInspectionCallback.RecoveryAction(const AID: TNyxText);
@@ -529,6 +569,14 @@ begin
   begin
     AdvanceFeed;
   end
+  else if (AEvent.OriginID = InspectionFollowID) and (FFollowing <> nil) then
+  begin
+    FFollowing.FollowLatest;
+  end
+  else if (AEvent.OriginID = InspectionKeepID) and (FFollowing <> nil) then
+  begin
+    FFollowing.KeepReading;
+  end
   else if (AEvent.OriginID = RecoveryPreviousID) or (AEvent.OriginID = RecoveryNextID) or
     (AEvent.OriginID = RecoveryDiscardID) then
   begin
@@ -551,7 +599,7 @@ begin
   LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition, ARecovery);
   FCallback := LCallback;
   FCallbackObject := LCallback;
-  SetLength(FSubscriptions, 6);
+  SetLength(FSubscriptions, 8);
   FSubscriptions[0] := AEvents.On(NyxControlEvents(InspectionPauseID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[1] := AEvents.On(NyxControlEvents(InspectionResumeID), ntClick)
@@ -563,6 +611,10 @@ begin
   FSubscriptions[4] := AEvents.On(NyxControlEvents(RecoveryNextID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[5] := AEvents.On(NyxControlEvents(RecoveryDiscardID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[6] := AEvents.On(NyxControlEvents(InspectionFollowID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[7] := AEvents.On(NyxControlEvents(InspectionKeepID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
 end;
 

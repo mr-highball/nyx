@@ -14,6 +14,67 @@ begin
   end;
 end;
 
+function NyxCollectionFollowing(const AView: INyxCollectionView): INyxCollectionFollowing;
+begin
+  Result := nil;
+
+  if AView <> nil then
+  begin
+    Supports(AView, INyxCollectionFollowing, Result);
+  end;
+end;
+
+function TView.FollowLatest: INyxCollectionFollowing;
+var
+  LLease: INyxCollectionView;
+begin
+  LLease := Self as INyxCollectionView;
+  Writable;
+
+  if not FInspectionPolicy.Defined or (FProjection = cpTree) then
+  begin
+    raise ENyxCollectionInspection.Create('Following requires a configured flat List or Table');
+  end;
+
+  if FInspectionStatus.Mode = ncimPaused then
+  begin
+    raise ENyxCollectionInspection.Create('Resume inspection before following the last visible record');
+  end;
+
+  if FInspectionStatus.FollowRequestSerial = High(Integer) then
+  begin
+    raise ENyxCollectionInspection.Create('The follow request serial is exhausted');
+  end;
+  Inc(FInspectionStatus.FollowRequestSerial);
+  FInspectionStatus.FollowMode := ncfLastVisible;
+  Result := Self as INyxCollectionFollowing;
+  { Ordinary view observers refresh the physical viewport. This is a runtime
+    navigation command, not a source mutation or an implicit page/query change. }
+  Notify(nil, False, ncicFollowChanged);
+end;
+
+function TView.KeepReading: INyxCollectionFollowing;
+var
+  LLease: INyxCollectionView;
+begin
+  LLease := Self as INyxCollectionView;
+  Writable;
+  Result := Self as INyxCollectionFollowing;
+
+  if FInspectionStatus.FollowMode = ncfKeepPosition then
+  begin
+    Exit;
+  end;
+
+  if FInspectionStatus.FollowRequestSerial = High(Integer) then
+  begin
+    raise ENyxCollectionInspection.Create('The follow request serial is exhausted');
+  end;
+  Inc(FInspectionStatus.FollowRequestSerial);
+  FInspectionStatus.FollowMode := ncfKeepPosition;
+  Notify(nil, False, ncicFollowChanged);
+end;
+
 function TView.GetInspectionPolicy: TNyxCollectionInspectionPolicy;
 begin
   Result := FInspectionPolicy.Copy;
@@ -40,6 +101,7 @@ procedure TView.ConfigureInspection(const APolicy: TNyxCollectionInspectionPolic
 var
   LPolicy: TNyxCollectionInspectionPolicy;
   LLease: INyxCollectionView;
+  LFollowChanged: Boolean;
 begin
   LLease := Self as INyxCollectionView;
   LPolicy := APolicy.Copy;
@@ -53,6 +115,18 @@ begin
   if LPolicy.Defined and (FAtomic = nil) then
   begin
     raise ENyxCollectionInspection.Create('Inspection requires a source with prepared publication');
+  end;
+
+  if LPolicy.Defined and (LPolicy.DefaultFollow = ncfLastVisible) and
+    (FProjection = cpTree) then
+  begin
+    raise ENyxCollectionInspection.Create('Tree physical following is not supported');
+  end;
+  LFollowChanged := FInspectionStatus.FollowMode <> LPolicy.DefaultFollow;
+
+  if LFollowChanged and (FInspectionStatus.FollowRequestSerial = High(Integer)) then
+  begin
+    raise ENyxCollectionInspection.Create('The follow request serial is exhausted');
   end;
 
   if FInspectionStatus.Mode = ncimPaused then
@@ -77,7 +151,13 @@ begin
   FInspectionPolicy := LPolicy;
   FDisplayContinuity := nil;
   FInspectionStatus.Configured := LPolicy.Defined;
-  Notify(nil, True, ncicPolicyChanged);
+
+  if LFollowChanged then
+  begin
+    Inc(FInspectionStatus.FollowRequestSerial);
+    FInspectionStatus.FollowMode := LPolicy.DefaultFollow;
+  end;
+  Notify(nil, not LFollowChanged, ncicPolicyChanged);
 end;
 
 procedure TView.PauseInspection;

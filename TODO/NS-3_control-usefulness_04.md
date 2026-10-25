@@ -127,7 +127,16 @@ each pass 24 focused recovery checks per width (1280/390), alongside the existin
 inspection journey. Changed values, same-ID replacement and hidden rows preserve
 text before closing the editor; confirmed discard affects only its exact entry.
 Advisory journal warnings do not supply a hard memory bound. Browser behavior,
-native Tree inline editors, deliberate follow/feed presentations, saved policy/
+native Tree inline editors, remaining feed presentations, saved policy/
 Studio/MCP adoption and all original criteria remain open. No DONE or completion
 credit is assigned from these bounded checks. See WORK for final source/evidence
 cohorts and retained failed qualification attempts.
+
+Deliberate flat-view following now has typed opt-in defaults and a specialized
+runtime interface, public Follow/Keep buttons, independent selection/peer intent
+and acknowledgement only after successful physical refresh. Native List/plain-
+grid and handwritten/generated arranged-Table journeys exercise tail visibility;
+model checks cover empty results, pause refusal, query/source distinctions and
+failure/retry. This advances the follow portion above; remaining feed-state
+presentations, Tree, memory/scale, browser execution and saved/Studio/source/MCP
+adoption remain open under the unchanged original criteria.

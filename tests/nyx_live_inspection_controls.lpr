@@ -86,6 +86,8 @@ var
     LAnchor: TNyxItemRef;
     LNext: TNyxItemRef;
     LObservation: INyxCollectionPositionObservation;
+    LFollowing: INyxCollectionFollowing;
+    LFollowSerial: Integer;
     {$ifdef PAS2JS}
     LTable: TJSHTMLElement;
     {$else}
@@ -126,6 +128,36 @@ var
       {$else}
       Result := LFirst.View.Snapshot.ItemAt(LTable.TopRow - 1).Ref;
       {$endif}
+    end;
+
+    function LastRowVisible: Boolean;
+    {$ifdef PAS2JS}
+    var
+      LRow: TJSHTMLElement;
+      LLast: TNyxItemRef;
+    {$endif}
+    begin
+      {$ifdef PAS2JS}
+      LLast := LFirst.View.Snapshot.ItemAt(LFirst.View.Snapshot.Count - 1).Ref;
+      LRow := TJSHTMLElement(LTable.querySelector('[data-nyx-item="' + LLast.ID + '"]'));
+      Result := (LRow <> nil) and (LRow.getBoundingClientRect.bottom > LTable.getBoundingClientRect.top) and
+        (LRow.getBoundingClientRect.top < LTable.getBoundingClientRect.bottom);
+      {$else}
+      Result := (LTable.CellRect(LTable.FixedCols, LTable.RowCount - 1).Top < LTable.ClientHeight) and
+        (LTable.CellRect(LTable.FixedCols, LTable.RowCount - 1).Bottom >
+          LTable.CellRect(LTable.FixedCols, 0).Bottom);
+      {$endif}
+    end;
+
+    procedure ReadMiddle;
+    begin
+      {$ifdef PAS2JS}
+      TPositionElement(LTable).scrollTopPixels := 480;
+      LFirst.Refresh;
+      {$else}
+      LTable.TopRow := 15;
+      {$endif}
+      LAnchor := TopItem;
     end;
 
   begin
@@ -190,6 +222,55 @@ var
     Check((TopItem.ID <> LAnchor.ID) and
       (LObservation.GetPositionRecovery.Kind = ncpFollowing),
       'a reused source ID cannot inherit its old physical reading position');
+    LFirst.View.ConfigureQuery(Default(TNyxCollectionQuery));
+    LFirst.Select(LGateway);
+    ReadMiddle;
+    LBefore := LFirst.View.Snapshot;
+    LFollowing := NyxCollectionFollowing(LFirst.View);
+    Click(InspectionFollowID);
+    Check((LObservation.GetPositionRecovery.Kind = ncpLatest) and LastRowVisible and
+      (LFirst.View.Selection.Focus.ID = LGateway.ID) and (LFirst.View.Snapshot = LBefore),
+      'the ordinary Follow button reveals the current last row without selecting it or changing source');
+    Check(NyxCollectionInspection(LPeer.View).CaptureInspection.FollowMode = ncfKeepPosition,
+      'the public Follow button does not enable following in its independent peer');
+    LBefore := LFirst.View.Store.Snapshot;
+    LFirst.View.Store.Insert(LBefore.Count,
+      NyxCollectionItem(NyxItem(LBefore.Key, 'tail-followed')).WithValue(NyxTextField('name'), 'New last row'));
+    Check(LastRowVisible and (LObservation.GetPositionRecovery.Kind = ncpLatest) and
+      (LObservation.GetPositionRecovery.Current.ID = 'tail-followed'),
+      'an incoming displayed tail is physically revealed while following is deliberately enabled');
+    ReadMiddle;
+    LBefore := LFirst.View.Store.Snapshot;
+    LFirst.View.Store.Apply([NyxRemove(NyxItem(LBefore.Key, 'tail-followed')),
+      NyxInsert(LBefore.Count - 1, LBefore.Item(NyxItem(LBefore.Key, 'tail-followed')))]);
+    Check(LastRowVisible and (LObservation.GetPositionRecovery.Kind = ncpLatest),
+      'an equal-value reused tail ID follows as a new incarnation using exact removal evidence');
+    ReadMiddle;
+    LFirst.View.Store.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('notes'), 'An unrelated live marker'));
+    Check((TopItem.ID = LAnchor.ID) and (LObservation.GetPositionRecovery.Kind = ncpRetained),
+      'an unrelated value update preserves the reader even while follow mode is enabled');
+    LFollowSerial := LInspection.CaptureInspection.FollowRequestSerial;
+    Click(InspectionFollowID);
+    Check(LastRowVisible and (LInspection.CaptureInspection.FollowRequestSerial = LFollowSerial + 1),
+      'pressing Follow again reveals the tail at the same source revision');
+    Click(InspectionKeepID);
+    ReadMiddle;
+    LBefore := LFirst.View.Store.Snapshot;
+    LFirst.View.Store.Insert(LBefore.Count,
+      NyxCollectionItem(NyxItem(LBefore.Key, 'tail-not-followed')).WithValue(NyxTextField('name'), 'A later last row'));
+    Check((TopItem.ID = LAnchor.ID) and (LInspection.CaptureInspection.FollowMode = ncfKeepPosition),
+      'the ordinary Keep reading button stops later tail publications from moving the reader');
+    Click(InspectionPauseID);
+    {$ifdef PAS2JS}
+    Check(TJSHTMLButtonElement(LApplication.View.ElementFor(InspectionFollowID)).disabled,
+      'the public Follow command is visibly disabled while inspection is paused');
+    {$else}
+    Check(not LApplication.View.ControlFor(InspectionFollowID).Enabled,
+      'the public Follow command is visibly disabled while inspection is paused');
+    {$endif}
+    Click(InspectionResumeID);
+    Check(LInspection.CaptureInspection.FollowMode = ncfKeepPosition,
+      'resuming never silently turns a stopped follow policy back on');
   end;
 
 begin
@@ -330,6 +411,7 @@ var
   LInspection: INyxCollectionInspection;
   LObservation: INyxCollectionPositionObservation;
   LState: INyxCollectionPositionState;
+  LFollowing: INyxCollectionFollowing;
   LItems: array of TNyxCollectionItem;
   LKey: TNyxCollectionRef;
   LAnchor: TNyxItemRef;
@@ -351,6 +433,25 @@ var
       LTop := TListBox(LWidget).TopIndex;
     end;
     Result := LMount.View.Snapshot.ItemAt(LTop).Ref;
+  end;
+
+  function LastRowVisible: Boolean;
+  var
+    LLast: Integer;
+  begin
+
+    if ATable then
+    begin
+      LLast := TStringGrid(LWidget).RowCount - 1;
+      Result := (TStringGrid(LWidget).CellRect(0, LLast).Top < LWidget.ClientHeight) and
+        (TStringGrid(LWidget).CellRect(0, LLast).Bottom > TStringGrid(LWidget).CellRect(0, 0).Bottom);
+    end
+    else
+    begin
+      LLast := TListBox(LWidget).Items.Count - 1;
+      Result := (TListBox(LWidget).ItemRect(LLast).Top < LWidget.ClientHeight) and
+        (TListBox(LWidget).ItemRect(LLast).Bottom > 0);
+    end;
   end;
 
 begin
@@ -420,18 +521,32 @@ begin
       .WithValue(NyxTextField('name'), 'ZZ inserted while paused'));
     LInspection.ResumeInspection;
     Check(TopItem.ID = LAnchor.ID, 'flat resume preserves the actual reading row');
+    LMount.View.ConfigureQuery(Default(TNyxCollectionQuery));
+    LInspection.ConfigureInspection(NyxInspectionPolicy.Follow(ncfLastVisible));
+    Check(LastRowVisible and (LObservation.GetPositionRecovery.Kind = ncpLatest),
+      'a typed initial follow policy reveals the last row in the actual native List/plain grid');
+    LBefore := LMount.View.Store.Snapshot;
+    LMount.View.Store.Insert(LBefore.Count,
+      NyxCollectionItem(NyxItem(LKey, 'followed-tail')).WithValue(NyxTextField('name'), 'New last record'));
+    Check(LastRowVisible and (LMount.View.Selection.Focus.ID = LItems[0].Ref.ID),
+      'native List/plain grid follows an incoming tail independently of selected-row restoration');
+    LFollowing := NyxCollectionFollowing(LMount.View);
+    LFollowing.KeepReading;
+    LAnchor := LObservation.GetPositionRecovery.Current;
     LApplication.Free;
     LApplication := nil;
     Check(not LMount.Connected and (LObservation.GetPositionRecovery.Current.ID = LAnchor.ID),
       'retained position facts never revive a disposed native target');
     LObservation := nil;
     LInspection := nil;
+    LFollowing := nil;
     LMount := nil;
     Check(not LState.Active and (LState.Recovery.Current.ID = LAnchor.ID),
       'the readonly data port survives without its former mount or renderer');
   finally
     LObservation := nil;
     LInspection := nil;
+    LFollowing := nil;
     LMount := nil;
     LApplication.Free;
     LDocument.Free;

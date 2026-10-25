@@ -7185,7 +7185,7 @@ begin
   { Anchor only an actually resident visible row. Offscreen/detached previews
     must not scroll their containing page in response to background updates. }
 
-  if (FRendered <> nil) and (FRendered <> LData) and
+  if (FRendered <> nil) and
     (FGeometry.Count = FRendered.Count) and document.documentElement.contains(FHost) and
     (Length(FHost.getClientRects) > 0) then
   begin
@@ -7224,6 +7224,22 @@ begin
           LPositionTop := LPositionTop + LPositionInset * LPositionScale;
           LPositionInset := 0;
         end;
+      end;
+
+      if not LPositionActive and (FRendered.Count = 0) then
+      begin
+        { An empty displayed body has no resident row to anchor. A deliberate
+          follow request may still admit its first incoming tail. The attached,
+          visible host checks above prevent offscreen page scrolling. }
+        LPositionRecovery := ResolvePosition(FRendered, LData, -1);
+
+        if not InputLifetimeCurrent then
+        begin
+          Exit;
+        end;
+        LPositionIndex := LPositionRecovery.Index;
+        LPositionActive := (LPositionRecovery.Kind = ncpLatest) and (LPositionIndex >= 0);
+        LPositionTop := FBody.getBoundingClientRect.top;
       end;
     end;
   end;

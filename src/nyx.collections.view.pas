@@ -256,6 +256,18 @@ type
       INyxCollectionViewSubscription;
   end;
 
+  { Optional flat List/Table viewport commands use the existing view owner and
+    inspection notifications. FollowLatest explicitly requests the current last
+    visible row, then follows changed tail identities on source publications.
+    KeepReading preserves the current place. Neither changes query, page, row
+    selection or authored defaults. Resume is required before FollowLatest;
+    Tree physical following is unsupported and refuses explicitly. }
+  INyxCollectionFollowing = interface(IInterface)
+    ['{C23746F1-9DD8-449B-BE42-09373D90D489}']
+    function FollowLatest: INyxCollectionFollowing;
+    function KeepReading: INyxCollectionFollowing;
+  end;
+
   { A detached receipt proves identity continuity for the last displayed source
     transition. It owns no source/view and remains safe after this view retires.
     Deferred targets which skipped a different transition must recover explicitly. }
@@ -410,6 +422,9 @@ function NyxCollectionColumns(const AView: INyxCollectionView): INyxCollectionCo
 { Query the optional runtime owner without changing an existing view or source.
   Unsupported alternatives return nil; a captured source is immutable data only. }
 function NyxCollectionInspection(const AView: INyxCollectionView): INyxCollectionInspection;
+{ Optional runtime viewport commands; retains the ordinary view, never a mount
+  or renderer. A configured inspection policy is required before following. }
+function NyxCollectionFollowing(const AView: INyxCollectionView): INyxCollectionFollowing;
 { Retains an optional UI-thread text/density command owner. Unsupported or
   non-table alternatives refuse; no host-specific control API is exposed. }
 function NyxCollectionTablePresentation(const AView: INyxCollectionView):
@@ -547,7 +562,7 @@ type
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
     INyxCollectionTablePresentation, IColumnPresentationTransferTarget,
     INyxCollectionColumnSampling, INyxCollectionExportView, INyxCollectionSelectedRowsView,
-    INyxCollectionInspection, INyxCollectionPositionView)
+    INyxCollectionInspection, INyxCollectionPositionView, INyxCollectionFollowing)
   private
     FRowCopyReadiness: INyxCancellationReadiness;
     FRowCopyReadinessObject: TRowCopyReadiness;
@@ -648,6 +663,8 @@ type
     destructor Destroy; override;
     function GetInspectionPolicy: TNyxCollectionInspectionPolicy;
     function CaptureDisplayContinuity: INyxCollectionDisplayContinuity;
+    function FollowLatest: INyxCollectionFollowing;
+    function KeepReading: INyxCollectionFollowing;
     procedure ConfigureInspection(const APolicy: TNyxCollectionInspectionPolicy);
     function CaptureInspection: TNyxCollectionInspectionObservation;
     function GetDisplayedSource: INyxCollectionSnapshot;

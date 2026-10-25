@@ -37,23 +37,31 @@ type
     Following describes update delivery, not an implicit scroll-to-last command. }
   TNyxCollectionInspectionMode = (ncimFollowing, ncimPaused);
 
+  { Viewport intent is separate from receiving source updates. LastVisible means
+    the final row after this view's filters, sort and page, never an assumed
+    timestamp. KeepPosition is the default; neither choice selects a record. }
+  TNyxCollectionFollowMode = (ncfKeepPosition, ncfLastVisible);
+
   { Identifies a committed runtime observation independently of data-change logs.
     Pending source changes do not masquerade as a new displayed dataset. }
   TNyxCollectionInspectionCause = (ncicPolicyChanged, ncicPaused, ncicResumed,
-    ncicSourceChanged, ncicViewChanged);
+    ncicSourceChanged, ncicViewChanged, ncicFollowChanged);
 
   { Runtime retention intent owns only scalars. Pause retains one existing
     immutable displayed source, not a queue of source snapshots or change logs.
     MaximumPausedBytes counts its logical DataBytes, excluding query/index and
     widget overhead. IdentityLimit bounds removed-ID tracking for safe resume;
     zero is allowed and requests explicit context reset after the first removal.
-    Default records are absent, preserving ordinary view behavior. }
+    DefaultFollow supplies initial viewport intent; runtime follow commands do
+    not rewrite it. Default records are absent, preserving ordinary behavior. }
   TNyxCollectionInspectionPolicy = record
   private
     FDefined: Boolean;
     FMaximumPausedBytes: Integer;
     FIdentityLimit: Integer;
+    FDefaultFollow: TNyxCollectionFollowMode;
   public
+    function Follow(AValue: TNyxCollectionFollowMode): TNyxCollectionInspectionPolicy;
     function PausedBytes(AValue: Integer): TNyxCollectionInspectionPolicy;
     function RemovedIdentities(AValue: Integer): TNyxCollectionInspectionPolicy;
     function Copy: TNyxCollectionInspectionPolicy;
@@ -61,12 +69,15 @@ type
     property Defined: Boolean read FDefined;
     property MaximumPausedBytes: Integer read FMaximumPausedBytes;
     property IdentityLimit: Integer read FIdentityLimit;
+    property DefaultFollow: TNyxCollectionFollowMode read FDefaultFollow;
   end;
 
   { Copied, bounded UI status. Editing this value cannot command a live view.
     No snapshot, callback, view/store or subscription is retained. Pending counts
     saturate explicitly; removed-ID overflow requires conservative context reset
-    on resume rather than restoring an old identity into a new incarnation. }
+    on resume rather than restoring an old identity into a new incarnation.
+    FollowRequestSerial distinguishes an explicit request even at the same source
+    revision; FollowMode is runtime viewport intent, independent of Mode. }
   TNyxCollectionInspectionObservation = record
     Supported: Boolean;
     Configured: Boolean;
@@ -81,6 +92,8 @@ type
     MissingSelectedRows: Integer;
     FocusChangedOnResume: Boolean;
     ContextResetOnResume: Boolean;
+    FollowMode: TNyxCollectionFollowMode;
+    FollowRequestSerial: Integer;
   end;
 
   { A synchronous UI-owner notification carries detached status only. The
@@ -107,10 +120,21 @@ end;
 procedure TNyxCollectionInspectionPolicy.Validate;
 begin
 
-  if not FDefined or (FMaximumPausedBytes < 0) or (FIdentityLimit < 0) then
+  if not FDefined or (FMaximumPausedBytes < 0) or (FIdentityLimit < 0) or
+    (Ord(FDefaultFollow) < Ord(Low(TNyxCollectionFollowMode))) or
+    (Ord(FDefaultFollow) > Ord(High(TNyxCollectionFollowMode))) then
   begin
     raise ENyxCollectionInspection.Create('Create a nonnegative inspection retention policy');
   end;
+end;
+
+function TNyxCollectionInspectionPolicy.Follow(AValue: TNyxCollectionFollowMode):
+  TNyxCollectionInspectionPolicy;
+begin
+  Validate;
+  Result := Self;
+  Result.FDefaultFollow := AValue;
+  Result.Validate;
 end;
 
 function TNyxCollectionInspectionPolicy.Copy: TNyxCollectionInspectionPolicy;

@@ -478,9 +478,136 @@ begin
   end;
 end;
 
+procedure FollowCases;
+var
+  LFixture: TFixture;
+  LFollowing: INyxCollectionFollowing;
+  LPositionView: INyxCollectionPositionView;
+  LBefore: INyxCollectionSnapshot;
+  LRecovery: TNyxCollectionPositionRecovery;
+  LStatus: TNyxCollectionInspectionObservation;
+  LRefused: Boolean;
+begin
+  LFixture := TFixture.Create;
+  try
+    LFollowing := NyxCollectionFollowing(LFixture.First);
+    Check(LFollowing <> nil, 'flat views expose optional typed follow commands');
+    LRefused := False;
+    try
+      LFollowing.FollowLatest;
+    except
+      on LException: ENyxCollectionInspection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'following requires explicit inspection configuration');
+    LFixture.Inspection.ConfigureInspection(NyxInspectionPolicy);
+    LFixture.First.Select(Item('a'));
+    LBefore := LFixture.First.Snapshot;
+    LStatus := LFixture.Inspection.CaptureInspection;
+    LFollowing.FollowLatest;
+    Check((LFixture.Inspection.CaptureInspection.FollowMode = ncfLastVisible) and
+      (LFixture.Inspection.CaptureInspection.FollowRequestSerial = LStatus.FollowRequestSerial + 1) and
+      (LFixture.First.Snapshot = LBefore) and (LFixture.First.Selection.Focus.ID = 'a'),
+      'explicit follow changes only runtime viewport intent, not source or selection');
+    Check((LFixture.Inspection.GetInspectionPolicy.DefaultFollow = ncfKeepPosition) and
+      (NyxCollectionInspection(LFixture.Peer).CaptureInspection.FollowMode = ncfKeepPosition),
+      'runtime following does not rewrite defaults or a peer view');
+    LRecovery := NyxCollectionLatestPosition(LBefore, LBefore, 0, True);
+    Check((LRecovery.Kind = ncpLatest) and (LRecovery.Current.ID = 'c') and (LRecovery.Index = 2),
+      'an explicit same-revision request resolves the current last visible row');
+    LStatus := LFixture.Inspection.CaptureInspection;
+    LFollowing.FollowLatest;
+    Check(LFixture.Inspection.CaptureInspection.FollowRequestSerial = LStatus.FollowRequestSerial + 1,
+      'a repeated explicit request can reveal the tail again without a new source revision');
+    LFixture.Store.Update(NyxCollectionItem(Item('a')).WithValue(NyxTextField('Name'), 'Changed'));
+    LRecovery := NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, 0, False);
+    Check(LRecovery.Kind = ncpUnavailable, 'an unrelated value update does not pull a reader to the tail');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Insert(3, NyxCollectionItem(Item('d')).WithValue(NyxTextField('Name'), 'D'));
+    LRecovery := NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, 0, False);
+    Check((LRecovery.Kind = ncpLatest) and (LRecovery.Current.ID = 'd'),
+      'a changed displayed tail identity requests following after source publication');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Apply([NyxRemove(Item('d')), NyxInsert(3, LBefore.Item(Item('d')))]);
+    Supports(LFixture.First, INyxCollectionPositionView, LPositionView);
+    LRecovery := NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, 0, False,
+      LPositionView.CaptureDisplayContinuity);
+    Check((LRecovery.Kind = ncpLatest) and (LRecovery.Current.ID = 'd'),
+      'an exact removal receipt identifies a same-value reused tail ID as a new arrival');
+    Check(NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, 0, False).Kind = ncpUnavailable,
+      'a same-ID tail without retirement evidence does not fabricate a new incarnation');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.First.ConfigureQuery(NyxCollectionQuery.OrderBy(NyxTextField('Name'), nsdDescending));
+    Check(NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, 0, False).Kind = ncpUnavailable,
+      'local sorting does not masquerade as a new source publication');
+    LRecovery := NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, 0, True);
+    Check(LRecovery.Current.ID = LFixture.First.Snapshot.ItemAt(3).Ref.ID,
+      'explicit following respects the current sort rather than assuming chronological order');
+    LFixture.Inspection.PauseInspection;
+    LStatus := LFixture.Inspection.CaptureInspection;
+    LRefused := False;
+    try
+      LFollowing.FollowLatest;
+    except
+      on LException: ENyxCollectionInspection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFixture.Inspection.CaptureInspection.Mode = ncimPaused) and
+      (LFixture.Inspection.CaptureInspection.FollowRequestSerial = LStatus.FollowRequestSerial),
+      'follow refuses while paused without resuming or consuming a request');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Insert(4, NyxCollectionItem(Item('e')).WithValue(NyxTextField('Name'), 'E'));
+    LFollowing.KeepReading;
+    Check((LFixture.First.Snapshot = LBefore) and
+      (LFixture.Inspection.CaptureInspection.FollowMode = ncfKeepPosition),
+      'keep-reading can stop following during pause without adopting pending data');
+    LFixture.Inspection.ResumeInspection;
+    Check(LFixture.Inspection.CaptureInspection.FollowMode = ncfKeepPosition,
+      'resume honors the deliberately stopped follow mode');
+    LFixture.Inspection.ConfigureInspection(NyxInspectionPolicy.Follow(ncfLastVisible));
+    Check(LFixture.Inspection.CaptureInspection.FollowMode = ncfLastVisible,
+      'typed fluent defaults can explicitly enable initial following');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Apply([NyxRemove(Item('a')), NyxRemove(Item('b')), NyxRemove(Item('c')),
+      NyxRemove(Item('d')), NyxRemove(Item('e'))]);
+    LRecovery := NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, 0, True);
+    Check((LRecovery.Kind = ncpEmpty) and (LRecovery.Index = -1),
+      'following an empty result never invents a row');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Insert(0, NyxCollectionItem(Item('new')).WithValue(NyxTextField('Name'), 'New'));
+    Check(NyxCollectionLatestPosition(LBefore, LFixture.First.Snapshot, -1, False).Kind = ncpLatest,
+      'the first incoming row can be followed after an empty frame');
+  finally
+    LFollowing := nil;
+    LPositionView := nil;
+    LFixture.Free;
+  end;
+  LFixture := TFixture.Create(cpTree);
+  try
+    LRefused := False;
+    try
+      LFixture.Inspection.ConfigureInspection(NyxInspectionPolicy.Follow(ncfLastVisible));
+    except
+      on LException: ENyxCollectionInspection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and not LFixture.Inspection.GetInspectionPolicy.Defined,
+      'unsupported Tree following refuses before changing inspection defaults');
+  finally
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     PauseCases;
+    FollowCases;
     PositionCases;
     RemovalCases(cpTable, False);
     RemovalCases(cpTable, True);

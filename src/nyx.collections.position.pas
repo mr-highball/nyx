@@ -27,9 +27,10 @@ type
   { Recovery is a viewport decision, never a row selection. Following/preceding
     choose the nearest surviving OLD neighbor, not a newly inserted record.
     Reset retains an approximate ordinal when identity cannot be proved; a known
-    projection with no surviving old rows starts at its new first row. }
+    projection with no surviving old rows starts at its new first row. Latest is
+    an explicit follow proposal for the final projected row, not a selection. }
   TNyxCollectionPositionKind = (ncpUnavailable, ncpRetained, ncpFollowing,
-    ncpPreceding, ncpEmpty, ncpReset);
+    ncpPreceding, ncpEmpty, ncpReset, ncpLatest);
 
   { Detached recovery proposal. Index is zero based and -1 for unavailable/empty.
     Targets may clamp a requested row near the physical viewport's end. No pixel,
@@ -83,6 +84,15 @@ function NyxCollectionPositionState(const AOwner: IInterface): INyxCollectionPos
 function NyxCollectionPositionRecovery(const ABefore, AAfter: INyxCollectionSnapshot;
   AIndex: Integer; const AContinuity: INyxCollectionDisplayContinuity):
   TNyxCollectionPositionRecovery;
+
+{ Explicit follow requests target the current last projected row. Thereafter,
+  only source publications with a changed final row identity request movement;
+  value-only updates and local query/page changes do not repeatedly pull a reader.
+  An exact continuity receipt also identifies retirement/reuse of the same ID.
+  The caller checks the follow mode. This pure proposal never changes selection. }
+function NyxCollectionLatestPosition(const ABefore, AAfter: INyxCollectionSnapshot;
+  AIndex: Integer; AExplicitRequest: Boolean;
+  const AContinuity: INyxCollectionDisplayContinuity = nil): TNyxCollectionPositionRecovery;
 
 implementation
 
@@ -271,6 +281,72 @@ begin
   end;
   Result.Index := LNext;
   Result.Current := AAfter.ItemAt(LNext).Ref;
+end;
+
+function NyxCollectionLatestPosition(const ABefore, AAfter: INyxCollectionSnapshot;
+  AIndex: Integer; AExplicitRequest: Boolean;
+  const AContinuity: INyxCollectionDisplayContinuity): TNyxCollectionPositionRecovery;
+begin
+  Result := Default(TNyxCollectionPositionRecovery);
+  Result.Index := -1;
+  Result.PreviousRevision := -1;
+
+  if AAfter = nil then
+  begin
+    Exit;
+  end;
+
+  if ABefore <> nil then
+  begin
+
+    if ABefore.Key.Name <> AAfter.Key.Name then
+    begin
+      Exit;
+    end;
+    Result.PreviousRevision := ABefore.Revision;
+
+    if (AIndex >= 0) and (AIndex < ABefore.Count) then
+    begin
+      Result.Previous := ABefore.ItemAt(AIndex).Ref;
+    end;
+  end;
+
+  if not AExplicitRequest then
+  begin
+
+    if (ABefore = nil) or (ABefore.Revision = AAfter.Revision) then
+    begin
+      Exit;
+    end;
+
+    if (ABefore.Count > 0) and (AAfter.Count > 0) and
+      (ABefore.ItemAt(ABefore.Count - 1).Ref.ID = AAfter.ItemAt(AAfter.Count - 1).Ref.ID) then
+    begin
+
+      if (AContinuity = nil) or AContinuity.Reset or
+        (AContinuity.Collection.Name <> AAfter.Key.Name) or
+        (AContinuity.FromRevision <> ABefore.Revision) or
+        (AContinuity.ToRevision <> AAfter.Revision) then
+      begin
+        Exit;
+      end;
+
+      if AContinuity.Retains(ABefore.ItemAt(ABefore.Count - 1).Ref) then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+  Result.CurrentRevision := AAfter.Revision;
+
+  if AAfter.Count = 0 then
+  begin
+    Result.Kind := ncpEmpty;
+    Exit;
+  end;
+  Result.Kind := ncpLatest;
+  Result.Index := AAfter.Count - 1;
+  Result.Current := AAfter.ItemAt(Result.Index).Ref;
 end;
 
 function NyxCollectionPositionState(const AOwner: IInterface): INyxCollectionPositionState;
