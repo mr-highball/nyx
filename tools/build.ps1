@@ -8865,7 +8865,11 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     }
     $nyxArrangeNative = Join-Path $nyxArrangeRoot 'controls'
     New-Item -ItemType Directory -Force $nyxArrangeNative | Out-Null
-    foreach ($nyxArrangeProgram in @('nyx_projection_refresh_tests', 'nyx_native_binding_layout_tests')) {
+    $nyxArrangePrograms = @('nyx_projection_refresh_tests', 'nyx_native_binding_layout_tests')
+    if (($nyxArrangePlatform -match '-win(32|64)$') -and ($Widgetset -eq 'win32')) {
+      $nyxArrangePrograms += 'nyx_native_geometry_controls'
+    }
+    foreach ($nyxArrangeProgram in $nyxArrangePrograms) {
       Invoke-NyxCompiler $nyxLclFpc ($nyxArrangeChecked + $nyxArrangeSource + @('-Fustudio', '-Futests',
         "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform", "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform/$Widgetset",
         "-Fu$nyxLazarus/components/lazutils/lib/$nyxArrangePlatform", "-Fu$nyxLazarus/packager/units/$nyxArrangePlatform",

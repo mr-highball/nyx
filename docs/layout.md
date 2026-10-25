@@ -325,7 +325,31 @@ resize-phase marker separates these from construction and frame replacement.
 These clocks overlap: do not add them as independent elapsed time, infer native
 window redundancy from unchanged leaf rectangles, or treat instrumented timing
 as application latency. The [native geometry task](../TODO/NS-2_lcl-renderer_02.md)
-owns the remaining implementation and full interaction qualification.
+owns ordinary Studio/application qualification and the remaining platform matrix.
+
+Ordinary zero-border native layout panels can publish eligible Win32 siblings
+together during LCL's synchronous realization walk. A bounded cohort must share
+the same native parent and physical retirement frame. Custom faces, direct
+geometry callback properties, borders, right-to-left native frames and
+incompatible cohorts retain ordinary LCL publication. No application directive
+or native API call is needed.
+
+This is a publication optimization, not an atomic native transaction. LCL retains
+its anticipated client-area queries during allocation; native callbacks can see
+partially published siblings. Each delivered command checks its original mount
+and window incarnation and reads the current intended rectangle, so preceding
+callbacks cannot overwrite a newer LCL allocation with an older copied command.
+Retired mounts reject movement, and window recreation cannot borrow an earlier
+incarnation's authority. Physical controls remain retained through the native
+call; LCL then finishes its ordinary caches and any remaining bounds work.
+No pending command survives the synchronous call. Native API failure follows
+ordinary realization, without promising rollback of effects already delivered.
+
+The native geometry regression exercises reentrant edits, handle recreation,
+mount retirement, independent successors, ordinary-callback fallback and retained
+input drafts/selection. Explicit parent-window recreation is compared against
+ordinary LCL, including its focus behavior; it does not promise focus survives
+destruction of the focused input's native ancestry.
 
 Native label measurement lazily borrows one screen drawing context during each
 synchronous layout pass. LCL's canvas state is saved/restored around each label;

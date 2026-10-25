@@ -24,7 +24,7 @@ program nyx_native_binding_layout_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Interfaces, Classes, SysUtils, Types, Forms, Controls,
+  Interfaces, Classes, SysUtils, Types, Forms, Controls, LCLIntf,
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.render.lcl, nyx.widgets.lcl;
 
 type
@@ -189,13 +189,48 @@ var
   LCaption: TNyxText;
   LFace: TControl;
   LRefused: Boolean;
+
+  procedure CheckDisplayedGeometry;
+  var
+    LIndex: Integer;
+    LControl: TWinControl;
+    LNativeWidth: Integer;
+    LNativeHeight: Integer;
+    LNativeLeft: Integer;
+    LNativeTop: Integer;
+    LClient: TRect;
+  begin
+    { Read real windows after each displayed width, not merely LCL's intended
+      rectangles after a whole resize sequence. No paint work is left hidden
+      behind the timed loop; every borrowed face survives until replacement. }
+    Application.ProcessMessages;
+    AHost.Update;
+    for LIndex := 0 to High(LFaces) do
+    begin
+      LControl := TWinControl(LFaces[LIndex].Control);
+      LNativeWidth := 0;
+      LNativeHeight := 0;
+      LNativeLeft := 0;
+      LNativeTop := 0;
+      LClient := Rect(0, 0, 0, 0);
+      LCLIntf.GetWindowSize(LControl.Handle, LNativeWidth, LNativeHeight);
+      LCLIntf.GetWindowRelativePosition(LControl.Handle, LNativeLeft, LNativeTop);
+      LCLIntf.GetClientRect(LControl.Handle, LClient);
+      Check((LControl.Left = LNativeLeft) and (LControl.Top = LNativeTop) and
+        (LControl.Width = LNativeWidth) and (LControl.Height = LNativeHeight) and
+        (LControl.ClientWidth = LClient.Right - LClient.Left) and
+        (LControl.ClientHeight = LClient.Bottom - LClient.Top),
+        'Each displayed leaf/layout window has exact native position, outer and client geometry');
+    end;
+  end;
+
 begin
   LDocument := MakeDocument(CLeaves, 'Explore');
   LCandidate := nil;
   LRenderer := TNyxLCLRenderer.Create;
   try
     LRenderer.Render(LDocument, LDocument.Pages[0], AHost);
-    SetLength(LFaces, CLeaves);
+    SetLength(LFaces, CLeaves + CLeaves div 8 + 1);
     for LIndex := 0 to CLeaves - 1 do
     begin
       LFaces[LIndex].Control := LRenderer.ControlFor(LeafID(LIndex));
@@ -203,6 +238,11 @@ begin
       {$ifdef NYX_LCL_LAYOUT_PROFILE}
       LFaces[LIndex].Control.AddHandlerOnChangeBounds(AHost.LeafBoundsChanged);
       {$endif}
+    end;
+    LFaces[CLeaves].Control := LRenderer.ControlFor('layout');
+    for LIndex := 0 to CLeaves div 8 - 1 do
+    begin
+      LFaces[CLeaves + 1 + LIndex].Control := LRenderer.ControlFor('row-' + IntToStr(LIndex));
     end;
     LStarted := GetTickCount64;
     for LPass := 1 to CRefreshes do
@@ -218,7 +258,9 @@ begin
     for LPass := 1 to CRefreshes do
     begin
       AHost.ClientWidth := 968;
+      CheckDisplayedGeometry;
       AHost.ClientWidth := 960;
+      CheckDisplayedGeometry;
     end;
     LResizeMilliseconds := GetTickCount64 - LStarted;
     {$ifdef NYX_LCL_LAYOUT_PROFILE}AHost.PrintProfile;{$endif}

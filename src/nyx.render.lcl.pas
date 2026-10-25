@@ -995,19 +995,22 @@ uses
   nyx.collections, nyx.collections.query.lcl,
   nyx.collections.arrangement.lcl,
   nyx.collections.cell.lcl,
-  nyx.application.resources, nyx.projection.context;
+  nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl;
 
 type
 
-  {$ifdef NYX_STUDIO_PROFILE}
-  { Ordinary non-themed layout panel with observation only. The renderer owns
-    it through its normal LCL parent; no model or external callback is retained.
-    The inherited native call may retire this control, so the tail uses locals. }
-  TNativeLayoutProfilePanel = class(TPanel)
-  protected
-    procedure DoSendBoundsToInterface; override;
+  { Keep the exact canonical generation alive through its native layout hosts.
+    Generation.Current reads a weak renderer flag; retirement revokes it before
+    cleanup. No renderer is retained, and the existing physical frame retires
+    controls before their last generation lease releases the realized model. }
+  TNativeLayoutLifetime = class(TInterfacedObject, INyxLCLLayoutLifetime)
+  private
+    FGeneration: INyxLCLBindingGeneration;
+  public
+    constructor Create(const AGeneration: INyxLCLBindingGeneration);
+    function Current: Boolean;
+    function GetFrame: INyxNativeGestureFrame;
   end;
-  {$endif}
 
   { Internal control-flow unwind after the exact native receiver retires.
     Event boundaries consume it; it is never a successor binding diagnostic. }
@@ -1501,16 +1504,26 @@ end;
 
 {$I nyx.projection.context.adapter.inc}
 
-{$ifdef NYX_STUDIO_PROFILE}
-procedure TNativeLayoutProfilePanel.DoSendBoundsToInterface;
-var
-  LStarted: QWord;
+constructor TNativeLayoutLifetime.Create(const AGeneration: INyxLCLBindingGeneration);
 begin
-  LStarted := GetTickCount64;
-  inherited DoSendBoundsToInterface;
-  WriteLn('native-layout-panel,bounds,', GetTickCount64 - LStarted);
+  inherited Create;
+  FGeneration := AGeneration;
 end;
-{$endif}
+
+function TNativeLayoutLifetime.Current: Boolean;
+begin
+  Result := (FGeneration <> nil) and FGeneration.Current;
+end;
+
+function TNativeLayoutLifetime.GetFrame: INyxNativeGestureFrame;
+begin
+  Result := nil;
+
+  if FGeneration <> nil then
+  begin
+    Result := FGeneration.PhysicalFrame;
+  end;
+end;
 
 constructor TNyxLCLRenderer.CreateRetirementShell;
 begin
@@ -3032,11 +3045,12 @@ begin
     end
     else
     begin
-      {$ifdef NYX_STUDIO_PROFILE}
-      LPanel := TNativeLayoutProfilePanel.Create(FPanel);
-      {$else}
-      LPanel := TPanel.Create(FPanel);
-      {$endif}
+      LPanel := TNyxLCLLayoutPanel.Create(FPanel);
+
+      if FGeneration <> nil then
+      begin
+        TNyxLCLLayoutPanel(LPanel).ConnectLayout(TNativeLayoutLifetime.Create(FGeneration));
+      end;
       LPanel.BevelOuter := bvNone;
       LPanel.Caption := '';
     end;

@@ -9,7 +9,53 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Active prerequisite — native geometry publication
+## Current checkpoint — grouped native geometry — 2026-10-25
+
+Root continues alone. The owned raw layout panel now publishes bounded,
+compatible Win32 siblings together during LCL's synchronous realization walk.
+It preserves ordinary LCL client-area/caching behavior and leaves incompatible
+cohorts on the existing path. Mount/window incarnation receipts live only across
+the native call; the existing physical frame retains retired controls. Native
+effects are not promised to roll back if the platform partially fails.
+
+An actual native callback test first exposed an earlier copied rectangle
+overwriting a callback's newer sibling allocation. Delivery now reads the current
+intended rectangle and rejects retired or recreated authority. The final fixture
+passes 134 checks for this edit, native recreation, retirement/successors, direct
+callback fallback, beveled/foreign siblings and retained input draft/selection.
+Ordinary LCL itself drops focus when the focused input's parent window is
+explicitly recreated; the grouped case matches its ordinary control case.
+The failed assertions and compiler repairs remain preserved in private evidence.
+
+The matched visible 512-control workload now checks actual native positions,
+outer sizes and client sizes after each displayed width, in addition to its
+original identity/replacement/refusal/unmount assertions. Both ordinary checked
+O2/heap-traced runs pass 28,826 checks. Without optional profilers, 24 resize
+pairs measure 54,078 ms before and 30,938 ms after, about 43% less time. The
+separate matched profiler cohort measures 78,578/32,797 ms; instrumentation
+affects the apparent gain, so that larger difference is not the ordinary-build
+claim. These remain isolated stress-workload results, not whole-editor latency.
+
+Current native regressions pass 134 geometry, 28,826 layout, 186 retained
+projection, 4,205 logical viewport, 137 Studio recovery and 57/61 Studio chrome
+checks at 1280/390. All seven runtimes have complete clean heaps; all six
+compilers finish without warnings. Desktop design and compact Inspector captures
+are inspected. The matched timing cohorts also have complete clean heaps and
+warning-free compilers. All actual jobs are joined and all 2,322 batch inputs
+reverify. After that freeze ended, only the build-target condition changed to
+keep the Windows-specific geometry fixture out of other widgetset test lists;
+its PowerShell syntax is checked. Product and fixture bytes remain unchanged.
+
+Evidence is `.local/qualification/native-geometry-group-01`. The retained
+arrangement target includes the new Win32 fixture; its entire target was not
+rerun. No browser execution, other-widgetset qualification, full instrumented
+Studio lifetime or original task/DONE/completion credit follows. The next action
+is the existing [native geometry task](TODO/NS-2_lcl-renderer_02.md): repeat the
+ordinary full Studio and saved application's own-code journeys against this
+implementation, retaining their original assertions and bounds. Broader callback,
+platform and workbench acceptance remains with the original task owners.
+
+## Profiling baseline — native geometry publication
 
 The preceding turn is PROGRESS:8f18b79 indexes native realized-object lookup and
 qualifies its bounded improvement. The remaining resize investigation now changes

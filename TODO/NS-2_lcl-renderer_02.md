@@ -74,3 +74,25 @@ WORK owns source identities, diagnostic limits and the discarded painting trials
   instrumented lifetime or delivery acceptance.
 - Necessary Nyx library, adapter and shared-contract changes are authorized by
   AGENTS.md. This sequence coordinates work and validation; it adds no approval gate.
+
+**Progress — 2026-10-25:**
+
+- The owned raw layout panel now groups bounded compatible Win32 siblings at
+  LCL's synchronous realization seam. Exact mount/window receipts are rechecked
+  when native commands arrive; LCL still owns anticipated client areas and final
+  realization. Unknown cohorts use ordinary publication.
+- A new reentrant-edit test exposed an older queued rectangle overwriting a
+  callback's newer allocation. Delivery now reads the current intended rectangle
+  and rejects retired/recreated authority. Failure evidence remains retained.
+- The matched checked/O2/profile/heap-traced 512-control workload passes 28,826
+  checks before and after, including actual positions, outer sizes and client
+  sizes after every displayed width. The 24 resize pairs measure 78,578 ms before
+  and 32,797 ms after. Both heaps are complete and clean; this is an isolated
+  workload result, not ordinary Studio latency or whole-task acceptance.
+- The corresponding ordinary checked/O2/heap-traced runs, without optional
+  profilers, pass the same 28,826 checks and measure 54,078/30,938 ms. Lead with
+  this approximately 43% reduction for the ordinary-build workload; profiling
+  changes the apparent gain. Every comparison heap is complete and clean.
+- Actual callback/incarnation/fallback checks, ordinary retained/scrolling/Studio
+  regressions and saved-application qualification are recorded in WORK.md as
+  they finish. Full original interaction/platform/Studio criteria remain open.
