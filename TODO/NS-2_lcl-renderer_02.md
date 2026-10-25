@@ -106,3 +106,21 @@ WORK owns source identities, diagnostic limits and the discarded painting trials
   attempts refuse in this automation context. Explicit diagnostic redraws are
   inspected at both widths with clean heaps; they do not qualify displayed
   clipping. The remaining visual/platform/lifetime outcomes stay open.
+- Current ordinary-build stack sampling puts eight of ten resize-phase samples
+  in native paint/message processing. Phase-logged samples also contain stdout
+  writes, so they cannot alone attribute time to the renderer's algorithm.
+  This bounded sample is diagnostic, not an exclusive timing percentage.
+- Buttons now reuse the revocable dirty/visible-region buffer. The final
+  checked/O2/heap-traced 512-control workload still passes 28,826 assertions and
+  measures 33,344/28,062 ms for 24 resize pairs, with no optional phase profiling
+  or sampler. This one isolated final-source pair is about 16% lower, not a
+  whole-editor result. Earlier private comparisons were disqualified because
+  FPC substituted the canonical unit; the corrected prototype uses a linked
+  witness. WORK retains both failures and the distinction from final source.
+- Focused actual-source checks pass 89 for button theme/paint/lifecycle, 67 per
+  width for role/action and independent-process invocation, 20 for shared buffer
+  behavior, and 57/61 for Studio chrome at 1280/390. All heaps are clean and all
+  ten final native compiler logs have zero warnings. Diagnostic desktop design
+  and compact Inspector redraws are inspected. Original display, whole-editor,
+  full lifetime, application and broader platform requirements remain open;
+  neither this task nor workbench03 is moved to DONE.

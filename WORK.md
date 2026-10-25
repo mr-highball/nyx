@@ -9,7 +9,102 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — native splitter release — 2026-10-25
+## Current checkpoint — bounded native button painting — 2026-10-25
+
+The preceding turn is PROGRESS: 2bbcf42 repairs native splitter release and is
+remote-verified. Its original external-context question remains optional/pending;
+the full ticket stays open. Root returned solo to workbench03's responsiveness
+outcome through [native geometry02](TODO/NS-2_lcl-renderer_02.md), retaining every
+original authoring, browser, lifetime and display requirement.
+
+The existing grouped-publication profile contains substantial time outside the
+direct renderer traversal. A current private stack-sampled copy preserves all
+28,826 geometry assertions and the full visible 512-control/24-resize-pair
+workload. The first cold compiler reaches its unchanged 240-second deadline and
+produces no runtime evidence. The later matching checked/O2/profile/heap cohort
+reuses 551 byte-verified qualified unit/object files; its compiler finishes and
+the native run passes with a complete clean heap. Its wrapper was interrupted
+during final source reverification after buffered progress was misread; a
+separate complete check verifies all 2,323 pinned sources. The unnecessary second
+preparation was stopped before producing a runtime. These setup events and the
+cold failure remain retained; no missing guard is treated as passed.
+
+Symbol inspection identifies sampled addresses in System's DO_WRITE and
+FILEWRITEFUNC: per-phase profiling output itself can block. A subsequent cohort
+therefore removes both optional phase profilers, keeps every safety/assertion/
+heap flag, and timestamps the actual resize interval. It passes the same 28,826
+checks with a complete clean 6,167,044-block/190,709,230-byte heap; all 2,323
+sources reverify and every reader is joined. Of 12 samples, 10 occur inside that
+interval: eight are in Win32 paint/message processing, one in Nyx measurement
+and one in grouped publication. This is a bounded diagnostic, not a percentage
+attribution, matched speedup or full Studio responsiveness acceptance.
+
+A private opaque-button attempt and initial buffer attempt each pass 28,826
+checks with clean heaps, but their comparisons are disqualified. Consumer logs
+show that FPC recompiles the original `src/nyx.widgets.lcl.pas` after the private
+unit compiler succeeds. The identical allocation counts expose this caching/
+source-search mistake. The 33,375/36,344 and 31,562/34,594 ms pairs consequently
+do not measure either proposed variant and establish neither gain nor regression.
+Both private sources and all logs remain retained. No library edit was adopted.
+The opacity idea is left unqualified, without another equivalent style trial.
+
+The corrected buffer02 experiment puts its private source directory before the
+canonical source and adds an actually called, separately linked witness. An
+original-unit substitution must now fail compilation/linkage/runtime admission.
+That variant passes all 28,826 checks with a complete clean
+6,168,325-block/193,754,196-byte heap. A fresh ordinary baseline passes the same
+checks. Their resize phases measure 33,344/25,562 ms with checked O2/heap tracing
+and neither optional phase profiler nor sampler. This is one isolated pair,
+about 23% less resize time; no whole-editor, compositor or parity claim follows.
+
+The actual library candidate now gives buttons the existing dirty/visible DC
+buffer with independent HWND ownership and a copied diagnostics getter. Paint
+and accessibility fields retire before glyphs/handle destruction; already owned
+field scopes also retire before replacement after native creation. The focused
+theme fixture retains all original font checks and passes 89 with a clean heap,
+including exactly-once small-region painting, bounded allocation, caller-disabled
+buffering, supplied-DC backdrop, repeated handle recreation and recreation during
+painting. Earlier compiler failures are fixture namespace collisions with Windows
+TBitmap/Rect; explicit Graphics/Types qualifications repair those without changing
+assertions. The actual role/action fixture passes 67 at each width 800/390 with
+clean heaps, including its independent process action.
+
+That latter fixture first exposed an unrelated harness transport defect: the
+child inherited the parent's exclusively opened HEAPTRC log, so a locked-file
+warning preceded its valid role/verb JSON. Retained bounded diagnostics identify
+the warning. The child now copies native environment entries and uses its own
+stderr trace without changing the parent environment. Original strict JSON and
+both clean-heap assertions remain. The shared buffer regression passes 20 with a
+clean heap. The final actual-source layout consumer passes all 28,826 assertions
+with a clean heap; its resize phase takes 28,062 ms against the fresh 33,344 ms
+baseline. Lead with this final-source pair, about 16% less time, rather than the
+private prototype's 23%. Compiler/widgetset flags and the complete workload are
+unchanged. All ten final native compiler logs are warning-free.
+
+Ordinary Studio chrome additionally passes 57 at 1280 and 61 at 390 with clean
+heaps, preserving native controls, style editing and paired history. Its desktop
+design and compact Inspector PNGs are inspected. These are explicit PaintTo
+diagnostic redraws, not actual display/clipping or foreground qualification.
+No complete 900-second authoring journey was repeated solely for this paint
+change. Complete original Studio lifetime/performance, application/display,
+browser and broader widgetset/parity acceptance remain with their original owners.
+
+All actual readers are joined and their source freeze has ended. The bounded
+button-buffer change is qualified by those native results; geometry02 and
+workbench03 retain every original acceptance criterion and stay open. Root stays
+solo. The next performance step must measure an ordinary editor interaction with
+optional phase output disabled, using the existing full/focused editor evidence
+and preserving pending drafts/history. Do not repeat the discarded/substituted
+variants or infer a whole-editor speedup from this layout loop.
+
+New large outputs use provisioned scratch storage; D: was observed at about
+16 MiB free. No cleanup, deletion, SDK edit or service change was performed.
+Small local source/evidence changes remain possible. Ignored
+`.local/qualification/native-paint-path-01` owns the exact private artifact paths
+and receipts. This is one investigation under the existing geometry/workbench
+criteria, without a new task, DONE move, completion credit or helper assignment.
+
+## Native splitter release — 2026-10-25
 
 The preceding turn is PROGRESS: 430911a admits required Kanban List projection
 before rebuilding it. Root then pulled the existing

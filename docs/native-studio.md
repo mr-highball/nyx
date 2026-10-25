@@ -9,6 +9,15 @@ routers as browser Studio. The palette, hierarchy, inspector, warning cards,
 canvas surface, split view and Pascal editor are ordinary public Nyx components.
 LCL supplies their native adapters and the containing application window.
 
+Native Nyx buttons share the revocable paint buffer used by drawing/viewport
+hosts. Eligible Win32 paints allocate only their dirty visible rectangle;
+supplied-DC printing, caller-disabled `DoubleBuffered` and unsupported native
+paths retain ordinary LCL painting. Both native paint/accessibility attachments
+retire before local resources and handle destruction, including recreation from
+inside painting. `TNyxLCLButton.PaintBufferStats` copies UI-thread diagnostics;
+it grants no window or control lifetime lease. This is native adapter behavior,
+independent of a design's output selection.
+
 ```powershell
 ./tools/build.ps1 -Target native-studio
 ./build/native-studio/controller/nyx_studio_native.exe

@@ -364,6 +364,9 @@ begin
 end;
 
 procedure InvokeFromChild(AWindow: HWND);
+const
+  { FPC process configuration belongs to the native harness boundary. }
+  CHeapTracePrefix = 'HEAPTRC=';
 var
   LProcess: TProcess;
   LOutput: TMemoryStream;
@@ -371,6 +374,10 @@ var
   LFirstLine: Integer;
   LValue: TNyxDataValue;
   LDeadline: QWord;
+  LIndex: Integer;
+  { Keep the RTL's native environment encoding at this SDK boundary. These
+    values are copied only into the owned child, never into a Nyx document. }
+  LEnvironment: String;
 begin
   LProcess := TProcess.Create(nil);
   LOutput := TMemoryStream.Create;
@@ -379,6 +386,21 @@ begin
     LProcess.Parameters.Add('--invoke-window');
     LProcess.Parameters.Add(IntToStr(AWindow));
     LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
+    { RunOwned gives the parent an exclusive heap log. Inheriting that path
+      makes the child print a locked-file warning before its JSON packet.
+      Preserve its other native environment entries, and request the same
+      zero-depth trace on the child's captured stderr instead. Parent process
+      configuration is never changed, and both clean-heap checks stay active. }
+    for LIndex := 1 to GetEnvironmentVariableCount do
+    begin
+      LEnvironment := GetEnvironmentString(LIndex);
+
+      if not SameText(Copy(LEnvironment, 1, Length(CHeapTracePrefix)), CHeapTracePrefix) then
+      begin
+        LProcess.Environment.Add(LEnvironment);
+      end;
+    end;
+    LProcess.Environment.Add(CHeapTracePrefix + 'tracedepth=0');
     LProcess.Execute;
     LDeadline := GetTickCount64 + 10000;
     while LProcess.Running and (GetTickCount64 < LDeadline) do
@@ -405,7 +427,17 @@ begin
     Check(Pos('0 unfreed memory blocks : 0', LText) > 0, 'the independent client has a clean Pascal heap');
     LFirstLine := Pos(#10, LText);
     Check(LFirstLine > 0, 'the independent client emits its complete result');
-    LValue := TNyxDataValue.ParseJSON(Copy(LText, 1, LFirstLine - 1));
+    try
+      LValue := TNyxDataValue.ParseJSON(Copy(LText, 1, LFirstLine - 1));
+    except
+      on LError: Exception do
+      begin
+        { Keep transport failures distinct from button action failures. The
+          packet contains only this fixture's own role/verb and heap trace. }
+        raise Exception.Create('Independent MSAA client packet: ' + LError.Message +
+          ' / captured prefix: ' + Copy(LText, 1, 512));
+      end;
+    end;
     Check(LValue.Field('role').AsInteger = PushButtonRole, 'the external client reads a real push-button role');
     Check(LValue.Field('action').AsText <> '', 'the external client reads the system action verb');
     Pump;

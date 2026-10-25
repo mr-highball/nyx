@@ -41,6 +41,7 @@ uses
   nyx.layout.viewport,
   nyx.theme,
   nyx.accessibility.button.lcl,
+  nyx.paint.buffer.lcl,
   nyx.event.emitter,
   nyx.gestures.lcl,
   nyx.types;
@@ -57,6 +58,10 @@ type
     Nyx reuses its state/activation operations, with keyboard callbacks ordered
     before activation so consumed keys cannot cause a default click.
     Theme fields are copied during ApplyTheme: controls retain no theme pointer.
+    The native paint scope buffers only the dirty visible rectangle. Ordinary
+    supplied-DC painting, caller-disabled buffering and unsupported widgetsets
+    retain LCL's path. Both HWND scopes retire before local paint resources;
+    nested window creation retires an already installed field-owned scope.
     Custom factories may still return standard TButton or other LCL controls. }
   TNyxLCLButton = class(TCDButton)
   private
@@ -80,6 +85,9 @@ type
     FAccessibilityManaged: Boolean;
     FAccessibilitySource: INyxEventEmitter;
     FAccessibilityFrame: INyxNativeGestureFrame;
+    { This interface owns a per-HWND attachment, which only borrows the button.
+      Retire it before freeing glyphs or allowing native handle destruction. }
+    FPaintBuffer: INyxLCLPaintBuffer;
     function AccessibleButtonState: TNyxLCLAccessibleButtonState;
     function DisclosureSpace: Integer;
     function GetGlyphAvailable: Boolean;
@@ -129,6 +137,9 @@ type
       reservation. Repeating the accepted state does not invalidate the widget. }
     procedure Disclosure(ACue: TNyxLCLDisclosureCue);
     procedure Paint; override;
+    { Copy native diagnostics without retaining a window/DC. A missing handle
+      or unsupported widgetset reports the same zero value as other hosts. }
+    function PaintBufferStats: TNyxLCLPaintBufferStats;
     { Expose the inherited activation entry point for applications/harnesses.
       Disabled controls (including disabled ancestors) must never activate. }
     procedure Click; override;
@@ -263,6 +274,18 @@ end;
 
 destructor TNyxLCLButton.Destroy;
 begin
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
+
+  if FAccessibility <> nil then
+  begin
+    FAccessibility.Retire;
+    FAccessibility := nil;
+  end;
   FGlyph.Free;
   inherited Destroy;
 end;
@@ -295,11 +318,33 @@ end;
 procedure TNyxLCLButton.CreateWnd;
 begin
   inherited CreateWnd;
+  { Native creation may reenter before the outer call returns. Retire the
+    exact scopes already owned by these fields, including an inner creation's
+    attachments, before installing their replacement on the current HWND. }
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
+
+  if FAccessibility <> nil then
+  begin
+    FAccessibility.Retire;
+    FAccessibility := nil;
+  end;
+  FPaintBuffer := AttachNyxLCLPaintBuffer(Self);
   FAccessibility := AttachNyxLCLAccessibleButton(Self, AccessibleButtonState);
 end;
 
 procedure TNyxLCLButton.DestroyWnd;
 begin
+
+  if FPaintBuffer <> nil then
+  begin
+    FPaintBuffer.Retire;
+    FPaintBuffer := nil;
+  end;
 
   if FAccessibility <> nil then
   begin
@@ -307,6 +352,16 @@ begin
     FAccessibility := nil;
   end;
   inherited DestroyWnd;
+end;
+
+function TNyxLCLButton.PaintBufferStats: TNyxLCLPaintBufferStats;
+begin
+  Result := Default(TNyxLCLPaintBufferStats);
+
+  if FPaintBuffer <> nil then
+  begin
+    Result := FPaintBuffer.Stats;
+  end;
 end;
 
 procedure TNyxLCLButton.ConnectAccessibility(const ASource: INyxEventEmitter;

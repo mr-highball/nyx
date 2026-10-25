@@ -452,6 +452,11 @@ Its harness supplies the monotonic clock; the portable reader has no production
 clock or profiling globals. Parent stages include nested stages, so their totals
 must not be added as exclusive costs. This define is for the single-threaded
 benchmark only and must remain absent from a concurrently serving Studio service.
+Native per-phase stdout can itself block under redirected capture: current stack
+inspection identified System's text-write path inside profiled UI work. Use
+separate runs with optional phase logging disabled for ordinary-build timing,
+and retain the logging/sampling configuration with each diagnostic. A stack in a
+logged parent stage does not by itself attribute time to that stage's algorithm.
 The `lex` and `symbol-read` call counts identify unique source snapshots read by
 one reconciliation's owned context pool. Mutable readers copy their records;
 the final candidate verifier always parses fresh. No parsed context is persisted
