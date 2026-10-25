@@ -165,3 +165,14 @@ records the reproduced defect, final readiness repair and remaining browser gate
 This advances producer/lifecycle behavior without accepting the full criterion.
 Browser execution, overload presentation in the demo, authoring/AT/visual/Tree
 and measured scale/memory remain open under the original criteria.
+
+The Tree checklist now has a public process-tree example and reusable typed
+inspection capture: effective matches, context ancestors, disclosed rows and
+separate query-hidden/collapsed selected counts. Explicit reveal preserves exact
+membership/anchor and never clears filters. Search uses one existing session
+owner; clear updates its input/predicate together without restoring old runtime
+selection/disclosure. Native handwritten/generated controls exercise the nested
+path, peer ownership, later branch changes, deletion and binding retirement at
+both widths. Browser execution, physical long-tree viewport reveal/scrolling,
+AT/visual/Studio and the unchanged original criteria remain open. These bounded
+checks do not accept the whole Tree checklist or04.

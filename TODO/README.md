@@ -56,6 +56,12 @@ handwritten/generated controls exercise these cases. [Final receiver admission](
 tracks the discovered validator-revocation defect and remaining browser gate;
 it adds no separate store or scheduling engine.
 
+Tree inspection now has typed match/context/disclosure and hidden-selection
+captures, plus a public process-tree search/reveal example. Native handwritten/
+generated journeys exercise scoped clearing, deliberate relaxation and retained
+selection/disclosure at both widths. Browser execution, long-tree viewport
+reveal, AT/visual, Studio adoption and full04 acceptance remain open in WORK.
+
 The 2026-10-18 request adds an optional client-side pas2js compiler for WEB and
 a static client-only Studio edition suitable for GitHub Pages. It must require
 no Nyx backend, account, server compiler or cloud storage for local authoring;

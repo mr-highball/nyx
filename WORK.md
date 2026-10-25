@@ -9,7 +9,86 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — background refresh admission — 2026-10-25
+## Current checkpoint — inspect and reveal Tree search results — 2026-10-25
+
+The previous checkpoint977ff9a is remote-verified and PROGRESS. Root remains
+SOLO; Lil' Scooty is idle until the user changes that preference. This is the
+seventh original04 L1 checkpoint without original criterion closure. The new
+outcome is a reusable typed Tree inspection capture and public process-tree
+search/reveal example, using existing hierarchy/query/session/selection owners.
+All original04/03 criteria and existing collection02/03 browser gates remain open.
+
+CaptureNyxTreeInspection distinguishes direct matches from required context
+ancestors, complete query rows from logically disclosed rows, and query-hidden
+selected members from selected members inside closed branches. Counts describe
+ALL accepted predicates, including authored/peer contributions; they are not
+painted-row or viewport counts. MatchAt follows accepted query order, including
+closed descendants. RoleOf and VisibilityOf expose closed typed choices.
+Coherence checks retain the displayed source, query result, selection and tree
+command stamp from one UI capture. Alternative views must supply the displayed-
+source facet. Immutable captures retain snapshots/metadata until released, never
+a live view, store, widget, callback, subscription or command authority.
+
+RevealNyxTreeItem uses ordinary SetSelection to focus/open an admitted path,
+preserving exact selected membership and anchor. Missing and filtered are typed
+outcomes, never implicit filter relaxation or substitute selection. Foreign and
+undefined identities refuse. Observers retain normal post-commit meaning. The
+caller remains responsible for its ordinary UI/generation authority. Revealed
+means logical admission; it is not a lasting onscreen/physical-focus guarantee.
+
+The English process-tree public document uses ordinary Nyx Input/Label/Button/
+Tree controls and two independent views of one source. An explicit session owner
+filters names with documented ASCII-insensitive comparison. Clear my search
+clears its text and predicate together through the existing prepared group,
+without removing peer predicates or restoring earlier selection/disclosure.
+Clear-and-reveal makes relaxation a separate deliberate action. Bound status
+explains hidden selection; Next match opens a deeply nested process path without
+changing selected membership. Clear selection is explicit. Revocable context/
+generation, weak view token and retained event receiver keep no application,
+renderer, router or document alive. Close withdraws events/observation/owner
+before disposal. Generated documents use the same ordinary runtime attachment.
+
+Native public handwritten/generated journeys pass28 checks per1280/390 width,
+plus one fresh-generation guard in handwritten1280. They cover the actual bound
+Input, Find/Next/Clear/Reveal commands, exact membership/anchor, effective match/
+context/disclosed counts, owner-only relaxation under a peer filter, later branch
+changes, intervening deletion, unchanged saved defaults and retired button
+bindings. The actual native Tree cursor follows admitted reveal. Detached facts
+remain readable after widget/application disposal. Four complete native heaps
+have zero unfreed allocations. Matching handwritten/generated/browser example
+consumers compile, with installed RTL warnings and no owned compiler warnings.
+No browser execution, pixels, AT, physical keyboard/pointer or long-tree scroll
+qualification is claimed.
+
+Private tree-inspection-01 evidence retains controls-01/02/03 and maintained-04.
+The first path passed23 checks per width/variant. The expanded input check then
+caught a fixture mistake: ControlFor addresses the Input caption/frame, whereas
+InputFor returns its actual edit field. The unchanged assertion passes through
+that public lookup on the repaired journey; no library binding assertion was
+weakened. Maintained-04 runs the exact new -Target tree-inspection command logic
+with the established direct log-output transport replacing only RunOwned's
+PowerShell asynchronous writer. Ten owned receipts pass; four clean native
+heaps, all1849 pinned source/tool inputs unchanged, actual jobs joined. The
+command builds the same generated companion/public entry and stages matched RTL
+and HTTP test/example HTML; it starts no host. Standard redirected-output writer
+behavior is not newly qualified by that transport-specific execution.
+
+Current document-control discovery still reports no session. The browser tool
+is available, but existing local preview tabs point to the stopped host. No
+server/LAN replacement, cleanup, dependency install, helper or denied host/
+protocol workaround occurs. Runtime screenshots and semantic authoring remain
+explicit unavailable evidence, not inferred from source/compilation.
+
+Next: finish04's actual long-Tree viewport reveal/scrolling contract, including
+repeat reveal at the same logical focus. Current browser refresh preserves scroll
+and logical disclosure/focus alone does not prove the requested row is onscreen
+when commands originate outside the Tree. Reuse existing mount/generation and
+row geometry/scroll owners; do not create another query/search engine. Hard draft
+memory, saved-policy/Studio/catalog/source/MCP adoption and L2 measured scale/
+paint/input/memory remain open. No original task is accepted or moved to DONE;
+completion credit and percentages remain unassessed.
+
+## Background refresh admission — 2026-10-25
 
 The previous checkpoint db9ec45 is remote-verified. Root continues SOLO; Lil'
 Scooty's last assignment is complete and idle. This is the sixth original04 L1

@@ -177,6 +177,49 @@ widgetsets use their corresponding installed LCL unit directories.
 For the live inspection variant, use `live_inspection.lpr` in both compiler
 commands and copy/open `live-inspection.html` beside the generated script/runtime.
 
+## Process-tree inspection
+
+`process_tree.lpr` is a second portable public example. Search for `index`, then
+choose **Reveal next match** to open the nested worker's path without changing
+selected membership or its range anchor. The status separates matches, required
+context ancestors, disclosed rows and source rows. A selected row hidden by a
+filter has a different count from one inside a closed branch. These counts
+describe the complete accepted query, not just this search box's predicate.
+
+**Reveal first selected** explains a filter obstruction. **Clear my search and
+reveal** is the explicit relaxation choice; other owners' filters remain active.
+**Clear my search** clears its input and predicate in one grouped publication,
+retaining later branch choices and surviving selected identities. It does not
+restore an earlier disclosure/selection snapshot. **Clear selection** is explicit.
+The second Tree shares data with independent query/disclosure/selection state.
+Keyboard typeahead remains navigation among disclosed labels, distinct from the
+Find button's membership filter. The example's comparison is explicitly ASCII
+insensitive, while Unicode source text/identities remain supported.
+
+The runtime binding uses the public
+[Tree inspection contract](../../docs/collection-views.md#tree-matches-context-and-hidden-selection)
+and existing query/session/hierarchy owners. Own it beside the application and
+close it before page replacement/disposal. Retained inspection captures own only
+immutable data; they cannot keep a widget or its command authority alive.
+Authored defaults/history remain unchanged by these runtime operations.
+
+Build the entry with the same compiler flags above, substituting
+`process_tree.lpr`, and copy `process-tree.html` beside the matching browser
+script/runtime. A maintained handwritten/generated qualification path is:
+
+```powershell
+./tools/build.ps1 -Target tree-inspection -TreeInspectionEvidenceDirectory <new-directory>
+```
+
+Use a new absolute output directory without spaces. The target executes native
+wide/compact checks, compiles the same journey's generated companion and public
+entry, and stages both browser test variants plus the runnable example. It starts
+no server. The browser test HTML reports `data-tree-inspection-checks` or
+`data-tree-inspection-error` on the body. Native command injection is not physical
+keyboard/pointer evidence; compilation is not browser execution or visual/AT
+qualification. Long-tree viewport reveal/scrolling remains an explicit adapter
+gate, rather than being inferred from the short sample's open path.
+
 ## Qualification
 
 `tests/nyx_service_monitor_controls.lpr` mounts the public document in two native

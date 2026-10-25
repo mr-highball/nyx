@@ -2181,6 +2181,58 @@ authenticated transport and a temporary owned review, with one grouped typed
 composition and exact bounded source windows. It never edits enrollment, profiles
 or primary user work. It requires a backend admitting combined collection steps.
 
+## Tree matches, context and hidden selection
+
+`nyx.collections.tree.inspection` supplies an immutable public inspection capture:
+
+```pascal
+LProcesses := CaptureNyxTreeInspection(LProcessView);
+LFacts := LProcesses.Observation;
+
+if LFacts.MatchedRows > 0 then
+begin
+  LOutcome := RevealNyxTreeItem(LProcessView, LProcesses.MatchAt(0));
+end;
+```
+
+Capture on the view's UI thread. `MatchedRows` satisfies the complete effective
+predicate, including authored and peer contributions. `ContextRows` counts
+included ancestors which do not themselves match; `ResultRows` is their sum.
+`DisclosedRows` counts the logical open preorder, not painted/realized rows or
+viewport capacity. Source counts use the displayed source facet, not a fresh
+lookup against a potentially advancing producer. Alternative views must supply
+that facet and a coherent hierarchy/snapshot/selection. A changed capture refuses.
+
+`RoleOf` distinguishes match/context/absence. `VisibilityOf` distinguishes a
+missing source identity, a filtered identity, a closed branch and a disclosed
+row. `FilteredSelectedRows` and `CollapsedSelectedRows` are disjoint counts;
+selected ancestors included for context are still present. `MatchAt` uses query
+ordering, includes closed descendants and rejects invalid indices. Retained
+captures own immutable source/query snapshots and disclosed metadata until
+released; they retain no live view, store, widget, receiver or command authority.
+Their logical source payload remains retained even after the application closes.
+
+`RevealNyxTreeItem` explicitly focuses an admitted item and opens its ancestors
+through the ordinary view command, preserving exact membership and range anchor.
+Its typed outcome reports missing/filtered/revealed. It never relaxes a filter,
+selects a substitute or restores an older disclosure/selection snapshot. A foreign
+or undefined identity refuses. The caller still owns its normal UI/generation
+authority, and observers retain ordinary post-commit semantics. Physical viewport
+scrolling/focus delivery follows the adapters; this helper does not claim that
+every disclosed row is currently onscreen. Long-tree viewport qualification
+remains separate, especially for browser commands issued outside the Tree.
+
+The public [process-tree example](../examples/service-monitor/README.md#process-tree-inspection)
+uses ordinary Nyx Input/Label/Button/Tree controls, one explicit search owner and
+an independent peer view of the same collection. Clear removes only that owner's
+predicate and clears its bound text in one grouped publication. It retains later
+disclosure choices and surviving selected identities; another owner's accepted
+filter can still hide a selected process. The separate Clear-and-reveal command
+makes relaxation deliberate. Input labels distinguish membership search from the
+Tree's keyboard typeahead. Native handwritten/generated controls exercise both
+widths; matching browser artifacts build, while browser/AT/pixel/long-scroll and
+full live-inspection acceptance remain open.
+
 ## Immutable tree rows and browser windows
 
 Import `nyx.collections.tree.rows` to obtain `INyxTreeRows` with
