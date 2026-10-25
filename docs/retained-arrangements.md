@@ -111,6 +111,13 @@ These use real routers/coordinators and injected target phases. The maintained
 publication consumers, plus the actual physical form consumer described below.
 
 Both physical renderers expose `TryPrepareFormRefresh(Document, Root, Forms)`.
+Studio can prefer this complete preparation when its existing bounded membership
+scan establishes concrete trees and copied form metadata indicates a changed
+context. The hint is discarded before target admission. Unknown composition,
+identity or form shape keeps ordinary routing, and a refused preferred preparation
+falls back through the original path. Ordinary scalar refreshes preserve unchanged
+contexts' drafts and event generation; malformed candidates refuse without
+adopting form data.
 Its exact form contexts are the same explicit portable contract. Nil means the
 form cannot be retained or its old event work remains busy; it leaves accepted
 controls, drafts and pending work untouched. The ordinary replacement path is

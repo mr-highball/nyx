@@ -106,6 +106,17 @@ calls on512 controls. One matched pair measures2469ms/2094ms and cumulative
 browser execution, peak memory and whole-editor latency remain open. WORK owns
 the exact source cohorts; these isolated savings do not close an original criterion.
 
+Inspector routing now uses bounded static membership and discarded copied metadata
+to prefer complete form preparation when its context changes. Unknown shapes and
+refused hints retain the former path; no validation/publication fence is bypassed.
+Matched native section runs pass135 with clean heaps, and the strengthened
+invalid-candidate run passes137. Eight repeated context changes measure26125ms/
+22687ms. Complete native Studio passes1124/1135 at desktop/compact sizes with
+exactly unchanged saved outputs, using its separate no-heap functional profile.
+Its current full timings667.735s/450.340s remain too slow for responsiveness
+acceptance. Browser fixtures and matched worker compile only. WORK retains the
+source/heap/profile distinctions and remaining original criteria.
+
 The presentation-authoring continuation adds typed ordinary spacing/text forms,
 independent set/reset and paired history, bounded semantic reads and grouped
 operations with complete version11 discovery. Authoring05 passes40 per actual

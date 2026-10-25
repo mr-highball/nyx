@@ -795,6 +795,11 @@ var
   LEventBefore: INyxCancellationScope;
   LBaseline: TNyxText;
   LMinimumID: TNyxText;
+  LRefused: Boolean;
+  {$if defined(NYX_SECTION_REFRESH_BENCHMARK) and not defined(PAS2JS)}
+  LRepeat: Integer;
+  LStarted: QWord;
+  {$endif}
   {$ifndef PAS2JS}
   LQueryHandle: PtrUInt;
   LLayoutHandle: PtrUInt;
@@ -887,6 +892,80 @@ begin
       (PtrUInt(TWinControl(LLayoutField).Handle) = LLayoutHandle),
       'collection baseline updates keep exact native query and stock layout windows');
     {$endif}
+
+    { An unchanged context must keep its event generation and independent drafts.
+      Selecting a faster preparation path must not turn every scalar refresh
+      into a context reset or revoke callbacks which still own valid work. }
+    Draft(LQueryField, '13.25');
+    Draft(LLayoutField, '124');
+    LEventBefore := NyxEventGeneration(LViews.SectionEvents(nssInspector));
+    FreeAndNil(LNext);
+    LNext := ComposeCollectionFixture;
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]),
+      'unchanged collection context still admits an ordinary retained refresh');
+    Check(not LEventBefore.Cancelled and (LViews.SectionRoot(nssInspector) = LRoot),
+      'unchanged collection context preserves its exact event generation and Inspector');
+    Check((InputText(LQueryField) = '13.25') and (InputText(LLayoutField) = '124') and
+      (InputText(LPropertyField) = '19.5'),
+      'unchanged collection context preserves every unfinished independent draft');
+
+    {$if defined(NYX_SECTION_REFRESH_BENCHMARK) and not defined(PAS2JS)}
+    { Compare the same mounted stock Inspector and source composition on both
+      sides of a routing change. Keep all original checks and safety flags.
+      These repeated context changes measure this path, not whole-editor latency. }
+    LStarted := GetTickCount64;
+    for LRepeat := 0 to 7 do
+    begin
+      Draft(LQueryField, '12.75');
+      Draft(LLayoutField, '123');
+      LEventBefore := NyxEventGeneration(LViews.SectionEvents(nssInspector));
+      LSession.Selected.SetCollectionView(LSpec.TableQuery(
+        NyxTableQuery.Filtering(not Odd(LRepeat))));
+      FreeAndNil(LNext);
+      LNext := ComposeCollectionFixture;
+      Check(LViews.TryRefresh(LNext, LNext.Pages[0]),
+        'repeated stock collection context admits through the ordinary section owner');
+      Check((LViews.SectionRoot(nssInspector) = LRoot) and
+        (LViews.InputFor('collection-query-draft') = LQueryField) and
+        (LViews.InputFor(LMinimumID) = LLayoutField),
+        'repeated context changes retain their exact actual Inspector inputs');
+      Check(LEventBefore.Cancelled and (InputText(LQueryField) = '7') and
+        (InputText(LLayoutField) = TNyxText(IntToStr(LSpec.TableLayoutPolicy.MinimumScrollableWidth))) and
+        (InputText(LPropertyField) = '19.5'),
+        'each repeated context retires old authority and resets only its own drafts');
+      Check((PtrUInt(TWinControl(LQueryField).Handle) = LQueryHandle) and
+        (PtrUInt(TWinControl(LLayoutField).Handle) = LLayoutHandle),
+        'repeated collection context retains both native windows');
+    end;
+    WriteLn('PROFILE Inspector context changes=8 elapsed-ms=', GetTickCount64 - LStarted);
+    {$endif}
+
+    { Positive metadata hints are never admission. Keep the same complete static
+      node set and change the collection baseline, then corrupt an ordinary
+      property which the fresh renderer must reject before any form adoption. }
+    Draft(LQueryField, '14.75');
+    Draft(LLayoutField, '125');
+    LEventBefore := NyxEventGeneration(LViews.SectionEvents(nssInspector));
+    LSession.Selected.SetCollectionView(LSpec.TableQuery(NyxTableQuery.Filtering(True)));
+    FreeAndNil(LNext);
+    LNext := ComposeCollectionFixture;
+    LNext.Find('collection-query-draft').Props.Add('width=invalid-length');
+    LRefused := False;
+    try
+      LViews.TryRefresh(LNext, LNext.Pages[0]);
+    except
+      on LException: ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'changed-context hint never bypasses fresh scalar property admission');
+    Check(not LEventBefore.Cancelled and (LViews.SectionRoot(nssInspector) = LRoot) and
+      (LViews.InputFor('collection-query-draft') = LQueryField) and
+      (LViews.InputFor(LMinimumID) = LLayoutField) and
+      (InputText(LQueryField) = '14.75') and (InputText(LLayoutField) = '125') and
+      (InputText(LPropertyField) = '19.5'),
+      'refused hinted form preserves exact controls, every draft and prior callback authority');
   finally
     LViews.Free;
     LNext.Free;

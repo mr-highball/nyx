@@ -9,6 +9,57 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Active prerequisite — Inspector context routing
+
+The preceding turn is PROGRESS: dd1f8df changes the shared codec and qualifies
+exact behavior plus isolated allocation savings. Task03's ordinary Studio
+authoring/performance outcome now avoids duplicate ordinary/form preparation
+when Inspector context metadata changes. The existing bounded static membership
+walk supplies a routing hint without granting admission or continuity rights.
+Unknown/composed/oversized inputs keep the ordinary path, and the target's complete
+form admission, event fence and rollback remain required. All earlier recovery
+assertions and runtime bounds remain intact.
+
+The bounded membership result now reports whether both concrete trees were
+completely compared. Only a known unchanged set can request the copied metadata
+hint. Its temporary restore vector is discarded before the same complete renderer
+form preparation; nil retains the entire former fallback sequence. Unchanged,
+composed, escaped/unknown or incompatible scopes keep ordinary routing. No public
+API, persistent proof, skipped validation or weakened event/rollback fence is added.
+The expanded native section consumer passes135 before/after with complete clean
+heaps. Eight stock Inspector context changes measure26125ms/22687ms in one matched
+checked/O2/profiled/heap-traced pair. Whole-fixture allocation is36521238 blocks/
+20177507043 bytes before and33347209/19576074788 after; this is cumulative work,
+not peak memory or whole-editor latency. The follow-up invalid-candidate consumer
+passes137 with a complete clean34721728-block/20053089389-byte heap, proving a
+positive hint cannot admit malformed scalar properties or disturb original drafts,
+controls or callback authority. It adds only test cases to the measured source.
+Both browser fixture generations compile only. The complete current Studio
+native/browser fixtures and matched worker also compile. All eight compiler jobs
+have zero owned warnings; four browser builds retain seven installed RTL warnings
+each. Complete native Studio passes1124 at1280 and1135 at390, with the original
+checked/O2/profiled/no-heap-tracing configuration and900s bound. The two complete
+accepted projects and Pascal files match each other and the earlier full-export01
+producer exactly:15127/8188 bytes, retaining its recorded hashes and independently
+compiled-source identity. No new own-application execution is inferred from that
+byte equality; its earlier448-check cohort retains its separate source evidence.
+
+Whole-journey observations are667.735s/450.340s, versus690.933s/476.001s before the
+combined codec/routing continuation. These are one comparable diagnostic pair
+per size, not production latency acceptance. The current desktop profile records
+89 preferred form admissions and removes those ordinary refusal attempts. Shell
+rendering still totals442731ms, with81418ms of nested Sync layout and86562ms of
+detached section preparation. Timings overlap and must not be added as independent
+elapsed totals. Retained Sync/layout and replacement remain concrete next owners.
+
+Evidence roots are `.local/qualification/inspector-context-route-01` and
+`.local/qualification/studio-inspector-route-full-01`. Every actual reader is
+joined, all2318 current source pins reverify and their short source freeze has
+ended. Full instrumented Studio lifetime, responsiveness, browser execution and
+all original workbench criteria remain open. No helper, task/DONE move or new
+completion credit. Continue from the remaining measured cost rather than an
+equivalent routing variant or unchanged full900s rerun.
+
 ## Active prerequisite — repeated context formatting
 
 The previous goal turn is PROGRESS: complete native Studio Save/Open and its

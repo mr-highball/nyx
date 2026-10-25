@@ -753,8 +753,12 @@ end;
   discarding a doomed retained candidate first. Equal sets or an unknown shape
   still take the complete ordinary path, including reparenting/reordering whose
   per-parent child counts change. Full fresh Prepare remains the admission owner.
-  Indices retain copied keys only and expire with this invocation. }
-function StaticMembershipChanged(AExisting, ASource: TNyxNode): Boolean;
+  Indices retain copied keys only and expire with this invocation. AKnown means
+  both complete concrete trees passed these bounded membership checks. It is a
+  routing observation only: properties, contracts and target admission remain
+  unchecked. Unknown/composed shapes never authorize an early form hint. }
+function StaticMembershipChanged(AExisting, ASource: TNyxNode;
+  out AKnown: Boolean): Boolean;
 var
   LExistingIDs: TNyxTextIndex;
   LSourceIDs: TNyxTextIndex;
@@ -819,6 +823,7 @@ var
 
 begin
   Result := False;
+  AKnown := False;
   LExistingIDs := TNyxTextIndex.Create;
   LSourceIDs := nil;
   try
@@ -830,6 +835,7 @@ begin
     if Collect(AExisting, nil, True, 0, LExistingIDs, LExistingCount) and
       Collect(ASource, nil, False, 0, LSourceIDs, LSourceCount) then
     begin
+      AKnown := True;
       Result := LDifferent or (LExistingCount <> LSourceCount);
     end;
   finally
@@ -855,6 +861,8 @@ var
   LEffects: INyxPreparedPublication;
   LForms: TNyxProjectionFormContexts;
   LFailed: Boolean;
+  LStaticKnown: Boolean;
+  LMembershipChanged: Boolean;
   {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
   LPhaseStarted: QWord;
 
@@ -935,6 +943,53 @@ var
       SetLength(LForms, LCount + 1);
       LForms[LCount] := LCollectionForms[LIndex];
     end;
+  end;
+
+  function TryChangedInspectorForm: Boolean;
+  var
+    LRestoreHint: TNyxProjectionValueRestores;
+    LChangedHint: Boolean;
+    LHintValid: Boolean;
+  begin
+    Result := False;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    LPhaseStarted := GetTickCount64;
+    {$endif}
+    PrepareInspectorForms;
+    { Only complete bounded static trees reach this hint. Their source/runtime
+      spelling can still differ (for example escaped IDs), and form structure or
+      context presence may be unknown. Any uncertainty keeps the ordinary path.
+      The copied restore vector is discarded before the target call; it grants
+      no reset rights and never survives as an admission or publication plan. }
+    LHintValid := PrepareNyxProjectionFormRestores(LView.Root,
+      LDocuments[nssInspector].Pages[0], LForms, LRestoreHint, LChangedHint);
+    LRestoreHint := nil;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+    RecordPhase('form-hint', nssInspector);
+    {$endif}
+
+    if not LHintValid or not LChangedHint then
+    begin
+      Exit;
+    end;
+    { A changed context cannot pass ordinary scalar admission. Prefer the SAME
+      complete renderer preparation used after that refusal: fresh document,
+      realization, baseline, draft, scheduler and event-generation checks still
+      own the decision. Nil falls through to the complete former routing below. }
+    LFormEffect := LView.TryPrepareFormRefresh(LDocuments[nssInspector],
+      LDocuments[nssInspector].Pages[0], LForms);
+    Result := LFormEffect <> nil;
+    {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
+
+    if Result then
+    begin
+      RecordPhase('form-preferred-accepted', nssInspector);
+    end
+    else
+    begin
+      RecordPhase('form-preferred-refused', nssInspector);
+    end;
+    {$endif}
   end;
 
   procedure RestoreRetained;
@@ -1106,9 +1161,22 @@ begin
           a complete static membership mismatch can only reach replacement.
           Readiness, model/draft capture above and fresh Prepare below remain
           required; this decision grants no admission or continuity rights. }
-        if (LSection = nssChrome) or not StaticMembershipChanged(LView.Root,
-          LDocuments[LSection].Pages[0]) then
+        LStaticKnown := False;
+        LMembershipChanged := False;
+
+        if LSection <> nssChrome then
         begin
+          LMembershipChanged := StaticMembershipChanged(LView.Root,
+            LDocuments[LSection].Pages[0], LStaticKnown);
+        end;
+
+        if not LMembershipChanged then
+        begin
+
+          if (LSection = nssInspector) and LStaticKnown and TryChangedInspectorForm then
+          begin
+            Continue;
+          end;
           { Even a target Sync exception can have touched the physical draft.
             Ordinary TryRefresh recovers its model; the outer owner must also
             restore continuity for this attempted retained role. }
