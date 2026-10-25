@@ -305,6 +305,13 @@ large split panes explicitly require logical adapters. Non-panel client offsets,
 logical resize events, widgetset/DPI metrics and complete parity remain under
 the original renderer owners; this API does not accept those untested outcomes.
 
+Native layout resolves realized objects through a frame-owned pointer index.
+The index borrows nodes and bindings, moves with their frame and retires before
+the realized tree. It changes association lookup only: identity admission,
+measurement, property validation and generation fences remain independent.
+The `retained-arrangement` build target includes a real-control regression for
+large repeated layouts, same-ID/empty replacements, refused candidates and unmounts.
+
 Native measurement can be inspected with the optional `NYX_LCL_LAYOUT_PROFILE`
 compiler definition. It logs control counts, width/height traversals, row plans
 and elapsed milliseconds, with no authored text or retained document references.

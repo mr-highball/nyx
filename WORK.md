@@ -9,6 +9,38 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Active prerequisite — native object lookup
+
+The preceding turn is PROGRESS:89ed631 removes redundant native button font
+notifications. Under task03's remaining responsiveness prerequisite, native
+layout now resolves realized objects through a private frame-owned pointer index
+instead of repeatedly scanning every binding. The index borrows both objects,
+grows separately before publication and transfers/retires with its exact frame.
+Retained rearrangement keeps the same objects; public identity lookup, complete
+property/refresh admission, generation fencing and measurement remain unchanged.
+
+The same512-control fixture passes1130 before/after assertions with complete
+clean heaps, including every exact face/allocation, same-ID/smaller/empty/growing
+replacements, partial candidate refusal and unmount/remount. One matched checked/
+O2/heap-traced pair observes2375ms/2094ms for24 Sync calls and53266ms/52156ms for
+24 host resize pairs. The small resize difference does not establish meaningful
+resize improvement or whole-editor responsiveness. The current fixture repeats
+all1130 assertions, using the actual native button class for caption reads.
+The paired timing fixtures retain their exact earlier bytes separately.
+
+Current-source retained projection passes186 and strengthened Studio section
+recovery passes137; ordinary Studio chrome passes57/61 at1280/390. All have
+complete clean heaps. Desktop design and compact Inspector captures are inspected.
+All six native compiler jobs finish without warnings. Seven actual runtime jobs
+are joined across the comparison and current regression cohorts, and all2320
+current source inputs reverify. Their short source freeze has ended. The existing
+retained-arrangement build target now includes the new native regression; its
+whole target was not rerun. Evidence is `.local/qualification/native-binding-layout-01`.
+Browser execution, full instrumented Studio lifetime, dominant layout/replacement
+cost and all original workbench criteria remain open. Continue from those measured
+costs and user outcomes, without equivalent hash variants or an unchanged full900s
+rerun. Root remains the sole active worker.
+
 ## Active prerequisite — native button font churn
 
 The preceding turn is PROGRESS: a9047e1 changes Inspector routing and qualifies

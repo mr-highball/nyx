@@ -126,6 +126,14 @@ passes95 configuration and57/61 actual Studio chrome checks at wide/compact size
 all with clean heaps. Browser style is unchanged and execution remains unclaimed;
 whole-editor latency and the original workbench outcomes stay open.
 
+The native object-lookup continuation replaces repeated binding scans with a
+frame-owned borrowed-pointer index. The same512-control fixture passes1130 before/
+after checks with clean heaps; one matched pair measures2375ms/2094ms for24 Sync
+calls, with only a small resize difference. Current-source retained projection186,
+section recovery137 and wide/compact Studio57/61 also pass with clean heaps.
+Identity admission and validation remain unchanged; whole-editor responsiveness
+and every original criterion stay open. WORK retains the cohorts and limits.
+
 The presentation-authoring continuation adds typed ordinary spacing/text forms,
 independent set/reset and paired history, bounded semantic reads and grouped
 operations with complete version11 discovery. Authoring05 passes40 per actual

@@ -344,6 +344,15 @@ type
     before retirement; extension destructors must release without raising. }
   TNyxLCLRenderer = class
   private type
+    { Borrowed exact-object association within one physical frame. Neither the
+      realized node nor its binding is retained; nil marks an unused slot. }
+    TBindingSlot = record
+      Node: TNyxNode;
+      Binding: TNyxLCLBinding;
+    end;
+    { Frame-owned, at most half-full pointer index. It moves with FBindings and
+      is discarded before their realized tree, including failed candidates. }
+    TBindingIndex = array of TBindingSlot;
     { Immutable managed replay intent. Its exact runtime identity and revocable
       generation own no widget/router/view. Irreversible mount cancellation
       prevents a same-ID replacement from inheriting an earlier replay policy. }
@@ -467,6 +476,7 @@ type
     {$endif}
     FProjecting: Boolean;
     FBindings: TNyxLCLBindings;
+    FBindingIndex: TBindingIndex;
     FFactoryKinds: array of TNyxText;
     FDrawingNames: array of TNyxText;
     FDrawingProviders: array of INyxDrawingProvider;
@@ -606,6 +616,8 @@ type
     function LayoutColumns(ANode: TNyxNode; AWidth: Integer): Integer;
     procedure Layout(ANode: TNyxNode; AX, AY, AWidth: Integer; AHeight: Integer = -1;
       AAllocatedWidth: Boolean = False);
+    class function BindingHash(ANode: TNyxNode; ACapacity: Integer): Integer; static;
+    procedure IndexBinding(ABinding: TNyxLCLBinding);
     function Binding(ANode: TNyxNode): TNyxLCLBinding;
     function IdentityBinding(const AID: TNyxText;
       AIdentity: TNyxIdentityKind): TNyxLCLBinding;
@@ -1650,6 +1662,8 @@ begin
     FProjectionBaseline := nil;
     LOld.FBindings := FBindings;
     FBindings := nil;
+    LOld.FBindingIndex := FBindingIndex;
+    FBindingIndex := nil;
     LOld.FCollectionBindings := FCollectionBindings;
     FCollectionBindings := nil;
     LOld.FCaptureObserver := FCaptureObserver;
@@ -2356,6 +2370,7 @@ begin
 
   try
     SetLength(FBindings, 0);
+    FBindingIndex := nil;
   except
     on Exception do RememberFailure;
   end;
@@ -3141,6 +3156,7 @@ begin
   end;
   SetLength(FBindings, Length(FBindings) + 1);
   FBindings[Length(FBindings) - 1] := LBinding;
+  IndexBinding(LBinding);
 
   { Every native TControl exposes the same click slot, including labels and
     layout hosts. Preserve a factory's own callback just as for focus hooks;
@@ -3280,16 +3296,84 @@ begin
   {$endif}
 end;
 
+class function TNyxLCLRenderer.BindingHash(ANode: TNyxNode;
+  ACapacity: Integer): Integer;
+var
+  LPointer: PtrUInt;
+begin
+  { Heap alignment leaves low pointer bits constant. Fold higher bits without
+    arithmetic overflow under checked builds on either native pointer width. }
+  LPointer := PtrUInt(ANode);
+  Result := Integer((LPointer xor (LPointer shr 11) xor (LPointer shr 23)) and
+    PtrUInt(ACapacity - 1));
+end;
+
+procedure TNyxLCLRenderer.IndexBinding(ABinding: TNyxLCLBinding);
+var
+  LPrepared: TBindingIndex;
+  LCapacity: Integer;
+  LIndex: Integer;
+
+  procedure Put(var AIndex: TBindingIndex; ABinding: TNyxLCLBinding);
+  var
+    LSlot: Integer;
+  begin
+    LSlot := BindingHash(ABinding.FNode, Length(AIndex));
+    while (AIndex[LSlot].Node <> nil) and
+      (AIndex[LSlot].Node <> ABinding.FNode) do
+    begin
+      LSlot := (LSlot + 1) and (Length(AIndex) - 1);
+    end;
+
+    if AIndex[LSlot].Node = nil then
+    begin
+      AIndex[LSlot].Node := ABinding.FNode;
+      AIndex[LSlot].Binding := ABinding;
+    end;
+  end;
+
+begin
+  { Build appends the binding before indexing it, so candidate cleanup always
+    owns it even if allocation fails. Prepare a complete growth separately;
+    publishing invokes no extension or native callbacks. First-object wins
+    preserves the former scan's semantics even for a duplicate association. }
+
+  if (Length(FBindingIndex) div 2) < Length(FBindings) then
+  begin
+    LCapacity := 16;
+    while (LCapacity div 2) < Length(FBindings) do
+    begin
+      LCapacity := LCapacity * 2;
+    end;
+    SetLength(LPrepared, LCapacity);
+    for LIndex := 0 to High(FBindings) do
+    begin
+      Put(LPrepared, FBindings[LIndex]);
+    end;
+    FBindingIndex := LPrepared;
+  end
+  else
+  begin
+    Put(FBindingIndex, ABinding);
+  end;
+end;
+
 function TNyxLCLRenderer.Binding(ANode: TNyxNode): TNyxLCLBinding;
 var
-  LIndex: Integer;
+  LSlot: Integer;
 begin
-  for LIndex := 0 to Length(FBindings) - 1 do
-  begin
 
-    if FBindings[LIndex].FNode = ANode then
+  if (ANode <> nil) and (Length(FBindingIndex) > 0) then
+  begin
+    LSlot := BindingHash(ANode, Length(FBindingIndex));
+    while FBindingIndex[LSlot].Node <> nil do
     begin
-      Exit(FBindings[LIndex]);
+
+      if FBindingIndex[LSlot].Node = ANode then
+      begin
+        Exit(FBindingIndex[LSlot].Binding);
+      end;
+      LSlot := (LSlot + 1) and (Length(FBindingIndex) - 1);
     end;
   end;
   raise ENyxModel.Create('Native projection is missing a node');
@@ -7725,6 +7809,7 @@ begin
     end;
     RequireAttempt;
     FBindings := LCandidate.FBindings;
+    FBindingIndex := LCandidate.FBindingIndex;
     FEmitterScope := LCandidate.FEmitterScope;
     RequireAttempt;
     LCandidate.FEmitterScope := nil;
@@ -7744,6 +7829,7 @@ begin
     LCandidate.FCaptureObserver := nil;
     RequireAttempt;
     LCandidate.FBindings := nil;
+    LCandidate.FBindingIndex := nil;
     RequireAttempt;
     { Logical scroll ports borrow their renderer receiver. The prepared frame
       was wired to LCandidate, which is released below. Rebase every port during

@@ -8865,12 +8865,14 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     }
     $nyxArrangeNative = Join-Path $nyxArrangeRoot 'controls'
     New-Item -ItemType Directory -Force $nyxArrangeNative | Out-Null
-    Invoke-NyxCompiler $nyxLclFpc ($nyxArrangeChecked + $nyxArrangeSource + @('-Fustudio', '-Futests',
-      "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform", "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform/$Widgetset",
-      "-Fu$nyxLazarus/components/lazutils/lib/$nyxArrangePlatform", "-Fu$nyxLazarus/packager/units/$nyxArrangePlatform",
-      "-FU$nyxArrangeNative", "-FE$nyxArrangeNative", 'tests/nyx_projection_refresh_tests.lpr'))
-    & (Join-Path $nyxArrangeNative 'nyx_projection_refresh_tests.exe')
-    if ($LASTEXITCODE -ne 0) { throw 'Actual native retained arrangement failed' }
+    foreach ($nyxArrangeProgram in @('nyx_projection_refresh_tests', 'nyx_native_binding_layout_tests')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxArrangeChecked + $nyxArrangeSource + @('-Fustudio', '-Futests',
+        "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform", "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform/$Widgetset",
+        "-Fu$nyxLazarus/components/lazutils/lib/$nyxArrangePlatform", "-Fu$nyxLazarus/packager/units/$nyxArrangePlatform",
+        "-FU$nyxArrangeNative", "-FE$nyxArrangeNative", "tests/$nyxArrangeProgram.lpr"))
+      & (Join-Path $nyxArrangeNative ($nyxArrangeProgram + '.exe'))
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native retained arrangement failed' }
+    }
     Invoke-NyxCompiler $nyxLclFpc ($nyxArrangeChecked + $nyxArrangeSource + @('-Fustudio', '-Futests',
       "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform", "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxArrangePlatform", "-Fu$nyxLazarus/packager/units/$nyxArrangePlatform",
