@@ -37,6 +37,7 @@ uses
   nyx.collections.alignment,
   nyx.collections.mount,
   nyx.collections.position,
+  nyx.collections.recovery,
   nyx.collections.clipboard.actions, nyx.collections.draft,
   nyx.collections.lcl.grid, nyx.collections.range.stroke,
   nyx.collections.range.pointer, nyx.gestures, nyx.scheduler;
@@ -662,6 +663,7 @@ type
     procedure RestoreColumnEditor;
     function ColumnValueDisplay(const AValue: TNyxStateValue): TNyxText;
     procedure RememberDormantColumnEdit(const ALease: TColumnEditLease);
+    procedure RecoverColumnDrafts(const AData: INyxCollectionSnapshot);
     procedure PruneDormantColumnEdits;
     procedure ColumnEditorShown(Sender: TObject);
     procedure ResumeColumnEditor(AData: PtrInt);
@@ -3335,6 +3337,53 @@ begin
     False, False);
 end;
 
+procedure TNativeMount.RecoverColumnDrafts(const AData: INyxCollectionSnapshot);
+var
+  LBefore: INyxCollectionSnapshot;
+  LFormer: TNyxCollectionCellEdits;
+  LNext: TNyxCollectionCellEdits;
+  LCell: TNyxCollectionCellEdit;
+  LReason: TNyxCollectionDraftLoss;
+  LIndex: Integer;
+  LCount: Integer;
+  LDirty: Boolean;
+begin
+  LBefore := FRendered;
+  LFormer := FDormantColumnEdits;
+  SetLength(LNext, Length(LFormer));
+  LCount := 0;
+  for LIndex := 0 to High(LFormer) do
+  begin
+
+    if not RecoverCell(LFormer[LIndex], LBefore, AData, LReason) then
+    begin
+      LNext[LCount] := LFormer[LIndex].Copy;
+      Inc(LCount);
+    end;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+  end;
+  SetLength(LNext, LCount);
+  FDormantColumnEdits := LNext;
+
+  if FColumnEdit.Active then
+  begin
+    LCell := NyxCollectionCellEdit(FColumnEdit.Item, FColumnEdit.Field,
+      FColumnEdit.Accepted, TNyxText(FColumnEdit.Text), FColumnEdit.Selection, False, False);
+    LDirty := TNyxText(FColumnEdit.Text) <> ColumnValueDisplay(FColumnEdit.Accepted);
+
+    if RecoverCell(LCell, LBefore, AData, LReason, LDirty) and InputLifetimeCurrent then
+    begin
+      { A saved value is inert recovery data. Never let its old edit/focus lease
+        attach to a replaced ID or overwrite a changed accepted scalar. }
+      FColumnEdit := Default(TColumnEditLease);
+    end;
+  end;
+end;
+
 procedure TNativeMount.PruneDormantColumnEdits;
 var
   LView: INyxCollectionView;
@@ -4822,6 +4871,7 @@ begin
     end;
     Inc(FArrangedRevision);
     CaptureColumnEditor;
+    RecoverColumnDrafts(AData);
 
     if not InputLifetimeCurrent or FTargetRefreshDeferred or DeferTargetRefresh then
     begin
@@ -7331,6 +7381,8 @@ var
   LEditingLength: Integer;
   LRestoreEditor: Boolean;
   LEditor: TCustomEdit;
+  LCell: TNyxCollectionCellEdit;
+  LReason: TNyxCollectionDraftLoss;
 begin
   LData := FView.Snapshot;
 
@@ -7398,6 +7450,20 @@ begin
         LColumnSpec.Read(LData.Item(LEditingItem))) and
       not (FNormalizeValues and (FNormalizeItem.ID = LEditingItem.ID) and
         (FNormalizeColumn = LEditingColumn));
+    LCell := NyxCollectionCellEdit(LEditingItem, LColumnSpec.Identity,
+      LColumnSpec.Read(FRendered.Item(LEditingItem)), TNyxText(LEditingText),
+      CaptureNyxLCLSelection(LEditor), False, False);
+
+    if RecoverCell(LCell, FRendered, LData, LReason,
+      TNyxText(LEditingText) <> ColumnValueDisplay(LCell.Accepted)) then
+    begin
+      LRestoreEditor := False;
+    end;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
     FGrid.EditorMode := False;
   end;
 

@@ -6,7 +6,7 @@ unit nyx.live.inspection;
 interface
 
 uses nyx.model, nyx.application.context, nyx.events, nyx.collections.view,
-  nyx.collections.position;
+  nyx.collections.position, nyx.collections.recovery;
 
 const
   InspectionPeerID = 'live-service-peer';
@@ -14,6 +14,13 @@ const
   InspectionPauseID = 'pause-inspection';
   InspectionResumeID = 'resume-inspection';
   InspectionStepID = 'next-feed-update';
+  RecoverySummaryID = 'recovered-draft-summary';
+  RecoveryTextID = 'recovered-draft-text';
+  RecoveryVisibleID = 'recovered-drafts-visible';
+  RecoveryPreviousID = 'previous-recovered-draft';
+  RecoveryNextID = 'next-recovered-draft';
+  RecoveryDiscardID = 'discard-recovered-draft';
+  RecoveryDiscardTextID = 'discard-recovered-draft-caption';
 
 type
   { Own this UI-only binding beside the mounted application. Close before page
@@ -27,7 +34,8 @@ type
   public
     constructor Create(const AContext: INyxApplicationContext;
       const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
-      const APosition: INyxCollectionPositionState = nil);
+      const APosition: INyxCollectionPositionState = nil;
+      const ARecovery: INyxCollectionDraftRecovery = nil);
     destructor Destroy; override;
     procedure Close;
   end;
@@ -56,14 +64,21 @@ type
     FStatusToken: INyxCollectionViewSubscription;
     FPosition: INyxCollectionPositionState;
     FPositionSerial: Integer;
+    FRecovery: INyxCollectionDraftRecovery;
+    FRecoveryIndex: Integer;
+    FRecovered: INyxRecoveredCollectionDraft;
+    FDiscard: INyxRecoveredCollectionDraft;
     FStep: Integer;
     function Active: Boolean;
     procedure StatusChanged(const AStatus: TNyxCollectionInspectionObservation;
       ACause: TNyxCollectionInspectionCause);
     procedure AdvanceFeed;
+    procedure PublishState(const AStatus: TNyxText);
+    procedure RecoveryAction(const AID: TNyxText);
   public
     constructor Create(const AContext: INyxApplicationContext;
-      const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState);
+      const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState;
+      const ARecovery: INyxCollectionDraftRecovery);
     destructor Destroy; override;
     procedure Close;
     procedure Invoke(const AEvent: TNyxEventInfo;
@@ -80,11 +95,22 @@ var
   LStatus: INyxLabel;
   LPeerTitle: INyxLabel;
   LPeer: INyxTable;
+  LRecovery: INyxCard;
+  LRecoverySummary: INyxLabel;
+  LRecoveryText: INyxMemo;
+  LRecoveryCommands: INyxRow;
+  LPreviousDraft: INyxButton;
+  LNextDraft: INyxButton;
+  LDiscardDraft: INyxButton;
 begin
   Result := BuildServiceMonitorDocument;
   try
     Result.Title := 'Live service inspection';
     Result.State.SetValue(NyxTextState(InspectionStatusID), 'Following live updates.');
+    Result.State.SetValue(NyxTextState(RecoverySummaryID), 'No recovered drafts.');
+    Result.State.SetValue(NyxTextState(RecoveryTextID), '');
+    Result.State.SetValue(NyxTextState(RecoveryDiscardTextID), 'Discard draft');
+    Result.State.SetValue(NyxBooleanState(RecoveryVisibleID), False);
     LPage := Result.Find('services');
     LPage.Configure.Gap(8).Done;
     Result.Find('service-title').Configure.Text('Keep your place while services change').Done;
@@ -115,6 +141,29 @@ begin
       'Each click replays one atomic update: change and insert, remove, then replace a record. ' +
       'Paused values can be selected, filtered and copied; edits refuse until Resume. ' +
       'A removed or replaced selection is explained when you resume. No timer or external service is involved.').Done;
+    LRecovery := NewNyxCard('recovered-drafts');
+    LPage.Add(LRecovery);
+    LRecovery.Configure.Layout(nlColumn).Padding(12).Gap(8).Done;
+    LRecovery.Binds.Visible(NyxBooleanState(RecoveryVisibleID)).Done;
+    LRecoverySummary := NewNyxLabel(RecoverySummaryID);
+    LRecovery.Add(LRecoverySummary);
+    LRecoverySummary.Binds.Text(NyxTextState(RecoverySummaryID)).Done;
+    LRecoveryText := NewNyxMemo(RecoveryTextID).WithText('Recovered text');
+    LRecovery.Add(LRecoveryText);
+    LRecoveryText.Configure.Height(140).ReadOnly(True)
+      .AccessibleName('Recovered draft text; null characters shown as backslash zero').Done;
+    LRecoveryText.Binds.Value(NyxTextState(RecoveryTextID)).Done;
+    LRecoveryCommands := NewNyxRow('recovery-commands');
+    LRecovery.Add(LRecoveryCommands);
+    LRecoveryCommands.Configure.Gap(8).Done;
+    LRecoveryCommands.Configure.WhenViewport(TNyxViewportWidth.Below(560)).Layout(nlColumn).Done;
+    LPreviousDraft := NewNyxButton(RecoveryPreviousID).WithText('Previous draft');
+    LRecoveryCommands.Add(LPreviousDraft);
+    LNextDraft := NewNyxButton(RecoveryNextID).WithText('Next draft');
+    LRecoveryCommands.Add(LNextDraft);
+    LDiscardDraft := NewNyxButton(RecoveryDiscardID);
+    LRecoveryCommands.Add(LDiscardDraft);
+    LDiscardDraft.Binds.Text(NyxTextState(RecoveryDiscardTextID)).Done;
   except
     Result.Free;
     raise;
@@ -122,7 +171,8 @@ begin
 end;
 
 constructor TInspectionCallback.Create(const AContext: INyxApplicationContext;
-  const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState);
+  const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState;
+  const ARecovery: INyxCollectionDraftRecovery);
 begin
   inherited Create;
 
@@ -142,6 +192,7 @@ begin
   end;
   FPeer := APeer;
   FPosition := APosition;
+  FRecovery := ARecovery;
   FInspection.ConfigureInspection(NyxInspectionPolicy);
   FStatusToken := FInspection.SubscribeInspection(StatusChanged);
   StatusChanged(FInspection.CaptureInspection, ncicPolicyChanged);
@@ -165,6 +216,9 @@ begin
   FInspection := nil;
   FPeer := nil;
   FPosition := nil;
+  FRecovery := nil;
+  FRecovered := nil;
+  FDiscard := nil;
   FGeneration := nil;
   FContext := nil;
 end;
@@ -233,7 +287,191 @@ begin
   begin
     Exit;
   end;
-  FContext.State.SetValue(NyxTextState(InspectionStatusID), LText);
+  PublishState(LText);
+end;
+
+{ A physical memo cannot display literal NUL consistently on both hosts. Escape
+  only its preview; the journal retains the complete original bytes and caret. }
+function DraftPreview(const AText: TNyxText): TNyxText;
+var
+  LIndex: Integer;
+  LStart: Integer;
+begin
+  Result := '';
+  LStart := 1;
+  for LIndex := 1 to Length(AText) do
+  begin
+
+    if AText[LIndex] = #0 then
+    begin
+      Result := Result + Copy(AText, LStart, LIndex - LStart) + '\0';
+      LStart := LIndex + 1;
+    end;
+  end;
+  Result := Result + Copy(AText, LStart, Length(AText) - LStart + 1);
+end;
+
+{ Explain lost automatic compatibility without implying that an old draft may
+  safely be applied to a current row. The journal keeps the typed reason. }
+function DraftLossCaption(AReason: TNyxCollectionDraftLoss): TNyxText;
+begin
+  case AReason of
+    ncdlRowRemoved: Result := 'The record was removed.';
+    ncdlIdentityReplaced: Result := 'The original record was replaced.';
+    ncdlHidden: Result := 'The record is hidden by the current view.';
+    ncdlValueChanged: Result := 'The accepted field value changed.';
+    ncdlFieldUnavailable: Result := 'The edited field is no longer available.';
+    ncdlUnknownIdentity: Result := 'The original record identity could not be verified.';
+  end;
+end;
+
+procedure TInspectionCallback.PublishState(const AStatus: TNyxText);
+var
+  LJournal: INyxCollectionDraftRecovery;
+  LEntry: INyxRecoveredCollectionDraft;
+  LObservation: TNyxDraftRecoveryObservation;
+  LSummary: TNyxText;
+  LText: TNyxText;
+  LCaption: TNyxText;
+begin
+  LJournal := FRecovery;
+  LObservation := Default(TNyxDraftRecoveryObservation);
+  LSummary := 'No recovered drafts.';
+  LText := '';
+  LCaption := 'Discard draft';
+
+  if LJournal <> nil then
+  begin
+    LObservation := LJournal.Capture;
+  end;
+
+  if not Active then
+  begin
+    Exit;
+  end;
+
+  if LObservation.Count > 0 then
+  begin
+
+    if (FRecoveryIndex < 0) or (FRecoveryIndex >= LObservation.Count) then
+    begin
+      FRecoveryIndex := 0;
+    end;
+    LEntry := LJournal.EntryAt(FRecoveryIndex);
+
+    if not Active then
+    begin
+      Exit;
+    end;
+
+    if LEntry <> FRecovered then
+    begin
+      FDiscard := nil;
+    end;
+    FRecovered := LEntry;
+    LText := DraftPreview(LEntry.Cell.Text);
+    LSummary := 'Recovered draft ' + TNyxText(IntToStr(FRecoveryIndex + 1)) + ' of ' +
+      TNyxText(IntToStr(LObservation.Count)) + ' / ' + LEntry.Cell.Item.ID + ' / ' +
+      LEntry.Cell.Field.Name + '. ' + DraftLossCaption(LEntry.Reason) +
+      ' Your text is safe; review and copy it before discarding.';
+
+    if LObservation.Warning then
+    begin
+      LSummary := LSummary + ' The journal has reached its configured retention warning.';
+    end;
+
+    if FDiscard = LEntry then
+    begin
+      LSummary := LSummary + ' Discard this draft? Choose Confirm discard to remove this exact entry.';
+      LCaption := 'Confirm discard';
+    end;
+  end
+  else
+  begin
+    FRecovered := nil;
+    FDiscard := nil;
+  end;
+
+  if not Active then
+  begin
+    Exit;
+  end;
+  FContext.State.Apply([
+    NyxStateValue(NyxTextState(InspectionStatusID), AStatus),
+    NyxStateValue(NyxTextState(RecoverySummaryID), LSummary),
+    NyxStateValue(NyxTextState(RecoveryTextID), LText),
+    NyxStateValue(NyxTextState(RecoveryDiscardTextID), LCaption),
+    NyxStateValue(NyxBooleanState(RecoveryVisibleID), LObservation.Count > 0)]);
+end;
+
+procedure TInspectionCallback.RecoveryAction(const AID: TNyxText);
+var
+  LJournal: INyxCollectionDraftRecovery;
+  LEntry: INyxRecoveredCollectionDraft;
+  LCount: Integer;
+  LStatus: TNyxText;
+begin
+  LJournal := FRecovery;
+
+  if LJournal = nil then
+  begin
+    Exit;
+  end;
+  LStatus := FContext.State.GetValue(NyxTextState(InspectionStatusID));
+  LCount := LJournal.Capture.Count;
+
+  if not Active or (LCount = 0) then
+  begin
+    Exit;
+  end;
+
+  if (FRecoveryIndex < 0) or (FRecoveryIndex >= LCount) then
+  begin
+    FRecoveryIndex := 0;
+  end;
+
+  if AID = RecoveryDiscardID then
+  begin
+    LEntry := LJournal.EntryAt(FRecoveryIndex);
+
+    if not Active then
+    begin
+      Exit;
+    end;
+
+    if (FDiscard = LEntry) and (FRecovered = LEntry) then
+    begin
+      LJournal.Discard(LEntry);
+      FDiscard := nil;
+    end
+    else
+    begin
+      FRecovered := LEntry;
+      FDiscard := LEntry;
+    end;
+  end
+  else
+  begin
+    FDiscard := nil;
+
+    if AID = RecoveryNextID then
+    begin
+      FRecoveryIndex := (FRecoveryIndex + 1) mod LCount;
+    end
+    else if FRecoveryIndex = 0 then
+    begin
+      FRecoveryIndex := LCount - 1;
+    end
+    else
+    begin
+      Dec(FRecoveryIndex);
+    end;
+  end;
+
+  if Active then
+  begin
+    PublishState(LStatus);
+  end;
 end;
 
 procedure TInspectionCallback.AdvanceFeed;
@@ -290,12 +528,17 @@ begin
   else if AEvent.OriginID = InspectionStepID then
   begin
     AdvanceFeed;
+  end
+  else if (AEvent.OriginID = RecoveryPreviousID) or (AEvent.OriginID = RecoveryNextID) or
+    (AEvent.OriginID = RecoveryDiscardID) then
+  begin
+    RecoveryAction(AEvent.OriginID);
   end;
 end;
 
 constructor TNyxLiveInspectionDemo.Create(const AContext: INyxApplicationContext;
   const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
-  const APosition: INyxCollectionPositionState);
+  const APosition: INyxCollectionPositionState; const ARecovery: INyxCollectionDraftRecovery);
 var
   LCallback: TInspectionCallback;
 begin
@@ -305,15 +548,21 @@ begin
   begin
     raise ENyxCollectionInspection.Create('The demo needs its mounted event router');
   end;
-  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition);
+  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition, ARecovery);
   FCallback := LCallback;
   FCallbackObject := LCallback;
-  SetLength(FSubscriptions, 3);
+  SetLength(FSubscriptions, 6);
   FSubscriptions[0] := AEvents.On(NyxControlEvents(InspectionPauseID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[1] := AEvents.On(NyxControlEvents(InspectionResumeID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[2] := AEvents.On(NyxControlEvents(InspectionStepID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[3] := AEvents.On(NyxControlEvents(RecoveryPreviousID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[4] := AEvents.On(NyxControlEvents(RecoveryNextID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[5] := AEvents.On(NyxControlEvents(RecoveryDiscardID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
 end;
 

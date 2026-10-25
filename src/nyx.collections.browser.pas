@@ -203,6 +203,8 @@ uses
   nyx.layout.flow,
   nyx.collections.window,
   nyx.collections.position,
+  nyx.collections.recovery,
+  nyx.collections.edits,
   nyx.collections.selection,
   nyx.collections.clipboard.actions,
   nyx.collections.range.actions,
@@ -544,7 +546,8 @@ type
     Accepted: TNyxStateValue;
   end;
   { One realized stable row owns its cells/editors. Range paint uses cached
-    immutable membership and never changes accepted data or draft focus. }
+    immutable membership and never changes accepted data or draft focus.
+    Retired identity withdraws DOM reuse after its drafts are preserved. }
   TBrowserRow = class
   private
     FOwner: TBrowserMount;
@@ -562,6 +565,7 @@ type
     FInputs: array of TJSHTMLInputElement;
     FInitialized: Boolean;
     FHadCellRange: Boolean;
+    FIdentityRetired: Boolean;
     procedure SyncCellRange;
     procedure SyncTextLayout(var AMeasuredCells: Integer);
     function Click(AEvent: TJSMouseEvent): Boolean;
@@ -749,6 +753,7 @@ type
     procedure WindowFrame(ATime: Double);
     procedure ObserveWindowAncestors;
     procedure RowViewport(out AOffset, AExtent: Double);
+    procedure RecoverRowDrafts(const AData: INyxCollectionSnapshot);
     procedure RenderFlatWindow;
     { Disclosed rows use viewport geometry; retained ancestors own their real
       child groups. Hidden drafts retain controls without becoming tree entries. }
@@ -6847,6 +6852,92 @@ begin
   RefreshColumnResizers;
 end;
 
+procedure TBrowserMount.RecoverRowDrafts(const AData: INyxCollectionSnapshot);
+var
+  LBefore: INyxCollectionSnapshot;
+  LRow: TBrowserRow;
+  LInput: TJSHTMLInputElement;
+  LCell: TNyxCollectionCellEdit;
+  LAccepted: TNyxStateValue;
+  LSelection: TNyxTextSelection;
+  LReason: TNyxCollectionDraftLoss;
+  LWork: Integer;
+  LColumn: Integer;
+  LText: TNyxText;
+  LDirty: Boolean;
+begin
+  LBefore := FRendered;
+
+  if LBefore = nil then
+  begin
+    Exit;
+  end;
+  for LWork := 0 to High(FResidentRows) do
+  begin
+    LRow := FRows[FResidentRows[LWork]];
+
+    if LRow = nil then
+    begin
+      Continue;
+    end;
+    LRow.FIdentityRetired := False;
+    for LColumn := 0 to High(LRow.FInputs) do
+    begin
+      LInput := LRow.FInputs[LColumn];
+
+      if LInput = nil then
+      begin
+        Continue;
+      end;
+      LText := LInput.value;
+      LSelection := Default(TNyxTextSelection);
+
+      if LInput._type = 'checkbox' then
+      begin
+        LText := 'false';
+
+        if LInput.checked then
+        begin
+          LText := 'true';
+        end;
+      end
+      else
+      begin
+        LSelection := CaptureNyxBrowserSelection(LInput);
+      end;
+      LAccepted := FView.Spec.ColumnAt(LColumn).Read(LBefore.Item(LRow.FRef));
+      LDirty := LText <> NyxCellEditWireText(LAccepted);
+      LCell := NyxCollectionCellEdit(LRow.FRef, FView.Spec.ColumnAt(LColumn).Identity,
+        LAccepted, LText, LSelection, False, False);
+
+      if RecoverCell(LCell, LBefore, AData, LReason, LDirty) then
+      begin
+
+        if not InputLifetimeCurrent then
+        begin
+          Exit;
+        end;
+
+        if LReason in [ncdlIdentityReplaced, ncdlUnknownIdentity] then
+        begin
+          LRow.FIdentityRetired := True;
+        end;
+
+        if FEditingItem.Defined and (FEditingItem.ID = LRow.FRef.ID) and
+          (FEditingColumn = LColumn) then
+        begin
+          FEditingItem := Default(TNyxItemRef);
+        end;
+      end;
+
+      if not InputLifetimeCurrent then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
 procedure TBrowserMount.RenderFlatWindow;
 const
   CEstimate = 32;
@@ -7079,6 +7170,15 @@ begin
   begin
     Exit;
   end;
+  if FRendered <> LData then
+  begin
+    RecoverRowDrafts(LData);
+  end;
+
+  if not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
   LPositionActive := False;
   LPositionIndex := -1;
   LPositionInset := 0;
@@ -7208,8 +7308,12 @@ begin
 
       if (LPrevious >= 0) and (LPrevious < Length(FRows)) then
       begin
-        LNext[LIndex] := FRows[LPrevious];
-        LUsed[LPrevious] := True;
+
+        if (FRows[LPrevious] = nil) or not FRows[LPrevious].FIdentityRetired then
+        begin
+          LNext[LIndex] := FRows[LPrevious];
+          LUsed[LPrevious] := True;
+        end;
 
         if LNext[LIndex] <> nil then
         begin

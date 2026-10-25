@@ -141,8 +141,67 @@ and exact generated examples, an offscreen selected gateway, insertion, deletion
 sorting, pause/resume and ID replacement at desktop/compact widths. Separate
 visible native List and plain-grid journeys qualify those adapter paths and
 retained-port retirement. Browser fixtures compile; actual browser input, pixel
-validation and complete task acceptance remain open. Native Tree disclosure/
-scrolling and orphaned drafts remain separate unfinished L1 requirements.
+validation and complete task acceptance remain open. Native Tree physical
+scrolling remains a separate unfinished L1 requirement.
+
+## Recovering unfinished cell drafts
+
+Mounted editable Tables preserve incompatible unfinished text before replacing
+their physical editor. A changed accepted value, removed row, same-ID replacement,
+hidden row, unavailable field or unverified identity transition withdraws the old
+editing authority. Recovery never silently applies that text to the live source.
+Unrelated updates retain a compatible draft. Clearing a filter does not restore
+an old draft over current data. A paused view keeps its displayed editor until
+deliberate resume; the transition then uses the same removal-history evidence.
+
+Import `nyx.collections.recovery` and `nyx.collections.mount`:
+
+```pascal
+LRecovery := NyxCollectionDraftRecovery(LMount);
+
+if (LRecovery <> nil) and (LRecovery.Capture.Count > 0) then
+begin
+  LEntry := LRecovery.EntryAt(0);
+  LText := LEntry.Cell.Text;
+end;
+```
+
+Declare `LRecovery: INyxCollectionDraftRecovery`,
+`LEntry: INyxRecoveredCollectionDraft` and `LText: TNyxText`. Alternative mounts
+may return nil. The independent data port retains no view, source snapshot,
+renderer, widget, event router or executable callback. Read/capture it on its UI
+owner. Immutable entries may outlive both journal and mount. Each entry retains
+exact text, scalar caret range, typed field, accepted scalar, loss reason and
+before/after source revisions. Its copied cell has no edit/focus authority.
+Supplementary Unicode, NUL and line endings remain exact in the journal; a UI
+may escape NUL for presentation without changing those facts.
+
+`Capture` returns count/revision/lifetime and text-byte observations; `EntryAt`
+reads one entry instead of dumping every draft. `Discard(LEntry)` requires the
+exact entry interface, so a stale index cannot discard a different user's work.
+Applications should warn before discarding. Retired journals remain readable
+and explicitly discardable; retirement clears `Active` before target teardown
+and refuses further capture. Retaining one entry does not retain its writer.
+
+`ConfigureWarnings(NyxDraftRecoveryWarnings.Entries(64).Bytes(8 * 1024 * 1024))`
+configures advisory thresholds; these are also the defaults. Zero disables the
+corresponding warning. Warnings never truncate, expire or discard text. Byte
+accounting covers UTF-8 draft text only, saturates explicitly and excludes
+widget/interface overhead. **This journal has no hard memory quota or spill
+policy yet.** It does not satisfy the live-inspection task's bounded total-memory
+acceptance. The paused-source bounds above are separate; neither should be
+described as a bound on recovered user text. Final memory/overflow policy and
+measured workload qualification remain open.
+
+The public live-inspection example composes a bound read-only recovery memo,
+previous/next navigation, an explanation and exact-entry discard confirmation
+from ordinary Nyx controls. Review changes runtime state only. Current native
+checks exercise real arranged Table editors through handwritten/generated apps
+at desktop/compact widths; pure and model-mounted fixtures cover exact text,
+retirement and failed-refresh input refusal. Browser Table/Tree recovery paths
+compile but still require actual browser execution. Native Tree inline-editor
+recovery, saved recovery policy, Studio/MCP inspection and full parity remain
+open. A compilation pass does not qualify those interactions.
 
 ## Typed construction
 

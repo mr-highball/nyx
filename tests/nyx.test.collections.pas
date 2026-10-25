@@ -442,6 +442,27 @@ begin
     LProbe.Mode := cpmReject;
     LRejected := False;
     try
+      LStore.Apply([NyxRemove(LA), NyxInsert(LBefore.IndexOf(LA), LBefore.Item(LA))]);
+    except
+      on LException: ENyxCollection do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LStore.Snapshot = LBefore) and (LProbe.Calls = LCalls),
+      'equal-value replacement still validates atomically before identity retirement', Result);
+    LProbe.Mode := cpmObserve;
+    LStore.Apply([NyxRemove(LA), NyxInsert(LBefore.IndexOf(LA), LBefore.Item(LA))]);
+    Check((LStore.Snapshot.Revision = LRevision + 1) and (LProbe.Calls = LCalls + 1) and
+      SameDataset(LStore.Snapshot, LBefore) and (LProbe.Last.Count = 2) and
+      (LProbe.Last.Kind(0) = nceRemove) and (LProbe.Last.Kind(1) = nceInsert),
+      'equal values/order retain the explicit original-row remove and insert publication', Result);
+    LBefore := LStore.Snapshot;
+    LRevision := LBefore.Revision;
+
+    LProbe.Mode := cpmReject;
+    LRejected := False;
+    try
       LStore.Update(NyxCollectionItem(LA).WithValue(CountField, 43));
     except
       on LException: ENyxCollection do

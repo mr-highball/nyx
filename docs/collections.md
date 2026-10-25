@@ -125,9 +125,15 @@ four scalar families, supplementary Unicode/NUL, field extension and record
 replacement alongside the existing rejection and lifetime cases.
 
 An admitted batch advances the revision once. Pure no-op operations are omitted
-from its change log. A batch whose final dataset exactly equals its baseline
-does not publish, notify or advance revision. Pass a nonnegative expected revision
-to reject stale writes; -1 disables that comparison, and lower values are invalid.
+from its change log. Equal final values/order suppress publication only when no
+original row was explicitly removed. Removing an existing row and reinserting
+its ID retires the original identity: even equal values/order publish one revision
+and the ordered remove/insert log. Old selection, disclosure and editing context
+must not transfer to that replacement. Validation still admits or rejects the
+whole batch atomically. An unchanged update/assignment, moving a row away and
+back, or inserting/removing a previously absent transient ID remains a no-op.
+Pass a nonnegative expected revision to reject stale writes; -1 disables that
+comparison, and lower values are invalid.
 
 `Assign` admits an entire read-only snapshot with the same collection key and
 ordered schema. It reports removals followed by insertions when meaning changes.

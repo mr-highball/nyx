@@ -240,7 +240,7 @@ begin
     Check((LFirst <> nil) and (LPeer <> nil) and (LFirst.View <> LPeer.View) and
       (LFirst.View.Store = LPeer.View.Store), 'independent views share the actual application store');
     LDemo := TNyxLiveInspectionDemo.Create(LApplication.Context, LApplication.View.Events,
-      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst));
+      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), NyxCollectionDraftRecovery(LFirst));
     LInspection := NyxCollectionInspection(LFirst.View);
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     LField := NyxColumnIdentity(NyxTextField('status'));

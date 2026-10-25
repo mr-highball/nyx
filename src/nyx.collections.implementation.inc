@@ -1731,6 +1731,7 @@ var
   LItem: TNyxCollectionItem;
   LSame: Boolean;
   LKeepAlive: INyxCollection;
+  LRemovedOriginal: Boolean;
 begin
   CheckWritable(AExpectedRevision);
 
@@ -1743,6 +1744,7 @@ begin
   LKeepAlive := Self;
   LItems := Copy(FItems, 0, Length(FItems));
   LSteps := nil;
+  LRemovedOriginal := False;
   for LEdit := 0 to Length(AEdits) - 1 do
   begin
 
@@ -1826,6 +1828,10 @@ begin
           end;
         nceRemove:
           begin
+            { Equality of the final values does not undo the caller's explicit
+              retirement of an original ID. A new transient ID can still be
+              inserted/removed as a genuine no-op within this same batch. }
+            LRemovedOriginal := LRemovedOriginal or FCurrent.Has(AEdits[LEdit].FRef);
             LSteps[LStep].AfterIndex := -1;
             for LNext := LIndex to High(LItems) - 1 do
             begin
@@ -1864,9 +1870,9 @@ begin
   begin
     Exit;
   end;
-  { A batch may insert/remove or move away/back. Suppress the complete net no-op,
-    keeping selection snapshots/revision stable rather than notifying churn. }
-  LSame := Length(LItems) = Length(FItems);
+  { Value/order no-ops retain their snapshot, unless the caller deliberately
+    retired an original row. Observers need that ordered identity transition. }
+  LSame := not LRemovedOriginal and (Length(LItems) = Length(FItems));
 
   if LSame then
   begin

@@ -118,3 +118,16 @@ query snapshots alone do not establish the user-facing result or performance.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supply authoritative
   data, revision and selection publication. Existing scheduler/query/windowing
   owners remain the implementation foundation.
+- [Equal-value row replacement](NS-1_state-collections_02.md) closes a reproduced
+  no-op folding gap that otherwise transfers an old draft to a replacement ID.
+
+L1 now includes a data-only unfinished-draft recovery journal, native Table
+capture and public Nyx recovery review. Handwritten/generated native applications
+each pass 24 focused recovery checks per width (1280/390), alongside the existing
+inspection journey. Changed values, same-ID replacement and hidden rows preserve
+text before closing the editor; confirmed discard affects only its exact entry.
+Advisory journal warnings do not supply a hard memory bound. Browser behavior,
+native Tree inline editors, deliberate follow/feed presentations, saved policy/
+Studio/MCP adoption and all original criteria remain open. No DONE or completion
+credit is assigned from these bounded checks. See WORK for final source/evidence
+cohorts and retained failed qualification attempts.

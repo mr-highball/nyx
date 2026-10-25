@@ -60,8 +60,23 @@ privileged generated-code path.
 
 The [retention contract](../../docs/collection-views.md#pausing-live-inspection)
 describes payload/removed-ID bounds, overflow and current limitations. This demo
-does not yet qualify lost-draft recovery, Tree physical anchors, full feed states,
+does not yet qualify Tree physical anchors, full feed states,
 automatic follow-newest or Studio policy authoring.
+
+If an unfinished Table edit loses its original row/value, a recovery card keeps
+the exact draft separate from live data. It explains the reason, provides a
+read-only memo and previous/next navigation, and requires confirmation before
+discarding the exact reviewed entry. Changing entries cancels a pending discard.
+The runtime binding accepts an optional `NyxCollectionDraftRecovery(LMount)` data
+port without retaining the mount. NUL is shown as `\0` in the memo; the journal's
+raw text is unchanged. See [draft recovery](../../docs/collection-views.md#recovering-unfinished-cell-drafts)
+for advisory warnings, lifetime and the remaining hard-memory/browser gates.
+
+`tests/nyx_collection_recovery_controls.lpr` passes 24 actual native control
+checks at each width in both handwritten and generated applications. It types
+unfinished supplementary text, changes a producer value, replaces a same-ID row,
+filters the edited row out and exercises the two-step discard. These injected
+native interactions do not establish browser, trusted hardware or pixel quality.
 
 Opted-in Lists and Tables recover their reading row independently of ordinary
 selection. Inserting above it keeps the same record in view; removing it chooses

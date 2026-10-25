@@ -33,10 +33,13 @@ next independent core packet is [live inspection04 L1](NS-3_control-usefulness_0
 preserve a user's place while data changes, with visible follow/pause/resume and
 independent views. Its runtime pause/retention foundation and public two-view
 demo now have focused native mounted/generated evidence. Flat List/Table reading
-positions also have native pinned/plain/List and generated evidence; unfinished
-draft recovery, Tree physical anchors, remaining feed/authoring behavior and
-browser execution stay open in WORK.md. Its collection/review prerequisites are
-accepted; it does not
+positions also have native pinned/plain/List and generated evidence. Incompatible
+unfinished Table drafts now have native handwritten/generated recovery review
+and exact-entry discard checks. Hard journal-memory policy, native Tree editors/
+physical anchors, remaining feed/authoring behavior and browser execution stay
+open in WORK.md. [Equal-value replacement](NS-1_state-collections_02.md) records
+the discovered identity-publication correction and its remaining browser gate.
+The accepted collection/review foundation remains the starting point; 04 does not
 require declaring03 complete. Existing03 gates remain intact. This is product
 development, not a host/config or rollout release.
 
@@ -1936,6 +1939,7 @@ blockers rather than filename order.
 | NS-1 | [Portable runtime identity](DONE/NS-1_identity_01.md) | Accepted Unicode admission and qualified reusable identity | Pending assessment |
 | NS-1 | [Persistence and state](DONE/NS-1_persistence-state_01.md) | Accepted version-1 data, scalar bindings and commands | Pending assessment |
 | NS-1 | [Observable structured state](DONE/NS-1_state-collections_01.md) | Accepted typed stores, persisted/source bindings, runtime scopes and Studio/control consumers | Pending assessment |
+| NS-1 | [Equal-value row replacement](NS-1_state-collections_02.md) | Preserve explicit row retirement through net-value equality; discovered live-inspection prerequisite | Pending assessment |
 | NS-1 | [Portable resources and bindings](DONE/NS-1_resources_01.md) | Accepted image/JSON/text/data resources, typed bindings, localization, hosted caches and ordinary Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |

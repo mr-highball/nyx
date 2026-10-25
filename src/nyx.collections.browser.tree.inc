@@ -223,6 +223,16 @@ var
 
 begin
   LData := FView.Snapshot;
+
+  if FRendered <> LData then
+  begin
+    RecoverRowDrafts(LData);
+  end;
+
+  if not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
   LRows := TreeRows;
   LChanged := FTreeGeometryRows <> LRows;
 
@@ -316,7 +326,7 @@ begin
         descendant controls/listeners remain independently owned by row slots. }
       FBody.appendChild(FRows[LPrevious].FElement);
 
-      if LSource >= 0 then
+      if (LSource >= 0) and not FRows[LPrevious].FIdentityRetired then
       begin
         LNext[LSource] := FRows[LPrevious];
         AddWork(LSource);

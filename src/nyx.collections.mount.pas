@@ -30,11 +30,12 @@ uses
   SysUtils,
   nyx.text,
   nyx.state,
-  nyx.editing,
+  nyx.editing, nyx.collections.edits,
   nyx.collections,
   nyx.collections.arrangement,
   nyx.collections.view, nyx.collections.inspection,
   nyx.collections.position,
+  nyx.collections.recovery,
   nyx.collections.selection,
   nyx.collections.refresh,
   nyx.typeahead,
@@ -97,7 +98,9 @@ type
     checking it alone never admits physical input or controlled model commands.
     Epoch changes before explicit edit suspension or an enabled-to-disabled
     transition. A captured query cannot revive when Ready becomes true again.
-    Whole-refresh shielding preserves Epoch. Saturation requires a fresh query
+    Whole-refresh shielding preserves Epoch. A failed physical refresh keeps
+    Ready false until a successful retry, protecting an older visible row map.
+    Saturation requires a fresh query
     input owner; no generation may be captured at High(Integer). }
   INyxCollectionInputLifetime = interface(IInterface)
     ['{D9BA1214-152B-4B5F-B72E-D185284EA937}']
@@ -135,35 +138,18 @@ type
     procedure PrepareInputTracking;
   end;
 
-  { An owned physical cell draft, independent of widgets and authored defaults.
-    Item and typed field identify its exact accepted scalar. Text is the host's
-    wire draft (including an escaped NUL representation), not a promised scalar
-    conversion. Selection uses Nyx's Unicode scalar offsets on both hosts.
-    A nonediting dirty cell can survive browser row-window eviction; only one
-    cell per snapshot may own editing/focus. An untouched record is absent. }
-  TNyxCollectionCellEdit = record
-  private
-    FDefined, FEditing, FFocused: Boolean;
-    FItem: TNyxItemRef;
-    FField: TNyxColumnIdentity;
-    FAccepted: TNyxStateValue;
-    FText: TNyxText;
-    FSelection: TNyxTextSelection;
-    function GetAccepted: TNyxStateValue;
-  public
-    function Copy: TNyxCollectionCellEdit;
-    procedure Validate;
-    property Defined: Boolean read FDefined;
-    property Item: TNyxItemRef read FItem;
-    property Field: TNyxColumnIdentity read FField;
-    property Accepted: TNyxStateValue read GetAccepted;
-    property Text: TNyxText read FText;
-    property Selection: TNyxTextSelection read FSelection;
-    property Editing: Boolean read FEditing;
-    property Focused: Boolean read FFocused;
-  end;
-  TNyxCollectionCellEdits = array of TNyxCollectionCellEdit;
+  { Source-compatible name for the portable editor value, independent of mounts. }
+  TNyxCollectionCellEdit = nyx.collections.edits.TNyxCollectionCellEdit;
+  { Source-compatible owned vector; the portable unit defines its value model. }
+  TNyxCollectionCellEdits = nyx.collections.edits.TNyxCollectionCellEdits;
 
+  { Optional runtime recovery access. Returned data has no mount/renderer/router
+    backreference. Closing a physical target retires its writer before cleanup;
+    already retained user work stays readable through independent data owners. }
+  INyxCollectionDraftRecoveryMount = interface(IInterface)
+    ['{7832DCFA-F357-47AC-A959-0479981480F8}']
+    function GetDraftRecovery: INyxCollectionDraftRecovery;
+  end;
   { Immutable copied drafts from one exact runtime store. No document, mount,
     widget or callback is retained. Store is retained for identity comparison;
     it does not grant a replacement the former view's query/selection state.
@@ -299,11 +285,13 @@ type
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
     INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
-    INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation)
+    INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation,
+    INyxCollectionDraftRecoveryMount)
   private
     FToken: INyxCollectionViewSubscription;
     FPositionState: INyxCollectionPositionState;
     FPositionStateObject: TObject; { Borrowed while FPositionState retains it. }
+    FRecoveryWriter: INyxCollectionDraftRecoveryWriter;
     FConnected: Boolean;
     FDisconnecting: Boolean;
     FQueryFactory: INyxQueryFormPresenterFactory;
@@ -504,6 +492,12 @@ type
     { Flags/weak-receiver retirement only, before query/observer cleanup can
       enter external code. Actual target API/hook cleanup remains DetachTarget. }
     procedure RetireTargetInput; virtual;
+    { Call BEFORE overwriting/removing captured physical text. AHasDraft=False
+      withdraws incompatible context without journaling an untouched value.
+      True means old automatic compatibility is withdrawn. }
+    function RecoverCell(const ACell: TNyxCollectionCellEdit;
+      const ABefore, AAfter: INyxCollectionSnapshot;
+      out ALoss: TNyxCollectionDraftLoss; AHasDraft: Boolean = True): Boolean;
     function ResolvePosition(const ABefore, AAfter: INyxCollectionSnapshot;
       AIndex: Integer): TNyxCollectionPositionRecovery;
     procedure RenderDataset; virtual; abstract;
@@ -521,6 +515,7 @@ type
     procedure Disconnect;
     procedure Refresh;
     function GetPositionRecovery: TNyxCollectionPositionRecovery;
+    function GetDraftRecovery: INyxCollectionDraftRecovery;
     function CapturePositionState: INyxCollectionPositionState;
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
     procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
@@ -584,6 +579,9 @@ function NyxCollectionCellEdit(const AItem: TNyxItemRef;
   AEditing, AFocused: Boolean): TNyxCollectionCellEdit;
 function NewNyxCollectionEditsSnapshot(const AStore: INyxCollection;
   const ACells: array of TNyxCollectionCellEdit): INyxCollectionEditsSnapshot;
+{ Capture only the independent data journal, releasing its observing mount
+  before return. Unsupported alternatives return nil. UI-owner operation. }
+function NyxCollectionDraftRecovery(const AOwner: IInterface): INyxCollectionDraftRecovery;
 function NewNyxCollectionInputGate(
   const AParent: INyxCollectionInputGate = nil): INyxCollectionInputGate;
 { A callback-free final fence for an actual prepared UI command. Entry checks
@@ -2045,62 +2043,13 @@ begin
   Result := TCollectionInputGate.Create(AParent);
 end;
 
-function TNyxCollectionCellEdit.GetAccepted: TNyxStateValue;
-begin
-  Result := FAccepted.Copy;
-end;
-
-function TNyxCollectionCellEdit.Copy: TNyxCollectionCellEdit;
-begin
-  Result := Self;
-  Result.FAccepted := FAccepted.Copy;
-end;
-
-procedure TNyxCollectionCellEdit.Validate;
-var
-  LSelection: TNyxTextSelection;
-begin
-
-  if not FDefined or not FItem.Defined then
-  begin
-    raise ENyxCollection.Create('Cell edit requires a defined item and draft');
-  end;
-  FField.Validate;
-  FAccepted.Validate;
-
-  if (FAccepted.Kind <> FField.Kind) or (FFocused and not FEditing) then
-  begin
-    raise ENyxCollection.Create('Cell edit field, value and focus ownership must agree');
-  end;
-  NyxTextScalarCount(FText);
-
-  if FSelection.Defined then
-  begin
-    LSelection := NyxTextSelection(FText, FSelection.Start, FSelection.Finish,
-      FSelection.Direction);
-
-    if not LSelection.SameRange(FSelection) then
-    begin
-      raise ENyxCollection.Create('Cell edit selection does not describe its exact draft');
-    end;
-  end;
-end;
-
 function NyxCollectionCellEdit(const AItem: TNyxItemRef;
   const AField: TNyxColumnIdentity; const AAccepted: TNyxStateValue;
   const AText: TNyxText; const ASelection: TNyxTextSelection;
   AEditing, AFocused: Boolean): TNyxCollectionCellEdit;
 begin
-  Result := Default(TNyxCollectionCellEdit);
-  Result.FDefined := True;
-  Result.FItem := AItem;
-  Result.FField := AField;
-  Result.FAccepted := AAccepted.Copy;
-  Result.FText := AText;
-  Result.FSelection := ASelection;
-  Result.FEditing := AEditing;
-  Result.FFocused := AFocused;
-  Result.Validate;
+  Result := nyx.collections.edits.NyxCollectionCellEdit(AItem, AField, AAccepted,
+    AText, ASelection, AEditing, AFocused);
 end;
 
 constructor TCollectionEditsSnapshot.Create(const AStore: INyxCollection;
@@ -3473,6 +3422,11 @@ begin
   FConnected := False;
   FCellFocusValid := False;
 
+  if FRecoveryWriter <> nil then
+  begin
+    FRecoveryWriter.Retire;
+  end;
+
   if FPositionStateObject <> nil then
   begin
     TPositionState(FPositionStateObject).Active := False;
@@ -3964,6 +3918,7 @@ var
   LFormerSummary: TNyxText;
   LInputLease: INyxCollectionInputLifetime;
   LInputState: TCollectionInputState;
+  LCompleted: Boolean;
 begin
   FCellFocusValid := False;
 
@@ -3985,6 +3940,7 @@ begin
   LFormerSummary := FQuerySummary;
   LInputLease := nil;
   LInputState := nil;
+  LCompleted := False;
   FUpdating := True;
   try
     { A complete target refresh withdraws an unfinished physical gesture. Its
@@ -3997,8 +3953,7 @@ begin
       Exit;
     end;
 
-    if FInputTrackingPrepared or FHasColumnLayout or FHasTablePresentation or FObservesTablePresentation or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
-      FCellRangeEnabled then
+    if FInputStateObject <> nil then
     begin
       { The independent state survives a reentrant Disconnect that clears the
         mount field. Ready blocks NEW OS/DOM input throughout all outward reads
@@ -4071,6 +4026,7 @@ begin
       FLastSnapshot := LSnapshot;
     end;
     Inc(FRefreshCount);
+    LCompleted := True;
   finally
     { A source getter may start composition after the initial admission check.
       Preserve the caches belonging to the still-visible physical column map. }
@@ -4089,7 +4045,11 @@ begin
     begin
       { Clearing this temporary flag cannot revive a terminal lifetime. Never
         borrow FInputStateObject again after an outward reader or target call. }
-      LInputState.Refreshing(False);
+      { Deferred composition retains its existing input rules. An exception
+        before completion must not let an old physical map write newer rows;
+        a later successful Refresh clears this same temporary shield. }
+      LInputState.Refreshing(not LCompleted and not FTargetRefreshDeferred and
+        InputLifetimeCurrent);
     end;
     { Last target call, with this call frame still retained. No borrowed target
       or Self read follows a wake that could retire the renderer. }
@@ -4565,5 +4525,7 @@ function TNyxCollectionMountBase.GetRefreshCount: Integer;
 begin
   Result := FRefreshCount;
 end;
+
+{$i nyx.collections.recovery.mount.inc}
 
 end.

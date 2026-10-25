@@ -9,7 +9,84 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — stable flat reading positions — 2026-10-25
+## Current checkpoint — unfinished Table draft recovery — 2026-10-25
+
+The preceding goal turn is PROGRESS: cce7132 is remote-verified. Root remains
+solo; Lil' Scooty's final assignment is finished and no helper is refilled.
+This advances original [04 L1](TODO/NS-3_control-usefulness_04.md) without closing
+an original criterion. All 04/03 acceptance and completion-credit gates stay open.
+The discovered [equal-value replacement prerequisite](TODO/NS-1_state-collections_02.md)
+is implemented but remains in TODO pending actual browser qualification.
+
+Mounted Tables now capture incompatible unfinished text before withdrawing their
+old physical editor. Changed values, removed/replaced/hidden rows, missing fields
+and unknown identity continuity receive typed reasons. Compatible unrelated
+updates keep the draft. A portable immutable cell-edit value is extracted behind
+source-compatible mount aliases. An independent recovery reader/journal retains
+exact text/caret/accepted scalar and revision provenance, with no mount, snapshot,
+view, renderer, router, callback or widget back-reference. Reader and individual
+entries can outlive retirement; the private writer retires before target cleanup.
+No recovered entry can silently write source data or regain old edit authority.
+A failed physical refresh keeps input admission shielded until a successful retry.
+
+The native arranged/dormant and plain-grid paths capture before overwrite/removal.
+Browser flat/Tree resident-row capture and replaced-row remapping compile only.
+Native Tree inline-editor recovery remains open. No complete cross-family or
+browser interaction claim is made. Existing own successful edit/cancel
+normalization remains deliberate, rather than being misclassified as lost work.
+
+The public service-inspection application adds a normal Nyx recovery card with
+a bound read-only memo, reason/status, previous/next navigation and exact-entry
+two-step discard confirmation. Changing the reviewed entry cancels confirmation.
+NUL is escaped only for display; raw journal text remains exact. Review/discard
+changes runtime state only, never the live collection or design history. The
+handwritten and exact generated applications use the same optional data-port
+attachment. Each passes 24 native recovery-control checks at both 1280 and390.
+The original inspection journeys also pass 42 per variant/width, plus one fresh
+output guard in the handwritten1280 producer. No trusted hardware, AT, actual
+pixels, browser execution or performance result is claimed.
+
+The collection no-op correction publishes explicit removal/reinsertion of an
+original ID even when final values/order match. Atomic validation, ordered logs,
+limits and genuine update/assignment/move/transient-ID no-ops remain unchanged.
+Native collection checks pass162. New pure recovery and model-mounted checks
+pass20/11, including supplementary Unicode/NUL/line endings/caret, exact-entry
+identity, retired ownership, advisory overrides and failed-refresh refusal.
+Existing inspection/view/prepared-query/query-session/copy-command fixtures pass
+45/12429/89/93/273. Workbench/context passes116; actual native clipboard controls
+pass1658/1647 at900/390. Maintained workbench compilation/runtime/browser lists
+now include the recovery fixtures and the previously omitted inspection compiler
+consumer. PowerShell orchestration parses successfully.
+
+Final evidence under the private live-draft-recovery-01 qualification root on E:
+retains46 successful owned receipts and19 complete clean native heaps, with closed
+stdout/stderr/launch/heap hashes. Cohorts: controls-10, recovery-controls-11,
+regression-12's native collection pass and regression-13. All actual jobs are
+joined. Successful native compiler logs have zero warnings; browser compilers
+retain installed RTL warnings and no owned warnings. Browser consumers compile
+only. Per-cohort pins and the final private manifest distinguish post-read MIT
+header/README/maintained-list changes and the final mount comment/blank-line
+style adjustment; no functional source changes followed the successful checks.
+
+Retained failures: new fixture's illegal outer-scope loop counter; unsafe test
+cast of a memo frame instead of InputFor; demo caption binding instead of memo
+Value binding; and private browser compilation missing the Studio search path.
+All are corrected without weakening assertions. Earlier model failures exposed
+the real equal-value replacement gap and remain preserved. No server, LAN change,
+cleanup, compiler install, dependency edit or new helper was introduced. Current
+connector discovery has no connected document; existing HTTP(S)/browser/cursor
+qualification limits remain recorded without repeated approval requests.
+
+Journal warning defaults are64 entries/8MiB text, freely configurable including
+zero. They are advisory: user text is not expired, truncated or discarded.
+There is no hard journal-memory quota/spill policy yet, and text-byte accounting
+is not total widget/process memory. This remains an explicit original04 gate.
+Next: continue L1's deliberate follow/feed presentations and Tree/find/reveal
+through the same public workload; retain hard-memory, browser execution and
+saved-policy/Studio/source/MCP adoption as explicit remaining requirements.
+L2 still owns measured scale/paint/input/memory. No DONE or percentage changes.
+
+## Stable flat reading positions — 2026-10-25
 
 The preceding goal turn is PROGRESS: 5ba6641 is remote-verified. Root remains
 solo. This continues original 04 L1's stable inspection and public-application
