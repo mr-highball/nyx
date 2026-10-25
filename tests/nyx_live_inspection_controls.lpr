@@ -519,7 +519,7 @@ begin
       'normal application mounting consumes saved inspection defaults without a runtime attachment');
     LInspection.ConfigureInspection(LInspection.GetInspectionPolicy.PausedBytes(8 * 1024 * 1024));
     LDemo := TNyxLiveInspectionDemo.Create(LApplication.Context, LApplication.View.Events,
-      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), NyxCollectionDraftRecovery(LFirst));
+      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), NyxCollectionDraftRecovery(LFirst), LFirst);
     Check(LInspection.GetInspectionPolicy.MaximumPausedBytes = 8 * 1024 * 1024,
       'attaching demo callbacks preserves an application caller''s runtime policy override');
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');

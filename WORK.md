@@ -9,7 +9,93 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — saved inspection defaults and authoring — 2026-10-25
+## Current checkpoint — bounded recovery and safe pressure retry — 2026-10-25
+
+Parentc8a1558 is remote-verified. Root remains SOLO; Lil' Scooty is idle. The
+previous goal turn is PROGRESS. This tenth original04 L1 checkpoint remains
+PROGRESS with no original criterion closure, task DONE or completion credit.
+All04/03 criteria and collection02/03 browser gates stay open. The useful result
+is finite recovery-journal ownership with actual native pressure feedback and
+safe explicit retry, without rolling back the source or freezing a shared peer.
+
+The same data journal now offers optional typed limits/budget observation:
+256 entries and16MiB logical UTF-8 payload by default. Payload counts draft,
+accepted text and collection/item/field names; entry count separately bounds
+fixed records, scalar caches and inert scope markers. Active physical drafts,
+host allocations and discarded entries retained independently by callers are
+outside this ownership bound. It is not a total process-memory/scale result.
+Zero stops new storage; lowering below current ownership refuses without
+implicit eviction. Private entry/byte/frame vectors prepare before publication.
+Refusal retains only scalar diagnostic facts, never rejected text or a queue.
+
+A writer refuses capacity before the control can release its dirty value.
+The mount keeps the former physical display and its existing stale-input shield,
+while source updates/peers continue. Native arranged editors now preflight before
+closing the physical editor or invalidating columns. Public recovery controls
+show pressure and offer Retry display after exact-entry discard or caller limit
+adjustment. Premature retry remains safe. Reverting a draft deliberately may
+require no new entry: live hold status is therefore separate from the journal's
+historical refusal. Successful frame installation releases the input shield.
+No runtime limit, pause or recovery review modifies saved design/history.
+
+The first native pressure journey preserved text/caret and passed assertions,
+but its message queue did not drain. Retained GDB evidence on the owned test
+identified RefreshAfterComposition continuously requeueing a deliberately held
+frame. Native/browser automatic refresh paths now suppress quota-held retries
+without dropping pending work; explicit/source refresh and native resize cleanup
+remain available. The actual premature-retry test drains ordinary LCL messages;
+it was not replaced with a compile, hidden fixture or weakened assertion.
+
+A multi-draft negative then reproduced double charging: one original draft was
+stored before another hit capacity, and a retry with unknown loss provenance
+stored the first again. Simply ignoring reason was too broad and failed the
+existing distinct paused-edit case. The final optional scoped-writer capability
+uses an opaque inert per-physical-frame identity. Failed passes reuse it; a
+successfully installed frame starts afresh, even at the same source revision.
+First receipt provenance remains immutable. Legacy unscoped behavior remains
+compatible. Native frame copies reference-count a marker; matched pas2js forbids
+COM interfaces in records, so its private marker is a resource-free GC object.
+Neither representation retains a source/snapshot/control/callback. The readonly
+journal still cannot acquire writer authority.
+
+Final maintained inspection-authoring logic passes31 owned jobs/14 complete
+zero-unfreed native heaps; all1965 compiler/orchestration inputs remain unchanged.
+Pure recovery37, model-mounted recovery21, authoring12, Studio/semantic22, native
+MCP discovery236 and prior presentation58 pass. The public handwritten/generated
+monitoring journey passes87 per width/variant plus a fresh-output guard in
+handwritten1280. Actual recovery controls pass45 per1280/390 and handwritten/
+generated variant: exact text/caret, live peer, premature retry, confirmed
+specific discard, exact payload-bound increase, cancellation/revert, source
+invariance and retirement. Two cold full Studio builds (native LCL/pas2js) pass
+with814 unchanged inputs. No owned compiler warnings; upstream RTL warnings are
+retained. These are injected native control journeys, not hardware/AT/pixel or
+measured production-scale evidence. Browser assertions compile/stage only.
+
+Private draft-budget-01/final-evidence-private.json links maintained-11 and
+studio-build-03. All actual readers/jobs are joined. Preserve models-01's FPC
+access violation with mixed older caches, both240s pressure timeouts, focused60s
+queue timeouts/GDB trace, partial-07-negative, the reason-only regression and the
+COM-record compiler refusal. Fresh owned-unit output resolved the initial
+compiler crash without changing SDK/dependency sources. Earlier clean model/
+control cohorts and their narrower limits remain recorded. Exact maintained
+commands use the established direct log-output transport replacing only
+RunOwned's asynchronous writer; standard writer behavior is not newly qualified.
+
+No connected document-control session or listener on the review ports is found.
+No user project, service/LAN process, toolchain install, cleanup or helper changes.
+There is no denied host/protocol workaround. Current docs/task/catalog distinguish
+bounded journal ownership from complete pressure UX and original acceptance.
+
+Next: complete portable copy/export and confirmed cancellation of an oversized
+PENDING draft through the existing mount/edit/file-save contracts. Freeing old
+entries may not make one oversized pending value fit; caller limit override is
+available, but the public panel currently reviews already retained entries.
+Saved recovery limits/Studio/MCP, actual browser/observing Studio/Tree recovery
+and measured L2 outcomes remain original work. Revalidate available browser/host
+capabilities from current evidence; do not turn historical source inventories
+or private handoffs into new permission gates.
+
+## Checkpoint — saved inspection defaults and authoring — 2026-10-25
 
 Parent27c808b is remote-verified. Root remains SOLO; Lil' Scooty is idle until
 requested otherwise. This ninth original04 L1 checkpoint remains PROGRESS and

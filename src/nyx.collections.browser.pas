@@ -6040,7 +6040,7 @@ begin
     CancelColumnResizes;
   end;
 
-  if GetConnected then
+  if GetConnected and not FDraftRecoveryHeld then
   begin
     { Refresh retains its managed call frame through observer/focus callbacks.
       The following cleanup reads only retained proposal flags, never a borrowed

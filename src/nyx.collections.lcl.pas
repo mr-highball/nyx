@@ -659,7 +659,9 @@ type
     function CanonicalEditable(AColumn, ARow: Integer): Boolean;
     function MainEditable(AColumn, ARow: Integer): Boolean;
     function ReadColumnEditor: TColumnEditLease;
-    procedure CaptureColumnEditor;
+    { Optional displayed destination preflights recovery BEFORE closing a
+      physical editor. Capacity refusal must leave its exact text/caret visible. }
+    procedure CaptureColumnEditor(const ARecoveryData: INyxCollectionSnapshot = nil);
     procedure RestoreColumnEditor;
     function ColumnValueDisplay(const AValue: TNyxStateValue): TNyxText;
     procedure RememberDormantColumnEdit(const ALease: TColumnEditLease);
@@ -4109,12 +4111,17 @@ begin
   Result := True;
 end;
 
-procedure TNativeMount.CaptureColumnEditor;
+procedure TNativeMount.CaptureColumnEditor(const ARecoveryData: INyxCollectionSnapshot);
 var
   LGrid: TStringGrid;
-  LColumn, LPhysical, LRow, LRevision: Integer;
+  LColumn: Integer;
+  LPhysical: Integer;
+  LRow: Integer;
+  LRevision: Integer;
   LUpdating: Boolean;
   LLease: TColumnEditLease;
+  LCell: TNyxCollectionCellEdit;
+  LReason: TNyxCollectionDraftLoss;
 begin
 
   if not InputLifetimeCurrent or FEditsSuspended or FColumnEdit.Active then
@@ -4131,6 +4138,19 @@ begin
   if DeferTargetRefresh or not InputLifetimeCurrent then
   begin
     Exit;
+  end;
+
+  if (ARecoveryData <> nil) and LLease.Active and (FRendered <> nil) then
+  begin
+    LCell := NyxCollectionCellEdit(LLease.Item, LLease.Field, LLease.Accepted,
+      TNyxText(LLease.Text), LLease.Selection, False, False);
+    RecoverCell(LCell, FRendered, ARecoveryData, LReason,
+      TNyxText(LLease.Text) <> ColumnValueDisplay(LLease.Accepted));
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
   end;
   FColumnEdit := LLease;
 
@@ -4531,7 +4551,7 @@ end;
 procedure TNativeMount.CellCompositionEnded(Sender: TObject);
 begin
 
-  if not InputLifetimeCurrent or FEditsSuspended or
+  if not InputLifetimeCurrent or FEditsSuspended or FDraftRecoveryHeld or
     not (FCellRefreshPending or FColumnGeometryPending) or
     FCellRefreshQueued or (FColumnEditing = nil) or FColumnEditing.Composing then
   begin
@@ -4549,7 +4569,7 @@ begin
     Exit;
   end;
 
-  if not (FCellRefreshPending or FColumnGeometryPending) and ((FResizeRequest = nil) or
+  if (FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending)) and ((FResizeRequest = nil) or
     FResizeRequest.Publishing or FResizeQueued or
     not (FResizeRequest.Retired or FResizeReleased)) then
   begin
@@ -4605,7 +4625,7 @@ begin
     Application.QueueAsyncCall(PublishColumnLayout, LRequest.Serial);
   end;
 
-  if not (FCellRefreshPending or FColumnGeometryPending) or FCellRefreshQueued then
+  if FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending) or FCellRefreshQueued then
   begin
     { Queued work now owns its retry. A busy publisher explicitly rearms this
       same registration, even when there will be no later native Activity.Leave. }
@@ -4641,7 +4661,7 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   FCellRefreshQueued := False;
 
-  if not (FCellRefreshPending or FColumnGeometryPending) or FEditsSuspended or
+  if FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending) or FEditsSuspended or
     (FColumnEditing = nil) or FColumnEditing.Composing then
   begin
     Exit;
@@ -4825,6 +4845,16 @@ begin
   begin
     Exit;
   end;
+  { Admission must precede even column-transition/toolbar invalidation. A held
+    dirty editor is still a live LCL control; repeatedly invalidating its map
+    on refused refresh can continuously enqueue editor/paint work. }
+  CaptureColumnEditor(AData);
+  RecoverColumnDrafts(AData);
+
+  if not InputLifetimeCurrent or FTargetRefreshDeferred or DeferTargetRefresh then
+  begin
+    Exit;
+  end;
   FCellFocusValid := False;
   LOuter := TNyxCollectionStringGrid(FGrid);
   LHadFocus := LOuter.HasOwnedColumnFocus;
@@ -4870,13 +4900,6 @@ begin
       raise ENyxCollection.Create('Native column presentation revision is exhausted');
     end;
     Inc(FArrangedRevision);
-    CaptureColumnEditor;
-    RecoverColumnDrafts(AData);
-
-    if not InputLifetimeCurrent or FTargetRefreshDeferred or DeferTargetRefresh then
-    begin
-      Exit;
-    end;
     FColumnRendering := AData;
     LTop := FGrid.TopRow;
     LPosition := ResolvePosition(FRendered, AData, LTop - 1);

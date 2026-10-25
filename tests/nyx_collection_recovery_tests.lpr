@@ -43,6 +43,142 @@ begin
   end;
 end;
 
+{ Qualify hard ownership admission independently of warnings and physical hosts.
+  Rejected captures never acquire another text/cell owner inside the journal. }
+procedure BudgetChecks;
+var
+  LWriter: INyxCollectionDraftRecoveryWriter;
+  LJournal: INyxCollectionDraftRecovery;
+  LBudget: INyxCollectionDraftRecoveryBudget;
+  LCell: TNyxCollectionCellEdit;
+  LNext: TNyxCollectionCellEdit;
+  LEntry: INyxRecoveredCollectionDraft;
+  LRetained: INyxRecoveredCollectionDraft;
+  LBefore: TNyxDraftRecoveryBudgetObservation;
+  LReceipt: TNyxDraftRecoveryBudgetObservation;
+  LBytes: Integer;
+  LSaturated: Boolean;
+  LRefused: Boolean;
+  LScoped: INyxCollectionDraftRecoveryScopedWriter;
+  LFrame: TNyxDraftRecoveryFrame;
+  LOtherFrame: TNyxDraftRecoveryFrame;
+begin
+  LWriter := NewNyxCollectionDraftRecovery;
+  LJournal := LWriter.Recovery;
+  LBudget := NyxCollectionDraftRecoveryBudget(LJournal);
+  Check((LBudget <> nil) and (LBudget.CaptureBudget.Limits.MaximumEntries = 256) and
+    (LBudget.CaptureBudget.Limits.MaximumPayloadBytes = 16 * 1024 * 1024),
+    'the same journal exposes finite independent entry/payload defaults');
+  LCell := NyxCollectionCellEdit(NyxItem(NyxCollection('services'), 'gateway'),
+    NyxColumnIdentity(NyxTextField('notes')), TNyxStateValue.FromText('Accepted 🌙' + #0),
+    CExact, NyxTextSelection(CExact, 1, 9), True, True);
+  LBytes := NyxDraftRecoveryPayloadBytes(LCell, LSaturated);
+  Check(not LSaturated and (LBytes = NyxUTF8ByteCount(CExact) +
+    NyxUTF8ByteCount('Accepted 🌙' + #0) + Length('servicesgatewaynotes')),
+    'logical payload includes supplementary/NUL draft, accepted text and all retained names');
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(1).PayloadBytes(LBytes));
+  LEntry := LWriter.Preserve(LCell, ncdlValueChanged, 1, 2);
+  Check((LBudget.CaptureBudget.PayloadBytes = LBytes) and (LJournal.Capture.Count = 1),
+    'exact-capacity admission preserves every byte without truncation');
+  Check(LWriter.Preserve(LCell, ncdlValueChanged, 1, 3) = LEntry,
+    'an exact retry coalesces even at both hard limits');
+  LNext := NyxCollectionCellEdit(LCell.Item, LCell.Field, LCell.Accepted,
+    CExact + 'x', Default(TNyxTextSelection), False, False);
+  LRefused := False;
+  try
+    LWriter.Preserve(LNext, ncdlValueChanged, 2, 3);
+  except
+    on E: ENyxDraftRecoveryPressure do
+    begin
+      LRefused := True;
+      LReceipt := E.Budget;
+    end;
+  end;
+  Check(LRefused and (LReceipt.LastRefusal = ncrpEntryCount) and
+    (LReceipt.RequiredPayloadBytes = LBytes + 1) and not LReceipt.CanRetry and
+    (LJournal.Capture.Count = 1) and (LJournal.EntryAt(0) = LEntry),
+    'entry pressure returns a scalar receipt and leaves all existing user work untouched');
+  LBefore := LBudget.CaptureBudget;
+  LRefused := False;
+  try
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(0));
+  except
+    on E: ENyxCollection do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LBudget.CaptureBudget.Revision = LBefore.Revision) and
+    (LBudget.CaptureBudget.PayloadBytes = LBytes), 'lower limits cannot implicitly evict accepted entries');
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(2).PayloadBytes(LBytes));
+  LRefused := False;
+  try
+    LWriter.Preserve(LNext, ncdlValueChanged, 2, 3);
+  except
+    on E: ENyxDraftRecoveryPressure do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LBudget.CaptureBudget.LastRefusal = ncrpPayloadBytes) and
+    (LBudget.CaptureBudget.PayloadBytes = LBytes), 'payload capacity is enforced independently of entry capacity');
+  LRetained := LEntry;
+  Check(LJournal.Discard(LEntry) and (LBudget.CaptureBudget.PayloadBytes = 0) and
+    (LBudget.CaptureBudget.LastRefusal = ncrpPayloadBytes) and not LBudget.CaptureBudget.CanRetry,
+    'deliberate discard releases journal ownership but does not misreport an oversized candidate as ready');
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(2).PayloadBytes(LBytes + 1));
+  Check(LBudget.CaptureBudget.CanRetry and (LRetained.Cell.Text = CExact),
+    'caller override admits a retry while independently retained discarded facts remain readable');
+  LEntry := LWriter.Preserve(LNext, ncdlValueChanged, 2, 4);
+  Check((LBudget.CaptureBudget.LastRefusal = ncrpNone) and
+    (LBudget.CaptureBudget.PayloadBytes = LBytes + 1) and (LEntry.Cell.Text = CExact + 'x'),
+    'successful retry clears only pressure facts and installs exact new ownership');
+  LBefore := LBudget.CaptureBudget;
+  LRefused := False;
+  try
+    LBudget.ConfigureLimits(Default(TNyxDraftRecoveryLimits));
+  except
+    on E: ENyxCollection do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LBudget.CaptureBudget.Revision = LBefore.Revision),
+    'undefined limits cannot replace accepted configuration');
+  LWriter.Retire;
+  Check(not LBudget.CaptureBudget.Active and not LBudget.CaptureBudget.CanRetry and
+    (LBudget.CaptureBudget.PayloadBytes = LBytes + 1), 'retirement preserves bounded data without capture/retry authority');
+  Check(LJournal.Discard(LEntry) and (LBudget.CaptureBudget.PayloadBytes = 0),
+    'retired data owners can deliberately release exact admitted payload');
+  LWriter := NewNyxCollectionDraftRecovery;
+  LJournal := LWriter.Recovery;
+  LBudget := NyxCollectionDraftRecoveryBudget(LJournal);
+  Check(Supports(LWriter, INyxCollectionDraftRecoveryScopedWriter, LScoped),
+    'the capture owner has a scoped capability separate from readonly data');
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(1));
+  LFrame := NewNyxDraftRecoveryFrame;
+  LOtherFrame := NewNyxDraftRecoveryFrame;
+  LEntry := LScoped.PreserveInFrame(LCell, ncdlValueChanged, 1, 2, LFrame);
+  Check((LScoped.PreserveInFrame(LCell, ncdlUnknownIdentity, 1, 4, LFrame) = LEntry) and
+    (LEntry.Reason = ncdlValueChanged) and (LEntry.AfterRevision = 2),
+    'same-frame retry preserves the first receipt when later loss provenance weakens');
+  LRefused := False;
+  try
+    LScoped.PreserveInFrame(LCell, ncdlValueChanged, 1, 4, LOtherFrame);
+  except
+    on E: ENyxDraftRecoveryPressure do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LJournal.Capture.Count = 1),
+    'another frame is independent work even with identical source revision, text and reason');
+  LJournal.Discard(LEntry);
+  LRetained := LScoped.PreserveInFrame(LCell, ncdlValueChanged, 1, 4, LOtherFrame);
+  Check((LRetained <> LEntry) and (LJournal.Capture.Count = 1),
+    'a new frame gets its own exact receipt after deliberate capacity release');
+end;
+
 procedure Run;
 var
   LWriter: INyxCollectionDraftRecoveryWriter;
@@ -120,7 +256,7 @@ begin
     'equal text and cell identity from another journal cannot discard this exact entry');
   LRetained := LWriter.Preserve(LCell, ncdlValueChanged, 9, 10);
   Check((LRetained <> LEntry) and (LJournal.Capture.Count = 2),
-    'later user work or a different loss is not conflated with an old recovery');
+    'later user work from another source revision is not conflated with an old recovery');
   Check(LJournal.Discard(LEntry) and (LJournal.Capture.Count = 1) and
     (LJournal.EntryAt(0) = LRetained), 'deliberate discard removes only the reviewed interface identity');
   Check(not LJournal.Discard(LEntry) and (LJournal.Capture.Count = 1),
@@ -151,6 +287,7 @@ end;
 begin
   try
     Run;
+    BudgetChecks;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-recovery-checks', IntToStr(GChecks));
     {$else}

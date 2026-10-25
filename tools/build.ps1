@@ -703,7 +703,8 @@ try {
     $nyxInspectionCold = @('-B')
     foreach ($nyxInspectionProgram in @('nyx_collection_inspection_authoring_tests',
         'nyx_collection_inspection_studio_tests', 'nyx_agent_collection_schema',
-        'nyx_table_presentation_authoring_tests')) {
+        'nyx_table_presentation_authoring_tests', 'nyx_collection_recovery_tests',
+        'nyx_collection_recovery_mount_tests')) {
       Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + $nyxInspectionCold + @(
         "-FU$nyxInspectionNative", "-FE$nyxInspectionNative", "tests/$nyxInspectionProgram.lpr")) ($nyxInspectionProgram + '-compiler')
       $nyxInspectionCold = @()
@@ -744,6 +745,19 @@ try {
       Copy-Item -LiteralPath $nyxInspectionRuntime -Destination (Join-Path $nyxInspectionStage 'rtl.js')
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/service-monitor/live-inspection.html') -Destination $nyxInspectionStage
     }
+    # This native Win32 journey drives the same public recovery controls and
+    # emitted document through capacity pressure, deliberate discard and retry.
+    $nyxInspectionProgram = 'tests/nyx_collection_recovery_controls.lpr'
+    Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + @(
+      "-FU$nyxInspectionNative", "-FE$nyxInspectionNative", $nyxInspectionProgram)) 'recovery-compiler'
+    $nyxInspectionExe = Join-Path $nyxInspectionNative 'nyx_collection_recovery_controls.exe'
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('1280') 'recovery-1280' $true
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('390') 'recovery-390' $true
+    Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + @('-dNYX_INSPECTION_GENERATED',
+      "-Fu$nyxInspectionGenerated", "-FU$nyxInspectionGeneratedNative", "-FE$nyxInspectionGeneratedNative", $nyxInspectionProgram)) 'recovery-generated-compiler'
+    $nyxInspectionExe = Join-Path $nyxInspectionGeneratedNative 'nyx_collection_recovery_controls.exe'
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('1280') 'recovery-generated-1280' $true
+    Invoke-NyxInspectionCheck $nyxInspectionExe @('390') 'recovery-generated-390' $true
     foreach ($nyxInspectionPin in $nyxInspectionPins) {
       if ((Get-FileHash -LiteralPath $nyxInspectionPin.path).Hash -ne $nyxInspectionPin.sha256) {
         throw ('Compiler input changed: ' + $nyxInspectionPin.path)

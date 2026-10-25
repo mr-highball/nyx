@@ -25,7 +25,7 @@ unit nyx.collections.recovery;
 
 interface
 
-uses nyx.collections.edits;
+uses nyx.collections, nyx.collections.edits;
 
 type
   { Recovery explains why a dirty physical draft lost automatic compatibility.
@@ -47,6 +47,64 @@ type
     procedure Validate;
     property EntryThreshold: Integer read FEntries;
     property ByteThreshold: Integer read FBytes;
+  end;
+
+  { Hard admission limits for this journal's owned entries and logical UTF-8
+    text payload: draft, accepted text, collection/item/field names. Entry count
+    bounds fixed record/interface overhead separately. Active editors, caller-
+    retained discarded entries and host allocation overhead are outside these
+    limits. Zero refuses new storage; existing entries are never evicted. }
+  TNyxDraftRecoveryLimits = record
+  private
+    FDefined: Boolean;
+    FEntries: Integer;
+    FPayloadBytes: Integer;
+  public
+    function Entries(AValue: Integer): TNyxDraftRecoveryLimits;
+    function PayloadBytes(AValue: Integer): TNyxDraftRecoveryLimits;
+    procedure Validate;
+    property MaximumEntries: Integer read FEntries;
+    property MaximumPayloadBytes: Integer read FPayloadBytes;
+  end;
+
+  { A refusal describes the first exceeded resource, never an eviction choice.
+    Both resources are still checked when reporting whether a retry can fit. }
+  TNyxDraftRecoveryPressure = (ncrpNone, ncrpEntryCount, ncrpPayloadBytes);
+
+  { Constant-size receipt owns no rejected text, cell, mount or callback.
+    LastRefusal persists until a successful capture; changing capacity alone
+    never claims that a held physical display has already been refreshed.
+    RequiredPayloadBytes is the rejected ENTRY's size, saturated explicitly. }
+  TNyxDraftRecoveryBudgetObservation = record
+    Active: Boolean;
+    Revision: Integer;
+    Limits: TNyxDraftRecoveryLimits;
+    Count: Integer;
+    PayloadBytes: Integer;
+    LastRefusal: TNyxDraftRecoveryPressure;
+    RequiredPayloadBytes: Integer;
+    RequiredPayloadSaturated: Boolean;
+    CanRetry: Boolean;
+  end;
+
+  { Optional configuration/observation facet of the same data journal. Lowering
+    below current ownership refuses atomically. No capture writer, source or
+    physical refresh authority can be acquired through this interface. }
+  INyxCollectionDraftRecoveryBudget = interface(IInterface)
+    ['{9CF7C02B-BEDD-43CE-B41B-33A21A3F821B}']
+    function CaptureBudget: TNyxDraftRecoveryBudgetObservation;
+    procedure ConfigureLimits(const ALimits: TNyxDraftRecoveryLimits);
+  end;
+
+  { Admission refusal keeps the journal's prior entries intact. The caller MUST
+    retain its original dirty cell/physical draft and must not close/overwrite
+    it after this exception. Committed source updates are not rolled back. }
+  ENyxDraftRecoveryPressure = class(ENyxCollection)
+  private
+    FBudget: TNyxDraftRecoveryBudgetObservation;
+  public
+    constructor Create(const ABudget: TNyxDraftRecoveryBudgetObservation);
+    property Budget: TNyxDraftRecoveryBudgetObservation read FBudget;
   end;
 
   { Immutable exact text/caret and accepted-value provenance. The copied cell
@@ -92,7 +150,9 @@ type
 
   { The mounted writer owns lifecycle/capture authority separately from readers.
     The returned journal cannot QueryInterface back to this writer. Preserve
-    copies before a physical draft is overwritten/removed. Retire precedes
+    copies before a physical draft is overwritten/removed. Capacity refusal
+    raises ENyxDraftRecoveryPressure before admission; keep the original draft
+    until an explicit successful retry. Retire precedes
     teardown; already retained data stays independently readable. }
   INyxCollectionDraftRecoveryWriter = interface(IInterface)
     ['{26EDC084-092F-41C8-A57B-50B27D391E69}']
@@ -104,14 +164,56 @@ type
     property Recovery: INyxCollectionDraftRecovery read GetRecovery;
   end;
 
+  { Opaque identity for one physical recovery pass and its retries. Only the
+    factory creates its private inert marker; copying retains no snapshot,
+    store, control or executable callback. Undefined is never a scoped frame.
+    A new successfully installed frame must use a fresh identity. Native copies
+    reference-count the marker. The matched pas2js cannot put a COM interface
+    in a record, so browser copies keep an inert GC object; never free it while
+    another copy exists. Neither representation owns external resources. }
+  TNyxDraftRecoveryFrame = record
+  private
+    {$ifdef PAS2JS}
+    FIdentity: TObject;
+    {$else}
+    FIdentity: IInterface;
+    {$endif}
+    function GetDefined: Boolean;
+  public
+    function Same(const AOther: TNyxDraftRecoveryFrame): Boolean;
+    property Defined: Boolean read GetDefined;
+  end;
+
+  { Optional writer capability coalesces retries inside an exact physical
+    frame, even when later source activity changes the loss classification.
+    New frames remain independent at the same numeric source revision. The
+    first receipt is immutable. The readonly journal cannot acquire this writer. }
+  INyxCollectionDraftRecoveryScopedWriter = interface(IInterface)
+    ['{EF70052A-37C9-438C-A05D-72B40F2295DC}']
+    function PreserveInFrame(const ACell: TNyxCollectionCellEdit;
+      AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer;
+      const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
+  end;
+
 { Advisory defaults are 64 retained entries or 8MiB text. They never silently
   remove or truncate a user's draft. Applications can choose other thresholds. }
 function NyxDraftRecoveryWarnings: TNyxDraftRecoveryWarnings;
+function NewNyxDraftRecoveryFrame: TNyxDraftRecoveryFrame;
+{ Finite defaults: 256 entries and 16MiB logical retained text/provenance. }
+function NyxDraftRecoveryLimits: TNyxDraftRecoveryLimits;
+{ Exact retained text metric, without constructing another entry. Overflow is
+  explicit and can never fit any policy. Fixed scalars are bounded by entries. }
+function NyxDraftRecoveryPayloadBytes(const ACell: TNyxCollectionCellEdit;
+  out ASaturated: Boolean): Integer;
+{ Alternative journal implementations may return nil. This facet owns data
+  only; retry a held target through its existing INyxCollectionMount.Refresh. }
+function NyxCollectionDraftRecoveryBudget(const ARecovery: INyxCollectionDraftRecovery):
+  INyxCollectionDraftRecoveryBudget;
 function NewNyxCollectionDraftRecovery: INyxCollectionDraftRecoveryWriter;
 
 implementation
 
-uses nyx.bytes, nyx.collections;
+uses SysUtils, nyx.bytes, nyx.text, nyx.state;
 
 type
   { Owns one validated inert value. Interface getters copy records so callers
@@ -134,28 +236,42 @@ type
   end;
 
   { Data owner has no pointer back to its capture writer or any physical target.
-    Last-entry release is ordinary managed value cleanup, never a callback. }
-  TJournal = class(TInterfacedObject, INyxCollectionDraftRecovery)
+    Hard admission bounds its entries and all retained text/provenance. Refusal
+    retains only scalar diagnostics. Last-entry release invokes no callback. }
+  TJournal = class(TInterfacedObject, INyxCollectionDraftRecovery,
+    INyxCollectionDraftRecoveryBudget)
   private
     FEntries: array of INyxRecoveredCollectionDraft;
+    FEntryBytes: array of Integer;
+    FEntryFrames: array of TNyxDraftRecoveryFrame;
     FWarnings: TNyxDraftRecoveryWarnings;
     FActive: Boolean;
     FRevision: Integer;
+    FLimits: TNyxDraftRecoveryLimits;
+    FPayloadBytes: Integer;
+    FRefusal: TNyxDraftRecoveryPressure;
+    FRequiredBytes: Integer;
+    FRequiredSaturated: Boolean;
     procedure RequireRevision;
+    procedure ClearRefusal;
   public
     constructor Create;
     function Capture: TNyxDraftRecoveryObservation;
     function EntryAt(AIndex: Integer): INyxRecoveredCollectionDraft;
     function Discard(const AEntry: INyxRecoveredCollectionDraft): Boolean;
     procedure ConfigureWarnings(const AWarnings: TNyxDraftRecoveryWarnings);
+    function CaptureBudget: TNyxDraftRecoveryBudgetObservation;
+    procedure ConfigureLimits(const ALimits: TNyxDraftRecoveryLimits);
     function Preserve(const ACell: TNyxCollectionCellEdit;
-      AReason: TNyxCollectionDraftLoss; ABefore, AAfter: Integer): INyxRecoveredCollectionDraft;
+      AReason: TNyxCollectionDraftLoss; ABefore, AAfter: Integer;
+      const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
     procedure Retire;
   end;
 
   { Only this private writer can add or retire. The public data interface owns
     the journal; its raw class address is borrowed while that interface lives. }
-  TWriter = class(TInterfacedObject, INyxCollectionDraftRecoveryWriter)
+  TWriter = class(TInterfacedObject, INyxCollectionDraftRecoveryWriter,
+    INyxCollectionDraftRecoveryScopedWriter)
   private
     FRecovery: INyxCollectionDraftRecovery;
     FJournal: TJournal;
@@ -166,6 +282,9 @@ type
     function Preserve(const ACell: TNyxCollectionCellEdit;
       AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer):
       INyxRecoveredCollectionDraft;
+    function PreserveInFrame(const ACell: TNyxCollectionCellEdit;
+      AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer;
+      const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
     procedure Retire;
   end;
 
@@ -175,6 +294,114 @@ begin
   Result.FDefined := True;
   Result.FEntries := 64;
   Result.FBytes := 8 * 1024 * 1024;
+end;
+
+function NewNyxDraftRecoveryFrame: TNyxDraftRecoveryFrame;
+begin
+  Result := Default(TNyxDraftRecoveryFrame);
+  {$ifdef PAS2JS}
+  Result.FIdentity := TObject.Create;
+  {$else}
+  Result.FIdentity := TInterfacedObject.Create;
+  {$endif}
+end;
+
+function TNyxDraftRecoveryFrame.GetDefined: Boolean;
+begin
+  Result := FIdentity <> nil;
+end;
+
+function TNyxDraftRecoveryFrame.Same(const AOther: TNyxDraftRecoveryFrame): Boolean;
+begin
+  Result := Defined and AOther.Defined and (FIdentity = AOther.FIdentity);
+end;
+
+function NyxDraftRecoveryLimits: TNyxDraftRecoveryLimits;
+begin
+  Result := Default(TNyxDraftRecoveryLimits);
+  Result.FDefined := True;
+  Result.FEntries := 256;
+  Result.FPayloadBytes := 16 * 1024 * 1024;
+end;
+
+procedure TNyxDraftRecoveryLimits.Validate;
+begin
+
+  if not FDefined or (FEntries < 0) or (FPayloadBytes < 0) then
+  begin
+    raise ENyxCollection.Create('Create nonnegative draft recovery limits');
+  end;
+end;
+
+function TNyxDraftRecoveryLimits.Entries(AValue: Integer): TNyxDraftRecoveryLimits;
+begin
+  Result := Self;
+  Result.FEntries := AValue;
+  Result.Validate;
+end;
+
+function TNyxDraftRecoveryLimits.PayloadBytes(AValue: Integer): TNyxDraftRecoveryLimits;
+begin
+  Result := Self;
+  Result.FPayloadBytes := AValue;
+  Result.Validate;
+end;
+
+function NyxDraftRecoveryPayloadBytes(const ACell: TNyxCollectionCellEdit;
+  out ASaturated: Boolean): Integer;
+var
+  LBytes: Integer;
+  LAccepted: TNyxStateValue;
+
+  procedure Add(const AText: TNyxText);
+  var
+    LPart: Integer;
+  begin
+    LPart := NyxUTF8ByteCount(AText);
+
+    if LPart > High(Integer) - LBytes then
+    begin
+      LBytes := High(Integer);
+      ASaturated := True;
+    end
+    else
+    begin
+      Inc(LBytes, LPart);
+    end;
+  end;
+
+begin
+  ACell.Validate;
+  ASaturated := False;
+  LBytes := 0;
+  Add(ACell.Text);
+  Add(ACell.Item.Collection.Name);
+  Add(ACell.Item.ID);
+  Add(ACell.Field.Name);
+  LAccepted := ACell.Accepted;
+
+  if LAccepted.Kind = nskText then
+  begin
+    Add(LAccepted.TextValue);
+  end;
+  Result := LBytes;
+end;
+
+function NyxCollectionDraftRecoveryBudget(const ARecovery: INyxCollectionDraftRecovery):
+  INyxCollectionDraftRecoveryBudget;
+begin
+  Result := nil;
+
+  if ARecovery <> nil then
+  begin
+    Supports(ARecovery, INyxCollectionDraftRecoveryBudget, Result);
+  end;
+end;
+
+constructor ENyxDraftRecoveryPressure.Create(const ABudget: TNyxDraftRecoveryBudgetObservation);
+begin
+  inherited Create('Recovery capacity reached; retain the visible draft, review entries or raise limits, then retry');
+  FBudget := ABudget;
 end;
 
 procedure TNyxDraftRecoveryWarnings.Validate;
@@ -247,7 +474,51 @@ constructor TJournal.Create;
 begin
   inherited Create;
   FWarnings := NyxDraftRecoveryWarnings;
+  FLimits := NyxDraftRecoveryLimits;
   FActive := True;
+end;
+
+function TJournal.CaptureBudget: TNyxDraftRecoveryBudgetObservation;
+begin
+  Result := Default(TNyxDraftRecoveryBudgetObservation);
+  Result.Active := FActive;
+  Result.Revision := FRevision;
+  Result.Limits := FLimits;
+  Result.Count := Length(FEntries);
+  Result.PayloadBytes := FPayloadBytes;
+  Result.LastRefusal := FRefusal;
+  Result.RequiredPayloadBytes := FRequiredBytes;
+  Result.RequiredPayloadSaturated := FRequiredSaturated;
+  Result.CanRetry := FActive and (FRefusal <> ncrpNone) and not FRequiredSaturated and
+    (Length(FEntries) < FLimits.MaximumEntries) and
+    (FRequiredBytes <= FLimits.MaximumPayloadBytes - FPayloadBytes);
+end;
+
+procedure TJournal.ConfigureLimits(const ALimits: TNyxDraftRecoveryLimits);
+begin
+  ALimits.Validate;
+
+  if (Length(FEntries) > ALimits.MaximumEntries) or
+    (FPayloadBytes > ALimits.MaximumPayloadBytes) then
+  begin
+    raise ENyxCollection.Create('Recovery limits cannot discard already retained entries');
+  end;
+  RequireRevision;
+  FLimits := ALimits;
+  Inc(FRevision);
+end;
+
+procedure TJournal.ClearRefusal;
+begin
+
+  if FRefusal <> ncrpNone then
+  begin
+    RequireRevision;
+    FRefusal := ncrpNone;
+    FRequiredBytes := 0;
+    FRequiredSaturated := False;
+    Inc(FRevision);
+  end;
 end;
 
 procedure TJournal.RequireRevision;
@@ -307,11 +578,16 @@ begin
     if FEntries[LIndex] = AEntry then
     begin
       RequireRevision;
+      Dec(FPayloadBytes, FEntryBytes[LIndex]);
       for LMove := LIndex to High(FEntries) - 1 do
       begin
         FEntries[LMove] := FEntries[LMove + 1];
+        FEntryBytes[LMove] := FEntryBytes[LMove + 1];
+        FEntryFrames[LMove] := FEntryFrames[LMove + 1];
       end;
       SetLength(FEntries, Length(FEntries) - 1);
+      SetLength(FEntryBytes, Length(FEntryBytes) - 1);
+      SetLength(FEntryFrames, Length(FEntryFrames) - 1);
       Inc(FRevision);
       Exit(True);
     end;
@@ -327,10 +603,18 @@ begin
 end;
 
 function TJournal.Preserve(const ACell: TNyxCollectionCellEdit;
-  AReason: TNyxCollectionDraftLoss; ABefore, AAfter: Integer): INyxRecoveredCollectionDraft;
+  AReason: TNyxCollectionDraftLoss; ABefore, AAfter: Integer;
+  const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
 var
   LIndex: Integer;
   LCell: TNyxCollectionCellEdit;
+  LBytes: Integer;
+  LSaturated: Boolean;
+  LPressure: TNyxDraftRecoveryPressure;
+  LNext: array of INyxRecoveredCollectionDraft;
+  LNextBytes: array of Integer;
+  LNextFrames: array of TNyxDraftRecoveryFrame;
+  LEntry: INyxRecoveredCollectionDraft;
 begin
 
   if not FActive then
@@ -339,18 +623,28 @@ begin
   end;
   ACell.Validate;
 
+  if (Ord(AReason) < Ord(Low(TNyxCollectionDraftLoss))) or
+    (Ord(AReason) > Ord(High(TNyxCollectionDraftLoss))) then
+  begin
+    raise ENyxCollection.Create('Recovered draft loss requires a known reason');
+  end;
+
   if (ABefore < 0) or (AAfter < ABefore) then
   begin
     raise ENyxCollection.Create('Recovered draft revisions must describe an ordered display transition');
   end;
-  { A deferred retry captures one physical draft again. Coalesce that exact
-    capture, without conflating later user work from another source revision. }
+  { Scoped retries keep the first immutable receipt even if later activity
+    weakens the loss classification. Another installed frame is independent,
+    including a later edit at the SAME source revision. Unscoped public callers
+    retain the former reason-qualified coalescing contract. }
   for LIndex := 0 to High(FEntries) do
   begin
     LCell := FEntries[LIndex].Cell;
 
     if (FEntries[LIndex].BeforeRevision = ABefore) and
-      (FEntries[LIndex].Reason = AReason) and
+      (AFrame.Same(FEntryFrames[LIndex]) or
+        (not AFrame.Defined and not FEntryFrames[LIndex].Defined and
+          (FEntries[LIndex].Reason = AReason))) and
       (LCell.Item.Collection.Name = ACell.Item.Collection.Name) and
       (LCell.Item.ID = ACell.Item.ID) and LCell.Field.Same(ACell.Field) and
       LCell.Accepted.SameValue(ACell.Accepted) and (LCell.Text = ACell.Text) and
@@ -359,15 +653,62 @@ begin
 
       if not LCell.Selection.Defined or LCell.Selection.SameRange(ACell.Selection) then
       begin
+        ClearRefusal;
         Exit(FEntries[LIndex]);
       end;
     end;
   end;
+  LBytes := NyxDraftRecoveryPayloadBytes(ACell, LSaturated);
+  LPressure := ncrpNone;
+
+  if Length(FEntries) >= FLimits.MaximumEntries then
+  begin
+    LPressure := ncrpEntryCount;
+  end
+  else if LSaturated or (LBytes > FLimits.MaximumPayloadBytes - FPayloadBytes) then
+  begin
+    LPressure := ncrpPayloadBytes;
+  end;
+
+  if LPressure <> ncrpNone then
+  begin
+
+    if (FRefusal <> LPressure) or (FRequiredBytes <> LBytes) or
+      (FRequiredSaturated <> LSaturated) then
+    begin
+      RequireRevision;
+      FRefusal := LPressure;
+      FRequiredBytes := LBytes;
+      FRequiredSaturated := LSaturated;
+      Inc(FRevision);
+    end;
+    raise ENyxDraftRecoveryPressure.Create(CaptureBudget);
+  end;
   RequireRevision;
-  Result := TRecovered.Create(ACell, AReason, ABefore, AAfter);
-  SetLength(FEntries, Length(FEntries) + 1);
-  FEntries[High(FEntries)] := Result;
+  { Build both private vectors before publishing either. Allocation failure
+    cannot leave a nil admitted entry or a payload ledger of a different size. }
+  LEntry := TRecovered.Create(ACell, AReason, ABefore, AAfter);
+  SetLength(LNext, Length(FEntries) + 1);
+  SetLength(LNextBytes, Length(FEntryBytes) + 1);
+  SetLength(LNextFrames, Length(FEntryFrames) + 1);
+  for LIndex := 0 to High(FEntries) do
+  begin
+    LNext[LIndex] := FEntries[LIndex];
+    LNextBytes[LIndex] := FEntryBytes[LIndex];
+    LNextFrames[LIndex] := FEntryFrames[LIndex];
+  end;
+  LNext[High(LNext)] := LEntry;
+  LNextBytes[High(LNextBytes)] := LBytes;
+  LNextFrames[High(LNextFrames)] := AFrame;
+  FEntries := LNext;
+  FEntryBytes := LNextBytes;
+  FEntryFrames := LNextFrames;
+  Inc(FPayloadBytes, LBytes);
+  FRefusal := ncrpNone;
+  FRequiredBytes := 0;
+  FRequiredSaturated := False;
   Inc(FRevision);
+  Result := LEntry;
 end;
 
 procedure TJournal.Retire;
@@ -402,7 +743,20 @@ function TWriter.Preserve(const ACell: TNyxCollectionCellEdit;
   AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer):
   INyxRecoveredCollectionDraft;
 begin
-  Result := FJournal.Preserve(ACell, AReason, ABeforeRevision, AAfterRevision);
+  Result := FJournal.Preserve(ACell, AReason, ABeforeRevision, AAfterRevision,
+    Default(TNyxDraftRecoveryFrame));
+end;
+
+function TWriter.PreserveInFrame(const ACell: TNyxCollectionCellEdit;
+  AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer;
+  const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
+begin
+
+  if not AFrame.Defined then
+  begin
+    raise ENyxCollection.Create('Scoped recovery requires an exact defined physical frame');
+  end;
+  Result := FJournal.Preserve(ACell, AReason, ABeforeRevision, AAfterRevision, AFrame);
 end;
 
 procedure TWriter.Retire;

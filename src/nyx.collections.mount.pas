@@ -150,6 +150,15 @@ type
     ['{7832DCFA-F357-47AC-A959-0479981480F8}']
     function GetDraftRecovery: INyxCollectionDraftRecovery;
   end;
+
+  { Optional live mount status, separate from the journal's historical refusal
+    receipt. Read/copy on UI; the interface retains its mount, while the copied
+    Boolean grants no command or widget authority. Retired targets report false. }
+  INyxCollectionDraftRecoveryStatus = interface(IInterface)
+    ['{695EC5BD-92E1-4F73-A89F-5E5CFE70F6F6}']
+    function GetDraftRecoveryHeld: Boolean;
+    property DraftRecoveryHeld: Boolean read GetDraftRecoveryHeld;
+  end;
   { Immutable copied drafts from one exact runtime store. No document, mount,
     widget or callback is retained. Store is retained for identity comparison;
     it does not grant a replacement the former view's query/selection state.
@@ -288,12 +297,15 @@ type
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
     INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
     INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation,
-    INyxCollectionDraftRecoveryMount)
+    INyxCollectionDraftRecoveryMount, INyxCollectionDraftRecoveryStatus)
   private
     FToken: INyxCollectionViewSubscription;
     FPositionState: INyxCollectionPositionState;
     FPositionStateObject: TObject; { Borrowed while FPositionState retains it. }
     FRecoveryWriter: INyxCollectionDraftRecoveryWriter;
+    { Inert recovery scope persists across failed target passes and is released
+      after a successful install. Journal copies retain no reference to us. }
+    FRecoveryFrame: TNyxDraftRecoveryFrame;
     FConnected: Boolean;
     FDisconnecting: Boolean;
     FQueryFactory: INyxQueryFormPresenterFactory;
@@ -351,6 +363,10 @@ type
     FTreeRevealAllowed: Boolean;
     FPendingFollowRequestSerial: Integer;
     FUpdating: Boolean;
+    { Capacity refusal deliberately holds the old physical frame. Deferred
+      target queues must not busy-retry it; source updates/explicit Refresh may
+      still attempt admission. Clear only after a successful installation. }
+    FDraftRecoveryHeld: Boolean;
     FInputGate: INyxCollectionInputGate;
     { A full-render edit handoff pauses this adapter's physical refresh and
       input defaults without holding FUpdating across callbacks. Resume runs a
@@ -533,6 +549,7 @@ type
     procedure Refresh;
     function GetPositionRecovery: TNyxCollectionPositionRecovery;
     function GetDraftRecovery: INyxCollectionDraftRecovery;
+    function GetDraftRecoveryHeld: Boolean;
     function CapturePositionState: INyxCollectionPositionState;
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
     procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
@@ -599,6 +616,9 @@ function NewNyxCollectionEditsSnapshot(const AStore: INyxCollection;
 { Capture only the independent data journal, releasing its observing mount
   before return. Unsupported alternatives return nil. UI-owner operation. }
 function NyxCollectionDraftRecovery(const AOwner: IInterface): INyxCollectionDraftRecovery;
+{ False for retired targets or alternative mounts without this optional facet.
+  Unlike LastRefusal, this reports a physical frame still held right now. }
+function NyxCollectionDraftRecoveryHeld(const AOwner: IInterface): Boolean;
 function NewNyxCollectionInputGate(
   const AParent: INyxCollectionInputGate = nil): INyxCollectionInputGate;
 { A callback-free final fence for an actual prepared UI command. Entry checks
@@ -3155,6 +3175,7 @@ var
   LPresentation: INyxCollectionTablePresentation;
 begin
   inherited Create;
+  FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
   FTextLimits := TNyxTableTextWorkLimits.Defaults;
   FClipboardOptions := TNyxCollectionClipboardOptions.Defaults;
 
@@ -3453,6 +3474,7 @@ begin
   begin
     FRecoveryWriter.Retire;
   end;
+  FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
 
   if FPositionStateObject <> nil then
   begin
@@ -4033,6 +4055,7 @@ var
   LInputLease: INyxCollectionInputLifetime;
   LInputState: TCollectionInputState;
   LCompleted: Boolean;
+  LRecoveryHeld: Boolean;
 begin
   FCellFocusValid := False;
 
@@ -4055,6 +4078,7 @@ begin
   LInputLease := nil;
   LInputState := nil;
   LCompleted := False;
+  LRecoveryHeld := False;
   FPendingFollowRequestSerial := FFollowRequestSerial;
   FPendingTreeRevealSerial := FTreeRevealSerial;
   FUpdating := True;
@@ -4130,7 +4154,21 @@ begin
         must keep their composition continuity even after all choices clear. }
       FHasTablePresentation := True;
     end;
-    RenderDataset;
+    try
+      RenderDataset;
+    except
+      on LPressure: ENyxDraftRecoveryPressure do
+      begin
+        { The journal refused BEFORE the target released its dirty value.
+          Keep the former physical map and its existing input shield, while
+          letting committed source/peer notifications complete normally.
+          Applications review capacity through the data-only budget facet and
+          retry this same mount explicitly after resolving the pressure. }
+        LRecoveryHeld := True;
+        FDraftRecoveryHeld := True;
+        Exit;
+      end;
+    end;
 
     if FTargetRefreshDeferred then
     begin
@@ -4142,6 +4180,8 @@ begin
       FLastSnapshot := LSnapshot;
       FFollowRequestSerial := FPendingFollowRequestSerial;
       FTreeRevealSerial := FPendingTreeRevealSerial;
+      FDraftRecoveryHeld := False;
+      FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
     end;
     Inc(FRefreshCount);
     LCompleted := True;
@@ -4149,7 +4189,7 @@ begin
     { A source getter may start composition after the initial admission check.
       Preserve the caches belonging to the still-visible physical column map. }
 
-    if FTargetRefreshDeferred and InputLifetimeCurrent and (FView = LView) then
+    if (FTargetRefreshDeferred or LRecoveryHeld) and InputLifetimeCurrent and (FView = LView) then
     begin
       FColumnLayout := LFormerLayout;
       FTablePresentation := LFormerPresentation;

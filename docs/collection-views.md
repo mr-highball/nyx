@@ -359,22 +359,73 @@ and refuses further capture. Retaining one entry does not retain its writer.
 `ConfigureWarnings(NyxDraftRecoveryWarnings.Entries(64).Bytes(8 * 1024 * 1024))`
 configures advisory thresholds; these are also the defaults. Zero disables the
 corresponding warning. Warnings never truncate, expire or discard text. Byte
-accounting covers UTF-8 draft text only, saturates explicitly and excludes
-widget/interface overhead. **This journal has no hard memory quota or spill
-policy yet.** It does not satisfy the live-inspection task's bounded total-memory
-acceptance. The paused-source bounds above are separate; neither should be
-described as a bound on recovered user text. Final memory/overflow policy and
-measured workload qualification remain open.
+accounting covers UTF-8 draft text only and saturates explicitly. Independent
+hard admission limits now default to **256 entries and 16 MiB logical UTF-8
+payload**, including draft text, accepted text and collection/item/field names.
+Entry count separately bounds fixed record/interface overhead. These are limits
+on journal ownership, excluding active editors, host allocations and discarded
+entries independently retained by callers. They are not a process-wide memory
+or measured performance guarantee. Paused-source bounds remain separate.
+
+```pascal
+LBudget := NyxCollectionDraftRecoveryBudget(LRecovery);
+
+if LBudget <> nil then
+begin
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits
+    .Entries(128)
+    .PayloadBytes(8 * 1024 * 1024));
+end;
+```
+
+Declare `LBudget: INyxCollectionDraftRecoveryBudget`. Both limits accept zero;
+zero prevents new storage. Lowering below current journal ownership refuses
+atomically. No policy evicts, truncates or overwrites already retained entries.
+Exact duplicate retries coalesce even at capacity. `CaptureBudget` returns only
+scalar limits/counts/payload/refusal facts; it retains no rejected draft or host.
+`RequiredPayloadBytes` describes the refused entry, with explicit saturation.
+`CanRetry` checks current capacity, independently of physical display readiness.
+Mounted retries use an opaque recovery-frame identity, so partial admission
+cannot store the same original draft again when later source activity changes
+its loss classification. The first receipt remains immutable. Another installed
+frame stays independent even at the same data revision with identical text.
+The marker retains no snapshot, widget, source or callback. Custom capture owners
+may use the optional `INyxCollectionDraftRecoveryScopedWriter` and
+`NewNyxDraftRecoveryFrame`; unscoped writer behavior remains compatible.
+
+A direct writer's `Preserve` raises `ENyxDraftRecoveryPressure` before taking
+ownership when a new entry cannot fit. The caller must keep its original dirty
+cell. Ordinary mounts handle that refusal by holding the previous physical
+display and shielding its stale input. Committed source updates and peers keep
+advancing. Native arranged editors preflight capture before closing their actual
+editor; plain-grid and browser recovery also precede dropping their dirty value.
+Review/copy retained entries, discard an exact entry deliberately or raise limits,
+then call the same mount's `Refresh`. Successful capture precedes display adoption
+and input release. Free capacity alone does not claim a completed refresh.
+`NyxCollectionDraftRecoveryHeld(LMount)` reports the current physical hold;
+the journal's `LastRefusal` is a historical capture receipt. For example,
+deliberately reverting the dirty text can let a fresh frame install without
+needing another journal entry. Native/browser deferred refresh queues retain
+their pending work but do not busy-retry a quota-held display. Source updates
+and explicit refresh remain able to attempt admission.
+There is no spill service or hidden queue of rejected text. Explicit retirement
+releases physical drafts normally; preserve/export unresolved work before disposal.
 
 The public live-inspection example composes a bound read-only recovery memo,
-previous/next navigation, an explanation and exact-entry discard confirmation
+previous/next navigation, an explanation, exact-entry discard confirmation and
+an explicit **Retry display** action after capacity pressure
 from ordinary Nyx controls. Review changes runtime state only. Current native
 checks exercise real arranged Table editors through handwritten/generated apps
 at desktop/compact widths; pure and model-mounted fixtures cover exact text,
-retirement and failed-refresh input refusal. Browser Table/Tree recovery paths
+retirement, capacity refusal/retry and failed-refresh input refusal. Browser Table/Tree recovery paths
 compile but still require actual browser execution. Native Tree inline-editor
 recovery, saved recovery policy, Studio/MCP inspection and full parity remain
 open. A compilation pass does not qualify those interactions.
+An end-user action to copy/export or deliberately cancel an oversized **pending**
+draft through a portable mount contract remains separate work. The current
+panel reviews already retained entries; applications can raise limits through
+the runtime budget facet. This is not a claim of complete pressure UX or total
+application memory acceptance.
 
 ## Typed construction
 

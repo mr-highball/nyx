@@ -44,8 +44,18 @@ begin
 
   if not AValue then
   begin
+    WriteLn('ASSERTION ', GChecks, ' / ', AReason);
+    Flush(Output);
     raise Exception.Create('Recovery controls: ' + AReason);
   end;
+end;
+
+{ Flush phase evidence before entering host input/message loops. A bounded
+  timeout must retain the last completed operation, not just an empty stdout. }
+procedure Stage(const AName: TNyxText);
+begin
+  WriteLn('TRACE recovery ', GChecks, ' / ', AName);
+  Flush(Output);
 end;
 
 procedure Journey(AWidth: Integer);
@@ -65,11 +75,17 @@ var
   LGateway: TNyxItemRef;
   LSaved: TNyxText;
   LColumn: Integer;
+  LBudget: INyxCollectionDraftRecoveryBudget;
+  LCapacity: TNyxDraftRecoveryBudgetObservation;
+  LInput: INyxCollectionInputAdmission;
 
   procedure Click(const AID: TNyxText);
   begin
+    Stage('click ' + AID);
     SendMessage(TWinControl(LApplication.View.ControlFor(AID)).Handle, BM_CLICK, 0, 0);
+    Stage('click callback returned');
     Application.ProcessMessages;
+    Stage('click messages drained');
   end;
 
   procedure BeginDraft(const AText: TNyxText);
@@ -125,7 +141,7 @@ begin
     LStore := LFirst.View.Store;
     LJournal := NyxCollectionDraftRecovery(LFirst);
     LDemo := TNyxLiveInspectionDemo.Create(LApplication.Context, LApplication.View.Events,
-      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), LJournal);
+      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), LJournal, LFirst);
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     Check(not LApplication.View.ControlFor('recovered-drafts').Visible,
       'the ordinary bound recovery card starts hidden');
@@ -176,15 +192,84 @@ begin
       (LStore.Snapshot = LBefore) and (LRemoved.Cell.Text = CSecondDraft),
       'confirmation discards only the reviewed entry, leaving source data and independent facts untouched');
     Check(TNyxCodec.Encode(LDocument) = LSaved, 'recovery review is runtime state, not authored history');
+    Stage('baseline completed');
+    LBudget := NyxCollectionDraftRecoveryBudget(LJournal);
+    Supports(LFirst, INyxCollectionInputAdmission, LInput);
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(2));
+    BeginDraft(CSecondDraft);
+    Stage('entry pressure editor opened');
+    LBefore := LStore.Snapshot;
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('notes'), 'New value while capacity is full'));
+    Stage('entry pressure source accepted');
+    LCapacity := LBudget.CaptureBudget;
+    Check((LStore.Snapshot.Revision = LBefore.Revision + 1) and
+      (LPeer.View.Snapshot.Revision = LStore.Snapshot.Revision) and (LJournal.Capture.Count = 2),
+      'a full recovery journal does not roll back committed source updates or freeze the peer');
+    Check((LCapacity.LastRefusal = ncrpEntryCount) and not LCapacity.CanRetry and
+      not LInput.InputReady and LGrid.EditorMode and (TCustomEdit(LGrid.Editor) = LEditor) and
+      (TNyxText(LEditor.Text) = CSecondDraft) and (LEditor.SelStart = 2) and (LEditor.SelLength = 4),
+      'capacity refusal keeps the actual native editor/text/caret while shielding its stale row map');
+    Check(LApplication.State.GetValue(NyxBooleanState(RecoveryRetryVisibleID)) and
+      (Pos('Recovery capacity reached', LApplication.State.GetValue(NyxTextState(RecoverySummaryID))) > 0),
+      'ordinary recovery bindings expose useful pressure feedback and an explicit Retry display action');
+    Stage('entry pressure assertions completed');
+    Click(RecoveryRetryID);
+    Stage('premature retry completed');
+    Check(not LInput.InputReady and LGrid.EditorMode and (TNyxText(LEditor.Text) = CSecondDraft),
+      'premature user retry keeps the same refused physical draft');
+    Click(RecoveryDiscardID);
+    Click(RecoveryDiscardID);
+    Check((LJournal.Capture.Count = 1) and LBudget.CaptureBudget.CanRetry and not LInput.InputReady,
+      'confirmed exact-entry discard frees capacity without pretending the held display already refreshed');
+    LBefore := LStore.Snapshot;
+    Click(RecoveryRetryID);
+    Stage('entry capacity retry completed');
+    Check(LInput.InputReady and (LJournal.Capture.Count = 2) and
+      (LJournal.EntryAt(1).Cell.Text = CSecondDraft) and (LStore.Snapshot = LBefore) and
+      (LBudget.CaptureBudget.LastRefusal = ncrpNone) and
+      not LApplication.State.GetValue(NyxBooleanState(RecoveryRetryVisibleID)),
+      'explicit Retry display recovers the held draft, releases the shield and preserves accepted source');
+    LCapacity := LBudget.CaptureBudget;
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(3).PayloadBytes(LCapacity.PayloadBytes));
+    BeginDraft(CThirdDraft);
+    Stage('payload pressure editor opened');
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('notes'), 'New value under byte pressure'));
+    LCapacity := LBudget.CaptureBudget;
+    Check((LCapacity.LastRefusal = ncrpPayloadBytes) and LGrid.EditorMode and
+      (TNyxText(TCustomEdit(LGrid.Editor).Text) = CThirdDraft) and not LInput.InputReady,
+      'payload pressure also preserves the actual native editor without evicting retained work');
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(3)
+      .PayloadBytes(LCapacity.PayloadBytes + LCapacity.RequiredPayloadBytes));
+    Check(LBudget.CaptureBudget.CanRetry, 'the caller may raise the exact payload limit without evicting or rewriting data');
+    Click(RecoveryRetryID);
+    Stage('payload capacity retry completed');
+    Check(LInput.InputReady and (LJournal.Capture.Count = 3) and
+      (LJournal.EntryAt(2).Cell.Text = CThirdDraft) and
+      (LBudget.CaptureBudget.PayloadBytes = LBudget.CaptureBudget.Limits.MaximumPayloadBytes),
+      'an exact-capacity retry admits every retained byte and resumes normal native display');
+    Check(TNyxCodec.Encode(LDocument) = LSaved, 'runtime pressure and limit overrides remain outside design history');
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(3));
+    BeginDraft(CFirstDraft);
+    LBefore := LStore.Snapshot;
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('notes'), 'Latest accepted after cancellation'));
+    Check(NyxCollectionDraftRecoveryHeld(LFirst), 'a later full journal holds another incompatible dirty editor');
+    LEditor.Text := LBefore.Item(LGateway).GetValue(NyxTextField('notes'));
+    Click(RecoveryRetryID);
+    Check(LInput.InputReady and not NyxCollectionDraftRecoveryHeld(LFirst) and
+      (LJournal.Capture.Count = 3) and (LBudget.CaptureBudget.LastRefusal <> ncrpNone) and
+      not LApplication.State.GetValue(NyxBooleanState(RecoveryRetryVisibleID)),
+      'deliberately reverting a draft releases the display without misreading an old refusal as current pressure');
     LDemo.Close;
     LApplication.Free;
     LApplication := nil;
-    Check(not LJournal.Capture.Active and (LJournal.Capture.Count = 2) and
+    Check(not LJournal.Capture.Active and (LJournal.Capture.Count = 3) and
       (LJournal.EntryAt(0).Cell.Text = CFirstDraft), 'retained recovery remains readable after its actual native application retires');
   finally
+    Stage('journey finalization entered');
     LDemo.Free;
     LFirst := nil;
     LPeer := nil;
+    LInput := nil;
     LApplication.Free;
     LDocument.Free;
   end;
@@ -193,6 +278,9 @@ end;
 begin
   try
     Application.Initialize;
+    { Owned test failures propagate to the console guard rather than opening
+      an unattended LCL exception dialog while a timeout waits on the process. }
+    Application.CaptureExceptions := False;
     Journey(StrToInt(ParamStr(1)));
     WriteLn('PASS ', GChecks, ' native recovery control checks at ', ParamStr(1));
   except

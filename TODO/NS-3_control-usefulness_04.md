@@ -206,3 +206,22 @@ for native LCL and pas2js also succeed. Browser assertions compile/stage only;
 observed Studio interaction, screenshots, AT, hardware input, non-Win32 widgetsets,
 measured scale and complete original acceptance remain open. WORK retains earlier
 failed fixtures/receipts and distinguishes the relevant source cohorts.
+
+The recovery journal now enforces finite entry and logical text/provenance
+payload admission (default256/16MiB), independently of advisory warnings. New
+captures refuse before overwriting the original draft; accepted entries are
+never implicitly evicted. Current physical hold status is separate from a
+historical refusal. Explicit retry after confirmed discard or caller-raised
+limits restores the display safely while the authoritative source/peer stay
+live. Native queued refreshes originally busy-retried a held editor; debugger
+evidence led to suppressing automatic native/browser retry while preserving
+pending work and explicit/source admission. Failed timeouts remain recorded.
+
+Current maintained checks pass31 jobs/14 clean native heaps, including37 pure
+recovery,21 model-mounted recovery and45 actual native handwritten/generated
+recovery checks per width. Full native/browser Studio builds pass. Browser
+programs compile/stage only. This advances bounded journal ownership, not total
+process memory or full original criterion acceptance. Portable copy/export and
+confirmed cancellation of an oversized pending draft still need a useful
+end-user path; saved recovery limits/Studio/MCP, Tree editors, actual browser/
+AT/visual and measured L2 behavior remain open.

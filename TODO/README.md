@@ -36,7 +36,7 @@ demo now have focused native mounted/generated evidence. Flat List/Table reading
 positions also have native pinned/plain/List and generated evidence. Incompatible
 unfinished Table drafts now have native handwritten/generated recovery review
 and exact-entry discard checks. Deliberate follow/keep-reading commands also have
-native generated/public and List/plain-grid evidence. Hard journal-memory policy,
+native generated/public and List/plain-grid evidence. Complete pressure UX and whole-workload memory,
 native Tree editors/physical anchors, producer/authoring behavior and browser execution stay
 open in WORK.md. [Equal-value replacement](NS-1_state-collections_02.md) records
 the discovered identity-publication correction and its remaining browser gate.
@@ -65,8 +65,14 @@ Saved inspection defaults now also flow through typed view/source contracts,
 ordinary Studio forms and revision-aware semantic patches. Native handwritten/
 generated monitoring, inspector/history/reuse and native MCP discovery checks
 pass; full native/browser Studio builds succeed. Browser execution, observed
-Studio interaction, AT/visual, hard recovered-draft memory, measured scale and
+Studio interaction, AT/visual, complete pressure UX, measured scale and
 full04 acceptance remain open in WORK.
+
+Journal ownership now has finite entry/payload admission and a safe held-display
+path, qualified by native public/generated pressure/discard/retry controls.
+The affected source and peer remain live. Copy/export and confirmed cancellation
+of an oversized pending draft, saved recovery defaults, actual browser/Tree and
+whole-workload memory/performance remain original04 work; this is no DONE or credit.
 
 The 2026-10-18 request adds an optional client-side pas2js compiler for WEB and
 a static client-only Studio edition suitable for GitHub Pages. It must require

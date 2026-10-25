@@ -31,13 +31,15 @@ uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
 
 type
   { Model-only target exercises the actual mount notification, recovery and
-    input-lifetime machinery, including follow acknowledgement after success.
-    Its copied frame/draft/position are values, not widgets.
+    input-lifetime machinery, including capacity holds and follow acknowledgement after success.
+    Its copied frame/drafts/position are values, not widgets. Multiple dirty
+    cells survive a partial capture until the complete target can adopt data.
     Actual native/browser controls remain separate qualification. }
   TRecoveryTarget = class(TNyxCollectionMountBase)
   public
     Frame: INyxCollectionSnapshot;
     Draft: TNyxCollectionCellEdit;
+    ExtraDraft: TNyxCollectionCellEdit;
     Fail: Boolean;
     Loss: TNyxCollectionDraftLoss;
     Position: TNyxCollectionPositionRecovery;
@@ -61,6 +63,8 @@ end;
 procedure TRecoveryTarget.RenderDataset;
 var
   LNext: INyxCollectionSnapshot;
+  LRecover: Boolean;
+  LRecoverExtra: Boolean;
 begin
   LNext := FView.Snapshot;
   Position := ResolvePosition(Frame, LNext, 0);
@@ -70,9 +74,17 @@ begin
     raise ENyxCollection.Create('Expected physical refresh failure');
   end;
 
-  if Draft.Defined and RecoverCell(Draft, Frame, LNext, Loss) then
+  LRecover := Draft.Defined and RecoverCell(Draft, Frame, LNext, Loss);
+  LRecoverExtra := ExtraDraft.Defined and RecoverCell(ExtraDraft, Frame, LNext, Loss);
+
+  if LRecover then
   begin
     Draft := Default(TNyxCollectionCellEdit);
+  end;
+
+  if LRecoverExtra then
+  begin
+    ExtraDraft := Default(TNyxCollectionCellEdit);
   end;
   Frame := LNext;
 end;
@@ -81,6 +93,93 @@ procedure TRecoveryTarget.DetachTarget;
 begin
   Frame := nil;
   Draft := Default(TNyxCollectionCellEdit);
+  ExtraDraft := Default(TNyxCollectionCellEdit);
+end;
+
+{ Pressure is an intentional held target, not a failed source transaction.
+  The same portable base must keep dirty text and block stale input until retry. }
+procedure PressureChecks;
+const
+  CDraft: TNyxText = 'Hold 🌙' + #0 + #13#10 + 'this draft';
+var
+  LKey: TNyxCollectionRef;
+  LItem: TNyxItemRef;
+  LSecond: TNyxItemRef;
+  LStore: INyxCollection;
+  LView: INyxCollectionView;
+  LPeer: INyxCollectionView;
+  LMount: INyxCollectionMount;
+  LInput: INyxCollectionInputAdmission;
+  LTarget: TRecoveryTarget;
+  LJournal: INyxCollectionDraftRecovery;
+  LBudget: INyxCollectionDraftRecoveryBudget;
+  LFrame: INyxCollectionSnapshot;
+  LAccepted: INyxCollectionSnapshot;
+  LBytes: Integer;
+  LSaturated: Boolean;
+  LFirstCapture: INyxRecoveredCollectionDraft;
+begin
+  LKey := NyxCollection('pressure');
+  LItem := NyxItem(LKey, 'reader');
+  LSecond := NyxItem(LKey, 'peer');
+  LStore := NewNyxCollection(LKey, NyxCollectionSchema.Text(NyxTextField('name'), ''), [
+    NyxCollectionItem(LItem).WithValue(NyxTextField('name'), 'Original'),
+    NyxCollectionItem(LSecond).WithValue(NyxTextField('name'), 'Peer')]);
+  LView := NewNyxCollectionView(LStore, NyxCollectionView(LKey)
+    .Column(NyxTextField('name'), 'Name', cmEditable), cpTable);
+  LPeer := NewNyxCollectionView(LStore, LView.Spec, cpTable);
+  LTarget := TRecoveryTarget.Create(LView);
+  LMount := LTarget;
+  LTarget.Activate;
+  Supports(LMount, INyxCollectionInputAdmission, LInput);
+  LJournal := NyxCollectionDraftRecovery(LMount);
+  LBudget := NyxCollectionDraftRecoveryBudget(LJournal);
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(0).PayloadBytes(0));
+  LTarget.Draft := NyxCollectionCellEdit(LItem, NyxColumnIdentity(NyxTextField('name')),
+    TNyxStateValue.FromText('Original'), CDraft, NyxTextSelection(CDraft, 1, 4), True, True);
+  LBytes := NyxDraftRecoveryPayloadBytes(LTarget.Draft, LSaturated);
+  LFrame := LTarget.Frame;
+  LStore.Update(NyxCollectionItem(LItem).WithValue(NyxTextField('name'), 'Incoming'));
+  LAccepted := LStore.Snapshot;
+  Check((LPeer.Snapshot.Revision = LAccepted.Revision) and (LTarget.Frame = LFrame) and
+    LTarget.Draft.Defined and (LTarget.Draft.Text = CDraft) and not LInput.InputReady and
+    NyxCollectionDraftRecoveryHeld(LMount),
+    'zero-capacity refusal holds the draft/display and shields stale input while source/peer advance');
+  Check((LJournal.Capture.Count = 0) and (LBudget.CaptureBudget.PayloadBytes = 0) and
+    (LBudget.CaptureBudget.LastRefusal = ncrpEntryCount),
+    'a held zero-capacity display cannot leak its refused value into journal storage');
+  LMount.Refresh;
+  Check((LTarget.Frame = LFrame) and LTarget.Draft.Defined and not LInput.InputReady,
+    'repeated premature retry preserves the original held frame and exact text');
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(1).PayloadBytes(LBytes));
+  Check(not LSaturated and LBudget.CaptureBudget.CanRetry and not LInput.InputReady,
+    'raising exact capacity does not silently claim that old target input is ready');
+  LMount.Refresh;
+  Check((LStore.Snapshot = LAccepted) and (LTarget.Frame = LView.Snapshot) and
+    not LTarget.Draft.Defined and LInput.InputReady and
+    (LJournal.EntryAt(0).Cell.Text = CDraft) and
+    (LBudget.CaptureBudget.LastRefusal = ncrpNone) and not NyxCollectionDraftRecoveryHeld(LMount),
+    'one successful explicit retry preserves the draft before adopting current display and releasing input');
+  LJournal.Discard(LJournal.EntryAt(0));
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(1));
+  LTarget.Draft := NyxCollectionCellEdit(LItem, NyxColumnIdentity(NyxTextField('name')),
+    TNyxStateValue.FromText('Incoming'), CDraft, Default(TNyxTextSelection), False, False);
+  LTarget.ExtraDraft := NyxCollectionCellEdit(LSecond, NyxColumnIdentity(NyxTextField('name')),
+    TNyxStateValue.FromText('Peer'), CDraft + ' second', Default(TNyxTextSelection), False, False);
+  LStore.Apply([
+    NyxUpdate(NyxCollectionItem(LItem).WithValue(NyxTextField('name'), 'Changed first')),
+    NyxUpdate(NyxCollectionItem(LSecond).WithValue(NyxTextField('name'), 'Changed second'))]);
+  LFirstCapture := LJournal.EntryAt(0);
+  Check(NyxCollectionDraftRecoveryHeld(LMount) and LTarget.Draft.Defined and
+    LTarget.ExtraDraft.Defined and (LJournal.Capture.Count = 1),
+    'partial admission keeps every original physical draft while one receipt is already stored');
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(2));
+  LMount.Refresh;
+  Check(LInput.InputReady and not LTarget.Draft.Defined and not LTarget.ExtraDraft.Defined and
+    (LJournal.Capture.Count = 2) and (LJournal.EntryAt(0) = LFirstCapture) and
+    (LFirstCapture.Reason = ncdlValueChanged),
+    'retry coalesces an already stored physical draft even when later provenance is only unknown');
+  LMount.Disconnect;
 end;
 
 procedure Run;
@@ -210,6 +309,7 @@ end;
 begin
   try
     Run;
+    PressureChecks;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-recovery-mount-checks', IntToStr(GChecks));
     {$else}

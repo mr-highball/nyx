@@ -7,7 +7,7 @@ interface
 
 uses nyx.model, nyx.application.context, nyx.events, nyx.collections.view,
   nyx.collections.position, nyx.collections.recovery, nyx.collections.feedback,
-  nyx.linq.execution;
+  nyx.linq.execution, nyx.collections.mount;
 
 const
   InspectionPeerID = 'live-service-peer';
@@ -27,6 +27,9 @@ const
   RecoveryNextID = 'next-recovered-draft';
   RecoveryDiscardID = 'discard-recovered-draft';
   RecoveryDiscardTextID = 'discard-recovered-draft-caption';
+  RecoveryRetryID = 'retry-recovery-display';
+  RecoveryRetryVisibleID = 'recovery-retry-visible';
+  RecoveryRetryEnabledID = 'recovery-retry-enabled';
 
 type
   { Own this UI-only binding beside the mounted application. Close before page
@@ -43,7 +46,8 @@ type
     constructor Create(const AContext: INyxApplicationContext;
       const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
       const APosition: INyxCollectionPositionState = nil;
-      const ARecovery: INyxCollectionDraftRecovery = nil);
+      const ARecovery: INyxCollectionDraftRecovery = nil;
+      const ARecoveryMount: INyxCollectionMount = nil);
     destructor Destroy; override;
     procedure Close;
     function Feedback: INyxCollectionFeedback;
@@ -107,6 +111,9 @@ type
     FPosition: INyxCollectionPositionState;
     FPositionSerial: Integer;
     FRecovery: INyxCollectionDraftRecovery;
+    { Optional mounted command authority is separate from the inert journal.
+      Close releases it before application disposal; retired mounts cannot act. }
+    FRecoveryMount: INyxCollectionMount;
     FRecoveryIndex: Integer;
     FRecovered: INyxRecoveredCollectionDraft;
     FDiscard: INyxRecoveredCollectionDraft;
@@ -125,7 +132,7 @@ type
   public
     constructor Create(const AContext: INyxApplicationContext;
       const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState;
-      const ARecovery: INyxCollectionDraftRecovery);
+      const ARecovery: INyxCollectionDraftRecovery; const ARecoveryMount: INyxCollectionMount);
     destructor Destroy; override;
     procedure Close;
     procedure Invoke(const AEvent: TNyxEventInfo;
@@ -163,6 +170,8 @@ begin
     Result.State.SetValue(NyxTextState(RecoveryTextID), '');
     Result.State.SetValue(NyxTextState(RecoveryDiscardTextID), 'Discard draft');
     Result.State.SetValue(NyxBooleanState(RecoveryVisibleID), False);
+    Result.State.SetValue(NyxBooleanState(RecoveryRetryVisibleID), False);
+    Result.State.SetValue(NyxBooleanState(RecoveryRetryEnabledID), False);
     Result.State.SetValue(NyxBooleanState(InspectionCanFollowID), True);
     LPage := Result.Find('services');
     LPage.Configure.Gap(8).Done;
@@ -232,6 +241,10 @@ begin
     LDiscardDraft := NewNyxButton(RecoveryDiscardID);
     LRecoveryCommands.Add(LDiscardDraft);
     LDiscardDraft.Binds.Text(NyxTextState(RecoveryDiscardTextID)).Done;
+    LRecoveryCommands.Add(NewNyxButton(RecoveryRetryID).WithText('Retry display'));
+    LRecoveryCommands.Node.Find(RecoveryRetryID).Binds
+      .Visible(NyxBooleanState(RecoveryRetryVisibleID))
+      .Enabled(NyxBooleanState(RecoveryRetryEnabledID)).Done;
   except
     Result.Free;
     raise;
@@ -240,7 +253,7 @@ end;
 
 constructor TInspectionCallback.Create(const AContext: INyxApplicationContext;
   const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState;
-  const ARecovery: INyxCollectionDraftRecovery);
+  const ARecovery: INyxCollectionDraftRecovery; const ARecoveryMount: INyxCollectionMount);
 begin
   inherited Create;
 
@@ -262,6 +275,13 @@ begin
   FFollowing := NyxCollectionFollowing(AInspection);
   FPosition := APosition;
   FRecovery := ARecovery;
+  FRecoveryMount := ARecoveryMount;
+
+  if (FRecoveryMount <> nil) and
+    ((FRecoveryMount.View <> AInspection) or (NyxCollectionDraftRecovery(FRecoveryMount) <> ARecovery)) then
+  begin
+    raise ENyxCollectionInspection.Create('Recovery retry requires the exact inspected mount and journal');
+  end;
   { A designer/caller's saved defaults already initialized this view. The
     fallback keeps older unconfigured documents usable without replacing them. }
 
@@ -312,6 +332,7 @@ begin
   FPeer := nil;
   FPosition := nil;
   FRecovery := nil;
+  FRecoveryMount := nil;
   FRecovered := nil;
   FDiscard := nil;
   FGeneration := nil;
@@ -439,12 +460,31 @@ var
   LCaption: TNyxText;
   LCanFollow: Boolean;
   LInspection: INyxCollectionInspection;
+  LBudget: INyxCollectionDraftRecoveryBudget;
+  LCapacity: TNyxDraftRecoveryBudgetObservation;
+  LPressure: Boolean;
 begin
   LJournal := FRecovery;
   LObservation := Default(TNyxDraftRecoveryObservation);
   LSummary := 'No recovered drafts.';
   LText := '';
   LCaption := 'Discard draft';
+  LCapacity := Default(TNyxDraftRecoveryBudgetObservation);
+  LBudget := NyxCollectionDraftRecoveryBudget(LJournal);
+
+  if LBudget <> nil then
+  begin
+    LCapacity := LBudget.CaptureBudget;
+  end;
+  LPressure := LCapacity.LastRefusal <> ncrpNone;
+
+  if FRecoveryMount <> nil then
+  begin
+    { A reader may deliberately cancel/revert its still-visible dirty text.
+      A later successful frame then needs no new journal entry, so a historical
+      refusal alone cannot describe the physical display's current status. }
+    LPressure := NyxCollectionDraftRecoveryHeld(FRecoveryMount);
+  end;
 
   if LJournal <> nil then
   begin
@@ -512,6 +552,12 @@ begin
     FDiscard := nil;
   end;
 
+  if LPressure then
+  begin
+    LSummary := LSummary + ' Recovery capacity reached. The affected display is held and its unfinished ' +
+      'draft was kept. Review/copy retained entries, discard deliberately or raise limits, then Retry display.';
+  end;
+
   if not Active then
   begin
     Exit;
@@ -521,7 +567,11 @@ begin
     NyxStateValue(NyxTextState(RecoverySummaryID), LSummary),
     NyxStateValue(NyxTextState(RecoveryTextID), LText),
     NyxStateValue(NyxTextState(RecoveryDiscardTextID), LCaption),
-    NyxStateValue(NyxBooleanState(RecoveryVisibleID), LObservation.Count > 0),
+    NyxStateValue(NyxBooleanState(RecoveryVisibleID), (LObservation.Count > 0) or LPressure),
+    NyxStateValue(NyxBooleanState(RecoveryRetryVisibleID), LPressure),
+    { Retry also rechecks a limit raised by application code. Capacity changes
+      do not grant this data journal a callback back into a physical target. }
+    NyxStateValue(NyxBooleanState(RecoveryRetryEnabledID), LPressure and (FRecoveryMount <> nil)),
     NyxStateValue(NyxBooleanState(InspectionCanFollowID), LCanFollow)]);
 end;
 
@@ -540,6 +590,17 @@ begin
   end;
   LStatus := FContext.State.GetValue(NyxTextState(InspectionStatusID));
   LCount := LJournal.Capture.Count;
+
+  if (AID = RecoveryRetryID) and Active and (FRecoveryMount <> nil) then
+  begin
+    FRecoveryMount.Refresh;
+
+    if Active then
+    begin
+      PublishState(LStatus);
+    end;
+    Exit;
+  end;
 
   if not Active or (LCount = 0) then
   begin
@@ -902,7 +963,7 @@ begin
     CancelFeed;
   end
   else if (AEvent.OriginID = RecoveryPreviousID) or (AEvent.OriginID = RecoveryNextID) or
-    (AEvent.OriginID = RecoveryDiscardID) then
+    (AEvent.OriginID = RecoveryDiscardID) or (AEvent.OriginID = RecoveryRetryID) then
   begin
     RecoveryAction(AEvent.OriginID);
   end;
@@ -910,7 +971,8 @@ end;
 
 constructor TNyxLiveInspectionDemo.Create(const AContext: INyxApplicationContext;
   const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
-  const APosition: INyxCollectionPositionState; const ARecovery: INyxCollectionDraftRecovery);
+  const APosition: INyxCollectionPositionState; const ARecovery: INyxCollectionDraftRecovery;
+  const ARecoveryMount: INyxCollectionMount);
 var
   LCallback: TInspectionCallback;
 begin
@@ -920,10 +982,10 @@ begin
   begin
     raise ENyxCollectionInspection.Create('The demo needs its mounted event router');
   end;
-  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition, ARecovery);
+  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition, ARecovery, ARecoveryMount);
   FCallback := LCallback;
   FCallbackObject := LCallback;
-  SetLength(FSubscriptions, 12);
+  SetLength(FSubscriptions, 13);
   FSubscriptions[0] := AEvents.On(NyxControlEvents(InspectionPauseID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[1] := AEvents.On(NyxControlEvents(InspectionResumeID), ntClick)
@@ -947,6 +1009,8 @@ begin
   FSubscriptions[10] := AEvents.On(NyxControlEvents(LCallback.FFeedbackParts.ResumeID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
   FSubscriptions[11] := AEvents.On(NyxControlEvents(InspectionCancelFeedID), ntClick)
+    .Policy(neSequential).Subscribe(FCallback);
+  FSubscriptions[12] := AEvents.On(NyxControlEvents(RecoveryRetryID), ntClick)
     .Policy(neSequential).Subscribe(FCallback);
 end;
 

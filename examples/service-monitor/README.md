@@ -51,6 +51,13 @@ process or timer. Copy and cell-range commands read the paused frame; editing
 that frame refuses until resumed. The application explicitly supplies its target
 clipboard host; merely opening or advancing the demo does not write a clipboard.
 Runtime policy and pause status never change the saved document/history.
+Recovery also has finite journal entry/payload admission limits. If capacity is
+exhausted, the affected display holds its dirty editor while the shared source
+and peer keep advancing. The recovery panel explains the pressure. Review/copy
+retained text and discard deliberately, or raise limits through the typed budget
+facet, then choose **Retry display**. A premature retry preserves the held draft.
+This demo passes its exact inspected mount separately from the inert journal;
+Close releases that command authority before application disposal.
 The public document declares inspection defaults through
 `.Inspection(NyxInspectionPolicy)`. Ordinary mounting initializes independent
 views from those saved values; attaching feed callbacks preserves a caller's

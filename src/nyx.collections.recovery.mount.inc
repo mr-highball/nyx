@@ -28,6 +28,23 @@ begin
   Result := FRecoveryWriter.Recovery;
 end;
 
+function NyxCollectionDraftRecoveryHeld(const AOwner: IInterface): Boolean;
+var
+  LStatus: INyxCollectionDraftRecoveryStatus;
+begin
+  Result := (AOwner <> nil) and Supports(AOwner, INyxCollectionDraftRecoveryStatus, LStatus);
+
+  if Result then
+  begin
+    Result := LStatus.DraftRecoveryHeld;
+  end;
+end;
+
+function TNyxCollectionMountBase.GetDraftRecoveryHeld: Boolean;
+begin
+  Result := InputLifetimeCurrent and FDraftRecoveryHeld;
+end;
+
 function TNyxCollectionMountBase.RecoverCell(const ACell: TNyxCollectionCellEdit;
   const ABefore, AAfter: INyxCollectionSnapshot;
   out ALoss: TNyxCollectionDraftLoss; AHasDraft: Boolean): Boolean;
@@ -40,6 +57,7 @@ var
   LSpec: TNyxCollectionViewSpec;
   LJournal: INyxCollectionDraftRecovery;
   LReceipt: INyxRecoveredCollectionDraft;
+  LScoped: INyxCollectionDraftRecoveryScopedWriter;
   LReason: TNyxCollectionDraftLoss;
   LMutation: Integer;
   LColumn: Integer;
@@ -193,7 +211,21 @@ begin
   if AHasDraft then
   begin
     LJournal := GetDraftRecovery;
-    LReceipt := FRecoveryWriter.Preserve(ACell, LReason, ABefore.Revision, LSource.Revision);
+
+    if not FRecoveryFrame.Defined then
+    begin
+      FRecoveryFrame := NewNyxDraftRecoveryFrame;
+    end;
+
+    if Supports(FRecoveryWriter, INyxCollectionDraftRecoveryScopedWriter, LScoped) then
+    begin
+      LReceipt := LScoped.PreserveInFrame(ACell, LReason, ABefore.Revision,
+        LSource.Revision, FRecoveryFrame);
+    end
+    else
+    begin
+      LReceipt := FRecoveryWriter.Preserve(ACell, LReason, ABefore.Revision, LSource.Revision);
+    end;
   end;
   ALoss := LReason;
   Result := True;

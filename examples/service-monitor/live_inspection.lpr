@@ -39,7 +39,8 @@ begin
       GApplication.View.CollectionMount(ServiceTableID).View,
       GApplication.View.CollectionMount(InspectionPeerID).View,
       NyxCollectionPositionState(GApplication.View.CollectionMount(ServiceTableID)),
-      NyxCollectionDraftRecovery(GApplication.View.CollectionMount(ServiceTableID)));
+      NyxCollectionDraftRecovery(GApplication.View.CollectionMount(ServiceTableID)),
+      GApplication.View.CollectionMount(ServiceTableID));
     {$ifdef PAS2JS}
     document.body.setAttribute('data-nyx-live-inspection-ready', 'passed');
     { The page owns this demo for its lifetime. Embedded hosts call Close/Free
