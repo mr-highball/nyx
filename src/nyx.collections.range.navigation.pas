@@ -31,11 +31,13 @@ uses nyx.collections, nyx.collections.arrangement, nyx.collections.clipboard,
 type
   { Already-admitted key intentions. Extend actions require Shift; first/last
     additionally mean Control/Meta+Home/End. Host adapters retain ordinary
-    arrows, editors and default-off behavior. Escape clears an existing range
-    rather than manufacturing a singleton or selecting a row. }
+    arrows, editors and default-off behavior. Page extensions use a positive
+    host-measured visible-row step, preserving the column and clamping at the
+    current data-page boundary. Escape clears an existing range rather than
+    manufacturing a singleton or selecting a row. Existing ordinals stay stable. }
   TNyxCollectionRangeKey = (ncrkExtendLeft, ncrkExtendRight, ncrkExtendUp,
     ncrkExtendDown, ncrkExtendRowStart, ncrkExtendRowEnd, ncrkExtendFirstCell,
-    ncrkExtendLastCell, ncrkClear);
+    ncrkExtendLastCell, ncrkClear, ncrkExtendPageUp, ncrkExtendPageDown);
 
   { Single-use mounted key envelope. Entry reserves original input/epoch before
     any item getter. ResolveOrigin supplies that original physical cell once;
@@ -54,6 +56,17 @@ type
     procedure Retire;
     property Current: Boolean read GetCurrent;
     property DispatchCurrent: Boolean read GetDispatchCurrent;
+  end;
+
+  { Optional geometry capture on the SAME synchronous key command. Reserve the
+    ordinary input envelope before measuring the target viewport, then supply
+    its positive row step once, before Prepare. The first resolution is claimed
+    even if malformed; repeated, prepared or retired calls cannot retarget it.
+    Page keys without an admitted step install nothing. No widget or measurement
+    callback is retained, and older key-command interfaces keep their GUIDs. }
+  INyxCollectionCellRangePageKeyCommand = interface(IInterface)
+    ['{0D1A3675-2ED2-4EF6-AD0E-07A16A36B217}']
+    procedure ResolvePageRows(APageRows: Integer);
   end;
 
   { Optional actual-mount input reserves the same envelope used by target keys.
@@ -102,6 +115,16 @@ type
     property Limits: TNyxCollectionClipboardLimits read GetLimits;
   end;
 
+  { Optional readonly geometry for page-key proposals. The copied positive step
+    lets the selection owner re-admit a foreign proposal against the SAME movement
+    arithmetic, rather than trusting its claimed destination. This is scalar
+    intent only; it retains no target, provider callback or viewport authority. }
+  INyxCollectionRangePageNavigation = interface(IInterface)
+    ['{4B44F9B4-5250-472A-B5FA-98AC7F05D58B}']
+    function GetPageRows: Integer;
+    property PageRows: Integer read GetPageRows;
+  end;
+
   { Optional selection-owner facet preserves the original selection ABI. Entry
     reserves its own request before proposal getters and admits a complete RAW
     rectangle without replacing the accepted selection. A newer Select/Clear,
@@ -124,7 +147,10 @@ type
   This bounded proposal uses at most three indexed identities/row reads after
   checking page cardinality. Its subsequent prepared selection uses the existing
   complete range/SelectedPage admission for exact scalars, work/output/UTF-8
-  budgets and TSV. Escape needs an active original range but reads no rows and
+  budgets and TSV. APageRows is the caller's positive measured step for Page
+  Up/Down only; other keys ignore it. Large steps clamp before arithmetic, never
+  load another logical data page, and do not allocate intermediate row arrays.
+  Escape needs an active original range but reads no rows and
   permits nil source/page/empty fields: cancellation must not depend on a value
   formatter, clipboard availability or a fresh dataset getter. }
 function NewNyxCollectionRangeNavigation(const ASource, APage: INyxCollectionSnapshot;
@@ -132,18 +158,22 @@ function NewNyxCollectionRangeNavigation(const ASource, APage: INyxCollectionSna
   const AOrigin: TNyxCollectionCellIdentity;
   const APrevious: INyxCollectionCellRangeIntent; AKey: TNyxCollectionRangeKey;
   AColumnSerial: Integer; AHeaders: Boolean; ALineEnding: TNyxCollectionCopyLineEnding;
-  const ALimits: TNyxCollectionClipboardLimits): INyxCollectionRangeNavigation;
+  const ALimits: TNyxCollectionClipboardLimits;
+  APageRows: Integer = 1): INyxCollectionRangeNavigation;
 
 implementation
 
 uses SysUtils, nyx.collections.grid, nyx.state;
 
 type
-  { Private admitted movement stores no callback. Snapshot/cancel leases are
-    immutable original facts; arrays are copied and exposed only by value. }
-  TNavigation = class(TInterfacedObject, INyxCollectionRangeNavigation)
+  { Private admitted movement stores no callback. Snapshot/cancel leases and
+    the scalar viewport step are immutable original facts; arrays are copied
+    and exposed only by value. }
+  TNavigation = class(TInterfacedObject, INyxCollectionRangeNavigation,
+    INyxCollectionRangePageNavigation)
   private
     FKey: TNyxCollectionRangeKey;
+    FPageRows: Integer;
     FSource: INyxCollectionSnapshot;
     FPage: INyxCollectionSnapshot;
     FPrevious: INyxCollectionCellRangeIntent;
@@ -157,6 +187,7 @@ type
     FLimits: TNyxCollectionClipboardLimits;
   public
     function GetKey: TNyxCollectionRangeKey;
+    function GetPageRows: Integer;
     function GetSource: INyxCollectionSnapshot;
     function GetPage: INyxCollectionSnapshot;
     function GetPrevious: INyxCollectionCellRangeIntent;
@@ -176,7 +207,8 @@ function NewNyxCollectionRangeNavigation(const ASource, APage: INyxCollectionSna
   const AOrigin: TNyxCollectionCellIdentity;
   const APrevious: INyxCollectionCellRangeIntent; AKey: TNyxCollectionRangeKey;
   AColumnSerial: Integer; AHeaders: Boolean; ALineEnding: TNyxCollectionCopyLineEnding;
-  const ALimits: TNyxCollectionClipboardLimits): INyxCollectionRangeNavigation;
+  const ALimits: TNyxCollectionClipboardLimits;
+  APageRows: Integer): INyxCollectionRangeNavigation;
 var
   LSource: INyxCollectionSnapshot;
   LPage: INyxCollectionSnapshot;
@@ -232,6 +264,13 @@ var
   end;
 
 begin
+  { Refuse malformed page geometry before calling any snapshot/selection
+    provider. Scalar geometry is never inferred from a newer model observation. }
+
+  if (AKey in [ncrkExtendPageUp, ncrkExtendPageDown]) and (APageRows < 1) then
+  begin
+    raise ENyxCollectionRange.Create('Range paging requires a positive visible-row step');
+  end;
   LSource := ASource;
   LPage := APage;
   LPrevious := APrevious;
@@ -401,10 +440,19 @@ begin
         begin
           LMove := ngmLastCell;
         end;
+      ncrkExtendPageUp:
+        begin
+          LMove := ngmPageUp;
+        end;
+      ncrkExtendPageDown:
+        begin
+          LMove := ngmPageDown;
+        end;
     else
       raise ENyxCollectionRange.Create('Unsupported cell range movement');
     end;
-    LDestination := MoveNyxGridCell(LRow, LColumn, LCount, Length(LFields), LMove);
+    LDestination := MoveNyxGridCell(LRow, LColumn, LCount, Length(LFields), LMove,
+      APageRows);
     LItem := LPage.ItemAt(LDestination.Row).Ref;
 
     if LItem.Collection.Name <> LCollection.Name then
@@ -417,6 +465,7 @@ begin
   LNavigation := TNavigation.Create;
   LLease := LNavigation;
   LNavigation.FKey := AKey;
+  LNavigation.FPageRows := APageRows;
   LNavigation.FSource := LSource;
   LNavigation.FPage := LPage;
   LNavigation.FPrevious := LPrevious;
@@ -435,6 +484,11 @@ end;
 function TNavigation.GetKey: TNyxCollectionRangeKey;
 begin
   Result := FKey;
+end;
+
+function TNavigation.GetPageRows: Integer;
+begin
+  Result := FPageRows;
 end;
 
 function TNavigation.GetSource: INyxCollectionSnapshot;

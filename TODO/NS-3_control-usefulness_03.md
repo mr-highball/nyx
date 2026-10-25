@@ -14,6 +14,18 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+Viewport-sized Shift+Page Up/Page Down now extends the existing cell range.
+Typed page intent and optional geometry facets preserve prior interfaces and
+key ordinals. Original input is reserved before measurement; stale, consumed,
+malformed and inconsistent foreign proposals cannot acquire a replacement range.
+Native/browser adapters reuse their ordinary paging geometry. Native navigation
+passes 48; public handwritten/generated examples each pass 113 checks at both
+widths, including 64-row tall/short viewports and all three physical panes.
+The broader clipboard/range journey passes 1658/1647 at 900/390, with complete
+clean heaps. Browser companions compile only. The
+[current work record](../WORK.md#current-checkpoint--viewport-range-keys--2026-10-25)
+retains the exact boundaries, fixture failures and still-open original acceptance.
+
 The typed header continuation adds independent caption lines and minimum logical
 height through public policy, strict wire, source/generation, Studio forms and
 existing grouped semantic edits. Omitted headers retain the exact old nested

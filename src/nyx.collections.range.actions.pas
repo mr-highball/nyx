@@ -556,6 +556,7 @@ var
   LLease: INyxCollectionCellRangeSelection;
   LNavigation: INyxCollectionRangeNavigation;
   LNormalized: INyxCollectionRangeNavigation;
+  LPageNavigation: INyxCollectionRangePageNavigation;
   LOriginal: INyxCollectionCellRangeIntent;
   LPrevious: INyxCollectionCellRangeIntent;
   LPreviousObject: TRangeIntent;
@@ -569,10 +570,12 @@ var
   LLimits: TNyxCollectionClipboardLimits;
   LLines: TNyxCollectionCopyLineEnding;
   LHeaders: Boolean;
+  LHasPage: Boolean;
   LSerial: Integer;
   LCount: Integer;
   LIndex: Integer;
   LRequest: Integer;
+  LPageRows: Integer;
   LCapture: INyxCollectionCellRangeCapture;
   LCandidate: TRangeIntent;
   LCandidateLease: INyxCollectionCellRangeIntent;
@@ -627,6 +630,27 @@ begin
   end
   else
   begin
+    LPageRows := 1;
+
+    if LKey in [ncrkExtendPageUp, ncrkExtendPageDown] then
+    begin
+      { QueryInterface and the extension getter are both outward calls. Claim
+        the original selection request before them and fence each return. }
+      LHasPage := Supports(LNavigation, INyxCollectionRangePageNavigation, LPageNavigation);
+      RequireReservation;
+
+      if not LHasPage then
+      begin
+        raise ENyxCollectionRange.Create('Page movement requires its original viewport step');
+      end;
+      LPageRows := LPageNavigation.PageRows;
+      RequireReservation;
+
+      if LPageRows < 1 then
+      begin
+        raise ENyxCollectionRange.Create('Page movement has an invalid viewport step');
+      end;
+    end;
     LSource := LNavigation.Source;
     RequireReservation;
     LPage := LNavigation.Page;
@@ -675,7 +699,7 @@ begin
       navigation engines. Re-admit the key with the shared arithmetic before
       accepting its claimed endpoints or complete RAW candidate. }
     LNormalized := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
-      LOrigin, LOriginal, LKey, LSerial, LHeaders, LLines, LLimits);
+      LOrigin, LOriginal, LKey, LSerial, LHeaders, LLines, LLimits, LPageRows);
     RequireReservation;
 
     if not LNormalized.Anchor.Same(LAnchor) or not LNormalized.Focus.Same(LFocus) then

@@ -624,11 +624,14 @@ type
 
   { Original mounted range input. Keys and pointer endpoints share reservation,
     original input fences, target focus and the existing selection owner.
+    Page geometry is a copied scalar resolved once after that reservation;
+    missing/malformed geometry cannot fall back to single-row selection.
     Prepared selection and copied snapshot leases
     cannot outlive this synchronous envelope; the accepted range owns none of
     these live mount/view references. Flags-only checks follow every callout. }
   TCellRangeKeyCommand = class(TInterfacedObject, INyxCollectionCellRangeKeyCommand,
-    INyxCollectionCellRangePointerEntry, INyxCollectionCellRangePointerReceipt)
+    INyxCollectionCellRangePointerEntry, INyxCollectionCellRangePointerReceipt,
+    INyxCollectionCellRangePageKeyCommand)
   private
     FOwner: TNyxCollectionMountBase;
     FLease: INyxCollectionMount;
@@ -637,6 +640,8 @@ type
     FSelection: INyxCollectionCellRangeSelection;
     FPrevious: INyxCollectionCellRangeIntent;
     FKey: TNyxCollectionRangeKey;
+    FPageRows: Integer;
+    FPageRowsResolved: Boolean;
     FOrigin: TNyxCollectionCellIdentity;
     FTarget: TNyxCollectionCellIdentity;
     FPointer: Boolean;
@@ -665,6 +670,7 @@ type
     constructor CreateStrokeGuard(AOwner: TNyxCollectionMountBase; AKeepStroke: Boolean);
     destructor Destroy; override;
     procedure ResolveOrigin(const AOrigin: TNyxCollectionCellIdentity);
+    procedure ResolvePageRows(APageRows: Integer);
     procedure ResolveCells(const AOrigin, ATarget: TNyxCollectionCellIdentity);
     procedure Prepare;
     function GetCurrent: Boolean;
@@ -1346,6 +1352,22 @@ begin
   FOrigin := NyxCollectionCellIdentity(AOrigin.Item, AOrigin.Field);
 end;
 
+procedure TCellRangeKeyCommand.ResolvePageRows(APageRows: Integer);
+begin
+
+  if FPointer or FPageRowsResolved or FPrepared or not GetCurrent then
+  begin
+    Exit;
+  end;
+  FPageRowsResolved := True;
+
+  if not (FKey in [ncrkExtendPageUp, ncrkExtendPageDown]) or (APageRows < 1) then
+  begin
+    raise ENyxCollectionRange.Create('Resolve a positive viewport step for a page-extension key');
+  end;
+  FPageRows := APageRows;
+end;
+
 procedure TCellRangeKeyCommand.ResolveCells(
   const AOrigin, ATarget: TNyxCollectionCellIdentity);
 begin
@@ -1384,6 +1406,12 @@ begin
     Exit;
   end;
   FPrepared := True;
+
+  if not FPointer and (FKey in [ncrkExtendPageUp, ncrkExtendPageDown]) and
+    (FPageRows < 1) then
+  begin
+    Exit;
+  end;
 
   if not FPointer and (FKey = ncrkClear) then
   begin
@@ -1464,7 +1492,7 @@ begin
     begin
       LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
         FOrigin, FPrevious, FKey, LObservation.Serial, FOptions.IncludeHeaders,
-        FOptions.Lines, FOptions.WorkLimits);
+        FOptions.Lines, FOptions.WorkLimits, FPageRows);
       LFocus := LNavigation.Focus;
     end;
 

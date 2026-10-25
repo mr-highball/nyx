@@ -1957,6 +1957,7 @@ function TNativeMount.CellRangeKeyDown(Sender: TObject; var AKey: Word;
 var
   LLease: INyxCollectionMount;
   LCommand: INyxCollectionCellRangeKeyCommand;
+  LPageCommand: INyxCollectionCellRangePageKeyCommand;
   LKey: TNyxCollectionRangeKey;
   LOriginal: Word;
   LGrid: TStringGrid;
@@ -2020,6 +2021,14 @@ begin
         begin
           LKey := ncrkExtendRowEnd;
         end;
+      VK_PRIOR:
+        begin
+          LKey := ncrkExtendPageUp;
+        end;
+      VK_NEXT:
+        begin
+          LKey := ncrkExtendPageDown;
+        end;
       else
       begin
         Exit;
@@ -2077,6 +2086,17 @@ begin
   FConsumedTextKey := True;
   try
     try
+
+      if (LKey in [ncrkExtendPageUp, ncrkExtendPageDown]) and LCommand.Current then
+      begin
+        { Reserve the original input before observing the same native page
+          geometry used by ordinary navigation. One row overlaps each step. }
+
+        if Supports(LCommand, INyxCollectionCellRangePageKeyCommand, LPageCommand) then
+        begin
+          LPageCommand.ResolvePageRows(Max(1, LGrid.VisibleRowCount - 1));
+        end;
+      end;
 
       if (LKey <> ncrkClear) and LCommand.Current then
       begin

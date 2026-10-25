@@ -1971,9 +1971,12 @@ function TBrowserMount.BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColum
 var
   LKey: TNyxCollectionRangeKey;
   LCommand: INyxCollectionCellRangeKeyCommand;
+  LPageCommand: INyxCollectionCellRangePageKeyCommand;
   LRow: TBrowserRow;
   LIndex: Integer;
   LColumn: Integer;
+  LOffset: Double;
+  LExtent: Double;
 begin
   Result := nil;
 
@@ -2020,6 +2023,14 @@ begin
       'End':
         begin
           LKey := ncrkExtendRowEnd;
+        end;
+      'PageUp':
+        begin
+          LKey := ncrkExtendPageUp;
+        end;
+      'PageDown':
+        begin
+          LKey := ncrkExtendPageDown;
         end;
       else
       begin
@@ -2078,7 +2089,21 @@ begin
         if LCommand <> nil then
         begin
 
-          if LKey <> ncrkClear then
+          if (LKey in [ncrkExtendPageUp, ncrkExtendPageDown]) and LCommand.Current and
+            Supports(LCommand, INyxCollectionCellRangePageKeyCommand, LPageCommand) then
+          begin
+            { Use the clipped data plane, without virtual overscan or retained
+              offscreen drafts. Geometry is observed only after input reservation. }
+            RowViewport(LOffset, LExtent);
+
+            if LCommand.Current then
+            begin
+              LPageCommand.ResolvePageRows(Max(1,
+                FGeometry.Window(LOffset, LExtent, 0).Count - 1));
+            end;
+          end;
+
+          if (LKey <> ncrkClear) and LCommand.Current then
           begin
             LCommand.ResolveOrigin(NyxCollectionCellIdentity(LRow.FRef,
               ClipboardField(LColumn)));

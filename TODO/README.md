@@ -22,11 +22,18 @@ editing/events, Studio/source/history and the same journey's own compiled code.
 [WORK](../WORK.md#table-filtering-and-sorting-accepted) retains actual target
 counts, original producer reuse and qualification limits. Full component/parity/
 performance goals and completion-credit assessment remain open.
-Next core work is [table workbench03 W1](NS-3_control-usefulness_03.md):
-usable resize, keyboard alternatives, reorder/show-hide/reset and editable pins
-at both logical edges. Coordinate concurrent edits and validation snapshots through
-WORK.md; necessary library changes are authorized. This is not a host/config or
-rollout release.
+The existing [table workbench03 W1](NS-3_control-usefulness_03.md) retains its
+complete interaction and generated-application acceptance. Header tuning and
+viewport-sized cell-range keys now have focused native/public-example evidence;
+browser execution, physical input and full visual/Studio qualification remain
+open. Coordinate snapshots through WORK.md; necessary library changes are authorized.
+
+After six geometry/workbench packets without original criterion closure, the
+next independent core packet is [live inspection04 L1](NS-3_control-usefulness_04.md):
+preserve a user's place while data changes, with visible follow/pause/resume and
+independent views. Its collection/review prerequisites are accepted; it does not
+require declaring03 complete. Existing03 gates remain intact. This is product
+development, not a host/config or rollout release.
 
 The 2026-10-18 request adds an optional client-side pas2js compiler for WEB and
 a static client-only Studio edition suitable for GitHub Pages. It must require

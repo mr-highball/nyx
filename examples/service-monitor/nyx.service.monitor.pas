@@ -121,7 +121,9 @@ begin
 
     LHelp := NewNyxLabel('service-help');
     LPage.Add(LHelp);
-    LHelp.WithText('Use column controls to resize, reorder, hide, pin or restore defaults. Service and Status start pinned at opposite edges. Cell actions offer inspection, copying and TSV export.');
+    LHelp.WithText('Use column controls to resize, reorder, hide, pin or restore defaults. ' +
+      'Service and Status start pinned at opposite edges. Cell actions offer inspection, copying and TSV export. ' +
+      'Shift+Page Up or Page Down extends selected cells by the visible page. Escape clears the range.');
   except
     Result.Free;
     raise;

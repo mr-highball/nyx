@@ -9,6 +9,9 @@ reordering, visibility, pinning and restoring defaults. Service starts pinned at
 the logical start and Status at the logical end. Both remain editable; Process ID
 is read-only. Notes wrap and long command lines retain their complete raw value
 for inspection and copying. Cell actions expose inspection, copy and TSV export.
+Hold Shift with Page Up or Page Down to extend selected cells by the visible
+viewport. Arrow and Home/End range keys remain available; Escape clears the
+range. Editing keeps the control's own text-selection keys.
 Body-row density is independent of the query/column header reservation, both at
 initial mount and during runtime updates. Native headers use their captured
 native metric rather than multiplying the selected body-row height. This example
@@ -69,6 +72,13 @@ independent stores, unchanged authored defaults and mount retirement at an expli
 width. An independently mounted body-density comparison also protects header
 allocation. Its optional second argument writes a fresh UTF-8 generated companion;
 `NYX_SERVICE_GENERATED` selects that companion for the same checks.
+
+The same fixture also supplies 64 local test records to separate instances of
+the public document. Actual Win32/LCL key messages exercise the center and both
+pinned fields at tall and short authored heights, including measured page steps,
+anchor reversal, independent row membership and Escape. The exact generated
+application runs the same journey. These additional records belong to the test;
+the starter document retains its four English service records.
 
 These are mounted contract checks, not physical keyboard/pointer qualification.
 The original workbench task retains complete interaction, browser, authoring,

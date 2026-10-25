@@ -89,13 +89,15 @@ type
 
   { Foreign movement getters are genuine public extension callouts. One source
     getter can select newer cells; another case forges only its proposed focus,
-    which must be rejected by the shared typed movement admission. }
+    which must be rejected by the shared typed movement admission. Source reads
+    are counted so rejected page geometry cannot reach later model providers. }
   TNavigationProxy = class(TInterfacedObject, INyxCollectionRangeNavigation)
   public
     Inner: INyxCollectionRangeNavigation;
     OnSource: TReadCallback;
     WrongFocus: Boolean;
     PageReads: Integer;
+    SourceReads: Integer;
     function GetKey: TNyxCollectionRangeKey;
     function GetSource: INyxCollectionSnapshot;
     function GetPage: INyxCollectionSnapshot;
@@ -109,6 +111,16 @@ type
     function GetIncludeHeaders: Boolean;
     function GetLineEnding: TNyxCollectionCopyLineEnding;
     function GetLimits: TNyxCollectionClipboardLimits;
+  end;
+
+  { A foreign page proposal supplies geometry through the optional public facet.
+    Its borrowed callback belongs to the fixture frame and can retire the actual
+    selection during that getter; no callback survives the frame's cleanup. }
+  TPageNavigationProxy = class(TNavigationProxy, INyxCollectionRangePageNavigation)
+  public
+    PageRowsValue: Integer;
+    OnPageRows: TReadCallback;
+    function GetPageRows: Integer;
   end;
 
 const
@@ -270,6 +282,7 @@ function TNavigationProxy.GetSource: INyxCollectionSnapshot;
 var
   LRead: TReadCallback;
 begin
+  Inc(SourceReads);
   LRead := OnSource;
   OnSource := nil;
 
@@ -278,6 +291,20 @@ begin
     LRead;
   end;
   Result := Inner.Source;
+end;
+
+function TPageNavigationProxy.GetPageRows: Integer;
+var
+  LRead: TReadCallback;
+begin
+  LRead := OnPageRows;
+  OnPageRows := nil;
+
+  if Assigned(LRead) then
+  begin
+    LRead;
+  end;
+  Result := PageRowsValue;
 end;
 
 function TNavigationProxy.GetPage: INyxCollectionSnapshot;
@@ -644,9 +671,162 @@ begin
   end;
 end;
 
+{ Real source/page/selection owners qualify page movement independently of a
+  renderer. Foreign proposals exercise admission and reentrancy, while retained
+  RAW payloads prove the new movement does not change data or Unicode values. }
+procedure PageCases;
+var
+  LFixture: TFixture;
+  LProbe: TReadProbe;
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+  LFields: TNyxCollectionClipboardFields;
+  LSerial: Integer;
+  LState: INyxCollectionCellRangeSelection;
+  LPreparer: INyxCollectionCellRangePreparation;
+  LOriginal: INyxCollectionCellRangeIntent;
+  LRetained: INyxCollectionCellRangeIntent;
+  LNavigation: INyxCollectionRangeNavigation;
+  LGeometry: INyxCollectionRangePageNavigation;
+  LPlan: INyxPreparedPublication;
+  LForeign: TNavigationProxy;
+  LPageForeign: TPageNavigationProxy;
+  LForeignLease: INyxCollectionRangeNavigation;
+  LOrigin: TNyxCollectionCellIdentity;
+  LRefused: Boolean;
+begin
+  LFixture := TFixture.Create;
+  LProbe := TReadProbe.Create;
+  LPageForeign := nil;
+  try
+    LSource := LFixture.Store.Snapshot;
+    LPage := LFixture.View.Snapshot;
+    VisibleColumns(LFixture.View, LSerial, LFields);
+    LState := NewNyxCollectionCellRangeSelection;
+    Check(Supports(LState, INyxCollectionCellRangePreparation, LPreparer),
+      'page keys reuse the existing prepared selection owner');
+    LOrigin := Cell('b', LFields[0]);
+    LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+      LOrigin, nil, ncrkExtendPageDown, LSerial, True, nccleLF,
+      TNyxCollectionClipboardLimits.Defaults, 2);
+    Check(Supports(LNavigation, INyxCollectionRangePageNavigation, LGeometry) and
+      (LGeometry.PageRows = 2) and LNavigation.Focus.Same(Cell('a', LFields[0])),
+      'copied page step follows actual filtered order and preserves the pinned field');
+    LPlan := LPreparer.PrepareNavigation(LNavigation);
+    PublishNyxGroup([LPlan]);
+    LPlan := nil;
+    LOriginal := LState.Selection;
+    LRetained := LOriginal;
+    Check((LOriginal.Capture.Payload.RowCount = 3) and
+      (LOriginal.Capture.Payload.CellValue(2, 0).TextValue = CFull),
+      'page extension admits the complete exact RAW rectangle including Unicode and NUL');
+    LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+      LOriginal.Capture.Focus, LOriginal, ncrkExtendPageUp, LSerial, True, nccleLF,
+      TNyxCollectionClipboardLimits.Defaults, 1);
+    LPlan := LPreparer.PrepareNavigation(LNavigation);
+    PublishNyxGroup([LPlan]);
+    LPlan := nil;
+    LOriginal := LState.Selection;
+    Check(LOriginal.Capture.Anchor.Same(LOrigin) and
+      LOriginal.Capture.Focus.Same(Cell('c', LFields[0])) and
+      (LOriginal.Capture.Payload.RowCount = 2) and not LRetained.Current,
+      'reversing a page step shrinks from the original anchor and retires only the older range');
+    LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+      LOriginal.Capture.Focus, LOriginal, ncrkExtendPageDown, LSerial, False, nccleLF,
+      TNyxCollectionClipboardLimits.Defaults, High(Integer));
+    Check(LNavigation.Focus.Same(Cell('a', LFields[0])),
+      'a maximal page step clamps before addition at the actual page end');
+    LNavigation := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+      LOriginal.Capture.Focus, LOriginal, ncrkExtendPageUp, LSerial, False, nccleLF,
+      TNyxCollectionClipboardLimits.Defaults, High(Integer));
+    Check(LNavigation.Focus.Same(LOrigin),
+      'a maximal upward step clamps without wrapping or changing its column');
+    LRefused := False;
+    try
+      LNavigation := NewNyxCollectionRangeNavigation(nil, nil, [],
+        Default(TNyxCollectionCellIdentity), nil, ncrkExtendPageDown, 0, False,
+        nccleLF, TNyxCollectionClipboardLimits.Defaults, 0);
+    except
+      on E: ENyxCollectionRange do
+      begin
+        LRefused := Pos('visible-row step', E.Message) > 0;
+      end;
+    end;
+    Check(LRefused and (LState.Selection = LOriginal) and LOriginal.Current,
+      'invalid page geometry refuses before model providers and preserves accepted cells');
+    LState.Clear;
+    LForeign := TNavigationProxy.Create;
+    LForeignLease := LForeign;
+    LForeign.Inner := NewNyxCollectionRangeNavigation(LSource, LPage, LFields,
+      LOrigin, nil, ncrkExtendPageDown, LSerial, False, nccleLF,
+      TNyxCollectionClipboardLimits.Defaults, 2);
+    LRefused := False;
+    try
+      LPlan := LPreparer.PrepareNavigation(LForeignLease);
+    except
+      on E: ENyxCollectionRange do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LForeign.SourceReads = 0) and (LState.Selection = nil),
+      'a legacy foreign proposal cannot silently invent page geometry');
+    LPageForeign := TPageNavigationProxy.Create;
+    LPageForeign.Inner := LForeign.Inner;
+    LForeignLease := LPageForeign;
+    LPageForeign.PageRowsValue := 1;
+    LRefused := False;
+    try
+      LPlan := LPreparer.PrepareNavigation(LForeignLease);
+    except
+      on E: ENyxCollectionRange do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LState.Selection = nil),
+      'a foreign page proposal cannot substitute an endpoint that contradicts its step');
+    LProbe.State := LState;
+    LPageForeign.PageRowsValue := 2;
+    LPageForeign.SourceReads := 0;
+    LPageForeign.OnPageRows := LProbe.ClearSelection;
+    LRefused := False;
+    try
+      LPlan := LPreparer.PrepareNavigation(LForeignLease);
+    except
+      on E: ENyxCollectionRangeStale do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LProbe.Calls = 1) and (LPageForeign.SourceReads = 0) and
+      (LState.Selection = nil),
+      'a newer decision from the geometry getter defeats preparation before source reads');
+    Check((LFixture.Changes = 0) and (LFixture.Store.Snapshot = LSource) and
+      (LRetained.Capture.Payload.CellValue(2, 0).TextValue = CFull),
+      'page navigation and refused foreign proposals preserve source data and retained payloads');
+  finally
+
+    if LPageForeign <> nil then
+    begin
+      LPageForeign.OnPageRows := nil;
+    end;
+
+    if LPlan <> nil then
+    begin
+      LPlan.Retire;
+    end;
+    LForeignLease := nil;
+    LProbe.State := nil;
+    LProbe.Free;
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     Run;
+    PageCases;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-range-navigation-tests', IntToStr(GChecks));
     {$else}

@@ -9,7 +9,81 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — typed table headers — 2026-10-25
+## Current checkpoint — viewport range keys — 2026-10-25
+
+The preceding goal turn is PROGRESS: 51f99ea is remote-verified. Root remains
+solo until the user changes that preference. This packet serves workbench03's
+original keyboard/interaction and public-application outcomes; no original
+criterion, task/DONE, percentage or completion credit closes.
+
+Shift+Page Up/Page Down now extends an opted-in table's existing cell range by
+its current viewport, preserving the stable field, original anchor and ordinary
+row membership. Both adapters reuse their ordinary page geometry, overlap one
+row, advance at least one and clamp within the current logical page. Browser
+measurement excludes overscan/offscreen drafts. Editors and unrelated modifiers
+keep their earlier routes. There is no new saved setting, state engine or raw
+property: the existing typed RangeSelection policy enables the behavior.
+
+Page keys append to the existing enum without moving earlier ordinals. Optional
+command/proposal facets retain original interface GUIDs. The same synchronous
+mounted command reserves input before viewport measurement, accepts scalar
+geometry once before preparation and refuses missing/malformed/late resolution.
+Prepared publication re-admits foreign endpoints against their claimed step,
+with a request fence after QueryInterface and each extension getter. A callback
+that makes a newer selection decision defeats the older candidate before source
+reads. The browser repeats the input fence after measuring, before touching
+borrowed row/field identities. New interfaces retain no target, provider callback
+or live view/store.
+
+The native navigation suite passes 48 with a complete clean heap, including
+clamping before overflow, reverse extension, exact Unicode/NUL values and
+foreign/malformed/reentrant geometry. Its browser companion compiles only.
+The public service monitor and its exact 7,178-byte generated companion each
+pass 113 mounted checks at 1280/390, with complete clean heaps. Separate local
+64-row instances exercise center/start/end panes at 480/180 authored heights:
+the observed native steps are 9/1, and reversal, Escape, unchanged row membership
+and unchanged authored data are checked. The starter retains four English
+service records. The same examples compile as native applications and both
+browser entry points compile. These are Win32/LCL messages, not trusted hardware.
+
+The broader native clipboard/range controls pass 1658 at 900 and 1647 at 390, with
+complete clean heaps. Original editor, consumption, nested publication, ABA,
+pointer/capture, copy and retirement assertions stay in place; the added page
+keys also check exact canonical counts and consumed defaults. This does not claim
+the optional OS-pointer probe. The browser companion compiles only. All successful native compiler logs have zero warnings; each browser compiler retains
+the seven installed RTL warnings and no owned warning.
+
+Retained failures are fixture expectations, not removed gates. The first long-
+page fixture requires a multi-row step even for the short viewport; observed
+native rows show that one row is the correct overlapping step. The corrected
+fixture keeps a separate strict multi-row assertion for the tall viewport.
+The first broader run replaces an older key-count baseline; a separate page
+counter and an exact 19-event total retain the original 16 plus three added keys.
+Failed native heaps are complete and clean. Positive source cohorts are frozen
+while their actual readers run and retain their own input identities. The broader fixture's accounting changes after the service cohort; later README
+edits are documentation. Final review adds a browser-only fence before reading
+borrowed row/field identities; its three affected browser consumers recompile in
+a separate current cohort. Native sources and passing runtime results are unchanged. All actual compiler/runtime readers are joined.
+Qualification uses the retained private direct-file capture with 900-second
+compiler and 240-second runtime limits; no shared build helper repair is claimed.
+
+Physical input, browser execution, actual display, full Studio interaction and
+all original workbench acceptance remain open. No connected semantic design or
+allowed existing HTTP(S) preview is supplied; the prior file-preview rejection,
+desktop-tool initialization failure and native full-query cursor gate stay
+recorded. No alternate preview host/protocol, service replacement or approval
+loop is introduced. New large artifacts remain on provisioned E: storage.
+
+Task-flow reassessment: at least six successive geometry/workbench packets close
+no original criterion. Stop equivalent header/paging/performance variants here.
+Preserve 03's original gates and continue the independently eligible 04 L1 product
+packet: stable changing-data inspection with visible follow/pause/resume and
+independent views. Its review/collection prerequisites are accepted; this return
+does not rename or complete 03. The shared output-capture gap remains recorded
+under NS-6_delivery_01. No new agent, cleanup, compiler install or SDK edit occurs.
+
+
+## Typed table headers — 2026-10-25
 
 The preceding checkpoint is PROGRESS: b43f904 is remote-verified. Root remains
 solo; Lil' Scooty is finished and idle. This packet serves the existing

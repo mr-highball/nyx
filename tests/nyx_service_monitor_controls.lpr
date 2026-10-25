@@ -3,9 +3,11 @@ program nyx_service_monitor_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Interfaces, Classes, SysUtils, Forms, Controls, Grids,
+uses Interfaces, Classes, SysUtils, Forms, Controls, Grids, Windows,
   nyx.text, nyx.model, nyx.codec, nyx.codegen, nyx.controls,
   nyx.collections.presentation,
+  nyx.collections.range, nyx.collections.range.actions,
+  nyx.collections.range.commands, nyx.collections.selection,
   nyx.collections, nyx.collections.mount, nyx.application.lcl,
   nyx.service.monitor
   {$ifdef NYX_SERVICE_GENERATED}, nyx.generated.view{$endif};
@@ -219,10 +221,205 @@ begin
   end;
 end;
 
+{ Controlled Win32 keys exercise the actual focused grid and canonical Nyx
+  event route. Restore the calling thread's exact modifier bytes even on failure;
+  these messages do not claim trusted keyboard or assistive-technology input. }
+procedure PageKey(AGrid: TStringGrid; AKey: Word; AShift: Boolean = True);
+var
+  LSaved: TKeyboardState;
+  LState: TKeyboardState;
+  LHandle: HWND;
+begin
+  Check(GetKeyboardState(LSaved), 'capture exact modifiers before the page key');
+  LState := LSaved;
+  LState[VK_CONTROL] := 0;
+  LState[VK_LCONTROL] := 0;
+  LState[VK_RCONTROL] := 0;
+  LState[VK_MENU] := 0;
+  LState[VK_LMENU] := 0;
+  LState[VK_RMENU] := 0;
+  LState[VK_SHIFT] := 0;
+  LState[VK_LSHIFT] := 0;
+  LState[VK_RSHIFT] := 0;
+
+  if AShift then
+  begin
+    LState[VK_SHIFT] := $80;
+    LState[VK_LSHIFT] := $80;
+  end;
+  LHandle := AGrid.Handle;
+  Check(SetKeyboardState(LState), 'supply the original page-key modifiers');
+  try
+    SendMessage(LHandle, WM_KEYDOWN, AKey, 1);
+
+    if IsWindow(LHandle) then
+    begin
+      SendMessage(LHandle, WM_KEYUP, AKey, LPARAM($C0000001));
+    end;
+    Application.ProcessMessages;
+  finally
+    Check(SetKeyboardState(LSaved), 'restore the caller modifiers after the page key');
+  end;
+end;
+
+{ A separate public-example instance supplies enough rows to exceed the actual
+  viewport. The optional generated build creates the same table before its test
+  data is supplied. Mounted hosts retire before their borrowed documents; no
+  active Studio project, clipboard or external service is used. }
+function PageJourney(AWidth, ATableHeight: Integer): Integer;
+const
+  CFields: array[0..2] of TNyxText = ('Service', 'Process ID', 'Status');
+var
+  LDocument: TNyxDocument;
+  LApplication: TNyxLCLApplication;
+  LMount: INyxCollectionMount;
+  LRanges: INyxCollectionCellRangeMount;
+  LItems: array of TNyxCollectionItem;
+  LKey: TNyxCollectionRef;
+  LTable: TStringGrid;
+  LGrid: TStringGrid;
+  LCandidate: TStringGrid;
+  LRows: TNyxCollectionSelectionSnapshot;
+  LIntent: INyxCollectionCellRangeIntent;
+  LOrigin: TNyxCollectionCellIdentity;
+  LBefore: TNyxText;
+  LIndex: Integer;
+  LField: Integer;
+  LChild: Integer;
+  LColumn: Integer;
+  LPhysical: Integer;
+  LStep: Integer;
+begin
+  Result := 0;
+  {$ifdef NYX_SERVICE_GENERATED}
+  LDocument := BuildNyxDocument;
+  {$else}
+  LDocument := BuildServiceMonitorDocument;
+  {$endif}
+  LApplication := nil;
+  try
+    LKey := NyxCollection(ServiceCollectionName);
+    SetLength(LItems, 64);
+    for LIndex := 0 to High(LItems) do
+    begin
+      LItems[LIndex] := NyxCollectionItem(NyxItem(LKey,
+        'service-' + TNyxText(IntToStr(LIndex))))
+        .WithValue(NyxTextField('name'), 'Service ' + TNyxText(IntToStr(LIndex)))
+        .WithValue(NyxIntegerField('pid'), 5000 + LIndex)
+        .WithValue(NyxTextField('status'), 'Running');
+    end;
+    LDocument.Collections.Define(LKey, LDocument.Collections.Snapshot(LKey).Schema, LItems);
+    LDocument.Find(ServiceTableID).Configure.Height(ATableHeight).Done;
+    LBefore := TNyxCodec.Encode(LDocument);
+    LApplication := TNyxLCLApplication.Create;
+    LApplication.Mount(LDocument);
+    LApplication.Window.ClientWidth := AWidth;
+    LApplication.Window.ClientHeight := 760;
+    LApplication.Window.Show;
+    Application.ProcessMessages;
+    LMount := LApplication.View.CollectionMount(ServiceTableID);
+    Check(Supports(LMount, INyxCollectionCellRangeMount, LRanges),
+      'the public table exposes its existing typed range owner');
+    LRanges.ConfigureCellRange(True);
+    LTable := TStringGrid(LApplication.View.ControlFor(ServiceTableID));
+    Check((LMount.View.Snapshot.Count = 64) and (VisibleTablePanes(LTable) = 3),
+      'the long public workbench retains its full page and both visible pins');
+    for LField := Low(CFields) to High(CFields) do
+    begin
+      LGrid := nil;
+      LPhysical := -1;
+      for LChild := -1 to LTable.ControlCount - 1 do
+      begin
+        LCandidate := LTable;
+
+        if LChild >= 0 then
+        begin
+
+          if not (LTable.Controls[LChild] is TStringGrid) then
+          begin
+            Continue;
+          end;
+          LCandidate := TStringGrid(LTable.Controls[LChild]);
+        end;
+        for LColumn := 0 to LCandidate.ColCount - 1 do
+        begin
+
+          if Pos(CFields[LField], TNyxText(LCandidate.Cells[LColumn, 0])) = 1 then
+          begin
+            LGrid := LCandidate;
+            LPhysical := LColumn;
+            Break;
+          end;
+        end;
+
+        if LGrid <> nil then
+        begin
+          Break;
+        end;
+      end;
+      Check((LGrid <> nil) and LGrid.IsVisible,
+        'the page key resolves a real center or pinned field');
+      LRanges.ClearCellRange;
+      LGrid.Row := 1;
+      LGrid.Col := LPhysical;
+      LGrid.SetFocus;
+      Application.ProcessMessages;
+      LRows := LMount.View.Selection.Snapshot;
+      LStep := LGrid.VisibleRowCount - 1;
+      WriteLn('page viewport field=', CFields[LField], ' width=', AWidth,
+        ' authoredHeight=', ATableHeight, ' nativeHeight=', LGrid.Height,
+        ' visibleRows=', LGrid.VisibleRowCount, ' pageRows=', LMount.View.Snapshot.Count);
+      Check((LStep >= 1) and (LStep < LMount.View.Snapshot.Count - 1),
+        'the physical viewport supplies a positive bounded step within the long page');
+
+      if ATableHeight = 480 then
+      begin
+        Check(LStep > 1, 'the full viewport proves actual multi-row paging');
+      end;
+      Result := LStep;
+      PageKey(LGrid, VK_NEXT);
+      LIntent := LRanges.CellRange;
+      Check((LIntent <> nil) and LIntent.Current and
+        (LIntent.Capture.Focus.Item.ID = LMount.View.Snapshot.ItemAt(LStep).Ref.ID) and
+        (LIntent.Capture.Payload.RowCount = LStep + 1) and
+        (LIntent.Capture.Payload.FieldCount = 1),
+        'Shift+PageDown uses the measured viewport step and a single stable field');
+      LOrigin := LIntent.Capture.Anchor;
+      PageKey(TStringGrid(Screen.ActiveControl), VK_PRIOR);
+      Check(not LIntent.Current and LRanges.CellRange.Capture.Anchor.Same(LOrigin) and
+        LRanges.CellRange.Capture.Focus.Same(LOrigin) and
+        (LRanges.CellRange.Capture.Payload.RowCount = 1) and
+        LMount.View.Selection.Snapshot.SameState(LRows),
+        'Shift+PageUp reverses to the same anchor without changing ordinary row selection');
+      PageKey(TStringGrid(Screen.ActiveControl), VK_ESCAPE, False);
+      Check(LRanges.CellRange = nil, 'Escape clears the page range through ordinary canonical keys');
+    end;
+    Check(TNyxCodec.Encode(LDocument) = LBefore,
+      'viewport paging never rewrites authored defaults or source data');
+  finally
+    LRanges := nil;
+    LMount := nil;
+    LApplication.Free;
+    LDocument.Free;
+  end;
+end;
+
+procedure PageJourneys(AWidth: Integer);
+var
+  LFullStep: Integer;
+  LShortStep: Integer;
+begin
+  LFullStep := PageJourney(AWidth, 480);
+  LShortStep := PageJourney(AWidth, 180);
+  Check(LShortStep < LFullStep,
+    'a shorter authored viewport produces a smaller page-extension step');
+end;
+
 begin
   try
     Application.Initialize;
     Journey(StrToInt(ParamStr(1)));
+    PageJourneys(StrToInt(ParamStr(1)));
     WriteLn('PASS ', GChecks, ' service monitor mount checks at ', ParamStr(1));
   except
     on LException: Exception do

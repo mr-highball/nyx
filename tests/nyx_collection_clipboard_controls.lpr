@@ -1114,6 +1114,15 @@ begin
     begin
       LKey := VK_ESCAPE;
     end;
+
+    if AKey = 'PageUp' then
+    begin
+      LKey := VK_PRIOR;
+    end
+    else if AKey = 'PageDown' then
+    begin
+      LKey := VK_NEXT;
+    end;
     Check((LKey <> 0) and (Screen.ActiveControl is TCustomGrid),
       'range key targets a real currently focused outer or pinned grid');
     LHandle := Screen.ActiveControl.Handle;
@@ -2096,6 +2105,8 @@ var
   LRanges: INyxCollectionCellRangeMount;
   LKeyInput: INyxCollectionCellRangeKeyInput;
   LKeyCommand: INyxCollectionCellRangeKeyCommand;
+  LPageCommand: INyxCollectionCellRangePageKeyCommand;
+  LRefused: Boolean;
   LIntent: INyxCollectionCellRangeIntent;
   LSource: INyxCollectionSnapshot;
   LPage: INyxCollectionSnapshot;
@@ -2113,6 +2124,7 @@ var
   LBefore: Integer;
   LKeys: Integer;
   LReplies: Integer;
+  LPageKeys: Integer;
   LIndex: Integer;
   LClicks: Integer;
   {$ifdef PAS2JS}
@@ -2332,6 +2344,36 @@ begin
     {$endif}
     LKeyCommand.Retire;
     LKeyCommand := nil;
+    LKeyCommand := LKeyInput.BeginCellRangeKey(ncrkExtendPageDown);
+    Check(Supports(LKeyCommand, INyxCollectionCellRangePageKeyCommand, LPageCommand),
+      'page keys expose optional scalar geometry on the original mounted envelope');
+    LKeyCommand.ResolveOrigin(NyxCollectionCellIdentity(ItemA, LAnchorField));
+    LKeyCommand.Prepare;
+    LPageCommand.ResolvePageRows(1);
+    Check(LKeyCommand.Complete(True) and (LRanges.CellRange = nil),
+      'missing geometry cannot fall back to one row or be supplied after preparation');
+    LKeyCommand.Retire;
+    LPageCommand := nil;
+    LKeyCommand := LKeyInput.BeginCellRangeKey(ncrkExtendPageDown);
+    Check(Supports(LKeyCommand, INyxCollectionCellRangePageKeyCommand, LPageCommand),
+      'a new page key owns a fresh one-shot geometry resolution');
+    LRefused := False;
+    try
+      LPageCommand.ResolvePageRows(0);
+    except
+      on E: ENyxCollectionRange do
+      begin
+        LRefused := True;
+      end;
+    end;
+    LPageCommand.ResolvePageRows(1);
+    LKeyCommand.ResolveOrigin(NyxCollectionCellIdentity(ItemA, LAnchorField));
+    LKeyCommand.Prepare;
+    Check(LRefused and LKeyCommand.Complete(True) and (LRanges.CellRange = nil),
+      'malformed first geometry is refused and cannot be repaired on the same key authority');
+    LKeyCommand.Retire;
+    LPageCommand := nil;
+    LKeyCommand := nil;
     LKeyInput := nil;
     LClicks := FRangeClicks;
     FRangeClickPhase := '';
@@ -2372,6 +2414,25 @@ begin
     Check(LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, LLastField)) and
       FView.Selection.Snapshot.SameState(LRows) and (FHost.Writes = LBefore + 1),
       'real Control+Shift+End reaches the last page cell without changing row state or clipboard');
+    LPageKeys := FRangeKeys;
+    RangeKey('PageUp');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(LRanges.CellRange.Capture.Anchor.Same(LFirst) and
+      LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemA, LLastField)),
+      'real Shift+PageUp retains the directional anchor and typed pinned field at the page boundary');
+    RangeKey('PageDown');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((FRangeKeys = LPageKeys + 2) and LRanges.CellRange.Capture.Anchor.Same(LFirst) and
+      LRanges.CellRange.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, LLastField)) and
+      FView.Selection.Snapshot.SameState(LRows) and (FHost.Writes = LBefore + 1),
+      'real Shift+PageDown reverses through one canonical key per step without row or clipboard effects');
+    LIntent := LRanges.CellRange;
+    FMode := kmConsume;
+    RangeKey('PageUp');
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((FRangeKeys = LPageKeys + 3) and (LRanges.CellRange = LIntent) and LIntent.Current,
+      'consumed page extension preserves the exact accepted range and focus');
+    FMode := kmObserve;
     {$ifdef PAS2JS}
     Check((TJSHTMLElement(document.activeElement).getAttribute('data-nyx-column') =
       IntToStr(FView.Spec.ColumnIndex(LLastField))) and
@@ -2445,7 +2506,7 @@ begin
     Check(not LIntent.Current and (LRanges.CellRange = nil),
       'disable/re-enable during the canonical range callback cannot lend the old key a fresh epoch');
     FMode := kmObserve;
-    Check((FRangeKeys = LKeys + 16) and FView.Selection.Snapshot.SameState(LRows) and
+    Check((FRangeKeys = LKeys + 19) and FView.Selection.Snapshot.SameState(LRows) and
       (FHost.Writes = LBefore + 1),
       'all real range keys preserve ordinary row selection and make no host write');
     Check(FRangeClicks = LClicks,

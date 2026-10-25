@@ -1194,6 +1194,7 @@ from a data cell in navigation mode:
 | Key | Cell-range action |
 | --- | --- |
 | Shift+Left/Right/Up/Down | Extend from the original anchor to the neighboring visible cell |
+| Shift+Page Up/Page Down | Extend in the same column by the current viewport's row step |
 | Shift+Home/End | Extend to the first/last visible column of the focused row |
 | Ctrl+Shift+Home/End, or Meta+Shift+Home/End | Extend to the first/last cell of the actual current page |
 | Escape without modifiers | Clear an existing cell range |
@@ -1208,6 +1209,16 @@ caret and copy keys; composing input and Alt/AltGraph combinations are left to
 the existing input route. Tables without the explicit opt-in keep their existing
 selection behavior.
 
+Page extension uses the same geometry as ordinary Page Up/Page Down navigation:
+native grids measure visible rows; browsers use the clipped, scaled data plane,
+excluding virtual overscan and retained offscreen drafts. Consecutive steps
+overlap one row and always advance at least one. The movement clamps within the
+current logical data page, retains the original anchor when reversing and does
+not wrap, fetch another page or change ordinary row membership. Resizing the
+viewport changes the next key's step. This follows the viewport paging model in
+the [WAI grid keyboard guidance](https://www.w3.org/WAI/ARIA/apg/patterns/grid/);
+Nyx adds the Shift extension alongside its existing cell-range keys.
+
 `nyx.collections.range.navigation` exposes the typed movement intentions and
 the optional actual-mount `INyxCollectionCellRangeKeyInput` contract. Its
 single-use envelope reserves the original input epoch before row/field getters,
@@ -1218,6 +1229,17 @@ retargeting another cell. `Complete` claims the envelope once even when its
 default action is refused; calling it again cannot revive the prepared range.
 These synchronous UI contracts do not transfer a live mount to a worker or
 clipboard host.
+
+Page-key adapters query the optional `INyxCollectionCellRangePageKeyCommand`
+facet on that same reserved envelope and call `ResolvePageRows` before Prepare.
+Geometry is captured once after input reservation; missing, malformed or late
+geometry cannot silently become a one-row command. The optional readonly
+`INyxCollectionRangePageNavigation` facet carries the scalar step on detached
+proposals. Selection preparation rechecks foreign proposals against that step
+and fences every extension getter against newer selection decisions. Existing
+interface identities and key ordinals remain unchanged. Authors enable the keys
+with the existing `NyxTableWorkbench.RangeSelection(True)` policy; there is no
+new saved setting or raw property string.
 
 With range selection enabled, focus a data cell and Shift-click another cell to
 extend the anchored rectangle. Both adapters use the exact resident endpoints
