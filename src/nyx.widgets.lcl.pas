@@ -459,11 +459,19 @@ begin
   FBorderVisible := LAppearance.BorderVisible;
   Font.Height := -ATheme.FontSize;
   Font.Color := FTextColor;
-  Font.Style := [fsBold];
+
+  { Assign only the final native weight. Switching a regular face through bold
+    fires two Font.OnChange/preferred-size notifications on every unchanged
+    renderer Sync. Native inherit/semibold retain their existing bold mapping;
+    ordinary TFont setters still repair externally changed styles. }
 
   if FButtonFace.Weight = nbwRegular then
   begin
     Font.Style := [];
+  end
+  else
+  begin
+    Font.Style := [fsBold];
   end;
   ParentFont := False;
   Invalidate;

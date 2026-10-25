@@ -9,6 +9,44 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Active prerequisite — native button font churn
+
+The preceding turn is PROGRESS: a9047e1 changes Inspector routing and qualifies
+both complete native Studio journeys. Task03's remaining Sync/layout cost now
+has a concrete native widget cause: ApplyTheme assigns bold before restoring a
+regular face, triggering font/preferred-size notifications on unchanged buttons.
+The widget now assigns the final weight directly. The old implementation fails
+the new regression with a complete clean527364-block/19251442-byte heap: eight
+unchanged theme calls emit16 font notifications;32 ordinary renderer Sync calls
+over64 regular buttons emit4096. Observers forward the original LCL receiver and
+retire before their borrowed fonts, so the test does not suppress real font or
+preferred-size behavior. The fixed fixture passes72 with zero notifications,
+checking mutable themes, external font drift, native inherit/semibold mapping,
+fresh invalid-palette refusal and exact geometry for every button. The one
+matched workload observes515ms before/313ms after. A subsequent current-source
+run inside the ordinary target observes344ms; these samples describe this path,
+not whole-editor latency. The initial fix's source differs from the current
+widget by two separating blank lines only; the ordinary target compiles the
+current bytes and repeats all72 assertions.
+
+The existing button-editor target now includes this native regression. It passes
+95 configuration,72 native theme synchronization and57/61 actual Studio chrome
+checks at1280/390, all with complete clean heaps. Their blocks/bytes are
+720459/43948963,518872/19175492,10173143/4754139286 and7583940/3481074358.
+Desktop design and compact Inspector captures are inspected, preserving the
+intended final typography. All five native compilers finish without warnings;
+the unchanged browser configuration companion compiles with the existing seven
+installed RTL warnings shown by the target. Browser execution is not claimed.
+No cached admission, public contract, browser style or theme validation change.
+
+Evidence roots are `.local/qualification/button-font-sync-01` and
+`.local/qualification/button-editor-font-01`; the latter's source manifest is
+`button-editor-font-01-pins-private.json` beside it. All2319 current working inputs
+reverify, all readers are joined and their short source freeze has ended. The
+earlier complete1124/1135 Studio cohort remains separate; no unchanged full900s
+rerun or original task/DONE/credit closure follows. Continue with the remaining
+measured layout/replacement cost and the original control-usefulness outcomes.
+
 ## Active prerequisite — Inspector context routing
 
 The preceding turn is PROGRESS: dd1f8df changes the shared codec and qualifies

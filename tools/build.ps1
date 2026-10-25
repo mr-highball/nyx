@@ -7110,7 +7110,8 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       "-Fu$nyxLazarus/packager/units/$nyxEditorPlatform",
       "-FU$nyxEditorNative", "-FE$nyxEditorNative")
     $output = $nyxEditorNative
-    foreach ($nyxEditorProgram in @('nyx_button_configuration_tests', 'nyx_studio_chrome_controls')) {
+    foreach ($nyxEditorProgram in @('nyx_button_configuration_tests',
+        'nyx_button_theme_sync_tests', 'nyx_studio_chrome_controls')) {
       $nyxEditorCompile = RunOwned $nyxLclFpc ($nyxEditorFlags + @("tests/$nyxEditorProgram.lpr")) `
         ($nyxEditorProgram + '-compiler') 240 $false
       $nyxEditorCompile | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath `

@@ -156,6 +156,12 @@ uses an exact MCP selection companion and explicit current-source enrichment.
 native controls and compiled generated Pascal, then stages the matched browser
 consumer. HTTP execution and observing-release installation remain separate.
 
+Native buttons apply their final font weight directly, so refreshing an unchanged
+regular face does not manufacture font-change/layout notifications. Changed
+themes and externally changed font styles still update through ordinary LCL
+setters, and every call validates the complete current palette. This behavior
+uses the existing portable button presentation contract.
+
 Native automatic input/button heights account for the selected font size. Native
 rows stack caption controls when equal-width cells would clip their LCL preferred
 size. This handles the sample's narrow option row; general flex sizing, responsive

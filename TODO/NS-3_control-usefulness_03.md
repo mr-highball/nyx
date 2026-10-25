@@ -117,6 +117,15 @@ Its current full timings667.735s/450.340s remain too slow for responsiveness
 acceptance. Browser fixtures and matched worker compile only. WORK retains the
 source/heap/profile distinctions and remaining original criteria.
 
+The native widget continuation removes transient bold/regular switches during
+unchanged theme refresh. Its retained negative emits4096 TFont notifications in
+32 Sync calls over64 buttons; the fixed72-check regression emits zero with the
+same final geometry. Mutable themes, external font drift, invalid palette refusal
+and existing weight mappings remain checked. The ordinary button-editor target
+passes95 configuration and57/61 actual Studio chrome checks at wide/compact sizes,
+all with clean heaps. Browser style is unchanged and execution remains unclaimed;
+whole-editor latency and the original workbench outcomes stay open.
+
 The presentation-authoring continuation adds typed ordinary spacing/text forms,
 independent set/reset and paired history, bounded semantic reads and grouped
 operations with complete version11 discovery. Authoring05 passes40 per actual
