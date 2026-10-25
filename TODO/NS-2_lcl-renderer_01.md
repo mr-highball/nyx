@@ -4,6 +4,11 @@
 
 **Description:**
 
+The current [native geometry prerequisite](NS-2_lcl-renderer_02.md) owns the
+measured child-window publication cost found during workbench qualification.
+It preserves this task's original resize/interaction and parity criteria;
+profiling and an implementation plan do not accept renderer responsiveness.
+
 Current-source image readiness admits hosted metadata before payload bytes.
 Existing broker publication reaches retained canvas scopes and ordinary saved
 Canvas application controls. Native initial zero-size canvas allocation retries

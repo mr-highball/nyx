@@ -999,6 +999,16 @@ uses
 
 type
 
+  {$ifdef NYX_STUDIO_PROFILE}
+  { Ordinary non-themed layout panel with observation only. The renderer owns
+    it through its normal LCL parent; no model or external callback is retained.
+    The inherited native call may retire this control, so the tail uses locals. }
+  TNativeLayoutProfilePanel = class(TPanel)
+  protected
+    procedure DoSendBoundsToInterface; override;
+  end;
+  {$endif}
+
   { Internal control-flow unwind after the exact native receiver retires.
     Event boundaries consume it; it is never a successor binding diagnostic. }
   ENyxNativeGenerationRetired = class(ENyxModel);
@@ -1490,6 +1500,17 @@ begin
 end;
 
 {$I nyx.projection.context.adapter.inc}
+
+{$ifdef NYX_STUDIO_PROFILE}
+procedure TNativeLayoutProfilePanel.DoSendBoundsToInterface;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  inherited DoSendBoundsToInterface;
+  WriteLn('native-layout-panel,bounds,', GetTickCount64 - LStarted);
+end;
+{$endif}
 
 constructor TNyxLCLRenderer.CreateRetirementShell;
 begin
@@ -3011,7 +3032,11 @@ begin
     end
     else
     begin
+      {$ifdef NYX_STUDIO_PROFILE}
+      LPanel := TNativeLayoutProfilePanel.Create(FPanel);
+      {$else}
       LPanel := TPanel.Create(FPanel);
+      {$endif}
       LPanel.BevelOuter := bvNone;
       LPanel.Caption := '';
     end;
@@ -5637,6 +5662,11 @@ var
   LChild: Integer;
   LContentHeight: Double;
   {$ifdef NYX_LCL_LAYOUT_PROFILE}LMeasureStarted: QWord;{$endif}
+  {$ifdef NYX_STUDIO_PROFILE}
+  LResizeStarted: QWord;
+  LPhaseStarted: QWord;
+  LBindingCount: Integer;
+  {$endif}
 begin
   LGeneration := FGeneration;
 
@@ -5653,6 +5683,11 @@ begin
       begin
         Exit;
       end;
+      {$ifdef NYX_STUDIO_PROFILE}
+      LResizeStarted := GetTickCount64;
+      LPhaseStarted := LResizeStarted;
+      LBindingCount := Length(FBindings);
+      {$endif}
 
       if (FRoot <> nil) and (FPanel <> nil) then
       begin
@@ -5665,6 +5700,9 @@ begin
           RequireNativeGeneration(LGeneration);
           Exit;
         end;
+        {$ifdef NYX_STUDIO_PROFILE}
+        WriteLn('native-resize,viewport,', LBindingCount, ',', GetTickCount64 - LPhaseStarted);
+        {$endif}
         { LCL's automatic anchor/layout pass must see the complete new geometry.
           Otherwise showing a previously unplaced label can reapply its stale base
           position in the middle of SetBounds. Keep widgetset layout atomic while
@@ -5831,11 +5869,21 @@ begin
             ' milliseconds=', GetTickCount64 - LMeasureStarted);
           end;
           {$endif}
+          {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
           LPanel.EnableAutoSizing;
+          {$ifdef NYX_STUDIO_PROFILE}
+          { Copied count and local clock stay safe if autosizing retired Self.
+            This phase is outside the layout traversal's existing clock. }
+          WriteLn('native-resize,autosize,', LBindingCount, ',', GetTickCount64 - LPhaseStarted);
+          {$endif}
         end;
         RequireNativeGeneration(LGeneration);
+        {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
         UpdateSelection;
         RequireNativeGeneration(LGeneration);
+        {$ifdef NYX_STUDIO_PROFILE}
+        WriteLn('native-resize,selection,', LBindingCount, ',', GetTickCount64 - LPhaseStarted);
+        {$endif}
 
         if not FUpdating and UpdateViewport then
         begin
@@ -5848,6 +5896,9 @@ begin
       RequireNativeGeneration(LGeneration);
       QueueContent;
       RequireNativeGeneration(LGeneration);
+      {$ifdef NYX_STUDIO_PROFILE}
+      WriteLn('native-resize,total,', LBindingCount, ',', GetTickCount64 - LResizeStarted);
+      {$endif}
     except
       on ENyxNativeGenerationRetired do
       begin

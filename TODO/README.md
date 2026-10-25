@@ -1921,6 +1921,7 @@ blockers rather than filename order.
 | NS-1 | [Compiler-executed source projection](DONE/NS-1_source-projection_01.md) | Accepted complete Pascal construction before guarded editor reconciliation | Pending assessment |
 | NS-2 | [Browser renderer slice](NS-2_browser-renderer_01.md) | Incremental DOM projection for M1 | Pending assessment |
 | NS-2 | [LCL renderer slice](NS-2_lcl-renderer_01.md) | Incremental native projection for M1 | Pending assessment |
+| NS-2 | [Efficient native geometry](NS-2_lcl-renderer_02.md) | Bounded native window publication and real resize qualification | Prerequisite; no separate credit |
 | NS-2 | [Staged view sections](DONE/NS-2_section-publication_01.md) | Accepted public grouped section ownership prerequisite; full Studio integration remains open | Pending assessment |
 | NS-2 | [Parity and accessibility](NS-2_parity-accessibility_01.md) | Shared semantics, keyboard and accessibility | Pending assessment |
 | NS-3 | [Production component catalog](NS-3_components_01.md) | Exhaustive control and layout families | Pending assessment |

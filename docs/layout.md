@@ -317,6 +317,16 @@ compiler definition. It logs control counts, width/height traversals, row plans
 and elapsed milliseconds, with no authored text or retained document references.
 Ordinary builds contain neither those counters nor measurement clocks.
 
+`NYX_STUDIO_PROFILE` also separates viewport policy, autosizing, selection and
+total renderer-resize time, and observes ordinary layout-panel bounds publication.
+The layout regression's `NYX_LCL_LAYOUT_PROFILE` form observer records outer
+autosizing, form native-bounds time and logical leaf-bounds changes. Its explicit
+resize-phase marker separates these from construction and frame replacement.
+These clocks overlap: do not add them as independent elapsed time, infer native
+window redundancy from unchanged leaf rectangles, or treat instrumented timing
+as application latency. The [native geometry task](../TODO/NS-2_lcl-renderer_02.md)
+owns the remaining implementation and full interaction qualification.
+
 Native label measurement lazily borrows one screen drawing context during each
 synchronous layout pass. LCL's canvas state is saved/restored around each label;
 current font, caption, wrapping and bidirectional settings are still copied for

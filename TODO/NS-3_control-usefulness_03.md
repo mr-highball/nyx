@@ -5,6 +5,10 @@
 
 **Description:**
 
+The remaining measured native resize cost now has a focused
+[geometry-publication prerequisite](NS-2_lcl-renderer_02.md). It serves the native
+authoring/performance outcome below without replacing any original criterion.
+
 Make tables useful for real service/process inspection and data-entry work.
 W1 owns column arrangement and its complete Studio/generated-application journey;
 W2 adds full-value inspection, copying, formatting, export and context actions.

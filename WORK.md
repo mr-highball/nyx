@@ -9,6 +9,52 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Active prerequisite — native geometry publication
+
+The preceding turn is PROGRESS:8f18b79 indexes native realized-object lookup and
+qualifies its bounded improvement. The remaining resize investigation now changes
+the next action from recursive measurement/painting variants to native parent
+geometry publication. The existing profiler separates viewport policy, autosizing,
+selection and total renderer time. A profile-only ordinary layout-panel subclass
+observes the actual non-themed containers; normal builds still create TPanel.
+The fixture's optional form observer records outer autosizing, native form bounds
+and logical leaf changes. All added production hooks compile only with profiling.
+
+A checked no-heap-tracing diagnostic still measures 49.593 seconds for 24 resize
+pairs; its other profiler flags remain enabled, so it is not a release-app latency
+claim. The owned Pascal sampler captures 12 stacks, nine containing LCL native
+bounds publication. This corrects the earlier informal eight-sample tally. It
+captures fixed raw addresses while suspending only its own UI thread, resumes
+before allocation/symbol resolution/I/O, and joins at finalization. The installed
+GDB exits3 without a usable stack; the owned application still finishes all1130
+checks. A sampler preparation error and an ordinary-consumer misselection are
+retained separately and establish no sampler coverage.
+
+The final four-pair profile records 520 parent-panel native publications and zero
+logical button bounds changes. Inclusive panel timings sum6890ms within10844ms;
+form publication measures1000ms and overlaps that phase. These clocks must not
+be added. The 65 panel publications per resize identify the next optimization
+boundary; unchanged leaf rectangles do not prove that parent writes are redundant.
+The two discarded themed-surface painting trials did not affect this workload;
+source inspection shows its page/rows use plain TPanel, so they establish no
+themed-surface performance result. No painting or default runtime behavior change
+is retained, and no resize speedup is claimed.
+
+The final source passes1130 ordinary layout,1130 profiled layout and186 retained
+projection checks, all with complete clean heaps. Their blocks/bytes are
+6161688/195700285,2604728/106506302 and374351/108426554. All three final compilers
+finish without warnings. The earlier current-source cohort remains distinct.
+All actual readers are joined, all2320 final source inputs reverify and the short
+source freeze has ended. Evidence is `.local/qualification/native-resize-boundary-01`
+and its linked diagnostic roots. No full Studio/browser/visual acceptance follows.
+
+The next implementation is [efficient native geometry](TODO/NS-2_lcl-renderer_02.md),
+a prerequisite of the existing renderer and workbench outcomes. It explicitly
+owns client-area coherence, native coordinates, callback/window generations,
+fallback and the ordinary Studio/own-application qualification. Preserve all
+original criteria and runtime bounds; do not continue equivalent painting trials
+or add unrelated profiling variants. Root remains the sole active worker.
+
 ## Active prerequisite — native object lookup
 
 The preceding turn is PROGRESS:89ed631 removes redundant native button font

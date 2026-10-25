@@ -28,6 +28,31 @@ uses
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.render.lcl, nyx.widgets.lcl;
 
 type
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}
+  { Measure the ordinary owning form's outer autosize and native-boundary work
+    without suppressing either. Timings are inclusive and must not be added;
+    nested autosize entries contribute only to their outermost receiver. Bounds
+    handlers borrow this host, which outlives every observed fixture control. }
+  TLayoutHost = class(TForm)
+  private
+    FAutoSizeDepth: Integer;
+    FAutoSizeCalls: Integer;
+    FAutoSizeMilliseconds: QWord;
+    FNativeBoundsCalls: Integer;
+    FNativeBoundsMilliseconds: QWord;
+    FLeafBoundsChanges: Integer;
+  protected
+    procedure DoAllAutoSize; override;
+    procedure DoSendBoundsToInterface; override;
+  public
+    procedure ResetProfile;
+    procedure PrintProfile;
+    procedure LeafBoundsChanged(ASender: TObject);
+  end;
+  {$else}
+  { The ordinary regression uses the original native form without observers. }
+  TLayoutHost = TForm;
+  {$endif}
   { Borrowed actual native faces and copied geometry. The vector is discarded
     before replacing their frame; it neither owns controls nor extends a mount. }
   TFaceSnapshot = record
@@ -37,6 +62,62 @@ type
 
 var
   GChecks: Integer;
+
+{$ifdef NYX_LCL_LAYOUT_PROFILE}
+procedure TLayoutHost.DoAllAutoSize;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  Inc(FAutoSizeDepth);
+  try
+    inherited DoAllAutoSize;
+  finally
+    Dec(FAutoSizeDepth);
+
+    if FAutoSizeDepth = 0 then
+    begin
+      Inc(FAutoSizeCalls);
+      Inc(FAutoSizeMilliseconds, GetTickCount64 - LStarted);
+    end;
+  end;
+end;
+
+procedure TLayoutHost.DoSendBoundsToInterface;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  try
+    inherited DoSendBoundsToInterface;
+  finally
+    Inc(FNativeBoundsCalls);
+    Inc(FNativeBoundsMilliseconds, GetTickCount64 - LStarted);
+  end;
+end;
+
+procedure TLayoutHost.ResetProfile;
+begin
+  FAutoSizeCalls := 0;
+  FAutoSizeMilliseconds := 0;
+  FNativeBoundsCalls := 0;
+  FNativeBoundsMilliseconds := 0;
+  FLeafBoundsChanges := 0;
+end;
+
+procedure TLayoutHost.PrintProfile;
+begin
+  WriteLn('PROFILE native resize host autosize-calls=', FAutoSizeCalls,
+    ' autosize-ms=', FAutoSizeMilliseconds, ' native-bounds-calls=', FNativeBoundsCalls,
+    ' native-bounds-ms=', FNativeBoundsMilliseconds,
+    ' leaf-bounds-changes=', FLeafBoundsChanges);
+end;
+
+procedure TLayoutHost.LeafBoundsChanged(ASender: TObject);
+begin
+  Inc(FLeafBoundsChanges);
+end;
+{$endif}
 
 procedure Check(ACondition: Boolean; const AMessage: String);
 begin
@@ -89,7 +170,7 @@ begin
   raise ENyxModel.Create('Intentional binding candidate refusal');
 end;
 
-procedure Run(AHost: TForm);
+procedure Run(AHost: TLayoutHost);
 const
   CLeaves = 512;
   CRefreshes = 24;
@@ -119,6 +200,9 @@ begin
     begin
       LFaces[LIndex].Control := LRenderer.ControlFor(LeafID(LIndex));
       LFaces[LIndex].Bounds := LFaces[LIndex].Control.BoundsRect;
+      {$ifdef NYX_LCL_LAYOUT_PROFILE}
+      LFaces[LIndex].Control.AddHandlerOnChangeBounds(AHost.LeafBoundsChanged);
+      {$endif}
     end;
     LStarted := GetTickCount64;
     for LPass := 1 to CRefreshes do
@@ -126,6 +210,10 @@ begin
       LRenderer.Sync;
     end;
     LSyncMilliseconds := GetTickCount64 - LStarted;
+    {$ifdef NYX_LCL_LAYOUT_PROFILE}
+    AHost.ResetProfile;
+    WriteLn('PROFILE native resize begin');
+    {$endif}
     LStarted := GetTickCount64;
     for LPass := 1 to CRefreshes do
     begin
@@ -133,6 +221,7 @@ begin
       AHost.ClientWidth := 960;
     end;
     LResizeMilliseconds := GetTickCount64 - LStarted;
+    {$ifdef NYX_LCL_LAYOUT_PROFILE}AHost.PrintProfile;{$endif}
     for LIndex := 0 to CLeaves - 1 do
     begin
       LFace := LRenderer.ControlFor(LeafID(LIndex));
@@ -193,13 +282,13 @@ begin
 end;
 
 var
-  LHost: TForm;
+  LHost: TLayoutHost;
 begin
   LHost := nil;
   try
     try
       Application.Initialize;
-      LHost := TForm.CreateNew(nil);
+      LHost := TLayoutHost.CreateNew(nil);
       LHost.ClientWidth := 960;
       LHost.ClientHeight := 720;
       LHost.Show;
