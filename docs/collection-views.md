@@ -94,9 +94,55 @@ and normal collection defaults; the runtime binding supplies inspection behavior
 Native mounted input and the exact generated companion qualify that boundary;
 browser consumers currently compile only. This is runtime foundation, not full
 [live-inspection task acceptance](../TODO/NS-3_control-usefulness_04.md).
-Automatic following of newest rows, stable physical scroll anchors, orphaned
+Automatic following of newest rows, Tree physical scroll anchors, orphaned
 draft recovery, feed loading/error presentations, saved policy/Studio authoring
 and the complete List/Tree search journeys remain open.
+
+### Stable reading positions
+
+Configuring inspection also enables identity-based position recovery for flat
+Lists and Tables. The native adapter captures its last rendered TopIndex/TopRow
+and restores the chosen row after selection/editor synchronization; pinned panes
+follow the outer table. This prevents an unchanged offscreen selection from
+pulling a reader away after an insertion. Browser flat windows capture an actual
+resident visible row and its relative pixel position, realize its new location,
+and correct scrollable ancestors in their own scaled CSS coordinates. Detached
+or offscreen previews do not acquire a containing-page scroll anchor.
+
+A surviving row remains the anchor through insertion, sorting/filtering and
+deliberate resume. If it disappears, recovery chooses the nearest surviving old
+successor, then an old predecessor. It never silently chooses a newly inserted
+row as that old neighbor. Source removals/reinsertions use an immutable receipt
+with exact collection/revision identity, including the coalesced paused interval.
+Its removed identities use the inspection policy's bound. Missing, skipped or
+overflowed evidence reports `ncpReset`, retaining an approximate ordinal without
+claiming identity continuity. A known new page/projection with no surviving old
+rows starts at its first row. Empty results report `ncpEmpty` and no invented row.
+Recovery changes viewport position, independently of ordinary row selection.
+
+Import `nyx.collections.position` and call
+`NyxCollectionPositionState(LMount)` to capture a readonly data port. Alternative
+mounts may return nil. Its `Recovery` value contains kind, old/current identities,
+source revisions, an observing serial and a requested zero-based index. The
+serial distinguishes new recovery from a later selection-only notification,
+so application status need not repeat an older explanation. This is the last recovery
+proposal; a native widget/browser scroll owner may clamp near its physical end.
+`Active` clears before mount cleanup. Retained ports own no mount, widget, event
+router, callback or view, so application callbacks can compose status without
+creating a renderer/router reference cycle. Read the port on its UI owner; pass
+the captured record to workers rather than reading mutable UI state there.
+Disconnect/close the application's ordinary behavior binding before retiring
+its application as usual.
+
+The service example supplies that port to its public runtime binding and shows
+an explanation when the reading row disappears or its position resets. Checked
+native fixtures exercise 64 added runtime records through the public handwritten
+and exact generated examples, an offscreen selected gateway, insertion, deletion,
+sorting, pause/resume and ID replacement at desktop/compact widths. Separate
+visible native List and plain-grid journeys qualify those adapter paths and
+retained-port retirement. Browser fixtures compile; actual browser input, pixel
+validation and complete task acceptance remain open. Native Tree disclosure/
+scrolling and orphaned drafts remain separate unfinished L1 requirements.
 
 ## Typed construction
 

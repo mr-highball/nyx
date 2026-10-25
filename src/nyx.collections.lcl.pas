@@ -36,6 +36,7 @@ uses
   nyx.collections.presentation,
   nyx.collections.alignment,
   nyx.collections.mount,
+  nyx.collections.position,
   nyx.collections.clipboard.actions, nyx.collections.draft,
   nyx.collections.lcl.grid, nyx.collections.range.stroke,
   nyx.collections.range.pointer, nyx.gestures, nyx.scheduler;
@@ -4697,6 +4698,7 @@ end;
 
 procedure TNativeMount.RenderArrangedGrid(const AData: INyxCollectionSnapshot);
 var
+  LPosition: TNyxCollectionPositionRecovery;
   LOuter: TNyxCollectionStringGrid;
   LStart, LEnd, LMain: TNyxCollectionColumnOrder;
   LIndex, LColumn, LRow, LWidth, LStartWidth, LEndWidth: Integer;
@@ -4827,8 +4829,18 @@ begin
     end;
     FColumnRendering := AData;
     LTop := FGrid.TopRow;
+    LPosition := ResolvePosition(FRendered, AData, LTop - 1);
 
-    if (FRendered <> nil) and (LTop > 0) and (LTop <= FRendered.Count) then
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+
+    if LPosition.Index >= 0 then
+    begin
+      LTop := LPosition.Index + 1;
+    end
+    else if (FRendered <> nil) and (LTop > 0) and (LTop <= FRendered.Count) then
     begin
       LTop := AData.IndexOf(FRendered.ItemAt(LTop - 1).Ref) + 1;
     end;
@@ -5111,6 +5123,15 @@ begin
     PrepareTextRows(AData);
     SynchronizePaneRows;
     RestoreColumnEditor;
+    { Row/editor selection can scroll LCL after the first TopRow assignment.
+      Opted-in source recovery settles last, then mirrors the SAME outer row
+      into the pinned panes. Ordinary selection-only reveals remain unchanged. }
+
+    if InputLifetimeCurrent and (LPosition.Index >= 0) then
+    begin
+      FGrid.TopRow := Min(Max(1, LTop), FGrid.RowCount - 1);
+      SynchronizePaneRows;
+    end;
     { Consume geometry only after the admitted layout and copied editor have
       settled. A deferred/refused refresh retains the pending request. }
     FColumnGeometryPending := False;
@@ -7288,6 +7309,7 @@ end;
 
 procedure TNativeMount.RenderDataset;
 var
+  LPosition: TNyxCollectionPositionRecovery;
   LData: INyxCollectionSnapshot;
   LHierarchy: INyxTreeHierarchy;
   LIndex: Integer;
@@ -7316,7 +7338,6 @@ begin
   begin
     Exit;
   end;
-
   if FHasColumnLayout and (FGrid <> nil) then
   begin
     RenderArrangedGrid(LData);
@@ -7327,6 +7348,23 @@ begin
     end;
     Exit;
   end;
+  LPosition := Default(TNyxCollectionPositionRecovery);
+  LPosition.Index := -1;
+
+  if FGrid <> nil then
+  begin
+    LPosition := ResolvePosition(FRendered, LData, FGrid.TopRow - 1);
+  end
+  else if FList <> nil then
+  begin
+    LPosition := ResolvePosition(FRendered, LData, FList.TopIndex);
+  end;
+
+  if not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+
   { An authoritative view publication supersedes any host proposal queued before
     it. Never replay that older physical state over a later application command. }
 
@@ -7404,7 +7442,11 @@ begin
   begin
     LTop := FList.TopIndex;
 
-    if (FRendered <> nil) and (LTop >= 0) and (LTop < FRendered.Count) then
+    if LPosition.Index >= 0 then
+    begin
+      LTop := LPosition.Index;
+    end
+    else if (FRendered <> nil) and (LTop >= 0) and (LTop < FRendered.Count) then
     begin
       LTop := LData.IndexOf(FRendered.ItemAt(LTop).Ref);
     end;
@@ -7462,6 +7504,11 @@ begin
       end;
     finally
       FList.Items.EndUpdate;
+    end;
+
+    if InputLifetimeCurrent and (LPosition.Index >= 0) then
+    begin
+      FList.TopIndex := LPosition.Index;
     end;
   end
   else if FGrid <> nil then
@@ -7764,6 +7811,13 @@ begin
     finally
       FTree.Items.EndUpdate;
     end;
+  end;
+  { Settling source geometry/selection must not steal a reader's stable row.
+    This does not run for ordinary focus/selection-only notifications. }
+
+  if InputLifetimeCurrent and (FGrid <> nil) and (LPosition.Index >= 0) then
+  begin
+    FGrid.TopRow := Min(LPosition.Index + 1, FGrid.RowCount - 1);
   end;
   FRendered := LData;
   FCellRefreshPending := False;

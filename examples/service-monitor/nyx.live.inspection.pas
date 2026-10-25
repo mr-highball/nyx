@@ -5,7 +5,8 @@ unit nyx.live.inspection;
 
 interface
 
-uses nyx.model, nyx.application.context, nyx.events, nyx.collections.view;
+uses nyx.model, nyx.application.context, nyx.events, nyx.collections.view,
+  nyx.collections.position;
 
 const
   InspectionPeerID = 'live-service-peer';
@@ -25,7 +26,8 @@ type
     FSubscriptions: array of INyxEventSubscription;
   public
     constructor Create(const AContext: INyxApplicationContext;
-      const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView);
+      const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
+      const APosition: INyxCollectionPositionState = nil);
     destructor Destroy; override;
     procedure Close;
   end;
@@ -52,6 +54,8 @@ type
     FInspection: INyxCollectionInspection;
     FPeer: INyxCollectionView;
     FStatusToken: INyxCollectionViewSubscription;
+    FPosition: INyxCollectionPositionState;
+    FPositionSerial: Integer;
     FStep: Integer;
     function Active: Boolean;
     procedure StatusChanged(const AStatus: TNyxCollectionInspectionObservation;
@@ -59,7 +63,7 @@ type
     procedure AdvanceFeed;
   public
     constructor Create(const AContext: INyxApplicationContext;
-      const AInspection, APeer: INyxCollectionView);
+      const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState);
     destructor Destroy; override;
     procedure Close;
     procedure Invoke(const AEvent: TNyxEventInfo;
@@ -118,7 +122,7 @@ begin
 end;
 
 constructor TInspectionCallback.Create(const AContext: INyxApplicationContext;
-  const AInspection, APeer: INyxCollectionView);
+  const AInspection, APeer: INyxCollectionView; const APosition: INyxCollectionPositionState);
 begin
   inherited Create;
 
@@ -137,6 +141,7 @@ begin
     raise ENyxCollectionInspection.Create('The inspected view has no inspection capability');
   end;
   FPeer := APeer;
+  FPosition := APosition;
   FInspection.ConfigureInspection(NyxInspectionPolicy);
   FStatusToken := FInspection.SubscribeInspection(StatusChanged);
   StatusChanged(FInspection.CaptureInspection, ncicPolicyChanged);
@@ -159,6 +164,7 @@ begin
   FStatusToken := nil;
   FInspection := nil;
   FPeer := nil;
+  FPosition := nil;
   FGeneration := nil;
   FContext := nil;
 end;
@@ -168,6 +174,8 @@ procedure TInspectionCallback.StatusChanged(const AStatus: TNyxCollectionInspect
 var
   LText: TNyxText;
   LLease: INyxEventCallback;
+  LRecovery: TNyxCollectionPositionRecovery;
+  LPosition: INyxCollectionPositionState;
 begin
   LLease := Self;
 
@@ -194,6 +202,36 @@ begin
       LText := LText + ' ' + TNyxText(IntToStr(AStatus.MissingSelectedRows)) +
         ' inspected records were removed or replaced. Choose a current record.';
     end;
+  end;
+
+  LPosition := FPosition;
+
+  if (AStatus.Mode = ncimFollowing) and (LPosition <> nil) and LPosition.Active then
+  begin
+    LRecovery := LPosition.Recovery;
+
+    if (LRecovery.CurrentRevision = AStatus.DisplayRevision) and
+      (LRecovery.ObservationSerial <> FPositionSerial) then
+    begin
+      FPositionSerial := LRecovery.ObservationSerial;
+      case LRecovery.Kind of
+        ncpFollowing:
+          LText := LText + ' The reading row disappeared; showing its next surviving record.';
+        ncpPreceding:
+          LText := LText + ' The reading row disappeared; showing its previous surviving record.';
+        ncpReset:
+          LText := LText + ' The reading position was reset; choose a current record.';
+      else
+        begin
+          { Retained/empty/unavailable positions need no recovery warning. }
+        end;
+      end;
+    end;
+  end;
+
+  if not Active then
+  begin
+    Exit;
   end;
   FContext.State.SetValue(NyxTextState(InspectionStatusID), LText);
 end;
@@ -256,7 +294,8 @@ begin
 end;
 
 constructor TNyxLiveInspectionDemo.Create(const AContext: INyxApplicationContext;
-  const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView);
+  const AEvents: INyxEvents; const AInspection, APeer: INyxCollectionView;
+  const APosition: INyxCollectionPositionState);
 var
   LCallback: TInspectionCallback;
 begin
@@ -266,7 +305,7 @@ begin
   begin
     raise ENyxCollectionInspection.Create('The demo needs its mounted event router');
   end;
-  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer);
+  LCallback := TInspectionCallback.Create(AContext, AInspection, APeer, APosition);
   FCallback := LCallback;
   FCallbackObject := LCallback;
   SetLength(FSubscriptions, 3);

@@ -202,6 +202,7 @@ uses
   nyx.gestures.browser,
   nyx.layout.flow,
   nyx.collections.window,
+  nyx.collections.position,
   nyx.collections.selection,
   nyx.collections.clipboard.actions,
   nyx.collections.range.actions,
@@ -6851,6 +6852,8 @@ const
   CEstimate = 32;
   COverscan = 6;
 type
+  { Borrowed ancestors are retained only within this synchronous row pass.
+    Scroll offsets are copied before DOM changes can clamp their owners. }
   TScrollPosition = record
     Element: TJSHTMLElement;
     Top: Double;
@@ -6891,9 +6894,68 @@ var
   LAncestor: TJSHTMLElement;
   LWindowTop: Double;
   LWindowLeft: Double;
+  LPositionRecovery: TNyxCollectionPositionRecovery;
+  LPositionIndex: Integer;
+  LPositionTop: Double;
+  LPositionInset: Double;
+  LPositionScale: Double;
+  LPositionActive: Boolean;
   LCaretStart: NativeInt;
   LCaretEnd: NativeInt;
   LCaretDirection: String;
+
+  { Move only as much as each actual scroll owner accepts, in its own logical
+    pixels. Transform scale is local to that owner. Outer-page correction uses
+    the remaining viewport delta, keeping horizontal position untouched. }
+  procedure RestorePosition;
+  var
+    LDelta: Double;
+    LScale: Double;
+    LTop: Double;
+    LNextTop: Double;
+    LOwner: TJSHTMLElement;
+    LOverflow: String;
+  begin
+
+    if not LPositionActive or not InputLifetimeCurrent or
+      (LPositionIndex < 0) or (LPositionIndex >= Length(FRows)) or
+      (FRows[LPositionIndex] = nil) then
+    begin
+      Exit;
+    end;
+    LDelta := FRows[LPositionIndex].FElement.getBoundingClientRect.top - LPositionTop;
+    LOwner := FHost;
+    while (LOwner <> nil) and (Abs(LDelta) > 0.25) do
+    begin
+      LOverflow := window.getComputedStyle(LOwner).getPropertyValue('overflow-y');
+
+      if (LOverflow = 'auto') or (LOverflow = 'scroll') then
+      begin
+        LScale := 1;
+
+        if LOwner.offsetHeight > 0 then
+        begin
+          LScale := LOwner.getBoundingClientRect.height / LOwner.offsetHeight;
+        end;
+
+        if IsNan(LScale) or IsInfinite(LScale) or (LScale <= 0) then
+        begin
+          LScale := 1;
+        end;
+        LTop := TScrollableElement(LOwner).scrollTopPixels;
+        TScrollableElement(LOwner).scrollTopPixels := Max(0, LTop + LDelta / LScale);
+        LNextTop := TScrollableElement(LOwner).scrollTopPixels;
+        LDelta := LDelta - (LNextTop - LTop) * LScale;
+      end;
+      LOwner := TJSHTMLElement(LOwner.parentElement);
+    end;
+
+    if Abs(LDelta) > 0.25 then
+    begin
+      TScrollableWindow(window).scrollTo(TScrollableWindow(window).scrollXPixels,
+        Max(0, TScrollableWindow(window).scrollYPixels + LDelta));
+    end;
+  end;
 
   { This private work vector admits only current logical indices. It combines
     existing owned faces/drafts, the viewport and pinned navigation destinations.
@@ -7017,6 +7079,54 @@ begin
   begin
     Exit;
   end;
+  LPositionActive := False;
+  LPositionIndex := -1;
+  LPositionInset := 0;
+  { Anchor only an actually resident visible row. Offscreen/detached previews
+    must not scroll their containing page in response to background updates. }
+
+  if (FRendered <> nil) and (FRendered <> LData) and
+    (FGeometry.Count = FRendered.Count) and document.documentElement.contains(FHost) and
+    (Length(FHost.getClientRects) > 0) then
+  begin
+    RowViewport(LOffset, LExtent);
+
+    if LExtent > 0 then
+    begin
+      LIndex := FGeometry.IndexAt(LOffset);
+
+      if (LIndex >= 0) and (LIndex < Length(FRows)) and (FRows[LIndex] <> nil) then
+      begin
+        LPositionTop := FRows[LIndex].FElement.getBoundingClientRect.top;
+        LPositionInset := Max(0, LOffset - FGeometry.OffsetAt(LIndex));
+        LPositionRecovery := ResolvePosition(FRendered, LData, LIndex);
+
+        if not InputLifetimeCurrent then
+        begin
+          Exit;
+        end;
+        LPositionIndex := LPositionRecovery.Index;
+        LPositionActive := LPositionIndex >= 0;
+
+        if LPositionRecovery.Kind <> ncpRetained then
+        begin
+          LPositionScale := 1;
+
+          if FHost.offsetHeight > 0 then
+          begin
+            LPositionScale := FHost.getBoundingClientRect.height / FHost.offsetHeight;
+          end;
+
+          if IsNan(LPositionScale) or IsInfinite(LPositionScale) or (LPositionScale <= 0) then
+          begin
+            LPositionScale := 1;
+          end;
+          LPositionTop := LPositionTop + LPositionInset * LPositionScale;
+          LPositionInset := 0;
+        end;
+      end;
+    end;
+  end;
 
   if not FEnabled then
   begin
@@ -7114,6 +7224,11 @@ begin
     FGeometry.Reset(LData.Count, CEstimate);
   end;
   RowViewport(LOffset, LExtent);
+
+  if LPositionActive then
+  begin
+    LOffset := FGeometry.OffsetAt(LPositionIndex) + LPositionInset;
+  end;
   LWindow := FGeometry.Window(LOffset, LExtent, COverscan);
   LListEntry := -1;
 
@@ -7342,6 +7457,13 @@ begin
       end;
     end;
   end;
+  if LPositionActive then
+  begin
+    { A former queued keyboard reveal must not overwrite the reader's now
+      captured position after an unrelated source publication. }
+    FRevealItem := Default(TNyxItemRef);
+  end;
+  RestorePosition;
 
   if FRevealItem.Defined then
   begin

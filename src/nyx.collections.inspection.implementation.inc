@@ -19,6 +19,11 @@ begin
   Result := FInspectionPolicy.Copy;
 end;
 
+function TView.CaptureDisplayContinuity: INyxCollectionDisplayContinuity;
+begin
+  Result := FDisplayContinuity;
+end;
+
 function TView.CaptureInspection: TNyxCollectionInspectionObservation;
 begin
   { Cached scalar facts cannot call a provider, acquire authority or keep this
@@ -70,6 +75,7 @@ begin
     end;
   end;
   FInspectionPolicy := LPolicy;
+  FDisplayContinuity := nil;
   FInspectionStatus.Configured := LPolicy.Defined;
   Notify(nil, True, ncicPolicyChanged);
 end;
@@ -127,12 +133,68 @@ begin
   ATarget.FSelection := FSelection;
   ATarget.FExpanded := Copy(FExpanded, 0, Length(FExpanded));
   ATarget.FInspectionPolicy := FInspectionPolicy.Copy;
+  ATarget.FDisplayContinuity := FDisplayContinuity;
   ATarget.FInspectionStatus := FInspectionStatus;
   ATarget.FInspectionRemoved := Copy(FInspectionRemoved, 0, Length(FInspectionRemoved));
 
   if FInspectionIndex <> nil then
   begin
     ATarget.FInspectionIndex := FInspectionIndex.Clone;
+  end;
+end;
+
+procedure TView.PrepareDisplayContinuity(ATarget: TView;
+  const AData: INyxCollectionSnapshot; const AChanges: INyxCollectionChanges);
+var
+  LRemoved: TNyxItemRefs;
+  LIndex: Integer;
+  LCount: Integer;
+  LReset: Boolean;
+  LItem: TNyxItemRef;
+  LSeen: TNyxTextIndex;
+begin
+  ATarget.FDisplayContinuity := nil;
+
+  if not FInspectionPolicy.Defined then
+  begin
+    Exit;
+  end;
+  LReset := AChanges = nil;
+  LRemoved := nil;
+  LSeen := TNyxTextIndex.Create;
+  try
+
+    if AChanges <> nil then
+    begin
+      for LIndex := 0 to AChanges.Count - 1 do
+      begin
+
+        if AChanges.Kind(LIndex) <> nceRemove then
+        begin
+          Continue;
+        end;
+        LItem := AChanges.ItemRef(LIndex);
+
+        if not FSource.Has(LItem) or (LSeen.IndexOf(LItem.ID) >= 0) then
+        begin
+          Continue;
+        end;
+        LCount := Length(LRemoved);
+
+        if LCount >= FInspectionPolicy.IdentityLimit then
+        begin
+          LReset := True;
+          Break;
+        end;
+        SetLength(LRemoved, LCount + 1);
+        LRemoved[LCount] := LItem;
+        LSeen.AddFirst(LItem.ID, LCount);
+      end;
+    end;
+    ATarget.FDisplayContinuity := NewNyxCollectionDisplayContinuity(FSource.Key,
+      FSource.Revision, AData.Revision, LRemoved, LReset);
+  finally
+    LSeen.Free;
   end;
 end;
 
@@ -272,6 +334,10 @@ begin
       end;
     end;
     FPrepared.ProjectSnapshot(LSource, nil);
+    { Keep only bounded identity facts for this displayed jump. Physical targets
+      read this receipt after installation; no intervening source is retained. }
+    FPrepared.FDisplayContinuity := NewNyxCollectionDisplayContinuity(FSource.Key,
+      FSource.Revision, LSource.Revision, FInspectionRemoved, LReset);
     FPrepared.FInspectionStatus.Mode := ncimFollowing;
     FPrepared.FInspectionStatus.DisplayRevision := LSource.Revision;
     FPrepared.FInspectionStatus.IncomingRevision := LSource.Revision;

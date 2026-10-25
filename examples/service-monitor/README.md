@@ -60,8 +60,17 @@ privileged generated-code path.
 
 The [retention contract](../../docs/collection-views.md#pausing-live-inspection)
 describes payload/removed-ID bounds, overflow and current limitations. This demo
-does not yet qualify stable physical scroll anchors, lost-draft recovery, full
-feed states, automatic follow-newest or Studio policy authoring.
+does not yet qualify lost-draft recovery, Tree physical anchors, full feed states,
+automatic follow-newest or Studio policy authoring.
+
+Opted-in Lists and Tables recover their reading row independently of ordinary
+selection. Inserting above it keeps the same record in view; removing it chooses
+an old surviving neighbor. Resume uses the complete paused removal history, so a
+replacement with the same ID cannot inherit the old reading position. The bound
+status explains a disappeared reading row or an explicit reset. The callback
+retains a readonly UI data port, without retaining a mount or event router.
+See [stable reading positions](../../docs/collection-views.md#stable-reading-positions)
+for fallback, skipped-history and physical clamping limits.
 
 `tests/nyx_live_inspection_controls.lpr` exercises actual native button messages
 at desktop/compact widths, shared-source peer behavior, pending status, frozen
@@ -69,6 +78,11 @@ query counts, copying, range lifetime, refused stale edits, replacement recovery
 unchanged designs and binding retirement. The exact emitted Pascal companion
 runs the same journey. Browser fixture/example consumers compile; browser input
 and visual acceptance remain separate.
+The fixture adds 64 runtime records, moves the visible viewport away from the
+selected gateway and checks insertion, deletion, sorting, pause/resume and ID
+replacement. Separate visible native List and plain-grid cases exercise their
+own paths and retained-port retirement. These are input/contract checks, not a
+scale benchmark or physical-device/screen qualification.
 
 ## Build
 

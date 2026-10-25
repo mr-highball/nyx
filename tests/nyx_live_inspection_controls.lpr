@@ -2,20 +2,32 @@
 program nyx_live_inspection_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
 uses
   {$ifdef PAS2JS}
   JS, Web, nyx.application.browser,
   {$else}
-  Interfaces, Classes, Forms, Controls, Windows, nyx.application.lcl,
+  Interfaces, Classes, Forms, Controls, StdCtrls, Grids, Windows, nyx.application.lcl,
   {$endif}
-  SysUtils, nyx.text, nyx.model, nyx.codec, nyx.codegen, nyx.state,
+  SysUtils, Math, nyx.text, nyx.model, nyx.controls, nyx.codec, nyx.codegen, nyx.state,
   nyx.collections, nyx.collections.view, nyx.collections.inspection,
+  nyx.collections.position, nyx.collections.query,
+  nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.arrangement, nyx.collections.range,
   nyx.collections.range.commands, nyx.collections.range.actions,
   nyx.collections.query.controls, nyx.collections.clipboard.actions,
   nyx.collections.workbench.runtime, nyx.service.monitor, nyx.live.inspection
   {$ifdef NYX_INSPECTION_GENERATED}, nyx.generated.view{$endif};
+
+{$ifdef PAS2JS}
+type
+  { Standard DOM scrollTop uses fractional CSS pixels. The bridge borrows the
+    mounted table for this synchronous fixture only, on browsers with layout. }
+  TPositionElement = class external name 'HTMLElement'(TJSHTMLElement)
+    scrollTopPixels: Double; external name 'scrollTop';
+  end;
+{$endif}
 
 var
   GChecks: Integer;
@@ -66,6 +78,120 @@ var
     {$endif}
   end;
 
+  procedure PositionCases;
+  var
+    LChanges: array of TNyxCollectionEdit;
+    LIndex: Integer;
+    LBefore: INyxCollectionSnapshot;
+    LAnchor: TNyxItemRef;
+    LNext: TNyxItemRef;
+    LObservation: INyxCollectionPositionObservation;
+    {$ifdef PAS2JS}
+    LTable: TJSHTMLElement;
+    {$else}
+    LTable: TStringGrid;
+    {$endif}
+
+    function TopItem: TNyxItemRef;
+    {$ifdef PAS2JS}
+    var
+      LRows: TJSNodeList;
+      LRow: TJSHTMLElement;
+      LClip: Double;
+      LHeader: TJSHTMLElement;
+      LRowIndex: Integer;
+    {$endif}
+    begin
+      {$ifdef PAS2JS}
+      Result := Default(TNyxItemRef);
+      LClip := Max(0, LTable.getBoundingClientRect.top);
+      LHeader := TJSHTMLElement(LTable.querySelector('thead'));
+
+      if LHeader <> nil then
+      begin
+        LClip := Max(LClip, LHeader.getBoundingClientRect.bottom);
+      end;
+      LRows := LTable.querySelectorAll('[data-nyx-item]');
+      for LRowIndex := 0 to LRows.length - 1 do
+      begin
+        LRow := TJSHTMLElement(LRows[LRowIndex]);
+
+        if (LRow.offsetHeight > 0) and (LRow.getBoundingClientRect.bottom > LClip + 0.5) and
+          (LRow.getBoundingClientRect.top < LTable.getBoundingClientRect.bottom) then
+        begin
+          Result := NyxItem(NyxCollection(ServiceCollectionName), LRow.getAttribute('data-nyx-item'));
+          Exit;
+        end;
+      end;
+      {$else}
+      Result := LFirst.View.Snapshot.ItemAt(LTable.TopRow - 1).Ref;
+      {$endif}
+    end;
+
+  begin
+    SetLength(LChanges, 64);
+    LBefore := LFirst.View.Store.Snapshot;
+    for LIndex := 0 to High(LChanges) do
+    begin
+      LChanges[LIndex] := NyxInsert(LBefore.Count + LIndex,
+        NyxCollectionItem(NyxItem(LBefore.Key, 'diagnostic-' + TNyxText(IntToStr(LIndex))))
+          .WithValue(NyxTextField('name'), 'Diagnostic ' + TNyxText(Format('%.3d', [LIndex])))
+          .WithValue(NyxTextField('status'), 'Running'));
+    end;
+    LFirst.View.Store.Apply(LChanges, LBefore.Revision);
+    Check(Supports(LFirst, INyxCollectionPositionObservation, LObservation),
+      'the actual mount exposes detached position recovery observations');
+    LFirst.Select(LGateway);
+    {$ifdef PAS2JS}
+    LTable := LApplication.View.ElementFor(ServiceTableID);
+    TPositionElement(LTable).scrollTopPixels := 480;
+    LFirst.Refresh;
+    {$else}
+    LTable := TStringGrid(LApplication.View.ControlFor(ServiceTableID));
+    LTable.TopRow := 15;
+    {$endif}
+    LAnchor := TopItem;
+    Check(LAnchor.Defined and (LFirst.View.Snapshot.IndexOf(LAnchor) > 5),
+      'read a middle record while the selected gateway remains offscreen');
+    LFirst.View.Store.Insert(0, NyxCollectionItem(NyxItem(LBefore.Key, 'inserted-above'))
+      .WithValue(NyxTextField('name'), 'Inserted above'));
+    Check((TopItem.ID = LAnchor.ID) and
+      (LObservation.GetPositionRecovery.Kind = ncpRetained),
+      'inserting above preserves the physical reader anchor after selection restoration');
+    LBefore := LFirst.View.Snapshot;
+    LNext := LBefore.ItemAt(LBefore.IndexOf(LAnchor) + 1).Ref;
+    LFirst.View.Store.Remove(LAnchor);
+    Check((TopItem.ID = LNext.ID) and
+      (LObservation.GetPositionRecovery.Kind = ncpFollowing),
+      'deleting the anchor shows its nearest surviving old successor');
+    Check(Pos('reading row disappeared', LApplication.State.GetValue(NyxTextState(InspectionStatusID))) > 0,
+      'the ordinary bound status explains physical anchor recovery');
+    LFirst.Select(LNext);
+    Check(Pos('reading row disappeared', LApplication.State.GetValue(NyxTextState(InspectionStatusID))) = 0,
+      'a later deliberate selection does not repeat an older viewport recovery message');
+    LAnchor := TopItem;
+    LFirst.View.ConfigureQuery(NyxCollectionQuery.OrderBy(NyxTextField('name'), nsdDescending));
+    Check((TopItem.ID = LAnchor.ID) and
+      (LObservation.GetPositionRecovery.Kind = ncpRetained),
+      'sorting preserves the same physical reading identity');
+    LInspection.PauseInspection;
+    LFirst.View.Store.Insert(0, NyxCollectionItem(NyxItem(LBefore.Key, 'paused-above'))
+      .WithValue(NyxTextField('name'), 'ZZ paused insertion'));
+    Check(TopItem.ID = LAnchor.ID, 'a paused incoming insertion leaves the physical anchor intact');
+    LInspection.ResumeInspection;
+    Check((TopItem.ID = LAnchor.ID) and
+      (LObservation.GetPositionRecovery.Kind = ncpRetained),
+      'resuming coalesced data preserves the inspected physical row');
+    LInspection.PauseInspection;
+    LBefore := LFirst.View.Store.Snapshot;
+    LFirst.View.Store.Apply([NyxRemove(LAnchor), NyxInsert(0,
+      NyxCollectionItem(LAnchor).WithValue(NyxTextField('name'), 'Replacement incarnation'))], LBefore.Revision);
+    LInspection.ResumeInspection;
+    Check((TopItem.ID <> LAnchor.ID) and
+      (LObservation.GetPositionRecovery.Kind = ncpFollowing),
+      'a reused source ID cannot inherit its old physical reading position');
+  end;
+
 begin
   {$ifdef NYX_INSPECTION_GENERATED}
   LDocument := BuildNyxDocument;
@@ -114,7 +240,7 @@ begin
     Check((LFirst <> nil) and (LPeer <> nil) and (LFirst.View <> LPeer.View) and
       (LFirst.View.Store = LPeer.View.Store), 'independent views share the actual application store');
     LDemo := TNyxLiveInspectionDemo.Create(LApplication.Context, LApplication.View.Events,
-      LFirst.View, LPeer.View);
+      LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst));
     LInspection := NyxCollectionInspection(LFirst.View);
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     LField := NyxColumnIdentity(NyxTextField('status'));
@@ -169,6 +295,7 @@ begin
       'bound recovery status explains the removed inspected record');
     Check(not LRange.Current and not LCopy.Current, 'resume revokes old range and copied-cell authority');
     Check(TNyxCodec.Encode(LDocument) = LSaved, 'runtime inspection never changes the authored design');
+    PositionCases;
     LDemo.Close;
     LOriginal := LFirst.View.Store.Snapshot;
     Click(InspectionStepID);
@@ -188,6 +315,130 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+{ These visible public controls exercise the legacy grid and native List paths
+  separately from the service monitor's arranged/pinned table. The application
+  owns widgets; retained observations remain detached after its retirement. }
+procedure NativeFlatPositionCases(AWidth: Integer; ATable: Boolean);
+var
+  LDocument: TNyxDocument;
+  LApplication: TNyxLCLApplication;
+  LPage: INyxPage;
+  LControl: INyxControl;
+  LWidget: TWinControl;
+  LMount: INyxCollectionMount;
+  LInspection: INyxCollectionInspection;
+  LObservation: INyxCollectionPositionObservation;
+  LState: INyxCollectionPositionState;
+  LItems: array of TNyxCollectionItem;
+  LKey: TNyxCollectionRef;
+  LAnchor: TNyxItemRef;
+  LNext: TNyxItemRef;
+  LBefore: INyxCollectionSnapshot;
+  LIndex: Integer;
+
+  function TopItem: TNyxItemRef;
+  var
+    LTop: Integer;
+  begin
+
+    if ATable then
+    begin
+      LTop := TStringGrid(LWidget).TopRow - 1;
+    end
+    else
+    begin
+      LTop := TListBox(LWidget).TopIndex;
+    end;
+    Result := LMount.View.Snapshot.ItemAt(LTop).Ref;
+  end;
+
+begin
+  LDocument := TNyxDocument.Create;
+  LApplication := nil;
+  try
+    LKey := NyxCollection('flat-inspection');
+    SetLength(LItems, 64);
+    for LIndex := 0 to High(LItems) do
+    begin
+      LItems[LIndex] := NyxCollectionItem(NyxItem(LKey, 'service-' + TNyxText(IntToStr(LIndex))))
+        .WithValue(NyxTextField('name'), 'Service ' + TNyxText(Format('%.3d', [LIndex])));
+    end;
+    LDocument.Collections.Define(LKey, NyxCollectionSchema.Text(NyxTextField('name'), ''), LItems);
+    LPage := NewNyxPage('flat');
+    LDocument.AddPage(LPage);
+    LPage.Configure.Padding(16).Done;
+
+    if ATable then
+    begin
+      LControl := NewNyxTable('flat-target');
+    end
+    else
+    begin
+      LControl := NewNyxList('flat-target');
+    end;
+    LPage.Add(LControl);
+    LControl.Configure.Height(180).Done;
+    LControl.Binds.Collection(NyxCollectionView(LKey).Column(NyxTextField('name'), 'Service')).Done;
+    LApplication := TNyxLCLApplication.Create;
+    LApplication.Mount(LDocument);
+    LApplication.Window.ClientWidth := AWidth;
+    LApplication.Window.ClientHeight := 300;
+    LApplication.Window.Show;
+    Application.ProcessMessages;
+    LWidget := TWinControl(LApplication.View.ControlFor('flat-target'));
+    LMount := LApplication.View.CollectionMount('flat-target');
+    LInspection := NyxCollectionInspection(LMount.View);
+    LInspection.ConfigureInspection(NyxInspectionPolicy);
+    Check(Supports(LMount, INyxCollectionPositionObservation, LObservation) and LWidget.IsVisible,
+      'the public flat control is visible with typed recovery observation');
+    LState := LObservation.CapturePositionState;
+    LMount.Select(LItems[0].Ref);
+
+    if ATable then
+    begin
+      TStringGrid(LWidget).TopRow := 21;
+    end
+    else
+    begin
+      TListBox(LWidget).TopIndex := 20;
+    end;
+    LAnchor := TopItem;
+    LMount.View.Store.Insert(0, NyxCollectionItem(NyxItem(LKey, 'inserted-above'))
+      .WithValue(NyxTextField('name'), 'Inserted above'));
+    Check(TopItem.ID = LAnchor.ID, 'flat source insertion preserves the actual reading row');
+    LBefore := LMount.View.Snapshot;
+    LNext := LBefore.ItemAt(LBefore.IndexOf(LAnchor) + 1).Ref;
+    LMount.View.Store.Remove(LAnchor);
+    Check((TopItem.ID = LNext.ID) and (LObservation.GetPositionRecovery.Kind = ncpFollowing),
+      'flat anchor deletion recovers the old next row');
+    LAnchor := TopItem;
+    LMount.View.ConfigureQuery(NyxCollectionQuery.OrderBy(NyxTextField('name'), nsdDescending));
+    Check(TopItem.ID = LAnchor.ID, 'flat query sorting retains the reading identity');
+    LInspection.PauseInspection;
+    LMount.View.Store.Insert(0, NyxCollectionItem(NyxItem(LKey, 'paused-insert'))
+      .WithValue(NyxTextField('name'), 'ZZ inserted while paused'));
+    LInspection.ResumeInspection;
+    Check(TopItem.ID = LAnchor.ID, 'flat resume preserves the actual reading row');
+    LApplication.Free;
+    LApplication := nil;
+    Check(not LMount.Connected and (LObservation.GetPositionRecovery.Current.ID = LAnchor.ID),
+      'retained position facts never revive a disposed native target');
+    LObservation := nil;
+    LInspection := nil;
+    LMount := nil;
+    Check(not LState.Active and (LState.Recovery.Current.ID = LAnchor.ID),
+      'the readonly data port survives without its former mount or renderer');
+  finally
+    LObservation := nil;
+    LInspection := nil;
+    LMount := nil;
+    LApplication.Free;
+    LDocument.Free;
+  end;
+end;
+{$endif}
+
 begin
   try
     {$ifdef PAS2JS}
@@ -197,6 +448,8 @@ begin
     {$else}
     Application.Initialize;
     Journey(StrToInt(ParamStr(1)));
+    NativeFlatPositionCases(StrToInt(ParamStr(1)), False);
+    NativeFlatPositionCases(StrToInt(ParamStr(1)), True);
     WriteLn('PASS ', GChecks, ' live inspection control checks at ', ParamStr(1));
     {$endif}
   except

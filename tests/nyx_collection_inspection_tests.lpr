@@ -5,7 +5,8 @@ program nyx_collection_inspection_tests;
 
 uses SysUtils, nyx.text, nyx.state, nyx.contract, nyx.collections,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.query,
-  nyx.collections.inspection, nyx.collections.selection
+  nyx.collections.inspection, nyx.collections.selection, nyx.collections.position,
+  nyx.collections.paging
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -388,9 +389,99 @@ begin
   end;
 end;
 
+procedure PositionCases;
+var
+  LFixture: TFixture;
+  LPositionView: INyxCollectionPositionView;
+  LContinuity: INyxCollectionDisplayContinuity;
+  LRetained: INyxCollectionDisplayContinuity;
+  LBefore: INyxCollectionSnapshot;
+  LAfter: INyxCollectionSnapshot;
+  LRecovery: TNyxCollectionPositionRecovery;
+  LPageBefore: INyxCollectionSnapshot;
+  LPageAfter: INyxCollectionSnapshot;
+begin
+  LFixture := TFixture.Create;
+  try
+    Check(Supports(LFixture.First, INyxCollectionPositionView, LPositionView) and
+      (LPositionView.CaptureDisplayContinuity = nil),
+      'ordinary views retain absent continuity metadata until inspection is configured');
+    LFixture.Inspection.ConfigureInspection(NyxInspectionPolicy);
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Insert(0, NyxCollectionItem(Item('z')).WithValue(NyxTextField('Name'), 'Z'));
+    LAfter := LFixture.First.Snapshot;
+    LContinuity := LPositionView.CaptureDisplayContinuity;
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LAfter, 1, LContinuity);
+    Check((LRecovery.Kind = ncpRetained) and (LRecovery.Index = 2) and
+      (LRecovery.Current.ID = 'b'), 'inserting above retains the anchored identity at its new index');
+    LPageBefore := NyxPageSnapshot(LAfter, NyxCollectionPageWindow(4, 2, 1));
+    LPageAfter := NyxPageSnapshot(LAfter, NyxCollectionPageWindow(4, 2, 2));
+    LRecovery := NyxCollectionPositionRecovery(LPageBefore, LPageAfter, 1, nil);
+    Check((LRecovery.Kind = ncpReset) and (LRecovery.Index = 0) and
+      (LRecovery.Current.ID = 'b'), 'a deliberate new page starts at its first row when no old row survives');
+    LBefore := LAfter;
+    LFixture.First.ConfigureQuery(NyxCollectionQuery.OrderBy(NyxTextField('Name'), nsdDescending));
+    LAfter := LFixture.First.Snapshot;
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LAfter, 2, nil);
+    Check((LRecovery.Kind = ncpRetained) and (LRecovery.Current.ID = 'b'),
+      'same-source sorting preserves identity without inventing a source transition');
+    LFixture.First.ConfigureQuery(Default(TNyxCollectionQuery));
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Apply([NyxRemove(Item('b')), NyxInsert(2,
+      NyxCollectionItem(Item('b')).WithValue(NyxTextField('Name'), 'Replacement'))]);
+    LAfter := LFixture.First.Snapshot;
+    LContinuity := LPositionView.CaptureDisplayContinuity;
+    LRetained := LContinuity;
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LAfter, 2, LContinuity);
+    Check((LRecovery.Kind = ncpFollowing) and (LRecovery.Current.ID = 'c') and
+      not LContinuity.Retains(Item('b')), 'a replacement ID cannot inherit the former viewport anchor');
+    LBefore := LAfter;
+    LFixture.Store.Remove(Item('c'));
+    LContinuity := LPositionView.CaptureDisplayContinuity;
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LFixture.First.Snapshot, 3, LContinuity);
+    Check((LRecovery.Kind = ncpPreceding) and (LRecovery.Current.ID = 'b'),
+      'a deleted final anchor recovers the nearest surviving predecessor');
+    Check(not LRetained.Retains(Item('b')) and
+      (LRetained.ToRevision <> LContinuity.ToRevision), 'old receipts remain immutable detached facts');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Update(NyxCollectionItem(Item('a')).WithValue(NyxTextField('Name'), 'One'));
+    LFixture.Store.Update(NyxCollectionItem(Item('a')).WithValue(NyxTextField('Name'), 'Two'));
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LFixture.First.Snapshot, 1,
+      LPositionView.CaptureDisplayContinuity);
+    Check(LRecovery.Kind = ncpReset, 'a deferred target cannot claim identity proof across skipped receipts');
+    LFixture.Inspection.PauseInspection;
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Apply([NyxRemove(Item('a')), NyxInsert(1,
+      NyxCollectionItem(Item('a')).WithValue(NyxTextField('Name'), 'New A'))]);
+    LFixture.Store.Update(NyxCollectionItem(Item('b')).WithValue(NyxTextField('Name'), 'Later B'));
+    LFixture.Inspection.ResumeInspection;
+    LContinuity := LPositionView.CaptureDisplayContinuity;
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LFixture.First.Snapshot, 1, LContinuity);
+    Check((LRecovery.Kind = ncpFollowing) and (LRecovery.Current.ID = 'b') and
+      not LContinuity.Retains(Item('a')), 'resume receipt covers the complete coalesced source gap');
+    LFixture.Inspection.ConfigureInspection(NyxInspectionPolicy.RemovedIdentities(0));
+    LFixture.Inspection.PauseInspection;
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Remove(Item('z'));
+    LFixture.Inspection.ResumeInspection;
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LFixture.First.Snapshot, 1,
+      LPositionView.CaptureDisplayContinuity);
+    Check(LRecovery.Kind = ncpReset, 'overflow explicitly resets viewport identity even when an ID survives');
+    LBefore := LFixture.First.Snapshot;
+    LFixture.Store.Apply([NyxRemove(Item('a')), NyxRemove(Item('b'))]);
+    LRecovery := NyxCollectionPositionRecovery(LBefore, LFixture.First.Snapshot, 0,
+      LPositionView.CaptureDisplayContinuity);
+    Check((LRecovery.Kind = ncpEmpty) and (LRecovery.Index = -1), 'an empty view has no invented viewport row');
+  finally
+    LPositionView := nil;
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     PauseCases;
+    PositionCases;
     RemovalCases(cpTable, False);
     RemovalCases(cpTable, True);
     RemovalCases(cpTree, False);

@@ -9,7 +9,79 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — paused live inspection foundation — 2026-10-25
+## Current checkpoint — stable flat reading positions — 2026-10-25
+
+The preceding goal turn is PROGRESS: 5ba6641 is remote-verified. Root remains
+solo. This continues original 04 L1's stable inspection and public-application
+outcomes; every original criterion and the existing 03 gates remain open. No
+DONE, percentage or completion credit changes.
+
+Configured inspection now recovers a flat List/Table reader by stable identity,
+independently of ordinary row selection. A surviving record stays anchored after
+insertions, sorting/filtering or deliberate resume. Removed anchors choose an old
+surviving successor, then predecessor. Empty results have no anchor; known pages
+with no surviving old rows start at their first row. Missing/skipped/overflowed
+identity evidence reports an explicit ordinal reset. Removed/reinserted IDs never
+inherit their old viewport identity. The view's existing atomic reservation now
+prepares one immutable bounded continuity receipt, including a coalesced paused
+interval. Receipts retain only scoped names/revisions/removal facts, with no
+snapshot queue, store, view, executable callback or widget.
+
+Native TopIndex/TopRow recovery settles after selection/editor synchronization
+and mirrors the outer table into pinned panes. The browser path captures an actual
+resident visible row, realizes its new window and corrects vertical scroll owners
+in their own scaled CSS coordinates. Offscreen/detached hosts do not acquire a
+containing-page anchor. Target clamping and absent deferred-transition evidence
+remain explicit limits. Tree physical scrolling is not implemented by this flat
+adapter path. No performance or complete browser/pixel parity is claimed.
+
+Public optional observation exposes detached recovery facts. A separate readonly
+UI-owner data port can outlive its mount without retaining a renderer/router;
+Active clears before teardown. Capture value facts on UI before handing them to
+workers. The public demo uses this port for visible disappeared-row/reset messages.
+An observing serial prevents a later deliberate selection from repeating an older
+recovery explanation. Foreign observation/source getters are fenced by the exact
+mount/view/mutation state before target application. Absent inspection policy
+retains the existing target behavior and existing interface GUIDs remain intact.
+
+The handwritten and exact generated public examples each pass 42 native mounted
+checks at 1280/390; the handwritten 1280 run additionally checks fresh source output.
+The same journey adds 64 runtime diagnostic records, reads away from an offscreen
+selected gateway, then inserts, removes, sorts, pauses/resumes and replaces an ID.
+It checks the ordinary bound recovery message and its later dismissal. Separate
+visible native List/plain-grid cases qualify those paths and retained-port
+retirement. All four heaps are complete and clean. The generated document remains
+10,901 bytes and uses the same explicit public runtime attachment. Both actual
+application entries compile; browser fixture/example/generated consumers compile
+only. No trusted hardware input, screenshot or browser execution is claimed.
+
+Current checked model/view/prepared-query/query-session/copy-command fixtures
+pass 45/12429/89/93/273. The unchanged workbench/context suite passes 116 and broader
+clipboard/range controls pass 1658/1647 at 900/390. All eight native regression heaps
+are complete/clean. Every successful final native compiler log has zero warnings;
+browser compilers retain seven installed RTL warnings each and no owned warnings.
+Final source cohorts retain exact pins, closed-log hashes and owned process receipts.
+All actual compiler/runtime jobs are joined. New artifacts stay on provisioned E:
+storage; the private direct-file runner keeps 900-second compiler / 240-second runtime
+bounds. Its shared-tool adoption remains under NS-6_delivery_01.
+
+Retained failures are compiler admission issues repaired before qualification:
+a missing public item-array import, a collection reference incorrectly assumed
+to expose Defined, method placement among fields, and a duplicate browser local.
+A cold rebuild also exposes managed-local initialization and exhaustive-case
+warnings; both are corrected. No runtime assertion is weakened or removed. The
+final observing-serial behavior and detached-port lifetime receive positive
+mounted checks. No new host, service replacement, approval loop, cleanup,
+compiler install, SDK edit or helper is introduced.
+
+Next: original 04 L1's explicit unfinished/orphaned draft recovery, reusing existing
+edit journals and these identity-continuity facts. Deliberate follow-newest, feed
+presentations, Tree/find/reveal, saved policy/Studio/source/semantic adoption and
+L2 scale/paint/input/memory qualification remain open. Current connector discovery
+again finds no connected document. Existing browser URL/desktop/cursor limitations
+remain recorded; they do not prevent continuing authorized library work.
+
+## Paused live inspection foundation — 2026-10-25
 
 The preceding checkpoint is PROGRESS: 11d2a2f is remote-verified. Root continues
 solo; Lil' Scooty is finished and idle until the user changes this preference.

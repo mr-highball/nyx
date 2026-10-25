@@ -34,6 +34,7 @@ uses
   nyx.collections,
   nyx.collections.arrangement,
   nyx.collections.view, nyx.collections.inspection,
+  nyx.collections.position,
   nyx.collections.selection,
   nyx.collections.refresh,
   nyx.typeahead,
@@ -289,7 +290,8 @@ type
     activating. Active commands retain their own call frames through callbacks.
     Optional cell-range selection owns independent immutable generation facts;
     it never changes the view's ordinary row-selection owner. UI-thread
-    confinement is inherited from the view/store contract. }
+    confinement is inherited from the view/store contract. Position recovery is
+    a detached observation only; it cannot select rows or revive target input. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionInputPreparation,
@@ -297,9 +299,11 @@ type
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
     INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
-    INyxCollectionCellRangeStrokeInput)
+    INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation)
   private
     FToken: INyxCollectionViewSubscription;
+    FPositionState: INyxCollectionPositionState;
+    FPositionStateObject: TObject; { Borrowed while FPositionState retains it. }
     FConnected: Boolean;
     FDisconnecting: Boolean;
     FQueryFactory: INyxQueryFormPresenterFactory;
@@ -346,6 +350,7 @@ type
       const AChanges: INyxCollectionChanges);
   protected
     FView: INyxCollectionView;
+    FPositionRecovery: TNyxCollectionPositionRecovery;
     FUpdating: Boolean;
     FInputGate: INyxCollectionInputGate;
     { A full-render edit handoff pauses this adapter's physical refresh and
@@ -499,6 +504,8 @@ type
     { Flags/weak-receiver retirement only, before query/observer cleanup can
       enter external code. Actual target API/hook cleanup remains DetachTarget. }
     procedure RetireTargetInput; virtual;
+    function ResolvePosition(const ABefore, AAfter: INyxCollectionSnapshot;
+      AIndex: Integer): TNyxCollectionPositionRecovery;
     procedure RenderDataset; virtual; abstract;
     procedure DetachTarget; virtual; abstract;
   public
@@ -513,6 +520,8 @@ type
     procedure InstallInput;
     procedure Disconnect;
     procedure Refresh;
+    function GetPositionRecovery: TNyxCollectionPositionRecovery;
+    function CapturePositionState: INyxCollectionPositionState;
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
     procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
     procedure ConfigureQueries(const APresenters: INyxQueryFormPresenterFactory;
@@ -594,6 +603,16 @@ uses
   {$ifdef PAS2JS}, JS{$endif};
 
 type
+  { One data-only port can outlive the physical target. Its writer belongs
+    exclusively to the mount; readonly clients cannot obtain an owner callback. }
+  TPositionState = class(TInterfacedObject, INyxCollectionPositionState)
+  public
+    Active: Boolean;
+    Recovery: TNyxCollectionPositionRecovery;
+    function GetActive: Boolean;
+    function GetRecovery: TNyxCollectionPositionRecovery;
+  end;
+
   { Disconnect records a failure separately from its possibly empty message.
     Browser cleanup may throw any JS value; retain its exact identity while
     every independent target/controller/subscription duty is still attempted. }
@@ -3403,6 +3422,11 @@ begin
   FToken := FView.Subscribe(Changed);
   FSelection := FView.Selection;
   FConnected := True;
+
+  if FPositionStateObject <> nil then
+  begin
+    TPositionState(FPositionStateObject).Active := True;
+  end;
   TCollectionInputState(FInputStateObject).Connect;
   try
     Refresh;
@@ -3448,6 +3472,11 @@ begin
   FDisconnecting := True;
   FConnected := False;
   FCellFocusValid := False;
+
+  if FPositionStateObject <> nil then
+  begin
+    TPositionState(FPositionStateObject).Active := False;
+  end;
 
   if FInputStateObject <> nil then
   begin
@@ -3809,6 +3838,116 @@ end;
 procedure TNyxCollectionMountBase.RetireTargetInput;
 begin
   { Ordinary targets have no additional weak input receiver. }
+end;
+
+function TPositionState.GetActive: Boolean;
+begin
+  Result := Active;
+end;
+
+function TPositionState.GetRecovery: TNyxCollectionPositionRecovery;
+begin
+  Result := Recovery;
+end;
+
+function TNyxCollectionMountBase.CapturePositionState: INyxCollectionPositionState;
+var
+  LState: TPositionState;
+begin
+
+  if FPositionState = nil then
+  begin
+    LState := TPositionState.Create;
+    FPositionState := LState;
+    FPositionStateObject := LState;
+    LState.Active := FConnected and not FDisconnecting;
+    LState.Recovery := GetPositionRecovery;
+  end;
+  Result := FPositionState;
+end;
+
+function TNyxCollectionMountBase.GetPositionRecovery: TNyxCollectionPositionRecovery;
+begin
+  Result := FPositionRecovery;
+
+  if Result.Kind = ncpUnavailable then
+  begin
+    Result.Index := -1;
+  end;
+end;
+
+function TNyxCollectionMountBase.ResolvePosition(const ABefore,
+  AAfter: INyxCollectionSnapshot; AIndex: Integer): TNyxCollectionPositionRecovery;
+var
+  LView: INyxCollectionView;
+  LInspection: INyxCollectionInspection;
+  LPosition: INyxCollectionPositionView;
+  LContinuity: INyxCollectionDisplayContinuity;
+  LPolicy: TNyxCollectionInspectionPolicy;
+  LMutation: Integer;
+
+  function Current: Boolean;
+  begin
+    Result := InputLifetimeCurrent and (FView = LView);
+
+    if Result and (FCellMutationSerial <> LMutation) then
+    begin
+      raise ENyxCollection.Create('Collection changed during viewport recovery');
+    end;
+  end;
+
+begin
+  Result := Default(TNyxCollectionPositionRecovery);
+  Result.Index := -1;
+  LView := FView;
+  LMutation := FCellMutationSerial;
+
+  if not Current or (LMutation = High(Integer)) or (ABefore = nil) or (ABefore = AAfter) then
+  begin
+    Exit;
+  end;
+  LInspection := NyxCollectionInspection(LView);
+
+  if not Current or (LInspection = nil) then
+  begin
+    Exit;
+  end;
+  LPolicy := LInspection.GetInspectionPolicy;
+
+  if not Current or not LPolicy.Defined then
+  begin
+    Exit;
+  end;
+
+  if Supports(LView, INyxCollectionPositionView, LPosition) then
+  begin
+
+    if not Current then
+    begin
+      Exit;
+    end;
+    LContinuity := LPosition.CaptureDisplayContinuity;
+  end;
+
+  if not Current then
+  begin
+    Exit;
+  end;
+  Result := NyxCollectionPositionRecovery(ABefore, AAfter, AIndex, LContinuity);
+
+  if not Current then
+  begin
+    Result := Default(TNyxCollectionPositionRecovery);
+    Result.Index := -1;
+    Exit;
+  end;
+  Result.ObservationSerial := LMutation;
+  FPositionRecovery := Result;
+
+  if FPositionStateObject <> nil then
+  begin
+    TPositionState(FPositionStateObject).Recovery := Result;
+  end;
 end;
 
 procedure TNyxCollectionMountBase.Refresh;

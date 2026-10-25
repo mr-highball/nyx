@@ -48,6 +48,7 @@ uses
   nyx.collections.presentation,
   nyx.collections.alignment,
   nyx.collections.inspection,
+  nyx.collections.position,
   nyx.scheduler,
   nyx.collections.selection;
 
@@ -253,6 +254,14 @@ type
     procedure ResumeInspection;
     function SubscribeInspection(AObserver: TNyxCollectionInspectionObserver):
       INyxCollectionViewSubscription;
+  end;
+
+  { A detached receipt proves identity continuity for the last displayed source
+    transition. It owns no source/view and remains safe after this view retires.
+    Deferred targets which skipped a different transition must recover explicitly. }
+  INyxCollectionPositionView = interface(IInterface)
+    ['{2B522861-19F3-40AA-AFA2-A9826F5C6520}']
+    function CaptureDisplayContinuity: INyxCollectionDisplayContinuity;
   end;
 
   { Optional tree capability, obtained with NyxTreeHierarchy. It retains the
@@ -538,7 +547,7 @@ type
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
     INyxCollectionTablePresentation, IColumnPresentationTransferTarget,
     INyxCollectionColumnSampling, INyxCollectionExportView, INyxCollectionSelectedRowsView,
-    INyxCollectionInspection)
+    INyxCollectionInspection, INyxCollectionPositionView)
   private
     FRowCopyReadiness: INyxCancellationReadiness;
     FRowCopyReadinessObject: TRowCopyReadiness;
@@ -596,6 +605,7 @@ type
     FInspectionIndex: TNyxTextIndex;
     FInspectionPendingOnly: Boolean;
     FInspectionTransition: Boolean;
+    FDisplayContinuity: INyxCollectionDisplayContinuity;
     procedure RetireRowCopy;
     procedure Writable;
     procedure ValidateDataset(const AData: INyxCollectionSnapshot;
@@ -612,6 +622,8 @@ type
       const AChanges: INyxCollectionChanges);
     procedure CopyProjectionTo(ATarget: TView);
     procedure PrepareInspectionUpdate(ATarget: TView;
+      const AData: INyxCollectionSnapshot; const AChanges: INyxCollectionChanges);
+    procedure PrepareDisplayContinuity(ATarget: TView;
       const AData: INyxCollectionSnapshot; const AChanges: INyxCollectionChanges);
     procedure StoreChanged(const AStore: INyxCollection;
       const AChanges: INyxCollectionChanges);
@@ -635,6 +647,7 @@ type
       const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
     destructor Destroy; override;
     function GetInspectionPolicy: TNyxCollectionInspectionPolicy;
+    function CaptureDisplayContinuity: INyxCollectionDisplayContinuity;
     procedure ConfigureInspection(const APolicy: TNyxCollectionInspectionPolicy);
     function CaptureInspection: TNyxCollectionInspectionObservation;
     function GetDisplayedSource: INyxCollectionSnapshot;
@@ -2255,6 +2268,7 @@ begin
     else
     begin
       LCandidate.ProjectChanges(AChanges);
+      PrepareDisplayContinuity(LCandidate, AData, AChanges);
       LCandidate.FInspectionStatus.DisplayRevision := AData.Revision;
       LCandidate.FInspectionStatus.IncomingRevision := AData.Revision;
     end;
@@ -2273,6 +2287,7 @@ begin
   { Private installation is a nonallocating adoption of immutable references
     and detached vectors. No user callback, query or selection command runs. }
   FInspectionStatus := FPrepared.FInspectionStatus;
+  FDisplayContinuity := FPrepared.FDisplayContinuity;
   FInspectionRemoved := FPrepared.FInspectionRemoved;
   LPreviousIndex := FInspectionIndex;
   FInspectionIndex := FPrepared.FInspectionIndex;
