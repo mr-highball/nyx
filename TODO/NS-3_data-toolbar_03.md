@@ -83,10 +83,19 @@ themed containers and refuse competing status bindings.
 These are native adapter-input results, not browser, physical-input, visual or
 assistive acceptance. The older table regression stops at Windows cursor access
 before physical column-manager launch. [WORK.md](../WORK.md) owns the exact
-packets and remaining checks. Next extend the existing Studio-saved/generated
-application journey to open Details and remove a captured contribution, then
-finish the hidden-selection/binding refusal and browser/parity matrix. All
-original criteria and prerequisites above remain open.
+packets and remaining checks.
+
+The subsequent ordinary Studio journey explicitly configures Details/captions,
+uses the real popup in preview and saves/reopens its exact pair. Its own compiled
+application then removes captured contributions through the same controls at
+desktop/compact widths. Hidden selected membership, source rows, captions and
+facade retirement survive. Four clean native heaps cover 108/116 Studio/reopened
+App and 40/40 compiled-App checks. Both browser programs compile/stage only.
+Selection is seeded through the public view command, not a physical row gesture.
+Return for the binding/read-only/refusal and browser/physical/visual/parity matrix;
+all original criteria and prerequisites remain open. The next implementation
+priority is the already cataloged useful Tool Canvas workflow, not another
+generic query/source proof variant.
 
 **Blockers**
 

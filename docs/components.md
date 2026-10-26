@@ -543,6 +543,16 @@ compares each builder with its saved design and executes the resulting
 application at both widths. Matching asynchronous browser journeys and the
 Studio-saved application are staged without starting a host.
 
+The query-detail extension explicitly sets Details and custom captions through
+the ordinary form, including supplementary Unicode. Preview and reopened Apps
+use the actual popup to remove a captured contribution; the local entry remains
+until Clear, while accepted counts update. Hidden selected membership and source
+rows survive. The same journey's own compiled application repeats this behavior.
+That Win32 packet passes 108/116 Studio/reopened-App and 40/40 compiled-App
+checks, with four clean heaps and identical saved bytes across widths. Both
+matching browser programs compile/stage only; this does not prove browser,
+physical-input, assistive or visual behavior.
+
 The query-context checkpoint with both switches passes 50/50 base, 133/133 reusable,
 30 source, 13/13 source-fixture application, 32 authoring, 61/69 ordinary Studio
 and 14/14 Studio-generated application checks: 612 assertions and twelve complete

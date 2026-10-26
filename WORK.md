@@ -9,7 +9,53 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current user request — qualification storage cleanup — 2026-10-26
+## Current checkpoint — Query details in Studio-saved applications — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent 86c2876 is remote-verified. Root remains
+SOLO. Batch fourteen completes the next native Studio/saved-application journey
+under existing DataToolbar query-detail03 and authoring01. It does not close
+their full criteria, prerequisites, browser/parity gates or completion credit.
+
+The existing ordinary Studio consumer now explicitly selects Details and custom
+status/button captions through the actual form. The caption includes a
+supplementary Unicode scalar. Preview uses the real invoker and managed popup to
+remove a captured contribution. The input deliberately keeps its former entry
+while the summary follows the accepted query; local Clear then resets that entry.
+A selected Grace row survives being hidden by Search and revealed by removal.
+Selection is seeded through the public typed view command; this is not evidence
+of a physical row-selection gesture. Source snapshots and independent siblings
+remain unchanged, and disposal revokes the retained query-detail facade.
+
+Ordinary Undo/Redo and Save/Open preserve the exact typed query presentation.
+The journey's own exported Pascal is compiled against its own saved project,
+then its application exercises the same actual invoker/removal/status controls.
+This is not a pre-existing source fixture or a direct controller-reset shortcut.
+Private data-toolbar-query-studio-01 passes 108 desktop and 116 compact Win32 Studio/
+reopened-App checks, followed by 40/40 checks in the compiled saved application.
+All four heaps are complete and clean. Both widths save identical project and
+Pascal bytes; the maintained consumer's source hash is stable across all jobs.
+The same existing build target picks up these assertions without a new mode.
+
+Both matching browser programs compile and stage with the matched runtime and
+their exact saved-project input. There are zero owned warnings and 14 installed
+Classes occurrences. Browser interaction, visual/assistive quality and physical
+desktop input remain unverified. The previous Windows cursor-access failure is
+retained; no physical regression rerun or refused browser route was attempted.
+No Nyx MCP tool namespace is exposed in this turn's tool inventory; this does
+not establish server health. The ordinary Studio consumer uses its maintained
+typed exchange, and does not claim an authenticated MCP/HTTP observing run.
+
+All eight compiler/runtime results are joined; no source freeze remains. New
+artifacts, private orchestration and owned TEMP/TMP remain on external storage.
+Unrelated1280/390 directories are untouched. Reassessment now advances the next
+user-facing implementation to the existing fourth backlog priority: a useful
+Tool Canvas control event → JSON format → Save workflow, through its graph/file/
+host prerequisites and ordinary project saving. Preserve the DataToolbar return
+matrix for pending bindings/read-only/refusal, browser, physical/visual/parity
+and full coordinator acceptance. Do not add another generic query/source proof
+or resolver variant to replace those remaining checks. No acceptance is waived.
+
+## Completed on-demand qualification storage cleanup — 2026-10-26
 
 The user's one on-demand retirement of the two preserved legacy user-temp/
 user-local qualification trees is complete. The user additionally confirmed

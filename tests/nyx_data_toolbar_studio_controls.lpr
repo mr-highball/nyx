@@ -31,11 +31,19 @@ uses
   nyx.codegen, nyx.composition, nyx.source, nyx.files, nyx.studio.files, nyx.responsive,
   nyx.collections, nyx.collections.selection, nyx.collections.view,
   nyx.collections.view.types, nyx.menu.editor, nyx.data.toolbar,
+  nyx.data.toolbar.query, nyx.collections.query.controls,
   nyx.data.toolbar.editor, nyx.studio.inspector, nyx.studio.projects, nyx.studio.menu,
   {$ifdef PAS2JS}nyx.studio.browser, nyx.studio.agents, nyx.studio.exchange,
-  nyx.test.editor.exchange, nyx.application.browser, nyx.render.browser
-  {$else}nyx.studio.lcl, nyx.application.lcl, nyx.render.lcl{$endif}
+  nyx.test.editor.exchange, nyx.application.browser, nyx.render.browser, nyx.collections.query.browser
+  {$else}nyx.studio.lcl, nyx.application.lcl, nyx.render.lcl, nyx.collections.query.lcl{$endif}
   {$ifdef NYX_COMPILED_TOOLBAR_STUDIO}, nyx.generated.toolbar.studio{$endif};
+
+const
+  CQueryCaption: TNyxText = 'People 🌙';
+  CQueryButtonCaption: TNyxText = 'Inspect filters';
+  { This is an ordinary control identity in the public workbench presentation,
+    not an actor token or a command dispatched directly into its controller. }
+  CFirstRemovalAction = NyxQueryWorkbenchEditorID + '-chip-0';
 
 type
   { Only the file-delivery boundary is controlled. Ordinary Studio import/export
@@ -60,6 +68,8 @@ type
   TApplicationHost = TNyxBrowserApplication;
   { Realized adapter lifetime is borrowed only while its app/Studio is alive. }
   TView = TNyxBrowserRenderer;
+  { The exact popup exposes its own renderer, separate from the Studio shell. }
+  TQueryPresenter = INyxBrowserQueryFormPresenter;
   {$else}
   { Full native Studio keeps its ordinary paired queue and on-disk project store. }
   TWorkshopStudio = class(TNyxNativeStudio)
@@ -78,6 +88,8 @@ type
   TApplicationHost = TNyxLCLApplication;
   { Native and browser branches exercise the same semantic view owner. }
   TView = TNyxLCLRenderer;
+  { Borrow the exact native popup while its managed presenter remains retained. }
+  TQueryPresenter = INyxLCLQueryFormPresenter;
   {$endif}
   { Every source-producing action settles before the next assertion/input.
     A stage is an ordinary controller turn, never a direct document rewrite. }
@@ -428,6 +440,10 @@ begin
   IncludeChoice(NyxDataToolbarEditorFieldID(LRow, ntefIncluded));
   Change(NyxDataToolbarEditorFieldID(LKey, ntefSortField), NyxMenuEditorChoiceCaption(1, 'name'));
   Change(NyxDataToolbarEditorFieldID(LKey, ntefDirection), NyxMenuEditorChoiceCaption(1, 'Descending'));
+  Change(NyxDataToolbarEditorFieldID(NyxStudioDataToolbarEditorID, ntefQueryDisplay),
+    NyxMenuEditorChoiceCaption(Ord(ntqdDetails), 'Results summary and filter details'));
+  Change(NyxDataToolbarEditorFieldID(NyxStudioDataToolbarEditorID, ntefQueryCaption), CQueryCaption);
+  Change(NyxDataToolbarEditorFieldID(NyxStudioDataToolbarEditorID, ntefQueryButton), CQueryButtonCaption);
   Click(NyxDataToolbarEditorActionID(NyxStudioDataToolbarEditorID, nteaConfigure));
 end;
 
@@ -449,10 +465,33 @@ begin
   end;
 end;
 
+{ Read the actual status face; the authored label is only a default. }
+procedure CheckQueryStatus(AView: TView; const AToolbar: TNyxText;
+  const AQuery: INyxDataToolbarQueryBinding);
+var
+  LID: TNyxText;
+  LText: TNyxText;
+begin
+  LID := AView.Root.Find(AToolbar).Part(NyxPart(NyxDataToolbarQueryStatusPart)).ID;
+  {$ifdef PAS2JS}
+  LText := AView.ElementFor(LID).textContent;
+  {$else}
+  LText := TLabel(AView.ControlFor(LID)).Caption;
+  {$endif}
+  Check((LText = AQuery.QueryStatus) and (Pos(CQueryCaption + ': ', LText) = 1),
+    'real status follows accepted query state and the exact caption configured in Studio');
+end;
+
 procedure SearchAndClear(AView: TView; const AToolbar, ATarget: TNyxText);
 var
   LID: TNyxText;
+  LSearchID: TNyxText;
   LRows: INyxCollectionView;
+  LSource: INyxCollectionSnapshot;
+  LSelected: TNyxItemRef;
+  LQuery: INyxDataToolbarQueryBinding;
+  LPresenter: INyxQueryFormPresenter;
+  LTarget: TQueryPresenter;
   {$ifdef PAS2JS}
   LInput: TJSHTMLInputElement;
   {$else}
@@ -461,7 +500,14 @@ var
 begin
   LRows := AView.CollectionView(ATarget);
   Check((LRows <> nil) and (LRows.Snapshot.Count = 2), 'ordinary bound table starts with both people');
+  LSource := LRows.Store.Snapshot;
+  LSelected := NyxItem(LSource.Key, 'grace');
+  { Seed selection through the public typed view command; this journey qualifies
+    query controls, not a physical row-selection gesture. Filtering hides Grace
+    but must never remove her accepted selection membership. }
+  LRows.Select(LSelected);
   LID := AView.Root.Find(AToolbar).Part(NyxPart('search')).ID;
+  LSearchID := LID;
   AView.Reveal(LID, niRuntime);
   {$ifdef PAS2JS}
   LInput := TJSHTMLInputElement(AView.InputFor(LID));
@@ -474,6 +520,45 @@ begin
   Application.ProcessMessages;
   {$endif}
   Check(LRows.Snapshot.Count = 1, 'actual typed Search filters the visible table');
+  Check(LRows.Selection.Contains(LSelected), 'query filtering preserves hidden selected membership');
+  Check(Supports(AView.CoordinatorBinding(AToolbar), INyxDataToolbarQueryBinding, LQuery),
+    'Studio-configured application exposes its specialized query context');
+  Check((LQuery.Observation.Count = 1) and (LQuery.Observation.MatchedRows = 1) and
+    (LQuery.Observation.SourceRows = 2), 'query context reports the accepted filter and source counts');
+  CheckQueryStatus(AView, AToolbar, LQuery);
+  LID := AView.Root.Find(AToolbar).Part(NyxPart(NyxDataToolbarQueryDetailsPart)).ID;
+  AView.Reveal(LID, niRuntime);
+  {$ifdef PAS2JS}
+  Check(AView.ElementFor(LID).textContent = CQueryButtonCaption,
+    'real detail button retains the caption configured in Studio');
+  AView.ElementFor(LID).click;
+  {$else}
+  Check(TButton(AView.ControlFor(LID)).Caption = CQueryButtonCaption,
+    'real detail button retains the caption configured in Studio');
+  TControlAccess(AView.ControlFor(LID)).Click;
+  Application.ProcessMessages;
+  {$endif}
+  Check(LQuery.QueryControls <> nil, 'real detail button creates the managed query surface');
+  LPresenter := LQuery.QueryControls.Presenter;
+  Check((LPresenter <> nil) and LPresenter.Connected and LPresenter.IsOpen and
+    Supports(LPresenter, TQueryPresenter, LTarget), 'ordinary detail popup opens on the actual view');
+  LTarget.Presentation.Renderer.Reveal(CFirstRemovalAction, niRuntime);
+  {$ifdef PAS2JS}
+  LTarget.Presentation.Renderer.ElementFor(CFirstRemovalAction).click;
+  Check(TJSHTMLInputElement(AView.InputFor(LSearchID)).value = 'Ada',
+    'explicit filter removal preserves the local search entry');
+  {$else}
+  TControlAccess(LTarget.Presentation.Renderer.ControlFor(CFirstRemovalAction)).Click;
+  Application.ProcessMessages;
+  Check(TCustomEdit(AView.InputFor(LSearchID)).Text = 'Ada',
+    'explicit filter removal preserves the local search entry');
+  {$endif}
+  Check((LRows.Snapshot.Count = 2) and (LQuery.Observation.Count = 0) and
+    LRows.Selection.Contains(LSelected) and (LRows.Store.Snapshot = LSource),
+    'real popup removes one contribution while preserving source data and hidden selection');
+  Check(not LPresenter.Connected and not LPresenter.IsOpen,
+    'accepted removal retires its captured physical detail form');
+  CheckQueryStatus(AView, AToolbar, LQuery);
   LID := AView.Root.Find(AToolbar).Part(NyxPart('clear')).ID;
   AView.Reveal(LID, niRuntime);
   {$ifdef PAS2JS}
@@ -483,6 +568,13 @@ begin
   Application.ProcessMessages;
   {$endif}
   Check(LRows.Snapshot.Count = 2, 'ordinary accessible Clear restores the table');
+  {$ifdef PAS2JS}
+  Check(TJSHTMLInputElement(AView.InputFor(LSearchID)).value = '',
+    'local Clear resets the retained entry after explicit query removal');
+  {$else}
+  Check(TCustomEdit(AView.InputFor(LSearchID)).Text = '',
+    'local Clear resets the retained entry after explicit query removal');
+  {$endif}
 end;
 
 procedure Stage;
@@ -563,6 +655,10 @@ begin
         GSaved := Pair;
         Check(Pos('SetNyxDataToolbarIntent', GStudio.ProjectSnapshot.Source) > 0,
           'ordinary source generation retains crafted typed automatic intent');
+        Check((Pos('.QueryContext(NyxDataToolbarQueryOptions.Display(ntqdDetails)',
+          GStudio.ProjectSnapshot.Source) > 0) and
+          (Pos(CQueryCaption, GStudio.ProjectSnapshot.Source) > 0),
+          'ordinary source generation retains the exact typed query presentation');
         {$ifdef PAS2JS}
         Click('action-project-export');
         {$else}
@@ -620,6 +716,8 @@ var
   LApplication: TApplicationHost;
   LBefore: TNyxText;
   LBinding: INyxDataToolbarBinding;
+  LQuery: INyxDataToolbarQueryBinding;
+  LControls: INyxCollectionQueryWorkbench;
   {$ifdef PAS2JS}
   LHost: TJSHTMLElement;
   {$endif}
@@ -644,6 +742,9 @@ begin
       'unconfigured sibling retains its independent reusable source');
     Check(Supports(LApplication.View.CoordinatorBinding('local-tools'), INyxDataToolbarBinding, LBinding)
       and LBinding.Connected, 'ordinary saved application automatically mounts its toolbar');
+    Check(Supports(LBinding, INyxDataToolbarQueryBinding, LQuery),
+      'saved application retains specialized query inspection');
+    LControls := LQuery.QueryControls;
     LBinding.Sort(NyxToolbarSort('Name descending'));
     Check(LApplication.View.CollectionView('people').Snapshot.ItemAt(0).GetValue(NyxTextField('name')) = 'Grace',
       'saved typed sort choice orders the actual application table');
@@ -652,6 +753,8 @@ begin
     LApplication.Free;
   end;
   Check(not LBinding.Connected, 'application disposal retires retained toolbar authority');
+  Check((LControls <> nil) and not LControls.Connected,
+    'application disposal also revokes retained query-detail authority');
 end;
 
 procedure Finish;
