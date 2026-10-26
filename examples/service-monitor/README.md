@@ -286,11 +286,14 @@ invalidation, target failure/deferral/retry, suspension and remount refusal.
 ## Qualification
 
 `tests/nyx_service_monitor_studio_controls.lpr` exercises this public document
-through full native Studio. It edits width/visibility using mounted Inspector
+through full native Studio. It edits width, order and visibility using mounted Inspector
 inputs, checks exact Undo/Redo, saves to the real project store and reopens that
 same pair. Its application then uses the ordinary Columns popup to reveal,
 reorder, hide/show and restore columns while filtering leaves a peer unchanged.
 Runtime reset restores the saved authored defaults, including hidden columns.
+The Inspector's Move earlier/later commands retain field-specific widths and
+logical edge pins. Each move has exact paired Undo/Redo; the generated companion
+checks the reordered defaults independently of runtime Columns preferences.
 
 Build with the installed LCL paths, `-Fusrc -Fisrc -Fustudio -Fistudio
 -Fuexamples/service-monitor`, and the normal checked flags

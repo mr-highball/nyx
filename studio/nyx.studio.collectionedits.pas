@@ -321,7 +321,7 @@ const
      'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
      'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
      'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection',
-     'draft-recovery', 'default-draft-recovery');
+     'draft-recovery', 'default-draft-recovery', 'column-earlier', 'column-later');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -1591,7 +1591,7 @@ begin
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
   begin
     Add('baseline', NyxData(LIntent.LayoutBaseline));
   end;
@@ -1648,7 +1648,7 @@ begin
     scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
     scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
   begin
     Add('field', NyxData(LIntent.Field.Name));
     Add('kind', NyxData(NyxStateKindName(LIntent.Field.Kind)));
@@ -1814,7 +1814,7 @@ begin
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
   begin
     LAllowed := LAllowed + 'baseline|';
     Inc(LRequired);
@@ -1890,7 +1890,7 @@ begin
     scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
     scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
   begin
     LAllowed := LAllowed + 'field|kind|';
     Inc(LRequired, 2);

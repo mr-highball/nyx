@@ -38,7 +38,9 @@ uses
 type
   { Closed ordinary editor operations. These describe intent, not a saved
     collection replacement or an executable closure. Append new choices rather
-    than changing existing private-wire ordinals. }
+    than changing existing private-wire ordinals. Column moves swap a typed
+    field with its immediate authored neighbour under the exact layout baseline;
+    runtime preferences and physical pane order never enter this operation. }
   TNyxStudioCollectionAction = (scaCreate, scaRemove, scaAddField, scaDefault,
     scaAddRow, scaRemoveRow, scaCell, scaBind, scaScope, scaTitle, scaMode,
     scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
@@ -49,7 +51,7 @@ type
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
     scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
-    scaDraftRecovery, scaDefaultDraftRecovery);
+    scaDraftRecovery, scaDefaultDraftRecovery, scaColumnEarlier, scaColumnLater);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -315,7 +317,7 @@ begin
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
     scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
-    scaDraftRecovery, scaDefaultDraftRecovery];
+    scaDraftRecovery, scaDefaultDraftRecovery, scaColumnEarlier, scaColumnLater];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
@@ -327,7 +329,7 @@ begin
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
     scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
-    scaDraftRecovery, scaDefaultDraftRecovery];
+    scaDraftRecovery, scaDefaultDraftRecovery, scaColumnEarlier, scaColumnLater];
 end;
 
 procedure TNyxStudioCollectionIntent.Validate;
@@ -378,12 +380,12 @@ begin
       scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
       scaTableWorkbench, scaDefaultTableWorkbench,
       scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-      scaColumnAlignment, scaDefaultColumnAlignment]) and (LayoutBaseline = '')) or
+      scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater]) and (LayoutBaseline = '')) or
     (not (Action in [scaTableLayout, scaColumnLayout,
       scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
       scaTableWorkbench, scaDefaultTableWorkbench,
       scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-      scaColumnAlignment, scaDefaultColumnAlignment]) and (LayoutBaseline <> '')) or
+      scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater]) and (LayoutBaseline <> '')) or
     ((Action = scaTableLayout) <> TableLayout.Defined) or
     ((Action = scaColumnLayout) <> ColumnLayout.Defined) or
     ((Action = scaColumnFormat) <> ColumnFormat.Defined) or
@@ -433,7 +435,7 @@ begin
     scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
     scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment]) and not Field.Defined then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater]) and not Field.Defined then
   begin
     raise ENyxCollection.Create('Collection intent requires its exact typed field');
   end;
@@ -444,7 +446,7 @@ begin
     scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout,
     scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment]) then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater]) then
   begin
     raise ENyxCollection.Create('This collection intent does not use a field');
   end;
@@ -460,7 +462,7 @@ begin
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment]) and
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater]) and
     (Projection <> cpTable) then
   begin
     raise ENyxCollection.Create('Column sizing/query/layout controls require the table projection');
@@ -659,7 +661,7 @@ begin
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
   begin
     SetLength(LFields, 12);
     for LIndex := 0 to 10 do
@@ -750,6 +752,9 @@ var
   LColumnFound: Boolean;
   LSizing: TNyxColumnSizing;
   LSizeValue: Integer;
+  LMoveIndex: Integer;
+  LMoveTarget: Integer;
+  LSourceIndex: Integer;
   LPaging: TNyxCollectionPaging;
 begin
   AIntent.Validate;
@@ -810,7 +815,7 @@ begin
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
   begin
     { This existing proof covers the complete binding and schema families; it
       performs no runtime query or preference operation. }
@@ -936,6 +941,41 @@ begin
   begin
     raise ENyxCollection.Create('Parent-field authoring requires the captured tree');
   end;
+  LMoveIndex := -1;
+  LMoveTarget := -1;
+
+  if AIntent.Action in [scaColumnEarlier, scaColumnLater] then
+  begin
+    { Find by the complete stable identity before rebuilding. A stale boundary
+      command refuses rather than becoming an apparently successful no-op. }
+    for LIndex := 0 to ASpec.Count - 1 do
+    begin
+      LColumn := ASpec.ColumnAt(LIndex);
+
+      if (LColumn.FieldName = AIntent.Field.Name) and
+        (LColumn.Kind = AIntent.Field.Kind) then
+      begin
+        LMoveIndex := LIndex;
+        Break;
+      end;
+    end;
+
+    if LMoveIndex < 0 then
+    begin
+      raise ENyxCollection.Create('The column to move no longer exists');
+    end;
+    LMoveTarget := LMoveIndex - 1;
+
+    if AIntent.Action = scaColumnLater then
+    begin
+      LMoveTarget := LMoveIndex + 1;
+    end;
+
+    if (LMoveTarget < 0) or (LMoveTarget >= ASpec.Count) then
+    begin
+      raise ENyxCollection.Create('This column is already at the requested edge');
+    end;
+  end;
   Result := NyxCollectionView(ASpec.Key).Scoped(ASpec.Scope)
     .Selection(ASpec.SelectionMode).Query(ASpec.QueryPolicy);
   { Column/parent/scope edits reconstruct the ordered binding. Retain an exact
@@ -996,7 +1036,23 @@ begin
   LColumnFound := False;
   for LIndex := 0 to ASpec.Count - 1 do
   begin
-    LColumn := ASpec.ColumnAt(LIndex);
+    LSourceIndex := LIndex;
+
+    if LMoveIndex >= 0 then
+    begin
+
+      if LIndex = LMoveTarget then
+      begin
+        LSourceIndex := LMoveIndex;
+      end
+      else if LIndex = LMoveIndex then
+      begin
+        LSourceIndex := LMoveTarget;
+      end;
+    end;
+    { Reuse the complete existing column copier: sizing, format, text, query,
+      alignment, visibility and pin declarations travel with the field. }
+    LColumn := ASpec.ColumnAt(LSourceIndex);
     LTitle := LColumn.Title;
     LMode := LColumn.Mode;
     LSizing := LColumn.Sizing;
@@ -1176,7 +1232,7 @@ begin
     scaColumnDefault, scaColumnQuery, scaDefaultColumnQuery,
     scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment]) and not LColumnFound then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater]) and not LColumnFound then
   begin
     raise ENyxCollection.Create('Collection column no longer exists');
   end;
@@ -1245,7 +1301,7 @@ begin
     ((Result.Action in [scaDefaultTableQuery, scaDefaultColumnQuery,
       scaDefaultTableLayout, scaDefaultColumnLayout, scaDefaultColumnFormat,
       scaDefaultTableWorkbench, scaDefaultTablePresentation, scaDefaultColumnText,
-      scaDefaultColumnAlignment, scaDefaultInspection, scaDefaultDraftRecovery]) and
+      scaDefaultColumnAlignment, scaDefaultInspection, scaDefaultDraftRecovery, scaColumnEarlier, scaColumnLater]) and
       (AData.Count <> 12)) or
     (not (Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
@@ -1253,7 +1309,7 @@ begin
       scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
       scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
       scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
-      scaDraftRecovery, scaDefaultDraftRecovery]) and
+      scaDraftRecovery, scaDefaultDraftRecovery, scaColumnEarlier, scaColumnLater]) and
       (AData.Count <> 11)) then
   begin
     raise ENyxCollection.Create('Policy intent requires its exact extended descriptor');
@@ -1339,7 +1395,7 @@ begin
     scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
   begin
     Result.LayoutBaseline := AData.Field('baseline').AsText;
   end;

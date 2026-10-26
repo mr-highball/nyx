@@ -33,7 +33,7 @@ uses Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls,
   nyx.application.lcl, nyx.service.monitor,
   nyx.studio.lcl, nyx.studio.projects, nyx.studio.projectstore,
   nyx.studio.section.views, nyx.studio.collections, nyx.studio.inspector,
-  nyx.studio.menu, nyx.studio.authoring
+  nyx.studio.menu, nyx.studio.authoring, nyx.studio.collectionintent
   {$ifdef NYX_SERVICE_STUDIO_GENERATED}, nyx.generated.view{$endif};
 
 type
@@ -258,7 +258,23 @@ begin
       (LSpec.ColumnAt(0).Sizing.Value = 160), 'visible width field authors Service width');
     History(LStudio, LBefore);
 
-    LSection := LStudio.ShellView.Root.Find(NyxStudioLayoutPolicyFormID(2) + '-section');
+    Check(not LStudio.ShellView.ControlFor(NyxStudioColumnOrderID(0, scaColumnEarlier)).Enabled and
+      not LStudio.ShellView.ControlFor(NyxStudioColumnOrderID(4, scaColumnLater)).Enabled,
+      'actual first/last column controls expose their disabled edge moves');
+    LBefore := StudioPair(LStudio);
+    Click(LStudio, NyxStudioColumnOrderID(3, scaColumnEarlier));
+    Check(LStudio.Session.Selected.CollectionView.ColumnAt(2).FieldName = 'notes',
+      'ordinary Move earlier moves Notes with its own settings');
+    History(LStudio, LBefore);
+    LBefore := StudioPair(LStudio);
+    Click(LStudio, NyxStudioColumnOrderID(1, scaColumnLater));
+    LSpec := LStudio.Session.Selected.CollectionView;
+    Check((LSpec.ColumnAt(1).FieldName = 'notes') and
+      (LSpec.ColumnAt(2).FieldName = 'pid') and (LSpec.ColumnAt(3).FieldName = 'command'),
+      'ordinary Move later authors a complete new default column order');
+    History(LStudio, LBefore);
+
+    LSection := LStudio.ShellView.Root.Find(NyxStudioLayoutPolicyFormID(3) + '-section');
     Check(LSection <> nil, 'Command line layout is discoverable in the Inspector');
 
     if not NyxDisclosureExpanded(LSection) then
@@ -266,10 +282,10 @@ begin
       Click(LStudio, LSection.Part(NyxPart('header')).ID);
     end;
     LBefore := StudioPair(LStudio);
-    Change(LStudio, NyxStudioLayoutPolicyFieldID(2, slpfVisible), 'false');
+    Change(LStudio, NyxStudioLayoutPolicyFieldID(3, slpfVisible), 'false');
     Check(StudioPair(LStudio) = LBefore, 'visibility remains a draft before Apply');
-    Click(LStudio, NyxStudioLayoutPolicyApplyID(2));
-    Check(not LStudio.Session.Selected.CollectionView.ColumnAt(2).LayoutPolicy.IsVisible,
+    Click(LStudio, NyxStudioLayoutPolicyApplyID(3));
+    Check(not LStudio.Session.Selected.CollectionView.ColumnAt(3).LayoutPolicy.IsVisible,
       'Apply authors hidden Command line without deleting it');
     History(LStudio, LBefore);
     Check(EncodeNyxCollectionDefaults(LStudio.Session.Document.Collections) = LDefaults,
@@ -358,8 +374,13 @@ begin
     LBefore := TNyxCodec.Encode(LDocument);
     Check(LBefore = APair.Design, 'application constructor exactly matches its own saved design');
     Check((LDocument.Find(ServiceTableID).CollectionView.ColumnAt(0).Sizing.Value = 160) and
-      not LDocument.Find(ServiceTableID).CollectionView.ColumnAt(2).LayoutPolicy.IsVisible,
-      'application retains both Studio-authored column defaults');
+      not LDocument.Find(ServiceTableID).CollectionView.ColumnAt(3).LayoutPolicy.IsVisible and
+      (LDocument.Find(ServiceTableID).CollectionView.ColumnAt(1).FieldName = 'notes') and
+      (LDocument.Find(ServiceTableID).CollectionView.ColumnAt(2).FieldName = 'pid'),
+      'application retains Studio-authored order, width and visibility');
+    Check((LDocument.Find(ServiceTableID).CollectionView.ColumnAt(0).LayoutPolicy.Pin = ncpStart) and
+      (LDocument.Find(ServiceTableID).CollectionView.ColumnAt(4).LayoutPolicy.Pin = ncpEnd),
+      'Studio ordering retains both authored logical edge pins');
     LApplication := TNyxLCLApplication.Create;
     LApplication.Mount(LDocument);
     LApplication.Window.ClientWidth := GWidth;
@@ -376,16 +397,16 @@ begin
     Pump;
     Check((LManager.Presenter <> nil) and LManager.Presenter.IsOpen,
       'ordinary Columns popup opens');
-    Check(not LManager.Observation.ColumnAt(2).IsVisible,
+    Check(not LManager.Observation.ColumnAt(3).IsVisible,
       'hidden authored field remains discoverable for reveal');
     ColumnClick(LManager, NyxColumnIdentity(NyxTextField('command')), ncaaShow);
-    Check(LManager.Observation.ColumnAt(2).IsVisible, 'Show reveals Command line');
-    ColumnClick(LManager, NyxColumnIdentity(NyxTextField('notes')), ncaaMoveEarlier);
-    Check(LManager.Observation.OrderedAt(2) = 3, 'Move earlier reorders Notes by stable field');
+    Check(LManager.Observation.ColumnAt(3).IsVisible, 'Show reveals Command line');
+    ColumnClick(LManager, NyxColumnIdentity(NyxIntegerField('pid')), ncaaMoveEarlier);
+    Check(LManager.Observation.OrderedAt(1) = 2, 'Move earlier reorders Process ID by stable field');
     ColumnClick(LManager, NyxColumnIdentity(NyxTextField('notes')), ncaaHide);
-    Check(not LManager.Observation.ColumnAt(3).IsVisible, 'Hide preserves the Notes field');
+    Check(not LManager.Observation.ColumnAt(1).IsVisible, 'Hide preserves the Notes field');
     ColumnClick(LManager, NyxColumnIdentity(NyxTextField('notes')), ncaaShow);
-    Check(LManager.Observation.ColumnAt(3).IsVisible, 'Show restores hidden Notes');
+    Check(LManager.Observation.ColumnAt(1).IsVisible, 'Show restores hidden Notes');
     LMount.View.ConfigureQuery(NyxCollectionQuery.Where(
       NyxWhere(NyxTextField('status')).EqualTo('Running')));
     Pump;
@@ -393,7 +414,7 @@ begin
       (LPeer.View.CollectionMount(ServiceTableID).View.Snapshot.Count = 4),
       'filtering works with arrangement while the independent peer remains unchanged');
     ColumnClick(LManager, Default(TNyxColumnIdentity), ncaaResetAll);
-    Check(not LManager.Observation.ColumnAt(2).IsVisible and
+    Check(not LManager.Observation.ColumnAt(3).IsVisible and
       (LManager.Observation.Preferences.Count = 0) and
       (LManager.Observation.Preferences.OrderCount = 0),
       'Restore defaults returns to saved visibility/order rather than factory defaults');

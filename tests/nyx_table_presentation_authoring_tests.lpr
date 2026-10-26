@@ -29,6 +29,8 @@ uses
   nyx.codec, nyx.codegen, nyx.data, nyx.collections, nyx.collections.columns,
   nyx.collections.paging, nyx.collections.view.types, nyx.collections.query.editor,
   nyx.collections.workbench.policy, nyx.collections.presentation, nyx.collections.alignment,
+  nyx.collections.arrangement, nyx.collections.query.policy,
+  nyx.collections.inspection, nyx.collections.recovery.policy,
   nyx.studio.projects, nyx.studio.session,
   nyx.studio.authoring, nyx.studio.collectionintent, nyx.studio.collectionedits,
   nyx.studio.collections, nyx.studio.stateedits, nyx.studio.agents
@@ -612,6 +614,261 @@ begin
   end;
 end;
 
+{ Authored order is separate from runtime column preferences. Exact column
+  packets prove that movement preserves all declarations and raw presence. }
+procedure ColumnOrdering;
+var
+  LSession: TNyxStudioSession;
+  LShell: TNyxNode;
+  LProjection: TNyxNode;
+  LEdit: TNyxStudioDesignEdit;
+  LIntent: TNyxStudioCollectionIntent;
+  LBad: TNyxStudioCollectionIntent;
+  LRichIntent: TNyxStudioCollectionIntent;
+  LSpec: TNyxCollectionViewSpec;
+  LMoved: TNyxCollectionViewSpec;
+  LRich: TNyxCollectionViewSpec;
+  LRichMoved: TNyxCollectionViewSpec;
+  LRichData: TNyxDataValue;
+  LRichMovedData: TNyxDataValue;
+  LMember: Integer;
+  LSchema: TNyxCollectionSchema;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LDefinition: TNyxText;
+  LSibling: TNyxText;
+  LRefused: Boolean;
+
+  procedure Rebuild;
+  begin
+    FreeAndNil(LShell);
+    LShell := TNyxNode.Create(nkPage, 'column-order-inspector');
+    LProjection := LSession.SelectedProjection;
+    try
+      AddNyxCollectionBindingPanel(LShell, LSession, LProjection);
+    finally
+      FreeAndNil(LProjection);
+    end;
+  end;
+
+  procedure Refuses(const AIntent: TNyxStudioCollectionIntent;
+    const ASpec: TNyxCollectionViewSpec; const AReason: TNyxText);
+  var
+    LRejected: Boolean;
+  begin
+    LRejected := False;
+    try
+      ApplyNyxStudioCollectionViewIntent(AIntent, ASpec, LSchema);
+    except
+      on ENyxCollection do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, AReason);
+  end;
+
+begin
+  LSession := TNyxStudioSession.Create(Seed);
+  LShell := nil;
+  LProjection := nil;
+  try
+    LSession.Select('first-records');
+    LSpec := LSession.Document.Find('definition-table').CollectionView;
+    LSchema := LSession.Document.Collections.Snapshot(LSpec.Key).Schema;
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    LDefinition := TNyxCodec.NodeSnapshot(LSession.Document.Find('definition-table')).ToJSON;
+    LSibling := TNyxCodec.NodeSnapshot(LSession.Document.Find('second-panel')).ToJSON;
+    Rebuild;
+    Check(LShell.Find(NyxStudioColumnOrderID(0, scaColumnEarlier))
+      .Prop(NyxAttributeName(atEnabled)) = 'false', 'first authored column cannot move earlier');
+    Check(LShell.Find(NyxStudioColumnOrderID(1, scaColumnLater))
+      .Prop(NyxAttributeName(atEnabled)) = 'false', 'last authored column cannot move later');
+    Check(CaptureNyxStudioCollection(LSession,
+      LShell.Find(NyxStudioColumnOrderID(0, scaColumnLater)), ntClick,
+      Default(TNyxStudioPendingDesign), LEdit), 'ordinary later button captures typed intent');
+    LIntent := TNyxStudioCollectionIntent.FromData(LEdit.Collection.ToData);
+    Check((LIntent.ToData.Count = 12) and LIntent.SameIntent(LEdit.Collection) and
+      NyxStudioCollectionStructuralAction(LIntent.Action),
+      'move descriptor retains its exact typed field and baseline as structural intent');
+    LMoved := ApplyNyxStudioCollectionViewIntent(LIntent, LSpec, LSchema);
+    Check((LMoved.ToData.Field('columns').Item(0).ToJSON = LSpec.ToData.Field('columns').Item(1).ToJSON) and
+      (LMoved.ToData.Field('columns').Item(1).ToJSON = LSpec.ToData.Field('columns').Item(0).ToJSON),
+      'every original column member moves intact, including explicit text policy');
+    Check((LMoved.ToData.Field('version').AsInteger = LSpec.ToData.Field('version').AsInteger) and
+      (LMoved.TableWorkbenchPolicy.ToData.ToJSON = LSpec.TableWorkbenchPolicy.ToData.ToJSON) and
+      (LMoved.TablePresentationPolicy.ToData.ToJSON = LSpec.TablePresentationPolicy.ToData.ToJSON),
+      'movement preserves descriptor version and table policy presence');
+    LRich := LSpec.ColumnQuery(NyxColumnQuery.Sorting(False))
+      .ColumnLayout(NyxColumnLayout.PinEnd).ColumnText(NyxColumnText.Wrap(2))
+      .ColumnAlignment(NyxColumnAlignment.Horizontal(nchaEnd))
+      .TableLayout(NyxTableLayout.Enabled(False)).TableQuery(NyxTableQuery.Enabled(False))
+      .Inspection(NyxInspectionPolicy.PausedBytes(2048).RemovedIdentities(2))
+      .DraftRecovery(NyxDraftRecoveryPolicy.Entries(0).WarnEntries(0));
+    LRichIntent := LIntent;
+    LRichIntent.LayoutBaseline := NyxQueryEditorBaseline(LSchema, LRich);
+    LRichMoved := ApplyNyxStudioCollectionViewIntent(LRichIntent, LRich, LSchema);
+    LRichData := LRich.ToData;
+    LRichMovedData := LRichMoved.ToData;
+    Check((LRichData.Field('version').AsInteger = 14) and
+      (LRichData.Field('columns').Item(1).ToJSON = LRichMovedData.Field('columns').Item(0).ToJSON),
+      'rich column query/layout/text/alignment values travel together under version14');
+    for LMember := 0 to LRichData.Count - 1 do
+    begin
+
+      if LRichData.Key(LMember) <> 'columns' then
+      begin
+        Check(LRichData.Field(LRichData.Key(LMember)).ToJSON =
+          LRichMovedData.Field(LRichData.Key(LMember)).ToJSON,
+          'column movement preserves independent top-level policy: ' + LRichData.Key(LMember));
+      end;
+    end;
+    Refuses(LIntent, LMoved, 'stale order baseline refuses replay');
+    LBad := LIntent;
+    LBad.Action := scaColumnEarlier;
+    Refuses(LBad, LSpec, 'first-column earlier move refuses without a no-op publication');
+    LBad := LIntent;
+    LBad.Field := TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('Count'));
+    Refuses(LBad, LSpec, 'last-column later move refuses');
+    LBad.Field := TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('Caption'));
+    Refuses(LBad, LSpec, 'wrong scalar family refuses');
+    LBad.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('foreign'));
+    Refuses(LBad, LSpec, 'foreign field refuses');
+    LBad := LIntent;
+    LBad.Projection := cpList;
+    Refuses(LBad, LSpec, 'table order intent refuses a List projection');
+    LBad := LIntent;
+    LBad.Value := '1';
+    Refuses(LBad, LSpec, 'move direction cannot arrive as an unrelated raw string');
+    LBad := LIntent;
+    LBad.LayoutBaseline := '';
+    Refuses(LBad, LSpec, 'missing exact baseline refuses');
+    LSession.ApplyCollectionIntent(LIntent);
+    LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
+    Check((LAfter <> LBefore) and
+      LSession.Document.Find('first-records').HasCollectionView and
+      (LSession.Document.Find('first-records').CollectionView.ColumnAt(0).FieldName = 'Count'),
+      'moving an inherited column creates only that local binding');
+    Check((TNyxCodec.NodeSnapshot(LSession.Document.Find('definition-table')).ToJSON = LDefinition) and
+      (TNyxCodec.NodeSnapshot(LSession.Document.Find('second-panel')).ToJSON = LSibling),
+      'definition and reusable sibling remain exact');
+    LRefused := False;
+    try
+      CaptureNyxStudioCollection(LSession,
+        LShell.Find(NyxStudioColumnOrderID(0, scaColumnLater)), ntClick,
+        Default(TNyxStudioPendingDesign), LEdit);
+    except
+      on ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(LSession.ProjectSnapshot) = LAfter),
+      'old mounted order button refuses after the binding moves');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore, 'Undo restores inherited order and source');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LAfter, 'Redo restores local order and source');
+    Rebuild;
+    LSession.SetSourceDraft(LSession.Source + #10 + '{ unfinished order draft }');
+    LRefused := False;
+    try
+      CaptureNyxStudioCollection(LSession,
+        LShell.Find(NyxStudioColumnOrderID(1, scaColumnEarlier)), ntClick,
+        Default(TNyxStudioPendingDesign), LEdit);
+    except
+      on ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and LSession.SourceDraftPending, 'move preserves unfinished Pascal on refusal');
+  finally
+    LShell.Free;
+    LSession.Free;
+  end;
+end;
+
+{ The semantic dispatcher admits a title and subsequent order change in one
+  revision-aware paired transaction; a retry cannot move the column twice. }
+procedure SemanticColumnOrdering;
+var
+  LAgent: TNyxAgentSession;
+  LDocument: TNyxDocument;
+  LSpec: TNyxCollectionViewSpec;
+  LSchema: TNyxCollectionSchema;
+  LTitle: TNyxStudioCollectionIntent;
+  LMove: TNyxStudioCollectionIntent;
+  LWire: TNyxDataValue;
+  LRequest: TNyxDataValue;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LRevision: Integer;
+  LRefused: Boolean;
+begin
+  LAgent := TNyxAgentSession.Create(Seed);
+  LDocument := nil;
+  try
+    LRevision := LAgent.Revision;
+    LBefore := EncodeNyxProject(LAgent.PreviewPair(LRevision, 'home'));
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LRevision, 'home').Design);
+    LSpec := LDocument.Find('records-table').CollectionView;
+    LSchema := LDocument.Collections.Snapshot(LSpec.Key).Schema;
+    LTitle := Default(TNyxStudioCollectionIntent);
+    LTitle.Action := scaTitle;
+    LTitle.Key := LSpec.Key;
+    LTitle.Projection := cpTable;
+    LTitle.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('Caption'));
+    LTitle.Value := 'Display caption';
+    LSpec := ApplyNyxStudioCollectionViewIntent(LTitle, LSpec, LSchema);
+    LMove := Default(TNyxStudioCollectionIntent);
+    LMove.Action := scaColumnLater;
+    LMove.Key := LSpec.Key;
+    LMove.Projection := cpTable;
+    LMove.Field := LTitle.Field;
+    LMove.LayoutBaseline := NyxQueryEditorBaseline(LSchema, LSpec);
+    LWire := NyxCollectionPatch([
+      NyxCollectionIntentChange(NyxBindingOwner('records-table'), LTitle),
+      NyxCollectionIntentChange(NyxBindingOwner('records-table'), LMove)]).ToData;
+    Check(ReadNyxCollectionPatch(LWire).ToData.ToJSON = LWire.ToJSON,
+      'semantic move retains field, kind, projection and exact baseline through transport');
+    LRequest := NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData('column-order-group')), NyxField('changes', LWire)]);
+    LAgent.Call('nyx_collections', 'Column order test', LRequest);
+    LAfter := EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home'));
+    FreeAndNil(LDocument);
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LAgent.Revision, 'home').Design);
+    Check((LDocument.Find('records-table').CollectionView.ColumnAt(1).FieldName = 'Caption') and
+      (LDocument.Find('records-table').CollectionView.ColumnAt(1).Title = 'Display caption'),
+      'grouped semantic title and move both reach the same stable field');
+    LAgent.Call('nyx_collections', 'Column order test', LRequest);
+    Check(EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home')) = LAfter,
+      'exact semantic retry cannot move a column twice');
+    LRefused := False;
+    try
+      LAgent.Call('nyx_collections', 'Column order test', NyxObject([
+        NyxField('mode', NyxData('apply')), NyxField('expectedRevision', NyxData(LRevision)),
+        NyxField('operationId', NyxData('column-order-stale')), NyxField('changes', LWire)]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home')) = LAfter),
+      'stale semantic revision refuses the whole group');
+    LAgent.Call('nyx_history', 'Column order test', NyxObject([
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('column-order-undo')), NyxField('direction', NyxData('undo'))]));
+    Check(EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home')) = LBefore,
+      'one semantic Undo restores the whole title/order/source group');
+  finally
+    LDocument.Free;
+    LAgent.Free;
+  end;
+end;
+
 procedure SemanticAlignment;
 var
   LAgent: TNyxAgentSession;
@@ -709,6 +966,8 @@ begin
   try
     OrdinaryAuthoring;
     AlignmentAuthoring;
+    ColumnOrdering;
+    SemanticColumnOrdering;
     SemanticAlignment;
     SemanticAuthoring;
     {$ifdef PAS2JS}

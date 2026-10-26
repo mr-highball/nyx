@@ -2510,6 +2510,7 @@ Additional fields depend on that action and are discoverable through tools/list:
 | `bind`, `clear`, `inherit` | No additional fields beyond view ownership/projection |
 | `scope`, `selection` | `scope: application/instance`, or `selection: single/multiple` |
 | `column-title`, `column-mode` | `field`, `kind` and `title` or Boolean `editable` |
+| `column-earlier`, `column-later` | Exact layout/schema `baseline`, `field`, `kind`; `projection` is `table` |
 | `parent` | Text field name `parent`, or null to clear the tree mapping |
 | `remove-column`, `add-column` | Exact `field`, `kind` |
 | `query` | Complete typed `query` and exact schema/binding `baseline` from the public query form |
@@ -2522,6 +2523,12 @@ Ordinary `bind` derives columns from the current schema. Ordinary `add-column`
 adds the field's default presentation; change its title/mode in subsequent
 intents or use a full fluent `bind`. Clear deliberately masks inheritance;
 inherit removes a local override. Exact existing named-part owners are supported.
+Column moves use the typed ordinary form intent, preserve every column policy
+and swap immediate authored neighbours. Stale baselines, wrong families and
+edge moves refuse. They change the default sequence, not a running application's
+user preferences. Like other form intents, they require the exact baseline;
+a compact named move operation deriving that baseline server-side remains a
+separate authoring-tooling gap.
 The query-only named command derives its baseline from the exact-revision
 candidate; agents do not need to retrieve or resend private form metadata.
 

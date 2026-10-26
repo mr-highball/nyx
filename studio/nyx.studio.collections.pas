@@ -149,6 +149,10 @@ const
 
 { Stable ordinary Nyx form roles for shared inspector consumers and tests. }
 function NyxStudioInspectionFieldID(AField: TNyxStudioInspectionField): TNyxText;
+{ Locate an ordinary earlier/later button. The index is a presentation locator;
+  capture independently validates its typed field and exact binding baseline. }
+function NyxStudioColumnOrderID(AColumn: Integer;
+  AAction: TNyxStudioCollectionAction): TNyxText;
 { Capture a complete current form through ordinary typed session intent.
   Exact schema/binding, selected owner, pending locks and drafts are rechecked. }
 function CaptureNyxStudioInspection(ASession: TNyxStudioSession;
@@ -314,7 +318,7 @@ const
     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
      'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
      'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection',
-     'draft-recovery', 'default-draft-recovery');
+     'draft-recovery', 'default-draft-recovery', 'column-earlier', 'column-later');
   CQueryEditor = NyxStudioQueryEditorID;
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
@@ -424,6 +428,23 @@ end;
 function NyxStudioQueryPolicyDefaultID(AColumn: Integer): TNyxText;
 begin
   Result := NyxStudioQueryPolicyFormID(AColumn) + '-default';
+end;
+
+function NyxStudioColumnOrderID(AColumn: Integer;
+  AAction: TNyxStudioCollectionAction): TNyxText;
+begin
+
+  if (AColumn < 0) or (AColumn >= NyxMaximumColumnLayoutFields) or
+    not (AAction in [scaColumnEarlier, scaColumnLater]) then
+  begin
+    raise ENyxCollection.Create('Choose a bounded column and an earlier/later action');
+  end;
+  Result := 'collection-column-' + TNyxText(IntToStr(AColumn)) + '-earlier';
+
+  if AAction = scaColumnLater then
+  begin
+    Result := 'collection-column-' + TNyxText(IntToStr(AColumn)) + '-later';
+  end;
 end;
 
 function NyxStudioLayoutPolicyFormID(AColumn: Integer): TNyxText;
@@ -947,6 +968,7 @@ var
   LFound: Boolean;
   LLocked: Boolean;
   LPendingIndex: Integer;
+  LOrderBaseline: TNyxText;
 
   function Action(AKind: TNyxKind; const AID, ATitle: TNyxText;
     ACommand: TCollectionCommand): TNyxNode;
@@ -997,7 +1019,7 @@ begin
          scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
          scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
          scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-         scaColumnAlignment, scaDefaultColumnAlignment,
+         scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater,
          scaInspection, scaDefaultInspection]) then
     begin
       try
@@ -1064,6 +1086,8 @@ begin
         .Configure.InputType(niNumber).Value(LPaging.FirstPage).Done);
       LPanel.Add(Action(nkButton, 'collection-default-paging', 'Show all results', scaDefaultPaging));
     end;
+    LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
+    LOrderBaseline := NyxQueryEditorBaseline(LSchema, LSpec);
     for LIndex := 0 to LSpec.Count - 1 do
     begin
       LColumn := LSpec.ColumnAt(LIndex);
@@ -1119,12 +1143,25 @@ begin
         LRow.Add(Action(nkButton, LID + '-default-sizing', 'Restore default sizing', scaColumnDefault)
           .Configure.Extension(CField, LColumn.FieldName)
           .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
+        LRow.Add(Action(nkButton, NyxStudioColumnOrderID(LIndex, scaColumnEarlier),
+          'Move earlier', scaColumnEarlier).Configure
+          .Enabled(not LLocked and (LIndex > 0))
+          .AccessibleName('Move ' + LColumn.Title + ' earlier')
+          .Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind))
+          .Extension(CPolicyBaseline, LOrderBaseline).Done);
+        LRow.Add(Action(nkButton, NyxStudioColumnOrderID(LIndex, scaColumnLater),
+          'Move later', scaColumnLater).Configure
+          .Enabled(not LLocked and (LIndex < LSpec.Count - 1))
+          .AccessibleName('Move ' + LColumn.Title + ' later')
+          .Extension(CField, LColumn.FieldName)
+          .Extension(CKind, NyxStateKindName(LColumn.Kind))
+          .Extension(CPolicyBaseline, LOrderBaseline).Done);
       end;
       LRow.Add(Action(nkButton, LID + '-remove', 'Remove column', scaRemoveColumn)
         .Configure.Extension(CField, LColumn.FieldName)
         .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
     end;
-    LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
     AddInspectionForm(LPanel, ASession.SelectedID, LSchema, LSpec,
       NyxCollectionProjectionForNode(AProjection), LLocked);
     AddDraftRecoveryForm(LPanel, ASession.SelectedID, LSchema, LSpec,
@@ -2229,6 +2266,21 @@ begin
       begin
         raise ENyxCollection.Create('Collection binding changed; use its current inspector');
       end;
+
+      if LAction in [scaColumnEarlier, scaColumnLater] then
+      begin
+
+        if ASession.SourceDraftPending then
+        begin
+          raise ENyxCollection.Create('Resolve the pending Pascal draft before moving a column');
+        end;
+        AEdit.Collection.LayoutBaseline := ANode.Prop(CPolicyBaseline);
+
+        if AEdit.Collection.LayoutBaseline <> NyxQueryEditorBaseline(LSchema, LSpec) then
+        begin
+          raise ENyxCollection.Create('Column order changed; use its current inspector');
+        end;
+      end;
     finally
       LProjection.Free;
     end;
@@ -2291,7 +2343,7 @@ begin
 
   if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
     scaColumnMinimum, scaColumnMaximum, scaColumnDefault, scaPageSize,
-    scaInitialPage, scaDefaultPaging] then
+    scaInitialPage, scaDefaultPaging, scaColumnEarlier, scaColumnLater] then
   begin
     { Refuse an incomplete extent or inverted bound at the ordinary input
       boundary, where the adapter can restore the exact accepted field face.

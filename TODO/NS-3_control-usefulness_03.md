@@ -22,6 +22,34 @@ and reassess the delivery instead of extending internal variants.
 
 **Description:**
 
+**Authored column order — 2026-10-25:**
+
+The Inspector now exposes Move earlier/later beside each column's sizing fields.
+First/last edge moves are disabled; accessible names identify the actual field.
+Typed field identity and the complete binding/schema baseline protect capture,
+replay and semantic transactions. Moving a field preserves every column member,
+table policy and raw presence. Reusable definitions/peers remain independent;
+unfinished Pascal, stale/foreign input and impossible boundary moves refuse.
+
+The ordinary public service-monitor journey passes 91/95 native checks at
+1280/390, including both move directions and exact paired Undo/Redo. Actual
+Save/Open produces identical project/Pascal bytes at both widths; its own exact
+compiled constructor passes 26/26. Portable authoring/semantic checks pass 98;
+native MCP discovery passes 244 with all 76 expected change branches. Both full
+Studios and the portable authoring consumer compile. Thirteen accepted jobs,
+six complete clean native heaps and unchanged inputs are recorded in WORK.md;
+the initial wrong history argument and unsupported browser-server fixture attempt
+remain retained. Actual browser/physical/AT/visual acceptance remains open.
+
+This is the second delivery batch after reprioritization without a complete
+original criterion closure; earlier no-closure history is preserved. Reassessment
+changes the next action to the existing W2 public long-value inspection/copy/
+filtered-export journey using the current menus and host abstractions. Stop
+order/policy/profiling variants. A compact named semantic move deriving its
+baseline server-side remains an explicit criterion 6 tooling gap; typed ordinary
+intents already work. No original criterion is weakened or credited, and the
+complete W1 browser/quality gates remain required.
+
 **Public service-monitor Studio journey — 2026-10-25:**
 
 The focused native consumer now drives the actual public service monitor through
@@ -41,15 +69,9 @@ task is accepted. The new consumer is deliberately native; actual browser input,
 physical devices, rendered/AT quality and the full original criteria remain open.
 Studio semantic-session discovery returned none, so no active design was edited.
 
-Source review identifies the next direct user-facing gap under criteria 1/6:
-runtime Columns offers ordering, but the ordinary Inspector exposes no command
-to move a field in the authored default column order. Add discoverable earlier/
-later controls using typed, stable field intent, ordinary paired source/history
-and the existing semantic operation boundary. Preserve every column policy and
-raw presence, refuse stale/foreign/boundary moves, and verify Save/Open plus this
-journey's own generated application. Reuse this maintained consumer rather than
-returning to an unrelated full-query/profile sequence. WORK.md owns receipts
-and the exact native/browser distinction; the original W1/W2 finish lines remain.
+That source review identified the authored-order gap now addressed by the
+continuation above. Reuse this maintained consumer for the remaining original
+W1/W2 finish lines; do not return to an unrelated full-query/profile sequence.
 
 The remaining measured native resize cost now has a focused
 [geometry-publication prerequisite](NS-2_lcl-renderer_02.md). It serves the native

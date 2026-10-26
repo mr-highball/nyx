@@ -9,6 +9,65 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — authored default column ordering — 2026-10-25
+
+Previous goal turn: PROGRESS. Parent8f9ff7e is remote-verified. Root remains SOLO.
+This second delivery batch after the user-facing reprioritization serves
+workbench03 W1 criteria1/5/6/7. Earlier no-closure history stays intact; no full
+original criterion, task or completion credit closes from this checkpoint.
+
+The ordinary Inspector now offers Move earlier/later beside each table column's
+sizing controls, with disabled edge moves and field-specific accessible names.
+Two appended enum actions preserve old ordinals and private wire shapes. Exact
+typed field/schema/binding baselines protect capture and replay. The existing
+column reconstruction copies the swapped fields with all raw policy presence;
+no new preference/state store or descriptor version is introduced. Reusable
+instance moves create only their local binding. Runtime Columns stays separate.
+
+The existing semantic intent transport/discovery advertises both actions through
+revision-aware grouped edits. A title followed by a move admits as one paired
+transaction; retry, stale revision, wrong family, missing field/baseline, boundary
+and pending-source refusals retain accepted work. Exact rich version14 packets
+keep independent query, paging, display, layout, inspection and recovery facts.
+A compact named move that derives its baseline server-side remains a specific
+criterion6 tooling gap; do not claim private form metadata is a finished small
+agent API. No connected observing/MCP session was available or modified.
+
+Private column-order-03/final-evidence-private.json records13 accepted terminal
+jobs and753 unchanged source inputs. Portable authoring/semantic checks pass98;
+native MCP discovery passes244 with all76 expected branches. The ordinary public
+service-monitor Studio/Save/Open journey passes91 at1280 and95 at390, including
+both move directions, exact Undo/Redo and retained width/visibility/pins. Both
+widths save identical project/Pascal bytes. Its own exact newly saved Pascal
+constructor is independently compiled and passes26 at each width. All six native
+heaps are complete and zero-unfreed. Both full Studios and the portable authoring
+consumer compile. There are zero owned warnings;14 installed pas2js Classes case
+warnings remain recorded, without SDK edits or suppression.
+
+Failed predecessor01 retains the test's wrong nyx_history argument (action rather
+than direction), with a clean heap. Predecessor02 passes98/244 but its orchestration
+incorrectly attempts to browser-compile the native MCP-server fixture, which
+requires SyncObjs. The corrected driver keeps that actual discovery native and
+compiles the portable authoring path. Original assertions are retained; no
+product workaround for that unsupported test target was introduced.
+
+Actual browser interaction, physical input, pixels/accessibility and complete
+W1/W2 acceptance remain open. The browser policy refusal was not retried or
+bypassed; no listener, LAN replacement, active user-project edit or helper ran.
+All current readers are finished. Cached native units were reused with ordinary
+FPC source/dependency checks; no new cold-build or performance claim follows.
+
+Reassessment after two delivery batches without original criterion closure now
+changes the next action: stop order/policy/profiling variants and finish the
+existing W2 public full-value inspection/copy/filtered-export workflow using
+current menus and typed clipboard/file hosts. Preserve unfinished edits, make
+raw/displayed and selected/visible/all-filtered scopes explicit, and qualify
+cancel/unavailable outcomes through that same useful consumer. This remains the
+ranked table-workbench outcome; the next broader queue item is Studio workspace
+usability. Keep the W1 browser/physical/AT/visual gates and compact semantic move
+follow-up explicit. Recovery expansion and resolver work remain parked.
+
+
 ## Current checkpoint — public service-monitor Studio journey — 2026-10-25
 
 Previous goal turn: PROGRESS. Parentd8eda08 is remote-verified. Root remains SOLO.

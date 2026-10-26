@@ -599,7 +599,7 @@ end;
   number of schema branches. Named operations retain separate closed shapes. }
 function ExactChangeBranches(const AChanges: TNyxDataValue): Boolean;
 const
-  CActions: array[0..48] of TNyxText = (
+  CActions: array[0..50] of TNyxText = (
     'create', 'remove', 'add-field', 'default', 'add-row', 'remove-row', 'cell',
     'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
     'add-column', 'clear', 'inherit', 'selection', 'query',
@@ -610,7 +610,7 @@ const
     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
     'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection',
-    'draft-recovery', 'default-draft-recovery');
+    'draft-recovery', 'default-draft-recovery', 'column-earlier', 'column-later');
   CNamed: array[0..18] of TNyxText = (
     'define', 'field', 'remove-field', 'append/update-row', 'move-row',
     'bind', 'query', 'typeahead', 'table-query', 'column-query', 'table-layout', 'column-layout',
@@ -628,8 +628,8 @@ const
   CFamilies: array[0..3] of TNyxText = ('text', 'boolean', 'integer', 'number');
   CScalars: array[0..3] of TNyxText = ('string', 'boolean', 'integer', 'number');
 var
-  LCounts: array[0..48] of Integer;
-  LFamilies: array[0..48, 0..3] of Boolean;
+  LCounts: array[0..50] of Integer;
+  LFamilies: array[0..50, 0..3] of Boolean;
   LNamed: array[0..18] of Boolean;
   LBranch, LProperties, LOperation, LChoices: TNyxDataValue;
   LIndex, LAt, LFamily, LAction, LShape: Integer;
@@ -1002,7 +1002,7 @@ begin
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 74, 'nineteen named commands and all forty-nine typed ordinary actions');
+    Check(LChanges.Count = 76, 'nineteen named commands and all fifty-one typed ordinary actions');
     { BEGIN EXPANDED_ACTION_CHECK }
     Check(ExactChangeBranches(LChanges), 'nineteen named shapes and every typed action/family occur exactly once');
     { END EXPANDED_ACTION_CHECK }

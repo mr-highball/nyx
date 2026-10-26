@@ -484,7 +484,7 @@ begin
       scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
       scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
       scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-      scaColumnAlignment, scaDefaultColumnAlignment] then
+      scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
     begin
       LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
       LRequired := LRequired + ',"baseline"';
@@ -555,7 +555,7 @@ begin
         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
         scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
         scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-        scaColumnAlignment, scaDefaultColumnAlignment] then
+        scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
       begin
         LProperties := StringReplace(LProperties,
           '"projection":{"enum":["list","table","tree"]}',
@@ -581,7 +581,7 @@ begin
       scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
       scaColumnQuery, scaDefaultColumnQuery, scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
     scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment] then
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater] then
     begin
       LProperties := LProperties + ',"field":{"type":"string","minLength":1},' +
         '"kind":{"enum":["text","boolean","integer","number"]}';

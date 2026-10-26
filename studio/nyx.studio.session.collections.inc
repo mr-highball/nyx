@@ -231,7 +231,7 @@ begin
     scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
     scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment,
+    scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater,
     scaInspection, scaDefaultInspection]) and SourceDraftPending then
   begin
     { An authored query or command-policy replacement regenerates managed Pascal.

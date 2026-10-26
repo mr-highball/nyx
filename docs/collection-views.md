@@ -945,8 +945,8 @@ Use whole-binding **Inherit** to restore a reusable definition's binding;
 **Clear** instead records a deliberate unbound mask. A policy reset cannot
 silently remove that mask or rebind the table.
 
-The selected bound table's Inspector includes an independent **Column arrangement
-defaults** card. Its table form exposes Enabled, all five features, minimum center
+The selected bound table's Inspector includes an independent **Table defaults**
+card. Its table form exposes Enabled, all five features, minimum center
 width and Fit sample size. Each column disclosure exposes initial visibility,
 logical pin and its five features. **Apply layout defaults** submits one complete
 typed policy through Studio's existing paired design/Pascal command and Undo.
@@ -955,6 +955,21 @@ as `-` remain raw input through inspector replacement; they are parsed only on
 Apply. Pending source or structural edits lock the exact owner, and changed
 schema/binding context retires an older form draft.
 
+Each table column also has **Move earlier** and **Move later** buttons beside
+its sizing controls. They author the default order represented by the fluent
+`.Column(...)` sequence. The first/last edge move is disabled. A move swaps the
+chosen field with its immediate authored neighbour, including hidden columns;
+width, editing, formatting, text, query, visibility and logical pins stay with
+their fields. Pins still determine the target's physical edge panes.
+
+Each move is one paired design/Pascal change with Undo/Redo and survives
+Save/Open and generation. A reusable instance receives a local binding; its
+definition and peers retain their order. Changed schema/binding baselines,
+foreign fields, pending Pascal and impossible edge moves refuse before mutation.
+No new view descriptor version is needed: order is already part of the saved
+column sequence. Runtime **Columns** preferences remain independent and reset
+to that saved sequence.
+
 These saved defaults are separate from an application's runtime **Columns**
 preferences. Runtime resize, order, hidden fields and pins do not rewrite the
 document or generated Pascal. Saved layout declarations use strict view descriptor
@@ -962,8 +977,10 @@ version eight, preserving nullable complete table/column policies and the existi
 64-field budget. Removing every layout declaration returns to the applicable
 earlier descriptor version. [Collection agent commands](studio-agents.md#structured-collection-context-and-authoring)
 use the same typed admission and distinguish local, inherited and cleared owners.
-The authored-layout inspector and MCP additions are current-source work; their
-native/browser compilation and executed Studio qualification remain pending.
+The maintained public service-monitor consumer qualifies ordinary native Studio
+ordering, paired history and its own saved/generated application at wide/compact
+widths. Both Studios and portable authoring consumers compile; actual browser
+interaction, physical input and visual/accessibility quality remain separate gates.
 
 ## Browser column resizing — source preview
 
