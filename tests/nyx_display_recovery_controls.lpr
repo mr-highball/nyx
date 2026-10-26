@@ -30,6 +30,8 @@ uses
   nyx.studio.sourcejobs, nyx.studio.projects, nyx.test.capture.lcl;
 
 type
+  { Reach the mounted native button's ordinary Click route without keeping a
+    widget reference past its dispatch or mutating the Studio session directly. }
   TControlAccess = class(TControl);
 
 var
@@ -164,8 +166,9 @@ begin
     Check((LStudio.ShellView.Root.Find(NyxStudioDisplayRecoveryID) <> nil) and
       LStudio.ShellView.ControlFor(NyxStudioDisplayRecoveryID).IsVisible,
       'ordinary editor exposes its Nyx recovery notice');
-    Check(TLabel(LStudio.SourceView.ControlFor('studio-source-status')).Caption =
-      LStudio.SourceCommands.Message,
+    Check(LStudio.SourceView.ControlFor('studio-source-status').IsVisible and
+      (TLabel(LStudio.SourceView.ControlFor('studio-source-status')).Caption =
+        LStudio.SourceCommands.Message),
       'source status reports accepted admission independently of failed display');
     LCommitted := EncodeNyxProject(LStudio.Session.ProjectSnapshot);
     Check(not LStudio.CanvasView.ControlFor('home').Parent.Enabled,

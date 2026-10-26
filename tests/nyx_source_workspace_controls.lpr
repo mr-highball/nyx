@@ -25,14 +25,19 @@ program nyx_source_workspace_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, LCLType, LCLIntf, LMessages,
+  Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, LCLType, LCLIntf, LMessages, Types,
   Graphics, IntfGraphics, FPWritePNG,
-  nyx.text, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
+  nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
   nyx.studio.projects, nyx.studio.lcl, nyx.modal.lcl, nyx.studio.source,
-  nyx.split.lcl, nyx.studio.inspector, nyx.studio.drag;
+  nyx.split.lcl, nyx.studio.inspector, nyx.studio.drag, nyx.viewport, nyx.viewport.lcl,
+  nyx.editing, nyx.editing.lcl;
 
 type
+  { Protected Click reaches the mounted control's ordinary input route. The
+    fixture borrows the control only for that dispatch and never owns it. }
   TControlAccess = class(TControl);
+  { Retain callback failure text until the next UI settlement assertion. This
+    observer outlives the Studio and holds no controller or widget reference. }
   TObserver = class
   public
     Failure: TNyxText;
@@ -82,6 +87,9 @@ begin
   LDeadline := GetTickCount64 + 8000;
   repeat
     Application.ProcessMessages;
+    { Native selection/history observers coalesce at application idle. A real
+      GUI turn includes that publication before judging the retained caret. }
+    Application.Idle(False);
 
     if GObserver.Failure <> '' then
     begin
@@ -98,6 +106,27 @@ begin
     'owned editor work reaches its terminal presentation');
 end;
 
+{ Each source step types a suffix through the real native editing route.
+  Preserve the already displayed CRLF projection instead of replacing the whole
+  physical file with authored LF text. LCL SelText uses UTF-8; the public caret
+  is measured in the current Unicode frame. Exact authored LF assertions remain. }
+procedure TypeSource(const AText: TNyxText);
+var
+  LPhysical: TNyxText;
+  LCurrent: TNyxText;
+  LEnd: Integer;
+begin
+  LCurrent := GStudio.Session.DraftSource;
+  Check(Copy(AText, 1, Length(LCurrent)) = LCurrent,
+    'the source-input step extends the current exact authored frame');
+  LPhysical := NyxLCLInputText(LSource);
+  LEnd := NyxTextScalarCount(LPhysical);
+  GStudio.CodeView.SetTextSelection('studio-code',
+    NyxTextSelection(LPhysical, LEnd, LEnd));
+  LSource.SelText := UTF8Encode(Copy(AText, Length(LCurrent) + 1, MaxInt));
+  Pump;
+end;
+
 procedure Click(const AID: TNyxText);
 var
   LControl: TControl;
@@ -110,8 +139,69 @@ begin
   else
   begin
     LControl := GStudio.SourceView.ControlFor(AID);
+    GStudio.SourceView.Reveal(AID, niRuntime);
+    Check(LControl.IsVisible and LControl.Enabled,
+      'source command is reachable through its ordinary scroll viewport: ' + AID);
   end;
   TControlAccess(LControl).Click;
+  Pump;
+end;
+
+{ The ordinary native scroll control must expose clipped commands when focus
+  enters them. The source memo remains separately owned through that navigation. }
+procedure CheckActionLane;
+var
+  LBar: TScrollingWinControl;
+  LApply: TControl;
+  LExpand: TWinControl;
+  LForward: TWinControl;
+  LViewport: TNyxViewportSnapshot;
+  LFace: TRect;
+  LOrigin: TPoint;
+
+  { Native scroll bars can move the HWND without changing LCL Left/Top.
+    Read the actual complete window rectangle, including its border, rather
+    than treating retained logical coordinates as displayed geometry. }
+  function FaceBounds(AControl: TWinControl): TRect;
+  begin
+
+    if not AControl.HandleAllocated or (GetWindowRect(AControl.Handle, Result) = 0) then
+    begin
+      raise Exception.Create('Native source command window geometry is unavailable');
+    end;
+  end;
+
+begin
+  Check(GStudio.SourceView.ControlFor('studio-code-actions') is TScrollingWinControl,
+    'source actions use the public Nyx scroll viewport');
+  LBar := TScrollingWinControl(GStudio.SourceView.ControlFor('studio-code-actions'));
+  { The public snapshot follows logical scrolling as well as native bars.
+    In logical mode inherited TScrollBox bars are deliberately kept at zero. }
+  LBar.ScrollBy(-Round(CaptureNyxViewport(LBar).X.Position), 0);
+  LApply := GStudio.SourceView.ControlFor('action-apply-source');
+  LExpand := GStudio.SourceView.FocusFor('action-expand-source');
+  LOrigin := LBar.ClientToScreen(Point(0, 0));
+  LFace := FaceBounds(LExpand);
+  Check((LApply.Top = LExpand.Top) and
+    (LFace.Right <= LOrigin.X + LBar.ClientWidth),
+    'Apply and Expand lead the single lane and fit its current viewport');
+  LForward := GStudio.SourceView.FocusFor('action-source-forward');
+  LForward.SetFocus;
+  Pump;
+  LViewport := CaptureNyxViewport(LBar);
+  LOrigin := LBar.ClientToScreen(Point(0, 0));
+  LFace := FaceBounds(LForward);
+  WriteLn('Source command focus / offset ', LViewport.X.Position:0:0,
+    ' / native face ', LFace.Left, ':', LFace.Right,
+    ' / clip ', LOrigin.X, ':', LOrigin.X + LBar.ClientWidth);
+  Check(LForward.Focused and LViewport.X.Defined and (LViewport.X.Position > 0) and
+    (LFace.Left >= LOrigin.X) and
+    (LFace.Right <= LOrigin.X + LBar.ClientWidth),
+    'ordinary focus reveals the complete trailing source command / offset=' +
+      TNyxText(FloatToStr(LViewport.X.Position)) + ' / face=' + IntToStr(LFace.Left) +
+      ':' + IntToStr(LFace.Right) + ' / clip=' + IntToStr(LOrigin.X) +
+      ':' + IntToStr(LOrigin.X + LBar.ClientWidth));
+  LSource.SetFocus;
   Pump;
 end;
 
@@ -192,6 +282,11 @@ begin
     Capture(GForm, 'source-sizing');
     Check(LNormalHeight > 120,
       'ordinary source gains useful space from the viewport instead of a fixed desktop split');
+    Check(not GStudio.SourceView.ControlFor('studio-source-status').Visible and
+      (TNyxText(TLabel(GStudio.ShellView.ControlFor('studio-status')).Caption) =
+        GStudio.Status),
+      'the ordinary footer presents current editor status without a duplicate source row');
+    CheckActionLane;
     Click('action-outputs');
     Check((LSource.Height >= 120) and
       (GStudio.SourceView.ControlFor('studio-source-pane').Height >= 240) and
@@ -199,7 +294,7 @@ begin
       'source remains readable beside open Outputs through public pane minima');
     Capture(GForm, 'source-with-outputs');
     LDraft := LPair.Source + #10 + '{ This draft belongs to the same retained editor. }' + #10;
-    LSource.Text := LDraft;
+    TypeSource(LDraft);
     Pump;
     LSource.SelStart := 10;
     LSource.SelLength := 6;
@@ -253,7 +348,9 @@ begin
     LDetails := TNyxLCLSplitView(GStudio.ShellView.ControlFor('studio-details-split'));
     Check((LDetails.State.Position = LDetailsPosition) and
       (LSource.SelStart = 10) and (LSource.SelLength = 6),
-      'growing the host restores space without rewriting preference or caret');
+      'growing the host restores space without rewriting preference or caret / position=' +
+      IntToStr(LDetails.State.Position) + ':' + IntToStr(LDetailsPosition) +
+      ' / caret=' + IntToStr(LSource.SelStart) + ':' + IntToStr(LSource.SelLength));
     Click('action-agents');
     Click('action-messages-tab');
     Check(not GStudio.SourceView.ControlFor('studio-code-host').Visible and
@@ -267,6 +364,8 @@ begin
     Click('action-expand-source');
     Check(GStudio.SourceModal.IsOpen and not GForm.Enabled,
       'expanded native host isolates background input');
+    Check(GStudio.SourceView.ControlFor('studio-source-status').Visible,
+      'the floating editor retains its own operation status while the owner is disabled');
     Check((GStudio.CodeView.InputFor('studio-code') = LSource) and
       (LSource.Height > LNormalHeight + 200) and (LSource.SelStart = 10),
       'the same source editor receives an expanded viewport and keeps its range');
@@ -285,7 +384,7 @@ begin
       'native modal resize follows available space without losing editor ownership or input');
     { Source diagnostics change the workspace's control structure. Both rejection
       and admission must remain usable inside the modal and retain the memo. }
-    LSource.Text := LDraft + #10 + '''unfinished';
+    TypeSource(LDraft + #10 + '''unfinished');
     Click('action-apply-source');
     Check(GStudio.SourceModal.IsOpen and GStudio.Session.SourceDiagnostic.Defined and
       (GStudio.SourceView.Root.Find(NyxStudioDiagnosticGoID) <> nil) and
@@ -295,7 +394,7 @@ begin
     Click('action-reset-source');
     Check(not GStudio.Session.ProjectSnapshot.Pending and GStudio.SourceModal.IsOpen,
       'expanded Restore removes rejected diagnostics without retiring the editor');
-    LSource.Text := LDraft;
+    TypeSource(LDraft);
     LSource.SelStart := 10;
     LSource.SelLength := 6;
     Click('action-apply-source');
@@ -315,7 +414,7 @@ begin
     { Actual input creates an unfinished buffer beside the applied source.
       Native history must park it in Redo, then restore both the buffer and base
       through the ordinary shell callbacks and retained TMemo adapter. }
-    LSource.Text := LDraft + #10 + '{ A later unfinished note. }';
+    TypeSource(LDraft + #10 + '{ A later unfinished note. }');
     Pump;
     LHistoryPair := GStudio.Session.ProjectSnapshot;
     Click('action-undo');
@@ -337,9 +436,15 @@ begin
     LSource.SelStart := 10;
     LSource.SelLength := 6;
     Pump;
+    Capture(GForm, 'source-compact');
+    Check(LSource.Height >= 120,
+      'compact source actions leave a readable ordinary editor before expansion');
+    CheckActionLane;
     Click('action-expand-source');
     Check(GStudio.SourceModal.IsOpen and (LSource.Width > 250),
       'narrow expanded editor uses the available native viewport width');
+    Check(GStudio.SourceView.ControlFor('studio-source-status').IsVisible,
+      'narrow expanded source keeps operation status inside the active modal');
     Capture(TForm(GStudio.SourceModal.Control), 'source-expanded-narrow');
     LKey := VK_ESCAPE;
     TForm(GStudio.SourceModal.Control).OnKeyDown(GStudio.SourceModal.Control, LKey, []);

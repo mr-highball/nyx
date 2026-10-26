@@ -9,6 +9,79 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — readable source workspace — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent3a1ee9c is remote-verified. Root remains SOLO.
+This is the fourth user-facing delivery since reprioritization and the first
+Studio workspace batch after the recorded switch. It serves Studio-slice01
+criterion1 and full-authoring workspace/Inspector outcomes. Earlier no-closure
+history remains intact; no complete original criterion/task/credit closes.
+
+The existing native source-workspace consumer reproduced a91-pixel desktop code
+face. Growing source commands wrapped above Pascal. One public Nyx scroll lane
+now bounds their height; Apply and Expand lead it, with all existing command IDs
+and handlers retained. Keyboard focus reveals complete trailing faces. No font
+or design scale is reduced and no new per-project presentation field is added.
+
+Ordinary source outcomes share the editor footer. Expanded editors retain local
+status at desktop and compact widths. A failed display also keeps the separate
+source admission result visible. A real final01 regression exposed both adapters'
+retained SyncDisplayRecovery path forcing the idle row back on; a shared typed
+visibility rule now governs composition and both retained updates. This fixes
+the actual late squeeze rather than retaining a width override that masked it.
+The existing activity/progress owner, source queue, document history and platform
+modal/scroll contracts remain authoritative.
+
+Private studio-workspace-01/final-evidence-private.json records14 accepted terminal
+jobs. Final02 passes86 actual native workspace checks through wide, short and390
+allocation, Outputs/Agents, source/messages, diagnostics/Restore/Apply, modal resize,
+close/Escape and exact paired Undo/Redo. The same memo, exact unfinished source,
+caret10:6 and requested splits survive. Desktop code height grows91 to149 pixels;
+nested details retain133 pixels of code beside202 of canvas. Actual HWND bounds
+confirm complete focused trailing commands after horizontal scrolling. Current
+source-input companions pass38/38; ordinary Inspector/chrome passes57/61 at1280/390.
+The retained display-admission/refusal/retry consumer passes12, including visible
+source success beside a failed preview. All six native heaps are complete and
+zero-unfreed. Eight compiler jobs, including both full Studios and the two browser
+companions, pass with zero owned/21 installed pas2js Classes warning occurrences.
+No SDK edits or suppression occur. Cached native units use normal FPC dependency
+checks; neither a cold-build nor performance-budget claim follows.
+
+The current cohorts reverify755 pinned primary product/consumer inputs. The
+unchanged tracked capture-only helper is separately fingerprinted after execution
+with a timestamp preceding the jobs; it is not claimed as an initial pin. Native
+wide/compact, nested and expanded captures are reviewed as redraw evidence,
+separately from physical-device/assistive and full visual-quality acceptance.
+Browser companions, including the new lane/status visibility assertions, compile
+only; no browser runtime or observing deployment is claimed.
+
+Retain red, repair01-05, native-bounds01/02, input01-03, final01 and earlier matrices.
+These preserve the real initial/retained squeeze and the fixture's initial footer
+expectation, inherited-bar/logical-coordinate observations, WinAPI result type,
+normalizing TMemo.Text setter and missing application-idle publication. Actual
+native window rectangles resolve the geometry question. Native suffix typing
+preserves the existing physical CRLF projection and exact authored LF assertions;
+input02's passing full replacement had visibly collapsed source lines, so its
+visual result is not accepted. No original assertion is removed or weakened.
+All actual source/runtime readers are joined; no source freeze remains active.
+
+Prerequisite review retains model acceptance and the current codegen/browser/
+compile-service tasks' open criteria. This bounded source-shell repair does not
+accept them. No connected Codex document session was available; real native input
+harnesses qualify behavior semantic edits cannot prove. The prior browser policy
+refusal was not retried or bypassed. No listener, LAN/service replacement, active
+user-project change, helper or recurring cleanup ran. Untracked1280/390 are retained.
+
+Stop source toolbar/status/layout variants. Next reuse the ordinary component
+journey for actual canvas selection, text Properties, Events/source navigation,
+expanded-source return and preview at desktop/compact widths. Preserve unfinished
+Pascal, exact paired history and user selection; repair a demonstrated obstruction.
+Keep all original browser/input/quality and prerequisite acceptance gates explicit.
+The ranked DataToolbar and Tool Canvas outcomes follow; workbench03 retains its
+remaining original checks and compact named semantic move. Resolver and recovery-
+policy expansion stay parked. Reassess before another workspace expansion if the
+next batch still cannot close an original criterion; do not reset prior counters.
+
 ## Current checkpoint — scoped table inspection and export — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent1ba08b3 is remote-verified. Root remains SOLO.

@@ -303,6 +303,8 @@ var
   LCancel: TJSEvent;
   LOptions: TJSObject;
   LPanel: TJSHTMLElement;
+  LCommands: TJSHTMLElement;
+  LExpand: TJSHTMLElement;
 begin
   try
 
@@ -328,6 +330,13 @@ begin
           GInput := TJSHTMLTextAreaElement(Find('studio-code'));
           GHeight := GInput.getBoundingClientRect.height;
           Check(GHeight > 60, 'split source has a usable physical face');
+          LCommands := Find('studio-code-actions');
+          LCommands.scrollLeft := 0;
+          LExpand := Find('action-expand-source');
+          Check((LCommands.getBoundingClientRect.height <= 65) and
+            (LExpand.getBoundingClientRect.top = Find('action-apply-source').getBoundingClientRect.top) and
+            (LExpand.getBoundingClientRect.right <= LCommands.getBoundingClientRect.right),
+            'source commands keep one bounded lane with Apply and Expand immediately reachable');
           GDraft := GInput.value + #10 + '{ Pending English source workspace draft. }';
           for LIndex := 1 to 80 do
           begin

@@ -278,7 +278,8 @@ begin
       'actual host refusal retains the old display and exposes the Nyx recovery notice');
     Check(Find('display-title').closest('[inert]') <> nil,
       'stale canvas faces are inert while accepted content needs display recovery');
-    Check(Pos('Pascal applied', Find('studio-source-status').textContent) = 1,
+    Check((Find('studio-source-status').getBoundingClientRect.height > 0) and
+      (Pos('Pascal applied', Find('studio-source-status').textContent) = 1),
       'source status reports successful admission independently of failed display');
     await(Capture('display-recovery-stale'));
     Find('action-actions').click;

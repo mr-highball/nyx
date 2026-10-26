@@ -316,6 +316,12 @@ function BuildNyxStudioSourcePane(ASession: TNyxStudioSession;
   document, pending source and editor input ownership remain unchanged. }
 function RestoreNyxStudioSourceActivity(APane: TNyxNode; AWorking: Boolean): Boolean;
 
+{ Ordinary source outcomes share the workspace footer. Floating editors need a
+  local status, as does a failed display whose admission and rendering outcomes
+  differ. Retained adapter updates must follow the same rule as composition. }
+function NyxStudioSourceStatusVisible(AExpanded, ADisplayBlocked: Boolean;
+  const AMessage: TNyxText): Boolean;
+
 { Immediately suppress the previous variant's observation after retained
   proposal navigation. Root is borrowed; only the eight bounded stock detail
   cards show the new selection awaiting its reply. The controller synchronizes
@@ -341,6 +347,12 @@ uses
   nyx.studio.sourcefiles,
   nyx.binding, nyx.interaction, nyx.resources, nyx.application.resources,
   nyx.composition, nyx.studio.rootview, nyx.studio.buildview, nyx.studio.sections;
+
+function NyxStudioSourceStatusVisible(AExpanded, ADisplayBlocked: Boolean;
+  const AMessage: TNyxText): Boolean;
+begin
+  Result := (AMessage <> '') and (AExpanded or ADisplayBlocked);
+end;
 
 function RestoreNyxStudioSourceActivity(APane: TNyxNode; AWorking: Boolean): Boolean;
 var
@@ -661,15 +673,26 @@ begin
   Result := TNyxNode.Create(nkColumn, 'studio-source-pane')
     .Configure.Gap(0).Padding(0).Flex(1).Done;
   try
+    { Share ordinary status with the footer. A floating editor or failed display
+      needs its own source outcome; retained adapter updates follow this same
+      policy without spending an idle duplicate row above the split editor. }
     Result.Add(NewNyxLabel('studio-source-status').Configure
       .Text(AState.SourceStatus).Hint('Current Pascal source operation')
-      .Visible(AState.SourceStatus <> '')
-      .WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
+      .Visible(NyxStudioSourceStatusVisible(AState.SourceExpanded,
+        AState.DisplayRecovery.BlocksInput, AState.SourceStatus)).Done);
     Result.Add(NewNyxProgress('studio-source-progress').WithIndeterminate(True)
       .Configure.Height(8).AccessibleName('Preparing Pascal changes')
       .Visible(AState.SourceWorking).Done);
-    LActions := TNyxNode.Create(nkRow, 'studio-code-actions')
-      .Configure.Gap(8).Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap)).Done;
+    { Source commands keep one bounded horizontal lane. Wrapping an expanding
+      tool set consumed the split editor's height even on desktop. The ordinary
+      Nyx scroll viewport keeps every command reachable without shrinking text;
+      Apply and Expand lead the lane so both remain available at compact widths.
+      The height includes room for native horizontal scrollbar allocation. }
+    LActions := TNyxNode.Create(nkScroll, 'studio-code-actions')
+      .Configure.Gap(8).Padding(0).Height(64)
+      .Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap).Align(ncaCenter))
+      .AccessibleName('Pascal source commands')
+      .Hint('Scroll horizontally for more source commands').Done;
     Result.Add(LActions);
     LFileItems := '';
     for LFileIndex := 0 to ASession.SourceFileCount - 1 do
@@ -681,10 +704,6 @@ begin
       end;
       LFileItems := LFileItems + ASession.SourceFileTitle(ASession.SourceFile(LFileIndex));
     end;
-    LActions.Add(NewNyxSelect(NyxStudioSourceFileID).Configure.Text('Source file')
-      .AccessibleName('Source file').Hint('Each source file retains its own unfinished draft')
-      .Items(LFileItems).Value(ASession.SourceFileTitle(ASession.ActiveSourceFile))
-      .Visible(ASession.SourceFileCount > 1).Done);
     { These width conditions use the source pane's available space on both
       targets. The same buttons, callbacks and full hints remain reachable;
       compact presentation does not create a second set of editor actions. }
@@ -692,6 +711,17 @@ begin
       .Hint('Apply this file through project compilation; retain other unfinished drafts. ' +
         'Add uses/include references where you need a helper.')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Apply').Done);
+    LButton := Button('action-expand-source', 'Expand');
+    LActions.Add(LButton);
+
+    if AState.SourceExpanded then
+    begin
+      LButton.Configure.Text('Close').Hint('Return to the split editor').Done;
+    end;
+    LActions.Add(NewNyxSelect(NyxStudioSourceFileID).Configure.Text('Source file')
+      .AccessibleName('Source file').Hint('Each source file retains its own unfinished draft')
+      .Items(LFileItems).Value(ASession.SourceFileTitle(ASession.ActiveSourceFile))
+      .Visible(ASession.SourceFileCount > 1).Done);
     LActions.Add(Button('action-reset-source', 'Restore accepted').Configure
       .Hint('Discard only this file draft and restore its accepted Pascal')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Restore').Done);
@@ -708,13 +738,6 @@ begin
       .AccessibleName('Forward to the next source location')
       .Hint('Go forward through definition jumps (Alt+Right)')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('→').Done);
-    LButton := Button('action-expand-source', 'Expand');
-    LActions.Add(LButton);
-
-    if AState.SourceExpanded then
-    begin
-      LButton.Configure.Text('Close').Hint('Return to the split editor').Done;
-    end;
     LTabs := TNyxNode.Create(nkRow, 'studio-source-tabs')
       .Configure.Gap(8).Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap)).Done;
     Result.Add(LTabs);

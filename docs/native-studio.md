@@ -465,8 +465,17 @@ host, and **Close** or Escape returns it. Apply Pascal, Restore accepted and
 Save draft remain ordinary Nyx actions in either location. Diagnostic navigation
 selects Source before moving the caret.
 
-The ordinary source pane now asks the public split contract for 280 logical
-pixels, while the canvas asks for 96. These explicit child minima preserve a
+Source commands occupy one bounded horizontal Nyx scroll viewport. **Apply**
+and **Expand** lead the lane; Restore, Save draft and source-location
+navigation remain available by scrolling or keyboard focus. Growing the command
+set cannot add wrapped toolbar rows above the code. The ordinary workspace
+footer presents current editor status; the expanded editor retains its own
+source-operation status while the background owner is disabled.
+If display fails after source admission, the source outcome also stays visible
+beside the recovery notice, distinguishing accepted code from a failed preview.
+
+The ordinary source pane asks the public split contract for 240 logical
+pixels, while the canvas asks for 160. These explicit child minima preserve a
 readable source area beside Outputs or Agents without rewriting the chosen
 split proportion. In infeasible hosts the panes compress proportionally; Expand
 remains available for concentrated editing. Actual native and browser input
@@ -477,8 +486,8 @@ allocation and modal return; physical-phone usability remains a separate check.
 that view and the independent public code editor; moving the platform host does
 not create another editor or spend document history. Native root height sizing
 uses `nsFill` so the same memo follows window resizing. Source-view/expanded
-preferences are per-project presentation, stored in the strict version-3 packet;
-version 2 migrates with the inline Source default and preserves earlier choices.
+preferences are per-project presentation, stored in the strict editor-presentation
+packet. They remain independent of portable designs and document history.
 
 The reusable library boundary is `nyx.modal`: immutable `TNyxModalOptions` and
 managed `INyxModalHost`, with DOM/LCL types confined to their adapters. For example:

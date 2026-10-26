@@ -694,7 +694,8 @@ begin
     '[data-node=studio-canvas]{background:#fff;border:1px solid #dfe3ec;border-radius:10px;' +
     'box-shadow:0 12px 40px #24304810;width:100%;min-height:440px;margin:0 auto;}' +
     '[data-node=studio-canvas][style*=width]{max-width:none;}' +
-    '[data-node=studio-code-actions]{padding:6px 12px!important;flex-wrap:wrap!important;' +
+    '[data-node=studio-code-actions]{padding:6px 12px!important;flex-wrap:nowrap!important;' +
+    'overflow-x:auto;overflow-y:hidden;' +
     'flex-shrink:0;background:#fafbfe;border-top:1px solid #dfe3ec;}' +
     '[data-node=studio-code-actions] .nyx-button{font-size:11px;padding:6px 10px;}' +
     '[data-node=studio-code]{font:12px/1.7 Consolas,monospace;' +
@@ -1565,7 +1566,9 @@ begin
     { A failed canvas must not leave the independent source pane saying that
       admission is still preparing after its accepted command has completed. }
     FSourcePaneRenderer.Root.Find('studio-source-status').Configure
-      .Text(FSourceCommands.Message).Visible(FSourceCommands.Message <> '').Done;
+      .Text(FSourceCommands.Message).Visible(NyxStudioSourceStatusVisible(
+        FSourceExpanded, FViewState.DisplayRecovery.BlocksInput,
+        FSourceCommands.Message)).Done;
 
     if FSourcePaneRenderer.Root.Find('studio-source-progress') <> nil then
     begin

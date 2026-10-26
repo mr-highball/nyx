@@ -33,6 +33,14 @@ select/Inspector/source/preview controls. Keep unfinished text, selection and
 split position through panel changes. Do not start another table policy/profile
 variant or retry the refused browser surface. No task or criterion closes here.
 
+The first Studio usability repair gives source commands a bounded scroll lane
+and shares status consistently between composition and retained updates. Its
+native workspace journey passes 86 checks with a clean heap, increasing desktop
+code height from 91 to 149 pixels while preserving drafts, caret, split choices
+and modal/history behavior. [Studio slice](NS-4_studio-slice_01.md) owns the
+remaining ordinary component/Inspector/source/preview journey. Stop further
+toolbar/status variants; browser execution and original acceptance remain open.
+
 The complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact
 sizes. Reuse current evidence and tools; qualify real native/browser interaction

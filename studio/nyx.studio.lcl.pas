@@ -2548,7 +2548,9 @@ begin
     { Source admission and target display have independent outcomes. Refresh
       only this owned status, leaving the nested editor and its input intact. }
     FSourcePaneView.Root.Find('studio-source-status').Configure
-      .Text(FSourceCommands.Message).Visible(FSourceCommands.Message <> '').Done;
+      .Text(FSourceCommands.Message).Visible(NyxStudioSourceStatusVisible(
+        FState.SourceExpanded, FState.DisplayRecovery.BlocksInput,
+        FSourceCommands.Message)).Done;
 
     if FSourcePaneView.Root.Find('studio-source-progress') <> nil then
     begin
