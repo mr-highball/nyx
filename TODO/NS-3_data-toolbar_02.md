@@ -31,6 +31,15 @@ the exact saved/generated application under authoring01.
 
 **Work packets and handoff:**
 
+The later authoring01 checkpoint now exercises this runtime through actual
+native Studio preview, Save/Open and the application compiled from its own
+saved Pascal at1280/390. It passes61/69 Studio and14/14 saved application checks;
+both widths save identical project/source bytes. The maintained optional
+`-DataToolbarStudio` retains that journey and seven browser compilations when
+combined with `-DataToolbarSource`. All browser interaction and original
+coordinator/parity requirements remain open. Next is query-detail03's ordinary
+visible context/removal for retained filters, using these same session owners.
+
 **Runtime checkpoint — 2026-10-26:** The public `nyx.data.toolbar` factory now
 performs Search/Sort/Clear through the existing common scalar/state/query owners.
 Typed options, strict configured/Disabled intent and a detached configured copy

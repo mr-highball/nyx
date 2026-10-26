@@ -420,8 +420,25 @@ and `InheritNyxDataToolbarIntent` support authored concrete toolbars, reusable
 references and named override descriptors. They change metadata only; callers
 must admit required roles and compatible input domains together when enabling
 behavior. Effective specialization is checked after realization, and the runtime
-factory still validates exact target/schema/roles. Studio's dedicated authoring
-form and paired candidate remain in [authoring01](../TODO/NS-3_data-toolbar_01.md).
+factory still validates exact target/schema/roles.
+
+The public `NewNyxDataToolbarEditor` form now supplies target/search selectors,
+closed matching/comparison choices, a baseline caption and editable named sort
+choices with multiple ordered keys. Display captions map back to exact source
+identities. Include/uncheck a choice to add/remove it on Apply; an empty next
+row/key supports additions without editing JSON or executable strings. Invalid
+typed fields or comparisons refuse while drafts remain editable.
+`TNyxDataToolbarEditorChange` owns copied Configure/Disable/Inherit proposals
+with an exact source/schema baseline. The ordinary Studio Inspector routes these
+through `NyxDataToolbarPolicyPatch` and the existing paired history operation.
+Required Clear, selector contracts, intent and Pascal publish together.
+
+New configurations retain the selector's original/applied domain descriptors.
+Changing the toolbar's own choices or baseline can therefore preserve the
+original caller constraints through Disable and inheritance. A later explicit
+caller domain change remains authoritative. The detached configured-copy helper
+also uses that provenance, and preserves its input on refusal. Unrelated parts,
+captions and caller callbacks retain their existing ownership and policies.
 
 Generated Pascal emits typed `TNyxDataToolbarIntent.Configured`/`Disabled`,
 `NyxDataToolbarOptions`, `NyxControl`, `NyxTextField` and `NyxToolbarSort` values,
@@ -487,11 +504,21 @@ bytes, including supplementary Unicode and reusable Disabled overrides. This
 fixture export does not establish ordinary Studio Save/Open. All four matching
 browser programs are staged; the command still starts no listener.
 
-Current native results are50/50 basic,26/26 reusable,23 source and13/13 generated
-application checks. Together with46 existing presentation-source regression
-checks, all eight native heaps are complete and clean. Browser assertions
-compile/stage only. Full browser, physical-input, visual/parity, authoring and
-Studio saved/generated-application gates remain in
+Add `-DataToolbarStudio` for the public authoring checks and the actual ordinary
+Studio journey at desktop/390: configure through Inspector, Undo/Redo, use
+Search/Clear in preview, configure a named reusable instance and Save/Open.
+Native Save/Open uses real files in the selected external directory. Both widths
+must save identical project/Pascal bytes. The command compiles those saved units,
+compares each builder with its saved design and executes the resulting
+application at both widths. Matching asynchronous browser journeys and the
+Studio-saved application are staged without starting a host.
+
+The maintained command with both switches passes 50/50 base, 26/26 reusable,
+23 source, 13/13 source-fixture application, 28 authoring, 61/69 ordinary Studio
+and 14/14 Studio-generated application checks: 387 assertions and twelve complete
+clean native heaps. All seven browser consumers compile/stage only. Full browser,
+physical-input, visual/parity, remaining authoring/refusal and query-context gates
+remain in
 [runtime02](../TODO/NS-3_data-toolbar_02.md), [authoring01](../TODO/NS-3_data-toolbar_01.md)
 and [WORK.md](../WORK.md). These checks do not accept the complete tasks.
 

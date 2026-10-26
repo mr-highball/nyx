@@ -32,6 +32,28 @@ management; an injected programmatic query reset is not evidence of that UI.
 
 **Work packets and handoff:**
 
+**Ordinary Studio checkpoint — 2026-10-26:** The public Nyx form and ordinary
+Inspector/candidate/history now configure typed targets, text matching and
+multi-key sort choices, with copied drafts and Configure/Disable/Inherit.
+Whole and named reusable proposals preserve definitions/siblings and append
+payloads. Required Clear, selector contracts, intent and Pascal admit together;
+stale/pending-source and typed-family refusal retain the accepted pair. Saved
+selector provenance preserves original and later caller constraints.
+
+`data-toolbar -DataToolbarSource -DataToolbarStudio` now passes28 authoring checks,
+61/69 actual native Studio checks and14/14 checks in the application compiled
+from that journey's own saved Pascal. Both widths save identical project/source
+bytes. Base50/50, reusable26/26, source23 and source-fixture App13/13 also pass:
+387 checks and twelve complete clean heaps. All seven matching browser consumers
+compile/stage only, including the asynchronous Studio journey and its own saved
+application. Private data-toolbar-studio-maintained-02 and WORK retain exact
+receipts, predecessor failures and qualification limits. No original criterion
+or dependency closes; full named replacement/absent-Clear and unfinished-peer
+refusal cases, physical/assistive/visual quality and browser interaction remain.
+After batch twelve, next useful work is query-detail03's visible retained/peer
+filter management. Return here for those explicit acceptance checks; do not add
+generic source/input proof variants or treat this checkpoint as task acceptance.
+
 **Typed source prerequisite — 2026-10-26:** Has/Get/Set/Inherit now cover authored
 toolbars, reusable references and named overrides. Strict typed property/source
 admission and crafted target/field/search/sort emission preserve linked child

@@ -27,10 +27,13 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.controls, nyx.model, nyx.collections,
-  nyx.collections.query, nyx.coordinators;
+  nyx.collections.query, nyx.coordinators, nyx.contract;
 
 const
   NyxDataToolbarIntentKey = 'nyx.data-toolbar';
+  { Descriptor-boundary provenance retains the original caller value contract
+    across Configure/Disable/Inherit, independently of the current intent mask. }
+  NyxDataToolbarSortDomainKey = 'nyx.data-toolbar.sort-domain';
   NyxMaximumToolbarSorts = 64;
 
 type
@@ -134,6 +137,22 @@ function ConfigureNyxDataToolbar(const AToolbar: INyxDataToolbar;
   const AOptions: TNyxDataToolbarOptions): INyxDataToolbar;
 { Optional typed accessor preserves the original four-part interface/GUID. }
 function NyxDataToolbarClearButton(const AToolbar: INyxDataToolbar): INyxButton;
+{ Pure prospective selector contract. An exact list installed by the current
+  configured intent can be replaced; other caller constraints remain enforced.
+  No node/default/binding is changed. Both authored and realized roles qualify. }
+function NyxDataToolbarSortDomain(AToolbar: TNyxNode;
+  const AOptions: TNyxDataToolbarOptions): TNyxValueDomain; overload;
+{ Explicit previous intent supports a detached inheritance edit whose metadata
+  has already changed while its selector still has the previous owned choices. }
+function NyxDataToolbarSortDomain(AToolbar: TNyxNode;
+  const AOptions: TNyxDataToolbarOptions;
+  const APrevious: TNyxDataToolbarIntent): TNyxValueDomain; overload;
+{ Apply the prospective contract to an authored Sort or named descriptor. Exact
+  original/applied descriptors distinguish our choices from a later caller edit.
+  AToolbar is borrowed read-only and may be the pre-edit realized projection. }
+procedure SetNyxDataToolbarSortDomain(const ASort: INyxControl;
+  AToolbar: TNyxNode; const AOptions: TNyxDataToolbarOptions;
+  const APrevious: TNyxDataToolbarIntent);
 { Authored concrete toolbars, reusable references and named overrides use the
   same typed metadata. Effective specialization is checked after realization. }
 function HasNyxDataToolbarIntent(ANode: TNyxNode): Boolean;
@@ -149,7 +168,7 @@ function NewNyxDataToolbarCoordinatorFactory: INyxCoordinatorFactory;
 implementation
 
 uses
-  nyx.schema, nyx.contract, nyx.state, nyx.binding.inputs,
+  nyx.schema, nyx.state, nyx.binding.inputs,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.query.session,
   nyx.collections.bindings, nyx.events, nyx.behavior, nyx.scheduler,
   nyx.publication.types, nyx.publication
@@ -573,6 +592,159 @@ begin
   end;
 end;
 
+function NyxDataToolbarSortDomain(AToolbar: TNyxNode;
+  const AOptions: TNyxDataToolbarOptions): TNyxValueDomain;
+begin
+  Result := NyxDataToolbarSortDomain(AToolbar, AOptions, GetNyxDataToolbarIntent(AToolbar));
+end;
+
+function ToolbarBaseDomain(AToolbar: TNyxNode;
+  const APrevious: TNyxDataToolbarIntent): TNyxValueDomain;
+var
+  LDomain: TNyxValueDomain;
+  LData: TNyxDataValue;
+  LPrevious: TNyxDataToolbarIntent;
+  LOptions: TNyxDataToolbarOptions;
+  LFields: array of TNyxDataField;
+  LStamp: TNyxDataValue;
+  LBase: TNyxValueDomain;
+  LApplied: TNyxValueDomain;
+  LSort: TNyxNode;
+  LIndex: Integer;
+  LCount: Integer;
+  LOwned: Boolean;
+begin
+  if (AToolbar = nil) or (AToolbar.Kind <> NyxKindName(nkDataToolbar)) then
+  begin
+    raise ENyxDataToolbar.Create('Sort contract requires a specialized toolbar');
+  end;
+  LSort := AToolbar.Part(NyxPart('sort'));
+  LDomain := NyxNodeValueDomain(LSort);
+
+  if not LDomain.Defined or (LDomain.Kind <> nskText) then
+  begin
+    raise ENyxDataToolbar.Create('Toolbar Sort requires a text value domain');
+  end;
+  LData := LDomain.ToData;
+
+  if LSort.Extensions.Has(NyxExtension(NyxDataToolbarSortDomainKey)) then
+  begin
+    LStamp := LSort.Extensions.Value(NyxExtension(NyxDataToolbarSortDomainKey));
+
+    if (LStamp.Kind <> ndObject) or (LStamp.Count <> 3) or
+      (LStamp.Field('version').AsInteger <> 1) then
+    begin
+      raise ENyxDataToolbar.Create('Toolbar sort provenance requires its exact version-one descriptor');
+    end;
+    LBase := TNyxValueDomain.FromData(LStamp.Field('base'));
+    LApplied := TNyxValueDomain.FromData(LStamp.Field('applied'));
+
+    if (LBase.Kind <> nskText) or (LApplied.Kind <> nskText) then
+    begin
+      raise ENyxDataToolbar.Create('Toolbar sort provenance requires text value contracts');
+    end;
+
+    if LApplied.ToData.ToJSON = LData.ToJSON then
+    begin
+      Exit(LBase);
+    end;
+    { A caller subsequently changed the contract. Its current complete value
+      is authoritative; old toolbar provenance cannot weaken that declaration. }
+    Exit(LDomain);
+  end;
+  LPrevious := APrevious.Copy;
+  LOwned := False;
+
+  if LPrevious.Mode = ntiConfigured then
+  begin
+    LOptions := LPrevious.Options;
+    for LIndex := 0 to LData.Count - 1 do
+    begin
+
+      if LData.Key(LIndex) = 'choices' then
+      begin
+        LOwned := (LData.Field('choices').Kind = ndArray) and
+          (LData.Field('choices').Count = LOptions.Count + 1);
+      end;
+    end;
+
+    if LOwned then
+    begin
+      LOwned := LData.Field('choices').Item(0).AsText = LOptions.BaselineChoice.Name;
+      for LIndex := 0 to LOptions.Count - 1 do
+      begin
+        LOwned := LOwned and (LData.Field('choices').Item(LIndex + 1).AsText =
+          LOptions.ChoiceAt(LIndex).Reference.Name);
+      end;
+    end;
+  end;
+
+  if LOwned then
+  begin
+    { This is the explicit domain descriptor boundary. Remove only the exact
+      toolbar-owned choice vector; retain every other declared constraint. }
+    SetLength(LFields, LData.Count - 1);
+    LCount := 0;
+    for LIndex := 0 to LData.Count - 1 do
+    begin
+
+      if LData.Key(LIndex) <> 'choices' then
+      begin
+        LFields[LCount] := NyxField(LData.Key(LIndex), LData.Field(LData.Key(LIndex)));
+        Inc(LCount);
+      end;
+    end;
+    LDomain := TNyxValueDomain.FromData(NyxObject(LFields));
+  end;
+  Result := LDomain;
+end;
+
+function NyxDataToolbarSortDomain(AToolbar: TNyxNode;
+  const AOptions: TNyxDataToolbarOptions;
+  const APrevious: TNyxDataToolbarIntent): TNyxValueDomain;
+var
+  LDomain: TNyxValueDomain;
+  LChoices: array of TNyxText;
+  LIndex: Integer;
+begin
+  AOptions.Validate;
+  LDomain := ToolbarBaseDomain(AToolbar, APrevious);
+  SetLength(LChoices, AOptions.Count + 1);
+  LChoices[0] := AOptions.BaselineChoice.Name;
+  for LIndex := 0 to AOptions.Count - 1 do
+  begin
+    LChoices[LIndex + 1] := AOptions.ChoiceAt(LIndex).Reference.Name;
+  end;
+  for LIndex := 0 to High(LChoices) do
+  begin
+    LDomain.Admit(NyxData(LChoices[LIndex]));
+  end;
+  Result := NyxTextDomain(LDomain).Choices(LChoices).Definition;
+end;
+
+procedure SetNyxDataToolbarSortDomain(const ASort: INyxControl;
+  AToolbar: TNyxNode; const AOptions: TNyxDataToolbarOptions;
+  const APrevious: TNyxDataToolbarIntent);
+var
+  LBase: TNyxValueDomain;
+  LDomain: TNyxValueDomain;
+  LStamp: TNyxDataValue;
+begin
+
+  if (ASort = nil) or ASort.Node.IsRealized or
+    not ((ASort.Node.Kind = NyxKindName(nkSelect)) or
+      (ASort.Node.Kind = NyxKindName(nkSlotOverride))) then
+  begin
+    raise ENyxDataToolbar.Create('Apply the sort contract to its authored selector or descriptor');
+  end;
+  LBase := ToolbarBaseDomain(AToolbar, APrevious);
+  LDomain := NyxDataToolbarSortDomain(AToolbar, AOptions, APrevious);
+  LStamp := NyxObject([NyxField('version', NyxData(1)), NyxField('base', LBase.ToData),
+    NyxField('applied', LDomain.ToData)]);
+  ASort.Contract.Value(LDomain);
+  ASort.Extensions.SetValue(NyxExtension(NyxDataToolbarSortDomainKey), LStamp);
+end;
+
 function ConfigureNyxDataToolbar(const AToolbar: INyxDataToolbar;
   const AOptions: TNyxDataToolbarOptions): INyxDataToolbar;
 var
@@ -585,6 +757,9 @@ var
   LDomain: TNyxValueDomain;
   LIndex: Integer;
   LChild: INyxControl;
+  LPrevious: TNyxDataToolbarIntent;
+  LStamp: TNyxDataValue;
+  LOwnDefault: Boolean;
 begin
   AOptions.Validate;
 
@@ -610,6 +785,24 @@ begin
   end;
   LDomain.Admit(NyxData(''));
   LSort := Result.SortSelect;
+  LPrevious := GetNyxDataToolbarIntent(Result.Node);
+  LOwnDefault := LSort.Node.Props.IndexOfName(NyxAttributeName(atValue)) < 0;
+
+  if LPrevious.Mode = ntiConfigured then
+  begin
+    LOwnDefault := LOwnDefault or (LSort.Node.Prop(NyxAttributeName(atValue)) =
+      LPrevious.Options.BaselineChoice.Name);
+  end
+  else if LSort.Extensions.Has(NyxExtension(NyxDataToolbarSortDomainKey)) then
+  begin
+    LStamp := LSort.Extensions.Value(NyxExtension(NyxDataToolbarSortDomainKey));
+
+    if (LStamp.Field('applied').ToJSON = NyxNodeValueDomain(LSort.Node).ToData.ToJSON) then
+    begin
+      LOwnDefault := LOwnDefault or (LSort.Node.Prop(NyxAttributeName(atValue)) =
+        LStamp.Field('applied').Field('choices').Item(0).AsText);
+    end;
+  end;
   LClear := nil;
   for LIndex := 0 to Result.Count - 1 do
   begin
@@ -654,20 +847,10 @@ begin
     LItems := LItems + #10 + LChoices[LIndex + 1];
   end;
   { Keep the caller's declared domain constraints, then narrow its choices. }
-  LDomain := NyxNodeValueDomain(LSort.Node);
-
-  if LDomain.Kind <> nskText then
-  begin
-    raise ENyxDataToolbar.Create('Toolbar sort requires a text value domain');
-  end;
-  for LIndex := 0 to High(LChoices) do
-  begin
-    LDomain.Admit(NyxData(LChoices[LIndex]));
-  end;
-  LSort.Contract.Value(NyxTextDomain(LDomain).Choices(LChoices));
+  SetNyxDataToolbarSortDomain(LSort, Result.Node, AOptions, GetNyxDataToolbarIntent(Result.Node));
   LSort.Configure.Items(LItems).Done;
 
-  if LSort.Node.Props.IndexOfName(NyxAttributeName(atValue)) < 0 then
+  if LOwnDefault then
   begin
     LSort.Configure.Value(AOptions.BaselineChoice.Name).Done;
   end;

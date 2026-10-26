@@ -41,7 +41,7 @@ uses
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.tabs.editor,
-  nyx.kanban.editor, nyx.master.detail.editor,
+  nyx.kanban.editor, nyx.master.detail.editor, nyx.data.toolbar.editor,
   nyx.selection.editor,
   nyx.event.discovery,
   nyx.reusable.editor,
@@ -203,6 +203,7 @@ type
       retire it instead of replaying stale schema or named-part choices. }
     KanbanEditorDraft: TNyxKanbanEditorDraft;
     MasterDetailEditorDraft: TNyxMasterDetailEditorDraft;
+    DataToolbarEditorDraft: TNyxDataToolbarEditorDraft;
     SelectionEditorDraft: TNyxSelectionEditorDraft;
     ReusableEditorDraft: TNyxReusableEditorDraft;
     ExpressionEditorDraft: TNyxExpressionEditorDraft;
@@ -2057,6 +2058,7 @@ begin
         AddNyxKanbanInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxDateRangeInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxMasterDetailInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxDataToolbarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxCanvasInspector(LComponentGroup.BodyColumn.Node, ASession);
         LComponentGroup.BodyColumn.Add(NewNyxReusableEditor(NyxStudioReusableEditorID,
           ASession.Document, NyxControl(ASession.SelectedID)));

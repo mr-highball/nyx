@@ -84,6 +84,18 @@ Inspector/candidate/history operation, then actual Save/Open and its own compile
 application. The fixture export does not replace that saved pair; stop generic
 input/query/source-proof variants and retain all original gates.
 
+The subsequent ordinary Studio checkpoint now supplies that public Nyx form and
+paired Inspector/history operation. It passes28 authoring checks,61/69 native
+Studio checks and14/14 checks in the application compiled from its own Save/Open
+pair. Project and Pascal bytes match across widths. Together with the current
+base/reuse/source consumers, the maintained command passes387 checks and twelve
+complete clean heaps; all seven browser consumers compile only. Batch twelve
+adds no complete original criterion or dependency acceptance. Next is existing
+[query detail03](NS-3_data-toolbar_03.md): understandable local/peer/retained
+filters and explicit removal through the existing query-workbench owner. Keep01's
+remaining named replacement/absent-Clear, unfinished-peer and browser/physical/
+parity checks as explicit return work; stop generic source/input variants.
+
 On return, the complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact
 sizes. Reuse current evidence and tools; qualify real native/browser interaction

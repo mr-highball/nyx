@@ -26,6 +26,14 @@ steal ownership, restore an old baseline or erase a peer's current filters.
 Independent implementation can proceed while full runtime/coordinator/parity
 acceptance remains open. These prerequisites govern acceptance, not source access.
 
+The next user-facing batch after authoring01's native Studio/Save/Open checkpoint
+is this visible query-context/removal surface. Reuse the now exercised toolbar
+runtime and existing query-workbench/session operations. The61/69 Studio and
+14/14 own saved/generated App checks establish that return path, not acceptance
+of this task. Do not add another source/input proof variant before delivering
+ordinary retained-filter inspection/removal. Full prerequisites and all criteria
+below remain unchanged.
+
 **Acceptance Criteria:**
 
 - A configured toolbar exposes bounded, useful query status with current matched

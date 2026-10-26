@@ -72,6 +72,7 @@ const
   NyxStudioKanbanEditorID = 'inspector-kanban';
   NyxStudioDateRangeEditorID = 'inspector-date-range';
   NyxStudioMasterDetailEditorID = 'inspector-master-detail';
+  NyxStudioDataToolbarEditorID = 'inspector-data-toolbar';
   NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
   NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
   NyxStudioViewportHeightMinimumID = 'inspector-viewport-height-minimum';
@@ -186,6 +187,10 @@ procedure AddNyxMasterDetailInspector(AParent: TNyxNode; ASession: TNyxStudioSes
   AProjection: TNyxNode);
 function CaptureNyxMasterDetailInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+procedure AddNyxDataToolbarInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+function CaptureNyxDataToolbarInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Public Nyx form captures one complete board configuration. Exact authored
   owner/descriptor and mounted baseline survive through the shared paired job. }
 procedure AddNyxKanbanInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
@@ -266,7 +271,7 @@ uses
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
-  nyx.kanban.editor, nyx.date.range.editor, nyx.master.detail.editor,
+  nyx.kanban.editor, nyx.date.range.editor, nyx.master.detail.editor, nyx.data.toolbar.editor,
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
   nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.canvas.palette, nyx.canvas.editing, nyx.codec,
@@ -797,6 +802,55 @@ begin
   AEdit.View := ASession.ActiveViewID;
   AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
     NyxDesignStep(NyxMasterDetailPolicyPatch(LChange))]));
+  AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
+end;
+
+procedure AddNyxDataToolbarInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (AProjection = nil) or (AProjection.Kind <> NyxKindName(nkDataToolbar)) then
+  begin
+    Exit;
+  end;
+  AParent.Add(NewNyxDataToolbarEditor(NyxStudioDataToolbarEditorID, ASession.Document,
+    NyxControl(ASession.SelectedID)));
+end;
+
+function CaptureNyxDataToolbarInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxDataToolbarEditorChange;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := False;
+
+  if ASession = nil then
+  begin
+    Exit;
+  end;
+  Result := CaptureNyxDataToolbarEditor(AButton, AShellRoot, ASession.Document, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if ASession.SelectedID <> LChange.Owner.ID then
+  begin
+    raise ENyxModel.Create('Select this data toolbar again before changing its policy');
+  end;
+
+  if ASession.ProjectSnapshot.Pending then
+  begin
+    raise ENyxModel.Create('Resolve the pending Pascal draft before changing this data toolbar');
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+    NyxDesignStep(NyxDataToolbarPolicyPatch(LChange))]));
   AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
 end;
 

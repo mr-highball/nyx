@@ -9,6 +9,62 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — DataToolbar in ordinary Studio — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent10b0640 is remote-verified. Root remains
+SOLO. This is batch twelve since user-facing reprioritization. Authoring01 now
+has its public Nyx form, ordinary Inspector/paired history and a native Save/Open
+journey with that journey's own compiled application. No complete original
+criterion, prerequisite, task or completion credit closes: full browser/parity
+and the remaining authoring/refusal matrix still apply.
+
+`nyx.data.toolbar.editor` supplies typed Configure/Disable/Inherit proposals,
+bounded identity-mapped selectors, editable sort choices and multiple ordered
+keys. Exact owner/source/schema baselines fence stale proposals. Copied scalar
+drafts follow both Studio adapters. One existing design/source transaction admits
+required Clear, selector contracts, intent and Pascal together. Named append
+payloads, definitions, siblings and customized parts survive. Whole-reference
+inheritance reconciles its previous selector with inherited choices. Numeric
+fields refuse text-only comparison choices instead of silently ignoring them.
+Configured selector provenance now preserves the original caller contract through
+Disable/reconfiguration; a later explicit caller change cannot be weakened.
+
+The maintained `data-toolbar -DataToolbarSource -DataToolbarStudio` command runs
+the actual ordinary Inspector → Undo/Redo → preview Search/Clear → named instance
+→ Save/Open journey at1280/390. Both widths save identical project and Pascal
+bytes. It compiles that saved Pascal, compares its builder against each saved
+design and executes the resulting application at both widths, exercising real
+Search/Clear, typed Sort, independent siblings and retirement. File delivery is
+injected for browser assertions; native Save/Open uses actual isolated files.
+This is the actual Studio-saved pair, distinct from the earlier source fixture.
+
+Private data-toolbar-studio-maintained-02 passes50/50 base,26/26 reusable,
+23 source,13/13 source-fixture App,28 authoring,61/69 ordinary Studio and14/14
+Studio-generated App checks:387 assertions across twelve complete clean heaps.
+All seven matching browser consumers compile/stage only, including the full
+asynchronous Studio journey and its saved/generated application. There are0
+owned warnings and49 installed Classes warning occurrences. Native inputs are
+synthetic adapter events; hardware, assistive and visual quality remain unproven.
+No refused browser route was retried and no LAN/Studio service was replaced.
+
+Retained predecessors include the initial cached declaration mismatch, the cold
+build's missing imports, the fixture's incorrect project-revision type and the
+compact harness's premature Preview click. The latter now separates panel change
+from the next mounted input; the same180-second runtime bound remains unchanged.
+A PowerShell argument audit also corrected the compiled companion's output flag
+expressions before that branch was qualified. All actual readers are terminal;
+no source freeze remains. Only license/purpose comments were tidied afterward,
+with their before/after hashes recorded privately. All new scratch, runners,
+logs, tests, builds and owned process TEMP/TMP remain on external storage.
+Unrelated1280/390 directories remain untouched.
+
+Reassessment changes the next user-facing action to existing query-detail03:
+visible local/peer/retained filter context and deliberate removal through the
+existing query-workbench/session owner. Keep authoring01's remaining named
+replacement/absent-Clear, unfinished-peer/refusal and browser/physical/parity
+checks as return work; the passing journey does not waive them. Stop additional
+generic source/input variants, new query engines and resolver expansion.
+
 ## Current checkpoint — Typed DataToolbar source — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent bd3463d is remote-verified. Root remains
