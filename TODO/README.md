@@ -3,7 +3,7 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-## Current priority — useful everyday workflows — 2026-10-25
+## Current priority — useful everyday workflows — 2026-10-26
 
 The user requested a return to high-value, user-facing backlog work. This order
 supersedes historical next-task notes below. Root remains in single-agent mode.
@@ -12,19 +12,26 @@ adds no tasks, credit, dependency waivers or approval gates.
 
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
-| 1 — Now | A table people can comfortably work in | [Workbench03 W1](NS-3_control-usefulness_03.md): use visible column controls to resize, reorder, hide/reveal, pin and reset; keep editing/filtering usable; configure in Studio, reopen the project and run its own generated application. Then W2 finishes full-value inspection, copy and explicit filtered export. |
-| 2 — Next | A comfortable Studio workspace | [Studio authoring](NS-4_studio-authoring_01.md): qualify the everyday select → inspect → edit → preview journey, discoverable Properties/Events and source expansion, with usable canvas space at desktop/compact widths. Address concrete missing controls, overflow and lost panel state found along that journey. Retain the [splitter regression](NS-2_split-platform_02.md) as an explicit input/resize check. |
-| 3 | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), then [authoring01](NS-3_data-toolbar_01.md): type Search, change Sort and Clear back to the authored baseline on independent List/Table instances; configure, Save/Open and run the generated result. Follow the coordinator prerequisites; existing native progress does not waive their open acceptance gates. |
-| 4 | A useful connected Tool Canvas | [Logic components](NS-3_logic-components_01.md) and [Tool Canvas](NS-3_tool-canvas_01.md): finish one ordinary control event → JSON prettify → save journey using visible ports and existing host services, including cancellation and reopen/generated behavior. Follow the existing graph prerequisites and reuse the implemented parts. |
+| 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |
+| 2 — Now | A comfortable Studio workspace | [Studio slice](NS-4_studio-slice_01.md), consumed by [full authoring](NS-4_studio-authoring_01.md): qualify the everyday select → inspect → edit → preview journey, discoverable Properties/Events and source expansion, with usable canvas space at desktop/compact widths. Follow existing prerequisites and address concrete missing controls, overflow and lost panel state found along that journey. Retain the [splitter regression](NS-2_split-platform_02.md) as an explicit input/resize check. |
+| 3 — Next | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), then [authoring01](NS-3_data-toolbar_01.md): type Search, change Sort and Clear back to the authored baseline on independent List/Table instances; configure, Save/Open and run the generated result. Follow the coordinator prerequisites; existing native progress does not waive their open acceptance gates. |
+| 4 — After that | A useful connected Tool Canvas | [Logic components](NS-3_logic-components_01.md) and [Tool Canvas](NS-3_tool-canvas_01.md): finish one ordinary control event → JSON prettify → save journey using visible ports and existing host services, including cancellation and reopen/generated behavior. Follow the existing graph prerequisites and reuse the implemented parts. |
 
-The public service monitor now supports Inspector Move earlier/later for default
-column order. Its native Studio/Save/Open journey passes 91 desktop/95 compact
-checks; the own compiled application passes 26/26, with matching exports and
-complete clean heaps. After two delivery batches, the next bounded workbench
-outcome is W2 full-value inspection, copying and explicit filtered export through
-the existing public controls/hosts. [Workbench03](NS-3_control-usefulness_03.md)
-retains the original W1 browser/physical/visual gates and the compact semantic
-move follow-up. Stop order/policy variants; this is no task or criterion closure.
+The public service monitor's native Studio/Save/Open journey now passes 185
+desktop/189 compact checks; its own compiled application passes 120/120. Both
+widths save identical project/Pascal bytes. Existing clipboard controls retain
+1658/1647 checks, and all six native heaps are complete and clean. Export messages
+name the captured current page or all filtered rows for all six save outcomes.
+Clipboard/save effects use injected hosts; project-store Save/Open uses real
+files. Browser consumers compile only. [Workbench03](NS-3_control-usefulness_03.md)
+retains every original criterion and the compact semantic move follow-up.
+
+After this third delivery batch without complete original criterion closure,
+reassessment changes the active outcome to the Studio workspace journey above.
+The first bounded step follows its existing prerequisite evidence and native
+select/Inspector/source/preview controls. Keep unfinished text, selection and
+split position through panel changes. Do not start another table policy/profile
+variant or retry the refused browser surface. No task or criterion closes here.
 
 The complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact

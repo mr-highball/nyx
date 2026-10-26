@@ -2,6 +2,24 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+**Current priority — everyday workspace usability — 2026-10-26:**
+
+The [ranked queue](README.md#current-priority--useful-everyday-workflows--2026-10-26)
+now returns here after the bounded native table-workbench delivery. Follow the
+existing prerequisite evidence before implementation; their open acceptance
+conditions remain required. The next useful journey selects a component, opens
+Properties/Events, changes its text, expands/closes source and previews the result
+at desktop and compact widths. Retain unfinished Pascal, selection and pane
+position through ordinary panel changes. Reuse maintained native consumers and
+fix a demonstrated obstruction on this path; avoid resolver/policy expansion.
+
+This serves shell criterion one and the full-authoring workspace criteria; it
+does not accept either task or waive browser, compilation/recovery or target
+quality requirements. The [splitter regression](NS-2_split-platform_02.md) remains
+an explicit resize/reflow input. Browser observing remains a separate gate;
+do not retry or bypass the previously refused surface. WORK.md owns the next
+bounded source snapshot, checks and stop point.
+
 **Description:**
 
 Deliver studio end-to-end designer as part of the user's full Nyx and Nyx Studio outcome.

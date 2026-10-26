@@ -3,24 +3,57 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
-**Current priority — 2026-10-25:**
+**Current checkpoint and return path — 2026-10-26:**
 
-The user's request for high-value user-facing work returns the active queue to
-W1. Finish the ordinary service-monitor column workflow through Studio,
-Save/Open and its own exact generated application before more header, policy or
-profiling variants. Demonstrate resize/reorder/hide/reveal/pin/reset alongside
-editing/filtering and independent instances at wide and compact sizes. Reuse
-the existing native evidence; actual browser input, observed Studio behavior
-and visual quality remain distinct acceptance checks. Address concrete failures
-encountered on this path, including geometry only when it obstructs this useful
-workflow. W2's long-value inspection, copy and filtered export follows W1.
+The native public service-monitor workflow now covers ordinary Studio, Save/Open
+and its own exact generated application through W1 arrangement and W2 inspection,
+Copy and explicit filtered export. All seven original criteria remain open;
+browser input, physical/assistive input, visual quality and complete workbench
+coverage are distinct acceptance checks. Return to this maintained consumer for
+those gates or a concrete failure, rather than another header/policy/profile variant.
 
-This changes the next action after the earlier repeated no-closure packets. It
-does not reset their history, weaken the seven original criteria below or grant
-completion credit. After two further batches without criterion closure, stop
-and reassess the delivery instead of extending internal variants.
+This is the third delivery batch after reprioritization without full original
+criterion closure. Earlier no-closure history remains intact. Reassessment now
+moves active work to the next ranked user outcome, the ordinary Studio workspace
+journey under [Studio slice](NS-4_studio-slice_01.md) and its existing prerequisites.
+No table criterion, task or completion credit closes. The specific compact named
+semantic move follow-up below stays owned here; recovery and resolver expansion
+remain parked. Do not retry or bypass the refused browser surface.
 
 **Description:**
+
+**Full-value inspection, Copy and scoped export — 2026-10-26:**
+
+The same public service monitor uses real native context menus and Nyx popovers
+to inspect the complete command line and copy its accepted raw text. Inspecting
+a different readonly cell does not accept an unfinished Service edit; the exact
+dormant draft resumes. Default-off editable-cell context retains the platform
+text menu. Off-page selected-source Copy includes the selected Reports record.
+Page export captures Gateway alone; all-filtered export captures both Running
+records, excluding unfiltered source rows and the hidden Command line field.
+Both transfers retain exact RAW TSV bytes through the existing host contracts.
+
+Pending and terminal export messages now name the original captured current
+page or all filtered rows. Membership is copied before host entry, independent
+of subsequent paging/focus changes. Written, DownloadRequested, Cancelled,
+ActivationRequired, Unavailable and Failed preserve their distinct meanings;
+a download request never claims a confirmed disk write.
+
+The full native Studio/Save/Open/application journey passes 185 at 1280 and 189
+at 390. Both widths save identical project/Pascal bytes; independently compiling
+that own newly saved constructor passes 120 at each width. The unchanged broader
+clipboard consumer retains 1658/1647 checks. Fourteen terminal jobs, 753 unchanged
+source inputs and six complete zero-unfreed native heaps are recorded in WORK.md.
+Both full Studios, the public example and portable clipboard controls compile;
+there are zero owned warnings and 21 installed pas2js Classes warning occurrences.
+
+Injected clipboard/save hosts qualify exact transfer and typed outcomes, without
+claiming OS clipboard, file picker or export disk effects. Ordinary project-store
+Save/Open uses real files. Browser consumers compile only. The pre-fix missing-scope
+assertion and earlier fixture-driver/invalid-mock failures are retained separately.
+No assertion was weakened or original criterion accepted. Formatted/displayed
+copy, broader range/editing coverage and all original target/quality gates retain
+their existing owners and evidence requirements.
 
 **Authored column order — 2026-10-25:**
 

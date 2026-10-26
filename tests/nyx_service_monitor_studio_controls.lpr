@@ -23,13 +23,16 @@ program nyx_service_monitor_studio_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls,
+uses Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Windows, Types,
   nyx.text, nyx.types, nyx.model, nyx.codec, nyx.codegen, nyx.files, nyx.files.lcl,
-  nyx.disclosure,
-  nyx.collections, nyx.collections.codec, nyx.collections.view.types,
+  nyx.disclosure, nyx.state, nyx.scheduler, nyx.clipboard, nyx.bytes,
+  nyx.files.save, nyx.editing.lcl, nyx.menu.lcl, nyx.popover.lcl,
+  nyx.collections, nyx.collections.codec, nyx.collections.view.types, nyx.collections.view,
   nyx.collections.mount, nyx.collections.arrangement,
   nyx.collections.arrangement.controls, nyx.collections.arrangement.presenter,
-  nyx.collections.arrangement.lcl, nyx.collections.query,
+  nyx.collections.arrangement.lcl, nyx.collections.query, nyx.collections.paging,
+  nyx.collections.cell.actions, nyx.collections.clipboard.actions,
+  nyx.collections.export, nyx.collections.export.actions, nyx.collections.workbench.runtime,
   nyx.application.lcl, nyx.service.monitor,
   nyx.studio.lcl, nyx.studio.projects, nyx.studio.projectstore,
   nyx.studio.section.views, nyx.studio.collections, nyx.studio.inspector,
@@ -47,6 +50,44 @@ type
   public
     Text: TNyxText;
     procedure Failed(ASender: TObject; AException: Exception);
+  end;
+
+  { Shared request lifetime exercises ordinary terminal delivery. The fixture
+    records text only; no platform clipboard API is invoked. }
+  TCopyRequest = class(TNyxClipboardWriteRequest)
+  public
+    procedure Finish(AOutcome: TNyxClipboardWriteOutcome);
+  end;
+
+  { Explicit test authority captures complete text and a caller-selected typed
+    outcome. It never owns a widget, document or borrowed reply after delivery. }
+  TCopyHost = class(TInterfacedObject, INyxClipboardWriteHost)
+  public
+    Calls: Integer;
+    Text: TNyxText;
+    Outcome: TNyxClipboardWriteOutcome;
+    function BeginWriteText(const AText: TNyxText; const AScheduler: INyxScheduler;
+      const ACancellation: INyxCancellationScope;
+      AReply: TNyxClipboardWriteReply): INyxClipboardWriteRequest;
+  end;
+
+  { Ordinary save-request validation preserves written versus cancelled or
+    unavailable outcomes. This fixture grants no disk or picker authority. }
+  TSaveRequest = class(TNyxFileSaveRequest)
+  public
+    procedure Finish(AOutcome: TNyxFileSaveOutcome);
+  end;
+
+  { Exact copied bytes qualify the menu-to-host transfer independently of the
+    real native file adapter's separately maintained filesystem checks. }
+  TSaveHost = class(TInterfacedObject, INyxFileSaveHost)
+  public
+    Calls: Integer;
+    Bytes: TNyxBytes;
+    Outcome: TNyxFileSaveOutcome;
+    function BeginSave(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
+      const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
+      AReply: TNyxFileSaveReply): INyxFileSaveRequest;
   end;
 
 var
@@ -68,6 +109,59 @@ end;
 procedure TFailureObserver.Failed(ASender: TObject; AException: Exception);
 begin
   Text := TNyxText(AException.Message);
+end;
+
+procedure TCopyRequest.Finish(AOutcome: TNyxClipboardWriteOutcome);
+begin
+
+  if AOutcome = ncwoWritten then
+  begin
+    Complete(AOutcome, FByteCount, '', nctrExactUTF8);
+  end
+  else
+  begin
+    Complete(AOutcome, 0);
+  end;
+end;
+
+function TCopyHost.BeginWriteText(const AText: TNyxText;
+  const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
+  AReply: TNyxClipboardWriteReply): INyxClipboardWriteRequest;
+var
+  LRequest: TCopyRequest;
+begin
+  LRequest := TCopyRequest.Create(AText, AScheduler, ACancellation, AReply);
+  Result := LRequest;
+  Inc(Calls);
+  Text := AText;
+  LRequest.Finish(Outcome);
+end;
+
+procedure TSaveRequest.Finish(AOutcome: TNyxFileSaveOutcome);
+begin
+
+  if AOutcome in [nfsoWritten, nfsoDownloadRequested] then
+  begin
+    Complete(AOutcome, FOptions.SuggestedName, Length(FBytes));
+  end
+  else
+  begin
+    Complete(AOutcome, FOptions.SuggestedName, 0);
+  end;
+end;
+
+function TSaveHost.BeginSave(const AOptions: TNyxFileSaveOptions;
+  const ABytes: TNyxBytes; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope;
+  AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+var
+  LRequest: TSaveRequest;
+begin
+  LRequest := TSaveRequest.Create(AOptions, ABytes, AScheduler, ACancellation, AReply);
+  Result := LRequest;
+  Inc(Calls);
+  Bytes := Copy(ABytes, 0, Length(ABytes));
+  LRequest.Finish(Outcome);
 end;
 
 procedure Pump;
@@ -353,6 +447,283 @@ begin
   Pump;
 end;
 
+{ Continue the same public application through actual context menus and Nyx
+  inspector controls. Only clipboard/file effects are substituted; captures,
+  selection, query/paging, editor suspension and command results stay real. }
+procedure DataActions(AApplication: TNyxLCLApplication; const AMount: INyxCollectionMount;
+  const AManager: INyxColumnArrangementManager; ACopy: TCopyHost; ASave: TSaveHost);
+var
+  LActionsMount: INyxCollectionCellActionsMount;
+  LActions: INyxCollectionCellActions;
+  LExports: INyxCollectionExportMount;
+  LExportActions: INyxCollectionCellExportActions;
+  LClipboard: INyxCollectionClipboardMount;
+  LPages: INyxCollectionPages;
+  LInspector: INyxLCLPopover;
+  LGrid: TStringGrid;
+  LColumn: Integer;
+  LExpected: TNyxText;
+  LPayload: INyxCollectionExportText;
+  LRevision: Integer;
+  LIndex: Integer;
+
+  procedure DrainActions;
+  var
+    LTurn: Integer;
+  begin
+    { Match the established native context driver: idle callbacks own queued
+      menu work, so one ProcessMessages call is not a completion fence. }
+    for LTurn := 1 to 4 do
+    begin
+      Pump;
+      Application.Idle(False);
+    end;
+  end;
+
+  function GridFor(const ACaption: TNyxText; out AColumn: Integer): TStringGrid;
+  var
+    LTable: TStringGrid;
+    LCandidate: TStringGrid;
+    LChild: Integer;
+    LPhysical: Integer;
+  begin
+    Result := nil;
+    LTable := TStringGrid(AApplication.View.ControlFor(ServiceTableID));
+    for LChild := -1 to LTable.ControlCount - 1 do
+    begin
+      LCandidate := LTable;
+
+      if LChild >= 0 then
+      begin
+
+        if not (LTable.Controls[LChild] is TStringGrid) then
+        begin
+          Continue;
+        end;
+        LCandidate := TStringGrid(LTable.Controls[LChild]);
+      end;
+      for LPhysical := 0 to LCandidate.ColCount - 1 do
+      begin
+
+        if LCandidate.IsVisible and (LCandidate.ColWidths[LPhysical] > 0) and
+          (Pos(ACaption, TNyxText(LCandidate.Cells[LPhysical, 0])) = 1) then
+        begin
+          AColumn := LPhysical;
+          Exit(LCandidate);
+        end;
+      end;
+    end;
+    raise Exception.Create('Visible service field is missing: ' + ACaption);
+  end;
+
+  procedure Focus(const ACaption: TNyxText);
+  begin
+    LGrid := GridFor(ACaption, LColumn);
+    LGrid.LeftCol := LColumn;
+    LGrid.Col := LColumn;
+    LGrid.Row := 1;
+    LGrid.SetFocus;
+    DrainActions;
+  end;
+
+  procedure Context(const ACaption: TNyxText; AFocus: Boolean = True);
+  var
+    LBounds: Types.TRect;
+    LPoint: Types.TPoint;
+  begin
+
+    if AFocus then
+    begin
+      Focus(ACaption);
+    end;
+    LGrid := GridFor(ACaption, LColumn);
+    LBounds := LGrid.CellRect(LColumn, 1);
+    Check((LBounds.Right > LBounds.Left) and (LBounds.Bottom > LBounds.Top) and
+      PtInRect(LGrid.ClientRect, Types.Point(LBounds.Left + 4, LBounds.Top + 4)),
+      'context point is inside the actual visible cell: ' + ACaption);
+    LPoint := LGrid.ClientToScreen(Types.Point(LBounds.Left + 4, LBounds.Top + 4));
+    SendMessage(LGrid.Handle, WM_CONTEXTMENU, LGrid.Handle, MakeLParam(LPoint.X, LPoint.Y));
+    DrainActions;
+    Check((LActions.Menu <> nil) and LActions.Menu.IsOpen,
+      'real context input opens the managed cell menu: ' + ACaption +
+      ', editor=' + TNyxText(BoolToStr(LGrid.EditorMode, True)));
+  end;
+
+  procedure Menu(const AID: TNyxText);
+  var
+    LMenu: INyxLCLMenu;
+    LButton: TButton;
+  begin
+    Check(Supports(LActions.Menu, INyxLCLMenu, LMenu), 'menu uses its native Nyx presentation');
+    LMenu.Presentation.Renderer.Reveal(AID, niRuntime);
+    LButton := TButton(LMenu.Presentation.Renderer.FocusFor(AID));
+    Check((LButton <> nil) and LButton.Enabled, 'enabled cell action ' + AID);
+    LButton.Click;
+    DrainActions;
+  end;
+
+  procedure Inspector(const AID: TNyxText);
+  var
+    LButton: TButton;
+  begin
+    Check(Supports(LActions.Inspector, INyxLCLPopover, LInspector) and LInspector.IsOpen,
+      'cell inspector uses its native Nyx presentation');
+    LInspector.Renderer.Reveal(AID, niRuntime);
+    LButton := TButton(LInspector.Renderer.FocusFor(AID));
+    Check((LButton <> nil) and LButton.Enabled, 'enabled inspector action ' + AID);
+    LButton.Click;
+    DrainActions;
+  end;
+
+  function Status: TNyxText;
+  begin
+    Result := LActions.Inspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState));
+  end;
+
+  procedure CloseInspection;
+  begin
+    LInspector := nil;
+
+    if (LActions.Inspector <> nil) and LActions.Inspector.IsOpen then
+    begin
+      Inspector(NyxCellInspectorCloseID);
+    end;
+    LInspector := nil;
+    LActions.Close;
+  end;
+
+begin
+  Check(Supports(AMount, INyxCollectionCellActionsMount, LActionsMount) and
+    Supports(AMount, INyxCollectionExportMount, LExports) and
+    Supports(AMount, INyxCollectionClipboardMount, LClipboard),
+    'public services supply the ordinary inspection/copy/export mounts');
+  LActions := LActionsMount.CellActions;
+  Check(Supports(LActions, INyxCollectionCellExportActions, LExportActions),
+    'cell actions retain typed export receipts');
+  LRevision := AMount.View.Store.Snapshot.Revision;
+  ColumnClick(AManager, NyxColumnIdentity(NyxTextField('command')), ncaaShow);
+  AManager.Presenter.Close;
+  Pump;
+  Context('Command line');
+  LExpected := AMount.View.Store.Snapshot.Item(NyxItem(NyxCollection(ServiceCollectionName),
+    'gateway')).GetValue(NyxTextField('command'));
+  Menu(NyxCellActionsInspectID);
+  Check(Supports(LActions.Inspector, INyxLCLPopover, LInspector),
+    'long-value inspector is a real native Nyx popover');
+  Check(TCustomEdit(LInspector.Renderer.FocusFor(NyxCellInspectorValueID)).ReadOnly and
+    (NyxLCLInputText(TCustomEdit(LInspector.Renderer.FocusFor(NyxCellInspectorValueID))) = LExpected),
+    'readonly inspection exposes the complete long command line');
+  Inspector(NyxCellInspectorCopyID);
+  Check((ACopy.Calls = 1) and (ACopy.Text = LExpected) and
+    (LActions.LastResult.Outcome = ncwoWritten), 'Copy passes the exact accepted raw value once');
+  ACopy.Outcome := ncwoUnavailable;
+  Inspector(NyxCellInspectorCopyID);
+  Check((LActions.LastResult.Outcome = ncwoUnavailable) and (Status <> ''),
+    'unavailable clipboard produces a visible typed outcome');
+  ACopy.Outcome := ncwoWritten;
+  CloseInspection;
+
+  Focus('Service');
+  SendMessage(LGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+  Pump;
+  Check(LGrid.EditorMode, 'public pinned Service cell enters its ordinary editor');
+  RestoreNyxLCLInputText(TCustomEdit(LGrid.Editor), 'Unfinished service name');
+  { Default-off editor context deliberately keeps the platform text menu.
+    Inspect a different readonly cell without focusing it or accepting the draft. }
+  Context('Command line', False);
+  Menu(NyxCellActionsInspectID);
+  Inspector(NyxCellInspectorCopyID);
+  Check((ACopy.Text = LExpected) and
+    (AMount.View.Store.Snapshot.Revision = LRevision),
+    'inspection and accepted-value Copy never commit the unfinished editor');
+  CloseInspection;
+  Focus('Service');
+  SendMessage(LGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+  Pump;
+  Check(LGrid.EditorMode and
+    (NyxLCLInputText(TCustomEdit(LGrid.Editor)) = 'Unfinished service name'),
+    'the exact dormant draft resumes after inspection');
+  SendMessage(LGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
+  Pump;
+
+  AManager.Open;
+  Pump;
+  ColumnClick(AManager, NyxColumnIdentity(NyxTextField('command')), ncaaHide);
+  AManager.Presenter.Close;
+  Check(Supports(AMount.View, INyxCollectionPages, LPages), 'public view exposes optional runtime paging');
+  LPages.ConfigurePaging(NyxCollectionPaging.PageSize(1));
+  Pump;
+  Check((AMount.View.Snapshot.Count = 1) and (AMount.View.Snapshot.ItemAt(0).Ref.ID = 'gateway'),
+    'page membership is deliberately smaller than the filtered result');
+  Focus('Process ID');
+  AMount.View.SetSelection([NyxItem(NyxCollection(ServiceCollectionName), 'reports')],
+    NyxItem(NyxCollection(ServiceCollectionName), 'gateway'),
+    NyxItem(NyxCollection(ServiceCollectionName), 'reports'));
+  Pump;
+  Context('Process ID', False);
+  Menu(NyxCellActionsCopySourceRowsID);
+  Check((LClipboard.ClipboardCommands.LastPayload.RowCount = 1) and
+    (LClipboard.ClipboardCommands.LastPayload.ItemAt(0).ID = 'reports') and
+    (ACopy.Text = LClipboard.ClipboardCommands.LastPayload.Text),
+    'selected-source Copy includes the selected record outside the current page');
+  CloseInspection;
+  Context('Process ID');
+  Menu(NyxCellActionsExportPageID);
+  LPayload := LExports.ExportCommands.LastPayload;
+  Check((ASave.Calls = 1) and (LPayload.RowCount = 1) and
+    (LPayload.Membership = ncerCurrentPage) and (LPayload.ItemAt(0).ID = 'gateway') and
+    (LPayload.FieldCount = 4) and (NyxDecodeUTF8(ASave.Bytes) = LPayload.Text),
+    'current-page export captures exact raw rows and visible fields in saved order');
+  for LIndex := 0 to LPayload.FieldCount - 1 do
+  begin
+    Check(LPayload.FieldAt(LIndex).Name <> 'command', 'hidden Command line is excluded explicitly');
+  end;
+  Check(Pos('current page', Status) > 0, 'save status identifies its captured current-page scope');
+  CloseInspection;
+  Context('Process ID');
+  Menu(NyxCellActionsExportFilteredID);
+  LPayload := LExports.ExportCommands.LastPayload;
+  Check((ASave.Calls = 2) and (LPayload.RowCount = 2) and
+    (LPayload.Membership = ncerAllFiltered) and (LPayload.ItemAt(1).ID = 'reports') and
+    (NyxDecodeUTF8(ASave.Bytes) = LPayload.Text),
+    'all-filtered export includes other pages without exporting unfiltered source rows');
+  Check(Pos('all filtered rows', Status) > 0, 'save status identifies its captured all-filtered scope');
+  CloseInspection;
+  ASave.Outcome := nfsoCancelled;
+  Context('Process ID');
+  Menu(NyxCellActionsExportFilteredID);
+  Check((LExportActions.LastExportResult.Outcome = nfsoCancelled) and
+    (Pos('all filtered rows', Status) > 0), 'cancelled export keeps its scope and reports no write');
+  CloseInspection;
+  ASave.Outcome := nfsoUnavailable;
+  Context('Process ID');
+  Menu(NyxCellActionsExportPageID);
+  Check((LExportActions.LastExportResult.Outcome = nfsoUnavailable) and
+    (Pos('current page', Status) > 0), 'unavailable save keeps its exact requested scope visible');
+  CloseInspection;
+  ASave.Outcome := nfsoDownloadRequested;
+  Context('Process ID');
+  Menu(NyxCellActionsExportFilteredID);
+  Check((LExportActions.LastExportResult.Outcome = nfsoDownloadRequested) and
+    (Pos('all filtered rows', Status) > 0) and (Pos('download was requested', Status) > 0),
+    'download request names the captured scope without claiming a disk write');
+  CloseInspection;
+  ASave.Outcome := nfsoActivationRequired;
+  Context('Process ID');
+  Menu(NyxCellActionsExportPageID);
+  Check((LExportActions.LastExportResult.Outcome = nfsoActivationRequired) and
+    (Pos('current page', Status) > 0), 'activation refusal keeps the requested scope visible');
+  CloseInspection;
+  ASave.Outcome := nfsoFailed;
+  Context('Process ID');
+  Menu(NyxCellActionsExportFilteredID);
+  Check((LExportActions.LastExportResult.Outcome = nfsoFailed) and
+    (Pos('all filtered rows', Status) > 0), 'failed export names the admitted filtered scope');
+  CloseInspection;
+  Check(AMount.View.Store.Snapshot.Revision = LRevision,
+    'the complete inspection/copy/export journey never mutates service data');
+end;
+
 procedure ApplicationJourney(const APair: TNyxProjectPair);
 var
   LDocument: TNyxDocument;
@@ -362,6 +733,10 @@ var
   LColumns: INyxCollectionColumnArrangementMount;
   LManager: INyxColumnArrangementManager;
   LBefore: TNyxText;
+  LCopyHost: TCopyHost;
+  LCopyLease: INyxClipboardWriteHost;
+  LSaveHost: TSaveHost;
+  LSaveLease: INyxFileSaveHost;
 begin
   {$ifdef NYX_SERVICE_STUDIO_GENERATED}
   LDocument := BuildNyxDocument;
@@ -382,6 +757,14 @@ begin
       (LDocument.Find(ServiceTableID).CollectionView.ColumnAt(4).LayoutPolicy.Pin = ncpEnd),
       'Studio ordering retains both authored logical edge pins');
     LApplication := TNyxLCLApplication.Create;
+    LCopyHost := TCopyHost.Create;
+    LCopyLease := LCopyHost;
+    LCopyHost.Outcome := ncwoWritten;
+    LSaveHost := TSaveHost.Create;
+    LSaveLease := LSaveHost;
+    LSaveHost.Outcome := nfsoWritten;
+    LApplication.View.TableWorkbenchServices := NewNyxTableWorkbenchServices(
+      LCopyLease, LSaveLease, ServiceMonitorExportOptions);
     LApplication.Mount(LDocument);
     LApplication.Window.ClientWidth := GWidth;
     LApplication.Window.ClientHeight := 760;
@@ -419,6 +802,7 @@ begin
       (LManager.Observation.Preferences.OrderCount = 0),
       'Restore defaults returns to saved visibility/order rather than factory defaults');
     Check(LMount.View.Snapshot.Count = 2, 'arrangement reset preserves the active filter');
+    DataActions(LApplication, LMount, LManager, LCopyHost, LSaveHost);
     Check(TNyxCodec.Encode(LDocument) = LBefore, 'runtime commands never rewrite the saved design');
   finally
     LManager := nil;
@@ -426,6 +810,8 @@ begin
     LMount := nil;
     LPeer.Free;
     LApplication.Free;
+    LCopyLease := nil;
+    LSaveLease := nil;
     LDocument.Free;
   end;
 end;

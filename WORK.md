@@ -9,6 +9,69 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — scoped table inspection and export — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent1ba08b3 is remote-verified. Root remains SOLO.
+This is delivery batch three after the user-facing reprioritization, serving
+workbench03 W2 and original criteria2/3/4/6/7. No full original criterion, task or
+completion credit closes; earlier no-closure history remains intact.
+
+The public service monitor now has a maintained native full-value/Copy/export
+journey through real managed context menus and Nyx popovers. Long accepted raw
+command text is complete. Inspecting a different readonly cell preserves the
+unfinished Service draft and resumes it exactly. Default-off editable context
+keeps its platform text menu. Off-page selected-source Copy retains Reports;
+current-page export includes only Gateway, while all-filtered export includes
+both Running records. Hidden Command line stays excluded; exact RAW TSV reaches
+the existing injected clipboard/file hosts without mutating service data.
+
+One user-facing fix names the captured current page or all filtered rows in
+pending and all six terminal save messages. A scalar membership copied into the
+original reply before host dispatch prevents relabeling from a newer page.
+Written, DownloadRequested, Cancelled, ActivationRequired, Unavailable and Failed
+remain distinct; a requested download is not described as a confirmed disk write.
+No public interface, model store, scheduler, wire shape or file authority changes.
+
+Private workbench-values-02/final-evidence-private.json records14 accepted terminal
+jobs,753 unchanged source inputs and six complete zero-unfreed native heaps.
+The full ordinary Studio/real project-store Save/Open/application consumer passes
+185 at1280 and189 at390. Both widths save identical project and Pascal bytes.
+Independently compiling that own exact saved constructor passes120 at each width.
+The unchanged broader clipboard/range consumer passes1658 at900 and1647 at390.
+Both full Studios, the public service-monitor example and portable clipboard
+controls compile. Zero owned warnings remain;21 installed pas2js Classes case
+warnings are recorded without SDK edits or suppression. Native cache reuse uses
+ordinary compiler dependency checks; no cold-build/performance claim follows.
+
+The diagnostic predecessor workbench-values-01 retains missing optional-interface
+fixture compilation, menu driver/hidden duplicate grid-column errors, default-off
+editable-context misuse, visible-only Select misuse and an invalid empty-name
+mock save result. Probe06 is the actual pre-fix missing-current-page-scope failure;
+probe08 passes120 focused checks with a clean heap. The final packet uses newly
+saved own producers and retains all earlier assertions. No deadline is raised.
+
+Clipboard/export effects use explicit injected hosts, not OS clipboard, pickers
+or export disk writes. Project-store Save/Open really writes/reads files. Browser
+consumers compile only; physical/assistive input, pixels, full W1/W2 coverage and
+all seven original criteria remain open. Formatted/displayed copy and the compact
+named semantic move keep their existing owners. No connected semantic session
+was available or modified. The prior browser policy refusal was not retried or
+bypassed. No listener, LAN change, active user-project edit or helper ran.
+All actual compiler/runtime readers are joined; no source freeze remains active.
+
+Reassessment now changes the active user outcome to the next ranked Studio
+workspace journey, under NS-4_studio-slice_01 criterion1 and full-authoring's
+workspace/Inspector criteria. Follow its existing prerequisite evidence first;
+then reuse ordinary select/Properties/Events/text-edit/expanded-source/preview
+controls at desktop and compact widths. Preserve unfinished Pascal, selection
+and split position through panel changes. Fix a demonstrated obstruction rather
+than adding another table order/policy/profile variant. Stop at one integrated
+journey with explicit remaining browser/quality checks, or a concrete prerequisite
+failure requiring repair. Return to workbench03 for its original remaining gates;
+none is waived by this priority switch. Recovery and resolver expansion stay
+parked. The subsequent queue is DataToolbar Search/Sort/Clear, then a connected
+Tool Canvas JSON-prettify/save journey. No new task identities or credit are added.
+
 ## Current checkpoint — authored default column ordering — 2026-10-25
 
 Previous goal turn: PROGRESS. Parent8f9ff7e is remote-verified. Root remains SOLO.

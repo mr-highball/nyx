@@ -295,6 +295,20 @@ The Inspector's Move earlier/later commands retain field-specific widths and
 logical edge pins. Each move has exact paired Undo/Redo; the generated companion
 checks the reordered defaults independently of runtime Columns preferences.
 
+The same application journey inspects the full Command line, copies its exact
+accepted value and reports an unavailable clipboard. While a Service edit is
+unfinished, inspecting another readonly cell leaves the data unchanged and
+resumes the exact draft afterward. The native editor's ordinary text menu stays
+available when focused-draft context is disabled.
+
+With one visible row and two filtered matches, selected-source Copy includes an
+off-page selected record. Current-page export captures one row; all-filtered
+export captures both matches. Hidden Command line stays excluded under the
+visible-field policy. All six typed save outcomes keep their original scope in
+the inspector message. Clipboard and export hosts are injected here, so these
+checks prove exact transfers and UI outcomes rather than OS clipboard or disk
+effects. The real project-store Save/Open remains separate filesystem evidence.
+
 Build with the installed LCL paths, `-Fusrc -Fisrc -Fustudio -Fistudio
 -Fuexamples/service-monitor`, and the normal checked flags
 `-Mdelphi -Sa -Cr -Co -Ci -gl -gh`. Each run requires a new evidence directory:

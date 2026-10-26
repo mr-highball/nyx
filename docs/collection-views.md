@@ -2095,6 +2095,11 @@ session. Results reuse `TNyxFileSaveResult`, so Written, DownloadRequested,
 Cancelled, ActivationRequired, Unavailable and Failed retain their different
 meanings. A requested browser download is never reported as a confirmed disk
 write, and receiver cancellation cannot undo an already-entered platform effect.
+The managed inspector names the captured **current page** or **all filtered
+rows** in both pending and terminal export messages, including cancellation,
+unavailable hosts and activation refusal. That scope is copied into the original
+reply before host entry; completion never reads a newer page to label an older
+request. Download-requested text still describes a request rather than a disk write.
 Current control qualification uses injected hosts on both targets; actual OS
 effects and complete workbench acceptance remain separate.
 

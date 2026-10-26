@@ -358,7 +358,8 @@ type
 
   { Save reply owns inert session facts through host completion. No controller
     or presenter is owned by this borrowed callback; the explicit ReplyOwner
-    keeps this receiver alive even for inline completion and reentry. }
+    keeps this receiver alive even for inline completion and reentry. Membership
+    is copied before dispatch, so outcome text never recaptures a newer page. }
   TCellExportReply = class(TInterfacedObject)
   public
     Port: TCellPort;
@@ -366,6 +367,7 @@ type
     Serial: Integer;
     RequestSerial: Integer;
     Delivered: Boolean;
+    Membership: TNyxCollectionExportRows;
     Ready: INyxCancellationReadiness;
     procedure Receive(const AResult: TNyxFileSaveResult);
   end;
@@ -2522,6 +2524,26 @@ begin
   end;
 end;
 
+{ Outcome labels describe the admitted request, independently of later focus,
+  selection, paging or query changes. Closed enum choices select the scope. }
+function CellExportScopeText(AMembership: TNyxCollectionExportRows): TNyxText;
+begin
+  case Ord(AMembership) of
+    Ord(ncerCurrentPage):
+      begin
+        Result := 'current page';
+      end;
+    Ord(ncerAllFiltered):
+      begin
+        Result := 'all filtered rows';
+      end;
+  else
+    begin
+      raise ENyxCollectionExport.Create('Unknown export membership');
+    end;
+  end;
+end;
+
 procedure TCellActions.ExportValue(AMembership: TNyxCollectionExportRows;
   ASerial: Integer);
 var
@@ -2566,7 +2588,7 @@ begin
   begin
     Exit;
   end;
-  Status('Exporting the captured accepted rows as RAW TSV.', ASerial);
+  Status('Exporting the captured ' + CellExportScopeText(AMembership) + ' as RAW TSV.', ASerial);
 
   if not Current(ASerial) or (FPort.ExportSerial <> LSerial) then
   begin
@@ -2580,6 +2602,7 @@ begin
   LReply.PortLease := FPortLease;
   LReply.Serial := ASerial;
   LReply.RequestSerial := LSerial;
+  LReply.Membership := AMembership;
   LReply.Ready := LScope;
   FExportReply := LReply;
   FExportReplyLease := LReplyLease;
@@ -2625,6 +2648,7 @@ var
   LRequest: INyxFileSaveRequest;
   LReplyLease: IInterface;
   LSerial: Integer;
+  LSubject: TNyxText;
 begin
 
   if not Current(AReply.Serial) or (FExportReply <> AReply) then
@@ -2645,13 +2669,32 @@ begin
   { The export controller has already validated the complete payload/result. }
   FExportResult := AResult;
   FHasExportResult := True;
+  LSubject := 'Export of the captured ' + CellExportScopeText(AReply.Membership);
   case AResult.Outcome of
-    nfsoWritten: Status('The captured RAW TSV was written.', LSerial);
-    nfsoDownloadRequested: Status('A download was requested for the captured RAW TSV.', LSerial);
-    nfsoCancelled: Status('Export was cancelled.', LSerial);
-    nfsoActivationRequired: Status('Export requires a new user activation.', LSerial);
-    nfsoUnavailable: Status('This host cannot save the requested RAW TSV.', LSerial);
-    nfsoFailed: Status('Export failed: ' + AResult.Error, LSerial);
+    nfsoWritten:
+      begin
+        Status(LSubject + ' was written as RAW TSV.', LSerial);
+      end;
+    nfsoDownloadRequested:
+      begin
+        Status(LSubject + ': a RAW TSV download was requested.', LSerial);
+      end;
+    nfsoCancelled:
+      begin
+        Status(LSubject + ' was cancelled.', LSerial);
+      end;
+    nfsoActivationRequired:
+      begin
+        Status(LSubject + ' requires a new user activation.', LSerial);
+      end;
+    nfsoUnavailable:
+      begin
+        Status(LSubject + ': this host cannot save the requested RAW TSV.', LSerial);
+      end;
+    nfsoFailed:
+      begin
+        Status(LSubject + ' failed: ' + AResult.Error, LSerial);
+      end;
   end;
 end;
 
