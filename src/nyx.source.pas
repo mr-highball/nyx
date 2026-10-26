@@ -775,7 +775,8 @@ uses
   nyx.controls,
   nyx.design.tokens,
   nyx.tabs, nyx.disclosure, nyx.selection, nyx.flow.routes, nyx.flow.route.model,
-  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail, nyx.data.toolbar;
+  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail, nyx.data.toolbar,
+  nyx.data.toolbar.query;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -910,7 +911,7 @@ type
     vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
     vkColumnVerticalAlignment, vkTableHeaderPolicy, vkInspectionPolicy, vkCollectionFollow,
     vkDraftRecoveryPolicy, vkToolbarOptions, vkToolbarIntent, vkToolbarSortRef,
-    vkToolbarSearchMode);
+    vkToolbarSearchMode, vkToolbarQueryOptions, vkToolbarQueryDisplay);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -1000,6 +1001,7 @@ type
     MasterDetailOptions: TNyxMasterDetailOptions;
     MasterDetailIntent: TNyxMasterDetailIntent;
     ToolbarOptions: TNyxDataToolbarOptions;
+    ToolbarQueryOptions: TNyxDataToolbarQueryOptions;
     ToolbarIntent: TNyxDataToolbarIntent;
     KanbanOptions: TNyxKanbanOptions;
     SelectionOptions: TNyxSelectionOptions;
@@ -1790,6 +1792,9 @@ begin
   RegisterEnum(vkToolbarSearchMode, Ord(ntsmContains), 'ntsmContains');
   RegisterEnum(vkToolbarSearchMode, Ord(ntsmStartsWith), 'ntsmStartsWith');
   RegisterEnum(vkToolbarSearchMode, Ord(ntsmEqual), 'ntsmEqual');
+  RegisterEnum(vkToolbarQueryDisplay, Ord(ntqdHidden), 'ntqdHidden');
+  RegisterEnum(vkToolbarQueryDisplay, Ord(ntqdSummary), 'ntqdSummary');
+  RegisterEnum(vkToolbarQueryDisplay, Ord(ntqdDetails), 'ntqdDetails');
   RegisterEnum(vkQuerySortMode, Ord(nqsmSingle), 'nqsmSingle');
   RegisterEnum(vkQuerySortMode, Ord(nqsmMultiple), 'nqsmMultiple');
   for LQueryComparison := Low(TNyxQueryComparison) to High(TNyxQueryComparison) do
@@ -3018,7 +3023,7 @@ begin
         end;
 
         if (LName = 'tnyxdatatoolbarintent') or (LName = 'nyxdatatoolbaroptions') or
-          (LName = 'nyxtoolbarsort') then
+          (LName = 'nyxtoolbarsort') or (LName = 'nyxdatatoolbarqueryoptions') then
         begin
           Exit(DataToolbarConstructor(LName));
         end;
@@ -6812,7 +6817,8 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.resources') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.master.detail') or
-        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.data.toolbar') then
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.data.toolbar') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.data.toolbar.query') then
       begin
         LPrefix := WithNyxImport(LPrefix, LGeneratedImports.UnitAt(LImportIndex).Name);
 

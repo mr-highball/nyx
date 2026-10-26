@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.controls, nyx.model, nyx.collections,
-  nyx.collections.query, nyx.coordinators, nyx.contract;
+  nyx.collections.query, nyx.coordinators, nyx.contract, nyx.data.toolbar.query,
+  nyx.collections.query.controls;
 
 const
   NyxDataToolbarIntentKey = 'nyx.data-toolbar';
@@ -73,7 +74,9 @@ type
     FComparison: TNyxQueryTextComparison;
     FBaseline: TNyxToolbarSortRef;
     FChoices: array of TNyxToolbarSortChoice;
+    FQueryContext: TNyxDataToolbarQueryOptions;
     function GetCount: Integer;
+    function GetQueryContext: TNyxDataToolbarQueryOptions;
   public
     function SearchMode(AMode: TNyxToolbarSearchMode;
       AComparison: TNyxQueryTextComparison = nqtAsciiInsensitive): TNyxDataToolbarOptions;
@@ -83,6 +86,9 @@ type
     function Sort(const AReference: TNyxToolbarSortRef;
       const AQuery: TNyxCollectionQuery): TNyxDataToolbarOptions; overload;
     function Copy: TNyxDataToolbarOptions;
+    { Optional summary/details do not change target query authority. Absence
+      preserves old source/codec meaning; captions and visibility are caller data. }
+    function QueryContext(const AOptions: TNyxDataToolbarQueryOptions): TNyxDataToolbarOptions;
     function ChoiceAt(AIndex: Integer): TNyxToolbarSortChoice;
     function SortIndex(const AReference: TNyxToolbarSortRef): Integer;
     procedure Validate;
@@ -95,6 +101,7 @@ type
     property Comparison: TNyxQueryTextComparison read FComparison;
     property BaselineChoice: TNyxToolbarSortRef read FBaseline;
     property Count: Integer read GetCount;
+    property QueryPresentation: TNyxDataToolbarQueryOptions read GetQueryContext;
   end;
   { Absence inherits the static recipe; Disabled deliberately masks runtime
     coordination. Configured persists complete options without machine paths. }
@@ -124,6 +131,21 @@ type
     procedure Search(const AText: TNyxText);
     procedure Sort(const AReference: TNyxToolbarSortRef);
     procedure Clear;
+  end;
+  { Optional copied observation and managed inspection preserve the original
+    toolbar binding GUID. No executable actor token escapes. The query form
+    retires with the same common coordinator scope as Search/Sort/Clear. }
+  INyxDataToolbarQueryBinding = interface(IInterface)
+    ['{F0BF0579-2E22-466C-A9E4-6B79951BCD65}']
+    function GetObservation: TNyxQueryWorkbenchObservation;
+    function GetQueryStatus: TNyxText;
+    function GetQueryControls: INyxCollectionQueryWorkbench;
+    procedure OpenQueryDetails;
+    property Observation: TNyxQueryWorkbenchObservation read GetObservation;
+    property QueryStatus: TNyxText read GetQueryStatus;
+    { Nil until first OpenQueryDetails. The scope owns the lazily created form
+      controller; caller copies become inert when that same scope retires. }
+    property QueryControls: INyxCollectionQueryWorkbench read GetQueryControls;
   end;
 
 function NyxToolbarSort(const AName: TNyxText): TNyxToolbarSortRef;
@@ -168,7 +190,7 @@ function NewNyxDataToolbarCoordinatorFactory: INyxCoordinatorFactory;
 implementation
 
 uses
-  nyx.schema, nyx.state, nyx.binding.inputs,
+  nyx.schema, nyx.state, nyx.binding.inputs, nyx.binding.types,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.query.session,
   nyx.collections.bindings, nyx.events, nyx.behavior, nyx.scheduler,
   nyx.publication.types, nyx.publication
@@ -219,6 +241,7 @@ var
   LIndex: Integer;
 begin
   Result := Self;
+  Result.FQueryContext := FQueryContext.Copy;
   SetLength(Result.FChoices, 0);
   SetLength(Result.FChoices, Length(FChoices));
   for LIndex := 0 to High(FChoices) do
@@ -226,6 +249,18 @@ begin
     Result.FChoices[LIndex].FReference := FChoices[LIndex].Reference;
     Result.FChoices[LIndex].FQuery := FChoices[LIndex].Query;
   end;
+end;
+
+function TNyxDataToolbarOptions.GetQueryContext: TNyxDataToolbarQueryOptions;
+begin
+  Result := FQueryContext.Copy;
+end;
+
+function TNyxDataToolbarOptions.QueryContext(const AOptions: TNyxDataToolbarQueryOptions): TNyxDataToolbarOptions;
+begin
+  Result := Copy;
+  Result.FQueryContext := AOptions.Copy;
+  Result.Validate;
 end;
 
 function TNyxDataToolbarOptions.SearchMode(AMode: TNyxToolbarSearchMode;
@@ -300,6 +335,7 @@ var
   LIndex: Integer;
   LPrevious: Integer;
 begin
+  FQueryContext.Validate;
 
   if not FDefined or (FTarget.ID = '') or (FSearch.Name = '') or
     (Ord(FMode) < Ord(Low(TNyxToolbarSearchMode))) or
@@ -349,6 +385,7 @@ function TNyxDataToolbarOptions.ToData: TNyxDataValue;
 var
   LChoices: array of TNyxDataValue;
   LIndex: Integer;
+  LFields: array of TNyxDataField;
 begin
   Validate;
   SetLength(LChoices, Count);
@@ -363,6 +400,17 @@ begin
     NyxField('match', NyxData(CSearchNames[FMode])),
     NyxField('comparison', NyxData(CComparisonNames[FComparison])),
     NyxField('baseline', NyxData(FBaseline.Name)), NyxField('sorts', NyxArray(LChoices))]);
+
+  if FQueryContext.Defined then
+  begin
+    SetLength(LFields, Result.Count + 1);
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[High(LFields)] := NyxField('queryContext', FQueryContext.ToData);
+    Result := NyxObject(LFields);
+  end;
 end;
 
 class function TNyxDataToolbarOptions.FromData(const AData: TNyxDataValue):
@@ -376,7 +424,7 @@ var
   LIndex: Integer;
 begin
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 7) or
+  if (AData.Kind <> ndObject) or not (AData.Count in [7, 8]) or
     (AData.Field('version').AsInteger <> 1) then
   begin
     raise ENyxDataToolbar.Create('Toolbar options require an exact version-one object');
@@ -430,6 +478,16 @@ begin
     end;
     Result := Result.Sort(NyxToolbarSort(LChoice.Field('name').AsText),
       TNyxCollectionQuery.FromData(LChoice.Field('query')));
+  end;
+
+  if AData.Count = 8 then
+  begin
+    Result.FQueryContext := TNyxDataToolbarQueryOptions.FromData(AData.Field('queryContext'));
+
+    if not Result.FQueryContext.Defined then
+    begin
+      raise ENyxDataToolbar.Create('An explicit queryContext requires defined presentation options');
+    end;
   end;
   Result.Validate;
 end;
@@ -760,6 +818,13 @@ var
   LPrevious: TNyxDataToolbarIntent;
   LStamp: TNyxDataValue;
   LOwnDefault: Boolean;
+  LContext: INyxControl;
+  LPart: INyxControl;
+  LPresentation: TNyxDataToolbarQueryOptions;
+  LStatusNode: TNyxNode;
+  LDetailsNode: TNyxNode;
+  LBinding: TNyxBindingSpec;
+  LPrimitive: TNyxPrimitiveInfo;
 begin
   AOptions.Validate;
 
@@ -855,6 +920,94 @@ begin
     LSort.Configure.Value(AOptions.BaselineChoice.Name).Done;
   end;
   AOptions.SortIndex(NyxToolbarSort(LSort.Node.Prop(NyxAttributeName(atValue))));
+  LPresentation := AOptions.QueryPresentation;
+
+  if LPresentation.Defined then
+  begin
+    LContext := nil;
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+      LPart := Result.Children[LIndex];
+
+      if LPart.Node.StoredProp(NyxAttributeName(atPart)) = NyxDataToolbarQueryContextPart then
+      begin
+
+        if LContext <> nil then
+        begin
+          raise ENyxDataToolbar.Create('Toolbar query context is ambiguous');
+        end;
+        LContext := LPart;
+      end;
+    end;
+
+    if LContext = nil then
+    begin
+
+      if (Result.Node.Find(Result.ID + '-query-context') <> nil) or
+        (Result.Node.Find(Result.ID + '-query-context-status') <> nil) or
+        (Result.Node.Find(Result.ID + '-query-context-details') <> nil) then
+      begin
+        raise ENyxDataToolbar.Create('Toolbar query context identities are already occupied');
+      end;
+      LContext := NewNyxDataToolbarQueryContent(Result.ID + '-query-context', LPresentation);
+      Result.Add(LContext);
+    end;
+
+    if not FindNyxPrimitive(LContext.Node.ProjectionKind, LPrimitive) or not LPrimitive.Container then
+    begin
+      raise ENyxDataToolbar.Create('Toolbar query context requires a layout container');
+    end;
+    LContext.Configure.Visible(LPresentation.DisplayMode <> ntqdHidden).Done;
+
+    if LPresentation.DisplayMode <> ntqdHidden then
+    begin
+      LStatusNode := LContext.Node.Part(NyxPart('status'));
+
+      if (LStatusNode.Kind <> NyxKindName(nkLabel)) or
+        (LStatusNode.ProjectionKind <> NyxKindName(nkLabel)) or
+        (LStatusNode.Prop(NyxAttributeName(atCompound), 'false') = 'true') or
+        (LStatusNode.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <> NyxActionName(naNone)) or
+        LStatusNode.FindBinding(bpText, LBinding) then
+      begin
+        raise ENyxDataToolbar.Create('Query status requires an independent unbound Label');
+      end;
+      RetainNyxControl(LStatusNode).Configure.Text(LPresentation.StatusCaption).Done;
+    end;
+    { A summary needs no invoker. Preserve any existing themed container and
+      extra parts, while updating a present button's default caption/visibility. }
+    LDetailsNode := nil;
+    for LIndex := 0 to LContext.Count - 1 do
+    begin
+
+      if LContext.Children[LIndex].Node.StoredProp(NyxAttributeName(atPart)) = 'details' then
+      begin
+
+        if LDetailsNode <> nil then
+        begin
+          raise ENyxDataToolbar.Create('Toolbar query details are ambiguous');
+        end;
+        LDetailsNode := LContext.Children[LIndex].Node;
+      end;
+    end;
+
+    if LPresentation.DisplayMode = ntqdDetails then
+    begin
+
+      if (LDetailsNode = nil) or (LDetailsNode.Kind <> NyxKindName(nkButton)) or
+        (LDetailsNode.ProjectionKind <> NyxKindName(nkButton)) or
+        (LDetailsNode.Prop(NyxAttributeName(atCompound), 'false') = 'true') or
+        (LDetailsNode.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <> NyxActionName(naNone)) then
+      begin
+        raise ENyxDataToolbar.Create('Query details require an independent ordinary Button');
+      end;
+    end;
+
+    if LDetailsNode <> nil then
+    begin
+      RetainNyxControl(LDetailsNode).Configure.Text(LPresentation.ButtonCaption).
+        Visible(LPresentation.DisplayMode = ntqdDetails).Done;
+    end;
+  end;
   SetNyxDataToolbarIntent(Result, TNyxDataToolbarIntent.Configured(AOptions));
 end;
 

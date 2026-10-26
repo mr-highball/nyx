@@ -133,7 +133,7 @@ type
     property IsOpen: Boolean read GetOpen;
   end;
 
-  { Exact-table weak target port. It copies the borrowed form document through
+  { Exact-collection weak target port. It copies the borrowed form document through
     the existing popover constructor and retains no renderer/document/widget.
     Root's target adapters revoke it before collection target destruction. }
   INyxQueryFormPresenterFactory = interface(IInterface)
@@ -174,6 +174,18 @@ type
     property Observation: TNyxQueryWorkbenchObservation read GetObservation;
     { Optional target facets on this exact presenter permit physical consumers. }
     property Presenter: INyxQueryFormPresenter read GetPresenter;
+  end;
+
+  { Optional inspection purpose preserves the original workbench GUID. Details
+    address exact captured contributions, independent of table-header editing
+    policy. It grants no column filter/sort editor or actor-token serialization. }
+  INyxCollectionQueryDetails = interface(IInterface)
+    ['{4F2B6517-118B-45E1-AE3C-261EF14C43E0}']
+    procedure OpenDetails;
+    { Capture-time identity classifies a calling surface's own contribution.
+      It is presentation data only; the workbench's live actor and exact session
+      capture still authorize every removal/reset. Undefined means unclassified. }
+    procedure OpenDetailsFor(const ALocalOwner: TNyxQueryOwnerID);
   end;
 
 function NyxQueryWorkbenchEvent(AEvent: TNyxQueryWorkbenchEvent): TNyxEventRef;

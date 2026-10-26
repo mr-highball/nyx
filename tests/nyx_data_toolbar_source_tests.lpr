@@ -25,7 +25,7 @@ program nyx_data_toolbar_source_tests;
 
 uses
   SysUtils, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.controls,
-  nyx.codec, nyx.codegen, nyx.source, nyx.data.toolbar, nyx.collections,
+  nyx.codec, nyx.codegen, nyx.source, nyx.data.toolbar, nyx.data.toolbar.query, nyx.collections,
   nyx.collections.query, nyx.collections.view.types, nyx.composition, nyx.schema
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
@@ -50,6 +50,8 @@ function Options(const ATarget: TNyxText): TNyxDataToolbarOptions;
 begin
   Result := NyxDataToolbarOptions(NyxControl(ATarget), NyxTextField('name'))
     .SearchMode(ntsmStartsWith, nqtExact).Baseline(NyxToolbarSort(CBaseline))
+    .QueryContext(NyxDataToolbarQueryOptions.Display(ntqdDetails)
+      .Caption('People 🌙').ButtonText('Inspect filters'))
     .Sort(NyxToolbarSort(CChoice), NyxCollectionQuery
       .OrderBy(NyxTextField('name'), nsdDescending)
       .ThenBy(NyxIntegerField('rank')))
@@ -199,6 +201,8 @@ begin
       (Pos('ConfigureNyxDataToolbar(', LSource) = 0),
       'generation preserves specialized children and avoids raw intent or linked-tree replacement');
     LWorkspace.Accept(LDocument, LSource);
+    Check(Pos('.QueryContext(NyxDataToolbarQueryOptions.Display(ntqdDetails)', LSource) > 0,
+      'generated query context uses its specialized options and display enum');
     LCandidate := LWorkspace.Candidate(LDocument, LSource);
     Check(TNyxCodec.Encode(LCandidate) = TNyxCodec.Encode(LDocument),
       'concrete, reusable and named override intent survive exact source replay');
@@ -211,6 +215,15 @@ begin
     FreeAndNil(LCandidate);
     Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, '.SearchMode(ntsmStartsWith, nqtExact)',
       '.SearchMode(''starts-with'', nqtExact)'));
+    Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, '.Display(ntqdDetails)',
+      '.Display(''details'')'));
+    Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, '.Display(ntqdDetails)',
+      '.Display(nlColumn)'));
+    LChanged := ReplaceOnce(LSource, '.Display(ntqdDetails)', '.Display(ntqdHidden)');
+    LCandidate := LWorkspace.Candidate(LDocument, LChanged);
+    Check(GetNyxDataToolbarIntent(LCandidate.Find('tools')).Options.QueryPresentation.DisplayMode = ntqdHidden,
+      'source can hide context without replacing the specialized linked controls');
+    FreeAndNil(LCandidate);
     Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, 'NyxControl(''people-table'')',
       'NyxPart(''people-table'')'));
     Refuses(LWorkspace, LDocument, ReplaceOnce(LSource, '.Sort(NyxToolbarSort(''Name descending'')',

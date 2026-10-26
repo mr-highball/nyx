@@ -197,6 +197,7 @@ var
   LButton: INyxButton;
   LAction: TNyxDataToolbarEditorAction;
   LCanConfigure: Boolean;
+  LQueryOptions: TNyxDataToolbarQueryOptions;
 begin
   LContext := nil;
   try
@@ -210,6 +211,7 @@ begin
     LComparison := nqtAsciiInsensitive;
     LIntent := GetNyxDataToolbarIntent(LProjection);
     LOptions := Default(TNyxDataToolbarOptions);
+    LQueryOptions := NyxDataToolbarQueryOptions;
 
     if LCanConfigure then
     begin
@@ -225,6 +227,12 @@ begin
       LBaseline := LOptions.BaselineChoice.Name;
       LMatch := LOptions.MatchMode;
       LComparison := LOptions.Comparison;
+      LQueryOptions := LOptions.QueryPresentation;
+
+      if not LQueryOptions.Defined then
+      begin
+        LQueryOptions := NyxDataToolbarQueryOptions.Display(ntqdHidden);
+      end;
     end;
     AddIdentity(LTargets, LTarget);
     AddIdentity(LTexts, LSearch);
@@ -245,6 +253,14 @@ begin
       NyxData(CComparisonLabels[nqtExact]), NyxData(CComparisonLabels[nqtAsciiInsensitive])]),
       CComparisonLabels[LComparison]);
     TextField(Result, AID, ntefBaseline, 'Original order caption', LBaseline);
+    Choices(Result, AID, ntefQueryDisplay, 'Query context', NyxArray([
+      NyxData(CQueryDisplayLabels[ntqdHidden]), NyxData(CQueryDisplayLabels[ntqdSummary]),
+      NyxData(CQueryDisplayLabels[ntqdDetails])]), CQueryDisplayLabels[LQueryOptions.DisplayMode]);
+    TextField(Result, AID, ntefQueryCaption, 'Results caption', LQueryOptions.StatusCaption);
+    TextField(Result, AID, ntefQueryButton, 'Filter details button', LQueryOptions.ButtonCaption);
+    Result.Add(NewNyxLabel(AID + '-query-help').WithText(
+      'Clear belongs to this toolbar. Filter details can inspect and remove rules from ' +
+      'other controls or earlier views without claiming their ownership.'));
     LCount := LOptions.Count + 1;
 
     if LCount >= NyxMaximumToolbarSorts then
@@ -404,6 +420,7 @@ var
   LComparison: TNyxQueryTextComparison;
   LQuery: TNyxCollectionQuery;
   LSort: TNyxCollectionSort;
+  LDisplay: TNyxDataToolbarQueryDisplay;
 begin
   Result := NyxDataToolbarOptions(NyxControl(ReadChoice(AEditor, AID, ntefTarget)),
     NyxTextField(ReadChoice(AEditor, AID, ntefSearch)));
@@ -426,6 +443,24 @@ begin
   end;
   Result := Result.Baseline(NyxToolbarSort(FormField(AEditor, AID, ntefBaseline,
     nkInput).Prop(NyxAttributeName(atValue))));
+  LValue := ReadChoice(AEditor, AID, ntefQueryDisplay);
+  LFound := False;
+  for LDisplay := Low(TNyxDataToolbarQueryDisplay) to High(TNyxDataToolbarQueryDisplay) do
+  begin
+
+    if LValue = CQueryDisplayLabels[LDisplay] then
+    begin
+      Result := Result.QueryContext(NyxDataToolbarQueryOptions.Display(LDisplay)
+        .Caption(FormField(AEditor, AID, ntefQueryCaption, nkInput).Prop(NyxAttributeName(atValue)))
+        .ButtonText(FormField(AEditor, AID, ntefQueryButton, nkInput).Prop(NyxAttributeName(atValue))));
+      LFound := True;
+    end;
+  end;
+
+  if not LFound then
+  begin
+    raise ENyxDataToolbar.Create('Unknown toolbar query presentation');
+  end;
 
   if not TryStrToInt(AEditor.StoredProp(CRows), LCount) or
     (LCount < 1) or (LCount >= NyxMaximumToolbarSorts) then

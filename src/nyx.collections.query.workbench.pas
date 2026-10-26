@@ -36,6 +36,14 @@ function NewNyxCollectionQueryWorkbench(const AView: INyxCollectionView;
   const AEvents: INyxEvents; const ATarget: TNyxEventTarget;
   const APresenters: INyxQueryFormPresenterFactory;
   const ADesignID: TNyxText = ''): INyxCollectionQueryWorkbench;
+{ One explicit inspection surface for a List or Table. The existing session,
+  command negotiation, cancellation and presenter lifetimes remain authoritative.
+  Only exact removal and deliberate global resets are admitted in this purpose;
+  table headers retain their independent filter/sort permissions. }
+function NewNyxCollectionQueryDetails(const AView: INyxCollectionView;
+  const AEvents: INyxEvents; const ATarget: TNyxEventTarget;
+  const APresenters: INyxQueryFormPresenterFactory;
+  const ADesignID: TNyxText = ''): INyxCollectionQueryWorkbench;
 
 implementation
 
@@ -57,8 +65,14 @@ const
   COpenSort = 'nyx-query-workbench-open-sort';
   CReload = 'nyx-query-workbench-reload';
   CChipPrefix = 'nyx-query-workbench-chip-';
+  { The presenter anchor uses a negative ordinal for whole-surface content.
+    This distinct internal sentinel never denotes a source column. }
+  CDetailsColumn = -2;
 
 type
+  { Closed host purpose keeps inspection authority separate from header policy. }
+  TWorkbenchPurpose = (wpTableControls, wpQueryDetails);
+  { Forward declaration for inert callback ports, never a retained controller. }
   TWorkbench = class;
   { Only this inert weak port crosses callbacks/queued work. Revocation precedes
     any target cleanup. Serial is UI-owned and monotonic, including no-op Clear. }
@@ -139,8 +153,11 @@ type
   end;
   { Managed command surface. Its view/session/actor are model leases; target and
     form access stay behind weak factory/presenter interfaces. }
-  TWorkbench = class(TInterfacedObject, INyxCollectionQueryWorkbench)
+  TWorkbench = class(TInterfacedObject, INyxCollectionQueryWorkbench,
+    INyxCollectionQueryDetails)
   private
+    FPurpose: TWorkbenchPurpose;
+    FDetailsOwner: TNyxQueryOwnerID;
     FView: INyxCollectionView;
     FEvents: INyxEvents;
     FTarget: TNyxEventTarget;
@@ -164,7 +181,7 @@ type
     FDisconnected: Boolean;
     procedure Initialize(const AView: INyxCollectionView; const AEvents: INyxEvents;
       const ATarget: TNyxEventTarget; const APresenters: INyxQueryFormPresenterFactory;
-      const ADesignID: TNyxText);
+      const ADesignID: TNyxText; APurpose: TWorkbenchPurpose);
     function Advance(AJoin: Boolean = True): Integer;
     procedure RequireActive;
     procedure RequireFormOpen(AForm: TFormPort);
@@ -190,6 +207,8 @@ type
     destructor Destroy; override;
     procedure OpenColumn(AColumn: Integer);
     procedure OpenSort;
+    procedure OpenDetails;
+    procedure OpenDetailsFor(const ALocalOwner: TNyxQueryOwnerID);
     procedure ReloadDraft;
     procedure SortColumn(AColumn: Integer; ADirection: TNyxSortDirection;
       AAppend: Boolean = False);
@@ -539,8 +558,10 @@ end;
 
 procedure TWorkbench.Initialize(const AView: INyxCollectionView;
   const AEvents: INyxEvents; const ATarget: TNyxEventTarget;
-  const APresenters: INyxQueryFormPresenterFactory; const ADesignID: TNyxText);
+  const APresenters: INyxQueryFormPresenterFactory; const ADesignID: TNyxText;
+  APurpose: TWorkbenchPurpose);
 begin
+  FPurpose := APurpose;
   FView := AView;
   FEvents := AEvents;
   FPresenters := APresenters;
@@ -548,14 +569,23 @@ begin
   FDesignID := ADesignID;
 
   if (FView = nil) or (FEvents = nil) or (FPresenters = nil) or
-    (FView.Projection <> cpTable) or (FTarget.ID = '') then
+    not (FView.Projection in [cpList, cpTable]) or
+    ((FPurpose = wpTableControls) and (FView.Projection <> cpTable)) or (FTarget.ID = '') then
   begin
     raise ENyxCollection.Create('Query workbench requires an exact table, router and presenter port');
   end;
   FScheduler := FEvents.Scheduler;
   FScheduler.RequireUI;
   FSession := NyxCollectionQuerySession(FView);
-  FActor := FSession.AcquireOwner(NyxQueryOrigin('table-query-controls'), 'Table query controls');
+
+  if FPurpose = wpQueryDetails then
+  begin
+    FActor := FSession.AcquireOwner(NyxQueryOrigin('query-detail-controls'), 'Query details');
+  end
+  else
+  begin
+    FActor := FSession.AcquireOwner(NyxQueryOrigin('table-query-controls'), 'Table query controls');
+  end;
   FPort := TWorkbenchPort.Create;
   FPortLease := FPort;
   FPort.Owner := Self;
@@ -610,7 +640,7 @@ begin
     raise ENyxCollection.Create('Query controls retired during policy admission');
   end;
 
-  if not LSpec.TableQueryPolicy.IsEnabled then
+  if (FPurpose = wpTableControls) and not LSpec.TableQueryPolicy.IsEnabled then
   begin
     raise ENyxCollection.Create('Table query controls are disabled by policy');
   end;
@@ -657,7 +687,14 @@ begin
     end;
     RetireForm;
     RequireActive;
-    LNext := FSession.AcquireOwner(NyxQueryOrigin('table-query-controls'), 'Table query controls');
+    if FPurpose = wpQueryDetails then
+    begin
+      LNext := FSession.AcquireOwner(NyxQueryOrigin('query-detail-controls'), 'Query details');
+    end
+    else
+    begin
+      LNext := FSession.AcquireOwner(NyxQueryOrigin('table-query-controls'), 'Table query controls');
+    end;
 
     if not GetConnected or (FPort.Serial <> LSerial) then
     begin
@@ -674,6 +711,11 @@ var
   LSpec: TNyxCollectionViewSpec;
 begin
   RequireActive;
+
+  if FPurpose = wpQueryDetails then
+  begin
+    raise ENyxCollection.Create('Query details do not grant a column editor');
+  end;
   LSpec := FView.Spec;
 
   if (AColumn < 0) or (AColumn >= LSpec.Count) then
@@ -825,6 +867,10 @@ var
   LStore: INyxCollection;
   LSchema: TNyxCollectionSchema;
   LTarget: TNyxEventTarget;
+  LPopover: TNyxPopoverOptions;
+  LCaption: TNyxText;
+  LContribution: TNyxQueryContribution;
+  LDetailsOwner: TNyxQueryOwnerID;
 
   procedure Current;
   begin
@@ -877,8 +923,17 @@ var
   end;
 
   procedure Button(const AID, ACaption: TNyxText);
+  var
+    LButton: INyxButton;
   begin
-    LEditor.Add(NewNyxButton(AID).Configure.Text(ACaption).Done);
+    LButton := NewNyxButton(AID);
+    LButton.Configure.Text(ACaption).AccessibleName(ACaption).Done;
+
+    if AColumn = CDetailsColumn then
+    begin
+      LButton.Configure.PartName(NyxPart(AID)).Done;
+    end;
+    LEditor.Add(LButton);
   end;
 
 begin
@@ -888,6 +943,7 @@ begin
   LView := FView;
   LFactory := FPresenters;
   LTarget := FTarget;
+  LDetailsOwner := FDetailsOwner;
   LSpec := LView.Spec;
   Current;
   LStore := LView.Store;
@@ -908,8 +964,23 @@ begin
     LDocument.State.SetValue(NyxQueryFormStatusState, '');
     LPage := NewNyxPage(CPage);
     LPage.Configure.Padding(8).Gap(8).Done;
-    LEditor := NewNyxQueryEditor(NyxQueryWorkbenchEditorID, NyxControl(LTarget.ID),
-      LSchema, LSpec, AQuery, LOptions);
+
+    if AColumn = CDetailsColumn then
+    begin
+      LEditor := NewNyxCard(NyxQueryWorkbenchEditorID);
+      LEditor.Configure.Gap(10).Padding(12).Done;
+      LEditor.Node.SetProp(NyxMenuFormOwnerKey, LTarget.ID).
+        SetProp(NyxMenuFormBaselineKey, NyxQueryEditorBaseline(LSchema, LSpec));
+      LEditor.Add(NewNyxHeading(NyxQueryWorkbenchEditorID + '-title').WithText('Filters and sorting'));
+      LEditor.Add(NewNyxLabel(NyxQueryWorkbenchEditorID + '-help').WithText(
+        'Inspect the rules captured when this panel opened. Reload to see current rules. ' +
+        'Query changes leave control entries intact; a toolbar Clear resets its own entries.'));
+    end
+    else
+    begin
+      LEditor := NewNyxQueryEditor(NyxQueryWorkbenchEditorID, NyxControl(LTarget.ID),
+        LSchema, LSpec, AQuery, LOptions);
+    end;
     LEditor.Configure.PartName(NyxPart('editor')).Done;
     LObservation := GetObservation;
     Current;
@@ -933,15 +1004,70 @@ begin
     end;
     for LIndex := 0 to LObservation.Count - 1 do
     begin
-      Button(CChipPrefix + TNyxText(IntToStr(LIndex)), 'Remove ' +
+      LContribution := LObservation.ContributionAt(LIndex);
+      LCaption := 'Remove ' +
         PredicateCaption(NyxPredicateFromData(LObservation.ContributionAt(LIndex).Filter),
-          LSpec) + TNyxText(' — ') + LObservation.ContributionAt(LIndex).Owner.Caption);
+          LSpec) + TNyxText(' — ') + LContribution.Owner.Caption;
+
+      if AColumn = CDetailsColumn then
+      begin
+
+        if not LContribution.Owner.Connected then
+        begin
+          LCaption := LCaption + ' (retained from earlier activity)';
+        end
+        else if LDetailsOwner.Defined and (LDetailsOwner.Value = LContribution.Owner.ID.Value) then
+        begin
+          LCaption := LCaption + ' (this toolbar)';
+        end
+        else
+        begin
+          LCaption := LCaption + ' (another control, active when opened)';
+        end;
+      end;
+      Button(CChipPrefix + TNyxText(IntToStr(LIndex)), LCaption);
     end;
-    Button(CClearOwner, 'Clear this surface');
+
+    if AColumn = CDetailsColumn then
+    begin
+
+      if LObservation.HasUserSort then
+      begin
+        LCaption := 'Shared sorting belongs to ' + LObservation.SortOwner.Caption;
+
+        if not LObservation.SortOwner.Connected then
+        begin
+          LCaption := LCaption + ' (retained from earlier activity).';
+        end
+        else if LDetailsOwner.Defined and
+          (LDetailsOwner.Value = LObservation.SortOwner.ID.Value) then
+        begin
+          LCaption := LCaption + ' (this toolbar).';
+        end
+        else
+        begin
+          LCaption := LCaption + ' (another control, active when opened).';
+        end;
+      end
+      else
+      begin
+        LCaption := 'Original ordering; no user sort is active.';
+      end;
+      LEditor.Add(NewNyxLabel(CCounts + '-sort').WithText(LCaption));
+    end;
+
+    if AColumn <> CDetailsColumn then
+    begin
+      Button(CClearOwner, 'Clear this surface');
+    end;
     Button(CClearAll, 'Clear all user filters');
     Button(CResetSort, 'Reset shared sorting');
     Button(CResetAll, 'Reset all user filters and sorting');
-    Button(COpenSort, 'Edit shared sorting');
+
+    if AColumn <> CDetailsColumn then
+    begin
+      Button(COpenSort, 'Edit shared sorting');
+    end;
     Button(CReload, 'Discard draft and reload current rules');
     LLabel := NewNyxLabel(CStatus);
     LLabel.Binds.Text(NyxQueryFormStatusState).Done;
@@ -949,7 +1075,17 @@ begin
     LPage.Add(LEditor);
     LDocument.AddPage(LPage);
     LNewBaseline := LEditor.Node.Prop(NyxMenuFormBaselineKey);
-    LPresenter := LFactory.CreateForm(AColumn, LDocument, NyxPageRoot(CPage));
+    { -2 is controller-local purpose, not a physical column. Existing target
+      factories use -1 for a whole collection, including List anchors. }
+
+    if AColumn = CDetailsColumn then
+    begin
+      LPresenter := LFactory.CreateForm(-1, LDocument, NyxPageRoot(CPage));
+    end
+    else
+    begin
+      LPresenter := LFactory.CreateForm(AColumn, LDocument, NyxPageRoot(CPage));
+    end;
     Current;
     RequireActive;
 
@@ -969,7 +1105,14 @@ begin
       raise ENyxCollection.Create('Query form router requires ordinary input observation');
     end;
     ObserveNodes(LPage.Node);
-    LPresenter.Show(NyxPopover('Filter and sort').Size(480, 660).Focus(NyxPart('editor/field')));
+    LPopover := NyxPopover('Filter and sort').Size(480, 660).Focus(NyxPart('editor/field'));
+
+    if AColumn = CDetailsColumn then
+    begin
+      LPopover := NyxPopover('Filters and sorting').Size(480, 660).
+        Focus(NyxPart('editor/' + CClearAll));
+    end;
+    LPresenter.Show(LPopover);
     RequireActive;
 
     if FPort.Serial <> LSerial then
@@ -1029,7 +1172,7 @@ begin
   if GetConnected and FPort.Enabled and (FPort.Serial = LSerial) and
     (FForm = LForm) and LForm.Active and (FPresenter = LPresenter) then
   begin
-    LPresenter.Show(NyxPopover('Filter and sort').Size(480, 660).Focus(NyxPart('editor/field')));
+    LPresenter.Show(LPopover);
   end;
 end;
 
@@ -1097,6 +1240,11 @@ var
   LSerial: Integer;
 begin
   LLease := Self;
+
+  if FPurpose = wpQueryDetails then
+  begin
+    raise ENyxCollection.Create('Query details do not grant a sort editor');
+  end;
   LSerial := Advance;
   LSession := FSession;
   LView := FView;
@@ -1118,6 +1266,31 @@ begin
     LQuery := LSnapshot.UserSort;
   end;
   OpenForm(-1, LQuery, LSnapshot);
+end;
+
+procedure TWorkbench.OpenDetails;
+begin
+  OpenDetailsFor(Default(TNyxQueryOwnerID));
+end;
+
+procedure TWorkbench.OpenDetailsFor(const ALocalOwner: TNyxQueryOwnerID);
+var
+  LLease: INyxCollectionQueryWorkbench;
+  LSession: INyxCollectionQuerySession;
+  LSnapshot: INyxCollectionQuerySessionSnapshot;
+  LSerial: Integer;
+begin
+  LLease := Self;
+  LSerial := Advance;
+  FDetailsOwner := ALocalOwner;
+  LSession := FSession;
+  LSnapshot := LSession.Capture;
+
+  if not GetConnected or (FPort.Serial <> LSerial) then
+  begin
+    raise ENyxCollection.Create('Query details were superseded during capture');
+  end;
+  OpenForm(CDetailsColumn, NyxCollectionQuery, LSnapshot);
 end;
 
 procedure TWorkbench.ReloadDraft;
@@ -1152,6 +1325,12 @@ begin
     raise ENyxCollection.Create('Draft reload was superseded while reading current rules');
   end;
   LQuery := NyxCollectionQuery;
+
+  if LColumn = CDetailsColumn then
+  begin
+    OpenForm(CDetailsColumn, LQuery, LSnapshot);
+    Exit;
+  end;
 
   if LColumn >= 0 then
   begin
@@ -1230,6 +1409,20 @@ begin
   LActor := FActor;
   LSpec := LView.Spec;
   RequireActive;
+
+  if FPurpose = wpQueryDetails then
+  begin
+    for LIndex := 0 to AEdits.Count - 1 do
+    begin
+
+      if not (AEdits.EditAt(LIndex).Kind in [nqseRemoveFilter,
+        nqseClearAllFilters, nqseResetSort, nqseResetAll]) then
+      begin
+        raise ENyxCollection.Create('Query details allow captured removal and explicit global reset only');
+      end;
+    end;
+    Exit;
+  end;
   for LIndex := 0 to AEdits.Count - 1 do
   begin
     LEdit := AEdits.EditAt(LIndex);
@@ -1544,6 +1737,11 @@ begin
     Current;
     LWork.Scheduler := LScheduler;
     LWork.Column := FColumn;
+
+    if LWork.Column = CDetailsColumn then
+    begin
+      LWork.Column := -1;
+    end;
     LWork.Capture := FFormCapture;
     LWork.Command := nqwcApplyFilter;
 
@@ -1994,7 +2192,19 @@ var
 begin
   LOwner := TWorkbench.Create;
   Result := LOwner;
-  LOwner.Initialize(AView, AEvents, ATarget, APresenters, ADesignID);
+  LOwner.Initialize(AView, AEvents, ATarget, APresenters, ADesignID, wpTableControls);
+end;
+
+function NewNyxCollectionQueryDetails(const AView: INyxCollectionView;
+  const AEvents: INyxEvents; const ATarget: TNyxEventTarget;
+  const APresenters: INyxQueryFormPresenterFactory;
+  const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
+var
+  LOwner: TWorkbench;
+begin
+  LOwner := TWorkbench.Create;
+  Result := LOwner;
+  LOwner.Initialize(AView, AEvents, ATarget, APresenters, ADesignID, wpQueryDetails);
 end;
 
 end.

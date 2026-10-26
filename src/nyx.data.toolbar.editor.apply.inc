@@ -232,6 +232,109 @@ begin
   end;
 end;
 
+{ Admit the same reserved leaf roles as the runtime. A custom themed subtree is
+  preserved, but neither a competing action nor a bound label can be claimed. }
+procedure CheckQueryRoles(AProjection: TNyxNode;
+  const AOptions: TNyxDataToolbarQueryOptions);
+var
+  LContext: TNyxNode;
+  LStatus: TNyxNode;
+  LDetails: TNyxNode;
+  LBinding: TNyxBindingSpec;
+begin
+
+  if not AOptions.Defined or (AOptions.DisplayMode = ntqdHidden) then
+  begin
+    Exit;
+  end;
+  LContext := OptionalPart(AProjection, NyxDataToolbarQueryContextPart);
+
+  if LContext = nil then
+  begin
+    raise ENyxDataToolbar.Create('Query presentation requires its named context');
+  end;
+  LStatus := LContext.Part(NyxPart('status'));
+
+  if (LStatus = nil) or (LStatus.Kind <> NyxKindName(nkLabel)) or
+    (LStatus.ProjectionKind <> NyxKindName(nkLabel)) or
+    (LStatus.Prop(NyxAttributeName(atCompound), 'false') = 'true') or
+    (LStatus.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <> NyxActionName(naNone)) or
+    LStatus.FindBinding(bpText, LBinding) then
+  begin
+    raise ENyxDataToolbar.Create('Query status requires an independent unbound Label');
+  end;
+
+  if AOptions.DisplayMode = ntqdDetails then
+  begin
+    LDetails := LContext.Part(NyxPart('details'));
+
+    if (LDetails = nil) or (LDetails.Kind <> NyxKindName(nkButton)) or
+      (LDetails.ProjectionKind <> NyxKindName(nkButton)) or
+      (LDetails.Prop(NyxAttributeName(atCompound), 'false') = 'true') or
+      (LDetails.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <> NyxActionName(naNone)) then
+    begin
+      raise ENyxDataToolbar.Create('Query details require an independent ordinary Button');
+    end;
+  end;
+end;
+
+{ Add an optional owned subtree or edit exact local/named presentation values.
+  Existing styles, extra children, callbacks and unrelated slots survive. }
+procedure ApplyQueryPresentation(ADocument: TNyxDocument; AOwner, AProjection: TNyxNode;
+  const AOptions: TNyxDataToolbarQueryOptions);
+var
+  LContext: TNyxNode;
+  LWritable: TNyxNode;
+  LContent: INyxColumn;
+  LDetails: TNyxNode;
+  LID: TNyxText;
+  LIndex: Integer;
+begin
+
+  if not AOptions.Defined then
+  begin
+    Exit;
+  end;
+  LContext := OptionalPart(AProjection, NyxDataToolbarQueryContextPart);
+
+  if LContext = nil then
+  begin
+    for LIndex := 0 to NyxMaximumNodes do
+    begin
+      LID := AOwner.ID + '-query-context-' + TNyxText(IntToStr(LIndex));
+
+      if (ADocument.Find(LID) = nil) and (ADocument.Find(LID + '-status') = nil) and
+        (ADocument.Find(LID + '-details') = nil) then
+      begin
+        LContent := NewNyxDataToolbarQueryContent(LID, AOptions);
+        AppendHost(ADocument, AOwner).Add(LContent.Node);
+        Exit;
+      end;
+    end;
+    raise ENyxDataToolbar.Create('Query presentation identity budget exhausted');
+  end;
+  { Validate before any detached writes, then keep the caller's actual parts. }
+  CheckQueryRoles(AProjection, AOptions);
+  LWritable := WritableRole(ADocument, AOwner, LContext, NyxDataToolbarQueryContextPart);
+  RetainNyxControl(LWritable).Configure.Visible(AOptions.DisplayMode <> ntqdHidden).Done;
+
+  if AOptions.DisplayMode = ntqdHidden then
+  begin
+    Exit;
+  end;
+  LWritable := WritableRole(ADocument, AOwner, LContext.Part(NyxPart('status')),
+    NyxDataToolbarQueryStatusPart);
+  RetainNyxControl(LWritable).Configure.Text(AOptions.StatusCaption).Done;
+  LDetails := OptionalPart(LContext, 'details');
+
+  if LDetails <> nil then
+  begin
+    LWritable := WritableRole(ADocument, AOwner, LDetails, NyxDataToolbarQueryDetailsPart);
+    RetainNyxControl(LWritable).Configure.Text(AOptions.ButtonCaption).
+      Visible(AOptions.DisplayMode = ntqdDetails).Done;
+  end;
+end;
+
 procedure ApplyNyxDataToolbarEditorChange(ADocument: TNyxDocument;
   const AChange: TNyxDataToolbarEditorChange);
 var
@@ -329,6 +432,8 @@ begin
       LWritable.Add(LClear.Node);
     end;
 
+    ApplyQueryPresentation(ADocument, LRaw, LProjection, LOptions.QueryPresentation);
+
     if AChange.Action = nteaConfigure then
     begin
       SetNyxDataToolbarIntent(RetainNyxControl(LRaw), LIntent);
@@ -336,6 +441,7 @@ begin
     FreeAndNil(LContext);
     ResolveOwner(ADocument, AChange.Owner, LRaw, LContext, LProjection);
     CheckRoles(LProjection, True);
+    CheckQueryRoles(LProjection, LOptions.QueryPresentation);
     AdmitOptions(ADocument, LContext, LProjection, LOptions);
   finally
     LContext.Free;

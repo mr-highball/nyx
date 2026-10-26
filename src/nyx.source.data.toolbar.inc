@@ -31,6 +31,67 @@ var
 begin
   Result := Default(TValue);
 
+  if AName = 'nyxdatatoolbarqueryoptions' then
+  begin
+    Result.Kind := vkToolbarQueryOptions;
+    Result.ToolbarQueryOptions := NyxDataToolbarQueryOptions;
+
+    if At('(') then
+    begin
+      LArgs := Arguments(0);
+    end;
+    while At('.') do
+    begin
+      Expect('.');
+
+      if FCursor >= Length(FTokens) then
+      begin
+        Fail('Expected a typed query presentation method');
+      end;
+      LMethod := LowerCase(FTokens[FCursor].Text);
+      Inc(FCursor);
+      LArgs := Arguments(1);
+
+      if Length(LArgs) <> 1 then
+      begin
+        Fail('Query presentation methods require exactly one typed argument');
+      end;
+
+      if LMethod = 'display' then
+      begin
+
+        if LArgs[0].Kind <> vkToolbarQueryDisplay then
+        begin
+          Fail('Display requires TNyxDataToolbarQueryDisplay');
+        end;
+        Result.ToolbarQueryOptions := Result.ToolbarQueryOptions.Display(
+          TNyxDataToolbarQueryDisplay(LArgs[0].Ordinal));
+      end
+      else if (LMethod = 'caption') or (LMethod = 'buttontext') then
+      begin
+
+        if LArgs[0].Kind <> vkText then
+        begin
+          Fail('Query presentation captions require Pascal text');
+        end;
+
+        if LMethod = 'caption' then
+        begin
+          Result.ToolbarQueryOptions := Result.ToolbarQueryOptions.Caption(LArgs[0].Text);
+        end
+        else
+        begin
+          Result.ToolbarQueryOptions := Result.ToolbarQueryOptions.ButtonText(LArgs[0].Text);
+        end;
+      end
+      else
+      begin
+        Fail('Unknown typed query presentation method');
+      end;
+    end;
+    Exit;
+  end;
+
   if AName = 'tnyxdatatoolbarintent' then
   begin
     Result.Kind := vkToolbarIntent;
@@ -91,7 +152,17 @@ begin
     LMethod := LowerCase(FTokens[FCursor].Text);
     Inc(FCursor);
 
-    if LMethod = 'baseline' then
+    if LMethod = 'querycontext' then
+    begin
+      LArgs := Arguments(1);
+
+      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkToolbarQueryOptions) then
+      begin
+        Fail('QueryContext requires typed query presentation options');
+      end;
+      Result.ToolbarOptions := Result.ToolbarOptions.QueryContext(LArgs[0].ToolbarQueryOptions);
+    end
+    else if LMethod = 'baseline' then
     begin
       LArgs := Arguments(1);
 

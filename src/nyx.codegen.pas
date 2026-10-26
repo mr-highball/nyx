@@ -57,6 +57,7 @@ uses
   nyx.tabs,
   nyx.disclosure,
   nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail, nyx.data.toolbar,
+  nyx.data.toolbar.query,
   nyx.selection,
   nyx.data,
   nyx.contract,
@@ -2853,6 +2854,7 @@ var
   LHasDateRangeOptions: Boolean;
   LHasMasterDetailIntent: Boolean;
   LHasDataToolbarIntent: Boolean;
+  LHasDataToolbarQuery: Boolean;
   LHasSelectionOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
@@ -3560,6 +3562,19 @@ var
             end;
             LArgument := LArgument + #10 + '          .Baseline(NyxToolbarSort(' +
               PascalString(LToolbarOptions.BaselineChoice.Name) + '))';
+
+            if LToolbarOptions.QueryPresentation.Defined then
+            begin
+              case LToolbarOptions.QueryPresentation.DisplayMode of
+                ntqdHidden: LMethod := 'ntqdHidden';
+                ntqdSummary: LMethod := 'ntqdSummary';
+                ntqdDetails: LMethod := 'ntqdDetails';
+              end;
+              LArgument := LArgument + #10 +
+                '          .QueryContext(NyxDataToolbarQueryOptions.Display(' + LMethod + ')' + #10 +
+                '            .Caption(' + PascalString(LToolbarOptions.QueryPresentation.StatusCaption) + ')' + #10 +
+                '            .ButtonText(' + PascalString(LToolbarOptions.QueryPresentation.ButtonCaption) + '))';
+            end;
             for LToolbarSort := 0 to LToolbarOptions.Count - 1 do
             begin
               LArgument := LArgument + #10 + '          .Sort(NyxToolbarSort(' +
@@ -3839,6 +3854,12 @@ var
     if HasNyxDataToolbarIntent(ANode) then
     begin
       LHasDataToolbarIntent := True;
+
+      if GetNyxDataToolbarIntent(ANode).Mode = ntiConfigured then
+      begin
+        LHasDataToolbarQuery := LHasDataToolbarQuery or
+          GetNyxDataToolbarIntent(ANode).Options.QueryPresentation.Defined;
+      end;
     end;
 
     if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
@@ -4225,6 +4246,7 @@ begin
     LHasDateRangeOptions := False;
     LHasMasterDetailIntent := False;
     LHasDataToolbarIntent := False;
+    LHasDataToolbarQuery := False;
     LHasSelectionOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
@@ -4342,6 +4364,11 @@ begin
     if LHasDataToolbarIntent then
     begin
       LLines.Add('  nyx.data.toolbar,');
+    end;
+
+    if LHasDataToolbarQuery then
+    begin
+      LLines.Add('  nyx.data.toolbar.query,');
     end;
 
     if LHasSelectionOptions then

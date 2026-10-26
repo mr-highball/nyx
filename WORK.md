@@ -48,6 +48,66 @@ scratch roots before creating outputs and set child TEMP/TMP explicitly. The
 current maintained DataToolbar entry already follows that configuration.
 Unrelated projects, Windows data and maintained sources are outside this cleanup.
 
+## Current checkpoint — Visible query context and retained-filter removal — 2026-10-26
+
+Previous goal turn: PROGRESS. Root remains SOLO. Batch thirteen advances existing
+DataToolbar query-detail03 after the user's completed storage cleanup. Product
+baseline is 4f3e1bd; 6470ce9 records that cleanup separately. No full original
+criterion, prerequisite, task or completion credit closes.
+
+Explicit typed query presentation supports Hidden, Summary and Details, with
+custom captions. Absence preserves old source/codec meaning and the original
+four-part toolbar interface/GUID. New faces are ordinary Nyx Label/Button content;
+the status uses a reserved unbound text role and follows accepted view changes.
+Copied observations distinguish local entries from active query contributions.
+The optional binding supplies inspection without exporting executable actor
+tokens. Studio's existing typed form, paired history and source reader/generator
+carry the same options, including supplementary Unicode and named overrides.
+
+The common coordinator scope lazily owns/revokes managed query forms. Weak target
+factories retain no renderer, and detached cache vectors publish together. The
+existing workbench/session engine supplies List/Table details, exact captured
+removal and deliberate global filter/sort resets. Fresh owner labels identify
+this toolbar, peers and retained activity. Changed queries require explicit
+Reload; stale forms, retired facades and failed candidates cannot mutate a
+successor. Local Clear never claims an earlier actor by name. Query operations
+leave input entries intact, and the visible help/status explains their scope.
+
+Private data-toolbar-query-context-maintained-01 passes 50/50 base, 133/133
+reusable, 30 typed source, 13/13 source-fixture App, 32 authoring, 61/69 ordinary
+Studio and 14/14 Studio-saved App checks: 612 assertions across twelve complete
+clean heaps. Both widths save identical project/Pascal bytes. The reusable
+journey exercises real invoker/popup buttons for both List and Table, retained
+and live peer predicates, stale refusal/reload, exact removal, independent sort
+reset, failed navigation and two-App isolation. All seven browser consumers
+compile/stage only. Zero owned warnings; 49 installed Classes occurrences.
+
+Subsequent source review found an overconstrained pure configuration helper.
+Private data-toolbar-query-context-custom-01 qualifies the repair with 38
+authoring and 30 source checks, both clean heaps, and two affected browser
+compilations. Custom layout containers/extra children survive; summary content
+needs no unused invoker, captions update the detached copy, and a competing text
+binding refuses without altering the caller. Studio checks also reject compound
+leaf roles consistently with runtime. These later checks are separate from the
+maintained packet above; repeated assertions are not added as new coverage.
+Only purpose-comment corrections followed the terminal readers.
+
+Private data-toolbar-query-workbench-regression-01 compiles the existing table
+regression, but native1280 stops at Windows GetCursorPos before physical manager
+launch. It exits with a clean heap; compact was not attempted after that external
+failure. This is not a passing physical-input regression. Earlier compile failures
+(subscription method, native anchor type, mixed-cache compiler exception and a
+test import) remain retained; the fresh native closure and final checks pass.
+No refused browser route was retried and no LAN/Studio service was replaced.
+
+All actual readers are terminal; no source freeze remains. New artifacts, private
+runners, logs and owned process TEMP/TMP use external storage. Unrelated1280/390
+directories remain untouched. Next extend the existing Studio-saved/generated
+journey to open Details and remove a contribution, then qualify hidden selection,
+binding/refusal and browser/physical/visual parity. Preserve authoring01/runtime02
+and coordinator prerequisites; do not replace these checks with another generic
+source or resolver variant. Query-detail03 retains its full original acceptance.
+
 ## Current checkpoint — DataToolbar in ordinary Studio — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent10b0640 is remote-verified. Root remains

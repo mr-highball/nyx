@@ -28,7 +28,8 @@ interface
 
 uses
   nyx.controls, nyx.model, nyx.coordinators, nyx.data, nyx.collections.bindings,
-  nyx.events, nyx.scheduler, nyx.binding.inputs;
+  nyx.events, nyx.scheduler, nyx.binding.inputs, nyx.types, nyx.text,
+  nyx.collections.view, nyx.collections.query.controls;
 
 type
   { Trusted weak adapter seam. The exact full realized tree is borrowed only
@@ -38,6 +39,16 @@ type
   INyxCoordinatorInputHost = interface(IInterface)
     ['{B10521D5-51B3-4D5C-8105-870FF76F501A}']
     function InputsFor(ATree: TNyxNode): INyxInputCommands;
+  end;
+  { Trusted weak adapter seam for one already adopted tree and exact collection.
+    The caller owns the returned managed controller and must revoke/disconnect
+    it before target retirement. Parent event routing stays behind this seam;
+    target adapters alone borrow the native/DOM anchor during construction. }
+  INyxCoordinatorQueryHost = interface(IInterface)
+    ['{EFA050D7-0068-419C-91CC-C76C796675C0}']
+    function QueryDetailsFor(ATree: TNyxNode; const ATarget: TNyxControlRef;
+      const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
+      const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
   end;
 
   { Library integration seam for an existing built-in engine that returns real

@@ -20,6 +20,80 @@
   SOFTWARE.
 }
 
+function TCoordinatorScope.QueryDetails(const ATarget: TNyxControlRef): INyxCollectionQueryWorkbench;
+var
+  LLease: INyxCoordinatorProjection;
+  LHost: INyxCoordinatorQueryHost;
+  LRole: TCoordinatorRole;
+  LControl: INyxCollectionQueryWorkbench;
+  LControls: TCoordinatorQueryControls;
+  LIDs: TNyxCoordinatorMountIDs;
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  LLease := Self;
+  CheckLive(True);
+  CheckNodes;
+  LRole := FRoles[RoleIndex(ATarget)];
+
+  if (LRole.View = nil) or (FViews = nil) or
+    (FViews.ViewFor(ATarget.ID) <> LRole.View) then
+  begin
+    raise ENyxCoordinatorCancelled.Create('Query details require this exact discovered collection target');
+  end;
+  for LIndex := 0 to High(FQueryControls) do
+  begin
+
+    if FQueryIDs[LIndex] = ATarget.ID then
+    begin
+      Exit(FQueryControls[LIndex]);
+    end;
+  end;
+
+  if not Supports(FTarget, INyxCoordinatorQueryHost, LHost) then
+  begin
+    raise ENyxCoordinator.Create('This host does not provide managed query detail forms');
+  end;
+  LControl := nil;
+  try
+    LControl := LHost.QueryDetailsFor(FTreeNode, ATarget, LRole.View,
+      NyxControlEvents(FRootNode.ID, niRuntime), FRootNode.DesignID);
+    CheckLive(True);
+    CheckNodes;
+
+    if (LControl = nil) or not LControl.Connected then
+    begin
+      raise ENyxCoordinatorCancelled.Create('The target query form belongs to another or retired tree');
+    end;
+    CheckLive(True);
+    LCount := Length(FQueryControls);
+    { Allocate both vectors off-owner. Failure must not leave a nil cache slot
+      for Revoke/Cleanup or a mismatched target/controller ordinal. }
+    LControls := Copy(FQueryControls, 0, LCount);
+    LIDs := Copy(FQueryIDs, 0, LCount);
+    SetLength(LControls, LCount + 1);
+    SetLength(LIDs, LCount + 1);
+    LIDs[LCount] := ATarget.ID;
+    LControls[LCount] := LControl;
+    CheckLive(True);
+    CheckNodes;
+    FQueryIDs := LIDs;
+    FQueryControls := LControls;
+    Result := LControl;
+  except
+
+    if LControl <> nil then
+    begin
+      try
+        LControl.Disconnect;
+      except
+        { Preserve original admission failure after independently retiring forms. }
+      end;
+    end;
+    raise;
+  end;
+end;
+
 function TCoordinatorScope.CollectionTarget(const AReference: TNyxControlRef): TNyxControlRef;
 var
   LLease: INyxCoordinatorProjection;

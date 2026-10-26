@@ -27,7 +27,8 @@ unit nyx.data.toolbar.editor;
 interface
 
 uses
-  nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.data.toolbar, nyx.menu.editor;
+  nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.data.toolbar,
+  nyx.data.toolbar.query, nyx.menu.editor;
 
 type
   { Closed commands for one copied whole-policy proposal. }
@@ -59,7 +60,8 @@ type
   { Closed field identities keep host navigation independent of property names. }
   TNyxDataToolbarEditorField = (ntefTarget, ntefSearch, ntefMatch,
     ntefComparison, ntefBaseline, ntefIncluded, ntefCaption, ntefSortField,
-    ntefDirection, ntefSortComparison);
+    ntefDirection, ntefSortComparison, ntefQueryDisplay, ntefQueryCaption,
+    ntefQueryButton);
   { Shared copied scalar draft storage borrows no controls or document. Exact
     owner/source baseline and complete member shape fence unrelated repaints. }
   TNyxDataToolbarEditorDraft = TNyxMenuEditorDraft;
@@ -103,11 +105,12 @@ implementation
 uses
   SysUtils, nyx.codec, nyx.composition, nyx.collections, nyx.collections.registry,
   nyx.collections.codec, nyx.collections.view, nyx.collections.view.types, nyx.state,
-  nyx.contract, nyx.collections.query, nyx.collections.bindings, nyx.schema;
+  nyx.contract, nyx.collections.query, nyx.collections.bindings, nyx.schema,
+  nyx.binding.types;
 
 const
   CVersion = 'nyx.data-toolbar-editor.version';
-  CFormVersion = '1';
+  CFormVersion = '2';
   COwner = NyxMenuFormOwnerKey;
   CBaseline = NyxMenuFormBaselineKey;
   CEditor = 'nyx.data-toolbar-editor.editor';
@@ -118,7 +121,10 @@ const
   CKeys = 'nyx.data-toolbar-editor.keys';
   CNamesField: array[TNyxDataToolbarEditorField] of TNyxText =
     ('target', 'search', 'match', 'comparison', 'baseline', 'included', 'caption',
-      'sort-field', 'direction', 'sort-comparison');
+      'sort-field', 'direction', 'sort-comparison', 'query-display',
+      'query-caption', 'query-button');
+  CQueryDisplayLabels: array[TNyxDataToolbarQueryDisplay] of TNyxText =
+    ('Hidden', 'Results summary', 'Results summary and filter details');
   CMatchLabels: array[TNyxToolbarSearchMode] of TNyxText =
     ('Contains', 'Starts with', 'Equals');
   CComparisonLabels: array[TNyxQueryTextComparison] of TNyxText =

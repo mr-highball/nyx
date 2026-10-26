@@ -39,19 +39,23 @@ type
   end;
   { Forward declaration for the router's revocable borrowed receiver. }
   TToolbarBinding = class;
-  { Router slots retain this observer, which borrows only its controller.
-    The owner revokes it before cancelling any slot or releasing its scope. }
+  { Router slots retain this observer; the view subscription borrows its method.
+    The binding keeps the inert observer alive until both subscription families
+    have retired. Revocation clears the borrowed controller before any callout. }
   TToolbarObserver = class(TNyxEventObserver)
   public
     Owner: TToolbarBinding;
     procedure Observe(const AEvent: TNyxEventInfo; ACallbackCount: Integer); override;
+    procedure Changed(const AView: INyxCollectionView;
+      const AChanges: INyxCollectionChanges);
   end;
   { One common prepared coordinator owns the exact actor, event slots and weak
     input port. No widget, renderer, raw node or application is retained.
     Preparation and runtime share identity; installed Retire drops only the
     prospective event-plan lease. Explicit Disconnect attempts every cleanup. }
   TToolbarBinding = class(TInterfacedObject, INyxDataToolbarBinding,
-    INyxCoordinatorBinding, INyxPreparedCoordinator, INyxPublicationReadiness)
+    INyxCoordinatorBinding, INyxDataToolbarQueryBinding,
+    INyxPreparedCoordinator, INyxPublicationReadiness)
   private
     FOptions: TNyxDataToolbarOptions;
     FDisabled: Boolean;
@@ -61,7 +65,12 @@ type
     FSearch: TNyxControlRef;
     FSort: TNyxControlRef;
     FClear: TNyxControlRef;
+    FQueryStatus: TNyxControlRef;
+    FQueryDetails: TNyxControlRef;
     FTarget: TNyxControlRef;
+    FRefresh: INyxCoordinatorRefresh;
+    FQueryControls: INyxCollectionQueryWorkbench;
+    FViewToken: INyxCollectionViewSubscription;
     FViews: INyxCollectionBindings;
     FView: INyxCollectionView;
     FSession: INyxCollectionQuerySession;
@@ -84,16 +93,22 @@ type
     function SearchEdits(const AText: TNyxText): TNyxQuerySessionEdits;
     function SortEdits(const AReference: TNyxToolbarSortRef): TNyxQuerySessionEdits;
     procedure PublishQuery(const AEdits: TNyxQuerySessionEdits);
+    procedure UpdateQueryStatus;
   public
     constructor Create(const AProjection: INyxCoordinatorProjection;
       const AIntent: TNyxDataToolbarIntent; const AViews: INyxCollectionBindings;
-      const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler);
+      const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh);
     destructor Destroy; override;
     function GetConnected: Boolean;
     function GetBinding: INyxCoordinatorBinding;
     procedure Search(const AText: TNyxText);
     procedure Sort(const AReference: TNyxToolbarSortRef);
     procedure Clear;
+    function GetObservation: TNyxQueryWorkbenchObservation;
+    function GetQueryStatus: TNyxText;
+    function GetQueryControls: INyxCollectionQueryWorkbench;
+    procedure OpenQueryDetails;
     procedure Revoke;
     procedure Disconnect;
     procedure Validate;
@@ -159,7 +174,8 @@ end;
 
 constructor TToolbarBinding.Create(const AProjection: INyxCoordinatorProjection;
   const AIntent: TNyxDataToolbarIntent; const AViews: INyxCollectionBindings;
-  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler);
+  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh);
 var
   LFacts: INyxCoordinatorRoleFacts;
   LBehavior: INyxCoordinatorBehaviorFacts;
@@ -193,6 +209,7 @@ begin
   FViews := AViews;
   FEventView := AEventView;
   FScheduler := AScheduler;
+  FRefresh := ARefresh;
 
   if (FProjection = nil) or (FEventView = nil) or (FScheduler = nil) or
     not Supports(FProjection, INyxCoordinatorProjectionLifetime, FLifetime) then
@@ -229,6 +246,27 @@ begin
   RequireRole(FSearch, nkInput);
   RequireRole(FSort, nkSelect);
   RequireRole(FClear, nkButton);
+
+  if FOptions.QueryPresentation.Defined and
+    (FOptions.QueryPresentation.DisplayMode <> ntqdHidden) then
+  begin
+
+    if FRefresh = nil then
+    begin
+      raise ENyxDataToolbar.Create('Query status requires the managed refresh port');
+    end;
+    FQueryStatus := FProjection.Part(NyxPart(NyxDataToolbarQueryStatusPart));
+    RequireRole(FQueryStatus, nkLabel);
+    { Reserve presentation before Build. Conflicting caller text bindings refuse
+      the candidate; runtime updates never take ownership of such a binding. }
+    FProjection.Text(FQueryStatus, FProjection.AuthoredText(FQueryStatus));
+
+    if FOptions.QueryPresentation.DisplayMode = ntqdDetails then
+    begin
+      FQueryDetails := FProjection.Part(NyxPart(NyxDataToolbarQueryDetailsPart));
+      RequireRole(FQueryDetails, nkButton);
+    end;
+  end;
   LDomain := LInputs.ValueDomain(FSearch);
 
   if not LDomain.Defined or (LDomain.Kind <> nskText) then
@@ -295,6 +333,13 @@ begin
     ntChange, FObserverLease, nopBeforeCallbacks, NyxEvent(''));
   FTokens[2] := FEventView.PrepareObservation(NyxControlEvents(FClear.ID, niRuntime),
     ntClick, FObserverLease, nopBeforeCallbacks, NyxEvent(''));
+
+  if FQueryDetails.ID <> '' then
+  begin
+    SetLength(FTokens, 4);
+    FTokens[3] := FEventView.PrepareObservation(NyxControlEvents(FQueryDetails.ID, niRuntime),
+      ntClick, FObserverLease, nopBeforeCallbacks, NyxEvent(''));
+  end;
 end;
 
 destructor TToolbarBinding.Destroy;
@@ -472,6 +517,95 @@ begin
   LOwner.Observe(AEvent);
 end;
 
+procedure TToolbarObserver.Changed(const AView: INyxCollectionView;
+  const AChanges: INyxCollectionChanges);
+var
+  LOwner: TToolbarBinding;
+  LLease: INyxDataToolbarBinding;
+begin
+  LOwner := Owner;
+
+  if LOwner = nil then
+  begin
+    Exit;
+  end;
+  LLease := LOwner;
+  LOwner.UpdateQueryStatus;
+end;
+
+function TToolbarBinding.GetObservation: TNyxQueryWorkbenchObservation;
+var
+  LLease: INyxDataToolbarBinding;
+begin
+  LLease := Self;
+  CheckActive;
+  Result := TNyxQueryWorkbenchObservation.Read(FView);
+  CheckActive;
+end;
+
+function TToolbarBinding.GetQueryStatus: TNyxText;
+var
+  LLease: INyxDataToolbarBinding;
+  LObservation: TNyxQueryWorkbenchObservation;
+begin
+  LLease := Self;
+  LObservation := GetObservation;
+  Result := NyxDataToolbarQuerySummary(LObservation, FActor.ID, FOptions.QueryPresentation);
+end;
+
+function TToolbarBinding.GetQueryControls: INyxCollectionQueryWorkbench;
+begin
+  CheckActive;
+  Result := FQueryControls;
+end;
+
+procedure TToolbarBinding.OpenQueryDetails;
+var
+  LLease: INyxDataToolbarBinding;
+  LHost: INyxCoordinatorQueryControls;
+  LDetails: INyxCollectionQueryDetails;
+begin
+  LLease := Self;
+  CheckActive;
+
+  if FQueryControls = nil then
+  begin
+
+    if not Supports(FProjection, INyxCoordinatorQueryControls, LHost) then
+    begin
+      raise ENyxDataToolbar.Create('This coordinator host does not provide query details');
+    end;
+    FQueryControls := LHost.QueryDetails(FTarget);
+    CheckActive;
+  end;
+
+  if not Supports(FQueryControls, INyxCollectionQueryDetails, LDetails) then
+  begin
+    raise ENyxDataToolbar.Create('The managed query surface lacks its inspection purpose');
+  end;
+  { The common scope owns cancellation and cleanup. This copied identity merely
+    labels local contributions; no actor token is granted to the presenter. }
+  LDetails.OpenDetailsFor(FActor.ID);
+end;
+
+procedure TToolbarBinding.UpdateQueryStatus;
+var
+  LLease: INyxDataToolbarBinding;
+  LText: TNyxText;
+begin
+  LLease := Self;
+
+  if not GetConnected or (FQueryStatus.ID = '') then
+  begin
+    Exit;
+  end;
+  LText := GetQueryStatus;
+  FProjection.Text(FQueryStatus, LText);
+  CheckActive;
+  { Refresh is the final outward call and may dispose the whole view. }
+  FRefresh.Request;
+end;
+
 procedure TToolbarBinding.Observe(const AEvent: TNyxEventInfo);
 begin
   { An already snapshotted router slot is inert after query/view retirement.
@@ -485,6 +619,13 @@ begin
   if (AEvent.Trigger = ntClick) and (AEvent.OriginID = FClear.ID) then
   begin
     Clear;
+    Exit;
+  end;
+
+  if (AEvent.Trigger = ntClick) and (FQueryDetails.ID <> '') and
+    (AEvent.OriginID = FQueryDetails.ID) then
+  begin
+    OpenQueryDetails;
     Exit;
   end;
 
@@ -535,6 +676,7 @@ var
   LLifetime: INyxCoordinatorProjectionLifetime;
   LIndex: Integer;
   LFailure: TToolbarFailure;
+  LViewToken: INyxCollectionViewSubscription;
 begin
 
   if FCleaned then
@@ -548,7 +690,10 @@ begin
   LLifetime := FLifetime;
   FLifetime := nil;
   FObserver := nil;
-  FObserverLease := nil;
+  LViewToken := FViewToken;
+  FViewToken := nil;
+  FQueryControls := nil;
+  FRefresh := nil;
   FInputs := nil;
   FActor := nil;
   FSession := nil;
@@ -559,6 +704,22 @@ begin
   FGeneration := nil;
   FScheduler := nil;
   LFailure := Default(TToolbarFailure);
+  try
+
+    if LViewToken <> nil then
+    begin
+      LViewToken.Disconnect;
+    end;
+  except
+    {$ifdef PAS2JS}
+    CaptureToolbarFailure(LFailure, JSExceptValue);
+    {$else}
+    on LException: Exception do
+    begin
+      CaptureToolbarFailure(LFailure, TNyxText(LException.Message));
+    end;
+    {$endif}
+  end;
   for LIndex := 0 to High(LTokens) do
   begin
     try
@@ -594,6 +755,9 @@ begin
     end;
     {$endif}
   end;
+  { View callbacks borrow the observer, so release it only after all independent
+    cancellation attempts. Reentrant Disconnect already sees FCleaned=True. }
+  FObserverLease := nil;
   RaiseToolbarFailure(LFailure);
 end;
 
@@ -658,6 +822,12 @@ begin
   end;
   FNotified := True;
   CheckActive;
+
+  if FQueryStatus.ID <> '' then
+  begin
+    FViewToken := FView.Subscribe(FObserver.Changed);
+    CheckActive;
+  end;
   LCapture := FInputs.Capture([FSearch, FSort]);
   LEdits := NyxQuerySessionEdits;
 
@@ -686,6 +856,7 @@ begin
   begin
     PublishQuery(LEdits);
   end;
+  UpdateQueryStatus;
 end;
 
 procedure TToolbarBinding.Retire;
@@ -710,7 +881,7 @@ function TToolbarFactory.Prepare(const AProjection: INyxCoordinatorProjection;
   const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
 begin
   Result := TToolbarBinding.Create(AProjection, TNyxDataToolbarIntent.FromData(AIntent),
-    AViews, AView, AScheduler);
+    AViews, AView, AScheduler, ARefresh);
 end;
 
 function NewNyxDataToolbarCoordinatorFactory: INyxCoordinatorFactory;

@@ -1002,7 +1002,8 @@ implementation
 uses
   InterfaceBase,
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
-  nyx.collections, nyx.collections.query.lcl,
+  nyx.collections, nyx.collections.query.lcl, nyx.collections.query.controls,
+  nyx.collections.query.workbench,
   nyx.collections.arrangement.lcl,
   nyx.collections.cell.lcl,
   nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl, nyx.coordinators.internal;
@@ -1091,12 +1092,15 @@ type
   { Final presentation receiver is weak. A scope retains this managed port,
     never a renderer/controller; Sync is the last outward action in Request. }
   TNyxLCLCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget,
-    INyxCoordinatorInputHost)
+    INyxCoordinatorInputHost, INyxCoordinatorQueryHost)
   public
     Owner: TNyxLCLRenderer;
     constructor Create(AOwner: TNyxLCLRenderer);
     procedure Request;
     function InputsFor(ATree: TNyxNode): INyxInputCommands;
+    function QueryDetailsFor(ATree: TNyxNode; const ATarget: TNyxControlRef;
+      const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
+      const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
   end;
   { Copied physical draft facts and the existing weak presentation receiver.
     The exact core port proves the mounted generation without retaining its
@@ -1341,6 +1345,54 @@ begin
   end;
 end;
 
+function TNyxLCLCoordinatorRefresh.QueryDetailsFor(ATree: TNyxNode;
+  const ATarget: TNyxControlRef; const AView: INyxCollectionView;
+  const AEvents: TNyxEventTarget; const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
+var
+  LLease: INyxCoordinatorRefreshTarget;
+  LOwner: TNyxLCLRenderer;
+  LFactory: INyxQueryFormPresenterFactory;
+  LAnchor: TControl;
+begin
+  LLease := Self;
+  Result := nil;
+  LOwner := Owner;
+
+  if (LOwner = nil) or (LOwner.FRoot <> ATree) or (InputsFor(ATree) = nil) then
+  begin
+    Exit;
+  end;
+
+  if (Owner <> LOwner) or (LOwner.CollectionView(ATarget.ID) <> AView) then
+  begin
+    Exit;
+  end;
+  LAnchor := LOwner.ControlFor(ATarget.ID);
+
+  if not (LAnchor is TWinControl) then
+  begin
+    raise ENyxCoordinator.Create('Query details require a windowed collection control');
+  end;
+  LFactory := NewNyxLCLQueryFormFactory(TWinControl(LAnchor), LOwner.FTheme);
+  try
+
+    if (Owner <> LOwner) or (LOwner.FRoot <> ATree) then
+    begin
+      LFactory.Revoke;
+      Exit;
+    end;
+    Result := NewNyxCollectionQueryDetails(AView, LOwner.FEvents, AEvents, LFactory, ADesignID);
+
+    if (Owner <> LOwner) or (LOwner.FRoot <> ATree) then
+    begin
+      Result.Disconnect;
+      Result := nil;
+    end;
+  except
+    LFactory.Revoke;
+    raise;
+  end;
+end;
 function TNyxLCLCoordinatorRefresh.InputsFor(ATree: TNyxNode): INyxInputCommands;
 var
   LInputs: INyxInputCommands;

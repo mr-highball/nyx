@@ -475,15 +475,45 @@ new same-named actor does not claim an old actor's token. Target references use
 the same reusable expansion-prefix rule as collection pagers and cannot fall
 back to a globally matching sibling instance.
 
+Optional query context adds an ordinary Label and Button while preserving the
+original four-part `INyxDataToolbar` contract. Import `nyx.data.toolbar.query`
+and select a typed presentation:
+
+```pascal
+LOptions := NyxDataToolbarOptions(NyxControl('people'), NyxTextField('name'))
+  .QueryContext(NyxDataToolbarQueryOptions.Display(ntqdDetails)
+    .Caption('People').ButtonText('Filters and sorting'));
+LToolbar := ConfigureNyxDataToolbar(NewNyxDataToolbar('people-tools'), LOptions);
+```
+
+`ntqdSummary` shows counts and ownership without the button; `ntqdHidden` hides
+the optional group. The composition can use a custom layout container and extra
+parts; summary-only content needs no unused button. Its status Label must remain
+unbound so query updates cannot overwrite a competing caller binding.
+Omitted query options preserve existing source and designs.
+Studio's DataToolbar configuration exposes the same choices and captions.
+The optional `INyxDataToolbarQueryBinding` supplies copied `Observation` and
+`QueryStatus` values, plus `OpenQueryDetails`. Its `QueryControls` are created
+lazily and retire with the coordinator. No actor token is persisted or exposed.
+
+The Nyx-built detail popup works with List and Table targets. It identifies
+filters from this toolbar, active peers and earlier activity, and names shared
+sort ownership. Remove one captured contribution, clear all user filters or
+reset sorting deliberately. These operations leave control entries intact;
+local Clear still resets only its own entries and contributions. The summary
+explains that entries and active filters are separate. A changed query makes a
+captured action stale: Reload explicitly captures current rules before retrying.
+
 The maintained [application consumer](../tests/nyx_data_toolbar_controls.lpr)
 contains independent List/Table workspaces and shared-target toolbars. The
 [reusable App consumer](../tests/nyx_data_toolbar_reuse_controls.lpr) mounts two
 ordinary Apps with two reusable workspaces each. It checks four independent
 stores, exact scoped targets, multiple ordered caller callbacks, refused foreign
-targets, committed observer failure and navigation retirement. A retained filter
-is deliberately removed through an explicit session reset in this fixture.
-[Query detail03](../TODO/NS-3_data-toolbar_03.md) owns the visible end-user surface
-for understanding/removing such filters; local Clear does not claim them by name.
+targets, committed observer failure and navigation retirement. For both List and
+Table targets, the actual detail controls remove retained filters, preserve live
+peers, refuse stale actions, reload and reset shared sorting. Local Clear never
+claims an earlier actor's contributions by name.
+[Query detail03](../TODO/NS-3_data-toolbar_03.md) retains the full acceptance path.
 
 `tools/build.ps1 -Target data-toolbar -DataToolbarEvidenceDirectory <new external directory>`
 builds and runs both native consumers at1280/390 and stages both browser programs
@@ -513,12 +543,16 @@ compares each builder with its saved design and executes the resulting
 application at both widths. Matching asynchronous browser journeys and the
 Studio-saved application are staged without starting a host.
 
-The maintained command with both switches passes 50/50 base, 26/26 reusable,
-23 source, 13/13 source-fixture application, 28 authoring, 61/69 ordinary Studio
-and 14/14 Studio-generated application checks: 387 assertions and twelve complete
-clean native heaps. All seven browser consumers compile/stage only. Full browser,
-physical-input, visual/parity, remaining authoring/refusal and query-context gates
-remain in
+The query-context checkpoint with both switches passes 50/50 base, 133/133 reusable,
+30 source, 13/13 source-fixture application, 32 authoring, 61/69 ordinary Studio
+and 14/14 Studio-generated application checks: 612 assertions and twelve complete
+clean native heaps. A subsequent custom-composition repair passes the expanded
+38 authoring and 30 source checks with clean heaps; its two affected browser
+consumers compile again. All seven maintained browser consumers compile/stage
+only. The existing table regression stops at Windows cursor access before its
+physical column-manager launch; it is not a passing physical-input result.
+Full browser, physical-input, visual/parity, remaining authoring/refusal and
+query-context gates remain in
 [runtime02](../TODO/NS-3_data-toolbar_02.md), [authoring01](../TODO/NS-3_data-toolbar_01.md)
 and [WORK.md](../WORK.md). These checks do not accept the complete tasks.
 

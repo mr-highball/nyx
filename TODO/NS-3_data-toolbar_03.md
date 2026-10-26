@@ -64,6 +64,30 @@ below remain unchanged.
   qualify browser interaction separately from compilation. Exercise exact
   Save/Open/generated adoption with authoring01 before its acceptance.
 
+**Native checkpoint — 2026-10-26**
+
+Typed Hidden/Summary/Details options now round-trip through source and Studio's
+ordinary configuration form. The optional status and invoker remain composed
+Nyx controls. A common coordinator-owned host reuses the canonical workbench for
+List and Table detail popups, with copied ownership labels, captured removal,
+explicit reload and separate global filter/sort resets.
+
+Two ordinary Apps with independent reusable List/Table workspaces exercise the
+actual invoker and popup buttons at desktop/compact widths. The journey removes
+a retained predicate while preserving a live peer, refuses stale and retired
+commands, preserves a failed page candidate and updates the rendered summary.
+The maintained Studio Save/Open and compiled application path also passes its
+existing Search/Clear assertions. The expanded custom-composition checks retain
+themed containers and refuse competing status bindings.
+
+These are native adapter-input results, not browser, physical-input, visual or
+assistive acceptance. The older table regression stops at Windows cursor access
+before physical column-manager launch. [WORK.md](../WORK.md) owns the exact
+packets and remaining checks. Next extend the existing Studio-saved/generated
+application journey to open Details and remove a captured contribution, then
+finish the hidden-selection/binding refusal and browser/parity matrix. All
+original criteria and prerequisites above remain open.
+
 **Blockers**
 
 - [DataToolbar runtime](NS-3_data-toolbar_02.md) supplies the live scoped input,

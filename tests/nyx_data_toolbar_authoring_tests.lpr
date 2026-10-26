@@ -25,9 +25,9 @@ program nyx_data_toolbar_authoring_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.codec,
+  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.codec, nyx.state,
   nyx.codegen, nyx.source, nyx.composition, nyx.catalog, nyx.contract,
-  nyx.data.toolbar, nyx.data.toolbar.editor, nyx.menu.editor,
+  nyx.data.toolbar, nyx.data.toolbar.query, nyx.data.toolbar.editor, nyx.menu.editor,
   nyx.collections, nyx.collections.view.types, nyx.collections.query,
   nyx.studio.edits, nyx.studio.session
   {$ifdef PAS2JS}, Web{$endif};
@@ -103,6 +103,7 @@ end;
 function Options(const ATarget, ACaption: TNyxText): TNyxDataToolbarOptions;
 begin
   Result := NyxDataToolbarOptions(NyxControl(ATarget), NyxTextField('name')).
+    QueryContext(NyxDataToolbarQueryOptions.Display(ntqdDetails).Caption(CCaption)).
     Sort(NyxToolbarSort(ACaption), NyxCollectionQuery.OrderBy(NyxTextField('name'), nsdDescending).
       ThenBy(NyxIntegerField('rank')));
 end;
@@ -198,6 +199,77 @@ begin
     'the original caller choice restriction survives a successful first configuration');
 end;
 
+{ A caller can theme the optional composition and omit an unused invoker.
+  These detached proposals must preserve their input on every refusal. }
+procedure QueryContentCases;
+var
+  LToolbar: INyxDataToolbar;
+  LConfigured: INyxDataToolbar;
+  LContext: INyxCard;
+  LStatus: INyxLabel;
+  LButton: INyxButton;
+  LOptions: TNyxDataToolbarOptions;
+  LBefore: TNyxText;
+  LRefused: Boolean;
+begin
+  LToolbar := NewNyxDataToolbar('custom-query-tools');
+  LContext := NewNyxCard('custom-query-context');
+  LContext.Configure.PartName(NyxPart(NyxDataToolbarQueryContextPart)).Padding(27).Done;
+  LStatus := NewNyxLabel('custom-query-status');
+  LStatus.Configure.PartName(NyxPart('status')).Text('Old caption').Done;
+  LContext.Add(LStatus);
+  LContext.Add(NewNyxLabel('custom-query-note').WithText('Keep this decoration'));
+  LToolbar.Add(LContext);
+  LBefore := TNyxCodec.NodeSnapshot(LToolbar.Node).ToJSON;
+  LOptions := Options('people', 'Names').QueryContext(
+    NyxDataToolbarQueryOptions.Display(ntqdSummary).Caption(CCaption));
+  LConfigured := ConfigureNyxDataToolbar(LToolbar, LOptions);
+  Check((LConfigured.Part(NyxPart(NyxDataToolbarQueryContextPart)).Node.Kind = NyxKindName(nkCard)) and
+    (LConfigured.Part(NyxPart(NyxDataToolbarQueryContextPart)).Node.Prop(NyxAttributeName(atPadding)) = '27') and
+    (LConfigured.Part(NyxPart(NyxDataToolbarQueryContextPart)).Count = 2),
+    'summary-only configuration preserves a custom container without requiring an unused button');
+  Check((LConfigured.Part(NyxPart(NyxDataToolbarQueryStatusPart)).Node.Prop(NyxAttributeName(atText)) = CCaption) and
+    (TNyxCodec.NodeSnapshot(LToolbar.Node).ToJSON = LBefore),
+    'configured query captions update the detached copy and preserve its original');
+  LRefused := False;
+  try
+    LConfigured := ConfigureNyxDataToolbar(LToolbar,
+      LOptions.QueryContext(NyxDataToolbarQueryOptions.Display(ntqdDetails)));
+  except
+    on ENyxDataToolbar do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (TNyxCodec.NodeSnapshot(LToolbar.Node).ToJSON = LBefore),
+    'requesting Details without its ordinary button refuses without changing the caller');
+  LButton := NewNyxButton('custom-query-details');
+  LButton.Configure.PartName(NyxPart('details')).Text('Old button').Done;
+  LContext.Add(LButton);
+  LConfigured := ConfigureNyxDataToolbar(LToolbar,
+    LOptions.QueryContext(NyxDataToolbarQueryOptions.Display(ntqdDetails).ButtonText('Inspect people')));
+  Check((LConfigured.Part(NyxPart(NyxDataToolbarQueryDetailsPart)).Node.Prop(NyxAttributeName(atText)) =
+    'Inspect people') and (LConfigured.Node.Find('custom-query-note') <> nil),
+    'Details updates its invoker caption and preserves unrelated custom content');
+  LConfigured := ConfigureNyxDataToolbar(LConfigured,
+    LOptions.QueryContext(NyxDataToolbarQueryOptions.Display(ntqdHidden)));
+  Check(LConfigured.Part(NyxPart(NyxDataToolbarQueryContextPart)).Node.Prop(NyxAttributeName(atVisible)) = 'false',
+    'typed Hidden keeps the custom subtree while hiding its presentation');
+  LStatus.Binds.Text(NyxTextState('caller-status')).Done;
+  LBefore := TNyxCodec.NodeSnapshot(LToolbar.Node).ToJSON;
+  LRefused := False;
+  try
+    LConfigured := ConfigureNyxDataToolbar(LToolbar, LOptions);
+  except
+    on ENyxDataToolbar do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (TNyxCodec.NodeSnapshot(LToolbar.Node).ToJSON = LBefore),
+    'query context refuses a competing caller text binding without changing its input');
+end;
+
 procedure Run;
 var
   LDocument: TNyxDocument;
@@ -232,12 +304,18 @@ begin
     LKey := NyxDataToolbarEditorKeyID(LRow, 0);
     LRoot.Find(NyxDataToolbarEditorFieldID(LRow, ntefIncluded)).SetProp(NyxAttributeName(atValue), 'true');
     LRoot.Find(NyxDataToolbarEditorFieldID(LRow, ntefCaption)).SetProp(NyxAttributeName(atValue), CCaption);
+    SetChoice(LRoot, 'toolbar-editor', ntefQueryDisplay, 1, 'Results summary');
+    LRoot.Find(NyxDataToolbarEditorFieldID('toolbar-editor', ntefQueryCaption)).
+      SetProp(NyxAttributeName(atValue), CCaption);
     SetChoice(LRoot, LKey, ntefSortField, 1, 'name');
     Check(CaptureNyxDataToolbarEditor(LRoot.Find(NyxDataToolbarEditorActionID('toolbar-editor', nteaConfigure)),
       LRoot, LSession.Document, LChange), 'ordinary form captures typed target, search and sort');
     Check((LChange.Intent.Options.Target.ID = 'people') and
       (LChange.Intent.Options.ChoiceAt(0).Reference.Name = CCaption),
       'caption mapping retains exact typed references and supplementary Unicode');
+    Check((LChange.Intent.Options.QueryPresentation.DisplayMode = ntqdSummary) and
+      (LChange.Intent.Options.QueryPresentation.StatusCaption = CCaption),
+      'ordinary form captures typed query visibility and exact Unicode captions');
     Check(TNyxDataToolbarEditorChange.FromData(LChange.ToData).ToData.ToJSON = LChange.ToData.ToJSON,
       'copied versioned change survives exact descriptor replay');
     SetChoice(LRoot, LKey, ntefSortField, 2, 'rank');
@@ -261,6 +339,9 @@ begin
     Check(LDraft.Restore(LNext) and (LNext.Find(NyxDataToolbarEditorFieldID(LRow,
       ntefCaption)).Prop(NyxAttributeName(atValue)) = CCaption),
       'unsubmitted form drafts survive an unrelated shell replacement');
+    Check(LNext.Find(NyxDataToolbarEditorFieldID('toolbar-editor', ntefQueryCaption)).
+      Prop(NyxAttributeName(atValue)) = CCaption,
+      'the same draft preserves query presentation fields');
     Check(LSession.Save = LBefore, 'building and capturing the form changes no accepted design');
     LSession.ApplyPatch(NyxDataToolbarPolicyPatch(LChange));
     LAfter := LSession.Save;
@@ -268,6 +349,11 @@ begin
       'one ordinary Studio patch publishes toolbar roles, metadata and crafted source');
     Check(LSession.Document.Find('local-tools').Part(NyxPart('clear')).ProjectionKind =
       NyxKindName(nkButton), 'the complete candidate contains an accessible ordinary Clear button');
+    Check((LSession.Document.Find('local-tools').Part(NyxPart(NyxDataToolbarQueryStatusPart)).
+      Prop(NyxAttributeName(atText)) = CCaption) and
+      (LSession.Document.Find('local-tools').Part(NyxPart(NyxDataToolbarQueryDetailsPart)).
+      Prop(NyxAttributeName(atVisible)) = 'false'),
+      'summary-only configuration creates the ordinary status and hides its detail button');
     Check(LSession.Document.Find('local-tools').Part(NyxPart('create')).Prop(NyxAttributeName(atText)) =
       'Invite a person', 'configuring the toolbar preserves its customized existing parts');
     LSession.Undo;
@@ -293,6 +379,10 @@ begin
     Check(GetNyxDataToolbarIntent(LProjection).Options.Count = 1, 'named instance intent configures its own toolbar');
     Check(LProjection.Part(NyxPart('clear')).ProjectionKind = NyxKindName(nkButton),
       'named append descriptor acquires Clear with its original payload intact');
+    Check((LProjection.Part(NyxPart(NyxDataToolbarQueryDetailsPart)).ProjectionKind =
+      NyxKindName(nkButton)) and (GetNyxDataToolbarIntent(LProjection).Options.
+      QueryPresentation.DisplayMode = ntqdDetails),
+      'named append configuration acquires its own typed query context');
     Check(LSession.Document.Find('local-note').Prop(NyxAttributeName(atText)) = 'Keep this local note',
       'named append payload is retained');
     FreeAndNil(LContext);
@@ -359,6 +449,7 @@ end;
 begin
   try
     SortContractCases;
+    QueryContentCases;
     Run;
     {$ifdef PAS2JS}
     Web.document.body.setAttribute('data-toolbar-authoring-checks', IntToStr(GChecks));

@@ -29,7 +29,8 @@ interface
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.collections.bindings,
   nyx.collections.view.types, nyx.events, nyx.behavior, nyx.scheduler,
-  nyx.publication.types, nyx.binding.inputs, nyx.state, nyx.contract;
+  nyx.publication.types, nyx.binding.inputs, nyx.state, nyx.contract,
+  nyx.collections.query.controls;
 
 type
   { Coordinator admission is a UI-only operation, like the existing prepared
@@ -109,6 +110,14 @@ type
   INyxCoordinatorTargets = interface(IInterface)
     ['{1BC73083-D580-4A33-B78C-47F989643657}']
     function CollectionTarget(const AReference: TNyxControlRef): TNyxControlRef;
+  end;
+  { Optional installed-only query inspection. The collection role must already
+    have been discovered during preparation. Each controller belongs to this
+    exact scope/target and retires with the common mount, including its popover.
+    No renderer, widget, tree or event router escapes to the creator. }
+  INyxCoordinatorQueryControls = interface(IInterface)
+    ['{CA1D50ED-C3DC-4B1C-991C-19384E2105DD}']
+    function QueryDetails(const ATarget: TNyxControlRef): INyxCollectionQueryWorkbench;
   end;
   { Optional owner retirement for a behavior whose public Disconnect releases
     its presentation immediately. Revoke changes local flags only; Disconnect
@@ -335,13 +344,16 @@ type
     constructor Create(const APort: ICoordinatorPort; ARole: Integer);
     function GetAllowed: Boolean;
   end;
+  { Managed inspection surfaces are owned by one scope, never its renderer.
+    Detached arrays stage both cache vectors before admission can publish. }
+  TCoordinatorQueryControls = array of INyxCollectionQueryWorkbench;
   { Canonical retained projection with sealed claims and a weak renderer port.
     Final readiness uses dirty flags, the retained generation and raw model
     baselines; alternate view readiness is called only during Validate. }
   TCoordinatorScope = class(TInterfacedObject, INyxCoordinatorProjection,
     INyxCoordinatorRoleFacts, INyxCoordinatorProjectionLifetime,
     INyxCoordinatorRefresh, INyxCoordinatorInputs, INyxCoordinatorTargets,
-    INyxCoordinatorBehaviorFacts)
+    INyxCoordinatorBehaviorFacts, INyxCoordinatorQueryControls)
   private
     FTree: INyxControl;
     FTreeNode: TNyxNode;
@@ -354,6 +366,8 @@ type
     FViews: INyxCollectionBindings;
     FTarget: INyxCoordinatorRefreshTarget;
     FInputHost: IInterface; { exact trusted weak adapter facet, never a renderer }
+    FQueryIDs: TNyxCoordinatorMountIDs;
+    FQueryControls: TCoordinatorQueryControls;
     FPort: ICoordinatorPort;
     FCallback: TCoordinatorPort;
     FRoles: array of TCoordinatorRole;
@@ -390,6 +404,7 @@ type
     function StoredValue(const ARole: TNyxControlRef; out AValue: TNyxStateValue): Boolean;
     function InputCommands: INyxInputCommands;
     function CollectionTarget(const AReference: TNyxControlRef): TNyxControlRef;
+    function QueryDetails(const ATarget: TNyxControlRef): INyxCollectionQueryWorkbench;
     function TryCollectionSpec(const ARole: TNyxControlRef;
       out ASpec: TNyxCollectionViewSpec): Boolean;
     procedure Text(const ARole: TNyxControlRef; const AValue: TNyxText);
@@ -1287,6 +1302,10 @@ var
 begin
   FRevoked := True;
   FInstalled := False;
+  for LIndex := 0 to High(FQueryControls) do
+  begin
+    FQueryControls[LIndex].Revoke;
+  end;
   for LIndex := 0 to High(FRoles) do
   begin
 
@@ -1308,6 +1327,7 @@ var
   LRole: TCoordinatorRole;
   LRoles: array of TCoordinatorRole;
   LFailure: TCoordinatorFailure;
+  LQueries: array of INyxCollectionQueryWorkbench;
 begin
 
   if FCleaned then
@@ -1321,6 +1341,25 @@ begin
   LRoles := FRoles;
   FRoles := nil;
   LFailure := Default(TCoordinatorFailure);
+  LQueries := FQueryControls;
+  FQueryControls := nil;
+  FQueryIDs := nil;
+  for LIndex := 0 to High(LQueries) do
+  begin
+    try
+      LQueries[LIndex].Disconnect;
+    except
+      {$ifdef PAS2JS}
+      CaptureCoordinatorFailure(LFailure, JSExceptValue);
+      {$else}
+      on E: Exception do
+      begin
+        CaptureCoordinatorFailure(LFailure, TNyxText(E.Message));
+      end;
+      {$endif}
+    end;
+  end;
+  LQueries := nil;
   for LIndex := 0 to High(LRoles) do
   begin
     LRole := LRoles[LIndex];
