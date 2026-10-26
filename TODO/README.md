@@ -71,8 +71,10 @@ full04 acceptance remain open in WORK.
 Explicit pending-draft review/export/confirmed cancellation now complements the
 bounded journal, with native handwritten/generated control evidence. Stale
 confirmations cannot discard newer text; source/peers and design history remain
-independent. Exports above the existing 4 MiB direct file-save cap, browser
-execution, saved recovery tooling and original scale/acceptance remain open.
+independent. The standard save hosts now offer bounded streaming above the old
+direct byte cap, with native actual-file/cancellation/shutdown checks; the public
+review prefers that capability. Browser execution, saved recovery tooling and
+original scale/acceptance remain open.
 
 Journal ownership now has finite entry/payload admission and a safe held-display
 path, qualified by native public/generated pressure/discard/retry controls.

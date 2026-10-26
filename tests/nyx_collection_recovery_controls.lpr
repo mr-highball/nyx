@@ -27,7 +27,7 @@ uses Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Windows,
   nyx.text, nyx.model, nyx.codec, nyx.state, nyx.application.lcl,
   nyx.collections, nyx.collections.mount, nyx.collections.recovery,
   nyx.collections.position, nyx.collections.query, nyx.live.inspection,
-  nyx.service.monitor, nyx.files.save, nyx.bytes, nyx.scheduler
+  nyx.service.monitor, nyx.files.save, nyx.bytes, nyx.bytes.sources, nyx.scheduler
   {$ifdef NYX_INSPECTION_GENERATED}, nyx.generated.view{$endif};
 
 const
@@ -38,14 +38,18 @@ const
 type
   { Inline deterministic save host qualifies the UI's exact bytes and typed
     completion, without pretending that injected dialogs wrote a real file. }
-  TReviewSaveHost = class(TInterfacedObject, INyxFileSaveHost)
+  TReviewSaveHost = class(TInterfacedObject, INyxFileSaveHost, INyxFileSaveStreamHost)
   public
     Bytes: TNyxBytes;
     Outcome: TNyxFileSaveOutcome;
     Calls: Integer;
+    StreamCalls: Integer;
     function BeginSave(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
       const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
       AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+    function BeginStream(const AOptions: TNyxFileSaveStreamOptions;
+      const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+      const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
   end;
 
   { Uses the production request lifetime and receipt validation with an inline
@@ -53,6 +57,7 @@ type
   TReviewSaveRequest = class(TNyxFileSaveRequest)
   public
     procedure Finish(AOutcome: TNyxFileSaveOutcome);
+    function CollectSmallFixture: TNyxBytes;
   end;
 
 procedure TReviewSaveRequest.Finish(AOutcome: TNyxFileSaveOutcome);
@@ -63,9 +68,47 @@ begin
 
   if AOutcome = nfsoWritten then
   begin
-    LCount := Length(FBytes);
+    LCount := FExpectedBytes;
   end;
   Complete(AOutcome, FOptions.SuggestedName, LCount);
+end;
+
+function TReviewSaveRequest.CollectSmallFixture: TNyxBytes;
+var
+  LChunk: TNyxBytes;
+  LIndex: Integer;
+  LPosition: Integer;
+begin
+  Result := nil;
+
+  if FExpectedBytes > 65536 then
+  begin
+    raise Exception.Create('Inline recovery save fixture is deliberately small');
+  end;
+  SetLength(Result, FExpectedBytes);
+  LPosition := 0;
+  repeat
+    LChunk := ReadPayloadChunk;
+    for LIndex := 0 to High(LChunk) do
+    begin
+      Result[LPosition] := LChunk[LIndex];
+      Inc(LPosition);
+    end;
+  until Length(LChunk) = 0;
+end;
+
+function TReviewSaveHost.BeginStream(const AOptions: TNyxFileSaveStreamOptions;
+  const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+var
+  LRequest: TReviewSaveRequest;
+begin
+  LRequest := TReviewSaveRequest.CreateStream(AOptions, ASource, AScheduler, ACancellation, AReply);
+  Result := LRequest;
+  Bytes := LRequest.CollectSmallFixture;
+  Inc(Calls);
+  Inc(StreamCalls);
+  LRequest.Finish(Outcome);
 end;
 
 function TReviewSaveHost.BeginSave(const AOptions: TNyxFileSaveOptions;
@@ -332,7 +375,8 @@ begin
       'saved-entry navigation leaves pending review without discarding the original');
     Click(RecoveryReviewPendingID);
     Click(RecoveryExportPendingID);
-    Check((LSave.Calls = 1) and (NyxDecodeUTF8(LSave.Bytes) = CFirstDraft) and
+    Check((LSave.Calls = 1) and (LSave.StreamCalls = 1) and
+      (NyxDecodeUTF8(LSave.Bytes) = CFirstDraft) and
       (LJournal.Capture.Count = 3) and LGrid.EditorMode and (TNyxText(LEditor.Text) = CFirstDraft),
       'inline file export uses exact UTF-8 and never consumes or reapplies the original pending draft');
     LSave.Outcome := nfsoCancelled;

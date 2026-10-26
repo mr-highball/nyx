@@ -66,6 +66,9 @@ type
     { Revokes result/outcome delivery before cooperative cancel. Does not wait,
       roll back committed data, clear a query or resume a paused inspection. }
     procedure CancelFeed;
+    { Runtime export policy for the next review action. Changing this never
+      widens an already admitted request or changes the saved design. }
+    procedure ConfigureDraftExport(const AOptions: TNyxFileSaveStreamOptions);
   end;
 
 { Ordinary portable Nyx controls share one runtime collection. Only runtime
@@ -79,7 +82,7 @@ uses SysUtils, nyx.text, nyx.types, nyx.controls, nyx.state, nyx.behavior, nyx.r
   nyx.scheduler, nyx.collections, nyx.collections.inspection, nyx.service.monitor,
   nyx.collections.feedback.controls, nyx.collections.query, nyx.collections.query.session,
   nyx.publication, nyx.linq, nyx.linq.collections, nyx.linq.publication,
-  nyx.bytes, nyx.files;
+  nyx.bytes, nyx.bytes.sources, nyx.files;
 
 type
   { Worker-safe replay transformation owns only a copied stable reference and
@@ -130,6 +133,8 @@ type
     FSaveRequest: INyxFileSaveRequest;
     FSaveBytes: Integer;
     FSavePending: Boolean;
+    FSaveStreamOptions: TNyxFileSaveStreamOptions;
+    FSaveExpectedLimit: Integer;
     FRecoveryIndex: Integer;
     FRecovered: INyxRecoveredCollectionDraft;
     FDiscard: INyxRecoveredCollectionDraft;
@@ -289,6 +294,9 @@ constructor TInspectionCallback.Create(const AContext: INyxApplicationContext;
 begin
   inherited Create;
   FSaveHost := ASaveHost;
+  FSaveStreamOptions := NyxFileSaveStreamOptions(NyxFileSaveOptions('unfinished-draft.txt')
+    .Title('Export unfinished draft').MediaType(NyxMediaType(nfmtText)).Allow('txt')
+    .DownloadActivation(nfdaPlatform));
 
   if (AContext = nil) or not AContext.Active or (AInspection = nil) or
     (APeer = nil) or (AInspection = APeer) or (AInspection.Store <> APeer.Store) then
@@ -657,7 +665,7 @@ begin
     Exit;
   end;
   FSavePending := False;
-  ValidateNyxFileSaveResult(AResult, FSaveBytes);
+  ValidateNyxStreamFileSaveResult(AResult, FSaveBytes, FSaveExpectedLimit);
   FPendingStatus := 'Export: ' + NyxFileSaveOutcomeName(AResult.Outcome) +
     '. The original draft has not been discarded.';
   PublishState(FContext.State.GetValue(NyxTextState(InspectionStatusID)));
@@ -670,6 +678,8 @@ var
   LBytes: TNyxBytes;
   LOptions: TNyxFileSaveOptions;
   LRequest: INyxFileSaveRequest;
+  LStreamHost: INyxFileSaveStreamHost;
+  LSource: INyxByteSource;
 begin
 
   if not Active or not Supports(FRecoveryMount, INyxCollectionPendingDraftMount, LMount) then
@@ -726,21 +736,32 @@ begin
       FSaveRequest := nil;
       FSavePending := False;
       try
-        LOptions := NyxFileSaveOptions('unfinished-draft.txt').Title('Export unfinished draft')
-          .MediaType(NyxMediaType(nfmtText)).Allow('txt').MaximumBytes(NyxTextFileMaximumBytes);
-        { Check before allocating bytes or opening a picker. Oversized exports
-          refuse explicitly; the reviewed/original values are never truncated. }
-
-        if NyxUTF8ByteCount(FPendingReview.Cell.Text) > LOptions.ByteLimit then
+        if Supports(FSaveHost, INyxFileSaveStreamHost, LStreamHost) then
         begin
-          raise ENyxFile.Create('This file-save host accepts at most 4 MiB per request');
+          LSource := NyxUTF8ByteSource(FPendingReview.Cell.Text);
+          FSaveBytes := LSource.ByteCount;
+          FSaveExpectedLimit := FSaveStreamOptions.ByteLimit;
+          FSavePending := True;
+          FPendingStatus := 'Export pending; the original remains in its control.';
+          LRequest := LStreamHost.BeginStream(FSaveStreamOptions, LSource,
+            FContext.Scheduler, FGeneration, DraftSaved);
+        end
+        else
+        begin
+          LOptions := FSaveStreamOptions.FileOptions.MaximumBytes(NyxTextFileMaximumBytes);
+
+          if NyxUTF8ByteCount(FPendingReview.Cell.Text) > LOptions.ByteLimit then
+          begin
+            raise ENyxFile.Create('This byte-only save host accepts at most 4 MiB per request; configure a streaming host');
+          end;
+          LBytes := NyxEncodeUTF8(FPendingReview.Cell.Text);
+          FSaveBytes := Length(LBytes);
+          FSaveExpectedLimit := LOptions.ByteLimit;
+          FSavePending := True;
+          FPendingStatus := 'Export pending; the original remains in its control.';
+          LRequest := FSaveHost.BeginSave(LOptions, LBytes, FContext.Scheduler,
+            FGeneration, DraftSaved);
         end;
-        LBytes := NyxEncodeUTF8(FPendingReview.Cell.Text);
-        FSaveBytes := Length(LBytes);
-        FSavePending := True;
-        FPendingStatus := 'Export pending; the original remains in its control.';
-        LRequest := FSaveHost.BeginSave(LOptions, LBytes, FContext.Scheduler,
-          FGeneration, DraftSaved);
 
         if Active then
         begin
@@ -764,6 +785,21 @@ begin
   begin
     PublishState(LStatus);
   end;
+end;
+
+procedure TNyxLiveInspectionDemo.ConfigureDraftExport(const AOptions: TNyxFileSaveStreamOptions);
+var
+  LCallback: TInspectionCallback;
+begin
+  AOptions.Validate;
+  LCallback := TInspectionCallback(FCallbackObject);
+
+  if (LCallback = nil) or not LCallback.Active then
+  begin
+    raise ENyxFile.Create('Draft export configuration requires a live demo binding');
+  end;
+  LCallback.FContext.Scheduler.RequireUI;
+  LCallback.FSaveStreamOptions := AOptions;
 end;
 
 procedure TInspectionCallback.RecoveryAction(const AID: TNyxText);

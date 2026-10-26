@@ -26,7 +26,7 @@ unit nyx.files.save.lcl;
 
 interface
 
-uses nyx.text, nyx.files.save;
+uses nyx.text, nyx.files.save, nyx.bytes.sources;
 
 { Runtime-only initial directory is never serialized. Native Download mode is
   unavailable; picker modes use the real LCL save dialog and exact byte writer. }
@@ -40,6 +40,23 @@ uses
   {$ifdef windows}, Windows{$else}, BaseUnix{$endif};
 
 type
+  { Forward for one queued UI turn; its retained request lease protects the
+    borrowed receiver until execution or scheduler retirement. }
+  TSaveRequest = class;
+
+  { One cooperative UI continuation. Skipped armed work cancels its request,
+    closing staged output and detaching the borrowed reply during retirement.
+    PostTurn is UI-owned and cannot execute inline; arm only after admission. }
+  TStreamTurn = class(TInterfacedObject, INyxWork)
+  public
+    Request: TSaveRequest;
+    Lease: INyxFileSaveRequest;
+    Armed: Boolean;
+    Ran: Boolean;
+    destructor Destroy; override;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
+
   { One UI-thread save through a real LCL dialog and a staged byte writer.
     Owns its ownerless dialog/timer and copied runtime directory; shared-base and
     local leases protect nested modal turns. Cancellation closes only this
@@ -50,17 +67,29 @@ type
     FDirectory: TNyxText;
     FDialog: TSaveDialog;
     FTimer: TTimer;
+    FStage: TNyxText;
+    FSelected: TNyxText;
+    FStageHandle: THandle;
+    FStageStream: THandleStream;
     {$ifdef windows}
     FDialogWindow: HWND;
     {$endif}
     procedure ObserveCancellation(ASender: TObject);
     procedure WriteSelected(const APath: TNyxText);
+    procedure OpenStreamStage(const APath: TNyxText);
+    procedure ReleaseStreamStage;
+    procedure QueueStreamTurn;
+    procedure WriteStreamTurn;
   protected
     procedure EndHost; override;
   public
     constructor Create(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
       const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
       AReply: TNyxFileSaveReply; const ADirectory: TNyxText);
+    constructor CreateStream(const AOptions: TNyxFileSaveStreamOptions;
+      const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+      const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply;
+      const ADirectory: TNyxText);
     destructor Destroy; override;
     procedure Start;
   end;
@@ -69,7 +98,7 @@ type
     BeginSave owns no shared dialog: every call creates an independent request
     and may complete inline while the LCL modal loop runs. Native hosts refuse
     browser Download mode instead of reporting a different kind of delivery. }
-  TSaveHost = class(TInterfacedObject, INyxFileSaveHost)
+  TSaveHost = class(TInterfacedObject, INyxFileSaveHost, INyxFileSaveStreamHost)
   private
     FDirectory: TNyxText;
   public
@@ -77,6 +106,9 @@ type
     function BeginSave(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
       const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
       AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+    function BeginStream(const AOptions: TNyxFileSaveStreamOptions;
+      const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+      const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
   end;
 
 {$ifdef windows}
@@ -131,12 +163,171 @@ constructor TSaveRequest.Create(const AOptions: TNyxFileSaveOptions;
   const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply;
   const ADirectory: TNyxText);
 begin
+  FStageHandle := THandle(-1);
   inherited Create(AOptions, ABytes, AScheduler, ACancellation, AReply);
   FDirectory := ADirectory;
 end;
 
+constructor TSaveRequest.CreateStream(const AOptions: TNyxFileSaveStreamOptions;
+  const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply;
+  const ADirectory: TNyxText);
+begin
+  { Initialize before admission: a constructor failure still runs destruction. }
+  FStageHandle := THandle(-1);
+  inherited CreateStream(AOptions, ASource, AScheduler, ACancellation, AReply);
+  FDirectory := ADirectory;
+
+  if not NyxSchedulerTurns(AScheduler).CanYieldUI then
+  begin
+    raise ENyxFile.Create('Native streaming save requires cooperative UI turns');
+  end;
+end;
+
+destructor TStreamTurn.Destroy;
+begin
+
+  if Armed and not Ran and (Lease <> nil) then
+  begin
+    Lease.Cancel;
+  end;
+  inherited Destroy;
+end;
+
+procedure TStreamTurn.Execute(const AExecution: INyxExecution);
+begin
+  Ran := True;
+
+  if AExecution.Cancelled then
+  begin
+    Lease.Cancel;
+  end
+  else
+  begin
+    Request.WriteStreamTurn;
+  end;
+end;
+
+procedure TSaveRequest.QueueStreamTurn;
+var
+  LTurn: TStreamTurn;
+  LWork: INyxWork;
+begin
+  LTurn := TStreamTurn.Create;
+  LTurn.Request := Self;
+  LTurn.Lease := Self;
+  LWork := LTurn;
+  NyxSchedulerTurns(FScheduler).PostTurn(LWork);
+  LTurn.Armed := True;
+end;
+
+procedure TSaveRequest.ReleaseStreamStage;
+begin
+  FreeAndNil(FStageStream);
+
+  if FStageHandle <> THandle(-1) then
+  begin
+    FileClose(FStageHandle);
+    FStageHandle := THandle(-1);
+  end;
+
+  if FStage <> '' then
+  begin
+    DeleteFileUTF8(FStage);
+    FStage := '';
+  end;
+end;
+
+procedure TSaveRequest.OpenStreamStage(const APath: TNyxText);
+var
+  LIdentifier: TGUID;
+begin
+  FSelected := APath;
+  CreateGUID(LIdentifier);
+  FStage := IncludeTrailingPathDelimiter(ExtractFilePath(APath)) +
+    TNyxText('.nyx-') + TNyxText(GUIDToString(LIdentifier)) + TNyxText('.tmp');
+  {$ifdef windows}
+  FStageHandle := CreateFileW(PWideChar(UTF8Decode(FStage)), GENERIC_WRITE, 0, nil,
+    CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
+  {$else}
+  FStageHandle := fpOpen(PChar(FStage), O_WRONLY or O_CREAT or O_EXCL, &600);
+  {$endif}
+
+  if FStageHandle = THandle(-1) then
+  begin
+    { No ownership was acquired: cleanup must not delete another owner's file. }
+    FStage := '';
+    raise ENyxFile.Create('Cannot exclusively stage the selected file');
+  end;
+  FStageStream := THandleStream.Create(FStageHandle);
+end;
+
+procedure TSaveRequest.WriteStreamTurn;
+var
+  LChunk: TNyxBytes;
+  LInstalled: Boolean;
+  LFinished: Boolean;
+  LFailed: Boolean;
+begin
+
+  if not Pending then
+  begin
+    Cancel;
+    Exit;
+  end;
+  LFinished := False;
+  LFailed := False;
+  try
+    LChunk := ReadPayloadChunk;
+
+    if not Pending then
+    begin
+      Cancel;
+      Exit;
+    end;
+
+    if Length(LChunk) > 0 then
+    begin
+      FStageStream.WriteBuffer(LChunk[0], Length(LChunk));
+      QueueStreamTurn;
+    end
+    else
+    begin
+      FreeAndNil(FStageStream);
+      FileClose(FStageHandle);
+      FStageHandle := THandle(-1);
+      {$ifdef windows}
+      LInstalled := MoveFileExW(PWideChar(UTF8Decode(FStage)), PWideChar(UTF8Decode(FSelected)),
+        MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH);
+      {$else}
+      LInstalled := RenameFileUTF8(FStage, FSelected);
+      {$endif}
+
+      if not LInstalled then
+      begin
+        raise ENyxFile.Create('Cannot replace the selected file');
+      end;
+      FStage := '';
+      LFinished := True;
+    end;
+  except
+    LFailed := True;
+  end;
+
+  if LFailed then
+  begin
+    Complete(nfsoFailed, FOptions.SuggestedName, 0,
+      'The streamed file could not be committed; the previous file was retained');
+  end
+  else if LFinished then
+  begin
+    Complete(nfsoWritten, TNyxText(ExtractFileName(FSelected)), FExpectedBytes);
+  end;
+end;
+
 procedure TSaveRequest.EndHost;
 begin
+  ReleaseStreamStage;
 
   {$ifdef windows}
 
@@ -171,6 +362,7 @@ end;
 
 destructor TSaveRequest.Destroy;
 begin
+  ReleaseStreamStage;
   FTimer.Free;
   FDialog.Free;
   inherited Destroy;
@@ -211,6 +403,9 @@ begin
 
     if LHandle = THandle(-1) then
     begin
+      { Exclusive creation acquired no ownership. Never remove a colliding
+        existing path merely because the selected file could not be staged. }
+      LStage := '';
       raise Exception.Create('Cannot stage the selected file');
     end;
     LStream := THandleStream.Create(LHandle);
@@ -234,7 +429,7 @@ begin
     LInstalled := RenameFileUTF8(LStage, APath);
     {$endif}
 
-    if not LInstalled then
+    if not LInstalled and (LStage <> '') then
     begin
       raise Exception.Create('Cannot replace the selected file');
     end;
@@ -385,6 +580,13 @@ begin
     { Check the portable receipt before any file effect, including host-selected
       names which differ from the original suggestion. }
     LLeaf := NyxTextFile(TNyxText(ExtractFileName(LPath)), '');
+
+    if FStreamed then
+    begin
+      OpenStreamStage(LPath);
+      QueueStreamTurn;
+      Exit;
+    end;
     WriteSelected(LPath);
   except
     on E: Exception do
@@ -419,6 +621,18 @@ end;
 function NewNyxLCLFileSaveHost(const AInitialDirectory: TNyxText): INyxFileSaveHost;
 begin
   Result := TSaveHost.Create(AInitialDirectory);
+end;
+
+function TSaveHost.BeginStream(const AOptions: TNyxFileSaveStreamOptions;
+  const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+var
+  LRequest: TSaveRequest;
+begin
+  LRequest := TSaveRequest.CreateStream(AOptions, ASource, AScheduler, ACancellation,
+    AReply, FDirectory);
+  Result := LRequest;
+  LRequest.Start;
 end;
 
 end.

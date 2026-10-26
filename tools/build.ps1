@@ -704,7 +704,8 @@ try {
     foreach ($nyxInspectionProgram in @('nyx_collection_inspection_authoring_tests',
         'nyx_collection_inspection_studio_tests', 'nyx_agent_collection_schema',
         'nyx_table_presentation_authoring_tests', 'nyx_collection_recovery_tests',
-        'nyx_collection_recovery_mount_tests')) {
+        'nyx_collection_recovery_mount_tests', 'nyx_file_save_stream_tests',
+        'nyx_logic_file_save_tests')) {
       Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + $nyxInspectionCold + @(
         "-FU$nyxInspectionNative", "-FE$nyxInspectionNative", "tests/$nyxInspectionProgram.lpr")) ($nyxInspectionProgram + '-compiler')
       $nyxInspectionCold = @()
@@ -766,6 +767,11 @@ try {
     $nyxInspectionExe = Join-Path $nyxInspectionGeneratedNative 'nyx_collection_recovery_controls.exe'
     Invoke-NyxInspectionCheck $nyxInspectionExe @('1280') 'recovery-generated-1280' $true
     Invoke-NyxInspectionCheck $nyxInspectionExe @('390') 'recovery-generated-390' $true
+    Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + @(
+      "-FU$nyxInspectionNative", "-FE$nyxInspectionNative",
+      'tests/nyx_file_save_stream_controls.lpr')) 'stream-save-compiler'
+    Invoke-NyxInspectionCheck (Join-Path $nyxInspectionNative 'nyx_file_save_stream_controls.exe') @(
+      (Join-Path $nyxInspectionRoot 'stream-save-files')) 'stream-save-controls' $true
     foreach ($nyxInspectionPin in $nyxInspectionPins) {
       if ((Get-FileHash -LiteralPath $nyxInspectionPin.path).Hash -ne $nyxInspectionPin.sha256) {
         throw ('Compiler input changed: ' + $nyxInspectionPin.path)

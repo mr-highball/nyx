@@ -61,9 +61,17 @@ the original control. Export saves the reviewed text as exact UTF-8 through an
 injected file-save service and leaves the original intact. **Discard pending
 draft** requires confirmation against the exact current text/caret and resumes
 the latest display without writing source data. A stale confirmation reviews the
-changed value and asks again. The existing direct save service has a 4 MiB
-request cap; larger export refuses explicitly without truncation. Streaming
-export and full pressure/memory qualification remain open.
+changed value and asks again. The standard native/browser file-save hosts expose
+optional streaming support, which this demo prefers. It retains immutable text
+and encodes bounded chunks instead of another complete byte array. Runtime
+`ConfigureDraftExport` accepts fluent total/chunk/browser-download limits; the
+defaults are 64 MiB / 64 KiB / 64 MiB. Native staging yields between chunks, and
+browser picker writes await each chunk. Blob downloads buffer complete content
+within the chosen budget. Byte-only custom hosts retain their 4 MiB ceiling and
+larger requests refuse without truncation. Complete pressure/memory and actual
+browser qualification remain open. This demo delegates download activation to
+the browser; callers can select Nyx's required-activation policy through the
+same runtime file options.
 This demo passes its exact inspected mount separately from the inert journal;
 Close releases that command authority before application disposal.
 The public document declares inspection defaults through

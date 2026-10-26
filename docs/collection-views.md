@@ -446,12 +446,37 @@ delivery outcomes. Export never consumes the original or silently reapplies it.
 review and confirmation are required. Saved-entry navigation/discard remains a
 separate action. These are runtime controls, not authored history.
 
-The existing direct file-save contract accepts at most 4 MiB per request. Larger
-exports refuse before byte allocation or host effects, leaving both reviewed
-and original text intact. The raw pending interface remains available to caller
-export services. A portable streaming/chunked file-save path, complete pressure
-UX, browser execution and total application memory acceptance remain open;
-bounded journal ownership must not be presented as those broader outcomes.
+The original byte-only file-save contract still accepts at most 4 MiB. The same
+LCL/browser hosts now expose optional `INyxFileSaveStreamHost`. The example
+prefers that capability, using `NyxUTF8ByteSource(LReview.Cell.Text)` rather than
+constructing another complete encoded array. The immutable source validates
+Unicode once and opens independent cursors; chunks may split UTF-8 sequences,
+but their concatenation preserves exact bytes, supplementary scalars and NUL.
+
+`NyxFileSaveStreamOptions(LFileOptions)` defaults to 64 MiB total output, 64 KiB
+chunks and a 64 MiB browser-download buffer. Fluent `MaximumBytes`, `ChunkBytes`
+and `DownloadBufferBytes` tune those independently. The total limit is checked
+before opening a cursor. Every read is bounded and exact declared EOF precedes
+commit. A short source, extra bytes or an oversized chunk fails without claiming
+delivery. Changing runtime policy never widens an already admitted request.
+`TNyxLiveInspectionDemo.ConfigureDraftExport` configures the next export action.
+
+Native writes use cooperative Nyx scheduler turns and an exclusively created
+temporary sibling. Only exact complete content replaces the selected file;
+cancellation/failure closes and removes owned staging output. Picker browsers
+await each chunk write and close only after exact EOF, aborting uncommitted work
+when possible. Browser Blob downloads inherently buffer the whole output within
+the separately chosen download limit. This bounds logical content, not browser
+engine allocation/peak memory. Zero download buffer permits empty downloads and
+does not disable incremental picker output. A download remains a request, not a
+disk-completion guarantee; browser activation/security rules still apply.
+
+Byte-only alternative hosts remain supported for smaller values. Larger values
+refuse explicitly when that host lacks streaming, leaving both reviewed and
+original text intact. Streaming policy is runtime authority and does not change
+the existing saved byte-file schema. Complete pressure UX, executed browser
+behavior and total application memory acceptance remain open; bounded chunks
+and native file checks must not be presented as those broader outcomes.
 
 ## Typed construction
 

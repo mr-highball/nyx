@@ -36,7 +36,8 @@ function NewNyxBrowserFileSaveHost: INyxFileSaveHost;
 
 implementation
 
-uses SysUtils, JS, Web, WebOrWorker, nyx.text, nyx.bytes, nyx.files, nyx.scheduler;
+uses SysUtils, JS, Web, WebOrWorker, nyx.text, nyx.bytes, nyx.bytes.sources,
+  nyx.files, nyx.scheduler;
 
 type
   { File System Access bridge to showSaveFilePicker on the browser's borrowed
@@ -87,7 +88,7 @@ type
   private
     FPlatformLease: INyxFileSaveRequest;
     function Run: JSValue; async;
-    procedure Download;
+    function Download: JSValue; async;
   public
     procedure Start;
   end;
@@ -96,10 +97,13 @@ type
     Each BeginSave creates an independent request, whose lifetime covers picker
     promises or download dispatch. Only a completed write/close reports Written;
     an anchor download reports a request, not eventual disk completion. }
-  TSaveHost = class(TInterfacedObject, INyxFileSaveHost)
+  TSaveHost = class(TInterfacedObject, INyxFileSaveHost, INyxFileSaveStreamHost)
     function BeginSave(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
       const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
       AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+    function BeginStream(const AOptions: TNyxFileSaveStreamOptions;
+      const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+      const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
   end;
 
 { Promise rejection values are external platform data, not Pascal exceptions.
@@ -157,7 +161,18 @@ begin
   end;
 end;
 
-procedure TSaveRequest.Download;
+{ A real host turn permits input/cancellation between encoded download chunks.
+  This never fabricates or extends the browser's transient user activation. }
+procedure DownloadTurn(AResolve, AReject: TJSPromiseResolver);
+begin
+  window.setTimeout(
+    procedure
+    begin
+      AResolve(Undefined);
+    end, 0);
+end;
+
+function TSaveRequest.Download: JSValue; async;
 var
   LArray: TJSUint8Array;
   LBlobOptions: TJSBlobInit;
@@ -167,7 +182,10 @@ var
   LWork: INyxWork;
   LIndex: Integer;
   LCount: Integer;
+  LChunk: TNyxBytes;
+  LParts: array of JSValue;
 begin
+  Result := Undefined;
 
   if (FOptions.ActivationPolicy = nfdaRequired) and not ActiveGesture then
   begin
@@ -175,15 +193,70 @@ begin
       'Choose Save again from a current user action');
     Exit;
   end;
-  LCount := Length(FBytes);
-  LArray := TJSUint8Array.new(LCount);
-  for LIndex := 0 to High(FBytes) do
+  LCount := FExpectedBytes;
+
+  if FStreamed then
   begin
-    LArray[LIndex] := FBytes[LIndex];
+    { Blob downloads inherently retain the entire output in browser storage.
+      This explicit budget is independent of the genuinely incremental picker. }
+
+    if LCount > FStreamOptions.DownloadLimit then
+    begin
+      Complete(nfsoUnavailable, FOptions.SuggestedName, 0,
+        'The download exceeds its buffer budget; choose a picker or raise that explicit limit');
+      Exit;
+    end;
+    LParts := nil;
+    repeat
+      LChunk := ReadPayloadChunk;
+
+      if not Pending then
+      begin
+        Cancel;
+        Exit;
+      end;
+
+      if Length(LChunk) = 0 then
+      begin
+        Break;
+      end;
+      LArray := TJSUint8Array.new(Length(LChunk));
+      for LIndex := 0 to High(LChunk) do
+      begin
+        LArray[LIndex] := LChunk[LIndex];
+      end;
+      SetLength(LParts, Length(LParts) + 1);
+      LParts[High(LParts)] := LArray.buffer;
+      LChunk := nil;
+      await(TJSPromise.resolve(TJSPromise.new(@DownloadTurn)));
+    until False;
+  end
+  else
+  begin
+    LArray := TJSUint8Array.new(LCount);
+    for LIndex := 0 to High(FBytes) do
+    begin
+      LArray[LIndex] := FBytes[LIndex];
+    end;
+    SetLength(LParts, 1);
+    LParts[0] := LArray.buffer;
+  end;
+
+  if not Pending then
+  begin
+    Cancel;
+    Exit;
+  end;
+
+  if (FOptions.ActivationPolicy = nfdaRequired) and not ActiveGesture then
+  begin
+    Complete(nfsoActivationRequired, FOptions.SuggestedName, 0,
+      'The browser requires a current user action to request this download');
+    Exit;
   end;
   LBlobOptions := TJSBlobInit.new;
   LBlobOptions.type_ := FOptions.ContentType.Name;
-  LBlob := TJSBlob.new([LArray.buffer], LBlobOptions);
+  LBlob := TJSBlob.new(LParts, LBlobOptions);
   LRetirement := TURLRetirement.Create;
   LWork := LRetirement;
   LRetirement.URL := TJSURL.createObjectURL(LBlob);
@@ -228,6 +301,7 @@ var
   LName: TNyxText;
   LLeaf: INyxTextFile;
   LCommitted: Boolean;
+  LChunk: TNyxBytes;
 begin
   Result := Undefined;
   LLease := Self;
@@ -246,7 +320,7 @@ begin
       if (FOptions.SaveMode = nfsmDownload) or
         ((FOptions.SaveMode = nfsmPreferPicker) and not LPicker) then
       begin
-        Download;
+        await(Download);
         Exit;
       end;
 
@@ -320,13 +394,53 @@ begin
         Cancel;
         Exit;
       end;
-      LCount := Length(FBytes);
-      LArray := TJSUint8Array.new(LCount);
-      for LIndex := 0 to High(FBytes) do
+      LCount := FExpectedBytes;
+
+      if FStreamed then
       begin
-        LArray[LIndex] := FBytes[LIndex];
+        repeat
+          LChunk := ReadPayloadChunk;
+
+          if not Pending then
+          begin
+            Cancel;
+            Exit;
+          end;
+
+          if Length(LChunk) = 0 then
+          begin
+            Break;
+          end;
+          LArray := TJSUint8Array.new(Length(LChunk));
+          for LIndex := 0 to High(LChunk) do
+          begin
+            LArray[LIndex] := LChunk[LIndex];
+          end;
+          LChunk := nil;
+          LPacket := TJSObject(await(Settled(LWritable.write(LArray))));
+
+          if not Pending then
+          begin
+            Cancel;
+            Exit;
+          end;
+
+          if not Boolean(LPacket['ok']) then
+          begin
+            Complete(nfsoFailed, FOptions.SuggestedName, 0, 'The browser could not write a complete chunk');
+            Exit;
+          end;
+        until False;
+      end
+      else
+      begin
+        LArray := TJSUint8Array.new(LCount);
+        for LIndex := 0 to High(FBytes) do
+        begin
+          LArray[LIndex] := FBytes[LIndex];
+        end;
+        LPacket := TJSObject(await(Settled(LWritable.write(LArray))));
       end;
-      LPacket := TJSObject(await(Settled(LWritable.write(LArray))));
 
       if not Pending then
       begin
@@ -334,7 +448,7 @@ begin
         Exit;
       end;
 
-      if not Boolean(LPacket['ok']) then
+      if not FStreamed and not Boolean(LPacket['ok']) then
       begin
         Complete(nfsoFailed, FOptions.SuggestedName, 0, 'The browser could not write the complete file');
         Exit;
@@ -387,6 +501,17 @@ end;
 function NewNyxBrowserFileSaveHost: INyxFileSaveHost;
 begin
   Result := TSaveHost.Create;
+end;
+
+function TSaveHost.BeginStream(const AOptions: TNyxFileSaveStreamOptions;
+  const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+var
+  LRequest: TSaveRequest;
+begin
+  LRequest := TSaveRequest.CreateStream(AOptions, ASource, AScheduler, ACancellation, AReply);
+  Result := LRequest;
+  LRequest.Start;
 end;
 
 end.

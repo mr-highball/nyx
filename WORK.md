@@ -9,7 +9,86 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — pending draft review, export and exact cancellation — 2026-10-25
+## Current checkpoint — bounded streaming export for reviewed drafts — 2026-10-25
+
+Parentd925840 is remote-verified. Previous goal turn: PROGRESS. Root remains
+SOLO, with Lil' Scooty idle until requested otherwise. This twelfth original04
+L1 checkpoint advances large pending-value export through existing file hosts;
+no original criterion closes, no task moves to DONE and no completion credit is
+inferred. All04/03 criteria and collection02/03 browser gates remain open.
+
+nyx.bytes.sources adds immutable known-length content and independent cursors.
+The UTF-8 factory validates complete Unicode, retains immutable text and emits
+bounded owned chunks without another whole encoded array. Supplementary scalars,
+NUL and line endings remain exact even when a chunk splits an encoded scalar.
+Signed portable lengths, immutable content and private per-owner cursors are
+explicit contracts. No source/reader owns a widget, document or caller callback.
+
+The same native/browser hosts expose optional INyxFileSaveStreamHost. Separate
+fluent runtime limits default64MiB total/download buffering and64KiB chunks;
+chunk sizes1..1MiB and zero total/download have documented independent meanings.
+The old whole-byte4MiB save/schema contract remains unchanged. Sources exceeding
+admitted totals refuse before opening. Early EOF, excess bytes, oversize chunks,
+reader cancellation and premature delivery refuse without false success.
+Terminal publication retains cursor finalization until after the borrowed reply.
+
+Native writes run in cooperative Nyx UI turns, staging exclusively beside the
+selected file and replacing only at exact EOF. Skipped armed work cancels before
+retirement; read cancellation/failure and shutdown release only owned output.
+Review also found direct-save cleanup could remove an unowned colliding staging
+name after failed exclusive creation. It now clears that name before cleanup;
+this is a source-reviewed repair, not an injected GUID-collision qualification.
+Browser picker writes await each chunk and commit/abort through the existing
+promise lifetime. Blob downloads explicitly buffer whole output within their
+own logical cap; neither peak browser memory nor disk completion is claimed.
+
+The public recovery demo now prefers the streaming facet and exposes typed
+ConfigureDraftExport for the next action. The active request keeps its admitted
+limits. The demo defers download activation to platform rules; callers retain
+the existing required-activation policy. Byte-only custom hosts still serve
+small values and refuse larger values explicitly. Export does not consume or
+reapply the original pending draft or change saved design/history. Native
+handwritten/generated recovery controls exercise adoption via an injected
+streaming service; real platform host/file behavior is separately qualified.
+
+Private stream-save-01/final-evidence-private.json links final maintained-08 and
+studio-build-08. Maintained41 jobs pass with17 complete zero-unfreed native heaps
+and1969 unchanged compiler/orchestration inputs. Models: stream106, legacy byte59,
+recovery37/mounted25, authoring12, Studio/semantic22, native MCP discovery236 and
+presentation58. Public inspection remains87 per width/variant plus one guard in
+handwritten1280; actual recovery57 per1280/390 and handwritten/generated variant.
+Actual native file checks24 compare all5MiB+5 UTF-8/NUL bytes, preserve accepted
+content after cancellation/malformed replacement, cover direct compatibility and
+prove skipped scheduler work removes its stage before explicit Cancel. Both cold
+full Studio builds pass with815 unchanged inputs. No owned compiler warnings;
+installed RTL warnings remain recorded. All actual jobs/readers are joined.
+Maintained logic uses the established direct RunOwned log transport; standard
+asynchronous redirection is not newly qualified.
+
+Retain the early orchestration flag-filter failure, pas2js await refusal and
+managed-result warning. Typed large-text concatenation warnings are fixed with
+explicit portable text operands. The first native driver stalled in its owned
+modal UI; only its verified process was stopped after retaining GDB evidence.
+Focused04/05 timed out at overwrite confirmation after the first exact5MiB file
+passed. Descendant owned confirmation buttons fixed that driver; no file/source
+assertion was removed. Focused06 passes22 native checks/clean heap; final24 adds
+legacy direct compatibility. Maintained07 precedes final formatting only.
+
+Browser fixtures/adapters compile and stage, with no new browser execution:
+the previous CUA tab-protocol rejection is respected, with no alternate browser,
+raw CDP, indirect command or host workaround. A normal HTTP/HTTPS review tab URL
+is still requested. No service/LAN process, user project, toolchain/dependency,
+cleanup job or helper was changed. Native injected dialogs are not physical
+input, pixel/AT, non-Win32 or total-workload memory/scale evidence.
+
+Next: saved recovery defaults through the public view specification, closed
+codec/codegen/source reader, ordinary Studio properties and revision-aware
+semantic edits. Keep runtime holds/journals/drafts separate from saved defaults.
+Actual browser/observing Studio/Tree/AT/visual and measured L2/whole-workload
+memory remain original acceptance work. Do not manufacture new task credit or
+source/file approval gates from this checkpoint.
+
+## Checkpoint — pending draft review, export and exact cancellation — 2026-10-25
 
 Parentc600aee is remote-verified. Previous goal turn: PROGRESS. Root remains
 SOLO; Lil' Scooty is idle until the user requests otherwise. This eleventh

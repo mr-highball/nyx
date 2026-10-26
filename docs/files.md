@@ -56,6 +56,62 @@ all host deliveries were accepted, not that browser downloads reached a physical
 disk. Multiple files are separate writes: canceling a later save may leave earlier
 files delivered. Ordinary exports do not change supplied values or editor history.
 
+## Incremental saving
+
+`nyx.files.save` retains its existing bounded whole-byte save contract. Standard
+LCL/browser hosts additionally expose `INyxFileSaveStreamHost`; existing custom
+byte-only hosts do not need to implement it. Obtain that optional interface from
+the explicitly injected runtime host, rather than from serialized model data.
+
+`nyx.bytes.sources` supplies immutable `INyxByteSource` and independently opened
+`INyxByteReader` cursors. `NyxUTF8ByteSource` validates and retains text without
+another complete encoded byte array. Each positive bounded read returns owned
+bytes; chunks may split UTF-8 sequences, preserving their exact concatenation.
+Alternative sources must provide stable known lengths/content and fresh cursors.
+
+```pascal
+LSource := NyxUTF8ByteSource(LReviewedText);
+LOptions := NyxFileSaveStreamOptions(
+  NyxFileSaveOptions('unfinished-draft.txt')
+    .MediaType(NyxMediaType(nfmtText)))
+  .MaximumBytes(128 * 1024 * 1024)
+  .ChunkBytes(64 * 1024)
+  .DownloadBufferBytes(16 * 1024 * 1024);
+
+FRequest := FStreamHost.BeginStream(LOptions, LSource,
+  FScheduler, FScope, @Saved);
+```
+
+Here `LOptions` is `TNyxFileSaveStreamOptions`, `LSource` is `INyxByteSource`,
+`FStreamHost` is `INyxFileSaveStreamHost`, and `Saved` has the ordinary
+`TNyxFileSaveReply` signature. Cancel `FRequest` before disposing its borrowed
+receiver. Receipts use `ValidateNyxStreamFileSaveResult` with the admitted total
+limit; the old direct validator retains its 4 MiB cap. Stream limits are runtime
+authority and do not widen the existing saved byte-file schema.
+
+Defaults are 64 MiB total output/download buffering and 64 KiB chunks. Caller
+limits are independent: zero total permits an empty file; zero download budget
+still permits incremental picker output. Per-read chunks are 1..1 MiB. Sources
+exceeding the total budget refuse before opening; early EOF, excess bytes or an
+oversized returned chunk cannot claim successful delivery.
+
+Native saving writes cooperative UI chunks into an exclusively created sibling
+stage and replaces the selected file only after exact EOF. Request cancellation,
+reader failure and skipped scheduler turns retire owned staging output. Browser
+picker saves await each write, close only at exact EOF and abort uncommitted
+output when possible. Blob downloads inherently buffer complete output within
+their separate logical budget; this is not a peak engine-memory guarantee.
+They report DownloadRequested, never guaranteed disk delivery. Current browser
+activation/API/security rules still apply; the caller's existing typed download
+activation option remains available.
+
+Portable tests exercise exact scalar/NUL boundaries, independent cursors, more
+than 4 MiB, strict lengths/chunk bounds and cancellation. The native dialog test
+checks actual disk bytes, cancelled/malformed replacements, scheduler shutdown,
+owned-stage removal and compatibility with the original direct byte path.
+Browser consumers compile; executed browser picker/download streaming, physical
+input and accessibility remain separate qualification requirements.
+
 ## Studio project files
 
 Open the Project file section at any time; no output selection or compiler is

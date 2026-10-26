@@ -245,3 +245,23 @@ native recovery57 per width/variant, alongside the unchanged public/generated
 inspection and authoring regressions. Both full Studio compilers pass with814
 unchanged inputs. No new owned warnings. Browser access to the existing review
 tab was denied by its URL policy; fixture compilation is not execution evidence.
+
+Large reviewed values now export through an optional typed streaming capability
+on the same native/browser save hosts. Immutable UTF-8 sources open independent
+bounded cursors; total/chunk/browser-download budgets are separately tunable.
+The public recovery binding prefers that interface, keeping byte-only custom
+hosts compatible. Runtime configuration does not change the saved file schema.
+Native cooperative writes verify exact EOF before replacing an exclusively
+staged file. Reader cancellation/failure and scheduler retirement preserve the
+accepted file and release owned stages. Browser picker writes await each chunk;
+Blob downloads retain their explicit whole-output buffering/delivery distinction.
+Portable and actual-native checks advance this requirement; actual browser
+streaming, full observing Studio/AT/visual, saved recovery policy/tooling and
+original L1/L2 acceptance remain open. WORK owns the current source/evidence
+cohort and failed dialog-driver attempts; no DONE or criterion credit follows
+from compiler success or focused test volume.
+Final maintained validation passes41 jobs/17 complete zero-unfreed native heaps
+with1969 unchanged inputs: streaming106, existing byte-save59, actual native
+files24 and the preceding public/generated/recovery checks. Both full Studio
+compilers pass with815 unchanged inputs and no owned warnings. All jobs are
+joined. Browser adapter/fixture compilation remains distinct from execution.

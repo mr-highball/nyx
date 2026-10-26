@@ -26,7 +26,7 @@ unit nyx.files.save;
 
 interface
 
-uses SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.files, nyx.scheduler;
+uses SysUtils, nyx.text, nyx.bytes, nyx.bytes.sources, nyx.data, nyx.files, nyx.scheduler;
 
 type
   { Picker support and download delivery have distinct meanings. PreferPicker
@@ -137,6 +137,40 @@ type
       AReply: TNyxFileSaveReply): INyxFileSaveRequest;
   end;
 
+  { Runtime streaming budgets are separate from the existing whole-buffer file
+    options/wire contract. Total bytes, per-read chunk and browser Blob buffering
+    each have explicit caller limits. Zero total permits empty output; zero
+    download buffering permits only an empty Blob, without disabling pickers.
+    Defaults: 64 MiB total/download, 64 KiB chunks. No machine path is retained. }
+  TNyxFileSaveStreamOptions = record
+  private
+    FFile: TNyxFileSaveOptions;
+    FMaximum: Integer;
+    FChunk: Integer;
+    FDownload: Integer;
+  public
+    function MaximumBytes(AValue: Integer): TNyxFileSaveStreamOptions;
+    function ChunkBytes(AValue: Integer): TNyxFileSaveStreamOptions;
+    function DownloadBufferBytes(AValue: Integer): TNyxFileSaveStreamOptions;
+    procedure Validate;
+    property FileOptions: TNyxFileSaveOptions read FFile;
+    property ByteLimit: Integer read FMaximum;
+    property ChunkLimit: Integer read FChunk;
+    property DownloadLimit: Integer read FDownload;
+  end;
+
+  { Optional capability of the same host. The immutable source is opened once
+    per request on UI. Writes stage bounded chunks and commit only at exact EOF;
+    cancellation suppresses the borrowed reply and aborts uncommitted work.
+    Browser downloads may buffer a complete Blob within DownloadLimit, reporting
+    DownloadRequested rather than disk completion. Old byte-only hosts stay valid. }
+  INyxFileSaveStreamHost = interface(IInterface)
+    ['{243EB91F-79EC-40B2-A69F-32A33E6973BA}']
+    function BeginStream(const AOptions: TNyxFileSaveStreamOptions;
+      const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+      const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+  end;
+
   { Shared request lifetime for target/creator adapters. Self-retention lasts
     only while pending. Cancel and Complete revoke the receiver before cleanup/
     callbacks; subclasses must eventually retire outstanding platform callbacks.
@@ -152,21 +186,34 @@ type
     FBytes: TNyxBytes;
     FScheduler: INyxScheduler;
     FScope: INyxCancellationScope;
+    FStreamed: Boolean;
+    FStreamOptions: TNyxFileSaveStreamOptions;
+    FReader: INyxByteReader;
+    FExpectedBytes: Integer;
+    FReadBytes: Integer;
+    FEOFChecked: Boolean;
     function Pending: Boolean;
     procedure EndHost; virtual;
     procedure Complete(AOutcome: TNyxFileSaveOutcome; const AName: TNyxText;
       AByteCount: Integer; const AError: TNyxText = '');
     procedure RetainPending;
+    { Returns an owned bounded chunk and validates exact declared EOF. Reader
+      callbacks may cancel; retain their cursor locally and recheck Pending. }
+    function ReadPayloadChunk: TNyxBytes;
   public
     constructor Create(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
       const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
       AReply: TNyxFileSaveReply);
+    constructor CreateStream(const AOptions: TNyxFileSaveStreamOptions;
+      const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+      const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply);
     procedure Cancel; virtual;
   end;
 
 function NyxMediaType(const AName: TNyxText): TNyxMediaTypeRef; overload;
 function NyxMediaType(AValue: TNyxFileMediaType): TNyxMediaTypeRef; overload;
 function NyxFileSaveOptions(const ASuggestedName: TNyxText): TNyxFileSaveOptions;
+function NyxFileSaveStreamOptions(const AFile: TNyxFileSaveOptions): TNyxFileSaveStreamOptions;
 function NyxFileSaveOutcomeName(AOutcome: TNyxFileSaveOutcome): TNyxText;
 function NyxFileSaveWritten(const AResult: TNyxFileSaveResult): Boolean;
 function NyxFileSaveDelivered(const AResult: TNyxFileSaveResult): Boolean;
@@ -175,6 +222,10 @@ function NyxFileSaveDelivered(const AResult: TNyxFileSaveResult): Boolean;
   while other outcomes report zero delivered bytes. Raises ENyxFile on refusal. }
 procedure ValidateNyxFileSaveResult(const AResult: TNyxFileSaveResult;
   AExpectedBytes: Integer);
+{ A stream's explicit caller limit replaces only the old direct payload ceiling.
+  Outcome/name/error/exact-byte receipt rules are otherwise identical. }
+procedure ValidateNyxStreamFileSaveResult(const AResult: TNyxFileSaveResult;
+  AExpectedBytes, AMaximumBytes: Integer);
 
 implementation
 
@@ -459,8 +510,50 @@ begin
   Result := AResult.Outcome in [nfsoWritten, nfsoDownloadRequested];
 end;
 
-procedure ValidateNyxFileSaveResult(const AResult: TNyxFileSaveResult;
-  AExpectedBytes: Integer);
+function NyxFileSaveStreamOptions(const AFile: TNyxFileSaveOptions): TNyxFileSaveStreamOptions;
+begin
+  AFile.Validate;
+  Result := Default(TNyxFileSaveStreamOptions);
+  Result.FFile := AFile.Copy;
+  Result.FMaximum := 64 * 1024 * 1024;
+  Result.FDownload := Result.FMaximum;
+  Result.FChunk := 64 * 1024;
+end;
+
+function TNyxFileSaveStreamOptions.MaximumBytes(AValue: Integer): TNyxFileSaveStreamOptions;
+begin
+  Result := Self;
+  Result.FMaximum := AValue;
+  Result.Validate;
+end;
+
+function TNyxFileSaveStreamOptions.ChunkBytes(AValue: Integer): TNyxFileSaveStreamOptions;
+begin
+  Result := Self;
+  Result.FChunk := AValue;
+  Result.Validate;
+end;
+
+function TNyxFileSaveStreamOptions.DownloadBufferBytes(AValue: Integer): TNyxFileSaveStreamOptions;
+begin
+  Result := Self;
+  Result.FDownload := AValue;
+  Result.Validate;
+end;
+
+procedure TNyxFileSaveStreamOptions.Validate;
+begin
+  FFile.Validate;
+
+  if (FMaximum < 0) or (FDownload < 0) or (FChunk <= 0) or
+    (FChunk > NyxMaximumByteChunk) then
+  begin
+    raise ENyxFile.Create('Streaming save requires nonnegative byte limits and a bounded positive chunk');
+  end;
+end;
+
+procedure ValidateNyxStreamFileSaveResult(const AResult: TNyxFileSaveResult;
+  AExpectedBytes, AMaximumBytes: Integer);
 var
   LFile: INyxTextFile;
 begin
@@ -472,7 +565,7 @@ begin
     raise ENyxFile.Create('The file-save diagnostic exceeds its UTF-8 byte budget');
   end;
 
-  if (AExpectedBytes < 0) or (AExpectedBytes > 4194304) or
+  if (AMaximumBytes < 0) or (AExpectedBytes < 0) or (AExpectedBytes > AMaximumBytes) or
     (AResult.ByteCount < 0) then
   begin
     raise ENyxFile.Create('Invalid file-save byte receipt');
@@ -496,6 +589,12 @@ begin
   end;
 end;
 
+procedure ValidateNyxFileSaveResult(const AResult: TNyxFileSaveResult;
+  AExpectedBytes: Integer);
+begin
+  ValidateNyxStreamFileSaveResult(AResult, AExpectedBytes, NyxTextFileMaximumBytes);
+end;
+
 constructor TNyxFileSaveRequest.Create(const AOptions: TNyxFileSaveOptions;
   const ABytes: TNyxBytes; const AScheduler: INyxScheduler;
   const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply);
@@ -511,6 +610,7 @@ begin
   AScheduler.RequireUI;
   AOptions.Admit(ABytes);
   FOptions := AOptions.Copy;
+  FExpectedBytes := Length(ABytes);
   SetLength(FBytes, Length(ABytes));
   for LIndex := 0 to High(FBytes) do
   begin
@@ -519,6 +619,100 @@ begin
   FScheduler := AScheduler;
   FScope := ACancellation;
   FReply := AReply;
+end;
+
+constructor TNyxFileSaveRequest.CreateStream(const AOptions: TNyxFileSaveStreamOptions;
+  const ASource: INyxByteSource; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply);
+begin
+  inherited Create;
+
+  if (ASource = nil) or (AScheduler = nil) or not Assigned(AReply) then
+  begin
+    raise ENyxFile.Create('Streaming save requires an immutable source, scheduler and reply');
+  end;
+  AScheduler.RequireUI;
+  AOptions.Validate;
+  FExpectedBytes := ASource.ByteCount;
+
+  if (FExpectedBytes < 0) or (FExpectedBytes > AOptions.ByteLimit) then
+  begin
+    raise ENyxFile.Create('Streaming source exceeds the admitted total byte limit');
+  end;
+  FReader := ASource.Open;
+
+  if FReader = nil then
+  begin
+    raise ENyxFile.Create('Streaming source did not open an independent cursor');
+  end;
+  FStreamed := True;
+  FStreamOptions := AOptions;
+  FOptions := AOptions.FileOptions.Copy;
+  FScheduler := AScheduler;
+  FScope := ACancellation;
+  FReply := AReply;
+end;
+
+function TNyxFileSaveRequest.ReadPayloadChunk: TNyxBytes;
+var
+  LReader: INyxByteReader;
+  LLimit: Integer;
+begin
+  Result := nil;
+  FScheduler.RequireUI;
+
+  if not FStreamed then
+  begin
+    raise ENyxFile.Create('Chunk reads require an admitted streaming save');
+  end;
+
+  if not Pending then
+  begin
+    Exit;
+  end;
+  LLimit := FExpectedBytes - FReadBytes;
+
+  if LLimit > FStreamOptions.ChunkLimit then
+  begin
+    LLimit := FStreamOptions.ChunkLimit;
+  end;
+  LReader := FReader;
+
+  if FEOFChecked then
+  begin
+    Exit;
+  end;
+
+  if LLimit = 0 then
+  begin
+    Result := LReader.Read(1);
+
+    if not Pending then
+    begin
+      Result := nil;
+      Exit;
+    end;
+
+    if Length(Result) <> 0 then
+    begin
+      raise ENyxFile.Create('Streaming source exceeded its declared byte length');
+    end;
+    FEOFChecked := True;
+    Exit;
+  end;
+  Result := LReader.Read(LLimit);
+
+  if not Pending then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if (Length(Result) = 0) or (Length(Result) > LLimit) then
+  begin
+    raise ENyxFile.Create('Streaming source returned an invalid bounded chunk');
+  end;
+  Inc(FReadBytes, Length(Result));
 end;
 
 procedure TNyxFileSaveRequest.RetainPending;
@@ -545,6 +739,7 @@ begin
   FReply := nil;
   FLease := nil;
   FBytes := nil;
+  FReader := nil;
   FScope := nil;
   EndHost;
 end;
@@ -555,6 +750,7 @@ var
   LLease: INyxFileSaveRequest;
   LReply: TNyxFileSaveReply;
   LResult: TNyxFileSaveResult;
+  LReader: INyxByteReader;
 begin
   FScheduler.RequireUI;
   LLease := Self;
@@ -570,11 +766,29 @@ begin
   LResult.Name := AName;
   LResult.ByteCount := AByteCount;
   LResult.Error := AError;
-  ValidateNyxFileSaveResult(LResult, Length(FBytes));
+
+  if FStreamed then
+  begin
+
+    if NyxFileSaveDelivered(LResult) and not FEOFChecked then
+    begin
+      raise ENyxFile.Create('Streaming save cannot report delivery before exact EOF');
+    end;
+    ValidateNyxStreamFileSaveResult(LResult, FExpectedBytes, FStreamOptions.ByteLimit);
+  end
+  else
+  begin
+    ValidateNyxFileSaveResult(LResult, FExpectedBytes);
+  end;
   LReply := FReply;
   FReply := nil;
   FLease := nil;
   FBytes := nil;
+  { Keep arbitrary cursor finalization after receiver delivery. A custom
+    reader's last release must not retire the borrowed owner between cleanup
+    and invoking the already admitted terminal reply. }
+  LReader := FReader;
+  FReader := nil;
   FScope := nil;
   EndHost;
   LReply(LResult);
