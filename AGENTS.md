@@ -52,6 +52,11 @@ historical handoffs without erasing their evidence.
   Respect actual external-action boundaries and explicit user constraints.
 - Preserve unrelated work. Inspect the checkout and toolchain before changing
   setup; do not reinstall working compilers or edit dependency sources in place.
+- Use the user's external scratch volume for all new temporary files, private
+  build/test runners and build/test artifacts. The private toolchain configuration
+  records SCRATCH_ROOT, EVIDENCE_ROOT and TEMP_ROOT. Set TEMP/TMP on each owned
+  compiler/test process as well; output flags alone do not redirect host temporary
+  files. Keep maintained source in the checkout and private paths out of commits.
 - Preserve useful regression assertions and failure evidence. Distinguish source
   review, successful compilation, executed behavior, visual inspection and full
   acceptance. A compile alone does not prove interaction, accessibility, visual

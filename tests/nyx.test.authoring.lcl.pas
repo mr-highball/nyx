@@ -171,6 +171,19 @@ var
   LProperties: TNyxPropertyInfos;
   LPropertyIndex: Integer;
 
+  { Share the native suite's opt-in flushed diagnostic channel. Receipts mark
+    actual completed checks and separate portable shell construction from native
+    mounting; they neither change admission nor relax an assertion or bound. }
+  procedure Trace(const AStage: TNyxText);
+  begin
+
+    if GetEnvironmentVariable('NYX_NATIVE_TEST_TRACE') = '1' then
+    begin
+      WriteLn(StdErr, 'Native authoring / ', AStage);
+      Flush(StdErr);
+    end;
+  end;
+
   procedure Check(ACondition: Boolean; const AReason: TNyxText);
   begin
 
@@ -179,18 +192,23 @@ var
       raise ENyxState.Create('Native authoring: ' + AReason);
     end;
     Inc(Result);
+    Trace(AReason);
   end;
 
   procedure Rebuild;
   begin
     LRenderer.Unmount;
     FreeAndNil(LShell);
+    Trace('begin portable Studio shell construction');
     LShell := BuildNyxStudioView(LSession, LState, LProbe.CompilerReport);
+    Trace('begin native Studio shell mount');
     LRenderer.Render(LShell, LShell.Pages[0], LHost);
+    Trace('native Studio shell mounted');
   end;
 
 begin
   Result := 0;
+  Trace('begin ordinary Studio authoring');
   LCompilerDocument := nil;
   LSession := TNyxStudioSession.Create;
   LFixture := CreateNyxBindingFixture;

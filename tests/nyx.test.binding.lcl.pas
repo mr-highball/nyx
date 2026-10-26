@@ -54,6 +54,19 @@ uses
 var
   GRejectUpdate: Boolean = False;
 
+{ Opt-in, flushed stage receipts locate a stalled native interaction even when
+  redirected standard output remains buffered. No timing, admission or assertion
+  changes follow; ordinary runs retain their existing compact result output. }
+procedure TraceNativeBinding(const AStage: TNyxText);
+begin
+
+  if GetEnvironmentVariable('NYX_NATIVE_TEST_TRACE') = '1' then
+  begin
+    WriteLn(StdErr, 'Native binding / ', AStage);
+    Flush(StdErr);
+  end;
+end;
+
 function CaptionFactory(ANode: TNyxNode; AOwner: TComponent): TControl;
 var
   LPanel: TPanel;
@@ -105,6 +118,7 @@ var
       raise ENyxState.Create('Custom native binding: ' + AReason);
     end;
     Inc(Result);
+    TraceNativeBinding(AReason);
   end;
 
 begin
@@ -116,6 +130,7 @@ begin
     LHost.ClientWidth := 1000;
     LHost.ClientHeight := 800;
     LRenderer.RegisterFactory('label', CaptionFactory, UpdateCaption);
+    TraceNativeBinding('mount custom caption controls');
     LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
     LCaption := TPanel(LRenderer.ControlFor('reply-caption'));
     LRoot := LRenderer.Root;
@@ -428,12 +443,14 @@ var
       raise ENyxState.Create('Native retirement: ' + AReason);
     end;
     Inc(Result);
+    TraceNativeBinding(AReason);
   end;
 
 begin
   Result := 0;
   for LAction := nraProgrammaticUnmount to nraCommittedFailure do
   begin
+    TraceNativeBinding('retirement action ' + IntToStr(Ord(LAction)));
     LProbe := TNativeRetirementProbe.Create;
     LExternalStore := nil;
     try
@@ -590,6 +607,7 @@ var
       raise ENyxState.Create('Native binding: ' + AReason);
     end;
     Inc(Result);
+    TraceNativeBinding(AReason);
   end;
 
   function MemoText(AControl: TMemo): TNyxText;
@@ -598,8 +616,11 @@ var
   end;
 
 begin
+  TraceNativeBinding('begin custom controls');
   Result := RunCustomJourney;
+  TraceNativeBinding('begin native retirement cases');
   Inc(Result, RunNativeRetirementCases);
+  TraceNativeBinding('begin ordinary state and input controls');
   LDocument := CreateNyxBindingFixture;
   LApplication := TNyxLCLApplication.Create;
   LProbe := TNativeBindingProbe.Create;

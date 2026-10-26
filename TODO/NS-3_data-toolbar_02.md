@@ -20,7 +20,10 @@ After the native table and two Studio workspace checkpoints, this is the next
 user-facing outcome in the ranked queue. Root works solo. Follow the unchanged
 coordinator01 → parity01 → renderer prerequisites first, reusing applicable
 accepted evidence and addressing actual remaining interaction requirements.
-This does not accept the coordinator parent or waive target quality. Existing
+The current review retains accepted coordinator children and 68/68 actual native
+public coordinator checks at1280/390 with clean heaps. Full parent/parity
+acceptance remains open. These are acceptance dependencies, not a source freeze
+on independent runtime preparation with the existing qualified owner. Existing
 file/release wording below coordinates historical work, not source permission.
 No new resolver, static toolbar recipe or query-policy variant is the deliverable.
 The finish line remains real Search, Sort and Clear, then ordinary Studio and
@@ -30,7 +33,7 @@ the exact saved/generated application under authoring01.
 
 | Packet | Reviewable outcome | Dependency and finish line |
 | --- | --- | --- |
-| Q1 — Useful public toolbar | Typed target/field options and real Search, Sort and Clear operate on an existing List/Table query | Accepted common coordinator integration. Root owns scalar-input/query admission, publication, runtime and focused consumers across the existing owners. Review query ownership and visible-input reset together. Clear composes with and restores the admitted authored baseline. |
+| Q1 — Useful public toolbar | Typed target/field options and real Search, Sort and Clear operate on an existing List/Table query | Existing common coordinator implementation; complete parent integration is required for acceptance. Root owns scalar-input/query admission, publication, runtime and focused consumers across the existing owners. Review query ownership and visible-input reset together. Clear composes with and restores the admitted authored baseline. |
 | Q2 — Independent application | Two ordinary toolbars exercise input, empty results, hidden selection, target/query changes and retirement without changing rows/defaults | Q1. Root owns the ordinary application consumer, maintained build and stable-source validation. Native clean heaps, matching browser assertions and documented static compatibility qualify all five criteria below; Studio/save/generated adoption stays in01. |
 
 Resolve two concrete seams before coding Q1. The current static recipe exposes
@@ -60,9 +63,11 @@ opt-in ordinary Clear button uses the existing Clear semantic; compatible custom
 parts/captions/callbacks survive, and an occupied incompatible role refuses the
 whole candidate. The static four existing accessors/GUID remain unchanged.
 
-Read-only design can advance while prerequisites are pending. Acceptance remains
-downstream of the complete coordinator task, including05's actual-browser gate;
-this packet list does not bypass that dependency or authorize a host rollout.
+Independent runtime preparation can advance with the existing common owner while
+broader target acceptance is pending. Acceptance remains downstream of the
+complete coordinator task and its parity prerequisite; accepted reuse05 does not
+accept that parent. This packet list does not waive a dependency or authorize
+an observing deployment.
 
 The shared ownership rule is now specified with
 [column filtering02](DONE/NS-3_control-usefulness_02.md): one view-owned baseline and
@@ -75,15 +80,19 @@ filters/reset order. Same-origin reacquisition gets a fresh exact owner token,
 never another attachment's authority. Actual raw query replacement revokes the
 former session generation; equal replacement remains a no-op. The existing
 prepared state/query owner admits visible Search/Sort reset together. This settles
-the design seam only: Q1 implementation remains blocked by its unchanged parent,
-and all five original acceptance criteria below remain required.
+the design seam only: Q1 and the parent still require all five original criteria
+and their complete prerequisites before acceptance. The historical instruction
+blocking all implementation is superseded by this independent preparation path;
+neither source changes nor passing a new consumer grant completion credit.
 
 **Pull checklist — Q1:**
 
-Status: blocked for implementation by complete common coordinator integration.
-The existing owner review may proceed read-only while the prerequisite chain is
-followed. Necessary source changes are authorized; there is no file-release
-approval gate. Deliver useful input/query behavior, not a new static recipe.
+Status: independent runtime preparation follows the current prerequisite review;
+complete common coordinator integration remains a hard acceptance dependency.
+Use the existing prepared/live input and query owners. Necessary source changes
+are authorized; there is no file-release approval gate. Deliver useful input/query
+behavior, not a new static recipe. Do not present native-only preparation as
+complete target/parity acceptance.
 
 - Settle the cross-owner publication contract before source release: typed Search
   and Sort resets plus the query change admit together or all refuse. Validation,

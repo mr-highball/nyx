@@ -9,6 +9,66 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — DataToolbar prerequisite review and external scratch — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent1a0c978 is remote-verified. Root remains SOLO.
+This is work batch six since user-facing reprioritization, following two Studio
+workspace batches. The original no-closure history remains intact; no complete
+original criterion, task, completion credit or DONE move follows this review.
+
+DataToolbar02 remains the useful outcome. Prerequisite traversal retains accepted
+coordinator registration, MasterDetail, Kanban and reusable/embedded children;
+complete coordinator01 still awaits broad parity/renderer acceptance. Current
+public coordinator application input passes68/68 at1280/390, with two complete
+zero-unfreed heaps. It exercises actual controls, replacement/refusal, retirement
+and independent applications. Production inputs are unchanged from1a0c978.
+
+The full maintained native renderer suite does NOT pass this batch's private
+300-second aggregate watchdog. Retain02/03/04 failures and their incomplete heaps.
+Initial01 orchestration omitted the documented selection-summary example unit
+path; corrected compilation succeeds. Binding03's optional flushed receipts
+finish its complete binding and retirement journey. Authoring04 then continues
+through real input, native mounts, source-created controls, paired Undo/Redo and
+compiler-location dispatch before the aggregate deadline. It has not completed
+all remaining authoring/projection checks. This is not proof of an application
+freeze or a production performance-budget violation. Do not silently lengthen
+the deadline, call the partial trace a pass or start another marker-only rerun.
+
+Optional NYX_NATIVE_TEST_TRACE now prints completed binding/authoring checks and
+separates portable Studio construction from native mounting. Normal output and
+every original assertion are unchanged. Current04 verifies1900 unchanged primary
+inputs; compiler diagnostics contain no owned warnings. Its exact receipts and
+reused03 coordinator results are in private data-toolbar-prereq-04 evidence.
+All actual reader families are terminal; no source freeze remains. Browser
+execution, physical/assistive quality, other widgetsets and full acceptance stay
+open. The earlier refused browser route was not retried or bypassed.
+
+The historical scalar ancestor-read-only note is already superseded by the
+existing shared interaction policy and this parity task's later171/45 control
+packet. Do not manufacture another policy repair. Likewise, task-plan wording
+that barred ALL DataToolbar implementation while broad acceptance is pending is
+removed: independent runtime preparation uses the qualified common owner while
+all original criteria and hard acceptance prerequisites remain unchanged. This
+creates no acceptance credit and does not reclassify the parent dependency.
+
+Next implement DataToolbar02 Q1's missing typed live scalar capture/reset joined
+to existing query-session prepared publication, then its useful public Search,
+Sort and Clear consumer. Preserve exact roles, domains, caller bindings, query
+contributions, source/defaults, cancellation and retired authority. No second
+state/query/event engine, static recipe substitute, broad native performance
+investigation or resolver expansion follows. Authoring01 still owns ordinary
+Studio configuration, Save/Open and its own exact compiled application.
+
+The user's new storage instruction is durable in AGENTS and private toolchain
+SCRATCH_ROOT/EVIDENCE_ROOT/TEMP_ROOT. All new scratch, private runners and artifacts
+use the provisioned external volume, with process TEMP/TMP redirected as well.
+03/04 receipts record that directory; pre-instruction runs remain historical.
+Repository source stays in place. The active private data-toolbar handoff now
+lives in that evidence root; the former checkout scratch handoff is historical
+and must not be updated. No deletion, global environment, listener/LAN service,
+active user-project change or helper ran. Untracked1280/390 remain untouched.
+Goal remains active.
+
 ## Current checkpoint — ordinary Studio editing and next useful workflow — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent6ef5db2 is remote-verified. Root remains SOLO.

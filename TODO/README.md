@@ -49,6 +49,15 @@ canvas mode. Four complete clean heaps and both full Studio builds qualify this
 bounded repair. Browser consumers compile only. Stop further toolbar/status/mode
 variants; browser execution and original acceptance remain open.
 
+DataToolbar's prerequisite review now retains accepted coordinator children and
+current native 68/68 public application checks with clean heaps. Runtime02 owns
+independent implementation preparation; complete coordinator/parity acceptance
+remains required. The combined legacy renderer suite does not pass its private
+300-second watchdog, while flushed checks show continuing authoring rebuilds.
+Preserve that failure and stop marker-only reruns; it is not proof of an editor
+freeze. Next implement real scalar reset/query admission and Search/Sort/Clear
+through the existing owners, without a new state/query engine or source gate.
+
 On return, the complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact
 sizes. Reuse current evidence and tools; qualify real native/browser interaction

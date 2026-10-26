@@ -13,6 +13,13 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+The maintained `nyx_lcl_tests` program normally prints compact results. Set
+`NYX_NATIVE_TEST_TRACE=1` for flushed standard-error progress through binding and
+Studio authoring checks, including shell construction and native mounting. This
+diagnostic does not change assertions or qualify performance. Keep redirected
+logs, compiler outputs and process `TEMP`/`TMP` in the configured external scratch
+directories; compiler output flags alone do not redirect host temporary files.
+
 `project-files` runs checked portable file/project admission and builds native
 Studio, the ordinary file-control consumer, the Pascal semantic seed/HTTP observer
 tools, browser Studio/source worker and matching project fixtures. It starts no
