@@ -285,6 +285,36 @@ invalidation, target failure/deferral/retry, suspension and remount refusal.
 
 ## Qualification
 
+`tests/nyx_service_monitor_studio_controls.lpr` exercises this public document
+through full native Studio. It edits width/visibility using mounted Inspector
+inputs, checks exact Undo/Redo, saves to the real project store and reopens that
+same pair. Its application then uses the ordinary Columns popup to reveal,
+reorder, hide/show and restore columns while filtering leaves a peer unchanged.
+Runtime reset restores the saved authored defaults, including hidden columns.
+
+Build with the installed LCL paths, `-Fusrc -Fisrc -Fustudio -Fistudio
+-Fuexamples/service-monitor`, and the normal checked flags
+`-Mdelphi -Sa -Cr -Co -Ci -gl -gh`. Each run requires a new evidence directory:
+
+```powershell
+./nyx_service_monitor_studio_controls.exe <new-desktop-directory> 1280
+./nyx_service_monitor_studio_controls.exe <new-compact-directory> 390
+```
+
+Each directory receives `accepted-project.nyxproject` and the exact
+`nyx.generated.view.pas`. Recompile the same consumer with
+`-dNYX_SERVICE_STUDIO_GENERATED` and `-Fu<desktop-directory>` to execute that own
+saved constructor, then supply its packet as the third argument:
+
+```powershell
+./nyx_service_monitor_studio_controls.exe <new-application-directory> 1280 <desktop-directory>/accepted-project.nyxproject
+```
+
+Repeat for 390 and compare the two Studio exports. These are synthetic native
+widget events with explicit ownership/heap checks, not hardware input, actual
+browser execution, screenshots or assistive-technology qualification. The
+separate browser workbench and broader original acceptance remain required.
+
 `tests/nyx_service_monitor_controls.lpr` mounts the public document in two native
 applications. It checks editable pinned fields, read-only refusal, exact Unicode,
 independent stores, unchanged authored defaults and mount retirement at an explicit

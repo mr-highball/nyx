@@ -9,6 +9,54 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — public service-monitor Studio journey — 2026-10-25
+
+Previous goal turn: PROGRESS. Parentd8eda08 is remote-verified. Root remains SOLO.
+This is the first bounded delivery batch after the user-facing reprioritization;
+earlier workbench/geometry no-closure history remains intact. Original workbench03
+W1 criteria1/5/6/7 remain the owners. No full original criterion or task closes.
+
+The new maintained native consumer uses BuildServiceMonitorDocument itself,
+full ordinary Studio and its existing project store. Actual mounted Inspector
+input changes Service width and hides Command line; Apply is paired with exact
+design/Pascal Undo/Redo. Service data and a handwritten comment remain exact.
+Real named Save writes the own pair; ordinary Open restores it with fresh history.
+The application opens its real managed Columns popup and invokes show/reorder/
+hide/show/reset controls. Filtering changes its membership while a peer remains
+independent; reset restores saved defaults and preserves that active filter.
+
+Private service-studio-01/final-evidence-private.json records69 desktop and73
+compact Studio/application checks. Their actual project and generated Pascal
+files match byte-for-byte. The exact own saved constructor is independently
+compiled and its application passes25 at1280 and25 at390. Both accepted compiler
+jobs have zero warnings; all four native runtimes have complete zero-unfreed
+heaps. All six accepted jobs are terminal.751 source inputs remain unchanged.
+Initial compile-01 retains the fixture's missing imports and wrong revision
+variable type; compile-02 and generated-compile-01 qualify the corrected source.
+No product/library files or installed SDK sources changed in this batch.
+
+This consumer uses synthetic native widget input. It does not claim hardware,
+browser interaction, rendered pixel quality, accessibility, performance budgets
+or complete W1/W2 acceptance. Native application construction is separately
+qualified from Studio source/model admission. No connected document session or
+Nyx semantic tool was available; no active user project was replaced. The prior
+browser URL-policy refusal was not retried or bypassed. No listener was started.
+
+Next user-facing deliverable under the same W1 owner: add earlier/later buttons
+to author default column order in Studio. Source review finds runtime ordering
+commands but no corresponding Inspector authoring action. Use typed stable
+field intent through the existing paired source/history and semantic boundary,
+preserving every column's policy and raw presence. Refuse stale/foreign and
+out-of-bounds moves; extend this ordinary Save/Open/own-application journey.
+This is required W1 work, not another task identity, resolver continuation or
+header/profile variant. All original browser/physical/AT/visual gates remain.
+Reassess after two delivery batches without original criterion closure; do not
+reset earlier counters or dilute the acceptance criteria to close this packet.
+
+All current source readers are finished. The existing recovery return point and
+ranked backlog below remain; single-agent operation continues until changed.
+
+
 ## Current priority — user-facing backlog delivery — 2026-10-25
 
 The user requested a realignment with high-value user-facing tasks. Root remains

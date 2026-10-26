@@ -22,6 +22,35 @@ and reassess the delivery instead of extending internal variants.
 
 **Description:**
 
+**Public service-monitor Studio journey — 2026-10-25:**
+
+The focused native consumer now drives the actual public service monitor through
+full Studio at 1280/390: select its Table, edit Service width, hide Command line,
+check exact paired Undo/Redo and preserve all service data/handwritten text.
+Ordinary named Save writes this accepted pair to disk; ordinary Open restores it
+with fresh history. Its mounted application uses real Columns controls for
+reveal/reorder/hide/show/reset, with active filtering and an independent peer.
+The desktop/compact journeys pass 69/73 with complete clean heaps and byte-identical
+project/Pascal outputs. That exact saved Pascal is independently compiled; its
+application passes 25 at each width with complete clean heaps. Two accepted
+compilers have zero warnings. The initial fixture compile failure remains retained.
+
+This is the first bounded delivery batch after reprioritization, without resetting
+earlier workbench/geometry no-closure history. No complete original criterion or
+task is accepted. The new consumer is deliberately native; actual browser input,
+physical devices, rendered/AT quality and the full original criteria remain open.
+Studio semantic-session discovery returned none, so no active design was edited.
+
+Source review identifies the next direct user-facing gap under criteria 1/6:
+runtime Columns offers ordering, but the ordinary Inspector exposes no command
+to move a field in the authored default column order. Add discoverable earlier/
+later controls using typed, stable field intent, ordinary paired source/history
+and the existing semantic operation boundary. Preserve every column policy and
+raw presence, refuse stale/foreign/boundary moves, and verify Save/Open plus this
+journey's own generated application. Reuse this maintained consumer rather than
+returning to an unrelated full-query/profile sequence. WORK.md owns receipts
+and the exact native/browser distinction; the original W1/W2 finish lines remain.
+
 The remaining measured native resize cost now has a focused
 [geometry-publication prerequisite](NS-2_lcl-renderer_02.md). It serves the native
 authoring/performance outcome below without replacing any original criterion.

@@ -17,7 +17,14 @@ adds no tasks, credit, dependency waivers or approval gates.
 | 3 | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), then [authoring01](NS-3_data-toolbar_01.md): type Search, change Sort and Clear back to the authored baseline on independent List/Table instances; configure, Save/Open and run the generated result. Follow the coordinator prerequisites; existing native progress does not waive their open acceptance gates. |
 | 4 | A useful connected Tool Canvas | [Logic components](NS-3_logic-components_01.md) and [Tool Canvas](NS-3_tool-canvas_01.md): finish one ordinary control event → JSON prettify → save journey using visible ports and existing host services, including cancellation and reopen/generated behavior. Follow the existing graph prerequisites and reuse the implemented parts. |
 
-The immediate W1 finish line is one maintained service-monitor workflow through
+The public service monitor now has a focused native Studio/Save/Open journey
+(69 desktop/73 compact checks) and its own compiled application (25/25), with
+matching exports and four complete clean heaps. The next W1 user-facing gap is
+authoring default column order in the Inspector; runtime Columns already offers
+reordering. [Workbench03](NS-3_control-usefulness_03.md) owns the next controls
+and remaining browser/physical/visual acceptance.
+
+The complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact
 sizes. Reuse current evidence and tools; qualify real native/browser interaction
 separately from compilation. Fix failures on that path rather than adding another
