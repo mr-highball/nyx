@@ -9,6 +9,49 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Reusable DataToolbar applications — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent b4f3f55 is remote-verified. Root remains SOLO.
+This is batch ten since user-facing reprioritization. Runtime02 now has a
+maintained build plus actual ordinary App/reusable/navigation evidence. No
+complete original criterion, prerequisite, task or completion credit closes.
+
+The new public `nyx_data_toolbar_reuse_controls` consumer mounts two actual Apps
+with two reusable workspaces each. All four stores are independent; scoped Search
+cannot fall back to a globally matching foreign target. Failed navigation leaves
+the accepted page/binding intact. Multiple caller callbacks retain order/policy
+and observe accepted filtered rows. Programmatic Search synthesizes no callbacks.
+An injected query observer failure reports committed data. Navigation retires the
+old facade and accepted filters remain explicit orphans; a new same-named actor
+cannot claim them. The fixture removes that contribution by deliberate session
+reset and proves the peer App remains usable throughout.
+
+`tools/build.ps1 -Target data-toolbar` now stages fresh externally selected
+native/browser packets, runs both applications at1280/390 and starts no listener.
+Private EVIDENCE_ROOT/TEMP_ROOT route defaults and child TEMP/TMP; previous process
+values are restored. Existing RunOwned now saves joined completion before fallible
+heap reads and retries a closing heap writer within five seconds. There is no
+recurring cleanup or source-scope approval gate.
+
+Current private data-toolbar-reuse-03 passes50/50 base and26/26 reusable checks.
+Four complete clean heaps report1242985/1249323/654539/654847 allocated/freed
+blocks,0 unfreed. Both browser consumers compile/stage only;0 owned warnings and
+14 installed Classes warning occurrences remain. Native input is fixture-driven,
+not hardware/assistive/visual or other-widgetset proof. Failed01 retains the
+already-existing scratch-directory error;02 retains the static COM-interface
+array browser refusal alongside native passes. Dynamic owned interface vectors
+repair that fixture on both compilers. All actual readers are terminal. All new
+private scripts/logs/build/test artifacts and owned process TEMP/TMP remain on
+external scratch; unrelated1280/390 directories remain untouched.
+
+Reassessment moves the next useful work to authoring01's public Nyx configuration
+form, paired candidates and crafted typed emission, then its exact saved/generated
+application. Original runtime/coordinator/parity acceptance gates remain open;
+they do not make implementation sources immutable. New data-toolbar03 records
+the observed user gap: visible query context and explicit retained/peer filter
+removal. The fixture's programmatic reset is not that user surface. Do not add
+more model/input proof variants or silently take over an actor by diagnostic name.
+
 ## Current checkpoint — Useful DataToolbar runtime — 2026-10-26
 
 Previous continuation confirmed external scratch routing without changing the

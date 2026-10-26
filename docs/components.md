@@ -443,10 +443,30 @@ the same reusable expansion-prefix rule as collection pagers and cannot fall
 back to a globally matching sibling instance.
 
 The maintained [application consumer](../tests/nyx_data_toolbar_controls.lpr)
-contains independent List/Table workspaces and shared-target toolbars. Current
-qualification and the remaining reusable/navigation, browser, physical-input,
-authoring and generated-application gates belong to
-[runtime02](../TODO/NS-3_data-toolbar_02.md) and [WORK.md](../WORK.md).
+contains independent List/Table workspaces and shared-target toolbars. The
+[reusable App consumer](../tests/nyx_data_toolbar_reuse_controls.lpr) mounts two
+ordinary Apps with two reusable workspaces each. It checks four independent
+stores, exact scoped targets, multiple ordered caller callbacks, refused foreign
+targets, committed observer failure and navigation retirement. A retained filter
+is deliberately removed through an explicit session reset in this fixture.
+[Query detail03](../TODO/NS-3_data-toolbar_03.md) owns the visible end-user surface
+for understanding/removing such filters; local Clear does not claim them by name.
+
+`tools/build.ps1 -Target data-toolbar -DataToolbarEvidenceDirectory <new external directory>`
+builds and runs both native consumers at1280/390 and stages both browser programs
+and HTML pages without starting a server. Omit the directory only when private
+toolchain configuration supplies `EVIDENCE_ROOT`; each invocation gets a fresh
+packet. Owned compiler/test `TEMP`/`TMP` use configured `TEMP_ROOT`, or that packet's
+scratch directory, and are restored afterward. Optional `DataToolbarPlatform`
+and `DataToolbarNativeUnitCache` reuse an already known compiler platform and
+closed native unit outputs through ordinary FPC dependency checks. Empty caches
+request a cold build. Completion receipts precede fallible log/heap inspection.
+
+Current native results are50/50 basic and26/26 reusable checks, with four complete
+clean heaps; browser assertions compile/stage only. Full browser, physical-input,
+visual/parity, authoring and generated-application gates remain in
+[runtime02](../TODO/NS-3_data-toolbar_02.md), [authoring01](../TODO/NS-3_data-toolbar_01.md)
+and [WORK.md](../WORK.md). These checks do not accept the complete tasks.
 
 ## Creator behavior in ordinary applications
 

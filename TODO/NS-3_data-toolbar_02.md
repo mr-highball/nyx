@@ -47,11 +47,31 @@ documents copied configuration, query ownership and retained orphan semantics.
 
 Current evidence is private data-toolbar-runtime-07 under the configured external
 root. This checkpoint closes no complete original criterion or prerequisite.
-Remaining runtime work includes the ordinary reusable/navigation and caller-event/
-refusal journey and a maintained build entry. Full browser/physical/parity gates
-remain open; Studio, paired history, Save/Open and the exact generated application
-stay in01. Do not recapture an effective query as a new baseline or steal an old
-actor by its diagnostic origin to paper over replacement behavior.
+The later reusable checkpoint below qualifies that native journey and maintained
+build entry. Full browser/physical/parity gates remain open; Studio, paired history,
+Save/Open and the exact generated application stay in01. Do not recapture an
+effective query as a new baseline or steal an old actor by its diagnostic origin
+to paper over replacement behavior.
+
+**Reusable/native checkpoint — 2026-10-26:** The maintained `data-toolbar` target
+now executes both ordinary consumers at1280/390:50/50 base and26/26 reusable App
+checks, with four complete clean heaps. Two actual Apps each mount two reusable
+workspaces with independent stores. Search resolves the exact expansion-prefix
+target; an attractive global fallback refuses while preserving the accepted page.
+Multiple caller callbacks retain order/policy and see the already filtered result.
+Programmatic commands synthesize no input callbacks. A query observer failure
+reports committed data; navigation retires old commands and a same-named fresh
+actor cannot steal the previous orphan. Explicit session reset removes that
+retained contribution. Both browser consumers compile/stage only.
+
+Private data-toolbar-reuse-03 retains the exact maintained invocation, four
+execution receipts and heaps. Failed predecessor01 preserves a scratch-directory
+setup error;02 retains a pas2js static-interface-array failure with native passes.
+The fixture uses owned dynamic interface vectors on both compilers. No original
+criterion, dependency or task closes. [Query detail03](NS-3_data-toolbar_03.md)
+owns the discovered end-user gap: ordinary visible controls to explain and remove
+retained/peer filters. Studio's typed configuration/source integration remains the
+next authoring outcome; the fixture's programmatic reset does not qualify that UI.
 
 | Packet | Reviewable outcome | Dependency and finish line |
 | --- | --- | --- |

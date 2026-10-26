@@ -4,11 +4,11 @@
 
 **Description:**
 
-Make the existing DataToolbar an opt-in useful collection-control experience.
-Its current recipe creates search/sort faces and semantic actions but does not
-coordinate a target List/Table. Reuse `INyxCollectionView.ConfigureQuery`, its
-query policy and typed predicates/orders so Studio authors can configure a
-toolbar, save/reopen it and use the exact generated application.
+Make the existing DataToolbar an opt-in useful collection-control experience
+inside Studio. The public runtime now coordinates actual List/Table targets;
+its native ordinary/reusable App checkpoints are retained in runtime02. Consume
+those existing scalar/query owners so Studio authors can configure a toolbar,
+save/reopen it and use the exact generated application.
 
 Scope/credit remain [components](NS-3_components_01.md) criteria1/3 →
 [Studio authoring](NS-4_studio-authoring_01.md) criterion2 → parity. Preserve the
@@ -18,6 +18,17 @@ The 2026-10-26 ranked queue selects this outcome after the bounded table/Studio
 checkpoints. Root remains solo and first follows runtime02's coordinator/parity/
 renderer prerequisites. This authoring task retains all original criteria and
 its exact saved/generated finish line; no new source-permission gate applies.
+
+The 2026-10-26 runtime checkpoint passes50/50 basic and26/26 reusable native
+checks with clean heaps; matching browser programs compile only. Full runtime
+and coordinator/parity acceptance remain required before accepting this task,
+while necessary independent authoring preparation may proceed. The configured
+copy helper leaves its input unchanged: admit the returned complete toolbar,
+required Clear role and typed intent through the existing paired candidate.
+Generated code must preserve exact specialized child references when emitting
+intent; do not replace an already linked control tree behind those references.
+[Query detail03](NS-3_data-toolbar_03.md) separately owns visible retained-filter
+management; an injected programmatic query reset is not evidence of that UI.
 
 **Work packets and handoff:**
 

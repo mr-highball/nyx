@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('inspection-authoring', 'tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('data-toolbar', 'inspection-authoring', 'tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # NEW packet for saved inspection defaults, Studio/semantic admission and
   # the public native monitoring journey plus its own generated application.
@@ -41,6 +41,12 @@ param(
   [string]$CoordinatorEvidenceDirectory = 'build/coordinators/maintained',
   # NEW ordinary-application packet for independent reusable coordinator stores.
   [string]$CoordinatorReuseEvidenceDirectory = 'build/coordinator-reuse/maintained',
+  # NEW external packet for actual DataToolbar controls and reusable Apps.
+  # Empty uses EVIDENCE_ROOT from private toolchain configuration; no repository
+  # build fallback silently consumes the system drive on this workstation.
+  [string]$DataToolbarEvidenceDirectory,
+  [string]$DataToolbarPlatform,
+  [string[]]$DataToolbarNativeUnitCache = @(),
   # NEW model-only packet; native assertions run and matching browser stages.
   [string]$QueryPublicationEvidenceDirectory = 'build/query-publication/maintained',
   # NEW canonical contribution/session packet; no UI host is launched.
@@ -476,6 +482,12 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
   $finishedPID = $process.Id
   $finishedExit = $process.ExitCode
   $process.Dispose()
+  # Save joined process completion before any fallible log/heap inspection.
+  [ordered]@{pid=$finishedPID;exit=$finishedExit;timedOut=$timedOut;
+    startedUTC=$started;finishedUTC=[DateTime]::UtcNow.ToString('o');
+    timeoutSeconds=$TimeoutSeconds;executable=$Executable} |
+    ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (
+      Join-Path $output ($Tag+'-completion-private.json')) -Encoding utf8
   $result = [ordered]@{pid=$finishedPID;executable=$Executable;
     executableSHA256=(Get-FileHash -LiteralPath $Executable -Algorithm SHA256).Hash;
     arguments=$Arguments;exit=$finishedExit;timedOut=$timedOut;
@@ -484,7 +496,20 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
     stderr=$stderr;stderrSHA256=(Get-ClosedProcessLogHash $stderr);
     launch=$launchPath;launchSHA256=(Get-FileHash -LiteralPath $launchPath -Algorithm SHA256).Hash}
   if ($TraceHeap) {
-    $heapText = if (Test-Path -LiteralPath $heap) { [IO.File]::ReadAllText($heap) } else { '' }
+    $heapText = ''
+    $heapDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    while (Test-Path -LiteralPath $heap) {
+      try {
+        $heapText = [IO.File]::ReadAllText($heap)
+        break
+      } catch [System.IO.IOException] {
+        if ([DateTime]::UtcNow -ge $heapDeadline) {
+          $result.heapReadError=$_.Exception.Message
+          break
+        }
+        Start-Sleep -Milliseconds 50
+      }
+    }
     $allocated = [regex]::Match($heapText,'(?m)^(\d+) memory blocks allocated : (\d+)\s*$')
     $freed = [regex]::Match($heapText,'(?m)^(\d+) memory blocks freed : (\d+)\s*$')
     $result.heap=$heap
@@ -7797,6 +7822,114 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     Copy-Item -LiteralPath (Join-Path $nyxSelectionSource 'nyx.generated.view.pas'),
       $nyxRuntime, (Join-Path $nyxRoot 'studio/web/selection-style.html') -Destination $nyxSelectionBrowser
     Write-Host 'Native selection and generated source passed; execute the staged browser fixture explicitly.'
+    exit 0
+  }
+
+  if ($Target -eq 'data-toolbar') {
+    # Product/fixture logic stays Pascal. Native execution and browser staging
+    # remain distinct; this command starts no HTTP/Studio listener.
+    if (-not $DataToolbarEvidenceDirectory) {
+      if (-not $nyxConfig.ContainsKey('EVIDENCE_ROOT')) {
+        throw 'Supply a NEW DataToolbarEvidenceDirectory or configure EVIDENCE_ROOT'
+      }
+      $DataToolbarEvidenceDirectory = Join-Path $nyxConfig.EVIDENCE_ROOT (
+        'data-toolbar-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fffffff'))
+    }
+    $nyxToolbarRoot = [IO.Path]::GetFullPath($DataToolbarEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxToolbarRoot) {
+      throw 'DataToolbarEvidenceDirectory must be NEW; preserve previous evidence'
+    }
+    $nyxToolbarNative = Join-Path $nyxToolbarRoot 'native'
+    $nyxToolbarBrowser = Join-Path $nyxToolbarRoot 'browser'
+    $nyxToolbarTemp = Join-Path $nyxToolbarRoot 'scratch'
+    if ($nyxConfig.ContainsKey('TEMP_ROOT')) {
+      $nyxToolbarTemp = [IO.Path]::GetFullPath($nyxConfig.TEMP_ROOT)
+    }
+    New-Item -ItemType Directory -Path $nyxToolbarNative,$nyxToolbarBrowser | Out-Null
+    if (-not (Test-Path -LiteralPath $nyxToolbarTemp)) {
+      New-Item -ItemType Directory -Path $nyxToolbarTemp | Out-Null
+    }
+    $nyxToolbarPreviousTemp = $env:TEMP
+    $nyxToolbarPreviousTmp = $env:TMP
+    try {
+      $env:TEMP = $nyxToolbarTemp
+      $env:TMP = $nyxToolbarTemp
+      $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+      $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+      $nyxToolbarPlatform = $DataToolbarPlatform
+      if (-not $nyxToolbarPlatform) {
+        $nyxToolbarPlatform = (& $nyxLclFpc '-iTP').Trim() + '-' + (& $nyxLclFpc '-iTO').Trim()
+      }
+      $nyxToolbarFlags = @('-Mdelphi','-O2','-Sa','-Cr','-Co','-Ci','-gl','-gh',
+        '-Fusrc','-Fisrc','-Futests',"-FU$nyxToolbarNative","-FE$nyxToolbarNative",
+        "-Fu$nyxLazarus/lcl/units/$nyxToolbarPlatform",
+        "-Fu$nyxLazarus/lcl/units/$nyxToolbarPlatform/$Widgetset",
+        "-Fu$nyxLazarus/components/lazutils/lib/$nyxToolbarPlatform",
+        "-Fu$nyxLazarus/packager/units/$nyxToolbarPlatform")
+      if ($DataToolbarNativeUnitCache.Count -eq 0) {
+        $nyxToolbarFlags = @('-B') + $nyxToolbarFlags
+      } else {
+        foreach ($nyxToolbarCache in $DataToolbarNativeUnitCache) {
+          $nyxToolbarFlags += '-Fu' + [IO.Path]::GetFullPath($nyxToolbarCache)
+        }
+      }
+      $nyxToolbarPrograms = @('nyx_data_toolbar_controls','nyx_data_toolbar_reuse_controls')
+      $nyxToolbarSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
+      $nyxToolbarFailed = $false
+      $output = $nyxToolbarNative
+      foreach ($nyxToolbarProgram in $nyxToolbarPrograms) {
+        $nyxToolbarResult = RunOwned $nyxLclFpc ($nyxToolbarFlags + @(
+          'tests/' + $nyxToolbarProgram + '.lpr')) ('compile-'+$nyxToolbarProgram) 1200 $false
+        $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+          Join-Path $output ('compile-'+$nyxToolbarProgram+'-result.json')) -Encoding utf8
+        if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {
+          throw ('DataToolbar native compile failed; inspect '+$output)
+        }
+      }
+      foreach ($nyxToolbarProgram in $nyxToolbarPrograms) {
+        foreach ($nyxToolbarWidth in @('1280','390')) {
+          $output = Join-Path $nyxToolbarRoot ($nyxToolbarProgram+'-'+$nyxToolbarWidth)
+          New-Item -ItemType Directory -Path $output | Out-Null
+          $nyxToolbarResult = RunOwned (Join-Path $nyxToolbarNative (
+            $nyxToolbarProgram+$nyxToolbarSuffix)) @($nyxToolbarWidth) 'journey' 120 $true
+          $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+            Join-Path $output 'journey-result.json') -Encoding utf8
+          Get-Content -LiteralPath (Join-Path $output 'journey-stdout.log') -Tail 4
+          if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut -or
+            -not $nyxToolbarResult.heapComplete) { $nyxToolbarFailed = $true }
+        }
+      }
+      $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      $output = $nyxToolbarBrowser
+      foreach ($nyxToolbarProgram in $nyxToolbarPrograms) {
+        $nyxToolbarResult = RunOwned $nyxPas2js @('-Mdelphi','-Tbrowser','-Jirtl.js',
+          '-Fusrc','-Fisrc','-Futests',"-FE$nyxToolbarBrowser",
+          ('tests/'+$nyxToolbarProgram+'.lpr')) ('compile-'+$nyxToolbarProgram) 600 $false
+        $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+          Join-Path $output ('compile-'+$nyxToolbarProgram+'-result.json')) -Encoding utf8
+        if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {
+          throw ('DataToolbar browser compile failed; inspect '+$output)
+        }
+        $nyxToolbarHTML = @"
+<!doctype html><html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nyx DataToolbar application checks</title><body>
+<script src="rtl.js"></script><script src="$nyxToolbarProgram.js"></script>
+<script>rtl.run();</script></body></html>
+"@
+        [IO.File]::WriteAllText((Join-Path $output ($nyxToolbarProgram+'.html')),
+          $nyxToolbarHTML, (New-Object Text.UTF8Encoding($false)))
+      }
+      Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $output 'rtl.js')
+      if ($nyxToolbarFailed) {
+        throw 'DataToolbar native journey failed; all four execution packets retained'
+      }
+      Write-Host ('DataToolbar native controls/reusable Apps passed; browser assertions staged: '+$nyxToolbarRoot)
+    } finally {
+      $env:TEMP = $nyxToolbarPreviousTemp
+      $env:TMP = $nyxToolbarPreviousTmp
+    }
     exit 0
   }
 

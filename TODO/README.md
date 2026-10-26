@@ -64,10 +64,16 @@ real DataToolbar Search/Sort/Clear:50 actual native application checks at1280/39
 and179 existing coordinator checks pass, with three complete clean heaps. The
 application checks physical List/Table output, initial binding, shared-target
 ownership, invalid-role/Sort refusal and retirement. Browser assertions compile
-only. Next finish the ordinary reusable/navigation and caller-event/refusal
-journey and maintained build entry, then the Studio/save/generated adoption
-under authoring01. No original criterion closes, and no replacement state/query
-engine, generic input-proof variant or source gate follows.
+only. The maintained `data-toolbar` target now adds26/26 actual reusable App
+checks alongside50/50 base checks, with four complete clean heaps. Two Apps and
+four independent reusable stores qualify scoped target refusal, caller callback
+order, committed notification failure and navigation retirement. Both browser
+programs compile/stage only. Next is Studio/save/generated adoption under
+authoring01. [Query detail03](NS-3_data-toolbar_03.md) records the observed UX gap
+for visible retained/peer filters and their explicit removal; the test's injected
+session reset does not qualify that user surface. No original criterion closes,
+and no replacement state/query engine, generic input-proof variant or source gate
+follows.
 
 On return, the complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact
