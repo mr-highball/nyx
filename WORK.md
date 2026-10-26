@@ -9,6 +9,64 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Connected JSON Workshop — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent 30d7bd3 is remote-verified. Root remains
+SOLO. Batch fifteen advances the existing fourth user-facing priority through
+Tool Canvas01 and Logic components01. No original broad criterion, prerequisite,
+task or completion credit closes; the full script/resource/host/diagram/quality
+and browser/LCL parity requirements remain intact.
+
+The new public example composes a reusable notebook from ordinary specialized
+Nyx Memo/Button/Code/Label/Card interfaces. Separate typed Format and Save graphs
+connect parse/format, UTF-8 encoding and saving without a handwritten JSON-result
+receiver. The canvas retains content references and operation-node positions.
+Initial operation cards are requested through public Tool Canvas interfaces and
+publish on the existing queued UI turn. Runtime state belongs to each App.
+Portable graph/options data grants no file authority; the launcher configures
+real target hosts explicitly, with the browser's existing fresh-activation
+confirmation composition. Page retirement revokes pending work; the browser
+launcher rebuilds a fresh runtime when a cached page returns.
+
+The maintained json-workshop build entry honors configured external evidence/
+TEMP roots, builds the public launcher and runs its actual-control consumer at
+1280/390. That consumer exports its own exact source/project pair; the command
+compiles that constructor, compares it to its own saved design and repeats the
+same input journey at both widths. It starts no listener or long-lived app.
+Private json-workshop-maintained-02 passes 17/17 base and 18/18 compiled checks:
+70 assertions across four complete clean heaps. Both widths export identical
+project/Pascal bytes. Three matching browser programs compile/stage with their
+matched runtime and exact expected project; browser interaction is unverified.
+
+Actual embedded control input preserves supplementary Unicode, an integer beyond
+JavaScript's safe numeric range and escaped NUL. Save receives exact formatted
+UTF-8 bytes. User cancellation retains the source, later write flags replace
+cancellation, malformed JSON has an observed completed failure without host
+effects, and page navigation retires a pending request. An independently reopened
+peer remains usable; download-requested never claims a disk write. Both authored
+documents remain exact. File receipts are injected; these results prove no real
+picker/disk/download or physical input. Source/project admission and file export
+are not ordinary Studio UI saving. Visual/accessibility and browser BF-cache
+behavior remain unverified despite compilation.
+
+Retained predecessors include a missing native file-unit import, a premature
+immediate operation-card assertion, pas2js's unsupported static interface array
+and an unrelated-interface cast. The consumer now waits for real publication,
+owns dynamic interface vectors and queries optional capabilities through Supports.
+The invalid-JSON assertion waits for the actual route failure counter, not a
+guessed timer delay. All final compiler/runtime readers are joined; no freeze
+remains. All new artifacts, private orchestration and owned TEMP/TMP use external
+storage; unrelated1280/390 directories are untouched. No refused browser route,
+physical cursor workaround or LAN/Studio replacement was attempted.
+
+Next use this same useful example in ordinary Studio: inspect/edit its graph and
+ports, preserve unfinished changes and paired Undo/Redo, Save/Open, then execute
+that journey's own compiled result. Use semantic MCP for active designs when
+available; missing tools do not establish server health or authorize an alternate
+browser route. Keep real file outcomes, browser/visual/assistive quality, broader
+operations/resources/scripts and all DataToolbar return gates explicit. Stop
+standalone graph/constructor variants that do not advance that integrated outcome.
+
 ## Current checkpoint — Query details in Studio-saved applications — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent 86c2876 is remote-verified. Root remains

@@ -23,6 +23,9 @@ editing, adjacent Pascal generation and delegated HTTP compilation.
 The [service monitor example](examples/service-monitor/README.md) composes typed
 table filtering, column arrangement, editable pins, inspection, copying and export
 into a portable sample application, with independently owned runtime data.
+The [JSON Workshop](examples/tool-canvas/README.md) embeds ordinary Nyx controls
+in a Tool Canvas and connects typed JSON formatting to explicit file saving.
+Its operation cards, graphs and reusable content remain editable project data.
 Studio's shell is a shared Pascal Nyx document, including reusable public
 `code-editor` and `design-surface` components; the same shell is exercised by LCL.
 Studio also exposes [semantic MCP tools](docs/studio-agents.md) for inspecting

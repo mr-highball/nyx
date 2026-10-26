@@ -4,6 +4,24 @@
 
 **Description:**
 
+Current-source 2026-10-26 adds the public English
+[JSON Workshop](../examples/tool-canvas/README.md). Ordinary embedded controls
+drive separate Format and Save graphs, with editable operation cards, saved
+world placement and explicit runtime file authority. The example's own source/
+project pair is admitted, exported, compiled and executed at desktop/compact
+native widths. Exact Unicode/numbers/UTF-8, user cancellation, invalid JSON,
+pending-save retirement and independent reopened Apps pass through actual
+controls with injected file outcomes. WORK.md owns 17/17 base and 18/18 compiled
+checks, four clean heaps and three browser compilations/staged programs.
+
+This is a useful starter and connected runtime result, not ordinary Studio UI
+Save/Open or physical file/browser/visual/assistive acceptance. No original
+criterion, prerequisite, task or completion credit closes. Next use this same
+example through ordinary Studio graph/port authoring and paired saving, preserving
+unfinished proposals, before its own compiled application. Retain full script,
+image/resource, creator/host/operation breadth, diagram and browser/parity scope;
+do not substitute another standalone graph or constructor variant.
+
 Current-source 2026-10-16 semantic saved placement advances criterion four through
 bounded explicit graph/step queries, typed grouped position/reset operations and
 the existing paired source/history owner. Computed helper meaning and independent

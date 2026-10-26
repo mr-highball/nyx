@@ -2,6 +2,18 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source 2026-10-26 contributes the public
+[JSON Workshop](../examples/tool-canvas/README.md) under the existing useful-tool
+priority. Its embedded control event → JSON parse/format → UTF-8 → Save chain uses
+the current typed operations and explicit application host. Actual native input
+and the example's own compiled constructor preserve exact bytes, cancellation,
+invalid-input refusal, page retirement and independent reopened state. File
+outcomes are injected; this is not physical disk/picker/download evidence.
+WORK.md owns the four clean heaps and distinct browser compilation/staging.
+No operation kind, full criterion/task or completion credit is added. Next use
+the same tool through ordinary Studio authoring/Save/Open; retain every broader
+coverage, script, resource, HTTP/cache, host, browser/quality and delivery outcome.
+
 Current-source semantic placement exposes explicit saved positions for this
 collection through bounded existing tools and grouped paired source/history.
 It adds no operation kind, execution authority or tool. WORK.md owns production

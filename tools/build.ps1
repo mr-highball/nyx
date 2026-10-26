@@ -22,8 +22,13 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('data-toolbar', 'inspection-authoring', 'tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('json-workshop', 'data-toolbar', 'inspection-authoring', 'tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
+  # Complete public JSON Workshop example, both input widths and the constructor
+  # emitted by that journey. Browser consumers are staged without a listener.
+  [string]$JSONWorkshopEvidenceDirectory,
+  [string]$JSONWorkshopPlatform,
+  [string[]]$JSONWorkshopNativeUnitCache = @(),
   # NEW packet for saved inspection defaults, Studio/semantic admission and
   # the public native monitoring journey plus its own generated application.
   [string]$InspectionAuthoringEvidenceDirectory = 'build/inspection-authoring/maintained',
@@ -7828,6 +7833,173 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     Copy-Item -LiteralPath (Join-Path $nyxSelectionSource 'nyx.generated.view.pas'),
       $nyxRuntime, (Join-Path $nyxRoot 'studio/web/selection-style.html') -Destination $nyxSelectionBrowser
     Write-Host 'Native selection and generated source passed; execute the staged browser fixture explicitly.'
+    exit 0
+  }
+
+  if ($Target -eq 'json-workshop') {
+    if (-not $JSONWorkshopEvidenceDirectory) {
+      if (-not $nyxConfig.ContainsKey('EVIDENCE_ROOT')) {
+        throw 'Supply a NEW JSONWorkshopEvidenceDirectory or configure EVIDENCE_ROOT'
+      }
+      $JSONWorkshopEvidenceDirectory = Join-Path $nyxConfig.EVIDENCE_ROOT (
+        'json-workshop-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fffffff'))
+    }
+    $nyxWorkshopRoot = [IO.Path]::GetFullPath($JSONWorkshopEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxWorkshopRoot) {
+      throw 'JSONWorkshopEvidenceDirectory must be NEW; preserve earlier evidence'
+    }
+    $nyxWorkshopNative = Join-Path $nyxWorkshopRoot 'native'
+    $nyxWorkshopBrowser = Join-Path $nyxWorkshopRoot 'browser'
+    $nyxWorkshopTemp = Join-Path $nyxWorkshopRoot 'scratch'
+    if ($nyxConfig.ContainsKey('TEMP_ROOT')) {
+      $nyxWorkshopTemp = [IO.Path]::GetFullPath($nyxConfig.TEMP_ROOT)
+    }
+    New-Item -ItemType Directory -Path $nyxWorkshopNative,$nyxWorkshopBrowser -ErrorAction Stop | Out-Null
+    if (-not (Test-Path -LiteralPath $nyxWorkshopTemp)) {
+      New-Item -ItemType Directory -Path $nyxWorkshopTemp -ErrorAction Stop | Out-Null
+    }
+    $nyxWorkshopPreviousTemp = $env:TEMP
+    $nyxWorkshopPreviousTmp = $env:TMP
+    try {
+      $env:TEMP = $nyxWorkshopTemp
+      $env:TMP = $nyxWorkshopTemp
+      $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+      $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+      $nyxWorkshopPlatform = $JSONWorkshopPlatform
+      if (-not $nyxWorkshopPlatform) {
+        $nyxWorkshopPlatform = (& $nyxLclFpc '-iTP').Trim() + '-' + (& $nyxLclFpc '-iTO').Trim()
+      }
+      $nyxWorkshopFlags = @('-Mdelphi','-O2','-Sa','-Cr','-Co','-Ci','-gl','-gh',
+        '-Fusrc','-Fisrc','-Futests','-Fustudio','-Fuexamples/tool-canvas',
+        ('-FU'+$nyxWorkshopNative),('-FE'+$nyxWorkshopNative),
+        "-Fu$nyxLazarus/lcl/units/$nyxWorkshopPlatform",
+        "-Fu$nyxLazarus/lcl/units/$nyxWorkshopPlatform/$Widgetset",
+        "-Fu$nyxLazarus/components/lazutils/lib/$nyxWorkshopPlatform",
+        "-Fu$nyxLazarus/packager/units/$nyxWorkshopPlatform")
+      if ($JSONWorkshopNativeUnitCache.Count -eq 0) {
+        $nyxWorkshopFlags = @('-B') + $nyxWorkshopFlags
+      } else {
+        $nyxWorkshopCacheFlags = @()
+        foreach ($nyxWorkshopCache in $JSONWorkshopNativeUnitCache) {
+          $nyxWorkshopCacheFlags += '-Fu' + [IO.Path]::GetFullPath($nyxWorkshopCache)
+        }
+        $nyxWorkshopFlags = $nyxWorkshopCacheFlags + $nyxWorkshopFlags
+      }
+      $nyxWorkshopFlags = @('-Fu'+$nyxWorkshopNative) + $nyxWorkshopFlags
+      $nyxWorkshopSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
+      $output = $nyxWorkshopNative
+      foreach ($nyxWorkshopConsumer in @(
+        @('example','examples/tool-canvas/json_workshop.lpr'),
+        @('controls','tests/nyx_json_workshop_controls.lpr'))) {
+        $nyxWorkshopTag = 'compile-' + $nyxWorkshopConsumer[0]
+        $nyxWorkshopResult = RunOwned $nyxLclFpc ($nyxWorkshopFlags + @(
+          $nyxWorkshopConsumer[1])) $nyxWorkshopTag 600 $false
+        $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
+          Join-Path $output ($nyxWorkshopTag+'-result.json')) -Encoding utf8
+        if ($nyxWorkshopResult.exit -ne 0 -or $nyxWorkshopResult.timedOut) {
+          throw ('JSON Workshop compilation failed; inspect '+$output)
+        }
+        $nyxWorkshopFlags = @($nyxWorkshopFlags | Where-Object { $_ -ne '-B' })
+      }
+      foreach ($nyxWorkshopWidth in @('1280','390')) {
+        $output = Join-Path $nyxWorkshopRoot ('native-'+$nyxWorkshopWidth)
+        New-Item -ItemType Directory -Path $output | Out-Null
+        $nyxWorkshopResult = RunOwned (Join-Path $nyxWorkshopNative (
+          'nyx_json_workshop_controls'+$nyxWorkshopSuffix)) @($output,$nyxWorkshopWidth) 'journey' 120 $true
+        $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
+          Join-Path $output 'journey-result.json') -Encoding utf8
+        Get-Content $nyxWorkshopResult.stdout -Tail 3
+        if ($nyxWorkshopResult.exit -ne 0 -or $nyxWorkshopResult.timedOut -or
+          -not $nyxWorkshopResult.heapComplete) {
+          throw ('JSON Workshop journey failed; inspect '+$output)
+        }
+      }
+      $nyxWorkshopSaved = Join-Path $nyxWorkshopRoot 'native-1280'
+      foreach ($nyxWorkshopName in @('workshop.nyxproject','nyx.generated.json.workshop.pas')) {
+        $nyxWorkshopWide = (Get-FileHash -LiteralPath (
+          Join-Path $nyxWorkshopSaved $nyxWorkshopName) -Algorithm SHA256).Hash
+        $nyxWorkshopCompact = (Get-FileHash -LiteralPath (
+          Join-Path (Join-Path $nyxWorkshopRoot 'native-390') $nyxWorkshopName) -Algorithm SHA256).Hash
+        if ($nyxWorkshopWide -ne $nyxWorkshopCompact) {
+          throw ('JSON Workshop widths exported different paired bytes: '+$nyxWorkshopName)
+        }
+      }
+      $output = Join-Path $nyxWorkshopRoot 'compiled-native'
+      New-Item -ItemType Directory -Path $output | Out-Null
+      $nyxWorkshopCompiled = $output
+      $nyxWorkshopResult = RunOwned $nyxLclFpc (@('-Fu'+$nyxWorkshopSaved) + $nyxWorkshopFlags + @(
+        '-dNYX_COMPILED_JSON_WORKSHOP',('-FU'+$output),('-FE'+$output),
+        'tests/nyx_json_workshop_controls.lpr')) 'compile' 600 $false
+      $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
+        Join-Path $output 'compile-result.json') -Encoding utf8
+      if ($nyxWorkshopResult.exit -ne 0 -or $nyxWorkshopResult.timedOut) {
+        throw 'The example journey constructor failed native compilation'
+      }
+      foreach ($nyxWorkshopWidth in @('1280','390')) {
+        $output = Join-Path $nyxWorkshopRoot ('compiled-'+$nyxWorkshopWidth)
+        New-Item -ItemType Directory -Path $output | Out-Null
+        $nyxWorkshopExpected = Join-Path (Join-Path $nyxWorkshopRoot (
+          'native-'+$nyxWorkshopWidth)) 'workshop.nyxproject'
+        $nyxWorkshopResult = RunOwned (Join-Path $nyxWorkshopCompiled (
+          'nyx_json_workshop_controls'+$nyxWorkshopSuffix)) @(
+            $output,$nyxWorkshopWidth,$nyxWorkshopExpected) 'journey' 120 $true
+        $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
+          Join-Path $output 'journey-result.json') -Encoding utf8
+        Get-Content $nyxWorkshopResult.stdout -Tail 3
+        if ($nyxWorkshopResult.exit -ne 0 -or $nyxWorkshopResult.timedOut -or
+          -not $nyxWorkshopResult.heapComplete) {
+          throw ('Compiled JSON Workshop journey failed; inspect '+$output)
+        }
+      }
+      $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      $nyxWorkshopBrowserFlags = @('-Mdelphi','-Tbrowser','-Jirtl.js',
+        '-Fusrc','-Fisrc','-Futests','-Fustudio','-Fuexamples/tool-canvas')
+      $output = $nyxWorkshopBrowser
+      foreach ($nyxWorkshopConsumer in @(
+        @('example','examples/tool-canvas/json_workshop.lpr','json_workshop'),
+        @('controls','tests/nyx_json_workshop_controls.lpr','nyx_json_workshop_controls'))) {
+        $nyxWorkshopTag = 'compile-' + $nyxWorkshopConsumer[0]
+        $nyxWorkshopResult = RunOwned $nyxPas2js ($nyxWorkshopBrowserFlags + @(
+          ('-FE'+$output),$nyxWorkshopConsumer[1])) $nyxWorkshopTag 600 $false
+        $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
+          Join-Path $output ($nyxWorkshopTag+'-result.json')) -Encoding utf8
+        if ($nyxWorkshopResult.exit -ne 0 -or $nyxWorkshopResult.timedOut) {
+          throw ('JSON Workshop browser compilation failed; inspect '+$output)
+        }
+        $nyxWorkshopHTML = '<!doctype html><html lang="en"><meta charset="utf-8">' +
+          '<meta name="viewport" content="width=device-width,initial-scale=1"><title>JSON Workshop</title>' +
+          '<body><script src="rtl.js"></script><script src="'+$nyxWorkshopConsumer[2]+
+          '.js"></script><script>rtl.run();</script></body></html>'
+        [IO.File]::WriteAllText((Join-Path $output ($nyxWorkshopConsumer[2]+'.html')),
+          $nyxWorkshopHTML, (New-Object Text.UTF8Encoding($false)))
+      }
+      Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $output 'rtl.js')
+      $output = Join-Path $nyxWorkshopBrowser 'compiled'
+      New-Item -ItemType Directory -Path $output | Out-Null
+      $nyxWorkshopResult = RunOwned $nyxPas2js ($nyxWorkshopBrowserFlags + @(
+        ('-Fu'+$nyxWorkshopSaved),'-dNYX_COMPILED_JSON_WORKSHOP',('-FE'+$output),
+        'tests/nyx_json_workshop_controls.lpr')) 'compile' 600 $false
+      $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
+        Join-Path $output 'compile-result.json') -Encoding utf8
+      if ($nyxWorkshopResult.exit -ne 0 -or $nyxWorkshopResult.timedOut) {
+        throw 'The example journey constructor failed browser compilation'
+      }
+      Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $output 'rtl.js')
+      $nyxWorkshopExpectedText = [IO.File]::ReadAllText(
+        (Join-Path $nyxWorkshopSaved 'workshop.nyxproject')).Replace('<','\u003c')
+      $nyxWorkshopHTML = '<!doctype html><html lang="en"><meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1"><title>Compiled JSON Workshop</title>' +
+        '<body><script id="expected-project" type="application/json">'+$nyxWorkshopExpectedText+'</script>' +
+        '<script src="rtl.js"></script><script src="nyx_json_workshop_controls.js"></script>' +
+        '<script>rtl.run();</script></body></html>'
+      [IO.File]::WriteAllText((Join-Path $output 'index.html'), $nyxWorkshopHTML,
+        (New-Object Text.UTF8Encoding($false)))
+      Write-Host ('JSON Workshop native journeys passed; browser programs staged: '+$nyxWorkshopRoot)
+    } finally {
+      $env:TEMP = $nyxWorkshopPreviousTemp
+      $env:TMP = $nyxWorkshopPreviousTmp
+    }
     exit 0
   }
 

@@ -982,6 +982,17 @@ assertions does not qualify browser input.
 
 ## Embedded controls and Tool Canvas
 
+The [JSON Workshop example](../examples/tool-canvas/README.md) is a practical
+starting point: a reusable notebook contains actual Memo/Button/Code controls,
+with typed Format and Save graphs. The save graph connects JSON parse/format,
+UTF-8 encoding and the injected file service; its operation cards and positions
+use the public Tool Canvas contract. The portable design contains no file host.
+`tools/build.ps1 -Target json-workshop` runs the native control journey and the
+constructor exported by that same journey, then stages matching browser programs.
+Injected file receipts establish ownership/bytes/outcomes, not physical dialogs
+or disk/download success. Ordinary Studio authoring, browser interaction and
+full host/visual/accessibility parity remain separate requirements.
+
 `NewNyxToolCanvas('data-tool').WithScene(NyxCanvasRef('tools'))` is a specialized
 managed compound control. `WorkspaceCanvas`, `ToolsCard`, `ToolsTitleHeading` and
 `ToolsPortHostScroll` expose its ordinary Nyx parts. Independent factory instances
