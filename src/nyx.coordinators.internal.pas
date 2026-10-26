@@ -27,10 +27,19 @@ unit nyx.coordinators.internal;
 interface
 
 uses
-  nyx.controls, nyx.coordinators, nyx.data, nyx.collections.bindings,
-  nyx.events, nyx.scheduler;
+  nyx.controls, nyx.model, nyx.coordinators, nyx.data, nyx.collections.bindings,
+  nyx.events, nyx.scheduler, nyx.binding.inputs;
 
 type
+  { Trusted weak adapter seam. The exact full realized tree is borrowed only
+    for this call. Return nil until THAT tree is adopted and its bindings are
+    active; an old mounted view must never satisfy a candidate's lookup.
+    This getter is pure and exposes neither tree nor widgets to creators. }
+  INyxCoordinatorInputHost = interface(IInterface)
+    ['{B10521D5-51B3-4D5C-8105-870FF76F501A}']
+    function InputsFor(ATree: TNyxNode): INyxInputCommands;
+  end;
+
   { Library integration seam for an existing built-in engine that returns real
     specialized control facades. The common driver supplies the SAME retained
     canonical candidate used by its guarded projection, never a cloned or ID-only

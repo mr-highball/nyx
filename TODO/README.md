@@ -59,10 +59,15 @@ freeze. Typed live scalar capture/reset now joins the existing state/query
 owners:45 native model checks pass, alongside29/29 actual native control checks
 at configured1280/390,85 binding/104 state regressions and four complete clean
 heaps. Selective draft reset and composition readiness now use the same port;
-matching browser consumers compile only. Next is the scoped coordinator port
-directly into useful Search/Sort/Clear, without another generic proof variant.
-No original criterion closes, and no replacement state/query engine or source
-gate follows.
+matching browser consumers compile only. The scoped coordinator port now feeds
+real DataToolbar Search/Sort/Clear:50 actual native application checks at1280/390
+and179 existing coordinator checks pass, with three complete clean heaps. The
+application checks physical List/Table output, initial binding, shared-target
+ownership, invalid-role/Sort refusal and retirement. Browser assertions compile
+only. Next finish the ordinary reusable/navigation and caller-event/refusal
+journey and maintained build entry, then the Studio/save/generated adoption
+under authoring01. No original criterion closes, and no replacement state/query
+engine, generic input-proof variant or source gate follows.
 
 On return, the complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact

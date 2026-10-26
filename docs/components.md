@@ -381,6 +381,73 @@ ordinary and compiled browser consumers without starting a server. Current nativ
 results are63/165/114/124/15/15 with clean heaps; browser artifacts compile only.
 [WORK.md](../WORK.md) retains the missing-import failure and exact repair evidence.
 
+## Search, Sort and Clear for data controls
+
+`nyx.data.toolbar` supplies an opt-in query coordinator for an existing bound
+List or Table. Its options name a target control and typed schema fields; sort
+choices contain typed ordering descriptors rather than interpreted strings.
+The default Search comparison explicitly folds ASCII A–Z. Use `nqtExact` for
+exact Unicode scalar matching; neither choice depends on the host locale.
+
+```pascal
+LOptions := NyxDataToolbarOptions(NyxControl('people'), NyxTextField('name'))
+  .Sort(NyxToolbarSort('Name descending'),
+    NyxSort(NyxTextField('name'), nsdDescending));
+LToolbar := ConfigureNyxDataToolbar(NewNyxDataToolbar('people-tools'), LOptions);
+LPage.Add(LToolbar);
+LPeopleList := NewNyxList('people');
+LPeopleList.Binds.Collection(NyxCollectionView(NyxCollection('people'))
+  .Column(NyxTextField('name'), 'People'));
+LPage.Add(LPeopleList);
+```
+
+`ConfigureNyxDataToolbar` returns a **detached configured copy**. Keep that return
+value when adding/replacing the view. The supplied toolbar remains unchanged on
+success and refusal. Its custom parts, captions, bindings and callback policies
+are copied; incompatible roles, occupied Clear identities and incompatible
+scalar domains refuse. The opt-in copy adds an accessible Clear button and
+declares the closed Sort value domain. Custom nonempty Sort defaults must match
+an admitted choice. The static recipe and original four-part interface/GUID stay
+unchanged. `NyxDataToolbarClearButton` exposes the optional specialized button.
+
+The standard adapters register the trusted Pascal factory through their common
+coordinator path. `TNyxDataToolbarIntent.Disabled` keeps the static parts and
+requires no target or Clear role. Absence has the original static behavior.
+Configured intent is versioned data; it grants no executable authority itself.
+Studio's dedicated authoring form and crafted source emission remain in
+[authoring01](../TODO/NS-3_data-toolbar_01.md).
+
+Real Search and Sort observe accepted control values before application
+callbacks; the caller's callback registrations and scheduling policies remain
+independent. Code may query `CoordinatorBinding` for `INyxDataToolbarBinding`
+and call typed `Search`, `Sort` and `Clear`. Programmatic commands do not
+synthesize Click/Change callbacks. Input resets and collection query changes
+publish together through the existing scalar/state/query owners. Refusal changes
+none of that group; notification failure reports already committed models.
+
+One query session retains the admitted baseline. Toolbar searches AND with it
+and with independent owners' predicates. One shared user-sort vector overrides
+baseline ordering. Explicit Sort chooses that vector; Clear withdraws only this
+toolbar's predicates and resets sorting only if this exact actor owns it. In
+isolation Clear restores the admitted baseline. With peers, their contributions
+remain. The selector describes this toolbar's local request; it does not claim
+that a peer has withdrawn its sort. Initial bound values are read only after the
+exact candidate input owner is adopted, then submitted as one query edit batch.
+
+Actual raw query replacement revokes former toolbar authority; equal replacement
+is a no-op. Retained commands refuse after retirement, while snapshotted physical
+slots become inert. Disconnect never restores an obsolete query: accepted
+predicates remain session-visible orphans until explicitly removed. Acquiring a
+new same-named actor does not claim an old actor's token. Target references use
+the same reusable expansion-prefix rule as collection pagers and cannot fall
+back to a globally matching sibling instance.
+
+The maintained [application consumer](../tests/nyx_data_toolbar_controls.lpr)
+contains independent List/Table workspaces and shared-target toolbars. Current
+qualification and the remaining reusable/navigation, browser, physical-input,
+authoring and generated-application gates belong to
+[runtime02](../TODO/NS-3_data-toolbar_02.md) and [WORK.md](../WORK.md).
+
 ## Creator behavior in ordinary applications
 
 The [Selection Summary example](../examples/selection-summary/README.md) shows

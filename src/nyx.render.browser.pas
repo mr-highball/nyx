@@ -78,7 +78,7 @@ uses
   nyx.behavior,
   nyx.events,
   nyx.kanban, nyx.kanban.intent,
-  nyx.master.detail,
+  nyx.master.detail, nyx.data.toolbar,
   nyx.data,
   nyx.viewport,
   nyx.event.emitter,
@@ -821,7 +821,7 @@ uses
   nyx.collections, nyx.collections.query.browser,
   nyx.collections.arrangement.browser,
   nyx.collections.cell.browser,
-  nyx.application.resources, nyx.projection.context;
+  nyx.application.resources, nyx.projection.context, nyx.coordinators.internal;
 
 type
   { One exact owned palette shared by the renderer and an entered generation.
@@ -896,11 +896,13 @@ type
 
   { Final presentation receiver is weak. A scope retains this managed port,
     never a renderer/controller; Sync is the last outward action in Request. }
-  TNyxBrowserCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget)
+  TNyxBrowserCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget,
+    INyxCoordinatorInputHost)
   public
     Owner: TNyxBrowserRenderer;
     constructor Create(AOwner: TNyxBrowserRenderer);
     procedure Request;
+    function InputsFor(ATree: TNyxNode): INyxInputCommands;
   end;
   { Copied physical draft facts and the existing weak presentation receiver.
     The exact core port proves the mounted generation without retaining its
@@ -1290,6 +1292,23 @@ begin
   else
   begin
     Result := Result or (Pos('mailto:', LValue) = 1);
+  end;
+end;
+
+function TNyxBrowserCoordinatorRefresh.InputsFor(ATree: TNyxNode): INyxInputCommands;
+var
+  LInputs: INyxInputCommands;
+begin
+  Result := nil;
+
+  if (Owner <> nil) and (Owner.FRoot = ATree) then
+  begin
+    LInputs := Owner.GetInputs;
+
+    if (LInputs <> nil) and LInputs.Connected then
+    begin
+      Result := LInputs;
+    end;
   end;
 end;
 
@@ -3672,6 +3691,8 @@ begin
     NyxExtension(NyxMasterDetailIntentKey), NewNyxMasterDetailCoordinatorFactory);
   LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkKanbanBoard)),
     NyxExtension(NyxKanbanIntentKey), NewNyxKanbanCoordinatorFactory);
+  LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkDataToolbar)),
+    NyxExtension(NyxDataToolbarIntentKey), NewNyxDataToolbarCoordinatorFactory);
   LCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(
     LBuiltInCoordinators.Snapshot, LCallerCoordinatorSnapshot);
   try

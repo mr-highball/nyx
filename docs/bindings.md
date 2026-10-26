@@ -230,7 +230,16 @@ Current native evidence includes29 real-control checks at each configured width
 1280/390,45 model/query checks and85 binding/104 state regressions, with four
 complete clean heaps. Synthetic Win32 messages qualify the composition bridge;
 they do not prove hardware IME, assistive or other-widgetset behavior. Both
-matching browser consumers compile only. The scoped coordinator facet and useful
-DataToolbar Search/Sort/Clear application remain in
-[runtime02](../TODO/NS-3_data-toolbar_02.md); this foundation does not accept that
-task or its broader prerequisites.
+matching browser consumers compile only. The optional `INyxCoordinatorInputs`
+facet now reserves exact scalar roles before Build and returns weak commands for
+only those roles. The trusted adapter resolves them against the exact adopted
+tree; a pending candidate cannot borrow the previous project's input owner.
+Captures copy values and proofs without retaining a renderer or node. Existing
+coordinator interfaces and role-info record layout remain unchanged. Separate
+optional target and behavior facts provide bounded discovery without raw nodes.
+
+The [DataToolbar application](components.md#search-sort-and-clear-for-data-controls)
+uses this port for actual Search/Sort/Clear on List/Table controls, including
+grouped input/query reset. [Runtime02](../TODO/NS-3_data-toolbar_02.md) owns its
+current qualification and remaining gates. These bounded native checks do not
+accept that task or its broader prerequisites.

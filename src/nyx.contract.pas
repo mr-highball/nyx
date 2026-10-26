@@ -256,7 +256,10 @@ type
   are closed; extension registration never patches the built-in control enum. }
 function NyxNoDomain: TNyxValueDomain;
 function NyxScalarDomain(AKind: TNyxStateKind): TNyxValueDomain;
-function NyxTextDomain: TNyxTextDomain;
+function NyxTextDomain: TNyxTextDomain; overload;
+{ Extend an admitted text domain while preserving its existing refinements and
+  bounds. A different scalar family refuses before constructing a builder. }
+function NyxTextDomain(const ABase: TNyxValueDomain): TNyxTextDomain; overload;
 function NyxDateDomain: TNyxTextDomain; overload;
 { Enrich an existing text specification without dropping choices or bounds.
   Physical date projections also use this for legacy text declarations. }
@@ -1375,6 +1378,17 @@ end;
 function NyxTextDomain: TNyxTextDomain;
 begin
   Result.FDomain := NyxScalarDomain(nskText);
+end;
+
+function NyxTextDomain(const ABase: TNyxValueDomain): TNyxTextDomain;
+begin
+  ABase.Validate;
+
+  if not ABase.Defined or (ABase.Kind <> nskText) then
+  begin
+    raise ENyxContract.Create('A text domain builder requires a text value domain');
+  end;
+  Result.FDomain := ABase.Copy;
 end;
 
 function NyxDateDomain: TNyxTextDomain;

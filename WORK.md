@@ -9,6 +9,54 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Useful DataToolbar runtime — 2026-10-26
+
+Previous continuation confirmed external scratch routing without changing the
+product; this continuation is PROGRESS. Parent af94785 is remote-verified. Root
+remains SOLO. This is batch nine since the user-facing reprioritization. Runtime02
+Q1 now has real Search/Sort/Clear on ordinary List/Table controls. No complete
+original criterion, prerequisite, task or completion credit closes here.
+
+`nyx.data.toolbar` now supplies copied typed target/search/sort options, strict
+versioned intent, a detached configured-copy operation and an opt-in accessible
+Clear role. Static four-part recipes and their GUID remain unchanged. Custom
+parts/captions/bindings/callback policy survive; incompatible Clear roles and
+invalid sorts refuse without modifying the supplied toolbar. The standard
+adapters register the public factory through the existing coordinator vector.
+There is no new query/state engine or per-component renderer lifetime.
+
+Optional coordinator input/target/behavior facets reserve exact roles before
+Build. Their weak ports resolve only the exact adopted input tree, not a previous
+project. Original interfaces and the role-info record layout stay intact.
+Programmatic Search/Sort/Clear join the existing scalar/state/query publication;
+physical input uses synchronous before-callback observation without changing
+application callback policies. Independent searches AND together. Clear removes
+its exact actor's predicates and resets shared ordering only while owned. Equal
+raw query assignments preserve authority; actual replacement revokes it. Explicit
+Disconnect retains accepted orphan contributions and makes old slots inert.
+
+Current private data-toolbar-runtime-07 passes50 actual native application checks
+at each configured1280/390 width and179 existing portable coordinator checks.
+Three complete clean heaps report1242985/1249323/330751 allocated and freed
+blocks,0 unfreed. The application checks actual native List items/Table cells,
+initial bound values, shared-target peers, invalid Clear/Sort, Disabled, empty
+results, repeated Clear, hidden selection, source/default preservation, external
+query replacement and retirement. These are synthetic/native adapter inputs,
+not hardware, assistive, visual-quality or other-widgetset claims. Matching
+browser assertions compile/stage only:0 owned warnings,7 installed Classes
+warnings, no observing route retried. Earlier compiler/fixture failures remain
+retained. All readers are terminal and all2286 pinned owned inputs revalidate.
+All new private scripts, logs, artifacts and owned process TEMP/TMP use external
+scratch; maintained Pascal sources remain in the checkout.
+
+The next useful action is the remaining runtime02 ordinary reusable/navigation
+and caller-event/refusal journey plus its maintained build entry, then authoring01
+for Studio configuration, paired history, Save/Open and its own crafted generated
+application. Keep the common coordinator/parity prerequisites and every original
+criterion. Inherited query contributions require explicit session operations;
+do not silently steal an old actor by its diagnostic origin string. Stop generic
+input variants and resolver expansion; retain unavailable browser/physical gates.
+
 ## Current checkpoint — Physical typed input publication — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent6ddfb3f is remote-verified. Root remains SOLO.

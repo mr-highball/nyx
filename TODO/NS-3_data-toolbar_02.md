@@ -31,6 +31,28 @@ the exact saved/generated application under authoring01.
 
 **Work packets and handoff:**
 
+**Runtime checkpoint — 2026-10-26:** The public `nyx.data.toolbar` factory now
+performs Search/Sort/Clear through the existing common scalar/state/query owners.
+Typed options, strict configured/Disabled intent and a detached configured copy
+preserve the original recipe/GUID and caller policies. Optional weak scoped input,
+target and behavior discovery keeps old interfaces and record layouts intact.
+The ordinary [application](../tests/nyx_data_toolbar_controls.lpr) passes50 actual
+native checks at1280 and390, including physical List/Table output, initial bound
+values, two shared-target toolbars, peer preservation, invalid-role/Sort refusal,
+empty results, repeated Clear, hidden selection and query/owner retirement.
+The existing coordinator suite passes179 checks. All three heaps are complete
+and clean; matching browser assertions compile/stage only. No owned warnings;
+seven installed Classes warnings remain. [Caller use](../docs/components.md#search-sort-and-clear-for-data-controls)
+documents copied configuration, query ownership and retained orphan semantics.
+
+Current evidence is private data-toolbar-runtime-07 under the configured external
+root. This checkpoint closes no complete original criterion or prerequisite.
+Remaining runtime work includes the ordinary reusable/navigation and caller-event/
+refusal journey and a maintained build entry. Full browser/physical/parity gates
+remain open; Studio, paired history, Save/Open and the exact generated application
+stay in01. Do not recapture an effective query as a new baseline or steal an old
+actor by its diagnostic origin to paper over replacement behavior.
+
 | Packet | Reviewable outcome | Dependency and finish line |
 | --- | --- | --- |
 | Q1 — Useful public toolbar | Typed target/field options and real Search, Sort and Clear operate on an existing List/Table query | Existing common coordinator implementation; complete parent integration is required for acceptance. Root owns scalar-input/query admission, publication, runtime and focused consumers across the existing owners. Review query ownership and visible-input reset together. Clear composes with and restores the admitted authored baseline. |

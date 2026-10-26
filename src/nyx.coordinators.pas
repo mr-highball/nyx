@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.collections.bindings,
   nyx.collections.view.types, nyx.events, nyx.behavior, nyx.scheduler,
-  nyx.publication.types;
+  nyx.publication.types, nyx.binding.inputs, nyx.state, nyx.contract;
 
 type
   { Coordinator admission is a UI-only operation, like the existing prepared
@@ -82,6 +82,33 @@ type
   INyxCoordinatorRoleFacts = interface(IInterface)
     ['{9CD362E4-56F0-4640-B5BA-EE5802F2FAD8}']
     function Describe(const ARole: TNyxControlRef): TNyxCoordinatorRoleInfo;
+  end;
+  { Optional closed behavior inspection leaves the original role-info record
+    layout and interface intact. A compound can refuse a competing scalar
+    action without borrowing its descriptor or rewriting caller callbacks. }
+  INyxCoordinatorBehaviorFacts = interface(IInterface)
+    ['{7D11B924-028F-4BA3-9E0E-018FCE5DA969}']
+    function Action(const ARole: TNyxControlRef): TNyxAction;
+  end;
+  { Optional typed scalar capability; the original projection GUID stays
+    unchanged. Reserve exact roles before Build seals discovery. StoredValue
+    copies descriptor presence/value, before runtime binding projection; use
+    Commands.Capture for current bound values after installation. Commands are
+    weak, claimed-role-only and revoke with this scope even if its view lives. }
+  INyxCoordinatorInputs = interface(IInterface)
+    ['{DA86A3FA-FACF-470E-99DF-85A561960326}']
+    procedure ReserveInput(const ARole: TNyxControlRef);
+    function ValueDomain(const ARole: TNyxControlRef): TNyxValueDomain;
+    function StoredValue(const ARole: TNyxControlRef; out AValue: TNyxStateValue): Boolean;
+    function InputCommands: INyxInputCommands;
+  end;
+  { Explicit collection discovery under the coordinator's reusable expansion
+    prefix. Returns a copied exact runtime identity; no arbitrary node escapes.
+    Only List/Table targets are admitted. Outside roles remain collection-only,
+    so discovering a sibling table grants no scalar/text/Enabled authority. }
+  INyxCoordinatorTargets = interface(IInterface)
+    ['{1BC73083-D580-4A33-B78C-47F989643657}']
+    function CollectionTarget(const AReference: TNyxControlRef): TNyxControlRef;
   end;
   { Optional owner retirement for a behavior whose public Disconnect releases
     its presentation immediately. Revoke changes local flags only; Disconnect
@@ -195,7 +222,7 @@ implementation
 
 uses
   nyx.controls, nyx.binding.types, nyx.collections.view, nyx.collections,
-  nyx.interaction.policy, nyx.publication, nyx.coordinators.internal
+  nyx.interaction.policy, nyx.publication, nyx.coordinators.internal, nyx.schema
   {$ifdef PAS2JS}, JS{$endif};
 
 type
@@ -251,8 +278,10 @@ type
     function Owner: TCoordinatorScope;
     procedure Revoke;
   end;
-  { View changes mark a dormant candidate dirty without mutating selection. }
-  TCoordinatorPort = class(TInterfacedObject, ICoordinatorPort)
+  { View changes mark a dormant candidate dirty without mutating selection.
+    Scalar commands resolve only claimed roles through the exact adopted host;
+    captures/stages retain this weak port instead of keeping the scope alive. }
+  TCoordinatorPort = class(TInterfacedObject, ICoordinatorPort, INyxInputCommands)
   private
     FOwner: TCoordinatorScope;
   public
@@ -260,6 +289,10 @@ type
     function Acquire: INyxCoordinatorProjection;
     function Owner: TCoordinatorScope;
     procedure Revoke;
+    function GetConnected: Boolean;
+    function Capture(const AControls: array of TNyxControlRef): INyxInputCapture;
+    function Prepare(const ACapture: INyxInputCapture;
+      const AValues: array of TNyxInputValue): INyxPreparedPublication;
     procedure Changed(const AView: INyxCollectionView;
       const AChanges: INyxCollectionChanges);
   end;
@@ -275,6 +308,7 @@ type
     ProjectionKind: TNyxText;
     Compound: Boolean;
     EffectiveText: TNyxText;
+    Action: TNyxAction;
     Path: TNyxText;
     TextDefault: TNyxText;
     TextCurrent: TNyxText;
@@ -283,6 +317,8 @@ type
     TextClaimed: Boolean;
     TextReservation: INyxRuntimeTextReservation;
     EnabledClaimed: Boolean;
+    InputClaimed: Boolean;
+    ExternalCollection: Boolean;
     Allowed: Boolean;
     Policy: INyxRuntimeEnabledPolicy;
     View: INyxCollectionView;
@@ -304,7 +340,8 @@ type
     baselines; alternate view readiness is called only during Validate. }
   TCoordinatorScope = class(TInterfacedObject, INyxCoordinatorProjection,
     INyxCoordinatorRoleFacts, INyxCoordinatorProjectionLifetime,
-    INyxCoordinatorRefresh)
+    INyxCoordinatorRefresh, INyxCoordinatorInputs, INyxCoordinatorTargets,
+    INyxCoordinatorBehaviorFacts)
   private
     FTree: INyxControl;
     FTreeNode: TNyxNode;
@@ -316,6 +353,7 @@ type
     FScheduler: INyxScheduler;
     FViews: INyxCollectionBindings;
     FTarget: INyxCoordinatorRefreshTarget;
+    FInputHost: IInterface; { exact trusted weak adapter facet, never a renderer }
     FPort: ICoordinatorPort;
     FCallback: TCoordinatorPort;
     FRoles: array of TCoordinatorRole;
@@ -328,6 +366,8 @@ type
     function RoleIndex(const ARole: TNyxControlRef): Integer;
     procedure CheckLive(AInstalled: Boolean = False);
     procedure CheckNodes;
+    function LiveInputs: INyxInputCommands;
+    procedure CheckInput(const AControl: TNyxControlRef);
     procedure Seal;
     procedure Admit;
     procedure Cleanup;
@@ -344,11 +384,58 @@ type
     function Kind(const ARole: TNyxControlRef): TNyxKindRef;
     function AuthoredText(const ARole: TNyxControlRef): TNyxText;
     function Describe(const ARole: TNyxControlRef): TNyxCoordinatorRoleInfo;
+    function Action(const ARole: TNyxControlRef): TNyxAction;
+    procedure ReserveInput(const ARole: TNyxControlRef);
+    function ValueDomain(const ARole: TNyxControlRef): TNyxValueDomain;
+    function StoredValue(const ARole: TNyxControlRef; out AValue: TNyxStateValue): Boolean;
+    function InputCommands: INyxInputCommands;
+    function CollectionTarget(const AReference: TNyxControlRef): TNyxControlRef;
     function TryCollectionSpec(const ARole: TNyxControlRef;
       out ASpec: TNyxCollectionViewSpec): Boolean;
     procedure Text(const ARole: TNyxControlRef; const AValue: TNyxText);
     procedure Enabled(const ARole: TNyxControlRef; AAllowed: Boolean);
     procedure Request;
+  end;
+  { Private canonical proof prevents a capture from another coordinator scope
+    from borrowing this scope's claims, even on the same mounted input owner. }
+  IScopedInputProof = interface(IInterface)
+    ['{FCD3EF83-8973-451F-BA8E-69ADE0F9A0BA}']
+    function SnapshotObject: TObject;
+  end;
+  { Owned inner snapshot and weak scope identity. No retained projection/tree,
+    widget or creator binding; copied values stay readable after revocation. }
+  TScopedInputCapture = class(TInterfacedObject, INyxInputCapture, IScopedInputProof)
+  public
+    Port: ICoordinatorPort;
+    Commands: INyxInputCommands;
+    Inner: INyxInputCapture;
+    function SnapshotObject: TObject;
+    function GetCount: Integer;
+    function ControlAt(AIndex: Integer): TNyxControlRef;
+    function HasValueAt(AIndex: Integer): Boolean;
+    function ValueAt(AIndex: Integer): TNyxStateValue;
+  end;
+  { Delegates all model phases to the existing input group. The added weak
+    scope fence prevents a retired component from installing into a live peer.
+    This wrapper owns no state/query model and implements no second engine. }
+  TScopedInputStage = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPublicationReadiness)
+  private
+    FPort: ICoordinatorPort;
+    FCommands: INyxInputCommands;
+    FInner: INyxPreparedPublication;
+    FFence: INyxPublicationReadiness;
+    FRetired: Boolean;
+    procedure CheckScope;
+  public
+    constructor Create(const APort: ICoordinatorPort;
+      const ACommands: INyxInputCommands; const AInner: INyxPreparedPublication);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
   end;
   { Wraps a trusted creator's preparation with the driver's private revocable
     scope. The exact creator binding remains public, preserving specialized
@@ -826,6 +913,12 @@ begin
     LRole.ProjectionKind := ANode.ProjectionKind;
     LRole.Compound := ANode.Prop(NyxAttributeName(atCompound), 'false') = 'true';
     LRole.EffectiveText := ANode.Prop(NyxAttributeName(atText));
+
+    if not TryNyxAction(ANode.Prop(NyxAttributeName(atAction),
+      NyxActionName(naNone)), LRole.Action) then
+    begin
+      raise ENyxCoordinator.Create('Coordinator role has an invalid scalar action');
+    end;
     LRole.Path := APath;
     LRole.TextDefault := ANode.StoredProp(NyxAttributeName(atText));
     LRole.TextCurrent := LRole.TextDefault;
@@ -918,6 +1011,22 @@ begin
   Result.EffectiveText := LRole.EffectiveText;
 end;
 
+function TCoordinatorScope.Action(const ARole: TNyxControlRef): TNyxAction;
+var
+  LLease: INyxCoordinatorProjection;
+  LRole: TCoordinatorRole;
+begin
+  LLease := Self;
+  CheckNodes;
+  LRole := FRoles[RoleIndex(ARole)];
+
+  if LRole.ExternalCollection then
+  begin
+    raise ENyxCoordinator.Create('Collection discovery grants no scalar behavior inspection');
+  end;
+  Result := LRole.Action;
+end;
+
 function TCoordinatorScope.TryCollectionSpec(const ARole: TNyxControlRef;
   out ASpec: TNyxCollectionViewSpec): Boolean;
 var
@@ -991,6 +1100,11 @@ begin
   end;
   LRole := FRoles[RoleIndex(LRoleRef)];
 
+  if LRole.ExternalCollection then
+  begin
+    raise ENyxCoordinator.Create('A collection target does not grant text authority');
+  end;
+
   if not LRole.TextClaimed then
   begin
 
@@ -1034,6 +1148,11 @@ begin
   end;
   LRole := FRoles[RoleIndex(LRoleRef)];
 
+  if LRole.ExternalCollection then
+  begin
+    raise ENyxCoordinator.Create('A collection target does not grant Enabled authority');
+  end;
+
   if not LRole.EnabledClaimed then
   begin
 
@@ -1072,8 +1191,11 @@ begin
     if not LRole.Node.IsRealized or (LRole.Node.ID <> LRole.ID) or
       (LRole.Node.Kind <> LRole.Kind) or (LRole.Node.Parent <> LRole.Parent) or
       (LRole.Node.ProjectionKind <> LRole.ProjectionKind) or
+      (LRole.Node.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <>
+        NyxActionName(LRole.Action)) or
       ((LRole.Node.Prop(NyxAttributeName(atCompound), 'false') = 'true') <> LRole.Compound) or
-      (FRootNode.Find(LRole.ID) <> LRole.Node) or
+      ((not LRole.ExternalCollection) and (FRootNode.Find(LRole.ID) <> LRole.Node)) or
+      (LRole.ExternalCollection and (FTreeNode.Find(LRole.ID) <> LRole.Node)) or
       (LRole.Node.CollectionView.ToData.ToJSON <> LRole.Spec) then
     begin
       raise ENyxCoordinator.Create('Coordinator role identity or binding changed');
@@ -1263,6 +1385,7 @@ begin
   FViews := nil;
   FScheduler := nil;
   FGeneration := nil;
+  FInputHost := nil;
   FTarget := nil;
   FCallback := nil;
   FPort := nil;
@@ -2034,5 +2157,7 @@ begin
     end;
   end;
 end;
+
+{$I nyx.coordinators.inputs.inc}
 
 end.

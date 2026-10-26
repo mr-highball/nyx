@@ -93,7 +93,7 @@ uses
   nyx.behavior,
   nyx.events,
   nyx.kanban, nyx.kanban.intent,
-  nyx.master.detail,
+  nyx.master.detail, nyx.data.toolbar,
   nyx.data,
   nyx.viewport,
   nyx.viewport.lcl,
@@ -1005,7 +1005,7 @@ uses
   nyx.collections, nyx.collections.query.lcl,
   nyx.collections.arrangement.lcl,
   nyx.collections.cell.lcl,
-  nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl;
+  nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl, nyx.coordinators.internal;
 
 type
 
@@ -1090,11 +1090,13 @@ type
 
   { Final presentation receiver is weak. A scope retains this managed port,
     never a renderer/controller; Sync is the last outward action in Request. }
-  TNyxLCLCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget)
+  TNyxLCLCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget,
+    INyxCoordinatorInputHost)
   public
     Owner: TNyxLCLRenderer;
     constructor Create(AOwner: TNyxLCLRenderer);
     procedure Request;
+    function InputsFor(ATree: TNyxNode): INyxInputCommands;
   end;
   { Copied physical draft facts and the existing weak presentation receiver.
     The exact core port proves the mounted generation without retaining its
@@ -1336,6 +1338,23 @@ begin
   if Result > 100000 then
   begin
     Result := 100000;
+  end;
+end;
+
+function TNyxLCLCoordinatorRefresh.InputsFor(ATree: TNyxNode): INyxInputCommands;
+var
+  LInputs: INyxInputCommands;
+begin
+  Result := nil;
+
+  if (Owner <> nil) and (Owner.FRoot = ATree) then
+  begin
+    LInputs := Owner.GetInputs;
+
+    if (LInputs <> nil) and LInputs.Connected then
+    begin
+      Result := LInputs;
+    end;
   end;
 end;
 
@@ -7123,6 +7142,8 @@ begin
     RequireAttempt;
   LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkKanbanBoard)),
     NyxExtension(NyxKanbanIntentKey), NewNyxKanbanCoordinatorFactory);
+  LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkDataToolbar)),
+    NyxExtension(NyxDataToolbarIntentKey), NewNyxDataToolbarCoordinatorFactory);
     RequireAttempt;
   LCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(
     LBuiltInCoordinators.Snapshot, LCallerCoordinatorSnapshot);
