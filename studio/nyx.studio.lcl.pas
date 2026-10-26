@@ -2772,6 +2772,7 @@ begin
     FState.SourceTab := nstSource;
   end;
   FState.Compact := NyxStudioCompactHost(FHostSpace.Extent.Width, FHostSpace.Extent.Height);
+  FState.Preview := FPreview;
   FState.RootRemoval := NyxNull;
 
   if CurrentBridge <> nil then
@@ -3131,7 +3132,12 @@ begin
           inactive. Only an interacting preview admits runtime input snapshots;
           design faces still return to their exact host on failure. }
 
-        if (FCanvasView.Root <> nil) and FPreview then
+        { FPreview is the requested next mode. A mode cue can replace chrome
+          before the independent canvas adopts that request, so capture only
+          the currently admitted runtime view. Design bindings are dormant and
+          correctly refuse runtime snapshots. The reverse transition must still
+          capture its live preview even though the requested mode is design. }
+        if (FCanvasView.Root <> nil) and not FCanvasView.DesignMode then
         begin
           CaptureBorrowedInput(FCanvasView, LCanvasInputs, 'canvas');
           LCanvasCaptured := True;

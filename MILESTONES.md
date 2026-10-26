@@ -3,13 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current execution priority (2026-10-25): deliver observable everyday workflows
-from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-workflows--2026-10-25):
+Current execution priority (2026-10-26): deliver observable everyday workflows
+from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-workflows--2026-10-26):
 table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a
-useful connected Tool Canvas. Saved live-inspection recovery defaults are a
-checkpoint; its remaining scale/parity work is parked with an explicit return
-path. The resolver remains deferred. Existing scope, prerequisites, original
-acceptance criteria and pending completion assessments are unchanged.
+useful connected Tool Canvas. Native table and Studio journeys now have bounded
+checkpoints; their browser/input and full original acceptance stay open. The
+next active outcome is DataToolbar Search/Sort/Clear, first following its existing
+coordinator/parity/renderer prerequisites. Saved live-inspection recovery defaults
+are a checkpoint; its remaining scale/parity work is parked with an explicit
+return path. The resolver remains deferred. Existing scope, prerequisites,
+original acceptance criteria and pending completion assessments are unchanged.
 
 Scoped [table filtering and sorting](TODO/DONE/NS-3_control-usefulness_02.md)
 is accepted on2026-10-22 for its seven unchanged criteria: typed policies,
@@ -21,9 +24,10 @@ with all readers joined. [WORK](WORK.md#table-filtering-and-sorting-accepted)
 records exact evidence and reuse/target limits. This accepts that packet only;
 components01's full breadth/quality and NS-2 parity/performance remain open.
 NS-3 completion and expanded-scope weights stay Pending assessment; no percentage
-or duplicate credit is assigned. The current queue begins with
-[table workbench03 W1](TODO/NS-3_control-usefulness_03.md), column arrangement
-through ordinary Studio and its own generated application.
+or duplicate credit is assigned. [Table workbench03 W1](TODO/NS-3_control-usefulness_03.md)
+now has native column-arrangement/inspection/export checkpoints through ordinary
+Studio and its own generated application. Its remaining original checks stay
+explicit as the ranked queue moves to the next useful workflow.
 
 The 2026-10-18 scope addition includes an optional
 [browser-local pas2js WEB compiler](TODO/NS-5_browser-compiler_01.md) and a

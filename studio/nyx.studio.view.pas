@@ -112,7 +112,8 @@ type
     controllers only route events, file/storage access and compiler transport.
     This record borrows no widgets or document nodes. Outputs is an optional
     borrowed configuration, read only while the view is built; nil means empty
-    profiles. Copying the record never transfers profile ownership. }
+    profiles. Copying the record never transfers profile ownership. Preview is
+    copied from the controller's current mode solely to present its toggle. }
   TNyxStudioViewState = record
     CodeVisible: Boolean;
     CodePresentation: TNyxStudioCodePresentation;
@@ -139,6 +140,8 @@ type
     CanvasToolsVisible: Boolean;
     CanvasExpanded: Boolean;
     Phone: Boolean;
+    { Current interaction mode, independent of authored source and history. }
+    Preview: Boolean;
     { Exclusive manual preview choice, independent of authored pair/history. }
     PresentationSelection: TNyxPresentationSelection;
     { Transient physical-drop position; closed intent decoded at the UI boundary.
@@ -611,6 +614,7 @@ begin
   Result.CanvasPercent := 65;
   Result.DetailsPercent := 32;
   Result.Phone := False;
+  Result.Preview := False;
   Result.Palette := DefaultNyxStudioPaletteState;
   Result.ResourceBrowser := NyxResourceBrowserState;
   Result.Log := '';
@@ -1756,7 +1760,19 @@ begin
     .Configure.MinimumWidth(64).Flex(1).Done);
   LViewbar.Add(Button('action-desktop', 'Desktop'));
   LViewbar.Add(Button('action-phone', 'Phone'));
-  LViewbar.Add(Button('action-preview', 'Interact'));
+  { Preview is editor presentation, never an authored property. Keep a stable
+    toggle label and expose its pressed state to both target adapters. A filled
+    active face also remains visible when compact chrome paints only the glyph. }
+  LButton := Button('action-preview', 'Interact').Configure
+    .Pressed(AState.Preview).AccessibleName('Preview interactions')
+    .Hint('Try the accepted design without changing your document or Pascal draft.').Done;
+  LViewbar.Add(LButton);
+
+  if AState.Preview then
+  begin
+    LButton.Configure.Variant(nvPrimary)
+      .Hint('Preview mode is active. Select Interact again to return to design.').Done;
+  end;
   LViewbar.Add(Button('action-canvas-tools', 'Tools')
     .Configure.Pressed(AState.CanvasToolsVisible)
     .Hint('Show or hide placement, presentation and drag controls.').Done);

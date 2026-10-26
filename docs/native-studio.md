@@ -457,6 +457,18 @@ other-platform and full reload acceptance remain open.
 
 ## Source workspace and expanded editor
 
+For an ordinary editing journey, select a control on the canvas and use
+**Properties** to edit its text. **Events → Add callback** creates a named Pascal
+handler with a TODO body and opens source at that handler. Expand and Close keep
+the same source editor and its selection.
+
+**Interact** is a toggle: its filled active face means the canvas is accepting
+preview input. The same pressed state is exposed by the shared Nyx button,
+including compact glyph presentation. Select it again to return to design.
+Preview uses accepted content; navigating panels or trying a control does not
+apply an unfinished Pascal draft. Apply and Restore remain explicit source
+operations. A TODO callback has no application behavior until implemented.
+
 The shared Nyx source workspace offers mutually exclusive **Source** and
 **Compiler messages** views. Compiler output receives its own scroll area;
 it no longer reserves a fixed height above Pascal. The existing canvas/source
@@ -507,3 +519,19 @@ and [WAI dialog guidance](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
 checked 2026-10-05. Full browser keyboard/accessibility and physical phone
 qualification remain required; compilation alone does not establish them.
 Use the focused [source-editor command](building.md#source-workspace-and-expanded-editor).
+
+The maintained `tests/nyx_studio_chrome_controls.lpr` exercises canvas selection,
+caption edits, Events/source navigation, modal return and preview with a pending
+draft, in addition to its style/history checks. Supply a fresh project directory,
+the client width and an image prefix; run separately at 1280 and 390. Each project
+directory receives its own accepted `accepted-operator.nyxproject` and exact
+`nyx.generated.view.pas` after the pending note has been explicitly restored.
+These are fixture exports, not evidence of the ordinary named Save/Open workflow.
+
+Compile `tests/nyx_studio_operator_generated.lpr` with that captured source folder
+first in the unit search path. Run it with the own accepted packet path and client
+width to check the independently compiled application's exact design, caption,
+typed button presentation and callback descriptor, then mount and click its
+ordinary native button. The browser branch checks the generated document contract;
+compilation alone does not qualify browser rendering or input. Synthetic native
+control input and redraw captures remain separate from hardware/assistive testing.

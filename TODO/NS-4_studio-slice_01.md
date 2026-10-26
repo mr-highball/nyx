@@ -5,13 +5,13 @@
 **Current priority — everyday workspace usability — 2026-10-26:**
 
 The [ranked queue](README.md#current-priority--useful-everyday-workflows--2026-10-26)
-now returns here after the bounded native table-workbench delivery. Follow the
-existing prerequisite evidence before implementation; their open acceptance
-conditions remain required. The next useful journey selects a component, opens
-Properties/Events, changes its text, expands/closes source and previews the result
-at desktop and compact widths. Retain unfinished Pascal, selection and pane
-position through ordinary panel changes. Reuse maintained native consumers and
-fix a demonstrated obstruction on this path; avoid resolver/policy expansion.
+returned here after the bounded native table-workbench delivery. Its two native
+workspace deliveries are now qualified below. Follow the existing prerequisite
+evidence; their open acceptance conditions remain required. Reassessment moves
+the next active outcome to DataToolbar's prerequisite chain and Search/Sort/Clear,
+without more source-toolbar or preview-mode variants. Retain unfinished Pascal,
+selection and pane position through ordinary panel changes when returning for
+remaining browser/input and full authoring qualification.
 
 This serves shell criterion one and the full-authoring workspace criteria; it
 does not accept either task or waive browser, compilation/recovery or target
@@ -19,6 +19,33 @@ quality requirements. The [splitter regression](NS-2_split-platform_02.md) remai
 an explicit resize/reflow input. Browser observing remains a separate gate;
 do not retry or bypass the previously refused surface. WORK.md owns the next
 bounded source snapshot, checks and stop point.
+
+**Ordinary component editing and preview — 2026-10-26:**
+
+The maintained native chrome consumer now selects an actual canvas control,
+edits its caption in Properties, checks exact paired Undo/Redo, adds one named
+Click callback from Events and follows its TODO body into the source editor.
+Expand/Close, panel changes and preview preserve the same memo, pending Pascal
+and designer selection. Explicit Restore drops only the unfinished note. Interact
+now has a stable pressed toggle and a filled active face, including compact
+glyph mode; trying preview controls leaves accepted design/source unchanged.
+
+The new cue exposed a real native shell-replacement defect: requested preview
+mode was mistaken for the canvas's already admitted mode during input capture.
+Capture now checks the actual canvas mode, preserving both transition directions.
+Final native editor journeys pass 102/112 at 1280/390, and their exact emitted
+constructor independently compiles and passes 12/12 in its own application.
+Both widths export identical accepted project/Pascal bytes. These are fixture
+exports, not ordinary named Save/Open evidence; clicking a TODO-bearing callback
+does not establish an implemented callback body. All four native heaps are clean.
+
+WORK records nine terminal jobs, 751 unchanged primary inputs, representative
+native capture review and zero owned/14 installed Classes warning occurrences.
+Both full Studios and the generated browser contract compile; actual browser
+execution remains open. Retain operator01–05 failure evidence. This is the second
+Studio batch and fifth delivery since reprioritization without complete original
+criterion closure. Reassessment changes the next action to DataToolbar's existing
+prerequisites; no criterion/task/credit/DONE or observing deployment closes here.
 
 **Source workspace usability — 2026-10-26:**
 

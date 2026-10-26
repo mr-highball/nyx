@@ -1074,6 +1074,7 @@ begin
   LState.Compact := FCompact;
   LState.Panel := FPanel;
   LState.Phone := FPhone;
+  LState.Preview := FPreview;
   FPresentationSelection := FPresentationSelection.Reconciled(FSession.Document.Presentations);
   LState.PresentationSelection := FPresentationSelection;
   LState.DesignerPlacement := FDesignerPlacement;

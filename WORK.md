@@ -9,6 +9,71 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — ordinary Studio editing and next useful workflow — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent6ef5db2 is remote-verified. Root remains SOLO.
+This is the second Studio workspace batch and fifth delivery since the user's
+reprioritization. It serves Studio-slice01 criteria1/2 and full-authoring workspace
+outcomes. Earlier no-closure history remains intact. No complete original
+criterion, task, completion credit or DONE move follows this native checkpoint.
+
+The maintained chrome consumer now selects the actual canvas button, edits text
+through Properties, checks exact paired Undo/Redo, adds a named Click handler
+through Events and follows its TODO body into source. Expand/Close preserves the
+same memo and selection. Exact unfinished Pascal survives Properties/Events,
+compact panel changes and accepted-content preview. Preview checkbox input cannot
+rewrite the authored pair or designer selection; explicit Restore removes only
+the unfinished note. No direct Session.Select replaces this operator journey.
+
+Interact now exposes a stable pressed toggle and filled active face through the
+shared Nyx contract, including compact glyph mode. This exposed a native full-shell
+replacement defect: requested FPreview was treated as the already admitted canvas
+mode. Runtime input capture now checks actual CanvasView.DesignMode. Both entry
+and return preserve the correct accepted/input owner. The browser controller
+copies the same presentation state and already guards actual admitted mode.
+No authored wire, scheduler, model ownership or callback implementation changes.
+
+Private studio-operator-06/final-evidence-private.json records nine terminal jobs,
+751 unchanged primary inputs and four complete zero-unfreed native heaps. Editor
+journeys pass102/112 at1280/390. Both widths emit identical accepted project and
+Pascal bytes. Their OWN exact constructor independently compiles and its native
+application passes12/12, including exact canonical design, typed presentation,
+callback descriptor and actual button input without reported failure. Exports
+are fixture writes, not ordinary named Save/Open evidence. The generated TODO
+callback remains a no-op; input does not prove an implemented handler body.
+
+Both full Studios and the own generated browser contract compile successfully.
+Zero owned warnings and14 installed pas2js Classes warning occurrences remain;
+no dependency edits/suppression occur. Native caches use ordinary compiler
+dependency checks, not a cold-build/performance claim. The unchanged tracked
+capture helper is separately fingerprinted after execution with a timestamp
+preceding the readers; it is not counted as an initial primary pin. Desktop and
+compact redraws visibly show active Interact; this review is separate from
+physical/assistive, other-widgetset and full visual-quality qualification.
+Browser execution and observing deployment remain open. No connected document
+session was available, and the earlier refused browser route was not retried.
+
+Retain operator01–05: initial sibling-cast warning, rejected driver arguments,
+fixture missing import/unsupported member, missing presentation field and the
+actual input-snapshot refusal on preview entry. The final guard repair preserves
+every original assertion. All actual readers are terminal; no source freeze
+remains. No listener/LAN/service, active user project, helper or cleanup changed.
+Unrelated untracked1280/390 remain untouched.
+
+Reassessment changes the active outcome to DataToolbar runtime02, then authoring01:
+real Search/Sort/Clear on independent List/Table instances, followed by ordinary
+Studio configuration, Save/Open and that journey's own compiled application.
+Follow coordinators01 → parity01 → browser/LCL renderer prerequisites first;
+retained accepted child evidence does not accept the open parent. Address concrete
+remaining input/quality requirements, reusing applicable checks rather than
+repeating unrelated catalog or resolver work. Historical file-release assignments
+are not source permission gates. No prerequisite or original criterion is waived.
+Stop further source-toolbar, preview-mode and table-policy variants. Table and
+Studio retain their original browser/input/quality return checks. The next ranked
+independent outcome is the useful control → JSON prettify → Save Tool Canvas flow,
+under its existing graph/Logic/canvas prerequisites. Resolver and recovery-policy
+expansion remain parked. No new task identity or planning-only variant is added.
+
 ## Current checkpoint — readable source workspace — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent3a1ee9c is remote-verified. Root remains SOLO.

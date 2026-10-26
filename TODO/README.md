@@ -13,8 +13,8 @@ adds no tasks, credit, dependency waivers or approval gates.
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |
-| 2 — Now | A comfortable Studio workspace | [Studio slice](NS-4_studio-slice_01.md), consumed by [full authoring](NS-4_studio-authoring_01.md): qualify the everyday select → inspect → edit → preview journey, discoverable Properties/Events and source expansion, with usable canvas space at desktop/compact widths. Follow existing prerequisites and address concrete missing controls, overflow and lost panel state found along that journey. Retain the [splitter regression](NS-2_split-platform_02.md) as an explicit input/resize check. |
-| 3 — Next | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), then [authoring01](NS-3_data-toolbar_01.md): type Search, change Sort and Clear back to the authored baseline on independent List/Table instances; configure, Save/Open and run the generated result. Follow the coordinator prerequisites; existing native progress does not waive their open acceptance gates. |
+| 2 — Checkpoint delivered; gates open | A comfortable Studio workspace | [Studio slice](NS-4_studio-slice_01.md), consumed by [full authoring](NS-4_studio-authoring_01.md): native desktop/compact selection → Properties → Events → source → preview now passes with exact draft/history preservation and a visible active preview toggle. Browser, physical/assistive and full original acceptance remain open. Retain the [splitter regression](NS-2_split-platform_02.md) as an explicit input/resize check; stop further chrome variants. |
+| 3 — Now, through prerequisites | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), then [authoring01](NS-3_data-toolbar_01.md): type Search, change Sort and Clear back to the authored baseline on independent List/Table instances; configure, Save/Open and run the generated result. First follow the coordinator → parity → renderer prerequisites using retained applicable evidence. Existing native progress does not waive their open acceptance gates. |
 | 4 — After that | A useful connected Tool Canvas | [Logic components](NS-3_logic-components_01.md) and [Tool Canvas](NS-3_tool-canvas_01.md): finish one ordinary control event → JSON prettify → save journey using visible ports and existing host services, including cancellation and reopen/generated behavior. Follow the existing graph prerequisites and reuse the implemented parts. |
 
 The public service monitor's native Studio/Save/Open journey now passes 185
@@ -26,22 +26,30 @@ Clipboard/save effects use injected hosts; project-store Save/Open uses real
 files. Browser consumers compile only. [Workbench03](NS-3_control-usefulness_03.md)
 retains every original criterion and the compact semantic move follow-up.
 
-After this third delivery batch without complete original criterion closure,
-reassessment changes the active outcome to the Studio workspace journey above.
-The first bounded step follows its existing prerequisite evidence and native
-select/Inspector/source/preview controls. Keep unfinished text, selection and
-split position through panel changes. Do not start another table policy/profile
-variant or retry the refused browser surface. No task or criterion closes here.
+After the third delivery batch without complete original criterion closure,
+reassessment changed the active outcome to the Studio workspace journey above.
+Its two bounded deliveries now finish the native source and ordinary component
+journeys. This is the fifth delivery since reprioritization; no complete original
+criterion closes. Reassessment changes the next action to DataToolbar's actual
+prerequisite chain, then its useful Search/Sort/Clear outcome. Do not start another
+table policy/profile, Studio chrome or resolver variant, or retry the refused
+browser surface. No task or criterion closes here.
 
 The first Studio usability repair gives source commands a bounded scroll lane
 and shares status consistently between composition and retained updates. Its
 native workspace journey passes 86 checks with a clean heap, increasing desktop
 code height from 91 to 149 pixels while preserving drafts, caret, split choices
 and modal/history behavior. [Studio slice](NS-4_studio-slice_01.md) owns the
-remaining ordinary component/Inspector/source/preview journey. Stop further
-toolbar/status variants; browser execution and original acceptance remain open.
+ordinary component/Inspector/source/preview journey, now qualified natively at
+1280/390 by 102/112 checks. The journey's own emitted application independently
+compiles and passes 12/12 native checks; its project and Pascal bytes match across
+widths. Fixture exports do not establish named Save/Open. Preview now exposes a
+filled active toggle; its native shell replacement captures the actual current
+canvas mode. Four complete clean heaps and both full Studio builds qualify this
+bounded repair. Browser consumers compile only. Stop further toolbar/status/mode
+variants; browser execution and original acceptance remain open.
 
-The complete W1 finish line is one maintained service-monitor workflow through
+On return, the complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact
 sizes. Reuse current evidence and tools; qualify real native/browser interaction
 separately from compilation. Fix failures on that path rather than adding another

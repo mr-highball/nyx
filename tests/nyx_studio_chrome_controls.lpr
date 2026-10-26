@@ -9,7 +9,8 @@ uses Interfaces, Classes, SysUtils, Forms, Controls, Graphics, StdCtrls,
   nyx.codec, nyx.codegen, nyx.design.tokens, nyx.studio.projects,
   nyx.studio.lcl, nyx.studio.view, nyx.studio.glyphs, nyx.studio.chrome,
   nyx.studio.session, nyx.studio.commands, nyx.schema, nyx.resources,
-  nyx.disclosure, nyx.studio.presentation, nyx.behavior, nyx.events, nyx.scheduler;
+  nyx.disclosure, nyx.studio.presentation, nyx.behavior, nyx.events, nyx.scheduler,
+  nyx.callbacks, nyx.editing, nyx.editing.lcl, nyx.studio.inspector, nyx.bytes;
 
 type
   { Invoke the existing native widget entry point, never a Studio mutation.
@@ -39,7 +40,7 @@ var
   GFailure: TFailureObserver;
   GChecks: Integer;
   {$ifdef NYX_CHROME_LATENCY}
-  GLatencies: array[0..31] of TCommandLatency;
+  GLatencies: array[0..63] of TCommandLatency;
   GLatencyCount: Integer;
   {$endif}
 
@@ -66,6 +67,7 @@ begin
   repeat
     CheckSynchronize;
     Application.ProcessMessages;
+    Application.Idle(False);
 
     if GFailure.Error <> '' then
     begin
@@ -87,18 +89,36 @@ end;
 procedure Click(const AID: TNyxText);
 var
   LFace: TControl;
+  LShellCommand: Boolean;
   {$ifdef NYX_CHROME_LATENCY}
   LStarted: QWord;
   LRevealed: QWord;
   LDispatched: QWord;
   {$endif}
 begin
-  LFace := GStudio.ShellView.ControlFor(AID);
+  LShellCommand := GStudio.ShellView.RootFor(AID) <> nil;
+
+  if LShellCommand then
+  begin
+    LFace := GStudio.ShellView.ControlFor(AID);
+  end
+  else
+  begin
+    LFace := GStudio.SourceView.ControlFor(AID);
+  end;
   Check(LFace <> nil, 'A command is mounted: ' + AID);
   {$ifdef NYX_CHROME_LATENCY}
   LStarted := GetTickCount64;
   {$endif}
-  GStudio.ShellView.ViewFor(AID).Reveal(AID, niRuntime);
+
+  if LShellCommand then
+  begin
+    GStudio.ShellView.ViewFor(AID).Reveal(AID, niRuntime);
+  end
+  else
+  begin
+    GStudio.SourceView.Reveal(AID, niRuntime);
+  end;
   Check(LFace.IsVisible and LFace.Enabled, 'A command remains usable: ' + AID);
   {$ifdef NYX_CHROME_LATENCY}
   LRevealed := GetTickCount64;
@@ -283,6 +303,180 @@ begin
   end;
 end;
 
+{ Exact UTF-8 exports belong to this fresh fixture directory. They capture the
+  accepted operator result, independently of subsequent preview/draft activity. }
+procedure ExportPair(const APair: TNyxProjectPair);
+
+  procedure WriteText(const AName, AText: TNyxText);
+  var
+    LBytes: TNyxBytes;
+    LStream: TFileStream;
+  begin
+    LBytes := NyxEncodeUTF8(AText);
+    LStream := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(1)) +
+      AName, fmCreate);
+    try
+
+      if Length(LBytes) > 0 then
+      begin
+        LStream.WriteBuffer(LBytes[0], Length(LBytes));
+      end;
+    finally
+      LStream.Free;
+    end;
+  end;
+
+begin
+  WriteText('accepted-operator.nyxproject', EncodeNyxProject(APair));
+  WriteText('nyx.generated.view.pas', APair.Source);
+end;
+
+{ Continue the same ordinary editor after its style checks. Controls own every
+  input route; snapshots contain copied accepted/draft values only. No direct
+  Session.Select or design mutation substitutes for the operator's journey. }
+procedure EditingJourney;
+const
+  CCaption: TNyxText = 'Launch the preview';
+  CDraft: TNyxText = #10 + '// An unfinished operator note.';
+var
+  LBefore: TNyxProjectPair;
+  LCaptioned: TNyxProjectPair;
+  LCallbacks: TNyxProjectPair;
+  LInput: TCustomEdit;
+  LSource: TMemo;
+  LSelection: TNyxTextSelection;
+  LPhysical: TNyxText;
+  LEnd: Integer;
+  LCheck: TCheckBox;
+  LChecked: Boolean;
+  LHandler: TNyxText;
+
+  { Read the current typed descriptor afresh after publication. No borrowed
+    authored node or previous callback array survives an editor command. }
+  function ClickHandler: TNyxText;
+  var
+    LInfos: TNyxAuthoredEventInfos;
+    LIndex: Integer;
+  begin
+    LInfos := NyxAuthoredEvents(GStudio.Session.Document.Find('project-button'));
+    for LIndex := 0 to High(LInfos) do
+    begin
+
+      if LInfos[LIndex].Trigger = ntClick then
+      begin
+        Check(Length(LInfos[LIndex].Callbacks) = 1,
+          'ordinary Add creates exactly one selected-button callback');
+        Exit(LInfos[LIndex].Callbacks[0].Handler.Name);
+      end;
+    end;
+    raise Exception.Create('The selected button has no typed Click descriptor');
+  end;
+
+begin
+  LBefore := GStudio.ProjectSnapshot;
+  GStudio.ShellView.ViewFor('inspector-text').Reveal('inspector-text', niRuntime);
+  LInput := TCustomEdit(GStudio.ShellView.InputFor('inspector-text'));
+  Check((LInput <> nil) and LInput.IsVisible and LInput.Enabled,
+    'selected button text is editable in the ordinary Properties view');
+  LInput.SetFocus;
+  LInput.Text := UTF8Encode(CCaption);
+  AwaitChanges;
+  LCaptioned := GStudio.ProjectSnapshot;
+  Check((GStudio.Session.SelectedID = 'project-button') and
+    (GStudio.Session.Selected.Prop('text') = CCaption) and
+    (LCaptioned.Design <> LBefore.Design) and (Pos(CCaption, LCaptioned.Source) > 0),
+    'Properties text input updates the selected control and its Pascal together');
+  Click('action-undo');
+  Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(LBefore),
+    'one Undo restores the exact pair before text input');
+  Click('action-redo');
+  Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(LCaptioned),
+    'one Redo restores the exact caption pair');
+  Click(NyxInspectorEventsID);
+  Check(GStudio.ShellView.RootFor('event-click-add') <> nil,
+    'Events offers Click registration for this ordinary button');
+  Click('event-click-add');
+  LHandler := ClickHandler;
+  LCallbacks := GStudio.ProjectSnapshot;
+  Check((LHandler <> '') and (Pos(LHandler, LCallbacks.Source) > 0) and
+    (Pos('TODO', LCallbacks.Source) > 0),
+    'Add creates a named Pascal callback with a TODO body');
+  LSource := TMemo(GStudio.CodeView.InputFor('studio-code'));
+  Check((LSource <> nil) and LSource.Focused and (LSource.SelStart > 0),
+    'Add opens the retained source editor at its new handler');
+  LSelection := CaptureNyxLCLSelection(LSource);
+  Click('action-expand-source');
+  Check(GStudio.SourceModal.IsOpen and
+    (GStudio.CodeView.InputFor('studio-code') = LSource) and
+    CaptureNyxLCLSelection(LSource).SameRange(LSelection),
+    'Expand keeps the callback source control and its selected range');
+  Click('action-expand-source');
+  Check(not GStudio.SourceModal.IsOpen and
+    (GStudio.CodeView.InputFor('studio-code') = LSource) and
+    CaptureNyxLCLSelection(LSource).SameRange(LSelection),
+    'Close returns to the callback source without losing its range');
+  Check(EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(LCallbacks),
+    'source expansion spends no document history or accepted text');
+
+  { Append through native input while preserving the displayed CRLF projection
+    and exact authored LF. Panel/preview commands must retain this pending text. }
+  LPhysical := NyxLCLInputText(LSource);
+  LEnd := NyxTextScalarCount(LPhysical);
+  GStudio.CodeView.SetTextSelection('studio-code', NyxTextSelection(LPhysical, LEnd, LEnd));
+  LSource.SelText := UTF8Encode(CDraft);
+  AwaitChanges;
+  Check(GStudio.Session.SourceDraftPending and
+    (GStudio.Session.DraftSource = LCallbacks.Source + CDraft),
+    'ordinary source typing retains one exact unfinished draft');
+
+  if GStudio.ShellView.RootFor('action-panel-inspector') <> nil then
+  begin
+    Click('action-panel-inspector');
+  end;
+  Click(NyxInspectorPropertiesID);
+  Click(NyxInspectorEventsID);
+
+  if GStudio.ShellView.RootFor('action-panel-design') <> nil then
+  begin
+    Click('action-panel-design');
+  end;
+  Check((GStudio.CodeView.InputFor('studio-code') = LSource) and
+    (GStudio.Session.DraftSource = LCallbacks.Source + CDraft) and
+    (GStudio.ProjectSnapshot.Design = LCallbacks.Design),
+    'panel and Properties/Events navigation retain pending Pascal and accepted design');
+  Click('action-preview');
+  Check(not GStudio.CanvasView.DesignMode, 'Interact switches to the accepted runtime preview / ' +
+    String(GStudio.Status) + ' / pressed=' +
+    String(GStudio.ShellView.Root.Find('action-preview').Prop(NyxAttributeName(atPressed))));
+  Check(GStudio.ShellView.Root.Find('action-preview').Prop(NyxAttributeName(atPressed)) = 'true',
+    'the ordinary preview toggle exposes its active pressed state');
+  Check(GStudio.ShellView.Root.Find('action-preview').Prop(NyxAttributeName(atVariant)) =
+    NyxVariantName(nvPrimary), 'preview mode has a visible active face, including compact glyph mode');
+  LCheck := TCheckBox(GStudio.CanvasView.InputFor('project-choice'));
+  LChecked := LCheck.Checked;
+  LCheck.Checked := not LChecked;
+  TControlAccess(TControl(LCheck)).Click;
+  AwaitChanges;
+  Check(LCheck.Checked <> LChecked, 'the preview checkbox accepts native control input');
+  Check((GStudio.ProjectSnapshot.Design = LCallbacks.Design) and
+    (GStudio.ProjectSnapshot.Source = LCallbacks.Source) and
+    (GStudio.Session.DraftSource = LCallbacks.Source + CDraft) and
+    (GStudio.Session.SelectedID = 'project-button'),
+    'preview input cannot rewrite accepted code, the unfinished draft or designer selection');
+  Capture(ParamStr(3) + '-preview.png');
+  Click('action-preview');
+  Check(GStudio.CanvasView.DesignMode and
+    (GStudio.CodeView.InputFor('studio-code') = LSource),
+    'return to design preserves the same source input');
+  Check(GStudio.ShellView.Root.Find('action-preview').Prop(NyxAttributeName(atPressed)) = 'false',
+    'returning to design clears the preview toggle state');
+  Click('action-reset-source');
+  Check(not GStudio.Session.SourceDraftPending and
+    (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(LCallbacks)),
+    'explicit Restore discards only the unfinished note and retains accepted edits');
+  ExportPair(GStudio.ProjectSnapshot);
+end;
+
 procedure Journey;
 var
   LDocument: TNyxDocument;
@@ -386,9 +580,16 @@ begin
   Check(not NyxDisclosureExpanded(GStudio.ShellView.RootFor('studio-assets-picker').Find('studio-assets-picker')),
     'The ordinary disclosure closes the quick asset browser');
   Capture(ParamStr(3) + '-project.png');
-  GStudio.Session.Select('project-button');
-  GStudio.RequestRefresh(False);
+  if GStudio.ShellView.RootFor('action-panel-design') <> nil then
+  begin
+    Click('action-panel-design');
+  end;
+  Check(GStudio.CanvasView.ControlFor('project-button').IsVisible,
+    'the ordinary canvas button is visible for selection');
+  TControlAccess(GStudio.CanvasView.ControlFor('project-button')).Click;
   AwaitChanges;
+  Check(GStudio.Session.SelectedID = 'project-button',
+    'actual canvas input selects the authored button');
 
   if GStudio.ShellView.RootFor('action-panel-inspector') <> nil then
   begin
@@ -422,6 +623,7 @@ begin
   Check(NyxButtonPresentationOf(GStudio.Session.Document.Find('project-button')).ControlDensity = nbdTouch,
     'Redo restores the same typed style');
   Capture(ParamStr(3) + '-inspector.png');
+  EditingJourney;
 end;
 
 begin
