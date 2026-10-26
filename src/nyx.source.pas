@@ -775,7 +775,7 @@ uses
   nyx.controls,
   nyx.design.tokens,
   nyx.tabs, nyx.disclosure, nyx.selection, nyx.flow.routes, nyx.flow.route.model,
-  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail;
+  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail, nyx.data.toolbar;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -909,11 +909,13 @@ type
     vkWorkbenchLineEnding, vkTablePresentationPolicy, vkColumnTextPolicy,
     vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
     vkColumnVerticalAlignment, vkTableHeaderPolicy, vkInspectionPolicy, vkCollectionFollow,
-    vkDraftRecoveryPolicy);
+    vkDraftRecoveryPolicy, vkToolbarOptions, vkToolbarIntent, vkToolbarSortRef,
+    vkToolbarSearchMode);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
-    Workbench choices retain only the pure authored permission policy. }
+    Workbench choices retain only the pure authored permission policy.
+    Toolbar choices own copied descriptors, never a live query actor or scope. }
   TValue = record
     Kind: TValueKind;
     DiagramVertex: TNyxDiagramVertex;
@@ -997,6 +999,8 @@ type
     DateRangeOptions: TNyxDateRangeOptions;
     MasterDetailOptions: TNyxMasterDetailOptions;
     MasterDetailIntent: TNyxMasterDetailIntent;
+    ToolbarOptions: TNyxDataToolbarOptions;
+    ToolbarIntent: TNyxDataToolbarIntent;
     KanbanOptions: TNyxKanbanOptions;
     SelectionOptions: TNyxSelectionOptions;
     CanvasPoint: TNyxCanvasPoint;
@@ -1122,6 +1126,8 @@ type
     function DateRangeOptions: TValue;
     { Interprets only copied public field-reference options and closed intent. }
     function MasterDetailConstructor(const AName: TNyxText): TValue;
+    { Reads copied target/field/query choices; never configures/replaces nodes. }
+    function DataToolbarConstructor(const AName: TNyxText): TValue;
     function ButtonPresentationConstructor(const AName: TNyxText): TValue;
     procedure ButtonConfiguration;
     function SelectionOptions: TValue;
@@ -1781,6 +1787,9 @@ begin
   RegisterEnum(vkSortDirection, Ord(nsdDescending), 'nsdDescending');
   RegisterEnum(vkQueryTextComparison, Ord(nqtExact), 'nqtExact');
   RegisterEnum(vkQueryTextComparison, Ord(nqtAsciiInsensitive), 'nqtAsciiInsensitive');
+  RegisterEnum(vkToolbarSearchMode, Ord(ntsmContains), 'ntsmContains');
+  RegisterEnum(vkToolbarSearchMode, Ord(ntsmStartsWith), 'ntsmStartsWith');
+  RegisterEnum(vkToolbarSearchMode, Ord(ntsmEqual), 'ntsmEqual');
   RegisterEnum(vkQuerySortMode, Ord(nqsmSingle), 'nqsmSingle');
   RegisterEnum(vkQuerySortMode, Ord(nqsmMultiple), 'nqsmMultiple');
   for LQueryComparison := Low(TNyxQueryComparison) to High(TNyxQueryComparison) do
@@ -2723,6 +2732,7 @@ end;
 {$I nyx.source.kanban.inc}
 {$I nyx.source.date.range.inc}
 {$I nyx.source.master.detail.inc}
+{$I nyx.source.data.toolbar.inc}
 {$I nyx.source.button.inc}
 {$I nyx.source.selection.inc}
 
@@ -3005,6 +3015,12 @@ begin
         if (LName = 'tnyxmasterdetailintent') or (LName = 'nyxmasterdetailoptions') then
         begin
           Exit(MasterDetailConstructor(LName));
+        end;
+
+        if (LName = 'tnyxdatatoolbarintent') or (LName = 'nyxdatatoolbaroptions') or
+          (LName = 'nyxtoolbarsort') then
+        begin
+          Exit(DataToolbarConstructor(LName));
         end;
 
         if LName = 'tnyxdisclosureoptions' then
@@ -6795,9 +6811,18 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.formatting') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.resources') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or
-        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.master.detail') then
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.master.detail') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.data.toolbar') then
       begin
         LPrefix := WithNyxImport(LPrefix, LGeneratedImports.UnitAt(LImportIndex).Name);
+
+        if LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.data.toolbar' then
+        begin
+          { Intent can appear on a static/disabled toolbar with no collection
+            views. Its typed target/field/query vocabulary still needs imports. }
+          LPrefix := WithNyxImport(LPrefix, 'nyx.collections');
+          LPrefix := WithNyxImport(LPrefix, 'nyx.collections.query');
+        end;
       end;
     end;
 

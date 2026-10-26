@@ -47,6 +47,9 @@ param(
   [string]$DataToolbarEvidenceDirectory,
   [string]$DataToolbarPlatform,
   [string[]]$DataToolbarNativeUnitCache = @(),
+  # Extend the same maintained journey with typed source replay and that
+  # producer's own compiled application. This still launches no service.
+  [switch]$DataToolbarSource,
   # NEW model-only packet; native assertions run and matching browser stages.
   [string]$QueryPublicationEvidenceDirectory = 'build/query-publication/maintained',
   # NEW canonical contribution/session packet; no UI host is launched.
@@ -7869,10 +7872,15 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       if ($DataToolbarNativeUnitCache.Count -eq 0) {
         $nyxToolbarFlags = @('-B') + $nyxToolbarFlags
       } else {
+        $nyxToolbarCacheFlags = @()
         foreach ($nyxToolbarCache in $DataToolbarNativeUnitCache) {
-          $nyxToolbarFlags += '-Fu' + [IO.Path]::GetFullPath($nyxToolbarCache)
+          $nyxToolbarCacheFlags += '-Fu' + [IO.Path]::GetFullPath($nyxToolbarCache)
         }
+        # FPC must see a closed PPU path before a same-named source path.
+        # It still performs ordinary source/dependency validity checks.
+        $nyxToolbarFlags = $nyxToolbarCacheFlags + $nyxToolbarFlags
       }
+      $nyxToolbarFlags = @('-Fu'+$nyxToolbarNative) + $nyxToolbarFlags
       $nyxToolbarPrograms = @('nyx_data_toolbar_controls','nyx_data_toolbar_reuse_controls')
       $nyxToolbarSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
       $nyxToolbarFailed = $false
@@ -7885,6 +7893,9 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {
           throw ('DataToolbar native compile failed; inspect '+$output)
         }
+        # The first cold build closes the common dependency graph. Later
+        # consumers reuse that NEW packet and compile their additional units.
+        $nyxToolbarFlags = @($nyxToolbarFlags | Where-Object { $_ -ne '-B' })
       }
       foreach ($nyxToolbarProgram in $nyxToolbarPrograms) {
         foreach ($nyxToolbarWidth in @('1280','390')) {
@@ -7899,13 +7910,62 @@ body[data-query-authoring="passed"] script#query-authoring-project {
             -not $nyxToolbarResult.heapComplete) { $nyxToolbarFailed = $true }
         }
       }
+      $nyxToolbarGenerated = ''
+      if ($DataToolbarSource) {
+        $nyxToolbarGenerated = Join-Path $nyxToolbarRoot 'generated-source'
+        New-Item -ItemType Directory -Path $nyxToolbarGenerated | Out-Null
+        $output = $nyxToolbarNative
+        $nyxToolbarResult = RunOwned $nyxLclFpc ($nyxToolbarFlags + @(
+          'tests/nyx_data_toolbar_source_tests.lpr')) 'compile-source' 1200 $false
+        $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+          Join-Path $output 'compile-source-result.json') -Encoding utf8
+        if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {
+          throw ('Typed DataToolbar source compile failed; inspect '+$output)
+        }
+        $output = Join-Path $nyxToolbarRoot 'source-model'
+        New-Item -ItemType Directory -Path $output | Out-Null
+        $nyxToolbarResult = RunOwned (Join-Path $nyxToolbarNative (
+          'nyx_data_toolbar_source_tests'+$nyxToolbarSuffix)) @($nyxToolbarGenerated) 'source' 120 $true
+        $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+          Join-Path $output 'source-result.json') -Encoding utf8
+        Get-Content -LiteralPath (Join-Path $output 'source-stdout.log') -Tail 4
+        if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut -or
+          -not $nyxToolbarResult.heapComplete) {
+          throw 'Typed source replay failed; generated applications are not admitted'
+        }
+        $output = $nyxToolbarNative
+        $nyxToolbarResult = RunOwned $nyxLclFpc (@('-Fu'+$nyxToolbarGenerated) +
+          $nyxToolbarFlags + @('tests/nyx_data_toolbar_generated_application.lpr')) 'compile-generated' 1200 $false
+        $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+          Join-Path $output 'compile-generated-result.json') -Encoding utf8
+        if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {
+          throw ('Generated DataToolbar application compile failed; inspect '+$output)
+        }
+        foreach ($nyxToolbarWidth in @('1280','390')) {
+          $output = Join-Path $nyxToolbarRoot ('generated-application-'+$nyxToolbarWidth)
+          New-Item -ItemType Directory -Path $output | Out-Null
+          $nyxToolbarResult = RunOwned (Join-Path $nyxToolbarNative (
+            'nyx_data_toolbar_generated_application'+$nyxToolbarSuffix)) @(
+              $nyxToolbarGenerated,$nyxToolbarWidth) 'application' 120 $true
+          $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+            Join-Path $output 'application-result.json') -Encoding utf8
+          Get-Content -LiteralPath (Join-Path $output 'application-stdout.log') -Tail 4
+          if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut -or
+            -not $nyxToolbarResult.heapComplete) { $nyxToolbarFailed = $true }
+        }
+        $nyxToolbarPrograms += @('nyx_data_toolbar_source_tests','nyx_data_toolbar_generated_application')
+      }
       $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
       $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
       $output = $nyxToolbarBrowser
       foreach ($nyxToolbarProgram in $nyxToolbarPrograms) {
-        $nyxToolbarResult = RunOwned $nyxPas2js @('-Mdelphi','-Tbrowser','-Jirtl.js',
+        $nyxToolbarBrowserFlags = @('-Mdelphi','-Tbrowser','-Jirtl.js',
           '-Fusrc','-Fisrc','-Futests',"-FE$nyxToolbarBrowser",
-          ('tests/'+$nyxToolbarProgram+'.lpr')) ('compile-'+$nyxToolbarProgram) 600 $false
+          ('tests/'+$nyxToolbarProgram+'.lpr'))
+        if ($DataToolbarSource) {
+          $nyxToolbarBrowserFlags = @('-Fu'+$nyxToolbarGenerated) + $nyxToolbarBrowserFlags
+        }
+        $nyxToolbarResult = RunOwned $nyxPas2js $nyxToolbarBrowserFlags ('compile-'+$nyxToolbarProgram) 600 $false
         $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
           Join-Path $output ('compile-'+$nyxToolbarProgram+'-result.json')) -Encoding utf8
         if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {
@@ -7923,7 +7983,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       }
       Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $output 'rtl.js')
       if ($nyxToolbarFailed) {
-        throw 'DataToolbar native journey failed; all four execution packets retained'
+        throw 'DataToolbar native journey failed; every execution packet retained'
       }
       Write-Host ('DataToolbar native controls/reusable Apps passed; browser assertions staged: '+$nyxToolbarRoot)
     } finally {

@@ -26,7 +26,7 @@ unit nyx.data.toolbar;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.types, nyx.data, nyx.controls, nyx.collections,
+  SysUtils, nyx.text, nyx.types, nyx.data, nyx.controls, nyx.model, nyx.collections,
   nyx.collections.query, nyx.coordinators;
 
 const
@@ -107,6 +107,7 @@ type
     class function Disabled: TNyxDataToolbarIntent; static;
     class function Configured(const AOptions: TNyxDataToolbarOptions):
       TNyxDataToolbarIntent; static;
+    function Copy: TNyxDataToolbarIntent;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxDataToolbarIntent; static;
     property Mode: TNyxDataToolbarIntentMode read FMode;
@@ -133,14 +134,22 @@ function ConfigureNyxDataToolbar(const AToolbar: INyxDataToolbar;
   const AOptions: TNyxDataToolbarOptions): INyxDataToolbar;
 { Optional typed accessor preserves the original four-part interface/GUID. }
 function NyxDataToolbarClearButton(const AToolbar: INyxDataToolbar): INyxButton;
-procedure SetNyxDataToolbarIntent(const AToolbar: INyxDataToolbar;
+{ Authored concrete toolbars, reusable references and named overrides use the
+  same typed metadata. Effective specialization is checked after realization. }
+function HasNyxDataToolbarIntent(ANode: TNyxNode): Boolean;
+function GetNyxDataToolbarIntent(ANode: TNyxNode): TNyxDataToolbarIntent;
+procedure SetNyxDataToolbarIntent(const AToolbar: INyxControl;
   const AIntent: TNyxDataToolbarIntent);
+procedure InheritNyxDataToolbarIntent(const AToolbar: INyxControl);
+{ Strict metadata/known-host admission; unresolved references defer their
+  effective target type. Runtime factory admission still checks exact roles. }
+procedure ValidateNyxDataToolbarIntent(ANode: TNyxNode);
 function NewNyxDataToolbarCoordinatorFactory: INyxCoordinatorFactory;
 
 implementation
 
 uses
-  nyx.model, nyx.schema, nyx.contract, nyx.state, nyx.binding.inputs,
+  nyx.schema, nyx.contract, nyx.state, nyx.binding.inputs,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.query.session,
   nyx.collections.bindings, nyx.events, nyx.behavior, nyx.scheduler,
   nyx.publication.types, nyx.publication
@@ -431,6 +440,17 @@ begin
   Result := FOptions.Copy;
 end;
 
+function TNyxDataToolbarIntent.Copy: TNyxDataToolbarIntent;
+begin
+  Result := Default(TNyxDataToolbarIntent);
+  Result.FMode := FMode;
+
+  if FMode = ntiConfigured then
+  begin
+    Result.FOptions := FOptions.Copy;
+  end;
+end;
+
 function TNyxDataToolbarIntent.ToData: TNyxDataValue;
 begin
 
@@ -479,19 +499,78 @@ begin
   end;
 end;
 
-procedure SetNyxDataToolbarIntent(const AToolbar: INyxDataToolbar;
+function HasNyxDataToolbarIntent(ANode: TNyxNode): Boolean;
+begin
+  Result := (ANode <> nil) and
+    ANode.Extensions.Has(NyxExtension(NyxDataToolbarIntentKey));
+end;
+
+function GetNyxDataToolbarIntent(ANode: TNyxNode): TNyxDataToolbarIntent;
+begin
+  Result := Default(TNyxDataToolbarIntent);
+
+  if HasNyxDataToolbarIntent(ANode) then
+  begin
+    Result := TNyxDataToolbarIntent.FromData(
+      ANode.Extensions.Value(NyxExtension(NyxDataToolbarIntentKey)));
+  end;
+end;
+
+procedure CheckIntentHost(const AControl: INyxControl);
+begin
+
+  if (AControl = nil) or AControl.Node.IsRealized or
+    not ((AControl.Node.Kind = NyxKindName(nkDataToolbar)) or
+      (AControl.Node.Kind = NyxKindName(nkComponent)) or
+      (AControl.Node.Kind = NyxKindName(nkSlotOverride))) then
+  begin
+    raise ENyxDataToolbar.Create('Toolbar intent requires its authored toolbar or reusable descriptor');
+  end;
+end;
+
+procedure SetNyxDataToolbarIntent(const AToolbar: INyxControl;
   const AIntent: TNyxDataToolbarIntent);
 var
+  LControl: INyxControl;
   LData: TNyxDataValue;
 begin
+  LControl := AToolbar;
   LData := AIntent.ToData;
+  CheckIntentHost(LControl);
+  LControl.Extensions.SetValue(NyxExtension(NyxDataToolbarIntentKey), LData);
+end;
 
-  if (AToolbar = nil) or AToolbar.Node.IsRealized or
-    (AToolbar.Node.Kind <> NyxKindName(nkDataToolbar)) then
+procedure InheritNyxDataToolbarIntent(const AToolbar: INyxControl);
+var
+  LControl: INyxControl;
+begin
+  LControl := AToolbar;
+  CheckIntentHost(LControl);
+  LControl.Extensions.Remove(NyxExtension(NyxDataToolbarIntentKey));
+end;
+
+procedure ValidateNyxDataToolbarIntent(ANode: TNyxNode);
+var
+  LIntent: TNyxDataToolbarIntent;
+begin
+
+  if not HasNyxDataToolbarIntent(ANode) then
   begin
-    raise ENyxDataToolbar.Create('Configure toolbar intent before mounting');
+    Exit;
   end;
-  AToolbar.Extensions.SetValue(NyxExtension(NyxDataToolbarIntentKey), LData);
+  LIntent := GetNyxDataToolbarIntent(ANode);
+  LIntent.ToData;
+
+  if not ANode.IsRealized and ((ANode.Kind = NyxKindName(nkComponent)) or
+    (ANode.Kind = NyxKindName(nkSlotOverride))) then
+  begin
+    Exit;
+  end;
+
+  if ANode.Kind <> NyxKindName(nkDataToolbar) then
+  begin
+    raise ENyxDataToolbar.Create('Toolbar intent requires its specialized effective target');
+  end;
 end;
 
 function ConfigureNyxDataToolbar(const AToolbar: INyxDataToolbar;

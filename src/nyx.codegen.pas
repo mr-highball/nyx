@@ -56,7 +56,7 @@ uses
   nyx.design.tokens,
   nyx.tabs,
   nyx.disclosure,
-  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail,
+  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail, nyx.data.toolbar,
   nyx.selection,
   nyx.data,
   nyx.contract,
@@ -2852,6 +2852,7 @@ var
   LHasKanbanIntent: Boolean;
   LHasDateRangeOptions: Boolean;
   LHasMasterDetailIntent: Boolean;
+  LHasDataToolbarIntent: Boolean;
   LHasSelectionOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
@@ -3309,6 +3310,9 @@ var
     LDateRangeOptions: TNyxDateRangeOptions;
     LMasterDetailIntent: TNyxMasterDetailIntent;
     LMasterDetailOptions: TNyxMasterDetailOptions;
+    LToolbarIntent: TNyxDataToolbarIntent;
+    LToolbarOptions: TNyxDataToolbarOptions;
+    LToolbarSort: Integer;
     LKanbanOptions: TNyxKanbanOptions;
     LKanbanLane: Integer;
     LSelectionOptions: TNyxSelectionOptions;
@@ -3509,6 +3513,61 @@ var
               '        NyxMasterDetailOptions(' + #10 +
               '          NyxTextField(' + PascalString(LMasterDetailOptions.TitleField.Name) + '),' + #10 +
               '          NyxTextField(' + PascalString(LMasterDetailOptions.DescriptionField.Name) + '))));');
+          end;
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxDataToolbarIntentKey) then
+        begin
+          LToolbarIntent := TNyxDataToolbarIntent.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+
+          if LToolbarIntent.Mode = ntiDisabled then
+          begin
+            LLines.Add('    SetNyxDataToolbarIntent(' + AOwner +
+              ', TNyxDataToolbarIntent.Disabled);');
+          end
+          else
+          begin
+            LToolbarOptions := LToolbarIntent.Options;
+            LArgument := '    SetNyxDataToolbarIntent(' + AOwner + ',' + #10 +
+              '      TNyxDataToolbarIntent.Configured(' + #10 +
+              '        NyxDataToolbarOptions(NyxControl(' +
+              PascalString(LToolbarOptions.Target.ID) + '),' + #10 +
+              '          NyxTextField(' + PascalString(LToolbarOptions.SearchField.Name) + '))';
+            case LToolbarOptions.MatchMode of
+              ntsmContains:
+                begin
+                  LMethod := 'ntsmContains';
+                end;
+              ntsmStartsWith:
+                begin
+                  LMethod := 'ntsmStartsWith';
+                end;
+              ntsmEqual:
+                begin
+                  LMethod := 'ntsmEqual';
+                end;
+            end;
+            LArgument := LArgument + #10 + '          .SearchMode(' + LMethod + ', ';
+
+            if LToolbarOptions.Comparison = nqtExact then
+            begin
+              LArgument := LArgument + 'nqtExact)';
+            end
+            else
+            begin
+              LArgument := LArgument + 'nqtAsciiInsensitive)';
+            end;
+            LArgument := LArgument + #10 + '          .Baseline(NyxToolbarSort(' +
+              PascalString(LToolbarOptions.BaselineChoice.Name) + '))';
+            for LToolbarSort := 0 to LToolbarOptions.Count - 1 do
+            begin
+              LArgument := LArgument + #10 + '          .Sort(NyxToolbarSort(' +
+                PascalString(LToolbarOptions.ChoiceAt(LToolbarSort).Reference.Name) + '),' + #10 +
+                '            ' + QueryExpression(
+                  LToolbarOptions.ChoiceAt(LToolbarSort).Query, '            ') + ')';
+            end;
+            LLines.Add(LArgument + '));');
           end;
         end
         else if (AExtensions.Scope = nesNode) and
@@ -3775,6 +3834,11 @@ var
     if HasNyxMasterDetailIntent(ANode) then
     begin
       LHasMasterDetailIntent := True;
+    end;
+
+    if HasNyxDataToolbarIntent(ANode) then
+    begin
+      LHasDataToolbarIntent := True;
     end;
 
     if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
@@ -4160,6 +4224,7 @@ begin
     LHasKanbanIntent := False;
     LHasDateRangeOptions := False;
     LHasMasterDetailIntent := False;
+    LHasDataToolbarIntent := False;
     LHasSelectionOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
@@ -4274,6 +4339,11 @@ begin
       LLines.Add('  nyx.master.detail,');
     end;
 
+    if LHasDataToolbarIntent then
+    begin
+      LLines.Add('  nyx.data.toolbar,');
+    end;
+
     if LHasSelectionOptions then
     begin
       LLines.Add('  nyx.selection,');
@@ -4378,7 +4448,7 @@ begin
       LLines.Add('  nyx.collections.query.controls,');
     end;
 
-    if ADocument.HasCollectionViews then
+    if ADocument.HasCollectionViews or LHasDataToolbarIntent then
     begin
       LLines.Add('  nyx.collections.view.types,');
 
@@ -4440,7 +4510,7 @@ begin
       LLines.Add('  nyx.collections.query,');
     end;
 
-    if ADocument.Collections.Count > 0 then
+    if (ADocument.Collections.Count > 0) or LHasDataToolbarIntent then
     begin
       LLines.Add('  nyx.collections,');
       LLines.Add('  nyx.collections.registry,');

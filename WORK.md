@@ -9,6 +9,55 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Typed DataToolbar source — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent bd3463d is remote-verified. Root remains
+SOLO. This is batch eleven since user-facing reprioritization. Authoring01 A1
+now has its typed source prerequisite; its public configuration form, ordinary
+Inspector candidate/history integration and A2 saved application are still open.
+No complete original criterion, prerequisite, task or completion credit closes.
+
+DataToolbar intent now supports concrete toolbars, reusable references and named
+overrides through copied Has/Get/Set/Inherit contracts. Typed property admission
+rejects malformed metadata and incompatible effective hosts; structural document
+validation remains separate. Full target/schema/role checks for a Studio edit
+remain part of its prospective candidate. Generated Pascal emits readable typed
+target/field/search/sort descriptors without replacing the linked toolbar or
+invalidating specialized child references. The configuration reader accepts only
+the corresponding typed families and preserves the accepted pair on refusal.
+Static source can acquire Disabled intent without collection data; required
+imports are added while unrelated handwritten source remains intact.
+
+The maintained `data-toolbar -DataToolbarSource` journey now exports its own
+source-fixture project and two generated units, compiles them and runs their
+ordinary application at1280/390. This is the fixture's own pair, not an ordinary
+Studio Save/Open result. Closed native PPU caches precede source paths, and later
+consumers reuse the new packet instead of forcing another whole-graph rebuild.
+The final packet confirms consumer-only compilation; this is not a general
+performance benchmark. No host, LAN service or Studio session was changed.
+
+Private data-toolbar-source-maintained-01 passes50/50 base,26/26 reusable,
+23 source and13/13 generated application checks. The existing presentation-source
+regression passes46. All eight heaps are complete and clean:1514473/1520811,
+755439/755747,669399,257415/257539 and696683 allocated/freed blocks,0 unfreed.
+All four browser consumers compile/stage only;0 owned warnings and28 installed
+Classes warning occurrences remain. Native input is fixture-driven, not hardware,
+assistive, visual-quality or other-widgetset proof. Earlier source01 retains a
+fixture's incorrect use of structural rather than typed property validation;
+source02 retains the untyped Unicode-literal warning before its typed-constant
+repair. Neither failed predecessor is presented as the final passing packet.
+
+All actual compiler/runtime readers are terminal; no source freeze remains.
+All new private files, runners, logs, builds, tests and owned process TEMP/TMP
+use external scratch. Maintained sources stay in the checkout and unrelated
+1280/390 directories remain untouched. Reassessment now changes the next action
+to the actual public Nyx DataToolbar editor and ordinary Inspector/candidate/
+history integration: scoped target/schema admission, complete required roles,
+named overrides, draft guards and one paired Undo/Redo. Then qualify actual
+Studio Save/Open and its own compiled application. Stop further generic input,
+query or source-proof variants. Original runtime/coordinator/browser/parity gates
+and query-detail03's retained-filter UI remain open.
+
 ## Current checkpoint — Reusable DataToolbar applications — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent b4f3f55 is remote-verified. Root remains SOLO.

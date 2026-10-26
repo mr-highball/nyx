@@ -363,7 +363,7 @@ uses
   nyx.menu.declarations,
   nyx.menu.types,
   nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view, nyx.kanban.intent,
-  nyx.date.range, nyx.master.detail,
+  nyx.date.range, nyx.master.detail, nyx.data.toolbar,
   nyx.flow.routes, nyx.flow.route.model;
 
 type
@@ -3768,6 +3768,7 @@ begin
 
   ValidateNyxKanbanIntent(ANode);
   ValidateNyxMasterDetailIntent(ANode);
+  ValidateNyxDataToolbarIntent(ANode);
   { Only portable policy/target admission belongs here. Pair values may still
     be authored defaults or an interim command, before complete state projection. }
   ValidateNyxDateRangeOptions(ANode);
@@ -4061,6 +4062,7 @@ var
         malformed known metadata must not hide behind the structural skip. }
       ValidateNyxDateRangeOptions(ANode);
       ValidateNyxMasterDetailIntent(ANode);
+      ValidateNyxDataToolbarIntent(ANode);
       ValidateButtonPresentationMetadata(ANode);
     end
     else
@@ -4249,6 +4251,7 @@ var
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
       ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
       HasNyxDateRangeOptions(ANode) or HasNyxMasterDetailIntent(ANode) or
+      HasNyxDataToolbarIntent(ANode) or
       ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
       (ANode.Prop(NyxAttributeName(atPageView)) <> '') or
       ValidateButtonPresentationMetadata(ANode);

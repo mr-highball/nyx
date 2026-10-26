@@ -73,6 +73,16 @@ owns the discovered end-user gap: ordinary visible controls to explain and remov
 retained/peer filters. Studio's typed configuration/source integration remains the
 next authoring outcome; the fixture's programmatic reset does not qualify that UI.
 
+The later authoring01 source prerequisite adds strict typed emission/replay and
+an independently compiled source-fixture application. The maintained command's
+optional `-DataToolbarSource` now runs23 source and13/13 generated App checks
+alongside50/50 base and26/26 reusable checks; the existing presentation-source
+regression passes46 separately. Eight complete clean native heaps and four
+browser compilations qualify that packet. Actual Studio form/history/Save/Open
+and browser execution remain open in01; this does not accept runtime02 or its
+coordinator/parity prerequisites. WORK retains the current evidence and next
+public editor integration, rather than another runtime/source proof variant.
+
 | Packet | Reviewable outcome | Dependency and finish line |
 | --- | --- | --- |
 | Q1 — Useful public toolbar | Typed target/field options and real Search, Sort and Clear operate on an existing List/Table query | Existing common coordinator implementation; complete parent integration is required for acceptance. Root owns scalar-input/query admission, publication, runtime and focused consumers across the existing owners. Review query ownership and visible-input reset together. Clear composes with and restores the admitted authored baseline. |

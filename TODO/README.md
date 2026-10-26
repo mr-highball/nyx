@@ -73,7 +73,16 @@ authoring01. [Query detail03](NS-3_data-toolbar_03.md) records the observed UX g
 for visible retained/peer filters and their explicit removal; the test's injected
 session reset does not qualify that user surface. No original criterion closes,
 and no replacement state/query engine, generic input-proof variant or source gate
-follows.
+follows. Authoring01 now has typed source replay and crafted emission that
+preserve specialized child references and named reusable intent. The optional
+`data-toolbar -DataToolbarSource` maintained journey adds23 source and13/13
+checks in its own compiled source-fixture App; the existing presentation-source
+regression passes46. Eight native heaps are complete and clean, and all four
+browser consumers compile only. This is batch eleven without original criterion
+closure. Next is the actual public Nyx configuration form and ordinary Studio
+Inspector/candidate/history operation, then actual Save/Open and its own compiled
+application. The fixture export does not replace that saved pair; stop generic
+input/query/source-proof variants and retain all original gates.
 
 On return, the complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact

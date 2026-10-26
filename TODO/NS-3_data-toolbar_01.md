@@ -32,6 +32,21 @@ management; an injected programmatic query reset is not evidence of that UI.
 
 **Work packets and handoff:**
 
+**Typed source prerequisite — 2026-10-26:** Has/Get/Set/Inherit now cover authored
+toolbars, reusable references and named overrides. Strict typed property/source
+admission and crafted target/field/search/sort emission preserve linked child
+identities and exact Unicode. The maintained `data-toolbar -DataToolbarSource`
+journey passes23 source checks and13/13 checks in its own compiled ordinary App;
+the existing presentation-source regression passes46. Base50/50 and reusable26/26
+checks also pass; eight complete clean heaps cover these native runs. All four
+matching browser consumers compile/stage only. This is the source fixture's own
+export, not A2's ordinary Studio saved pair. Private
+data-toolbar-source-maintained-01 retains receipts; WORK records predecessor
+failures and qualification limits. A1's public form, scoped target/schema/role
+candidate, Inspector/draft/history integration and A2 remain open. After batch
+eleven without original criterion closure, proceed directly to that actual
+editor integration; no additional generic input/query/source-proof variant.
+
 | Packet | Reviewable outcome | Dependency and finish line |
 | --- | --- | --- |
 | A1 — Paired Studio configuration | Public Nyx form and one whole-toolbar/named-reusable candidate configure, disable or inherit behavior with strict codec/source admission | Accepted query runtime02. Root owns existing Inspector/candidate/source integration and the form/runtime consumers. Intent, required Clear role and Pascal publish in one history step with draft/sibling guards. |

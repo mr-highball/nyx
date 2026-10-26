@@ -414,8 +414,24 @@ The standard adapters register the trusted Pascal factory through their common
 coordinator path. `TNyxDataToolbarIntent.Disabled` keeps the static parts and
 requires no target or Clear role. Absence has the original static behavior.
 Configured intent is versioned data; it grants no executable authority itself.
-Studio's dedicated authoring form and crafted source emission remain in
-[authoring01](../TODO/NS-3_data-toolbar_01.md).
+`HasNyxDataToolbarIntent` distinguishes absence from Disabled, and
+`GetNyxDataToolbarIntent` returns a copied descriptor. `SetNyxDataToolbarIntent`
+and `InheritNyxDataToolbarIntent` support authored concrete toolbars, reusable
+references and named override descriptors. They change metadata only; callers
+must admit required roles and compatible input domains together when enabling
+behavior. Effective specialization is checked after realization, and the runtime
+factory still validates exact target/schema/roles. Studio's dedicated authoring
+form and paired candidate remain in [authoring01](../TODO/NS-3_data-toolbar_01.md).
+
+Generated Pascal emits typed `TNyxDataToolbarIntent.Configured`/`Disabled`,
+`NyxDataToolbarOptions`, `NyxControl`, `NyxTextField` and `NyxToolbarSort` values,
+with closed search/comparison choices and typed ordering queries. It sets intent
+on the already constructed control tree, preserving specialized part references.
+The source reader rejects interchangeable raw strings, wrong field/reference
+families and unsupported option methods before accepting the edited pair.
+Typed property admission checks metadata independently of structural
+`TNyxDocument.Validate`. Import promotion also works on static source with no
+collection definitions, while preserving handwritten sections.
 
 Real Search and Sort observe accepted control values before application
 callbacks; the caller's callback registrations and scheduling policies remain
@@ -462,9 +478,20 @@ and `DataToolbarNativeUnitCache` reuse an already known compiler platform and
 closed native unit outputs through ordinary FPC dependency checks. Empty caches
 request a cold build. Completion receipts precede fallible log/heap inspection.
 
-Current native results are50/50 basic and26/26 reusable checks, with four complete
-clean heaps; browser assertions compile/stage only. Full browser, physical-input,
-visual/parity, authoring and generated-application gates remain in
+Add `-DataToolbarSource` to that command to run the
+[typed source consumer](../tests/nyx_data_toolbar_source_tests.lpr), export its
+own project and Pascal units, then compile and run its
+[generated application](../tests/nyx_data_toolbar_generated_application.lpr) at
+both widths. The generated builder reconstructs the producer's exact design
+bytes, including supplementary Unicode and reusable Disabled overrides. This
+fixture export does not establish ordinary Studio Save/Open. All four matching
+browser programs are staged; the command still starts no listener.
+
+Current native results are50/50 basic,26/26 reusable,23 source and13/13 generated
+application checks. Together with46 existing presentation-source regression
+checks, all eight native heaps are complete and clean. Browser assertions
+compile/stage only. Full browser, physical-input, visual/parity, authoring and
+Studio saved/generated-application gates remain in
 [runtime02](../TODO/NS-3_data-toolbar_02.md), [authoring01](../TODO/NS-3_data-toolbar_01.md)
 and [WORK.md](../WORK.md). These checks do not accept the complete tasks.
 
