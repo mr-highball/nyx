@@ -9,6 +9,45 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current user request — qualification storage cleanup — 2026-10-26
+
+The user's one on-demand retirement of the two preserved legacy user-temp/
+user-local qualification trees is complete. The user additionally confirmed
+approval for the older qualification copies during execution. Unqualified
+query-detail edits remain intact, with an additional external patch/source copy;
+return to that existing product work. No product acceptance criterion closes.
+
+Private c-space-retirement-20261026-01 contains the supplied preservation-report
+review, launcher trace and fresh source/archive SHA audit. The supplied report
+paths were resolved under the archive date's `_verification` directory. All48845
+files/7718625965bytes reconcile with original SHA proofs. Temp received12062
+fresh pair hashes; Local reuses25734 completed fresh pair hashes and adds11049
+source hashes against the complete archive SHA proofs, with exact current/frozen
+archive metadata. Complete inventory stability checks found no source or archive
+metadata changes and no active dependencies. Original long-path stream-inspection
+exceptions remain evidence; extended Win32 paths correct that inspection. The
+first reader was deliberately joined to avoid redundant unchanged archive reads.
+
+The guarded retirement joined successfully:48845files/7718625965bytes removed,
+zero retained files/streams, and both old roots absent. Empty directories were
+removed non-recursively after preservation/stream checks. Final archive counts/
+bytes remain12062/4902288563 and36783/2816337402; original report hashes and all
+nine unfinished feature-file hashes remain unchanged. Private retirement-summary
+and final-verification receipts record the actual result. The volume gained
+18.83GiB during execution, including concurrent unrelated cleanup; this Nyx
+operation removed7.19GiB of file payload. Final C: free space is19.15GiB. Do not
+attribute the full volume delta to Nyx. External archives/reports remain read-only;
+maintained source, unrelated projects and Windows data were not cleaned. All
+actual audit/retirement readers are terminal; no source freeze remains.
+
+Twelve old private launchers bypass configured storage through host GetTempPath
+or explicit old output paths. Two geometry launchers hard-code the old Temp
+tree; the singleton GUID object's exact launch was not found in146 recorded
+launch receipts. Future launchers must resolve configured external evidence/
+scratch roots before creating outputs and set child TEMP/TMP explicitly. The
+current maintained DataToolbar entry already follows that configuration.
+Unrelated projects, Windows data and maintained sources are outside this cleanup.
+
 ## Current checkpoint — DataToolbar in ordinary Studio — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent10b0640 is remote-verified. Root remains
