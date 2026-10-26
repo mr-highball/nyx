@@ -74,9 +74,11 @@ type
     Captures stale after accepted scalar/state/resource commands, including an
     A-to-B-to-A sequence. The finite per-view serial refuses at High(Integer).
 
-    This contract changes accepted scalar projection. Target adapters supply
-    synchronization; unfinished physical composition/draft reset remains a
-    separate target admission responsibility, never permission to edit widgets. }
+    Target adapters add weak physical draft/readiness proof to this same port
+    and synchronize only explicitly reset roles. Active composition or capture
+    refuses before installation; opaque unsupported input faces refuse too.
+    A standalone model owner may omit physical hooks. This contract grants no
+    borrowed widget or permission to manipulate an adapter's controls. }
   INyxInputCommands = interface(IInterface)
     ['{3F54CE67-72E2-4E90-AF67-82C72C19A339}']
     function GetConnected: Boolean;

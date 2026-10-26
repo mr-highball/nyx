@@ -56,10 +56,13 @@ remains required. The combined legacy renderer suite does not pass its private
 300-second watchdog, while flushed checks show continuing authoring rebuilds.
 Preserve that failure and stop marker-only reruns; it is not proof of an editor
 freeze. Typed live scalar capture/reset now joins the existing state/query
-owners:42 native checks pass with a complete clean heap; matching browser
-assertions compile only. Selective physical draft reset/composition readiness,
-the scoped coordinator port and real Search/Sort/Clear remain next. No original
-criterion closes, and no replacement state/query engine or source gate follows.
+owners:45 native model checks pass, alongside29/29 actual native control checks
+at configured1280/390,85 binding/104 state regressions and four complete clean
+heaps. Selective draft reset and composition readiness now use the same port;
+matching browser consumers compile only. Next is the scoped coordinator port
+directly into useful Search/Sort/Clear, without another generic proof variant.
+No original criterion closes, and no replacement state/query engine or source
+gate follows.
 
 On return, the complete W1 finish line is one maintained service-monitor workflow through
 ordinary Studio and its own saved/generated application, at wide and compact

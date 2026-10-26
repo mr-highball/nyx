@@ -48,19 +48,30 @@ The first runtime preparation now supplies `TNyxLiveBindings.Inputs` through
 [`nyx.binding.inputs`](../src/nyx.binding.inputs.pas). Its bounded typed capture
 and reset join the existing prepared state/query publication, preserving exact
 roles, binding/domain/interaction admission, retirement and committed observer
-failure semantics. The public portable consumer passes42 native checks with a
+failure semantics. The public portable consumer passes45 native checks with a
 complete clean heap; matching browser assertions compile only. It also repairs
 ordinary unbound numeric commands and state-bound minimum changes that could
 otherwise bypass numeric range validation. Authored defaults remain unchanged.
 
-This is model/state/query admission, not the complete visible Clear operation.
-Next qualify selective physical draft reset and composition readiness through
-the adapters, then expose only reserved roles through the common coordinator
-scope. An INyxTextInput.Value setter still configures its node; it is not a live
-command. Keep original coordinator GUIDs and independent role ownership. Real
-Search/Sort/Clear, the Clear part, ordinary independent instances and every
-original criterion below remain open. [Bindings](../docs/bindings.md#coordinated-accepted-input-values)
-documents the new foundation and its limits.
+Both adapters now expose that port through View.Inputs with copied physical
+draft/readiness proof and exact-role synchronization. Native real-control checks
+pass29/29 at configured1280/390 widths, including same-value draft reset,
+unrelated draft preservation, supplementary Unicode, joined query publication,
+late composition, genuine end and owner disposal. Four complete clean heaps
+cover these,45 model checks and85 binding/104 state regressions. Matching browser
+consumers compile only; synthetic Win32 input is not hardware/assistive parity.
+The regression also repairs accepted read-only phase signals during a prepared
+input candidate while retaining the mutation busy guard.
+
+This remains a foundation for the complete visible Clear operation. Next expose
+only reserved roles through the common coordinator scope, then deliver the Clear
+part and real Search/Sort/Clear on independent List/Table instances. After two
+foundation batches without complete criterion closure, reassessment keeps this
+same useful Q1 outcome and stops further generic input-proof variants. An
+INyxTextInput.Value setter configures its node; it is not a live command. Keep
+original coordinator GUIDs and caller event/query ownership. Every original
+criterion below remains open. [Bindings](../docs/bindings.md#coordinated-accepted-input-values)
+documents the public foundation and qualification limits.
 
 Capture the admitted baseline and the canonical session observation for each
 command. Before mutation, verify the exact view/store/source, mounted generation,

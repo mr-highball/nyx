@@ -25,6 +25,7 @@ program nyx_input_publication_tests;
 
 uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.composition, nyx.codec,
   nyx.state, nyx.binding, nyx.binding.types, nyx.binding.inputs, nyx.publication,
+  nyx.behavior,
   nyx.collections, nyx.collections.query, nyx.collections.query.session,
   nyx.collections.view, nyx.collections.view.types
   {$ifdef PAS2JS}, Web{$endif};
@@ -301,6 +302,7 @@ var
   LAuthored: TNyxText;
   LRef: TNyxControlRef;
   LRefused: Boolean;
+  LSignal: TNyxDispatch;
 begin
   F := TFixture.Create;
   P := nil;
@@ -366,6 +368,26 @@ begin
     S := nil;
     Check(F.Live.RefreshReady and (F.Root.Find('absent').Props.IndexOfName('value') < 0),
       'abandonment releases state/view without creating an empty value');
+    S := F.Inputs.Prepare(F.Capture, [NyxInputValue(NyxControl('search'), '')]);
+    LSignal := F.Live.Signal(F.Root.Find('search'), ntCompositionStart);
+    Check((LSignal.Info.Trigger = ntCompositionStart) and not LSignal.Changed and
+      (F.Root.Find('search').Prop('value') = 'Ada'),
+      'read-only phase signals observe accepted input while reset admission is pending');
+    LRefused := False;
+    try
+      F.Live.Edit(F.Root.Find('search'), 'A reentrant mutation');
+    except
+      on ENyxState do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and F.State.Busy and
+      (F.State.GetValue(NyxTextState('query')) = 'Ada'),
+      'read-only signals do not grant reentrant mutation during prepared admission');
+    S.Retire;
+    S := nil;
+    Check(F.Live.RefreshReady, 'signal observation leaves ordinary stage retirement usable');
     F.Reject := True;
     Refuse(F.Inputs, F.Capture, [NyxInputValue(NyxControl('search'), '')],
       'existing state validator can refuse the scalar candidate');

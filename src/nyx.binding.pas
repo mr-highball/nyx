@@ -54,6 +54,21 @@ type
     semantics. The callback must not retain its borrowed node or retire its view. }
   TNyxBindingValueSync = function(ANode: TNyxNode): Boolean of object;
 
+  { Trusted synchronous adapter observation of exact physical input roles.
+    The returned weak proof owns copied facts, never widgets or a renderer.
+    CheckReady must be a pure UI-thread observation: no callbacks, allocation
+    of controls, scheduling or model mutation. It refuses composition, capture,
+    changed drafts and retired/replaced physical generations. Nil refuses an
+    installed hook's capture; an absent hook retains model-only operation. }
+  TNyxBindingInputCapture = function(const AControls: array of TNyxControlRef):
+    INyxPublicationReadiness of object;
+
+  { Synchronize one already committed reset through ordinary target Sync.
+    Only the supplied roles may force same-accepted-value draft restoration;
+    unrelated drafts retain their normal baselines. The borrowed receiver may
+    fail after publication, following the existing committed-notification rule. }
+  TNyxBindingInputSync = procedure(const AControls: array of TNyxControlRef) of object;
+
   { A live view borrows its realized root and runtime store. Neither may be
     freed before this coordinator. Activate owns one subscription token; Retire
     disconnects its authority before the renderer frees controls/model/state.
@@ -78,6 +93,8 @@ type
     FSubscription: TNyxStateSubscription;
     FOnSync: TNyxBindingSync;
     FOnValueSync: TNyxBindingValueSync;
+    FOnInputCapture: TNyxBindingInputCapture;
+    FOnInputSync: TNyxBindingInputSync;
     FCommandRoot: TNyxNode;
     FCommandProjected: Boolean;
     FResourcePort: IInterface; { managed revocable weak receiver, never owns this view }
@@ -87,6 +104,8 @@ type
     function GetRetired: Boolean;
     procedure SetOnSync(AValue: TNyxBindingSync);
     procedure SetOnValueSync(AValue: TNyxBindingValueSync);
+    procedure SetOnInputCapture(AValue: TNyxBindingInputCapture);
+    procedure SetOnInputSync(AValue: TNyxBindingInputSync);
     function GetRefreshReady: Boolean;
     function GetCommandActive: Boolean;
     function GetResourcePublicationBusy: Boolean;
@@ -175,6 +194,11 @@ type
       callback contract. Other property effects, state bindings or unsupported
       target controls always use OnSync. Neither callback owns its receiver. }
     property OnValueSync: TNyxBindingValueSync read FOnValueSync write SetOnValueSync;
+    { Adapter-only physical admission and selective reset notification. Both
+      borrow their receiver and revoke during Retire. Install these together
+      before exposing Inputs; ordinary model-only consumers may leave them nil. }
+    property OnInputCapture: TNyxBindingInputCapture read FOnInputCapture write SetOnInputCapture;
+    property OnInputSync: TNyxBindingInputSync read FOnInputSync write SetOnInputSync;
   end;
 
 { Shared projection/admission for renderers, application validators and tests.
@@ -269,6 +293,7 @@ type
     FContracts: array of TNyxText;
     FBindings: array of TInputBindingSpecs;
     FPolicies: array of TNyxInteractionPolicy;
+    FPhysical: INyxPublicationReadiness;
     procedure CheckIndex(AIndex: Integer);
     procedure RequireCurrent(AOwner: TNyxLiveBindings);
   public
@@ -297,6 +322,7 @@ type
     FBefore: TNyxNode;
     FCandidate: TNyxNode;
     FStateStage: INyxPreparedPublication;
+    FResetControls: array of TNyxControlRef;
     FValidated: Boolean;
     FInstalled: Boolean;
     FNotified: Boolean;
@@ -1113,6 +1139,8 @@ begin
   end;
   FOnSync := nil;
   FOnValueSync := nil;
+  FOnInputCapture := nil;
+  FOnInputSync := nil;
   LSubscription := FSubscription;
   FSubscription := nil;
   LSubscription.Free;
@@ -1204,6 +1232,26 @@ begin
     raise ENyxState.Create('Retired live bindings cannot acquire a value callback');
   end;
   FOnValueSync := AValue;
+end;
+
+procedure TNyxLiveBindings.SetOnInputCapture(AValue: TNyxBindingInputCapture);
+begin
+
+  if Assigned(AValue) and GetRetired then
+  begin
+    raise ENyxState.Create('Retired live bindings cannot acquire physical input admission');
+  end;
+  FOnInputCapture := AValue;
+end;
+
+procedure TNyxLiveBindings.SetOnInputSync(AValue: TNyxBindingInputSync);
+begin
+
+  if Assigned(AValue) and GetRetired then
+  begin
+    raise ENyxState.Create('Retired live bindings cannot acquire physical input synchronization');
+  end;
+  FOnInputSync := AValue;
 end;
 
 function TNyxLiveBindings.GetRefreshReady: Boolean;
@@ -1625,10 +1673,17 @@ end;
 function TNyxLiveBindings.Signal(ANode: TNyxNode;
   ATrigger: TNyxTrigger): TNyxDispatch;
 begin
+  { A prepared input reset borrows FCommandRoot for prospective validation.
+    Read-only physical phase signals must still observe the accepted FRoot:
+    composition can start before the final fence and must be able to revoke
+    that admission without becoming a native message exception. Signal cannot
+    execute click/change actions. All writes keep Command's existing busy guard;
+    an ordinary entered control command still refuses signal reentry. }
 
   if not NyxIsRuntimeTrigger(ATrigger) or (ATrigger in [ntClick, ntChange]) or
     (FSubscription = nil) or not FSubscription.Connected or
-    (FCommandRoot <> nil) or (ANode = nil) or (FRoot.Find(ANode.ID) <> ANode) then
+    ((FCommandRoot <> nil) and not (FResourcePreparation is TBindingInputPreparation)) or
+    (ANode = nil) or (FRoot.Find(ANode.ID) <> ANode) then
   begin
     raise ENyxState.Create('Signals require an accepted mounted control and notification trigger');
   end;

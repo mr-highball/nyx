@@ -206,9 +206,31 @@ and independent input/query notifications still receive their attempt. Reset
 does not synthesize Click or Change callbacks. These commands run on the UI
 thread, with the existing finite view observation serial.
 
-This foundation currently qualifies accepted model/state/query publication:
-42 native checks pass with a clean heap, and the same browser assertions compile.
-Physical draft reset, composition readiness, the scoped coordinator facet and
-DataToolbar adoption remain in [runtime02](../TODO/NS-3_data-toolbar_02.md).
-Ordinary adapter synchronization is retained; this API alone does not establish
-that an unchanged accepted value replaces an unfinished widget draft.
+An active browser/LCL renderer exposes the same port as `View.Inputs`, adding
+physical input admission and synchronization. It returns nil while unmounted or
+in design mode. Its capture owns copied draft text and a weak view proof; it
+retains no widget or renderer. Newer typing, active composition/pointer capture,
+replacement and disposal refuse before installation. Unsupported opaque input
+faces refuse instead of claiming to reset an inaccessible control.
+
+A successful reset invalidates only the requested fields' accepted-value
+baselines before ordinary Sync. This restores a requested unfinished draft even
+when its accepted value is unchanged, while unrelated drafts retain their usual
+baselines. Custom updaters and target failures keep the existing committed
+notification semantics. A model-only binding owner may omit the physical hooks.
+
+Read-only phase signals continue observing the accepted root while an input
+preparation owns a prospective candidate. They grant no write reentry. This lets
+a newly starting composition invalidate that preparation without raising an
+internal native message exception. A genuine composition end restores readiness.
+Prepared groups remain synchronous UI-thread work; callers must not hold them
+across an event-loop yield.
+
+Current native evidence includes29 real-control checks at each configured width
+1280/390,45 model/query checks and85 binding/104 state regressions, with four
+complete clean heaps. Synthetic Win32 messages qualify the composition bridge;
+they do not prove hardware IME, assistive or other-widgetset behavior. Both
+matching browser consumers compile only. The scoped coordinator facet and useful
+DataToolbar Search/Sort/Clear application remain in
+[runtime02](../TODO/NS-3_data-toolbar_02.md); this foundation does not accept that
+task or its broader prerequisites.

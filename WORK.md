@@ -9,6 +9,55 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Physical typed input publication — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent6ddfb3f is remote-verified. Root remains SOLO.
+This is batch eight since user-facing reprioritization. DataToolbar02 Q1 remains
+the useful outcome; no original criterion, task or completion credit closes.
+
+Browser/LCL View.Inputs now exposes the same live binding port with copied
+physical draft/readiness proof. It retains only the existing weak presentation
+receiver and exact core port, never widgets or a renderer. Newer typing,
+composition, pointer capture, replacement and retirement refuse before grouped
+installation. Notification invalidates only explicitly reset fields' baselines
+before ordinary Sync. Same-value reset restores that draft; unrelated drafts,
+caller bindings, accepted defaults and ordinary event policy remain intact.
+
+A real regression exposed read-only composition notification refusing while an
+input preparation borrows FCommandRoot. Native02/03 do NOT pass their unchanged
+120-second bounds and retain incomplete heaps. Direct negative04 reproduces the
+exact Signal exception with a complete clean heap. Signal now reads the accepted
+root during input preparation without granting Command mutation reentry. The
+fixture also uses typed numeric defaults, qualified Web.document, proper native
+composition-end idle delivery and a message-exception collector. Optional flushed
+receipts diagnose actual phases without relaxing assertions or runtime bounds.
+The private runner now records process completion before fallible heap inspection;
+02's capture failure and recovered process-family absence remain retained.
+
+Current05 passes29 native real-control checks at each configured1280/390 width,
+45 model/query checks and85 binding/104 state regressions. Four complete clean
+heaps report82258/82230/217022/1631048 allocated and freed blocks,0 unfreed.
+Both browser consumers compile/stage only. No observing route was retried. There
+are0 owned warnings and14 installed pas2js Classes warning occurrences. Tests use
+own-window synthetic input, not hardware IME, assistive or other-widgetset proof;
+the query owner is real but this is not the assembled DataToolbar/List journey.
+
+Private data-toolbar-input-controls-05 holds the receipts, staged browser pages
+and2390 primary pins.2386 remain byte-identical. Four post-qualification clarity
+edits are reviewed: purpose-comment clarification, purposeful local aliases and
+trailing blank-line cleanup. Exact inverse hashes reconstruct qualified bytes;
+no implementation, assertion, phase or deadline changed. All readers are terminal.
+All new private files, artifacts and process TEMP/TMP remain on external scratch.
+
+After two foundation batches without complete original criterion closure,
+reassessment keeps the same Q1 outcome: add only the needed optional coordinator
+input facet with copied initial-value discovery and claimed-role weak commands,
+then immediately deliver typed intent, Clear and real Search/Sort/Clear on
+independent List/Table instances. Stop further generic input-proof variants.
+Original coordinator GUIDs, event/query ownership, parent/parity dependencies,
+Studio/save/generated adoption and every original criterion remain required;
+these are acceptance dependencies, not a source-scope approval gate.
+
 ## Current checkpoint — Typed live input/query publication — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent7292f9a is remote-verified. Root remains SOLO.

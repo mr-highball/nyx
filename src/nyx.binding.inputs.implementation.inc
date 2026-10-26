@@ -170,6 +170,16 @@ begin
     end;
     FPolicies[LIndex] := NyxInteractionPolicy(LNode);
   end;
+
+  if Assigned(AOwner.FOnInputCapture) then
+  begin
+    FPhysical := AOwner.FOnInputCapture(AControls);
+
+    if FPhysical = nil then
+    begin
+      raise ENyxState.Create('The target refused physical input capture');
+    end;
+  end;
   RequireCurrent(AOwner);
 end;
 
@@ -286,6 +296,11 @@ begin
   begin
     raise ENyxState.Create('Input owner retired during capture admission');
   end;
+
+  if FPhysical <> nil then
+  begin
+    FPhysical.CheckReady;
+  end;
 end;
 
 { Compare canonical owned projection facts without constructing another tree.
@@ -384,8 +399,10 @@ begin
   AOwner.FResourcePreparation := Self;
   FBefore := AOwner.FRoot.CloneRuntimeProjection;
   FCandidate := AOwner.FRoot.CloneRuntimeProjection;
+  SetLength(FResetControls, Length(AValues));
   for LIndex := 0 to High(AValues) do
   begin
+    FResetControls[LIndex].ID := AValues[LIndex].Control.ID;
     LSlot := -1;
     for LPrevious := 0 to LCapture.GetCount - 1 do
     begin
@@ -565,7 +582,15 @@ begin
 
   if LOwner <> nil then
   begin
-    LOwner.Synchronize;
+
+    if Assigned(LOwner.FOnInputSync) then
+    begin
+      LOwner.FOnInputSync(FResetControls);
+    end
+    else
+    begin
+      LOwner.Synchronize;
+    end;
   end;
 end;
 

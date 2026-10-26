@@ -106,6 +106,7 @@ uses
   nyx.binding,
   nyx.binding.lifetime,
   nyx.binding.types,
+  nyx.binding.inputs,
   nyx.collections.view,
   nyx.collections.selection,
   nyx.collections.bindings,
@@ -653,6 +654,12 @@ type
     { Consumes the coordinator's fully admitted value-only synchronization plan.
       Unsupported/custom/content-sized fields retain ordinary complete Sync. }
     function SyncEditedValue(ANode: TNyxNode): Boolean;
+    { Physical observations contain copied drafts and weak generation proof.
+      Selective notification uses normal Sync, never a global forced restore. }
+    function CaptureInputTargets(const AControls: array of TNyxControlRef): INyxPublicationReadiness;
+    procedure SyncInputTargets(const AControls: array of TNyxControlRef);
+    function InputStamp(const AID: TNyxText): TNyxText;
+    function GetInputs: INyxInputCommands;
     { Reparent admitted ordinary hosts without replacing controls/bindings.
       Preserve every supported editing range and suppress incidental events. }
     procedure ArrangeControls(AFormer: TNyxNode);
@@ -936,6 +943,9 @@ type
     property Presentations: INyxPresentationView read GetPresentationView;
     property DesignMode: Boolean read FDesignMode;
     property State: TNyxState read FState;
+    { Runtime-only weak commands over the existing binding owner, with physical
+      draft/composition admission. Nil while unmounted or in design mode. }
+    property Inputs: INyxInputCommands read GetInputs;
     { Reload copied resource values/locale in this mounted view. No saved
       defaults or sibling runtime is changed; invalid data preserves controls. }
     { Explicit immutable application context persists across Render/navigation
@@ -1085,6 +1095,23 @@ type
     Owner: TNyxLCLRenderer;
     constructor Create(AOwner: TNyxLCLRenderer);
     procedure Request;
+  end;
+  { Copied physical draft facts and the existing weak presentation receiver.
+    The exact core port proves the mounted generation without retaining its
+    widgets, renderer, document or retirement shell. Readiness invokes no user
+    handlers and refuses newer physical input before any grouped installation. }
+  TLCLInputProof = class(TInterfacedObject, INyxPublicationReadiness)
+  private
+    FLease: INyxCoordinatorRefreshTarget;
+    FReceiver: TNyxLCLCoordinatorRefresh;
+    FCommands: INyxInputCommands;
+    FControls: array of TNyxControlRef;
+    FDrafts: TNyxStrings;
+  public
+    constructor Create(AOwner: TNyxLCLRenderer;
+      const AControls: array of TNyxControlRef);
+    destructor Destroy; override;
+    procedure CheckReady;
   end;
   { One immutable target lease. The existing cancellation token remains safe
     after its mount retires, with no native pointer or renderer back reference. }
@@ -7322,6 +7349,8 @@ begin
       LCandidate.FLiveBindings.OnSync := LCandidate.Sync;
       RequireAttempt;
       LCandidate.FLiveBindings.OnValueSync := LCandidate.SyncEditedValue;
+      LCandidate.FLiveBindings.OnInputCapture := LCandidate.CaptureInputTargets;
+      LCandidate.FLiveBindings.OnInputSync := LCandidate.SyncInputTargets;
       RequireAttempt;
       LCandidate.FPanel := TNyxLogicalScrollBox.Create(nil);
       TNativePanelGenerationLease.CreateFor(LCandidate.FPanel, LCandidate.FGeneration);
@@ -7818,6 +7847,8 @@ begin
     RequireAttempt;
     FLiveBindings.OnSync := Sync;
     FLiveBindings.OnValueSync := SyncEditedValue;
+    FLiveBindings.OnInputCapture := CaptureInputTargets;
+    FLiveBindings.OnInputSync := SyncInputTargets;
     FCollectionBindings := LCandidate.FCollectionBindings;
     RequireAttempt;
     LCandidate.FCollectionBindings := nil;
@@ -14635,5 +14666,7 @@ begin
   end;
   raise ENyxModel.Create('Canvas workspace identity is unavailable');
 end;
+
+{$I nyx.render.lcl.inputs.inc}
 
 end.
