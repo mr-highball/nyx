@@ -284,7 +284,10 @@ begin
     NyxField('typeAhead', LTypeAhead),
     NyxField('inspection', NyxObject([
       NyxField('declared', NyxData(ASpec.InspectionPolicy.Defined)),
-      NyxField('policy', ASpec.InspectionPolicy.ToData)]))]);
+      NyxField('policy', ASpec.InspectionPolicy.ToData)])),
+    NyxField('draftRecovery', NyxObject([
+      NyxField('declared', NyxData(ASpec.DraftRecoveryPolicy.Defined)),
+      NyxField('policy', ASpec.DraftRecoveryPolicy.ToData)]))]);
   { Capability reads are opt-in and share the existing column page/byte budget.
     Serialize the admitted policy itself: disabled filtering must not erase an
     explicit operator set. Saved declarations remain useful on non-table views;

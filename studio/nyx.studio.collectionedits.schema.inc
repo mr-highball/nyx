@@ -53,6 +53,8 @@ var
   LSpecTwelve: TNyxText;
   LSpecThirteen: TNyxText;
   LInspection: TNyxText;
+  LRecovery: TNyxText;
+  LSpecFourteen: TNyxText;
   LColumnFormat: TNyxText;
   LTableQuery: TNyxText;
   LColumnQuery: TNyxText;
@@ -316,6 +318,13 @@ begin
     '"removedIdentityLimit":{"type":"integer","minimum":0,"maximum":2147483647}},' +
     '"required":["version","follow","maximumPausedBytes","removedIdentityLimit"],' +
     '"additionalProperties":false}';
+  LRecovery := '{"type":"object","properties":{"version":{"const":1},' +
+    '"maximumEntries":{"type":"integer","minimum":0,"maximum":2147483647},' +
+    '"maximumPayloadBytes":{"type":"integer","minimum":0,"maximum":2147483647},' +
+    '"warningEntries":{"type":"integer","minimum":0,"maximum":2147483647},' +
+    '"warningTextBytes":{"type":"integer","minimum":0,"maximum":2147483647}},' +
+    '"required":["version","maximumEntries","maximumPayloadBytes","warningEntries","warningTextBytes"],' +
+    '"additionalProperties":false}';
   LSpecEleven := StringReplace(LSpecNine, '"const":9', '"const":11', []);
   LSpecEleven := StringReplace(LSpecEleven, '"editable":{"type":"boolean"}',
     '"editable":{"type":"boolean"},"textPresentation":{"anyOf":[{"type":"null"},' + LColumnText + ']}', []);
@@ -343,6 +352,11 @@ begin
     '"inspection":' + LInspection + ',"parent":{"type":"string"}', []);
   LSpecThirteen := StringReplace(LSpecThirteen, '"workbench","tablePresentation"]',
     '"workbench","tablePresentation","inspection"]', []);
+  LSpecFourteen := StringReplace(LSpecThirteen, '"const":13', '"const":14', []);
+  LSpecFourteen := StringReplace(LSpecFourteen, '"inspection":' + LInspection,
+    '"inspection":{"anyOf":[{"type":"null"},' + LInspection + ']},"draftRecovery":' + LRecovery, []);
+  LSpecFourteen := StringReplace(LSpecFourteen, '"tablePresentation","inspection"]',
+    '"tablePresentation","inspection","draftRecovery"]', []);
   Delete(LSpecTwelve, Length(LSpecTwelve), 1);
   LSpecTwelve := LSpecTwelve + ',"allOf":[{"properties":{"columns":{"contains":{' +
     '"properties":{"alignment":{"type":"object"}},"required":["alignment"]}}}}]}';
@@ -365,7 +379,7 @@ begin
     '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
     LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ',' +
-    LSpecNine + ',' + LSpecTen + ',' + LSpecEleven + ',' + LSpecTwelve + ',' + LSpecThirteen + ']}';
+    LSpecNine + ',' + LSpecTen + ',' + LSpecEleven + ',' + LSpecTwelve + ',' + LSpecThirteen + ',' + LSpecFourteen + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"',
@@ -434,6 +448,18 @@ begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
       CCollectionActions[LAction] + '"},"key":{"type":"string","minLength":1}';
     LRequired := '"op","action","key"';
+
+    if LAction in [scaDraftRecovery, scaDefaultDraftRecovery] then
+    begin
+      LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
+      LRequired := LRequired + ',"baseline"';
+
+      if LAction = scaDraftRecovery then
+      begin
+        LProperties := LProperties + ',"draftRecovery":' + LRecovery;
+        LRequired := LRequired + ',"draftRecovery"';
+      end;
+    end;
 
     if LAction in [scaInspection, scaDefaultInspection] then
     begin
@@ -628,6 +654,10 @@ begin
   end;
   { Append new named commands after former intent branches as well, preserving
     existing discovery order. Runtime semantic dispatch remains name-based. }
+  Branch('"op":{"const":"draft-recovery"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"enum":["list","table","tree"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LRecovery + ']}',
+    '"op","owner","key","projection","policy"');
   Branch('"op":{"const":"inspection"},"owner":{"type":"string","minLength":1},' +
     '"key":{"type":"string","minLength":1},"projection":{"enum":["list","table","tree"]},' +
     '"policy":{"oneOf":[{"type":"null"},' + LInspection + ']}',

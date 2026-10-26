@@ -3,6 +3,30 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Parked checkpoint and reassessment — 2026-10-25:**
+
+The thirteenth original L1 checkpoint supplies saved recovery defaults through
+typed fluent authoring, descriptor version14, source generation/reading, ordinary
+Studio controls and revision-aware semantic edits. Absent policy retains older
+descriptor bytes. Each new mount initializes an independent journal; later
+runtime overrides survive refresh. Reset removes only the authored choice.
+The public demo's explicit128-entry choice is checked at actual mount startup.
+
+The existing maintained batch passes41 jobs,17 complete clean native heaps,
+18 authoring,39 Studio/semantic,242 native MCP discovery and28 mounted recovery
+checks. Native handwritten/generated examples pass at wide/compact sizes; both
+full Studios compile. Browser interaction, observed Studio input, native Tree
+inline recovery, accessibility/visual quality and measured whole-workload L2
+budgets remain open. WORK.md retains exact receipts and failed predecessors.
+
+Repeated bounded implementations have not closed the complete original L1
+criteria. The user's new priority stops this expansion and returns to
+[workbench03 W1](NS-3_control-usefulness_03.md), then the ranked user-facing
+[queue](README.md#current-priority--useful-everyday-workflows--2026-10-25).
+Return here for the existing end-to-end acceptance and L2 workload, rather than
+another equivalent recovery-policy variant. All original criteria, blockers and
+the consecutive no-closure history remain intact; no task/credit is accepted.
+
 **Description:**
 
 A process/service debugger, log viewer or monitoring dashboard needs more than a

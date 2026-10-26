@@ -3,6 +3,40 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+## Current priority — useful everyday workflows — 2026-10-25
+
+The user requested a return to high-value, user-facing backlog work. This order
+supersedes historical next-task notes below. Root remains in single-agent mode.
+Use the existing task identities and acceptance criteria; this reprioritization
+adds no tasks, credit, dependency waivers or approval gates.
+
+| Order | User outcome | Existing owners and next useful delivery |
+| --- | --- | --- |
+| 1 — Now | A table people can comfortably work in | [Workbench03 W1](NS-3_control-usefulness_03.md): use visible column controls to resize, reorder, hide/reveal, pin and reset; keep editing/filtering usable; configure in Studio, reopen the project and run its own generated application. Then W2 finishes full-value inspection, copy and explicit filtered export. |
+| 2 — Next | A comfortable Studio workspace | [Studio authoring](NS-4_studio-authoring_01.md): qualify the everyday select → inspect → edit → preview journey, discoverable Properties/Events and source expansion, with usable canvas space at desktop/compact widths. Address concrete missing controls, overflow and lost panel state found along that journey. Retain the [splitter regression](NS-2_split-platform_02.md) as an explicit input/resize check. |
+| 3 | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), then [authoring01](NS-3_data-toolbar_01.md): type Search, change Sort and Clear back to the authored baseline on independent List/Table instances; configure, Save/Open and run the generated result. Follow the coordinator prerequisites; existing native progress does not waive their open acceptance gates. |
+| 4 | A useful connected Tool Canvas | [Logic components](NS-3_logic-components_01.md) and [Tool Canvas](NS-3_tool-canvas_01.md): finish one ordinary control event → JSON prettify → save journey using visible ports and existing host services, including cancellation and reopen/generated behavior. Follow the existing graph prerequisites and reuse the implemented parts. |
+
+The immediate W1 finish line is one maintained service-monitor workflow through
+ordinary Studio and its own saved/generated application, at wide and compact
+sizes. Reuse current evidence and tools; qualify real native/browser interaction
+separately from compilation. Fix failures on that path rather than adding another
+internal policy variant. If a required observing surface is unavailable, record
+that exact gate and continue an independent native or authoring part of this
+same outcome. Do not create a substitute browser route around a security refusal.
+
+[Live inspection04](NS-3_control-usefulness_04.md) is parked after the saved
+recovery-default checkpoint. Resume its remaining browser/Tree/pressure and
+measured L2 work at its recorded return point, or fix a demonstrated prerequisite
+of the queue above. Resolver and source-reference expansion remain deferred.
+After two batches without original criterion closure, reassess the useful
+delivery and remaining checks before expanding implementation again.
+
+## Historical progress and task context
+
+The notes below retain evidence and task navigation. Their old next-task wording
+does not override the current priority above or the current entry in WORK.md.
+
 [Splitter snap-back02](NS-2_split-platform_02.md) has a reproduced and repaired
 native release defect, qualified by 145 injected Win32/LCL checks and a clean
 heap. The original external context, physical input and browser interaction

@@ -775,6 +775,28 @@ begin
         Continue;
       end;
 
+      if SameText(LMethod, 'DraftRecovery') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkDraftRecoveryPolicy) then
+        begin
+          Fail('DraftRecovery requires a typed NyxDraftRecoveryPolicy');
+        end;
+        Result.CollectionView := Result.CollectionView.DraftRecovery(LArgs[0].DraftRecoveryPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultDraftRecovery') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('UseDefaultDraftRecovery takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultDraftRecovery;
+        Continue;
+      end;
+
       if SameText(LMethod, 'Inspection') then
       begin
 

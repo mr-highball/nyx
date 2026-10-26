@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current execution priority (2026-10-25): deliver observable everyday workflows
+from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-workflows--2026-10-25):
+table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a
+useful connected Tool Canvas. Saved live-inspection recovery defaults are a
+checkpoint; its remaining scale/parity work is parked with an explicit return
+path. The resolver remains deferred. Existing scope, prerequisites, original
+acceptance criteria and pending completion assessments are unchanged.
+
 Scoped [table filtering and sorting](TODO/DONE/NS-3_control-usefulness_02.md)
 is accepted on2026-10-22 for its seven unchanged criteria: typed policies,
 ordinary native/browser interaction, query ownership, safe editing/events and
@@ -13,8 +21,9 @@ with all readers joined. [WORK](WORK.md#table-filtering-and-sorting-accepted)
 records exact evidence and reuse/target limits. This accepts that packet only;
 components01's full breadth/quality and NS-2 parity/performance remain open.
 NS-3 completion and expanded-scope weights stay Pending assessment; no percentage
-or duplicate credit is assigned. Next core packet is
-[table workbench03 W1](TODO/NS-3_control-usefulness_03.md), column arrangement.
+or duplicate credit is assigned. The current queue begins with
+[table workbench03 W1](TODO/NS-3_control-usefulness_03.md), column arrangement
+through ordinary Studio and its own generated application.
 
 The 2026-10-18 scope addition includes an optional
 [browser-local pas2js WEB compiler](TODO/NS-5_browser-compiler_01.md) and a

@@ -4387,6 +4387,11 @@ begin
         LLines.Add('  nyx.collections.inspection,');
       end;
 
+      if NeedsCollectionDraftRecoveryUnits(ADocument) then
+      begin
+        LLines.Add('  nyx.collections.recovery.policy,');
+      end;
+
       if ADocument.HasCollectionPaging then
       begin
         LLines.Add('  nyx.collections.paging,');

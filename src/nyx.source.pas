@@ -770,6 +770,7 @@ uses
   nyx.collections.query.controls,
   nyx.collections.paging,
   nyx.collections.inspection,
+  nyx.collections.recovery.policy,
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens,
@@ -907,7 +908,8 @@ type
     vkWorkbenchCopyAction, vkWorkbenchCopyFields,
     vkWorkbenchLineEnding, vkTablePresentationPolicy, vkColumnTextPolicy,
     vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
-    vkColumnVerticalAlignment, vkTableHeaderPolicy, vkInspectionPolicy, vkCollectionFollow);
+    vkColumnVerticalAlignment, vkTableHeaderPolicy, vkInspectionPolicy, vkCollectionFollow,
+    vkDraftRecoveryPolicy);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -988,6 +990,7 @@ type
     ColumnAlignmentPolicy: TNyxColumnAlignmentPolicy;
     CollectionPaging: TNyxCollectionPaging;
     InspectionPolicy: TNyxCollectionInspectionPolicy;
+    DraftRecoveryPolicy: TNyxCollectionDraftRecoveryPolicy;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
     KanbanIntent: TNyxKanbanIntent;
@@ -3773,7 +3776,7 @@ begin
           (LName = 'newnyxmenubardefinition') or (LName = 'nyxmenubar') or
           (LName = 'nyxpopover') or (LName = 'nyxtypeahead') or
           (LName = 'nyxcolumnsizing') or (LName = 'nyxcollectionpaging') or
-          (LName = 'nyxinspectionpolicy') or
+          (LName = 'nyxinspectionpolicy') or (LName = 'nyxdraftrecoverypolicy') or
           (LName = 'nyxcolumnquery') or (LName = 'nyxtablequery') then
         begin
           Exit(MenuConstructor(LName));

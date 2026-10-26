@@ -9,6 +9,82 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current priority — user-facing backlog delivery — 2026-10-25
+
+The user requested a realignment with high-value user-facing tasks. Root remains
+SOLO. The ranked queue in TODO/README.md now supersedes old next-task notes:
+workbench03 W1, everyday Studio workspace usability, DataToolbar runtime/authoring,
+then a useful connected Tool Canvas. Existing task identities, prerequisites,
+original acceptance and pending completion assessments remain unchanged.
+
+Active task: NS-3_control-usefulness_03, W1, serving original criteria1/5/6/7.
+Deliverable: an ordinary service-monitor column workflow through actual Studio,
+Save/Open and its own exact saved/generated application at wide/compact widths.
+Exercise visible resize/reorder/hide/reveal/pin/reset, filtering/editing and
+independent instances. Use existing contracts, examples, harnesses and applicable
+evidence. Actual target interaction, observed Studio behavior and visual quality
+remain distinct from compilation. Fix concrete failures along that path; do not
+start another header/policy/profiling variant to substitute for this outcome.
+
+Stop/switch condition: finish this bounded W1 journey and assess the original
+criteria. After two additional batches without criterion closure, reassess the
+delivery and exact remaining checks. Earlier workbench/geometry no-closure
+history is preserved, not reset by this return. An unavailable browser surface
+leaves its gate open; independent native/authoring work can continue. Do not
+bypass the prior browser URL-policy refusal. No new host or service is started.
+
+Live inspection04 is parked after the saved recovery-default checkpoint below.
+Return for its existing native Tree, browser/Studio observation, pressure UX,
+accessibility/visual and measured mounted L2 requirements, or for a demonstrated
+prerequisite of the active queue. No equivalent recovery-policy expansion is
+queued. Full resolver/source-reference expansion stays deferred. Reprioritization
+itself closes no original criterion and moves no task to DONE.
+
+## Parked checkpoint — saved draft recovery defaults — 2026-10-25
+
+Parent e09925c is remote-verified. This thirteenth original04 L1 checkpoint is
+PROGRESS, with no complete original criterion closed. Repeated bounded work has
+not established the complete L1 journey. Task-flow reassessment now changes the
+next action to the user's ranked delivery queue above, rather than adding a
+fourteenth internal recovery variant. All04/03 and collection02/03 gates remain.
+
+The public scalar-only recovery policy declares entry/payload admission and
+entry/text warning thresholds. Defaults remain256 entries/16MiB payload and
+64 entries/8MiB draft-text warnings. Zero limits prevent new storage; zero
+warnings disable only that warning. Absent declarations preserve older wire;
+version14 retains declared policy and nullable inspection. New mounts initialize
+independent journals once. Refresh preserves explicit runtime overrides. The
+public example deliberately declares128 entries, checked on actual mounting.
+
+Crafted Pascal and source reading, ordinary collapsed Studio controls, paired
+history, reusable overrides and revision-aware semantic edits share this policy.
+Local/effective semantic reads expose scalar defaults, never running journals
+or recovered text. Apply/reset changes only its own field and rejects stale
+baselines and unfinished source. No current user project was changed.
+
+Private authored-recovery-01/maintained-06 passes41 jobs with17 complete clean
+native heaps and1971 unchanged compiler/orchestration inputs. Models pass18
+authoring,39 Studio/semantic,242 actual native MCP discovery,58 presentation,
+37 journal,28 mounted recovery,106 streaming and59 legacy save checks. Public
+native inspection passes89 handwritten1280 and88 at each other width/variant;
+recovery controls pass57 per wide/compact handwritten/generated variant. Actual
+native streamed-file checks remain24. Cold full native LCL/pas2js Studio builds
+pass in studio-build-05 with817 unchanged inputs. Both receipt groups are terminal,
+with no failed/timed-out jobs. Source pins were rechecked before this handoff.
+
+Maintained01 caught the omitted recovery field in spec Copy and a duplicated
+serializer branch during source preparation. Maintained02 caught the missing
+source factory registry entry;03 caught the private transport member allowlist;
+04/05 caught outdated discovery branch/descriptor cardinalities. Those failures
+remain retained. Final checks preserve all earlier assertions and add the new
+typed paths; compiler SDK sources are unchanged. Browser applications compile
+and stage only: no browser interaction, physical input, AT/pixels or full parity
+is inferred. Existing browser-policy rejection has not been retried or bypassed.
+
+The maintained jobs and both full Studio compilers are finished; there are no
+current source readers. No helper, listener, cleanup or recurring job is started.
+The final source checkpoint and backlog edits are ready for the existing branch.
+
 ## Current checkpoint — bounded streaming export for reviewed drafts — 2026-10-25
 
 Parentd925840 is remote-verified. Previous goal turn: PROGRESS. Root remains

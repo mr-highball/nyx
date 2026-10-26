@@ -240,6 +240,46 @@ begin
   Result := False;
 end;
 
+function NeedsCollectionDraftRecoveryUnits(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+
+  function ContainsRecovery(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.DraftRecoveryPolicy.Defined;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := ContainsRecovery(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if ContainsRecovery(ADocument.Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if ContainsRecovery(ADocument.Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 function NeedsColumnFormatUnits(ADocument: TNyxDocument): Boolean;
 var
   LIndex: Integer;
@@ -887,6 +927,15 @@ begin
       LLine := 'ncfLastVisible';
     end;
     ALines.Add(AIndent + '      .Follow(' + LLine + '))');
+  end;
+
+  if LView.DraftRecoveryPolicy.Defined then
+  begin
+    ALines.Add(AIndent + '    .DraftRecovery(NyxDraftRecoveryPolicy');
+    ALines.Add(AIndent + '      .Entries(' + IntToStr(LView.DraftRecoveryPolicy.MaximumEntries) + ')');
+    ALines.Add(AIndent + '      .PayloadBytes(' + IntToStr(LView.DraftRecoveryPolicy.MaximumPayloadBytes) + ')');
+    ALines.Add(AIndent + '      .WarnEntries(' + IntToStr(LView.DraftRecoveryPolicy.WarningEntries) + ')');
+    ALines.Add(AIndent + '      .WarnTextBytes(' + IntToStr(LView.DraftRecoveryPolicy.WarningTextBytes) + '))');
   end;
 
   if LView.HasTypeAhead then

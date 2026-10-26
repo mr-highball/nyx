@@ -14,11 +14,24 @@ begin
 end;
 
 function TNyxCollectionMountBase.GetDraftRecovery: INyxCollectionDraftRecovery;
+var
+  LWriter: INyxCollectionDraftRecoveryWriter;
+  LBudget: INyxCollectionDraftRecoveryBudget;
 begin
 
   if FRecoveryWriter = nil then
   begin
-    FRecoveryWriter := NewNyxCollectionDraftRecovery;
+    LWriter := NewNyxCollectionDraftRecovery;
+
+    if FRecoveryPolicy.Defined then
+    begin
+      LWriter.Recovery.ConfigureWarnings(NyxDraftRecoveryWarnings
+        .Entries(FRecoveryPolicy.WarningEntries).Bytes(FRecoveryPolicy.WarningTextBytes));
+      LBudget := NyxCollectionDraftRecoveryBudget(LWriter.Recovery);
+      LBudget.ConfigureLimits(NyxDraftRecoveryLimits
+        .Entries(FRecoveryPolicy.MaximumEntries).PayloadBytes(FRecoveryPolicy.MaximumPayloadBytes));
+    end;
+    FRecoveryWriter := LWriter;
 
     if (FView = nil) or FDisconnecting then
     begin

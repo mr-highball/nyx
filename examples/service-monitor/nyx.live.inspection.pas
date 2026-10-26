@@ -82,7 +82,7 @@ uses SysUtils, nyx.text, nyx.types, nyx.controls, nyx.state, nyx.behavior, nyx.r
   nyx.scheduler, nyx.collections, nyx.collections.inspection, nyx.service.monitor,
   nyx.collections.feedback.controls, nyx.collections.query, nyx.collections.query.session,
   nyx.publication, nyx.linq, nyx.linq.collections, nyx.linq.publication,
-  nyx.bytes, nyx.bytes.sources, nyx.files;
+  nyx.bytes, nyx.bytes.sources, nyx.files, nyx.collections.recovery.policy;
 
 type
   { Worker-safe replay transformation owns only a copied stable reference and
@@ -206,7 +206,8 @@ begin
       'Pause the upper table, then advance the sample feed. The lower table stays live.').Done;
     Result.Find(ServiceTableID).Configure.Height(160).Done;
     Result.Find(ServiceTableID).Binds.Collection(
-      Result.Find(ServiceTableID).CollectionView.Inspection(NyxInspectionPolicy)).Done;
+      Result.Find(ServiceTableID).CollectionView.Inspection(NyxInspectionPolicy)
+        .DraftRecovery(NyxDraftRecoveryPolicy.Entries(128))).Done;
     LCommands := NewNyxRow('inspection-commands');
     LPage.Insert(2, LCommands);
     LCommands.Configure.Gap(8).Done;

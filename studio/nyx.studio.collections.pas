@@ -70,6 +70,9 @@ type
   { Independent optional logical axes in the existing layout draft owner.
     Transport column positions never replace the captured full typed field. }
   TNyxStudioColumnAlignmentField = (scafHorizontal, scafVertical);
+  { Closed input roles distinguish finite capacity from advisory text-only
+    warnings. Widget text remains a draft until exact Integer admission. }
+  TNyxStudioDraftRecoveryField = (srfEntries, srfPayloadBytes, srfWarningEntries, srfWarningTextBytes);
   { A copied presentation receipt, never design data/history. Exact command
     context prevents a later project, selection or revision from inheriting its
     report. Rows/controls/stores are not retained. Last preview describes its
@@ -138,6 +141,9 @@ const
   NyxStudioQueryEditorID = 'inspector-collection-query';
   NyxStudioLayoutEditorID = 'inspector-collection-layout';
   NyxStudioInspectionEditorID = 'inspector-collection-inspection';
+  NyxStudioDraftRecoveryEditorID = 'inspector-collection-recovery';
+  NyxStudioDraftRecoveryApplyID = 'inspector-collection-recovery-apply';
+  NyxStudioDraftRecoveryDefaultID = 'inspector-collection-recovery-default';
   NyxStudioInspectionApplyID = 'inspector-collection-inspection-apply';
   NyxStudioInspectionDefaultID = 'inspector-collection-inspection-default';
 
@@ -148,6 +154,12 @@ function NyxStudioInspectionFieldID(AField: TNyxStudioInspectionField): TNyxText
 function CaptureNyxStudioInspection(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Current selected binding/schema qualifies the complete recovery form. This
+  captures authored scalar intent only, never a live journal or pending draft. }
+function CaptureNyxStudioDraftRecovery(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
+function NyxStudioDraftRecoveryFieldID(AField: TNyxStudioDraftRecoveryField): TNyxText;
 
 { Stable source IDs locate ordinary inspector parts. Metadata independently
   qualifies their exact owner, typed field and accepted schema/binding. }
@@ -271,6 +283,7 @@ uses
   nyx.collections.columns,
   nyx.collections.paging,
   nyx.collections.inspection,
+  nyx.collections.recovery.policy,
   nyx.collections.selection,
   nyx.collections.query.editor,
   nyx.collections.query.policy,
@@ -300,7 +313,8 @@ const
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
      'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
-     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection');
+     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection',
+     'draft-recovery', 'default-draft-recovery');
   CQueryEditor = NyxStudioQueryEditorID;
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
@@ -359,6 +373,7 @@ begin
   Add(CQueryEditor);
   Add(NyxStudioLayoutEditorID);
   Add(NyxStudioInspectionEditorID);
+  Add(NyxStudioDraftRecoveryEditorID);
 end;
 
 function NyxStudioQueryPolicyFormID(AColumn: Integer): TNyxText;
@@ -468,6 +483,7 @@ end;
 {$include nyx.studio.collections.presentation.inc}
 {$include nyx.studio.collections.alignment.inc}
 {$include nyx.studio.collections.inspection.inc}
+{$include nyx.studio.collections.recovery.inc}
 
 procedure AddLayoutPolicyForms(AParent: TNyxNode; const AOwner: TNyxText;
   const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
@@ -1111,6 +1127,8 @@ begin
     LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
     AddInspectionForm(LPanel, ASession.SelectedID, LSchema, LSpec,
       NyxCollectionProjectionForNode(AProjection), LLocked);
+    AddDraftRecoveryForm(LPanel, ASession.SelectedID, LSchema, LSpec,
+      NyxCollectionProjectionForNode(AProjection), LLocked);
     LQueryEditor := NewNyxQueryEditor(NyxStudioQueryEditorID,
       NyxControl(ASession.SelectedID), LSchema, LSpec);
     LQueryEditor.Configure.Enabled(not LLocked).Done;
@@ -1687,6 +1705,11 @@ var
   end;
 
 begin
+
+  if CaptureNyxStudioDraftRecovery(ASession, AButton, AShellRoot, APending, AEdit) then
+  begin
+    Exit(True);
+  end;
 
   if CaptureNyxStudioInspection(ASession, AButton, AShellRoot, APending, AEdit) then
   begin

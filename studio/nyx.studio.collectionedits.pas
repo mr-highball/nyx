@@ -30,7 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.state, nyx.contract, nyx.collections,
   nyx.collections.registry,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
-  nyx.typeahead, nyx.collections.inspection,
+  nyx.typeahead, nyx.collections.inspection, nyx.collections.recovery.policy,
   nyx.collections.query.policy, nyx.collections.arrangement, nyx.formatting,
   nyx.collections.workbench.policy, nyx.collections.presentation, nyx.collections.alignment,
   nyx.studio.authoring,
@@ -45,7 +45,8 @@ type
   TNyxCollectionChangeKind = (ccDefine, ccField, ccRemoveField, ccAppend,
     ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery, ccTypeAhead,
     ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat,
-    ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment, ccInspection);
+    ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment, ccInspection,
+    ccDraftRecovery);
 
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
@@ -74,6 +75,8 @@ type
       values contain no paused snapshot, receiver, viewport or runtime state. }
     FInspectionDeclared: Boolean;
     FInspection: TNyxCollectionInspectionPolicy;
+    FDraftRecoveryDeclared: Boolean;
+    FDraftRecovery: TNyxCollectionDraftRecoveryPolicy;
     { Command policies own only scalar flags and an operator set. An explicit
       default object stays declared; only the separate reset factories clear
       presence. No baseline, projected node or runtime query owner is retained. }
@@ -177,6 +180,14 @@ function NyxSetCollectionInspection(const AOwner: TNyxStudioBindingOwner;
 { Clear only inspection's raw declaration, retaining an independent local
   effective binding. Restoring reusable inheritance is a separate operation. }
 function NyxUseDefaultCollectionInspection(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection): TNyxCollectionChange;
+{ Partial authored recovery edits replay against the current ordered candidate.
+  They preserve inspection/layout choices and acquire no runtime draft authority. }
+function NyxSetCollectionDraftRecovery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxCollectionDraftRecoveryPolicy): TNyxCollectionChange;
+{ Clears raw recovery presence only, leaving the effective binding local. }
+function NyxUseDefaultCollectionDraftRecovery(const AOwner: TNyxStudioBindingOwner;
   const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection): TNyxCollectionChange;
 { Replace only a table's authored filter/sort command policy. Each ordered
   candidate derives the current schema/binding baseline internally and reuses
@@ -309,7 +320,8 @@ const
      'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
      'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench',
      'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
-     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection');
+     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection',
+     'draft-recovery', 'default-draft-recovery');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -569,6 +581,31 @@ begin
   Result := NyxUseDefaultCollectionInspection(AOwner, AKey, AProjection);
   Result.FInspectionDeclared := True;
   Result.FInspection := APolicy;
+end;
+
+function NyxUseDefaultCollectionDraftRecovery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection): TNyxCollectionChange;
+begin
+
+  if not (AProjection in [cpList, cpTable, cpTree]) then
+  begin
+    raise ENyxCollection.Create('Recovery requires a valid collection projection');
+  end;
+  Result := Default(TNyxCollectionChange);
+  Result.FKind := ccDraftRecovery;
+  Result.FOwner := NyxBindingOwner(AOwner.ID);
+  Result.FKey := NyxCollection(AKey.Name);
+  Result.FProjection := AProjection;
+end;
+
+function NyxSetCollectionDraftRecovery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxCollectionDraftRecoveryPolicy): TNyxCollectionChange;
+begin
+  APolicy.Validate;
+  Result := NyxUseDefaultCollectionDraftRecovery(AOwner, AKey, AProjection);
+  Result.FDraftRecoveryDeclared := True;
+  Result.FDraftRecovery := APolicy;
 end;
 
 function NyxUseDefaultCollectionTableQuery(const AOwner: TNyxStudioBindingOwner;
@@ -940,7 +977,7 @@ begin
               LProjected.Free;
             end;
           end;
-        ccInspection:
+        ccInspection, ccDraftRecovery:
           begin
             SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
             LProjected := LSession.SelectedProjection;
@@ -950,11 +987,23 @@ begin
                 not LProjected.CollectionView.Defined or
                 (LProjected.CollectionView.Key.Name <> LChange.FKey.Name) then
               begin
-                raise ENyxCollection.Create('Inspection edit requires the exact bound collection');
+                raise ENyxCollection.Create('Policy edit requires the exact bound collection');
               end;
               LSpec := LProjected.CollectionView;
 
-              if LChange.FInspectionDeclared then
+              if LChange.FKind = ccDraftRecovery then
+              begin
+
+                if LChange.FDraftRecoveryDeclared then
+                begin
+                  LSpec := LSpec.DraftRecovery(LChange.FDraftRecovery);
+                end
+                else
+                begin
+                  LSpec := LSpec.UseDefaultDraftRecovery;
+                end;
+              end
+              else if LChange.FInspectionDeclared then
               begin
                 LSpec := LSpec.Inspection(LChange.FInspection);
               end
@@ -1498,6 +1547,16 @@ begin
   Add('action', NyxData(CCollectionActions[LIntent.Action]));
   Add('key', NyxData(LIntent.Key.Name));
 
+  if LIntent.Action in [scaDraftRecovery, scaDefaultDraftRecovery] then
+  begin
+    Add('baseline', NyxData(LIntent.DraftRecoveryBaseline));
+
+    if LIntent.Action = scaDraftRecovery then
+    begin
+      Add('draftRecovery', LIntent.DraftRecovery.ToData);
+    end;
+  end;
+
   if LIntent.Action in [scaInspection, scaDefaultInspection] then
   begin
     Add('baseline', NyxData(LIntent.InspectionBaseline));
@@ -1694,6 +1753,20 @@ begin
   LIntent.Key := NyxCollection(AData.Field('key').AsText);
   LAllowed := '|op|action|key|';
   LRequired := 3;
+
+  if LIntent.Action in [scaDraftRecovery, scaDefaultDraftRecovery] then
+  begin
+    LAllowed := LAllowed + 'baseline|';
+    Inc(LRequired);
+    LIntent.DraftRecoveryBaseline := AData.Field('baseline').AsText;
+
+    if LIntent.Action = scaDraftRecovery then
+    begin
+      LAllowed := LAllowed + 'draftRecovery|';
+      Inc(LRequired);
+      LIntent.DraftRecovery := TNyxCollectionDraftRecoveryPolicy.FromData(AData.Field('draftRecovery'));
+    end;
+  end;
 
   if LIntent.Action in [scaInspection, scaDefaultInspection] then
   begin
@@ -2045,6 +2118,20 @@ begin
             NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
             NyxField('policy', LPolicy)]);
         end;
+      ccDraftRecovery:
+        begin
+          LPolicy := NyxNull;
+
+          if LChange.FDraftRecoveryDeclared then
+          begin
+            LPolicy := LChange.FDraftRecovery.ToData;
+          end;
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('draft-recovery')),
+            NyxField('owner', NyxData(LChange.FOwner.ID)),
+            NyxField('key', NyxData(LChange.FKey.Name)),
+            NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
+            NyxField('policy', LPolicy)]);
+        end;
       ccInspection:
         begin
           LPolicy := NyxNull;
@@ -2261,6 +2348,26 @@ begin
         NyxCollection(LData.Field('key').AsText),
         ReadProjection(LData.Field('projection')),
         TNyxCollectionQuery.FromData(LData.Field('query')));
+      Continue;
+    end;
+
+    if LOp = 'draft-recovery' then
+    begin
+      Fields(LData, '|op|owner|key|projection|policy|', 5);
+
+      if LData.Field('policy').Kind = ndNull then
+      begin
+        LChanges[LIndex] := NyxUseDefaultCollectionDraftRecovery(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText), ReadProjection(LData.Field('projection')));
+      end
+      else
+      begin
+        LChanges[LIndex] := NyxSetCollectionDraftRecovery(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText), ReadProjection(LData.Field('projection')),
+          TNyxCollectionDraftRecoveryPolicy.FromData(LData.Field('policy')));
+      end;
       Continue;
     end;
 

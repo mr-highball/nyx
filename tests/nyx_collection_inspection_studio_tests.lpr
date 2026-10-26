@@ -25,6 +25,7 @@ program nyx_collection_inspection_studio_tests;
 
 uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.contract,
   nyx.data, nyx.codec, nyx.codegen, nyx.collections, nyx.collections.inspection,
+  nyx.collections.recovery.policy,
   nyx.collections.view.types, nyx.collections.query, nyx.collections.query.editor,
   nyx.studio.projects, nyx.studio.session, nyx.studio.authoring,
   nyx.studio.collectionintent, nyx.studio.collectionedits, nyx.studio.collections,
@@ -327,9 +328,190 @@ begin
   end;
 end;
 
+procedure RecoveryInspector;
+var
+  LSession: TNyxStudioSession;
+  LShell: TNyxNode;
+  LProjection: TNyxNode;
+  LEdit: TNyxStudioDesignEdit;
+  LBefore: TNyxText;
+  LApplied: TNyxText;
+  LRefused: Boolean;
+
+  procedure Rebuild;
+  begin
+    FreeAndNil(LShell);
+    LShell := TNyxNode.Create(nkPage, 'recovery-inspector');
+    LProjection := LSession.SelectedProjection;
+    try
+      AddNyxCollectionBindingPanel(LShell, LSession, LProjection);
+    finally
+      LProjection.Free;
+    end;
+  end;
+
+  function Capture(AReset: Boolean = False): Boolean;
+  var
+    LID: TNyxText;
+  begin
+    LID := NyxStudioDraftRecoveryApplyID;
+
+    if AReset then
+    begin
+      LID := NyxStudioDraftRecoveryDefaultID;
+    end;
+    Result := CaptureNyxStudioLayout(LSession, LShell.Find(LID), LShell,
+      Default(TNyxStudioPendingDesign), LEdit);
+  end;
+
+begin
+  LSession := TNyxStudioSession.Create(Seed);
+  LShell := nil;
+  try
+    LSession.Select('reader-list');
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    Rebuild;
+    Check((LShell.Find(NyxStudioDraftRecoveryEditorID).Count = 8) and
+      (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore), 'opening recovery defaults preserves absent raw policy and project');
+    LShell.Find(NyxStudioDraftRecoveryFieldID(srfEntries)).Configure.Value('0').Done;
+    LShell.Find(NyxStudioDraftRecoveryFieldID(srfPayloadBytes)).Configure.Value('2147483647').Done;
+    LShell.Find(NyxStudioDraftRecoveryFieldID(srfWarningEntries)).Configure.Value('0').Done;
+    Check(Capture and (LEdit.Collection.Action = scaDraftRecovery) and
+      (LEdit.Collection.DraftRecovery.MaximumPayloadBytes = High(Integer)),
+      'complete recovery form captures exact zero/maximum scalars');
+    Check(TNyxStudioCollectionIntent.FromData(LEdit.Collection.ToData).SameIntent(LEdit.Collection),
+      'recovery form intent round-trips its exact closed descriptor and baseline');
+    Check(ReadNyxCollectionPatch(NyxCollectionPatch([NyxCollectionIntentChange(
+      NyxBindingOwner('reader-list'), LEdit.Collection)]).ToData).Count = 1,
+      'semantic form transport preserves recovery policy and baseline');
+    LSession.ApplyCollectionIntent(LEdit.Collection);
+    LApplied := EncodeNyxProject(LSession.ProjectSnapshot);
+    Check((Pos('.DraftRecovery(NyxDraftRecoveryPolicy', LSession.Source) > 0) and
+      (LSession.Document.Find('reader-list').CollectionView.DraftRecoveryPolicy.MaximumEntries = 0),
+      'ordinary recovery admission pairs typed generated source and design');
+    LRefused := False;
+    try
+      Capture;
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(LSession.ProjectSnapshot) = LApplied),
+      'stale recovery form refuses without publication');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore, 'one recovery Undo restores exact paired source/design');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LApplied, 'recovery Redo restores the exact accepted pair');
+    Rebuild;
+    LShell.Find(NyxStudioDraftRecoveryFieldID(srfEntries)).Configure.Value('unfinished').Done;
+    Check(Capture(True), 'default recovery reset ignores unfinished inactive input');
+    LSession.ApplyCollectionIntent(LEdit.Collection);
+    Check(not LSession.Document.Find('reader-list').CollectionView.DraftRecoveryPolicy.Defined,
+      'reset removes recovery presence without replacing other binding choices');
+    Rebuild;
+    LSession.SetSourceDraft(LSession.Source + #10 + '{ pending recovery code }');
+    LRefused := False;
+    try
+      Capture(True);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'pending Pascal refuses recovery reset without discarding code');
+  finally
+    LShell.Free;
+    LSession.Free;
+  end;
+end;
+
+procedure RecoverySemantic;
+var
+  LAgent: TNyxAgentSession;
+  LRequest: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LDocument: TNyxDocument;
+  LBefore: TNyxText;
+  LApplied: TNyxText;
+  LRevision: Integer;
+  LRefused: Boolean;
+begin
+  LAgent := TNyxAgentSession.Create(Seed);
+  try
+    LBefore := EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home'));
+    LRevision := LAgent.Revision;
+    LRequest := NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LRevision)), NyxField('operationId', NyxData('recovery-group')),
+      NyxField('changes', NyxCollectionPatch([
+        NyxSetCollectionInspection(NyxBindingOwner('reader-list'), NyxCollection('readers'), cpList,
+          NyxInspectionPolicy.PausedBytes(4096)),
+        NyxSetCollectionDraftRecovery(NyxBindingOwner('reader-list'), NyxCollection('readers'), cpList,
+          NyxDraftRecoveryPolicy.Entries(7).PayloadBytes(8192).WarnTextBytes(0))]).ToData)]);
+    LAgent.Call('nyx_collections', 'Recovery test', LRequest);
+    LApplied := EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home'));
+    LAgent.Call('nyx_collections', 'Recovery test', LRequest);
+    Check(EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home')) = LApplied,
+      'exact recovery operation retry is idempotent');
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LAgent.Revision, 'home').Design);
+    try
+      Check((LDocument.Find('reader-list').CollectionView.DraftRecoveryPolicy.MaximumEntries = 7) and
+        (LDocument.Find('reader-list').CollectionView.InspectionPolicy.MaximumPausedBytes = 4096),
+        'ordered partial recovery preserves preceding same-owner inspection edits');
+    finally
+      LDocument.Free;
+    end;
+    LRefused := False;
+    try
+      LAgent.Call('nyx_collections', 'Recovery test', NyxObject([
+        NyxField('mode', NyxData('apply')), NyxField('expectedRevision', NyxData(LRevision)),
+        NyxField('operationId', NyxData('stale-recovery')),
+        NyxField('changes', NyxCollectionPatch([NyxUseDefaultCollectionDraftRecovery(
+          NyxBindingOwner('reader-list'), NyxCollection('readers'), cpList)]).ToData)]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home')) = LApplied),
+      'stale semantic recovery revision cannot reset accepted defaults');
+    LAgent.Call('nyx_history', 'Recovery test', NyxObject([
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('recovery-undo')), NyxField('direction', NyxData('undo'))]));
+    Check(EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home')) = LBefore,
+      'one semantic Undo restores the complete grouped policy pair');
+    LAgent.Call('nyx_collections', 'Recovery test', NyxObject([
+      NyxField('mode', NyxData('apply')), NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('recovery-local')),
+      NyxField('changes', NyxCollectionPatch([NyxSetCollectionDraftRecovery(
+        NyxBindingOwner('first-records'), NyxCollection('readers'), cpList,
+        NyxDraftRecoveryPolicy.Entries(0))]).ToData)]));
+    LReply := LAgent.Call('nyx_collections', 'Recovery test', NyxObject([
+      NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('first-records')),
+      NyxField('limit', NyxData(1))]));
+    Check(LReply.Field('local').Field('draftRecovery').Field('declared').AsBoolean and
+      (LReply.Field('effective').Field('draftRecovery').Field('policy').Field('maximumEntries').AsInteger = 0),
+      'bounded semantic recovery read exposes independent local reusable defaults');
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LAgent.Revision, 'home').Design);
+    try
+      Check(not LDocument.Find('definition-list').CollectionView.DraftRecoveryPolicy.Defined,
+        'local recovery authoring preserves the reusable definition');
+    finally
+      LDocument.Free;
+    end;
+  finally
+    LAgent.Free;
+  end;
+end;
+
 begin
   try
     Inspector;
+    RecoveryInspector;
+    RecoverySemantic;
     Semantic;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-inspection-studio-checks', IntToStr(GChecks));

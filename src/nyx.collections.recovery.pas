@@ -232,7 +232,7 @@ function NewNyxCollectionDraftRecovery: INyxCollectionDraftRecoveryWriter;
 
 implementation
 
-uses SysUtils, nyx.bytes, nyx.text, nyx.state;
+uses SysUtils, nyx.bytes, nyx.text, nyx.state, nyx.collections.recovery.policy;
 
 type
   { Owns exact review data and an inert frame marker; no target/source/callback
@@ -368,8 +368,8 @@ function NyxDraftRecoveryWarnings: TNyxDraftRecoveryWarnings;
 begin
   Result := Default(TNyxDraftRecoveryWarnings);
   Result.FDefined := True;
-  Result.FEntries := 64;
-  Result.FBytes := 8 * 1024 * 1024;
+  Result.FEntries := NyxDefaultDraftRecoveryWarningEntries;
+  Result.FBytes := NyxDefaultDraftRecoveryWarningTextBytes;
 end;
 
 function NewNyxDraftRecoveryFrame: TNyxDraftRecoveryFrame;
@@ -396,8 +396,8 @@ function NyxDraftRecoveryLimits: TNyxDraftRecoveryLimits;
 begin
   Result := Default(TNyxDraftRecoveryLimits);
   Result.FDefined := True;
-  Result.FEntries := 256;
-  Result.FPayloadBytes := 16 * 1024 * 1024;
+  Result.FEntries := NyxDefaultDraftRecoveryEntries;
+  Result.FPayloadBytes := NyxDefaultDraftRecoveryPayloadBytes;
 end;
 
 procedure TNyxDraftRecoveryLimits.Validate;

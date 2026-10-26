@@ -3,6 +3,23 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Current priority — 2026-10-25:**
+
+The user's request for high-value user-facing work returns the active queue to
+W1. Finish the ordinary service-monitor column workflow through Studio,
+Save/Open and its own exact generated application before more header, policy or
+profiling variants. Demonstrate resize/reorder/hide/reveal/pin/reset alongside
+editing/filtering and independent instances at wide and compact sizes. Reuse
+the existing native evidence; actual browser input, observed Studio behavior
+and visual quality remain distinct acceptance checks. Address concrete failures
+encountered on this path, including geometry only when it obstructs this useful
+workflow. W2's long-value inspection, copy and filtered export follows W1.
+
+This changes the next action after the earlier repeated no-closure packets. It
+does not reset their history, weaken the seven original criteria below or grant
+completion credit. After two further batches without criterion closure, stop
+and reassess the delivery instead of extending internal variants.
+
 **Description:**
 
 The remaining measured native resize cost now has a focused

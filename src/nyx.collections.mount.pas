@@ -36,6 +36,7 @@ uses
   nyx.collections.view, nyx.collections.inspection,
   nyx.collections.position,
   nyx.collections.recovery,
+  nyx.collections.recovery.policy,
   nyx.collections.selection,
   nyx.collections.refresh,
   nyx.typeahead,
@@ -315,6 +316,9 @@ type
     FPositionState: INyxCollectionPositionState;
     FPositionStateObject: TObject; { Borrowed while FPositionState retains it. }
     FRecoveryWriter: INyxCollectionDraftRecoveryWriter;
+    { Captured authored defaults apply only when this mount creates its own
+      journal. Later runtime overrides are never reset by source refreshes. }
+    FRecoveryPolicy: TNyxCollectionDraftRecoveryPolicy;
     { Inert recovery scope persists across failed target passes and is released
       after a successful install. Journal copies retain no reference to us. }
     FRecoveryFrame: TNyxDraftRecoveryFrame;
@@ -3216,6 +3220,7 @@ begin
     raise ENyxCollection.Create('Collection mount requires a live view');
   end;
   FView := AView;
+  FRecoveryPolicy := AView.Spec.DraftRecoveryPolicy;
   FEnabled := True;
   LTable := AView.Projection = cpTable;
   FHasColumnLayout := LTable and AView.Spec.HasLayoutControls;

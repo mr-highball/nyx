@@ -61,7 +61,8 @@ begin
 
   if SameText(AName, 'NyxTypeAhead') or SameText(AName, 'NyxColumnSizing') or
     SameText(AName, 'NyxCollectionPaging') or SameText(AName, 'NyxColumnQuery') or
-    SameText(AName, 'NyxTableQuery') or SameText(AName, 'NyxInspectionPolicy') then
+    SameText(AName, 'NyxTableQuery') or SameText(AName, 'NyxInspectionPolicy') or
+    SameText(AName, 'NyxDraftRecoveryPolicy') then
   begin
     LArgs := nil;
 
@@ -93,6 +94,12 @@ begin
     begin
       Result.Kind := vkInspectionPolicy;
       Result.InspectionPolicy := NyxInspectionPolicy;
+    end;
+
+    if SameText(AName, 'NyxDraftRecoveryPolicy') then
+    begin
+      Result.Kind := vkDraftRecoveryPolicy;
+      Result.DraftRecoveryPolicy := NyxDraftRecoveryPolicy;
     end;
 
     if SameText(AName, 'NyxColumnQuery') then
@@ -265,6 +272,31 @@ begin
             begin
               Fail('Unknown table query control method');
             end;
+          end;
+        end;
+      vkDraftRecoveryPolicy:
+        begin
+          Require(1, vkInteger);
+
+          if LMethod = 'entries' then
+          begin
+            Result.DraftRecoveryPolicy := Result.DraftRecoveryPolicy.Entries(IntegerAt(0));
+          end
+          else if LMethod = 'payloadbytes' then
+          begin
+            Result.DraftRecoveryPolicy := Result.DraftRecoveryPolicy.PayloadBytes(IntegerAt(0));
+          end
+          else if LMethod = 'warnentries' then
+          begin
+            Result.DraftRecoveryPolicy := Result.DraftRecoveryPolicy.WarnEntries(IntegerAt(0));
+          end
+          else if LMethod = 'warntextbytes' then
+          begin
+            Result.DraftRecoveryPolicy := Result.DraftRecoveryPolicy.WarnTextBytes(IntegerAt(0));
+          end
+          else
+          begin
+            Fail('Unknown draft recovery policy method');
           end;
         end;
       vkInspectionPolicy:

@@ -33,7 +33,7 @@ uses
   nyx.studio.authoring, nyx.collections.columns, nyx.collections.paging,
   nyx.collections.query.policy, nyx.collections.arrangement, nyx.formatting,
   nyx.collections.workbench.policy, nyx.collections.presentation, nyx.collections.alignment,
-  nyx.collections.inspection;
+  nyx.collections.inspection, nyx.collections.recovery.policy;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -48,7 +48,8 @@ type
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection);
+    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
+    scaDraftRecovery, scaDefaultDraftRecovery);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -134,6 +135,8 @@ type
       newer declaration. Runtime pause, position and drafts are never authored. }
     Inspection: TNyxCollectionInspectionPolicy;
     InspectionBaseline: TNyxText;
+    DraftRecovery: TNyxCollectionDraftRecoveryPolicy;
+    DraftRecoveryBaseline: TNyxText;
     procedure Validate;
     function SameIntent(const AOther: TNyxStudioCollectionIntent): Boolean;
     { Strict private descriptor. Null is not an intent. Unknown/extra members,
@@ -311,7 +314,8 @@ begin
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection];
+    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
+    scaDraftRecovery, scaDefaultDraftRecovery];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
@@ -322,7 +326,8 @@ begin
     scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
     scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
     scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection];
+    scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
+    scaDraftRecovery, scaDefaultDraftRecovery];
 end;
 
 procedure TNyxStudioCollectionIntent.Validate;
@@ -330,6 +335,17 @@ var
   LKey: TNyxText;
 begin
   LKey := Key.Name;
+
+  if ((Action in [scaDraftRecovery, scaDefaultDraftRecovery]) <> (DraftRecoveryBaseline <> '')) or
+    ((Action = scaDraftRecovery) <> DraftRecovery.Defined) then
+  begin
+    raise ENyxCollection.Create('Recovery intent requires its own exact baseline and policy');
+  end;
+
+  if Action = scaDraftRecovery then
+  begin
+    DraftRecovery.Validate;
+  end;
 
   if ((Action in [scaInspection, scaDefaultInspection]) <> (InspectionBaseline <> '')) or
     ((Action = scaInspection) <> Inspection.Defined) then
@@ -542,7 +558,9 @@ begin
     (ColumnText.ToData.ToJSON = AOther.ColumnText.ToData.ToJSON) and
     (ColumnAlignment.ToData.ToJSON = AOther.ColumnAlignment.ToData.ToJSON) and
     (InspectionBaseline = AOther.InspectionBaseline) and
-    (Inspection.ToData.ToJSON = AOther.Inspection.ToData.ToJSON);
+    (Inspection.ToData.ToJSON = AOther.Inspection.ToData.ToJSON) and
+    (DraftRecoveryBaseline = AOther.DraftRecoveryBaseline) and
+    (DraftRecovery.ToData.ToJSON = AOther.DraftRecovery.ToData.ToJSON);
 
   if Result and Item.Defined then
   begin
@@ -572,6 +590,23 @@ begin
     NyxField('mode', NyxData(Ord(Mode))), NyxField('scope', NyxData(Ord(Scope))),
     NyxField('selection', NyxData(Ord(SelectionMode))),
     NyxField('projection', NyxData(Ord(Projection)))]);
+
+  if Action in [scaDraftRecovery, scaDefaultDraftRecovery] then
+  begin
+    SetLength(LFields, 12);
+    for LIndex := 0 to 10 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[11] := NyxField('baseline', NyxData(DraftRecoveryBaseline));
+
+    if Action = scaDraftRecovery then
+    begin
+      SetLength(LFields, 13);
+      LFields[12] := NyxField('draftRecovery', DraftRecovery.ToData);
+    end;
+    Result := NyxObject(LFields);
+  end;
 
   if Action in [scaInspection, scaDefaultInspection] then
   begin
@@ -816,6 +851,21 @@ begin
     end;
   end;
 
+  if AIntent.Action in [scaDraftRecovery, scaDefaultDraftRecovery] then
+  begin
+
+    if AIntent.DraftRecoveryBaseline <> NyxQueryEditorBaseline(ASchema, ASpec) then
+    begin
+      raise ENyxCollection.Create('Recovery binding/schema changed; reopen its inspector');
+    end;
+
+    if AIntent.Action = scaDraftRecovery then
+    begin
+      Exit(ASpec.DraftRecovery(AIntent.DraftRecovery));
+    end;
+    Exit(ASpec.UseDefaultDraftRecovery);
+  end;
+
   if AIntent.Action in [scaInspection, scaDefaultInspection] then
   begin
 
@@ -905,6 +955,11 @@ begin
   if ASpec.InspectionPolicy.Defined then
   begin
     Result := Result.Inspection(ASpec.InspectionPolicy);
+  end;
+
+  if ASpec.DraftRecoveryPolicy.Defined then
+  begin
+    Result := Result.DraftRecovery(ASpec.DraftRecoveryPolicy);
   end;
 
   if ASpec.HasTableQueryPolicy then
@@ -1185,19 +1240,20 @@ begin
 
   if ((Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
       scaTableLayout, scaColumnLayout, scaColumnFormat, scaTableWorkbench,
-      scaTablePresentation, scaColumnText, scaColumnAlignment, scaInspection]) and
+      scaTablePresentation, scaColumnText, scaColumnAlignment, scaInspection, scaDraftRecovery]) and
       (AData.Count <> 13)) or
     ((Result.Action in [scaDefaultTableQuery, scaDefaultColumnQuery,
       scaDefaultTableLayout, scaDefaultColumnLayout, scaDefaultColumnFormat,
       scaDefaultTableWorkbench, scaDefaultTablePresentation, scaDefaultColumnText,
-      scaDefaultColumnAlignment, scaDefaultInspection]) and
+      scaDefaultColumnAlignment, scaDefaultInspection, scaDefaultDraftRecovery]) and
       (AData.Count <> 12)) or
     (not (Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
       scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
       scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench,
       scaTablePresentation, scaDefaultTablePresentation, scaColumnText, scaDefaultColumnText,
-      scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection]) and
+      scaColumnAlignment, scaDefaultColumnAlignment, scaInspection, scaDefaultInspection,
+      scaDraftRecovery, scaDefaultDraftRecovery]) and
       (AData.Count <> 11)) then
   begin
     raise ENyxCollection.Create('Policy intent requires its exact extended descriptor');
@@ -1206,6 +1262,16 @@ begin
   if Result.Action = scaQuery then
   begin
     Result.Query := TNyxCollectionQuery.FromData(AData.Field('query'));
+  end;
+
+  if Result.Action in [scaDraftRecovery, scaDefaultDraftRecovery] then
+  begin
+    Result.DraftRecoveryBaseline := AData.Field('baseline').AsText;
+
+    if Result.Action = scaDraftRecovery then
+    begin
+      Result.DraftRecovery := TNyxCollectionDraftRecoveryPolicy.FromData(AData.Field('draftRecovery'));
+    end;
   end;
 
   if Result.Action in [scaInspection, scaDefaultInspection] then

@@ -367,6 +367,33 @@ on journal ownership, excluding active editors, host allocations and discarded
 entries independently retained by callers. They are not a process-wide memory
 or measured performance guarantee. Paused-source bounds remain separate.
 
+Saved defaults use the typed policy from `nyx.collections.recovery.policy`:
+
+```pascal
+LSpec := LSpec.DraftRecovery(NyxDraftRecoveryPolicy
+  .Entries(128)
+  .PayloadBytes(16 * 1024 * 1024)
+  .WarnEntries(64)
+  .WarnTextBytes(8 * 1024 * 1024));
+```
+
+`UseDefaultDraftRecovery` removes the authored override. Without one, the
+library uses the defaults above and preserves older descriptor bytes. A declared
+policy uses descriptor version14, including nullable inspection settings; it
+contains only scalar limits and never a runtime journal or recovered text.
+All four values are nonnegative integers. Zero entry/payload limits prevent new
+storage; zero warning values disable only that advisory threshold. Warnings
+measure draft text, while the hard payload limit includes the other text named
+above. Each newly mounted view initializes its own journal from this policy.
+Refresh does not reapply defaults over later explicit runtime configuration.
+
+Studio exposes a collapsed **Draft recovery** section beside collection
+inspection settings. Apply and Restore defaults use the same paired
+design/Pascal history as other collection edits. Bounded semantic binding reads
+expose the declared policy; grouped `draft-recovery` edits accept a policy or
+null for reset with the existing revision and baseline checks. These operations
+do not inspect or change a running application's drafts or journal limits.
+
 ```pascal
 LBudget := NyxCollectionDraftRecoveryBudget(LRecovery);
 
@@ -419,8 +446,10 @@ checks exercise real arranged Table editors through handwritten/generated apps
 at desktop/compact widths; pure and model-mounted fixtures cover exact text,
 retirement, capacity refusal/retry and failed-refresh input refusal. Browser Table/Tree recovery paths
 compile but still require actual browser execution. Native Tree inline-editor
-recovery, saved recovery policy, Studio/MCP inspection and full parity remain
-open. A compilation pass does not qualify those interactions.
+recovery and full parity remain open. Saved policy/source/Studio/semantic checks
+execute natively, including actual handwritten/generated mount initialization;
+ordinary observed Studio interaction remains a separate gate. A compilation
+pass does not qualify those interactions.
 An oversized **pending** draft is different from an already retained entry.
 `INyxCollectionPendingDraftMount.CapturePendingDraft` explicitly reads the exact
 refused physical draft without hiding it or admitting another journal entry.

@@ -26,7 +26,7 @@ program nyx_collection_recovery_mount_tests;
 uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   nyx.collections.arrangement, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.recovery, nyx.collections.inspection,
-  nyx.collections.query, nyx.collections.position
+  nyx.collections.query, nyx.collections.position, nyx.collections.recovery.policy
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -367,9 +367,52 @@ begin
     'a retained journal survives physical target disposal without retaining its authority');
 end;
 
+procedure SavedPolicy;
+var
+  LKey: TNyxCollectionRef;
+  LStore: INyxCollection;
+  LView: INyxCollectionView;
+  LMount: INyxCollectionMount;
+  LTarget: TRecoveryTarget;
+  LJournal: INyxCollectionDraftRecovery;
+  LBudget: INyxCollectionDraftRecoveryBudget;
+  LSaved: TNyxText;
+begin
+  LKey := NyxCollection('saved-recovery');
+  LStore := NewNyxCollection(LKey, NyxCollectionSchema.Text(NyxTextField('name'), ''), [
+    NyxCollectionItem(NyxItem(LKey, 'reader')).WithValue(NyxTextField('name'), 'Original')]);
+  LView := NewNyxCollectionView(LStore, NyxCollectionView(LKey)
+    .Column(NyxTextField('name'), 'Name', cmEditable)
+    .DraftRecovery(NyxDraftRecoveryPolicy.Entries(0).PayloadBytes(0)
+      .WarnEntries(0).WarnTextBytes(0)), cpTable);
+  LSaved := LView.Spec.ToData.ToJSON;
+  LTarget := TRecoveryTarget.Create(LView);
+  LMount := LTarget;
+  LTarget.Activate;
+  LJournal := NyxCollectionDraftRecovery(LMount);
+  LBudget := NyxCollectionDraftRecoveryBudget(LJournal);
+  Check((LBudget.CaptureBudget.Limits.MaximumEntries = 0) and
+    (LBudget.CaptureBudget.Limits.MaximumPayloadBytes = 0),
+    'a fresh mount consumes independent saved recovery limits before its first capture');
+  LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(2).PayloadBytes(8192));
+  LStore.Update(NyxCollectionItem(NyxItem(LKey, 'reader')).WithValue(NyxTextField('name'), 'Updated'));
+  LMount.Refresh;
+  Check((LBudget.CaptureBudget.Limits.MaximumEntries = 2) and
+    (LView.Spec.ToData.ToJSON = LSaved), 'source/explicit refresh preserves caller runtime overrides and saved defaults');
+  LMount.Disconnect;
+  LTarget := TRecoveryTarget.Create(LView);
+  LMount := LTarget;
+  LTarget.Activate;
+  LBudget := NyxCollectionDraftRecoveryBudget(NyxCollectionDraftRecovery(LMount));
+  Check(LBudget.CaptureBudget.Limits.MaximumEntries = 0,
+    'a replacement mount initializes its own journal from saved defaults, not the former runtime override');
+  LMount.Disconnect;
+end;
+
 begin
   try
     Run;
+    SavedPolicy;
     PressureChecks;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-recovery-mount-checks', IntToStr(GChecks));

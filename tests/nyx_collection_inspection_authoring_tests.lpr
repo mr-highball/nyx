@@ -26,7 +26,7 @@ program nyx_collection_inspection_authoring_tests;
 uses SysUtils, nyx.text, nyx.data, nyx.state, nyx.model, nyx.controls,
   nyx.types, nyx.codec, nyx.codegen, nyx.source, nyx.collections,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.inspection,
-  nyx.collections.paging, nyx.collections.query
+  nyx.collections.paging, nyx.collections.query, nyx.collections.recovery.policy
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
 var
@@ -181,9 +181,77 @@ begin
   end;
 end;
 
+procedure Recovery;
+var
+  LPolicy: TNyxCollectionDraftRecoveryPolicy;
+  LSpec: TNyxCollectionViewSpec;
+  LRead: TNyxCollectionViewSpec;
+  LData: TNyxDataValue;
+  LRefused: Boolean;
+  LDocument: TNyxDocument;
+  LCandidate: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LPage: INyxPage;
+  LSaved: TNyxText;
+  LSource: TNyxText;
+begin
+  LPolicy := NyxDraftRecoveryPolicy.Entries(0).PayloadBytes(High(Integer))
+    .WarnEntries(0).WarnTextBytes(17);
+  Check(TNyxCollectionDraftRecoveryPolicy.FromData(LPolicy.ToData).ToData.ToJSON =
+    LPolicy.ToData.ToJSON, 'recovery maximum/zero/default presence round-trips exactly');
+  LSpec := NyxCollectionView(NyxCollection('recoverable')).Column(NyxTextField('name'), 'Name');
+  LSaved := LSpec.ToData.ToJSON;
+  LRead := LSpec.DraftRecovery(NyxDraftRecoveryPolicy).UseDefaultDraftRecovery;
+  Check(LRead.ToData.ToJSON = LSaved, 'recovery reset restores exact old descriptor bytes');
+  LSpec := LSpec.DraftRecovery(LPolicy);
+  LData := LSpec.ToData;
+  LRead := TNyxCollectionViewSpec.FromData(LData);
+  Check((LData.Field('version').AsInteger = 14) and (LData.Count = 15) and
+    not LRead.InspectionPolicy.Defined and (LData.Field('inspection').Kind = ndNull) and
+    (LRead.DraftRecoveryPolicy.ToData.ToJSON = LPolicy.ToData.ToJSON),
+    'recovery-only v14 preserves absence of unrelated inspection defaults');
+  LRefused := False;
+  try
+    LPolicy := TNyxCollectionDraftRecoveryPolicy.FromData(TNyxDataValue.ParseJSON(
+      '{"version":1,"maximumEntries":-1,"maximumPayloadBytes":0,"warningEntries":0,"warningTextBytes":0}'));
+  except
+    on Exception do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LPolicy.MaximumPayloadBytes = High(Integer)),
+    'invalid recovery admission preserves an existing caller value');
+  LDocument := TNyxDocument.Create;
+  LWorkspace := TNyxSourceWorkspace.Create;
+  LCandidate := nil;
+  try
+    LDocument.Collections.Define(LSpec.Key, NyxCollectionSchema.Text(NyxTextField('name'), ''), [
+      NyxCollectionItem(NyxItem(LSpec.Key, 'reader')).WithValue(NyxTextField('name'),
+        TNyxText('Unfinished 🌙') + #0)]);
+    LPage := NewNyxPage('recovery');
+    LDocument.AddPage(LPage);
+    LPage.Add(NewNyxList('recovery-list').Binds.Collection(LSpec).Done);
+    LSaved := TNyxCodec.Encode(LDocument);
+    LSource := LWorkspace.Render(LDocument);
+    Check((Pos('.DraftRecovery(NyxDraftRecoveryPolicy', LSource) > 0) and
+      (Pos('.WarnTextBytes(17)', LSource) > 0) and
+      (Pos('nyx.collections.recovery.policy,', LSource) > 0),
+      'generated recovery defaults use typed fluent names and their public unit');
+    LCandidate := LWorkspace.Candidate(LDocument, LSource);
+    Check(TNyxCodec.Encode(LCandidate) = LSaved,
+      'source reading recreates exact recovery/default absence and supplementary/NUL data');
+  finally
+    LCandidate.Free;
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+
 begin
   try
     Run;
+    Recovery;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-inspection-authoring-checks', IntToStr(GChecks));
     {$else}

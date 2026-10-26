@@ -75,7 +75,13 @@ same runtime file options.
 This demo passes its exact inspected mount separately from the inert journal;
 Close releases that command authority before application disposal.
 The public document declares inspection defaults through
-`.Inspection(NyxInspectionPolicy)`. Ordinary mounting initializes independent
+`.Inspection(NyxInspectionPolicy)`. The saved example also declares
+`.DraftRecovery(NyxDraftRecoveryPolicy.Entries(128))` from
+`nyx.collections.recovery.policy`, deliberately below the library's 256-entry
+default. Its remaining limits use library defaults. Each mount starts with its
+own journal; explicit runtime changes survive refresh. Studio's Draft recovery
+section can change or reset the saved policy without changing a running journal.
+Ordinary mounting initializes independent
 views from those saved values; attaching feed callbacks preserves a caller's
 already configured runtime override. Generated Pascal uses the same policy.
 

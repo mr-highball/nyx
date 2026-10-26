@@ -17,6 +17,7 @@ uses
   nyx.linq.execution, nyx.scheduler,
   nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.arrangement, nyx.collections.range,
+  nyx.collections.recovery,
   nyx.collections.range.commands, nyx.collections.range.actions,
   nyx.collections.query.controls, nyx.collections.clipboard.actions,
   nyx.collections.workbench.runtime, nyx.service.monitor, nyx.live.inspection
@@ -67,6 +68,7 @@ var
   LRefreshCount: Integer;
   LFeedback: INyxCollectionFeedback;
   LClosingRun: INyxQueryRun;
+  LRecoveryBudget: INyxCollectionDraftRecoveryBudget;
   {$ifdef PAS2JS}
   LApplication: TNyxBrowserApplication;
   LHost: TJSHTMLElement;
@@ -512,6 +514,10 @@ begin
     LPeer := LApplication.View.CollectionMount(InspectionPeerID);
     Check((LFirst <> nil) and (LPeer <> nil) and (LFirst.View <> LPeer.View) and
       (LFirst.View.Store = LPeer.View.Store), 'independent views share the actual application store');
+    LRecoveryBudget := NyxCollectionDraftRecoveryBudget(NyxCollectionDraftRecovery(LFirst));
+    Check(LDocument.Find(ServiceTableID).CollectionView.DraftRecoveryPolicy.Defined and
+      (LRecoveryBudget.CaptureBudget.Limits.MaximumEntries = 128),
+      'normal application mounting consumes authored recovery limits that differ from library defaults');
     LInspection := NyxCollectionInspection(LFirst.View);
     Check(LInspection.CaptureInspection.Configured and
       (LInspection.GetInspectionPolicy.ToData.ToJSON =
