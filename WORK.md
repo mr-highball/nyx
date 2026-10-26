@@ -9,6 +9,47 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Typed live input/query publication — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent7292f9a is remote-verified. Root remains SOLO.
+This is the seventh batch since user-facing reprioritization. DataToolbar02 Q1
+remains the useful outcome; this foundation closes no complete original
+criterion, parent dependency, task, completion credit or DONE move.
+
+`nyx.binding.inputs` now exposes bounded copied typed captures and prepared
+assignments through TNyxLiveBindings.Inputs. It reuses the existing scalar/state
+owner and PublishNyxGroup with the collection query owner. Search/Sort values,
+bound mirrors and query membership install before any observer. Wrong family,
+foreign/stale role, read-only binding, invalid range, late retirement or changed
+baseline refuse without publishing the batch. Abandoned preparations release
+reservations. Notification failure remains committed and independent receivers
+still run. Captures retain copied data and a revoked weak port, not a live tree,
+widget or document; authored defaults and source rows remain independent.
+
+The public portable consumer passes42 native checks with a complete clean heap
+(211844 allocated/freed,0 unfreed). Existing binding85 and state104 regressions
+also pass with a complete clean heap (1631048 allocated/freed,0 unfreed). The
+matching browser consumer compiles only: no browser execution or physical UI
+claim follows. No owned warnings; seven installed pas2js Classes warnings remain
+unsuppressed. Current qualification rechecks2024 unchanged primary inputs.
+Private evidence is data-toolbar-input-04 and data-toolbar-input-browser-02 under
+the configured external evidence root; source-specific failed predecessors and
+orchestration failures remain retained. All actual readers are terminal.
+
+The new consumer found and repaired unbound numeric range bypass: ordinary wire
+edits and bound-minimum changes now share admission with explicit reset. A value
+and its new bound minimum validate together on the complete proposed projection.
+Portable widgets continue refusing NUL while unprojected state preserves NUL and
+supplementary Unicode. This is accepted model/state/query publication only.
+
+Next qualify selective physical draft reset and IME readiness, expose only
+reserved input roles through the existing common coordinator scope, then deliver
+real DataToolbar Search/Sort/Clear and its independent application consumer.
+Preserve original GUIDs and caller event/query ownership. Full authoring,
+Save/Open, own generated application and parent/parity acceptance remain open.
+All new private scripts, evidence, build/test outputs and owned process TEMP/TMP
+use the external scratch volume. Maintained sources remain in the checkout.
+
 ## Current checkpoint — DataToolbar prerequisite review and external scratch — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent1a0c978 is remote-verified. Root remains SOLO.

@@ -157,3 +157,58 @@ Studio controller remain required.
 Compound self values, named scalar fields and payloads now use explicit
 [typed domains](contracts.md), including range/choice admission. Generic containers
 expose no invented self value; Studio narrows its binding choices accordingly.
+
+## Coordinated accepted input values
+
+`nyx.binding.inputs` exposes typed capture and prepared assignment through
+`TNyxLiveBindings.Inputs`. This is the same live binding/state owner used by
+ordinary input. It can join a [prepared collection query](collection-queries.md)
+so Search, Sort, bound mirrors and query membership install together before any
+observer runs:
+
+```pascal
+LInputs := ALiveBindings.Inputs;
+LCapture := LInputs.Capture([
+  NyxControl('people-search'),
+  NyxControl('people-sort')]);
+
+LReset := LInputs.Prepare(LCapture, [
+  NyxInputValue(NyxControl('people-search'), ''),
+  NyxInputValue(NyxControl('people-sort'), 'Name')]);
+
+PublishNyxGroup([LReset, APreparedQuery]);
+```
+
+Here `LInputs` is `INyxInputCommands`, `LCapture` is `INyxInputCapture`, and
+`LReset` is `INyxPreparedPublication`. `APreparedQuery` comes from the query
+owner's own current capture; preparing input does not grant query authority.
+The sort face in this example has a text value. Boolean, integer and number
+faces take their corresponding typed `NyxInputValue` overloads.
+
+A capture contains 1..64 distinct exact runtime control references and copied
+typed values. `HasValueAt` distinguishes an absent value from explicit empty
+text; `ValueAt` refuses absence. Captures remain readable after disposal but
+cannot authorize a successor, another instance or an A-to-B-to-A command
+sequence. Retained command ports are weak and report `Connected = False` after
+their live owner retires.
+
+Preparation accepts only captured roles and their declared scalar families.
+Visibility, enabled/read-only state, writable bindings, domains, portable text
+rules and numeric limits all participate in admission. A value and its bound
+minimum can change in the same candidate. Conflicting assignments to one bound
+state key refuse the whole batch. Source-only, resource and expression bindings
+do not become writable. Unbound values use the runtime projection without
+inventing state keys or changing authored defaults.
+
+The prepared group reserves the existing view and state owner until retirement.
+Refusal or abandonment changes neither; a notification failure remains committed
+and independent input/query notifications still receive their attempt. Reset
+does not synthesize Click or Change callbacks. These commands run on the UI
+thread, with the existing finite view observation serial.
+
+This foundation currently qualifies accepted model/state/query publication:
+42 native checks pass with a clean heap, and the same browser assertions compile.
+Physical draft reset, composition readiness, the scoped coordinator facet and
+DataToolbar adoption remain in [runtime02](../TODO/NS-3_data-toolbar_02.md).
+Ordinary adapter synchronization is retained; this API alone does not establish
+that an unchanged accepted value replaces an unfinished widget draft.

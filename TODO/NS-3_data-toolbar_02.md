@@ -44,14 +44,23 @@ captions, not input values. Specify ownership of intervening target/query change
 so Clear/disposal never restore an obsolete baseline. Use ConfigureQuery and the
 existing state/selection/event owners; no replacement engine follows.
 
-The read-only owner review narrows that reset gap: live input admits through
-LiveBindings and State.Apply, while an INyxTextInput.Value setter only configures
-its node. A future scoped scalar command must reuse the existing live owner,
-exact accepted roles/generation and copied typed values without exposing a Node
-or controller. Admit Search and Sort together; two unrelated sequential writes
-cannot promise one Clear operation. Existing caller bindings/read-only/domain
-rules still apply. Specify validation/publication across scalar reset and query
-change before source release rather than assuming those owners commit together.
+The first runtime preparation now supplies `TNyxLiveBindings.Inputs` through
+[`nyx.binding.inputs`](../src/nyx.binding.inputs.pas). Its bounded typed capture
+and reset join the existing prepared state/query publication, preserving exact
+roles, binding/domain/interaction admission, retirement and committed observer
+failure semantics. The public portable consumer passes42 native checks with a
+complete clean heap; matching browser assertions compile only. It also repairs
+ordinary unbound numeric commands and state-bound minimum changes that could
+otherwise bypass numeric range validation. Authored defaults remain unchanged.
+
+This is model/state/query admission, not the complete visible Clear operation.
+Next qualify selective physical draft reset and composition readiness through
+the adapters, then expose only reserved roles through the common coordinator
+scope. An INyxTextInput.Value setter still configures its node; it is not a live
+command. Keep original coordinator GUIDs and independent role ownership. Real
+Search/Sort/Clear, the Clear part, ordinary independent instances and every
+original criterion below remain open. [Bindings](../docs/bindings.md#coordinated-accepted-input-values)
+documents the new foundation and its limits.
 
 Capture the admitted baseline and the canonical session observation for each
 command. Before mutation, verify the exact view/store/source, mounted generation,

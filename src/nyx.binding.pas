@@ -40,6 +40,7 @@ uses
   nyx.publication,
   nyx.resources,
   nyx.binding.types,
+  nyx.binding.inputs,
   nyx.model,
   nyx.behavior;
 
@@ -64,6 +65,9 @@ type
     without subscribing an incomplete view. Commands stage a complete independent
     tree; state validators admit it before any accepted properties change.
 
+    Inputs exposes a revocable typed batch port over this same owner, not a
+    second state engine. Prepared input/state publication reserves this view;
+    its detached projection installs before notification and preserves nodes.
     OnSync updates existing target controls. A notification exception means state
     is already committed, matching TNyxState's contract. Semantic callbacks belong
     to the adapter and run only after an accepted command returns. }
@@ -77,7 +81,9 @@ type
     FCommandRoot: TNyxNode;
     FCommandProjected: Boolean;
     FResourcePort: IInterface; { managed revocable weak receiver, never owns this view }
-    FResourcePreparation: TObject; { weak; one single-use stage }
+    FResourcePreparation: TObject; { weak; one resource or scalar projection stage }
+    FInputSerial: Integer; { finite view-local accepted-command observation }
+    function GetInputs: INyxInputCommands;
     function GetRetired: Boolean;
     procedure SetOnSync(AValue: TNyxBindingSync);
     procedure SetOnValueSync(AValue: TNyxBindingValueSync);
@@ -162,6 +168,8 @@ type
     procedure ValidateResourceReload(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     property HasBindings: Boolean read GetHasBindings;
+    { Managed weak commands; retirement revokes retained ports/captures. }
+    property Inputs: INyxInputCommands read GetInputs;
     property OnSync: TNyxBindingSync read FOnSync write SetOnSync;
     { Opt in to exact field synchronization without replacing the legacy full
       callback contract. Other property effects, state bindings or unsupported
@@ -196,19 +204,29 @@ uses
   nyx.projection.refresh;
 
 type
+  { Shared revocable weak receiver for resource and scalar preparations. The
+    port never owns its live binding, borrowed root, state or platform host. }
   IBindingResourcePort = interface
     ['{BE01BE99-9604-42D3-B844-F5380C273AC2}']
     function Owner: TNyxLiveBindings;
     procedure Revoke;
   end;
-  TBindingResourcePort = class(TInterfacedObject, IBindingResourcePort)
+  { One weak implementation supplies both optional command facets. Its owner
+    revokes it before subscription/control teardown; retained ports stay inert. }
+  TBindingResourcePort = class(TInterfacedObject, IBindingResourcePort, INyxInputCommands)
   private
     FOwner: TNyxLiveBindings;
   public
     constructor Create(AOwner: TNyxLiveBindings);
     function Owner: TNyxLiveBindings;
     procedure Revoke;
+    function GetConnected: Boolean;
+    function Capture(const AControls: array of TNyxControlRef): INyxInputCapture;
+    function Prepare(const ACapture: INyxInputCapture;
+      const AValues: array of TNyxInputValue): INyxPreparedPublication;
   end;
+  { Owns one detached resource projection and the old values displaced during
+    allocation-free installation. The held store and weak view port end at Retire. }
   TBindingResourcePreparation = class(TInterfacedObject, INyxPreparedPublication)
   private
     FPort: IBindingResourcePort;
@@ -222,6 +240,74 @@ type
       const ALocale, AFallback: TNyxLocaleRef);
     destructor Destroy; override;
     procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+  { Private proof unwraps only this exact canonical public snapshot. Returning
+    another object's proof cannot impersonate its public capture identity. }
+  IBindingInputProof = interface(IInterface)
+    ['{AF7054F1-20CA-4ABA-A6D1-294694189975}']
+    function SnapshotObject: TObject;
+  end;
+  { Copied descriptors have no executable/runtime owners, including expression
+    declarations. Each role has its own independent binding membership. }
+  TInputBindingSpecs = array of TNyxBindingSpec;
+  { A small observation retains only copied role facts and an inert weak port.
+    No original node/tree/store is kept alive by a caller's old capture. }
+  TBindingInputCapture = class(TInterfacedObject, INyxInputCapture, IBindingInputProof)
+  private
+    FPort: IBindingResourcePort;
+    FSerial: Integer;
+    FStateRevision: Integer;
+    FControls: array of TNyxControlRef;
+    FPresent: array of Boolean;
+    FValues: array of TNyxStateValue;
+    FKinds: array of TNyxStateKind;
+    FProps: array of TNyxStrings;
+    FContracts: array of TNyxText;
+    FBindings: array of TInputBindingSpecs;
+    FPolicies: array of TNyxInteractionPolicy;
+    procedure CheckIndex(AIndex: Integer);
+    procedure RequireCurrent(AOwner: TNyxLiveBindings);
+  public
+    constructor Create(AOwner: TNyxLiveBindings;
+      const AControls: array of TNyxControlRef);
+    destructor Destroy; override;
+    function SnapshotObject: TObject;
+    function GetCount: Integer;
+    function ControlAt(AIndex: Integer): TNyxControlRef;
+    function HasValueAt(AIndex: Integer): Boolean;
+    function ValueAt(AIndex: Integer): TNyxStateValue;
+  end;
+  { One scalar projection participant joins the existing prepared state owner.
+    Only independent clones are retained. The live owner is borrowed through
+    its revocable port, never owned by this preparation or its public group.
+    Final readiness compares owned facts without cloning, executing expressions
+    or invoking validators. Installation exchanges admitted property storage;
+    the original nodes and all controls keep their identities. }
+  TBindingInputPreparation = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPublicationReadiness)
+  private
+    FPort: IBindingResourcePort;
+    FCapture: INyxInputCapture;
+    { Borrowed canonical proof; FCapture retains this exact immutable object. }
+    FSnapshot: TBindingInputCapture;
+    FBefore: TNyxNode;
+    FCandidate: TNyxNode;
+    FStateStage: INyxPreparedPublication;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FNotified: Boolean;
+    FRetired: Boolean;
+    procedure RequireOwner;
+  public
+    constructor Create(AOwner: TNyxLiveBindings;
+      const ACapture: INyxInputCapture; const AValues: array of TNyxInputValue);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure CheckReady;
     procedure Install;
     procedure Notify;
     procedure Retire;
@@ -274,6 +360,11 @@ begin
   begin
     raise ENyxState.Create('Resource scalar preparation is retired or already admitted');
   end;
+
+  if FPort.Owner.FInputSerial = High(Integer) then
+  begin
+    raise ENyxState.Create('Live input observation serial is exhausted');
+  end;
   FValidated := True;
 end;
 
@@ -283,6 +374,7 @@ begin
   if FPort.Owner <> nil then
   begin
     FPort.Owner.FRoot.ExchangeResourceProjection(FCandidate);
+    Inc(FPort.Owner.FInputSerial);
   end;
   FInstalled := True;
 end;
@@ -401,23 +493,22 @@ begin
   Result := (ANode <> nil) and (ANode.ProjectionKind = 'image');
 end;
 
-function ProjectionText(ANode: TNyxNode; const ASpec: TNyxBindingSpec;
+{ Scalar input admission is shared by bound projections and explicit live
+  batches. It never invents a binding/state key merely to validate an unbound
+  control. Stored state remains exact; this result is the portable input wire. }
+function InputProjectionText(ANode: TNyxNode;
   const AValue: TNyxStateValue): TNyxText;
 begin
   Result := ScalarText(AValue);
 
-  if ASpec.Target in [bpText, bpValue, bpPlaceholder, bpHint, bpAccessibleName] then
+  if Pos(#0, Result) > 0 then
   begin
     { State/persistence preserve NUL, but native text widgets use terminated
       strings. Refuse a lossy portable control projection before publication. }
-
-    if Pos(#0, Result) > 0 then
-    begin
-      raise ENyxState.Create('Portable control text cannot contain NUL: ' + ANode.ID);
-    end;
+    raise ENyxState.Create('Portable control text cannot contain NUL: ' + ANode.ID);
   end;
 
-  if (ASpec.Target <> bpValue) or (AValue.Kind <> nskText) then
+  if AValue.Kind <> nskText then
   begin
     Exit;
   end;
@@ -439,6 +530,23 @@ begin
     begin
       raise ENyxState.Create('Single-line control binding cannot contain line breaks: ' + ANode.ID);
     end;
+  end;
+end;
+
+function ProjectionText(ANode: TNyxNode; const ASpec: TNyxBindingSpec;
+  const AValue: TNyxStateValue): TNyxText;
+begin
+
+  if ASpec.Target = bpValue then
+  begin
+    Exit(InputProjectionText(ANode, AValue));
+  end;
+  Result := ScalarText(AValue);
+
+  if (ASpec.Target in [bpText, bpPlaceholder, bpHint, bpAccessibleName]) and
+    (Pos(#0, Result) > 0) then
+  begin
+    raise ENyxState.Create('Portable control text cannot contain NUL: ' + ANode.ID);
   end;
 end;
 
@@ -586,8 +694,9 @@ begin
   end;
 end;
 
-procedure CheckValueRange(ANode: TNyxNode; const ASpec: TNyxBindingSpec;
-  const AValue: TNyxStateValue);
+{ Numeric bounds belong to the input, independently of whether Value has a
+  state binding. Explicit commands must obey the same physical/domain scale. }
+procedure CheckScalarRange(ANode: TNyxNode; const AValue: TNyxStateValue);
 var
   LValue: Double;
   LScale: TNyxSliderScale;
@@ -597,8 +706,7 @@ var
   LDefaultMaximum: TNyxText;
 begin
 
-  if (ASpec.Target <> bpValue) or
-    not (AValue.Kind in [nskInteger, nskNumber]) then
+  if not (AValue.Kind in [nskInteger, nskNumber]) then
   begin
     Exit;
   end;
@@ -610,7 +718,7 @@ begin
     LScale := TNyxSliderScale.Create(NyxNodeValueDomain(ANode),
       StrToIntDef(ANode.Prop('min'), 0), StrToIntDef(ANode.Prop('max'), 100),
       StrToIntDef(ANode.Prop('slider-intervals'), 1000));
-    LScale.PositionOf(ProjectionText(ANode, ASpec, AValue));
+    LScale.PositionOf(InputProjectionText(ANode, AValue));
     Exit;
   end;
   LValue := 0;
@@ -643,6 +751,52 @@ begin
     (LValue > LMaximum) then
   begin
     raise ENyxState.Create('Bound value exceeds its maximum on ' + ANode.ID);
+  end;
+end;
+
+procedure CheckValueRange(ANode: TNyxNode; const ASpec: TNyxBindingSpec;
+  const AValue: TNyxStateValue);
+begin
+
+  if ASpec.Target = bpValue then
+  begin
+    CheckScalarRange(ANode, AValue);
+  end;
+end;
+
+{ Borrow the accepted and completely projected prospective trees. Changed
+  scalar values and bounds share admission even when Value is unbound. State
+  validation already owns this detached projection; no extra tree is allocated.
+  An unchanged legacy face is not reinterpreted merely for an unrelated edit. }
+procedure CheckInputChanges(ABefore, AAfter: TNyxNode);
+var
+  LIndex: Integer;
+  LDomain: TNyxValueDomain;
+  LValue: TNyxStateValue;
+begin
+
+  if (ABefore.ID <> AAfter.ID) or (ABefore.Count <> AAfter.Count) then
+  begin
+    raise ENyxState.Create('Scalar commands cannot change their mounted tree shape');
+  end;
+  ValidateNyxDateRangeValues(AAfter);
+
+  if (ABefore.Prop('value') <> AAfter.Prop('value')) or
+    (ABefore.Prop('min') <> AAfter.Prop('min')) or
+    (ABefore.Prop('max') <> AAfter.Prop('max')) then
+  begin
+    LDomain := NyxNodeValueDomain(AAfter);
+
+    if LDomain.Defined then
+    begin
+      LValue := ReadScalar(AAfter.Prop('value'), LDomain.Kind);
+      InputProjectionText(AAfter, LValue);
+      CheckScalarRange(AAfter, LValue);
+    end;
+  end;
+  for LIndex := 0 to AAfter.Count - 1 do
+  begin
+    CheckInputChanges(ABefore.Children[LIndex], AAfter.Children[LIndex]);
   end;
 end;
 
@@ -1027,6 +1181,11 @@ begin
     ((FResourcePort as IBindingResourcePort).Owner <> Self);
 end;
 
+function TNyxLiveBindings.GetInputs: INyxInputCommands;
+begin
+  Result := FResourcePort as INyxInputCommands;
+end;
+
 procedure TNyxLiveBindings.SetOnSync(AValue: TNyxBindingSync);
 begin
 
@@ -1142,6 +1301,12 @@ procedure TNyxLiveBindings.ValidateCandidate(ACandidate: TNyxState;
 var
   LView: TNyxNode;
 begin
+
+  if (FInputSerial = High(Integer)) and
+    ((AChanges.Count > 0) or AChanges.OrderChanged) then
+  begin
+    raise ENyxState.Create('Live input observation serial is exhausted');
+  end;
   LView := FRoot;
 
   if FCommandRoot <> nil then
@@ -1151,6 +1316,7 @@ begin
   LView := LView.Clone;
   try
     ApplyNyxBindings(LView, ACandidate);
+    CheckInputChanges(FRoot, LView);
   finally
     LView.Free;
   end;
@@ -1168,6 +1334,17 @@ end;
 procedure TNyxLiveBindings.StateChanged(AState: TNyxState;
   AChanges: TNyxStateChanges);
 begin
+  { The grouped input participant has already installed the complete admitted
+    projection. Its own Notify synchronizes once, even if another state observer
+    fails. Reapplying here would overwrite unbound edits or execute projections
+    a second time before the independent group notification gets its turn. }
+
+  if (FResourcePreparation is TBindingInputPreparation) and
+    TBindingInputPreparation(FResourcePreparation).FInstalled then
+  begin
+    Exit;
+  end;
+  Inc(FInputSerial);
 
   if FCommandRoot <> nil then
   begin
@@ -1234,20 +1411,6 @@ var
   LAssignments: array of TNyxStateAssignment;
   LRevision: Integer;
   LValueOnly: Boolean;
-
-  { The scalar tree has already admitted its shape/budget. Zero-assignment
-    commands do not invoke state validators, so unbound pairs need this same pure
-    comparison before any accepted projection is copied or synchronized. }
-  procedure CheckUnboundRanges(ARangeNode: TNyxNode);
-  var
-    LChildIndex: Integer;
-  begin
-    ValidateNyxDateRangeValues(ARangeNode);
-    for LChildIndex := 0 to ARangeNode.Count - 1 do
-    begin
-      CheckUnboundRanges(ARangeNode.Children[LChildIndex]);
-    end;
-  end;
 
   procedure Collect(ACandidate, ABaseline: TNyxNode);
   var
@@ -1329,6 +1492,11 @@ begin
     raise ENyxState.Create('Control command requires active, idle bindings');
   end;
 
+  if FInputSerial = High(Integer) then
+  begin
+    raise ENyxState.Create('Live input observation serial is exhausted');
+  end;
+
   if (ANode = nil) or (FRoot.Find(ANode.ID) <> ANode) then
   begin
     raise ENyxState.Create('Control command must originate in its mounted view');
@@ -1367,7 +1535,9 @@ begin
 
     if Length(LAssignments) = 0 then
     begin
-      CheckUnboundRanges(FCommandRoot);
+      { Zero-assignment commands do not call state validators. Admit the same
+        complete scalar/date-range rules before copying their projection. }
+      CheckInputChanges(FRoot, FCommandRoot);
     end;
     LValueOnly := AEdit and Assigned(FOnValueSync) and not HasBindings and
       OnlyEditedValue(FRoot, FCommandRoot, ANode.ID);
@@ -1375,6 +1545,7 @@ begin
 
     if not FCommandProjected then
     begin
+      Inc(FInputSerial);
       CopyProjection(FRoot, FCommandRoot);
       ApplyNyxBindings(FRoot, FState);
       { Keep the existing synchronous-before-events contract. An eligible target
@@ -1492,5 +1663,7 @@ begin
   LDispatch := Signal(ANode, ATrigger);
   Result := LDispatch.Info.Copy;
 end;
+
+{$I nyx.binding.inputs.implementation.inc}
 
 end.
