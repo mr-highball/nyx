@@ -3246,6 +3246,49 @@ begin
     [NyxData('op'), NyxData('id'), NyxData('content')]);
 end;
 
+{ Only data crosses MCP. Sort keys reuse the transaction's existing closed typed
+  query definition; toolbar choices deliberately cannot contain filter authority.
+  Candidate admission additionally checks exact fields, roles and provenance. }
+function DataToolbarOperationSchema: TNyxDataValue;
+var
+  LQuery: TNyxDataValue;
+  LChoice: TNyxDataValue;
+  LContext: TNyxDataValue;
+  LOptions: TNyxDataValue;
+begin
+  LQuery := TNyxDataValue.ParseJSON(
+    '{"type":"object","additionalProperties":false,' +
+    '"required":["version","filter","order"],"properties":{"version":{"const":1},' +
+    '"filter":{"type":"null"},"order":{"type":"array","minItems":1,"maxItems":8,' +
+    '"items":{"$ref":"#/$defs/nyxQuerySort"}}}}');
+  LChoice := Schema(NyxObject([
+    NyxField('name', TextSchema('Unique sort caption; distinct from baseline')),
+    NyxField('query', LQuery)]), [NyxData('name'), NyxData('query')]);
+  LContext := TNyxDataValue.ParseJSON(
+    '{"type":"object","additionalProperties":false,' +
+    '"required":["version","display","caption","button"],"properties":{' +
+    '"version":{"const":1},"display":{"enum":["hidden","summary","details"]},' +
+    '"caption":{"type":"string","maxLength":256},"button":{"type":"string","maxLength":256}}}');
+  LOptions := Schema(NyxObject([
+    NyxField('version', NyxObject([NyxField('const', NyxData(1))])),
+    NyxField('target', TextSchema('Exact collection-view source ID relative to the reusable scope')),
+    NyxField('search', TextSchema('Text field of the target collection schema')),
+    NyxField('match', NyxObject([NyxField('enum', NyxArray([
+      NyxData('contains'), NyxData('starts-with'), NyxData('equal')]))])),
+    NyxField('comparison', NyxObject([NyxField('enum', NyxArray([
+      NyxData('exact'), NyxData('ascii-insensitive')]))])),
+    NyxField('baseline', TextSchema('Selector caption that withdraws this toolbar sort')),
+    NyxField('sorts', NyxObject([NyxField('type', NyxData('array')),
+      NyxField('maxItems', NyxData(63)), NyxField('items', LChoice)])),
+    NyxField('queryContext', LContext)]), [NyxData('version'), NyxData('target'),
+      NyxData('search'), NyxData('match'), NyxData('comparison'), NyxData('baseline'),
+      NyxData('sorts')]);
+  Result := Schema(NyxObject([
+    NyxField('op', NyxObject([NyxField('const', NyxData('data-toolbar-set'))])),
+    NyxField('id', TextSchema('Exact authored DataToolbar, whole instance or named override ID')),
+    NyxField('options', LOptions)]), [NyxData('op'), NyxData('id'), NyxData('options')]);
+end;
+
 function ValueDomainOperationSchema: TNyxDataValue;
 var
   LDomains: array of TNyxDataValue;
@@ -4100,6 +4143,10 @@ begin
     LMenuBarOperation.ToJSON + ',' +
     LTabsOperation.ToJSON + ',' +
     LSelectionOperation.ToJSON + ',' +
+    DataToolbarOperationSchema.ToJSON + ',' +
+    '{"type":"object","additionalProperties":false,"required":["op","id"],' +
+    '"properties":{"op":{"enum":["data-toolbar-disable","data-toolbar-inherit"]},' +
+    '"id":{"type":"string","minLength":1}}},' +
     CanvasOperationSchema.ToJSON + ',' +
     LogicOperationSchema.ToJSON + ',' +
     DiagramOperationSchema.ToJSON + ',' +
@@ -4146,6 +4193,14 @@ begin
         NyxField('selectionStyle', LBoolean),
         NyxField('selectionOffset', IntSchema(0, 100000)),
         NyxField('selectionLimit', IntSchema(1, 50)),
+        NyxField('dataToolbar', NyxObject([NyxField('type', NyxData('boolean')),
+          NyxField('description', NyxData('Inspect authored DataToolbar intent. toolbarScope defaults effective; local reads only the declaration. localDeclared/localMode distinguish inheritance and disabled masks; effectiveMode also identifies a static recipe. policy is null when the requested scope has no configuration. Sort choices and keys page independently (defaults four each, maxima eight). Open target/field/caption identities use exact value/offset/totalScalars/truncated text windows controlled by textOffset/textLimit. Query-context captions have a public 256-scalar ceiling. No live query actors or editor baselines are returned. Configure/Disable/Inherit use data-toolbar-set/data-toolbar-disable/data-toolbar-inherit in the ordinary grouped transaction.'))])),
+        NyxField('toolbarScope', NyxObject([NyxField('enum', NyxArray([
+          NyxData('local'), NyxData('effective')]))])),
+        NyxField('toolbarSortOffset', IntSchema(0, 63)),
+        NyxField('toolbarSortLimit', IntSchema(1, 8)),
+        NyxField('toolbarKeyOffset', IntSchema(0, 8)),
+        NyxField('toolbarKeyLimit', IntSchema(1, 8)),
         NyxField('canvas', LBoolean),
         NyxField('canvasScope', NyxObject([NyxField('enum', NyxArray([
           NyxData('local'), NyxData('effective')]))])),

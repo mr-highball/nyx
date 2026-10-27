@@ -32,7 +32,7 @@ uses
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
   nyx.kanban.editor, nyx.date.range, nyx.date.range.editor,
-  nyx.master.detail, nyx.master.detail.editor, nyx.data.toolbar.editor,
+  nyx.master.detail, nyx.master.detail.editor, nyx.data.toolbar, nyx.data.toolbar.editor,
   nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations,
   nyx.programs.editing, nyx.diagram.editing,
   nyx.flow.routes, nyx.flow.route.model;
@@ -40,7 +40,9 @@ uses
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
     transport boundary; internal behavior never dispatches arbitrary properties
-    or method names. A whole immutable patch builds one detached candidate. }
+    or method names. A whole immutable patch builds one detached candidate.
+    Compact toolbar operations capture the editor baseline at their ordered
+    candidate step, after preceding structural/collection operations. }
   TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
     doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew,
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
@@ -48,7 +50,8 @@ type
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
     doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram, doDiagram, doKanban,
-    doDateRange, doMasterDetail, doDataToolbar);
+    doDateRange, doMasterDetail, doDataToolbar,
+    doDataToolbarSet, doDataToolbarDisable, doDataToolbarInherit);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -287,6 +290,13 @@ function NyxDateRangePolicyPatch(const AChange: TNyxDateRangeEditorChange): INyx
   or current record enters the persisted design/source candidate. }
 function NyxMasterDetailPolicyPatch(const AChange: TNyxMasterDetailEditorChange): INyxDesignPatch;
 function NyxDataToolbarPolicyPatch(const AChange: TNyxDataToolbarEditorChange): INyxDesignPatch;
+{ Revision-aware semantic callers supply compact copied intent. Candidate-time
+  admission uses the same whole-policy owner as the ordinary Inspector, including
+  required parts, selector provenance and the final paired source gate. }
+function NyxSetDataToolbarPolicy(const AOwner: TNyxControlRef;
+  const AOptions: TNyxDataToolbarOptions): INyxDesignPatch;
+function NyxDisableDataToolbarPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
+function NyxInheritDataToolbarPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
 function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
   const AOptions: TNyxSelectionOptions): INyxDesignPatch;
 function NyxInheritSelectionPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
@@ -652,8 +662,9 @@ begin
 end;
 
 type
-  { Detached closed operations retain copied typed values. Candidate dispatch
-    never invokes a caller-supplied property name or mutation callback. }
+  { Detached closed operations retain copied typed values, including compact
+    toolbar options without an executable owner or caller-supplied baseline.
+    Candidate dispatch never invokes arbitrary mutation callbacks. }
   TDesignOperation = record
     Operation: TNyxDesignOperation;
     ID: TNyxText;
@@ -679,6 +690,7 @@ type
     DateRange: TNyxDateRangeEditorChange;
     MasterDetail: TNyxMasterDetailEditorChange;
     DataToolbar: TNyxDataToolbarEditorChange;
+    ToolbarOptions: TNyxDataToolbarOptions;
     Canvas: TNyxCanvasChange;
     Flow: TNyxFlowChange;
     ProgramChange: TNyxProgramChange;
@@ -1923,6 +1935,25 @@ begin
         LOperation.Selection.Options := TNyxSelectionOptions.FromData(LWire.Field('options'));
       end;
     end
+    else if LName = 'data-toolbar-set' then
+    begin
+      CheckFields(LWire, '|op|id|options|');
+      LOperation.Operation := doDataToolbarSet;
+      LOperation.ID := NyxControl(LWire.Field('id').AsText).ID;
+      LOperation.ToolbarOptions := TNyxDataToolbarOptions.FromData(
+        LWire.Field('options')).Copy;
+    end
+    else if (LName = 'data-toolbar-disable') or (LName = 'data-toolbar-inherit') then
+    begin
+      CheckFields(LWire, '|op|id|');
+      LOperation.Operation := doDataToolbarDisable;
+
+      if LName = 'data-toolbar-inherit' then
+      begin
+        LOperation.Operation := doDataToolbarInherit;
+      end;
+      LOperation.ID := NyxControl(LWire.Field('id').AsText).ID;
+    end
     else if LName = 'data-toolbar-policy' then
     begin
       CheckFields(LWire, '|op|change|');
@@ -2226,6 +2257,30 @@ begin
     NyxObject([NyxField('op', NyxData('data-toolbar-policy')),
       NyxField('change', AChange.ToData)])]));
 end;
+
+function NyxSetDataToolbarPolicy(const AOwner: TNyxControlRef;
+  const AOptions: TNyxDataToolbarOptions): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('data-toolbar-set')), NyxField('id', NyxData(AOwner.ID)),
+    NyxField('options', AOptions.ToData)])]));
+end;
+
+function NyxDisableDataToolbarPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('data-toolbar-disable')), NyxField('id', NyxData(AOwner.ID))])]));
+end;
+
+function NyxInheritDataToolbarPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('data-toolbar-inherit')), NyxField('id', NyxData(AOwner.ID))])]));
+end;
+
 function NyxKanbanPolicyPatch(const AChange: TNyxKanbanEditorChange): INyxDesignPatch;
 begin
   Result := ReadNyxDesignPatch(NyxArray([
@@ -2843,6 +2898,21 @@ begin
         doDataToolbar:
           begin
             ApplyNyxDataToolbarEditorChange(Result, LOperation.DataToolbar);
+          end;
+        doDataToolbarSet:
+          begin
+            ApplyNyxDataToolbarEditorChange(Result, NyxDataToolbarEditorChange(
+              Result, NyxControl(LOperation.ID), LOperation.ToolbarOptions));
+          end;
+        doDataToolbarDisable:
+          begin
+            ApplyNyxDataToolbarEditorChange(Result, NyxDataToolbarEditorChange(
+              Result, NyxControl(LOperation.ID), nteaDisable));
+          end;
+        doDataToolbarInherit:
+          begin
+            ApplyNyxDataToolbarEditorChange(Result, NyxDataToolbarEditorChange(
+              Result, NyxControl(LOperation.ID), nteaInherit));
           end;
         doMasterDetail:
           begin

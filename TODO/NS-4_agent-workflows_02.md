@@ -20,6 +20,18 @@ remain with original NS-4 agent-workflows01 and Studio authoring criterion2.
 The restored service's Input playground proves semantic connection, grouping and
 backend compilation; it does not configure a DataToolbar or accept this task.
 
+Current-source checkpoint: Configure/Disable/Inherit and bounded local/effective
+inspection now reuse that candidate in the existing tools. Native checks exercise
+reusable scopes, role/domain admission, refusal/history and long Unicode names.
+An authenticated temporary Pascal host composes an isolated People directory,
+verifies stale refusal and exact15019-byte paired Undo/Redo, and successfully
+compiles its own accepted application for browser and LCL. The test host is
+retired; the existing LAN service and durable projects/configurations remain
+unchanged. Browser test consumers compile only. Ordinary observing Studio
+Inspector/preview/Save/Open adoption, runtime execution and every original
+quality/dependency requirement remain open. See WORK.md for scoped evidence;
+no original criterion, task or completion credit closes here.
+
 **Acceptance Criteria:**
 
 - Bounded inspection reports configured/disabled/inherited behavior, exact scoped

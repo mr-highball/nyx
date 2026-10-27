@@ -938,6 +938,58 @@ semantic and Win32 form/queue checks; authenticated current-backend authoring,
 executed browser/observing Studio and rollout still require qualification. See
 [the public editor](time-fields.md#reusable-constraint-editor-and-studio).
 
+## DataToolbar policy
+
+Use `data-toolbar-set`, `data-toolbar-disable` and `data-toolbar-inherit` in
+`nyx_transaction`, with the ordinary workspace, expected revision and operation
+identity. These operations use the same detached whole-policy candidate as the
+Inspector. Configure admits required Search/Sort/Clear roles, selector choices
+and provenance together with the authored intent and crafted Pascal. Earlier
+creates and collection bindings in the same transaction are available when the
+policy is admitted. A later failure publishes none of the group.
+
+```json
+{"op":"data-toolbar-set","id":"people-tools","options":{
+  "version":1,"target":"people-table","search":"name",
+  "match":"contains","comparison":"ascii-insensitive",
+  "baseline":"Original order","sorts":[
+    {"name":"Name","query":{"version":1,"filter":null,"order":[
+      {"field":"name","kind":"text","direction":"ascending",
+       "textComparison":"asciiInsensitive"}]}}],
+  "queryContext":{"version":1,"display":"details",
+    "caption":"People","button":"Query details"}}}
+```
+
+`id` identifies an authored toolbar, whole reusable instance or named toolbar
+override. `target` is the exact collection-view source identity relative to that
+reusable scope. Search requires a text field; sort keys retain their closed scalar
+families. Each of at most63 choices contains one to eight distinct typed sort keys
+and no filter. Omit `queryContext` to retain the original presentation; opt into
+`hidden`, `summary` or `details` with captions of at most256 Unicode scalars.
+Disable and Inherit accept only `op` and `id`. Disable explicitly masks behavior;
+Inherit removes the declaration and resumes the definition or static recipe.
+They preserve customized parts and do not erase caller domains or callbacks.
+
+Inspect one toolbar with `nyx_node`, `dataToolbar:true` and a pinned
+`expectedRevision`. `toolbarScope` is `effective` by default; `local` reads only
+the authored declaration. The response distinguishes `localDeclared`,
+`localMode` (`inherited`, `disabled`, `configured`) and `effectiveMode`
+(`static`, `disabled`, `configured`). `policy` is null when the requested scope
+has no configuration. This is saved design intent, not live query or data state.
+
+Configured policies return target/search/baseline, closed match/comparison,
+optional query context and paged sort choices. `toolbarSortOffset/Limit` page
+choices (default4, maximum8); `toolbarKeyOffset/Limit` independently page each
+choice's keys (default4, maximum8). Absolute indexes and totals retain context.
+Open target/field/caption names are exact text windows containing `value`,
+`offset`, `totalScalars` and `truncated`. Use the existing `textOffset/textLimit`
+to page by Unicode scalars; do not use a truncated value as a complete reference.
+No editor baseline, source blob, runtime actor or executable owner is returned.
+
+The Pascal API exposes `NyxSetDataToolbarPolicy`, `NyxDisableDataToolbarPolicy`
+and `NyxInheritDataToolbarPolicy` for the same copied operations. Existing
+Inspector proposals retain their exact baseline-bearing public editor contract.
+
 ## Reusable components
 
 The source candidate adds four operations to `nyx_transaction`; the protected
@@ -1114,10 +1166,13 @@ qualification verifies exact paired Undo/Redo and all four browser/LCL applicati
 view compiler inputs. Native table controls execute separately; browser execution
 and full observing Studio retain the boundaries recorded in WORK.md.
 
-`tools/build.ps1 -Target project-transactions` runs checked shared admission and
-exact compiled-source/runtime projection, builds the semantic English table
+`tools/build.ps1 -Target project-transactions` runs checked shared admission,
+semantic DataToolbar authoring and exact compiled-source/runtime projection,
+builds the semantic English table
 companion, and stages matched browser consumers. It starts no service/browser
-and supplies no browser execution or observing qualification. The new grouped
+and supplies no browser execution or observing qualification. Outputs use the
+configured native scratch directory (or explicit `-NativeOutput`) beneath
+`project-transactions/`. The new grouped
 contract requires a backend built from current source; frozen older servers do
 not acquire it from local compilation. Browser readiness and LAN refresh retain
 their separately recorded gates in WORK.md.

@@ -62,6 +62,7 @@ var
   LRevision: Integer;
   LCount: Integer;
   LIndex: Integer;
+  LDefinition: Integer;
   LRejected: Boolean;
   LInitial: TNyxText;
   LAccepted: TNyxText;
@@ -476,8 +477,16 @@ begin
       if LTool.Field('name').AsText = 'nyx_transaction' then
       begin
         LTool := LTool.Field('inputSchema');
-        Check(LTool.Field('$defs').ToJSON = NyxCollectionAgentSchema.Field('$defs').ToJSON,
-          'recursive query references resolve at the actual tool schema root');
+        LArgs := NyxCollectionAgentSchema.Field('$defs');
+        for LDefinition := 0 to LArgs.Count - 1 do
+        begin
+          Check(LTool.Field('$defs').Field(LArgs.Key(LDefinition)).ToJSON =
+            LArgs.Field(LArgs.Key(LDefinition)).ToJSON,
+            'every recursive query definition resolves exactly at the actual tool schema root');
+        end;
+        Check((LTool.Field('$defs').Count = LArgs.Count + 1) and
+          (LTool.Field('$defs').Field('NyxExpression').Kind = ndObject),
+          'the transaction retains its independent expression definition beside query definitions');
         Check(Pos('"state"', LTool.ToJSON) > 0, 'actual tool advertises scalar groups');
         Check(Pos('"collections"', LTool.ToJSON) > 0, 'actual tool advertises collection groups');
         Check(Pos('"root-move"', LTool.ToJSON) > 0,

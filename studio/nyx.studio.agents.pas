@@ -99,7 +99,8 @@ type
   end;
 
   { One active, authoritative authoring session. Owns the ordinary Studio model
-    and source/history; no shadow design format or browser automation exists.
+    and source/history; bounded toolbar inspection shares its authored policy.
+    No shadow design format or browser automation exists.
     Native transports serialize all calls under an external lock. Portable tests
     and native controllers use the same command/query boundary directly. }
   TNyxAgentSession = class
@@ -184,6 +185,8 @@ type
       No whole form baseline, tree or mutable state is returned to an agent. }
     function TabsDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function SelectionDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
+    function DataToolbarDetails(ANode: TNyxNode;
+      const AArguments: TNyxDataValue): TNyxDataValue;
     function CanvasDetails(ANode: TNyxNode; ALayerOffset, ALayerLimit,
       AItemOffset, AItemLimit: Integer; ALocal: Boolean;
       const AArguments: TNyxDataValue): TNyxDataValue;
@@ -530,7 +533,8 @@ implementation
 uses
   nyx.source.preparation, nyx.studio.projectionediting, nyx.text.search, nyx.editing,
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
-  Math, nyx.design.tokens, nyx.tabs, nyx.selection, nyx.studio.edits, nyx.studio.callbackedits,
+  Math, nyx.design.tokens, nyx.tabs, nyx.selection, nyx.data.toolbar,
+  nyx.studio.edits, nyx.studio.callbackedits,
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query, nyx.collections.query.preview,
@@ -1477,7 +1481,7 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|expectedRevision|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|canvasConnections|canvasConnectionOffset|canvasConnectionLimit|canvasConnectionItem|canvasConnectionControl|canvasRouteOffset|canvasRouteLimit|canvasPrecision|canvasGuideOffset|canvasGuideLimit|canvasGraphNodes|canvasGraphNodeOffset|canvasGraphNodeLimit|canvasGraphNodeGraph|canvasGraphNodeStep|');
+  NyxAgentFields(AArguments, '|expectedRevision|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|tabs|tabOffset|tabLimit|selectionStyle|selectionOffset|selectionLimit|dataToolbar|toolbarScope|toolbarSortOffset|toolbarSortLimit|toolbarKeyOffset|toolbarKeyLimit|canvas|canvasScope|canvasLayerOffset|canvasLayerLimit|canvasItemOffset|canvasItemLimit|canvasConnections|canvasConnectionOffset|canvasConnectionLimit|canvasConnectionItem|canvasConnectionControl|canvasRouteOffset|canvasRouteLimit|canvasPrecision|canvasGuideOffset|canvasGuideLimit|canvasGraphNodes|canvasGraphNodeOffset|canvasGraphNodeLimit|canvasGraphNodeGraph|canvasGraphNodeStep|');
 
   if NyxAgentHas(AArguments, 'expectedRevision') then
   begin
@@ -1782,6 +1786,12 @@ begin
       IntegerArgument(AArguments, 'selectionLimit', 20, 1, 50)));
   end;
 
+  if NyxAgentHas(AArguments, 'dataToolbar') and AArguments.Field('dataToolbar').AsBoolean then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('dataToolbar', DataToolbarDetails(LNode, AArguments));
+  end;
+
   if NyxAgentHas(AArguments, 'canvas') and AArguments.Field('canvas').AsBoolean then
   begin
     SetLength(LFields, Length(LFields) + 1);
@@ -1794,6 +1804,8 @@ begin
   end;
   Result := NyxObject(LFields);
 end;
+
+{$include nyx.studio.agents.toolbars.inc}
 
 function TNyxAgentSession.SelectionDetails(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
 var

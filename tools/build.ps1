@@ -5457,7 +5457,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     # Pascal owns all admission/history, schema, ownership and compiled source
     # assertions. This target stages browser consumers and builds the explicit
     # MCP companion; it enrolls no client and starts no service or browser.
-    $nyxTransactionRoot = Join-Path $nyxRoot 'build/combined-transactions/maintained'
+    $nyxTransactionRoot = Join-Path $nyxNativeDir 'project-transactions'
     $nyxTransactionNative = Join-Path $nyxTransactionRoot 'native'
     $nyxTransactionBrowser = Join-Path $nyxTransactionRoot 'browser'
     $nyxTransactionSource = Join-Path $nyxTransactionRoot 'source'
@@ -5475,6 +5475,14 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       throw 'Combined semantic transaction checks failed'
     }
     Invoke-NyxCompiler $nyxFpc ($nyxTransactionFlags + @(
+      "-FU$nyxTransactionNative", "-FE$nyxTransactionNative",
+      'tests/nyx_agent_toolbar_tests.lpr'))
+    & (Join-Path $nyxTransactionNative 'nyx_agent_toolbar_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Semantic DataToolbar transaction checks failed'
+    }
+    Invoke-NyxCompiler $nyxFpc ($nyxTransactionFlags + @(
       "-Fu$nyxTransactionSource", "-FU$nyxTransactionNative", "-FE$nyxTransactionNative",
       'tests/nyx_transaction_generated_tests.lpr'))
     & (Join-Path $nyxTransactionNative 'nyx_transaction_generated_tests.exe')
@@ -5487,13 +5495,15 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxTransactionProgram in @('tests/nyx_agent_transaction_tests.lpr',
+      'tests/nyx_agent_toolbar_tests.lpr',
       'tests/nyx_transaction_generated_tests.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxTransactionSource",
         "-FE$nyxTransactionBrowser", $nyxTransactionProgram)
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTransactionBrowser 'rtl.js')
-    foreach ($nyxTransactionHost in @('agent-transactions.html', 'transaction-generated.html')) {
+    foreach ($nyxTransactionHost in @('agent-transactions.html', 'agent-toolbars.html',
+      'transaction-generated.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxTransactionHost)) `
         -Destination $nyxTransactionBrowser
     }

@@ -9,6 +9,75 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Semantic DataToolbar authoring — 2026-10-27
+
+Previous goal turn: NO PROGRESS toward product delivery; it rechecked the already
+completed on-demand cleanup. Both old C qualification roots remain absent and
+their external archives remain present. No additional deletion was needed.
+Root remains SOLO. Batch twenty-two follows agent-workflows02 from the pushed
+e0761eb baseline. Configure/Disable/Inherit now enter the ordinary revision-aware
+transaction through copied typed options and the existing DataToolbar editor
+candidate. Baselines are captured at each ordered detached step, so earlier
+creates and collection bindings participate in the same publication. Existing
+Inspector proposals and all original public runtime interfaces remain intact.
+
+Optional node inspection distinguishes local inheritance/masks and effective
+static/configured/disabled intent. Sort choices and keys page independently;
+open target/field/caption identities have exact Unicode scalar windows, including
+explicit truncation. It returns no editor baseline, actor or executable handle.
+The transaction schema reuses its existing typed query-sort definition and admits
+no filter authority through sort choices. Required roles, selector provenance,
+customized parts, reusable definitions and complete source/history stay with the
+same public candidate owner rather than a second toolbar implementation.
+
+Private agent-data-toolbar-01 records41 focused native checks,76 combined
+transaction checks,38 existing authoring checks and eight checks in that suite's
+own compiled source. All four native heaps are complete and clean:163 assertions.
+The first fixture assumed formatter whitespace and was repaired to construct
+malformed transport members by identity. Its initial missing unit and two Unicode
+warnings are retained; final native compilations have no warnings. The existing
+combined suite also exposed its stale whole-definitions equality assertion: it
+now verifies every shared query definition exactly plus the separate expression
+definition. No useful assertion or product requirement was removed.
+
+Four browser test consumers compile/stage only. A complete current Studio payload
+also builds, including its module worker and preview. Installed Classes warnings
+remain separate from owned warnings. Two long open captions (6001scalars each)
+exercise bounded inspection and exact supplementary tails without adding an
+arbitrary authoring length limit. Final source pins distinguish that test-only
+extension from the unchanged product snapshot used by the actual host.
+
+A temporary loopback-only maintained Pascal host provides actual authenticated
+MCP discovery and an isolated People directory project. One transaction creates
+its page/card/controls, collection/schema/rows, table binding and configured
+toolbar. Bounded policy/role queries report Search/Sort/Clear and query context;
+a stale revision refuses. One Undo restores the empty project and Redo restores
+the complete15019-byte project exactly. Actual Disable/Inherit plus their Undos
+restore the same SHA256766A8B0A prefix at revision8. The exported9302-byte Pascal
+has SHA256560FF75B prefix. Both actual backend application jobs succeed for the
+same revision/design/source identities; both compiled source files match that
+export exactly. Browser reports seven installed Classes warnings; LCL reports
+zero warnings. These applications were compiled, not executed.
+
+Wide/compact previews are prepared without capture, not rendered evidence. The
+temporary host/launcher and both loopback listeners are verified retired, with
+all delegated jobs terminal and no child compiler remaining. Existing LAN/MCP
+owner37824 stays live. All82 original durable runtime files and both managed
+client configurations retain their hashes; both primary sessions retain their
+document/navigation/draft/history state. Test projects/exports remain on external
+storage. No LAN replacement, firewall change, browser route retry, physical-input
+workaround or further cleanup occurred. Unrelated1280/390 remain untouched.
+
+The maintained project-transactions target now includes this focused consumer
+and browser host, and honors configured/explicit native scratch output instead
+of a fixed checkout build tree. All new private orchestration, compiler outputs
+and child TEMP/TMP use external storage. No source freeze remains after joined
+checks. This is a useful semantic authoring delivery, not complete original
+criterion/dependency acceptance or task credit. Next return the same accepted
+project through ordinary Studio Inspector/preview/Save/Open and its own runtime,
+then qualify observing browser/physical/visual/assistive/performance/parity gates.
+Stop additional connection reports or generic scalar/source proof variants.
+
 ## Current checkpoint — Restoring primary semantic testing — 2026-10-27
 
 Previous goal turn: PROGRESS; bb020e1 is pushed and remote-verified. Root remains
