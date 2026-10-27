@@ -27,6 +27,18 @@ const
   CToolbarSearchChannel = 'search';
 
 type
+  { A final no-op group participant observes the real installation boundary.
+    It owns no model or callback. Its retained lease survives notification and
+    retirement errors, including raw browser throws, without guessing commit
+    from exception classes/messages or implementing another transaction engine. }
+  TToolbarCommandPublication = class(TInterfacedObject, INyxPreparedPublication)
+  public
+    Installed: Boolean;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
   { Cleanup preserves the first failure, including arbitrary browser values
     and empty Pascal diagnostics, while attempting every independent duty. }
   TToolbarFailure = record
@@ -52,10 +64,11 @@ type
   { One common prepared coordinator owns the exact actor, event slots and weak
     input port. No widget, renderer, raw node or application is retained.
     Preparation and runtime share identity; installed Retire drops only the
-    prospective event-plan lease. Explicit Disconnect attempts every cleanup. }
+    prospective event-plan lease. Explicit Disconnect attempts every cleanup.
+    The last command receipt contains copied diagnostics, never execution rights. }
   TToolbarBinding = class(TInterfacedObject, INyxDataToolbarBinding,
     INyxCoordinatorBinding, INyxDataToolbarQueryBinding,
-    INyxPreparedCoordinator, INyxPublicationReadiness)
+    INyxPreparedCoordinator, INyxPublicationReadiness, INyxDataToolbarCommandFeedback)
   private
     FOptions: TNyxDataToolbarOptions;
     FDisabled: Boolean;
@@ -70,6 +83,7 @@ type
     FTarget: TNyxControlRef;
     FRefresh: INyxCoordinatorRefresh;
     FQueryControls: INyxCollectionQueryWorkbench;
+    FLastCommand: TNyxToolbarCommandFeedback;
     FViewToken: INyxCollectionViewSubscription;
     FViews: INyxCollectionBindings;
     FView: INyxCollectionView;
@@ -94,6 +108,10 @@ type
     function SortEdits(const AReference: TNyxToolbarSortRef): TNyxQuerySessionEdits;
     procedure PublishQuery(const AEdits: TNyxQuerySessionEdits);
     procedure UpdateQueryStatus;
+    procedure RunCommand(ACommand: TNyxToolbarCommand; const AText: TNyxText;
+      const ASort: TNyxToolbarSortRef; AAcceptedEvent: Boolean; out AInstalled: Boolean);
+    procedure RecordCommandFailure(ACommand: TNyxToolbarCommand; AInstalled: Boolean;
+      const AMessage: TNyxText);
   public
     constructor Create(const AProjection: INyxCoordinatorProjection;
       const AIntent: TNyxDataToolbarIntent; const AViews: INyxCollectionBindings;
@@ -105,6 +123,7 @@ type
     procedure Search(const AText: TNyxText);
     procedure Sort(const AReference: TNyxToolbarSortRef);
     procedure Clear;
+    function GetLastCommand: TNyxToolbarCommandFeedback;
     function GetObservation: TNyxQueryWorkbenchObservation;
     function GetQueryStatus: TNyxText;
     function GetQueryControls: INyxCollectionQueryWorkbench;
@@ -125,6 +144,23 @@ type
       const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
       const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
   end;
+
+procedure TToolbarCommandPublication.Validate;
+begin
+end;
+
+procedure TToolbarCommandPublication.Install;
+begin
+  Installed := True;
+end;
+
+procedure TToolbarCommandPublication.Notify;
+begin
+end;
+
+procedure TToolbarCommandPublication.Retire;
+begin
+end;
 
 procedure CaptureToolbarFailure(var AFailure: TToolbarFailure;
   {$ifdef PAS2JS}AValue: JSValue{$else}const AMessage: TNyxText{$endif});
@@ -452,54 +488,179 @@ end;
 
 procedure TToolbarBinding.Search(const AText: TNyxText);
 var
-  LLease: INyxDataToolbarBinding;
-  LCapture: INyxInputCapture;
-  LInputStage: INyxPreparedPublication;
-  LQueryStage: INyxPreparedPublication;
+  LInstalled: Boolean;
 begin
-  LLease := Self;
-  CheckActive;
-  LCapture := FInputs.Capture([FSearch]);
-  LInputStage := FInputs.Prepare(LCapture, [NyxInputValue(FSearch, AText)]);
-  LQueryStage := FSession.PrepareSession(FSession.Capture, FActor, SearchEdits(AText));
-  CheckActive;
-  PublishNyxGroup([LInputStage, LQueryStage]);
+  RunCommand(ntcSearch, AText, FOptions.BaselineChoice, False, LInstalled);
 end;
 
 procedure TToolbarBinding.Sort(const AReference: TNyxToolbarSortRef);
 var
-  LLease: INyxDataToolbarBinding;
-  LCapture: INyxInputCapture;
-  LInputStage: INyxPreparedPublication;
-  LQueryStage: INyxPreparedPublication;
-  LEdits: TNyxQuerySessionEdits;
+  LInstalled: Boolean;
 begin
-  LLease := Self;
-  CheckActive;
-  LEdits := SortEdits(AReference);
-  LCapture := FInputs.Capture([FSort]);
-  LInputStage := FInputs.Prepare(LCapture, [NyxInputValue(FSort, AReference.Name)]);
-  LQueryStage := FSession.PrepareSession(FSession.Capture, FActor, LEdits);
-  CheckActive;
-  PublishNyxGroup([LInputStage, LQueryStage]);
+  RunCommand(ntcSort, '', AReference, False, LInstalled);
 end;
 
 procedure TToolbarBinding.Clear;
+var
+  LInstalled: Boolean;
+begin
+  RunCommand(ntcClear, '', FOptions.BaselineChoice, False, LInstalled);
+end;
+
+function TToolbarBinding.GetLastCommand: TNyxToolbarCommandFeedback;
+begin
+  { Data-only observation also works after the scheduler/scope has retired.
+    As with the binding itself, callers capture this value on the UI thread. }
+  Result := FLastCommand;
+end;
+
+procedure TToolbarBinding.RecordCommandFailure(ACommand: TNyxToolbarCommand;
+  AInstalled: Boolean; const AMessage: TNyxText);
+begin
+  FLastCommand.FCommand := ACommand;
+  FLastCommand.FMessage := AMessage;
+
+  if AInstalled then
+  begin
+    FLastCommand.FOutcome := ntcoCommittedWithError;
+  end
+  else
+  begin
+    FLastCommand.FOutcome := ntcoRefused;
+  end;
+  { Diagnostic presentation must not replace the original exception, including
+    a raw browser value. The copied receipt remains available if refresh fails
+    or retires this scope. Successful-command refresh errors are NOT swallowed:
+    RunCommand catches them after its real installation marker instead. }
+  try
+    UpdateQueryStatus;
+  except
+  end;
+end;
+
+procedure TToolbarBinding.RunCommand(ACommand: TNyxToolbarCommand;
+  const AText: TNyxText; const ASort: TNyxToolbarSortRef;
+  AAcceptedEvent: Boolean; out AInstalled: Boolean);
 var
   LLease: INyxDataToolbarBinding;
   LCapture: INyxInputCapture;
   LInputStage: INyxPreparedPublication;
   LQueryStage: INyxPreparedPublication;
+  LProof: TToolbarCommandPublication;
+  LProofLease: INyxPreparedPublication;
+  LEdits: TNyxQuerySessionEdits;
+  LFailure: TToolbarFailure;
 begin
   LLease := Self;
+  AInstalled := False;
+  { Check revocation before dereferencing services released by Disconnect.
+    Retained commands keep their typed cancellation and cannot replace the
+    retired owner's last receipt or reach a successor. }
   CheckActive;
-  LCapture := FInputs.Capture([FSearch, FSort]);
-  LInputStage := FInputs.Prepare(LCapture, [NyxInputValue(FSearch, TNyxText('')),
-    NyxInputValue(FSort, FOptions.BaselineChoice.Name)]);
-  LQueryStage := FSession.PrepareSession(FSession.Capture, FActor,
-    NyxQuerySessionEdits.ClearOwner);
-  CheckActive;
-  PublishNyxGroup([LInputStage, LQueryStage]);
+  FLastCommand := Default(TNyxToolbarCommandFeedback);
+  FLastCommand.FCommand := ACommand;
+  FLastCommand.FOutcome := ntcoRunning;
+  LFailure := Default(TToolbarFailure);
+  LProof := TToolbarCommandPublication.Create;
+  LProofLease := LProof;
+  try
+    CheckActive;
+    case ACommand of
+      ntcSearch:
+        begin
+          LEdits := SearchEdits(AText);
+
+          if not AAcceptedEvent then
+          begin
+            LCapture := FInputs.Capture([FSearch]);
+            LInputStage := FInputs.Prepare(LCapture, [NyxInputValue(FSearch, AText)]);
+          end;
+        end;
+      ntcSort:
+        begin
+          LEdits := SortEdits(ASort);
+
+          if not AAcceptedEvent then
+          begin
+            LCapture := FInputs.Capture([FSort]);
+            LInputStage := FInputs.Prepare(LCapture, [NyxInputValue(FSort, ASort.Name)]);
+          end;
+        end;
+      ntcClear:
+        begin
+          LEdits := NyxQuerySessionEdits.ClearOwner;
+          LCapture := FInputs.Capture([FSearch, FSort]);
+          LInputStage := FInputs.Prepare(LCapture, [NyxInputValue(FSearch, TNyxText('')),
+            NyxInputValue(FSort, FOptions.BaselineChoice.Name)]);
+        end;
+    else
+      raise ENyxDataToolbar.Create('Toolbar command requires a concrete action');
+    end;
+    LQueryStage := FSession.PrepareSession(FSession.Capture, FActor, LEdits);
+    CheckActive;
+
+    if LInputStage = nil then
+    begin
+      { Accepted user input already owns its scalar publication. Never synthesize
+        a second change callback or turn that input into a programmatic reset. }
+      PublishNyxGroup([LQueryStage, LProofLease]);
+    end
+    else
+    begin
+      PublishNyxGroup([LInputStage, LQueryStage, LProofLease]);
+    end;
+    AInstalled := LProof.Installed;
+    FLastCommand.FOutcome := ntcoSucceeded;
+    UpdateQueryStatus;
+  except
+    {$ifdef PAS2JS}
+    CaptureToolbarFailure(LFailure, JSExceptValue);
+    AInstalled := LProof.Installed;
+
+    if LFailure.Raw then
+    begin
+      RecordCommandFailure(ACommand, AInstalled, 'The command failed in platform code.');
+    end
+    else
+    begin
+      { Match native exact diagnostic selection. A Pascal wrapper's explanatory
+        Message is not the original retained receiver text on either target. }
+
+      if TObject(LFailure.Value) is ENyxInputAssignmentRefused then
+      begin
+        LFailure.Message := ENyxInputAssignmentRefused(TObject(LFailure.Value)).Diagnostic;
+      end
+      else if (TObject(LFailure.Value) is ENyxPublicationNotification) and
+        ENyxPublicationNotification(TObject(LFailure.Value)).HasReceiverMessage then
+      begin
+        LFailure.Message := ENyxPublicationNotification(TObject(LFailure.Value)).ReceiverMessage;
+      end;
+      RecordCommandFailure(ACommand, AInstalled, LFailure.Message);
+    end;
+    raise;
+    {$else}
+    on LError: Exception do
+    begin
+
+      if LError is ENyxInputAssignmentRefused then
+      begin
+        LFailure.Message := ENyxInputAssignmentRefused(LError).Diagnostic;
+      end
+      else if (LError is ENyxPublicationNotification) and
+        ENyxPublicationNotification(LError).HasReceiverMessage then
+      begin
+        LFailure.Message := ENyxPublicationNotification(LError).ReceiverMessage;
+      end
+      else
+      begin
+        CaptureToolbarFailure(LFailure, LError.Message);
+      end;
+      AInstalled := LProof.Installed;
+      RecordCommandFailure(ACommand, AInstalled, LFailure.Message);
+      raise;
+    end;
+    {$endif}
+  end;
 end;
 
 procedure TToolbarObserver.Observe(const AEvent: TNyxEventInfo; ACallbackCount: Integer);
@@ -547,10 +708,54 @@ function TToolbarBinding.GetQueryStatus: TNyxText;
 var
   LLease: INyxDataToolbarBinding;
   LObservation: TNyxQueryWorkbenchObservation;
+  LAction: TNyxText;
+  LMessage: TNyxText;
+  LPosition: Integer;
+  LCount: Integer;
+  LScalar: Integer;
 begin
   LLease := Self;
   LObservation := GetObservation;
   Result := NyxDataToolbarQuerySummary(LObservation, FActor.ID, FOptions.QueryPresentation);
+
+  if FLastCommand.Outcome in [ntcoRefused, ntcoCommittedWithError] then
+  begin
+    case FLastCommand.Command of
+      ntcSearch: LAction := 'Search';
+      ntcSort: LAction := 'Sort';
+      ntcClear: LAction := 'Clear';
+    else
+      LAction := 'Command';
+    end;
+    { Bound only the visible preview at complete scalar boundaries. Keep the
+      original receipt exact; arbitrary creator diagnostics need not fit a label. }
+    LPosition := 1;
+    LCount := 0;
+    while (LPosition <= Length(FLastCommand.Message)) and (LCount < 240) do
+    begin
+
+      if not NyxNextScalar(FLastCommand.Message, LPosition, LScalar) then
+      begin
+        Break;
+      end;
+      Inc(LCount);
+    end;
+    LMessage := Copy(FLastCommand.Message, 1, LPosition - 1);
+
+    if LPosition <= Length(FLastCommand.Message) then
+    begin
+      LMessage := LMessage + NyxScalarText($2026);
+    end;
+
+    if FLastCommand.Outcome = ntcoRefused then
+    begin
+      Result := Result + ' ' + LAction + ' was not applied. ' + LMessage;
+    end
+    else
+    begin
+      Result := Result + ' ' + LAction + ' applied; a follow-up failed. ' + LMessage;
+    end;
+  end;
 end;
 
 function TToolbarBinding.GetQueryControls: INyxCollectionQueryWorkbench;
@@ -607,6 +812,8 @@ begin
 end;
 
 procedure TToolbarBinding.Observe(const AEvent: TNyxEventInfo);
+var
+  LInstalled: Boolean;
 begin
   { An already snapshotted router slot is inert after query/view retirement.
     Direct public commands still report a typed cancellation to their caller. }
@@ -618,7 +825,21 @@ begin
 
   if (AEvent.Trigger = ntClick) and (AEvent.OriginID = FClear.ID) then
   begin
-    Clear;
+    try
+      RunCommand(ntcClear, '', FOptions.BaselineChoice, False, LInstalled);
+    except
+      on LError: ENyxInputAssignmentRefused do
+      begin
+        { Only an unchanged, expected input refusal with opted-in query status
+          becomes ordinary UI feedback. Direct methods, hidden/static recipes,
+          programmer errors and any post-install failure retain their exception. }
+
+        if LInstalled or (FQueryStatus.ID = '') then
+        begin
+          raise;
+        end;
+      end;
+    end;
     Exit;
   end;
 
@@ -638,14 +859,14 @@ begin
 
   if AEvent.OriginID = FSearch.ID then
   begin
-    PublishQuery(SearchEdits(AEvent.Value.AsText));
+    RunCommand(ntcSearch, AEvent.Value.AsText, FOptions.BaselineChoice, True, LInstalled);
   end
   else
   begin
 
     if AEvent.OriginID = FSort.ID then
     begin
-      PublishQuery(SortEdits(NyxToolbarSort(AEvent.Value.AsText)));
+      RunCommand(ntcSort, '', NyxToolbarSort(AEvent.Value.AsText), True, LInstalled);
     end;
   end;
 end;

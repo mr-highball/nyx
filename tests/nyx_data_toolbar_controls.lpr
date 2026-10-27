@@ -29,9 +29,15 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.controls, nyx.model, nyx.codec, nyx.state,
   nyx.data.toolbar, nyx.coordinators, nyx.collections, nyx.collections.query,
   nyx.collections.view, nyx.collections.view.types, nyx.collections.query.session,
-  nyx.collections.selection, nyx.publication;
+  nyx.collections.selection, nyx.publication, nyx.binding.types, nyx.binding.inputs,
+  nyx.data.toolbar.query;
 
 type
+  { Authored binding cases exercise ordinary input/query publication, never
+    private renderer flags or a substitute query engine. Default keeps the
+    existing application unchanged; each additional fixture owns its stores. }
+  TBindingFixture = (tbfDefault, tbfTwoWay, tbfSearchProjection,
+    tbfSortProjection, tbfReadOnly, tbfAliasedState, tbfProjectionAtBaseline);
   {$ifndef PAS2JS}
   { Keep native callback failures observable without hiding behind a modal.
     The fixture receiver outlives all forms and renderers. }
@@ -53,7 +59,8 @@ type
     Renderer: TNyxLCLRenderer;
     Host: TForm;
     {$endif}
-    constructor Create(AInitialBindings: Boolean = False);
+    constructor Create(AInitialBindings: Boolean = False;
+      AFixture: TBindingFixture = tbfDefault);
     destructor Destroy; override;
     function Role(const AToolbar, APart: TNyxText): TNyxText;
     function Toolbar(const AID: TNyxText): INyxDataToolbarBinding;
@@ -63,6 +70,7 @@ type
     function InputText(const AID, APart: TNyxText): TNyxText;
     function Rows(const AID: TNyxText): INyxCollectionView;
     function VisibleFirst(const AID: TNyxText): TNyxText;
+    function StatusText: TNyxText;
   end;
 
 var
@@ -103,7 +111,7 @@ begin
 end;
 {$endif}
 
-constructor TJourney.Create(AInitialBindings: Boolean);
+constructor TJourney.Create(AInitialBindings: Boolean; AFixture: TBindingFixture);
 var
   LPage: INyxPage;
   LToolbar: INyxDataToolbar;
@@ -146,14 +154,51 @@ begin
   LPage.Children[1].Binds.Collection(LSpec);
   LOptions := NyxDataToolbarOptions(NyxControl('people-table'), LName)
     .Sort(NyxToolbarSort('Name descending'), NyxSort(LName, nsdDescending));
+
+  if AFixture <> tbfDefault then
+  begin
+    LOptions := LOptions.QueryContext(NyxDataToolbarQueryOptions.Display(ntqdSummary));
+  end;
   LConfigured := ConfigureNyxDataToolbar(NewNyxDataToolbar('table-tools'), LOptions);
 
-  if AInitialBindings then
+  if AInitialBindings or (AFixture <> tbfDefault) then
   begin
     Document.State.SetValue(NyxTextState('initial-search'), 'Ada');
     Document.State.SetValue(NyxTextState('initial-sort'), 'Name descending');
-    LConfigured.SearchInput.Binds.Value(NyxTextState('initial-search'));
-    LConfigured.SortSelect.Binds.Value(NyxTextState('initial-sort'));
+
+    if AFixture = tbfProjectionAtBaseline then
+    begin
+      Document.State.SetValue(NyxTextState('initial-search'), '');
+      Document.State.SetValue(NyxTextState('initial-sort'), 'Original order');
+    end;
+
+    if AFixture = tbfAliasedState then
+    begin
+      Document.State.SetValue(NyxTextState('initial-search'), 'Name descending');
+    end;
+
+    if AFixture in [tbfSearchProjection, tbfProjectionAtBaseline] then
+    begin
+      LConfigured.SearchInput.Binds.Value(NyxTextState('initial-search'), bdFromState);
+    end
+    else
+    begin
+      LConfigured.SearchInput.Binds.Value(NyxTextState('initial-search'));
+    end;
+
+    if AFixture in [tbfSortProjection, tbfProjectionAtBaseline] then
+    begin
+      LConfigured.SortSelect.Binds.Value(NyxTextState('initial-sort'), bdFromState);
+    end
+    else if AFixture = tbfAliasedState then
+    begin
+      LConfigured.SortSelect.Binds.Value(NyxTextState('initial-search'));
+    end
+    else
+    begin
+      LConfigured.SortSelect.Binds.Value(NyxTextState('initial-sort'));
+    end;
+    LConfigured.SearchInput.Configure.ReadOnly(AFixture = tbfReadOnly).Done;
   end;
   LPage.Add(LConfigured);
   LPage.Add(NewNyxTable('people-table'));
@@ -318,6 +363,145 @@ begin
   {$endif}
 end;
 
+function TJourney.StatusText: TNyxText;
+var
+  LID: TNyxText;
+begin
+  LID := Renderer.Root.Find('table-tools').Part(NyxPart(NyxDataToolbarQueryStatusPart)).ID;
+  {$ifdef PAS2JS}
+  Result := Renderer.ElementFor(LID).textContent;
+  {$else}
+  Application.ProcessMessages;
+  Result := TNyxText(TLabel(Renderer.ControlFor(LID)).Caption);
+  {$endif}
+end;
+
+{ The actual Clear button should explain expected input refusals, while direct
+  Pascal calls retain their typed exception and exact unchanged transaction.
+  Read visible values/status as well as state/query models. }
+procedure RunBindingCases;
+var
+  LFixture: TBindingFixture;
+  LJourney: TJourney;
+  LBinding: INyxDataToolbarBinding;
+  LFeedback: INyxDataToolbarCommandFeedback;
+  LBefore: TNyxText;
+  LQuery: TNyxText;
+  LSearch: TNyxText;
+  LSort: TNyxText;
+  LRevision: Integer;
+  LKind: TNyxInputRefusalKind;
+  LRefused: Boolean;
+begin
+  for LFixture := tbfTwoWay to tbfProjectionAtBaseline do
+  begin
+    LJourney := TJourney.Create(False, LFixture);
+    try
+      LBinding := LJourney.Toolbar('table-tools');
+      Check(Supports(LBinding, INyxDataToolbarCommandFeedback, LFeedback),
+        'the original toolbar binding exposes optional typed command feedback');
+      Check(LFeedback.LastCommand.Outcome = ntcoIdle, 'initial adoption is not an invented user command');
+      LBefore := TNyxCodec.Encode(LJourney.Document);
+      LQuery := LJourney.Rows('people-table').QueryPolicy.ToData.ToJSON;
+      LSearch := LJourney.InputText('table-tools', 'search');
+      LSort := LJourney.InputText('table-tools', 'sort');
+      LRevision := LJourney.Renderer.State.Revision;
+      LJourney.ClickClear('table-tools');
+
+      if LFixture in [tbfTwoWay, tbfProjectionAtBaseline] then
+      begin
+        Check((LFeedback.LastCommand.Command = ntcClear) and
+          (LFeedback.LastCommand.Outcome = ntcoSucceeded),
+          'writable bindings and equal one-way projections admit a real Clear');
+        Check((LJourney.Rows('people-table').Snapshot.Count = 3) and
+          (LJourney.InputText('table-tools', 'search') = '') and
+          (LJourney.InputText('table-tools', 'sort') = 'Original order'),
+          'accepted Clear synchronizes visible Search, Sort and real Table membership');
+        Check(Pos('Clear was not applied', LJourney.StatusText) = 0,
+          'successful status contains no stale refusal');
+      end
+      else
+      begin
+        Check((LFeedback.LastCommand.Command = ntcClear) and
+          (LFeedback.LastCommand.Outcome = ntcoRefused) and
+          (LFeedback.LastCommand.Message <> ''),
+          'actual Clear exposes a structured expected refusal');
+        Check((LJourney.Renderer.State.Revision = LRevision) and
+          (LJourney.Rows('people-table').QueryPolicy.ToData.ToJSON = LQuery) and
+          (LJourney.InputText('table-tools', 'search') = LSearch) and
+          (LJourney.InputText('table-tools', 'sort') = LSort),
+          'a refused Clear preserves state, query and both physical input values');
+        Check(Pos('Clear was not applied.', LJourney.StatusText) > 0,
+          'the ordinary rendered query status explains the unchanged Clear');
+        LRefused := False;
+        try
+          LBinding.Clear;
+        except
+          on LError: ENyxInputAssignmentRefused do
+          begin
+            LRefused := True;
+            LKind := nirkProjection;
+
+            if LFixture = tbfReadOnly then
+            begin
+              LKind := nirkInteraction;
+            end
+            else if LFixture = tbfAliasedState then
+            begin
+              LKind := nirkConflictingState;
+            end;
+            Check((LError.Kind = LKind) and (LError.Control.ID <> '') and
+              (LError.Diagnostic = LFeedback.LastCommand.Message),
+              'direct callers retain exact typed input-refusal diagnostics and identity');
+          end;
+        end;
+        Check(LRefused and (LJourney.Renderer.State.Revision = LRevision) and
+          (LJourney.Rows('people-table').QueryPolicy.ToData.ToJSON = LQuery),
+          'direct refused commands keep their exception and unchanged models');
+
+        if LFixture in [tbfSearchProjection, tbfSortProjection] then
+        begin
+
+          if LFixture = tbfSearchProjection then
+          begin
+            LJourney.Renderer.State.SetValue(NyxTextState('initial-search'), '');
+          end
+          else
+          begin
+            LJourney.Renderer.State.SetValue(NyxTextState('initial-sort'), 'Original order');
+          end;
+          LJourney.ClickClear('table-tools');
+          Check((LFeedback.LastCommand.Outcome = ntcoSucceeded) and
+            (LJourney.Rows('people-table').Snapshot.Count = 3) and
+            (Pos('Clear was not applied', LJourney.StatusText) = 0),
+            'updating the authoritative bound value permits recovery and clears the old explanation');
+        end
+        else if LFixture = tbfReadOnly then
+        begin
+          LBinding.Sort(NyxToolbarSort('Original order'));
+          Check((LFeedback.LastCommand.Command = ntcSort) and
+            (LFeedback.LastCommand.Outcome = ntcoSucceeded) and
+            (LJourney.InputText('table-tools', 'search') = LSearch) and
+            (Pos('Clear was not applied', LJourney.StatusText) = 0),
+            'an independent writable Sort remains usable beside a read-only Search');
+        end;
+      end;
+      Check((TNyxCodec.Encode(LJourney.Document) = LBefore) and
+        (LJourney.Rows('people-table').Store.Snapshot.Count = 3),
+        'binding command outcomes preserve authored defaults and source rows');
+      LBinding := nil;
+      FreeAndNil(LJourney);
+      Check(LFeedback.LastCommand.Outcome in [ntcoSucceeded, ntcoRefused],
+        'copied feedback remains inspectable after the mounted owner retires');
+      LFeedback := nil;
+    finally
+      LFeedback := nil;
+      LBinding := nil;
+      LJourney.Free;
+    end;
+  end;
+end;
+
 procedure Run;
 var
   LJourney: TJourney;
@@ -470,6 +654,7 @@ begin
     try
       Application.OnException := GFailures.Failed;
       Run;
+      RunBindingCases;
       Check(GFailures.Message = '', 'native dispatch has no unhandled callback exception');
     finally
       Application.OnException := nil;
@@ -478,6 +663,7 @@ begin
     WriteLn('PASS ', GChecks, ' DataToolbar application checks');
     {$else}
     Run;
+    RunBindingCases;
     Web.document.body.setAttribute('data-toolbar-checks', IntToStr(GChecks));
     {$endif}
   except

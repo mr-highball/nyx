@@ -430,7 +430,8 @@ begin
 
     if not NyxInteractionPolicy(LNode).CanEditValue then
     begin
-      raise ENyxState.Create('Input assignment requires an enabled visible writable control');
+      raise ENyxInputAssignmentRefused.Create(nirkInteraction, AValues[LIndex].Control,
+        'The input is read-only, disabled, or hidden.');
     end;
     LValue := AValues[LIndex].Value;
 
@@ -455,7 +456,8 @@ begin
 
         if LNode.Prop(NyxAttributeName(atValue)) <> LProjected then
         begin
-          raise ENyxState.Create('Input assignment cannot write a state-only or resource projection');
+          raise ENyxInputAssignmentRefused.Create(nirkProjection, AValues[LIndex].Control,
+            'The value is supplied by a one-way or resource binding.');
         end;
         Continue;
       end;
@@ -472,7 +474,8 @@ begin
 
         if not LAssignments[LAssignment].Value.SameValue(LValue) then
         begin
-          raise ENyxState.Create('Input assignments conflict on one bound state value');
+          raise ENyxInputAssignmentRefused.Create(nirkConflictingState, AValues[LIndex].Control,
+            'These inputs require different values for the same bound state.');
         end;
       end
       else

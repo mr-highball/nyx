@@ -369,6 +369,7 @@ var
   LOther: Integer;
   LStores: array of INyxCollection;
   LBinding: INyxDataToolbarBinding;
+  LFeedback: INyxDataToolbarCommandFeedback;
   LSuccessor: INyxDataToolbarBinding;
   LStream: INyxEventStream;
   LCallback: TSearchCallback;
@@ -458,6 +459,11 @@ begin
       Check(LCommitted and (LRows.Snapshot.Count = 1) and
         (LRows.Snapshot.ItemAt(0).GetValue(NyxTextField('name')) = 'Grace'),
         'query observer failure reports an already committed reusable Search');
+      Check(Supports(LBinding, INyxDataToolbarCommandFeedback, LFeedback) and
+        (LFeedback.LastCommand.Command = ntcSearch) and
+        (LFeedback.LastCommand.Outcome = ntcoCommittedWithError) and
+        (Pos('Deliberate committed query notification failure', LFeedback.LastCommand.Message) > 0),
+        'typed feedback records actual commitment without hiding the notification failure');
       Check(GCallbacks = 2, 'programmatic publication synthesizes no input callbacks');
     finally
       LFaultToken.Disconnect;
@@ -465,6 +471,8 @@ begin
       LFault.Free;
     end;
     ChooseSort(0, 'left');
+    Check(LFeedback.LastCommand.Outcome = ntcoSucceeded,
+      'the next accepted physical command replaces the committed-error receipt');
     CheckVisibleStatus(0, 'left');
     LOldControls := OpenQuery(0, 'left');
     LOldPresenter := LOldControls.Presenter;

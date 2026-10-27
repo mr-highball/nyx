@@ -4,6 +4,15 @@
 
 **Description:**
 
+The runtime binding/refusal return now has typed unchanged-versus-committed
+feedback and actual native one-way/read-only/shared-state cases. Existing ordinary
+Studio Save/Open and its own compiled application continue to pass. WORK.md owns
+the scoped results and distinguishes those regressions from authoring every new
+case through Studio. Next carry useful binding/refusal cases through the existing
+ordinary property/binding UI and that journey's own saved application. No options
+wire/source change, full criterion or completion credit is added; all original
+browser/physical/quality and coordinator/parity acceptance remains required.
+
 Make the existing DataToolbar an opt-in useful collection-control experience
 inside Studio. The public runtime now coordinates actual List/Table targets;
 its native ordinary/reusable App checkpoints are retained in runtime02. Consume

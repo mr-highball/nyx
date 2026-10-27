@@ -4,6 +4,16 @@
 
 **Description:**
 
+The current binding/refusal return makes expected Clear conflicts visible in the
+configured query status and exposes copied typed action/outcome diagnostics.
+Read-only/one-way/conflicting bindings retain state, query and physical values;
+recovery clears an older explanation. Actual installation distinguishes committed
+observer errors, and retirement leaves only readable data. WORK.md separates the
+new native renderer cases, existing Studio/saved-app regressions and nine browser
+compilations. This advances the third/fifth criteria without accepting their full
+scope. New cases' Studio adoption, browser/physical/assistive and full prerequisites
+remain open; no extra completion credit follows.
+
 Give a person using a DataToolbar a clear view of all filters/order affecting
 the target, including peer and retained contributions after page navigation.
 Provide ordinary Nyx controls for inspecting and explicitly withdrawing those

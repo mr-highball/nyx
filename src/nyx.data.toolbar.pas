@@ -123,6 +123,34 @@ type
     property Mode: TNyxDataToolbarIntentMode read FMode;
     property Options: TNyxDataToolbarOptions read GetOptions;
   end;
+  { Closed runtime actions, independent of captions or persisted control names.
+    None is the initial receipt; no action identity confers query authority. }
+  TNyxToolbarCommand = (ntcNone, ntcSearch, ntcSort, ntcClear);
+  { Applied includes an admitted no-op. A failure after actual installation is
+    committed and must never be presented as a refused or rolled-back command. }
+  TNyxToolbarCommandOutcome = (ntcoIdle, ntcoRunning, ntcoSucceeded,
+    ntcoRefused, ntcoCommittedWithError);
+  { Copied diagnostic data, readable after retirement without retaining a view,
+    actor or callback. Message retains exact text; visible summaries are bounded.
+    Default records describe None/Idle. No receipt is persisted as design intent. }
+  TNyxToolbarCommandFeedback = record
+  private
+    FCommand: TNyxToolbarCommand;
+    FOutcome: TNyxToolbarCommandOutcome;
+    FMessage: TNyxText;
+  public
+    property Command: TNyxToolbarCommand read FCommand;
+    property Outcome: TNyxToolbarCommandOutcome read FOutcome;
+    property Message: TNyxText read FMessage;
+  end;
+  { Optional UI-thread command observation preserves the original binding GUID
+    and alternative implementations. Capture this data before passing it to a
+    worker. Failed direct calls still raise; the receipt explains admission. }
+  INyxDataToolbarCommandFeedback = interface(IInterface)
+    ['{7ED92612-AC6D-4D92-927F-458E45403D4C}']
+    function GetLastCommand: TNyxToolbarCommandFeedback;
+    property LastCommand: TNyxToolbarCommandFeedback read GetLastCommand;
+  end;
   { UI-thread-confined commands use the accepted scalar/query owners together.
     Clear removes only this actor's predicates and resets sort only if owned.
     Disconnect revokes authority without restoring an obsolete query. }

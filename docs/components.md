@@ -458,6 +458,31 @@ synthesize Click/Change callbacks. Input resets and collection query changes
 publish together through the existing scalar/state/query owners. Refusal changes
 none of that group; notification failure reports already committed models.
 
+`INyxDataToolbarCommandFeedback` is an optional specialized observation on that
+same binding. `LastCommand` copies the action, outcome and diagnostic without a
+view, actor token or callback. Outcomes distinguish Running, Succeeded, Refused
+and CommittedWithError; a successful no-op is still admitted. Capture the receipt
+on UI before passing its data to a worker. Its last copied result remains readable
+after retirement; a retired command still raises cancellation before touching
+released services or replacing that result.
+
+When query status is configured, an expected Clear refusal explains **Clear was
+not applied** in the ordinary status Label. Direct Pascal calls keep raising their
+typed errors. Without query status, the established exception path remains.
+`ENyxInputAssignmentRefused` (from `nyx.binding.inputs`) distinguishes interaction
+policy, one-way/resource projection and conflicting shared-state assignments,
+with a copied control reference and exact portable `Diagnostic`. Other errors
+and all failures after installation still propagate. A bounded Unicode-safe
+message preview keeps the status useful; the typed receipt keeps its diagnostic.
+
+Two-way input resets and their query edit publish together. A one-way projection
+can participate only when the reset needs no change to its supplied value; update
+its authoritative source before retrying. Explicit read-only/disabled/hidden
+policies still forbid reset, and incompatible requests for one shared state key
+refuse the whole group. The next accepted Search, Sort or Clear replaces an older
+error explanation. Post-publication callback errors say the command applied;
+they never imply rollback. Caller callbacks and their policies remain intact.
+
 One query session retains the admitted baseline. Toolbar searches AND with it
 and with independent owners' predicates. One shared user-sort vector overrides
 baseline ordering. Explicit Sort chooses that vector; Clear withdraws only this

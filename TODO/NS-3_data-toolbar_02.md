@@ -31,6 +31,17 @@ the exact saved/generated application under authoring01.
 
 **Work packets and handoff:**
 
+The binding/refusal return now adds optional typed command receipts and structured
+shared-input refusals while preserving the original binding/GUID and options.
+Configured query status explains expected unchanged Clear failures; direct APIs
+and post-commit errors keep their semantics. Actual native controls qualify
+two-way, one-way, read-only, shared-state, recovery and retired-command behavior.
+WORK.md owns 1,053 assertions/fifteen clean heaps, including the existing source/
+Studio/saved-application regressions and unchanged input suites. Nine browser
+programs compile only. New binding cases still need ordinary Studio authoring/
+saved-app adoption and full browser/physical/assistive/parity acceptance. No full
+criterion, prerequisite or completion credit closes.
+
 The later authoring01 checkpoint now exercises this runtime through actual
 native Studio preview, Save/Open and the application compiled from its own
 saved Pascal at1280/390. It passes61/69 Studio and14/14 saved application checks;

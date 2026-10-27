@@ -9,6 +9,73 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — DataToolbar binding refusals — 2026-10-26
+
+Previous goal turn: PROGRESS; 155a161 is pushed and remote-verified. Root remains
+SOLO. Batch nineteen returns to existing DataToolbar02/03 and authoring01's
+binding/read-only/refusal matrix. The existing scalar preparation already refuses
+read-only, one-way projection and conflicting-state writes before query mutation;
+the user-facing gap is useful command feedback without an unhandled Clear error.
+
+Deliver an optional specialized copied command receipt, preserving the original
+binding/GUID and persisted options. Distinguish refusal from actual publication
+and post-commit failure through the existing prepared group phases, never by
+matching exception messages. Visible query status explains an expected refused
+Clear; direct API errors and committed notification failures keep their semantics.
+Hidden/static presentations retain their established exception behavior.
+
+The shared input contract now exposes ENyxInputAssignmentRefused with closed
+interaction/projection/conflicting-state reasons, a copied control reference and
+exact portable diagnostic. It remains an ENyxState. The optional toolbar command
+feedback interface copies action/outcome/message without changing the original
+binding GUID, options wire data or source generation. A final no-op participant
+observes actual group installation before notification; this is a receipt through
+the existing transaction phases, not another publication engine. Native and
+browser paths retain structured diagnostics and preserve raw browser throws.
+
+Configured query status renders an expected unchanged Clear refusal in its
+ordinary Label; direct calls and hidden/static recipes keep their exceptions.
+Other errors and every post-install failure still propagate. Successful commands
+replace stale explanations. Status previews are bounded at Unicode scalar
+boundaries while copied diagnostics remain exact. Retired commands cancel before
+touching released services; the last data-only receipt remains readable.
+
+Actual List/Table and reusable controls pass two-way, one-way, read-only,
+shared-state conflict, same-value projection, recovery and lifecycle cases.
+Refusals retain both physical input values, state revision, query policy, source
+rows and authored defaults. Rendered native status explains the refusal; writable
+Sort remains useful alongside a read-only Search. The existing deliberately
+failing observer still reports committed Search and the next physical command
+replaces that receipt, without synthesized caller callbacks.
+
+Private data-toolbar-binding-feedback-02 joins 33 successful compiler/runtime
+results: 139/139 ordinary application and 137/137 reusable checks, source30,
+generated13/13, authoring38, Studio108/116 and its own saved/compiled application
+40/40. The unchanged shared input suites add45 model and29/29 adapter checks:
+1,053 assertions with15 complete clean heaps. Nine browser programs compile/stage
+only. Zero owned warnings;63 installed Classes warning occurrences. All nine
+source/build/input pins stay exact. The retained first packet exposed the newly
+introduced retired-scheduler access and Unicode ellipsis conversions; restoring
+the lifetime fence and using the scalar text factory repair those failures.
+The supplemental runner's joined-switch guard refused before launching anything;
+its empty-output audit and corrected separate arguments are retained externally.
+
+This completes the declared native feedback/binding batch, not full original
+criteria, prerequisites or completion credit. The new binding cases are actual
+renderer consumers; existing Studio/source/generated journeys are regressions,
+not claims that every new binding case was authored through Studio. Browser,
+physical gesture, visual/assistive and full coordinator/parity gates stay open.
+All owned readers are terminal; no freeze remains. New artifacts/private
+orchestration and owned TEMP/TMP use external storage. No Nyx tool namespace is
+exposed in this turn's inventory; no authenticated observing or server-health
+claim follows. No refused browser route, cursor workaround, listener change or
+cleanup ran. Unrelated1280/390 directories remain untouched.
+
+Next carry useful binding/refusal cases into the ordinary Studio-to-saved-app
+journey through existing authoring01 and shared input owners. Preserve the full
+runtime02/query-detail03/coordinator/parity acceptance and outstanding browser/
+physical/quality matrix. Stop generic scalar/query or standalone source variants.
+
 ## Current checkpoint — Open JSON in the connected Workshop — 2026-10-26
 
 Previous goal turn: PROGRESS; f3df9c6 is pushed and remote-verified. Root remains

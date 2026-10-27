@@ -31,6 +31,25 @@ const
   NyxMaximumInputValues = 64;
 
 type
+  { Expected input-admission conflicts are distinct from malformed captures,
+    unknown roles and implementation errors. No value is installed on refusal. }
+  TNyxInputRefusalKind = (nirkInteraction, nirkProjection, nirkConflictingState);
+  { Structured expected refusal retains a copied control identity and exact
+    portable diagnostic, never a node, state owner or widget. Existing callers
+    catching ENyxState remain compatible. Diagnostic avoids native ANSI loss in
+    Exception.Message when a creator supplies supplementary Unicode. }
+  ENyxInputAssignmentRefused = class(ENyxState)
+  private
+    FKind: TNyxInputRefusalKind;
+    FControl: TNyxControlRef;
+    FDiagnostic: TNyxText;
+  public
+    constructor Create(AKind: TNyxInputRefusalKind; const AControl: TNyxControlRef;
+      const ADiagnostic: TNyxText);
+    property Kind: TNyxInputRefusalKind read FKind;
+    property Control: TNyxControlRef read FControl;
+    property Diagnostic: TNyxText read FDiagnostic;
+  end;
   { One copied typed assignment to an exact runtime identity. This is data,
     not authority: only a fresh capture from the same live input owner admits
     it. Values preserve their scalar family; no property names or wire strings
@@ -100,6 +119,15 @@ function NyxInputValue(const AControl: TNyxControlRef;
   AValue: Double): TNyxInputValue; overload;
 
 implementation
+
+constructor ENyxInputAssignmentRefused.Create(AKind: TNyxInputRefusalKind;
+  const AControl: TNyxControlRef; const ADiagnostic: TNyxText);
+begin
+  inherited Create(ADiagnostic);
+  FKind := AKind;
+  FControl.ID := AControl.ID;
+  FDiagnostic := ADiagnostic;
+end;
 
 function TNyxInputValue.GetControl: TNyxControlRef;
 begin
