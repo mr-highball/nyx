@@ -26,9 +26,10 @@ program json_workshop;
 uses
   SysUtils, nyx.model, nyx.json.workshop,
   {$ifdef PAS2JS}
-  Web, nyx.application.browser, nyx.files.save.browser, nyx.files.save.activation.browser;
+  Web, nyx.application.browser, nyx.files.save.browser, nyx.files.save.activation.browser,
+  nyx.files.open.browser;
   {$else}
-  Interfaces, Forms, nyx.application.lcl, nyx.files.save.lcl;
+  Interfaces, Forms, nyx.application.lcl, nyx.files.save.lcl, nyx.files.open.lcl;
   {$endif}
 
 type
@@ -70,6 +71,7 @@ begin
   GApplication := TWorkshopApplication.Create;
   try
     GApplication.ConfigureFileSaving(NewNyxBrowserActivatedFileSaveHost(NewNyxBrowserFileSaveHost));
+    GApplication.ConfigureFileOpening(NewNyxBrowserFileOpenHost);
     GApplication.Run(GDocument, TJSHTMLElement(document.body));
     ShowJSONWorkshopGraph(GApplication.View.ToolCanvasView(JSONWorkshopCanvas.ID));
     document.body.setAttribute('data-json-workshop-ready', 'passed');
@@ -92,6 +94,7 @@ begin
   GApplication := TWorkshopApplication.Create;
   try
     GApplication.ConfigureFileSaving(NewNyxLCLFileSaveHost);
+    GApplication.ConfigureFileOpening(NewNyxLCLFileOpenHost);
     GApplication.Mount(GDocument);
     GApplication.Window.ClientWidth := 1200;
     GApplication.Window.ClientHeight := 880;

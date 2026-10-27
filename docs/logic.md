@@ -984,16 +984,22 @@ assertions does not qualify browser input.
 
 The [JSON Workshop example](../examples/tool-canvas/README.md) is a practical
 starting point: a reusable notebook contains actual Memo/Button/Code controls,
-with typed Format and Save graphs. The save graph connects JSON parse/format,
+with typed Open, Format and Save graphs. The save graph connects JSON parse/format,
 UTF-8 encoding and the injected file service; its operation cards and positions
 use the public Tool Canvas contract. The portable design contains no file host.
-Both graphs begin with the authored **Prepare JSON** Pascal program. It accepts
-plain or completely fenced Markdown JSON without changing the input state. Its
+All three graphs use the authored **Prepare JSON** Pascal program. It accepts
+plain or completely fenced Markdown JSON and an optional BOM without changing the input state. Its
 typed text ports feed the strict parser; it preserves exact JSON values rather
 than projecting them through script numbers. **Pascal programs** exposes its
 source, checking and live replacement. Invalid drafts retain the accepted program
 and survive tab changes. Runtime edits stay local until explicitly saved through
 Studio's graph/program adoption host.
+The Open graph selects decoding and the accepted filename only after a completed
+read. Conditional skip provenance preserves content and name on Cancel; selected
+decode/parse failures expose no successful prefix. Its complete state publication
+uses the existing revision/generation guard, protecting newer text and retired
+pages. Read/save authority is injected independently by the launcher, never by
+the saved file options or filename.
 `tools/build.ps1 -Target json-workshop` runs the native control journey and the
 constructor exported by that same journey, then stages matching browser programs.
 Add `-JSONWorkshopStudio` to edit both formatter graphs through ordinary Studio

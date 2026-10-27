@@ -26,7 +26,7 @@ program nyx_json_workshop_controls;
 uses
   SysUtils, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.source, nyx.files, nyx.studio.files, nyx.studio.projects,
-  nyx.state, nyx.logic, nyx.files.save, nyx.scheduler,
+  nyx.state, nyx.logic, nyx.files.save, nyx.files.open, nyx.scheduler,
   nyx.json.workshop, nyx.tool.canvas, nyx.canvas.types, nyx.canvas.workspace,
   nyx.flow.routing, nyx.flow.declarations, nyx.view.behavior,
   nyx.programs, nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,
@@ -43,6 +43,8 @@ const
   CExactJSON: TNyxText = '{"name":"River 🌙","count":9007199254740993,"note":"line\u0000end"}';
   CReplacement: TNyxText = 'begin Prepared := ''{"custom":"Made with Pascal 🌙"}''; end.';
   CUnfinished: TNyxText = 'begin Prepared := ; { unfinished input } end.';
+  COpenedName: TNyxText = 'Sketch 🌙.json';
+  CNewerJSON: TNyxText = '{"draft":"Keep my newer text 🌙"}';
 
 type
   {$ifdef PAS2JS}
@@ -87,6 +89,25 @@ type
       const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
       AReply: TNyxFileSaveReply): INyxFileSaveRequest;
   end;
+  { Controlled read completion follows the same revocable receiver contract as
+    real hosts. A completed snapshot is data; it grants no disk or picker access. }
+  TOpenRequest = class(TNyxFileOpenRequest)
+  public
+    procedure Finish(AOutcome: TNyxFileOpenOutcome; const AFile: INyxFileSnapshot = nil);
+    function IsPending: Boolean;
+  end;
+  { Independent opening authority per App. The fixture keeps only copied options
+    and its latest token, never an application, view or callback after retirement. }
+  TOpenHost = class(TInterfacedObject, INyxFileOpenHost)
+  public
+    Calls: Integer;
+    Options: TNyxFileOpenOptions;
+    Request: TOpenRequest;
+    Lease: INyxFileOpenRequest;
+    function BeginOpen(const AOptions: TNyxFileOpenOptions;
+      const AScheduler: INyxScheduler; const AScope: INyxCancellationScope;
+      AReply: TNyxFileOpenReply): INyxFileOpenRequest;
+  end;
 
 var
   GDocument: TNyxDocument;
@@ -95,6 +116,8 @@ var
   GViews: array of TReviewCanvas;
   GHosts: array[0..1] of TSaveHost;
   GHostLeases: array of INyxFileSaveHost;
+  GOpenHosts: array[0..1] of TOpenHost;
+  GOpenLeases: array of INyxFileOpenHost;
   GNodes: array of INyxToolCanvasPipelineNodes;
   GBefore: TNyxText;
   GPretty: TNyxText;
@@ -110,6 +133,11 @@ var
   GAcceptedPrograms: TNyxText;
   GCustomPretty: TNyxText;
   GPeerPretty: TNyxText;
+  GOpenPretty: TNyxText;
+  GOpenCustomPretty: TNyxText;
+  GOpenSourceBefore: TNyxText;
+  GOpenPreviewBefore: TNyxText;
+  GOpenRevision: Integer;
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}
   GStudioJourney: INyxJSONWorkshopStudioJourney;
   GStudioPair: TNyxProjectPair;
@@ -182,6 +210,28 @@ begin
   Lease := Result;
 end;
 
+procedure TOpenRequest.Finish(AOutcome: TNyxFileOpenOutcome; const AFile: INyxFileSnapshot);
+begin
+  Complete(AOutcome, AFile);
+end;
+
+function TOpenRequest.IsPending: Boolean;
+begin
+  Result := Pending;
+end;
+
+function TOpenHost.BeginOpen(const AOptions: TNyxFileOpenOptions;
+  const AScheduler: INyxScheduler; const AScope: INyxCancellationScope;
+  AReply: TNyxFileOpenReply): INyxFileOpenRequest;
+begin
+  AScheduler.RequireUI;
+  Inc(Calls);
+  Options := AOptions.Copy;
+  Request := TOpenRequest.Create(AOptions, AScheduler, AScope, AReply);
+  Result := Request;
+  Lease := Result;
+end;
+
 procedure TypeSource(AApp: Integer; const AText: TNyxText);
 begin
   {$ifdef PAS2JS}
@@ -214,9 +264,31 @@ begin
   Result := '```' + #13#10 + CExactJSON + #13#10 + '```';
 end;
 
+function LoadedJSON: TNyxText;
+begin
+  Result := TNyxText(#$FEFF) + FencedJSON;
+end;
+
+function OpenSnapshot(const AName, AText: TNyxText): INyxFileSnapshot;
+var
+  LBytes: TNyxBytes;
+begin
+  LBytes := NyxEncodeUTF8(AText);
+  Result := NyxFileSnapshot(NyxFileMetadata(AName, Length(LBytes)), LBytes);
+end;
+
+function InvalidUTF8Snapshot: INyxFileSnapshot;
+var
+  LBytes: TNyxBytes;
+begin
+  SetLength(LBytes, 1);
+  LBytes[0] := 255;
+  Result := NyxFileSnapshot(NyxFileMetadata('invalid.json', 1), LBytes);
+end;
+
 { Copied diagnostic counters establish actual run completion. A timer tick alone
   cannot prove that a rejected asynchronous graph has finished without effects. }
-function SaveReport(AApp: Integer): TNyxDataValue;
+function RunReport(AApp: Integer; AControl: TJSONWorkshopControl = jwcSave): TNyxDataValue;
 var
   LRuntime: INyxCanvasRuntimeView;
   LRoutes: INyxFlowRouteBinding;
@@ -232,12 +304,21 @@ begin
   begin
     Result := LRoutes.Report(LIndex);
 
-    if Result.Field('owner').AsText = JSONWorkshopControl(jwcSave).ID then
+    if Result.Field('owner').AsText = JSONWorkshopControl(AControl).ID then
     begin
       Exit;
     end;
   end;
-  raise Exception.Create('The embedded Save route has no diagnostic record');
+  raise Exception.Create('The embedded control route has no diagnostic record');
+end;
+
+function OpenFinished(AApp, ACount: Integer): Boolean;
+var
+  LReport: TNyxDataValue;
+begin
+  LReport := RunReport(AApp, jwcOpen);
+  Result := (LReport.Field('started').AsInteger = ACount) and
+    (LReport.Field('active').AsInteger = 0);
 end;
 
 function ToolID(const ASuffix: TNyxText): TNyxText;
@@ -282,9 +363,9 @@ begin
   LInputs := [CExactJSON, FencedJSON, PlainFence,
     '```JSON' + #13#10 + CExactJSON + #13#10 + '```',
     '```json' + #10 + CExactJSON, '```javascript' + #10 + CExactJSON + #10 + '```',
-    '```', '  ' + CExactJSON + #9];
+    '```', '  ' + CExactJSON + #9, TNyxText(#$FEFF) + CExactJSON, LoadedJSON];
   LExpected := [CExactJSON, CExactJSON, CExactJSON, CExactJSON,
-    LInputs[4], LInputs[5], LInputs[6], CExactJSON];
+    LInputs[4], LInputs[5], LInputs[6], CExactJSON, CExactJSON, CExactJSON];
   for LIndex := 0 to High(LInputs) do
   begin
     LResult := LProgram.Run(NyxProgramValues.WithValue(
@@ -294,21 +375,44 @@ begin
   end;
 end;
 
+{ Step references, rather than registration indices, select each graph's own
+  explicit formatting policy. Opening and formatting are independently editable. }
+function SavedFormatter(const AFlow: TNyxFlowRef): INyxJSONFormat;
+var
+  LDefinition: INyxFlowDefinition;
+  LIndex: Integer;
+  LOperation: INyxLogicOperation;
+begin
+  Result := nil;
+  LDefinition := GDocument.Flows.Definition(AFlow);
+  for LIndex := 0 to LDefinition.StepCount - 1 do
+  begin
+
+    if LDefinition.Step(LIndex).Name = JSONWorkshopStep(jwsFormat).Name then
+    begin
+      LOperation := NyxLogicFromData(LDefinition.Descriptor(LIndex).Kind,
+        LDefinition.Configuration(LIndex));
+      Check(Supports(LOperation, INyxJSONFormat, Result),
+        'the saved formatter retains its specialized typed interface');
+      Exit;
+    end;
+  end;
+  raise Exception.Create('The saved graph has no formatter');
+end;
+
 procedure Initialize;
 var
   LIndex: Integer;
-  LStepIndex: Integer;
   LPair: TNyxProjectPair;
   LResolved: TNyxProjectPair;
   LWorkspace: TNyxSourceWorkspace;
   LSource: TNyxText;
   LTools: INyxToolCanvasView;
-  LDefinition: INyxFlowDefinition;
-  LOperation: INyxLogicOperation;
   LFormatter: INyxJSONFormat;
 begin
   SetLength(GViews, 2);
   SetLength(GHostLeases, 2);
+  SetLength(GOpenLeases, 2);
   SetLength(GNodes, 2);
   {$ifdef NYX_COMPILED_JSON_WORKSHOP}
   GDocument := BuildNyxDocument;
@@ -347,30 +451,23 @@ begin
   Check(ReadNyxTextFile(GDirectory + 'workshop.nyxproject').Text = EncodeNyxProject(LPair),
     'saved project bytes remain exact on the isolated file boundary');
   {$endif}
-  LDefinition := GDocument.Flows.Definition(NyxFlowRef('Format JSON'));
-  LOperation := nil;
-  for LStepIndex := 0 to LDefinition.StepCount - 1 do
-  begin
-
-    if LDefinition.Step(LStepIndex).Name = JSONWorkshopStep(jwsFormat).Name then
-    begin
-      LOperation := NyxLogicFromData(LDefinition.Descriptor(LStepIndex).Kind,
-        LDefinition.Configuration(LStepIndex));
-      Break;
-    end;
-  end;
-  Check(Supports(LOperation, INyxJSONFormat, LFormatter),
-    'the saved formatter is reconstructed through its specialized typed interface');
+  LFormatter := SavedFormatter(NyxFlowRef('Format JSON'));
   GPretty := LFormatter.Format(NewNyxJSONParse.Parse(CExactJSON));
   GCustomPretty := LFormatter.Format(NewNyxJSONParse.Parse('{"custom":"Made with Pascal 🌙"}'));
   GPeerPretty := LFormatter.Format(NewNyxJSONParse.Parse('{"peer":"Still independent 🌙"}'));
+  LFormatter := SavedFormatter(JSONWorkshopOpenFlow);
+  GOpenPretty := LFormatter.Format(NewNyxJSONParse.Parse(CExactJSON));
+  GOpenCustomPretty := LFormatter.Format(NewNyxJSONParse.Parse('{"custom":"Made with Pascal 🌙"}'));
   CheckPreparation;
   for LIndex := 0 to 1 do
   begin
     GHosts[LIndex] := TSaveHost.Create;
     GHostLeases[LIndex] := GHosts[LIndex];
+    GOpenHosts[LIndex] := TOpenHost.Create;
+    GOpenLeases[LIndex] := GOpenHosts[LIndex];
     GApps[LIndex] := TReviewApplication.Create;
     GApps[LIndex].ConfigureFileSaving(GHostLeases[LIndex]);
+    GApps[LIndex].ConfigureFileOpening(GOpenLeases[LIndex]);
     {$ifdef PAS2JS}
     GElements[LIndex] := TJSHTMLElement(document.createElement('main'));
     document.body.appendChild(GElements[LIndex]);
@@ -440,7 +537,10 @@ begin
     begin
       Exit;
     end;
-    Check(GTools.RefreshExecution.Status = nesSucceeded, 'actual program presentation completes');
+    if GTools.RefreshExecution.Status <> nesSucceeded then
+    begin
+      raise Exception.Create('Actual program presentation failed');
+    end;
   end;
   case GStage of
     0:
@@ -523,11 +623,11 @@ begin
     6:
       begin
 
-        if SaveReport(0).Field('failed').AsInteger = 0 then
+        if RunReport(0).Field('failed').AsInteger = 0 then
         begin
           Exit;
         end;
-        Check(SaveReport(0).Field('failure').AsText <> '',
+        Check(RunReport(0).Field('failure').AsText <> '',
           'invalid JSON has an actual completed failure diagnostic');
       end;
     7:
@@ -671,6 +771,213 @@ begin
         Check((GApps[1].State.GetValue(JSONWorkshopPreview) = GCustomPretty) and
           (GHosts[0].Calls = 3) and (GHosts[1].Calls = 2),
           'the other App returns with its original program and independent result, without extra file effects');
+        GOpenSourceBefore := GApps[0].State.GetValue(JSONWorkshopSource);
+        GOpenPreviewBefore := GApps[0].State.GetValue(JSONWorkshopPreview);
+        GOpenRevision := GApps[0].State.Revision;
+        Click(0, jwcOpen);
+      end;
+    23:
+      begin
+
+        if GOpenHosts[0].Calls <> 1 then
+        begin
+          Exit;
+        end;
+        Check(GOpenHosts[0].Request.IsPending and
+          (GApps[0].State.Revision = GOpenRevision),
+          'opening is pending without replacing the working document');
+        GOpenHosts[0].Request.Finish(nfooCancelled);
+      end;
+    24:
+      begin
+
+        if not OpenFinished(0, 1) then
+        begin
+          Exit;
+        end;
+        Check((GApps[0].State.GetValue(JSONWorkshopSource) = GOpenSourceBefore) and
+          (GApps[0].State.GetValue(JSONWorkshopPreview) = GOpenPreviewBefore) and
+          (GApps[0].State.GetValue(JSONWorkshopOpenedName) = '') and
+          GApps[0].State.GetValue(NyxBooleanState('open-cancelled')),
+          'cancel skips decode/parse and preserves source, preview and accepted file name');
+        Check((RunReport(0, jwcOpen).Field('failed').AsInteger = 0) and
+          (GApps[0].State.Revision = GOpenRevision + 1),
+          'cancel publishes one honest outcome without inventing a parse failure');
+        GOpenRevision := GApps[0].State.Revision;
+        Click(0, jwcOpen);
+      end;
+    25:
+      begin
+
+        if GOpenHosts[0].Calls <> 2 then
+        begin
+          Exit;
+        end;
+        GOpenHosts[0].Request.Finish(nfooRead, OpenSnapshot('broken.json', '{invalid'));
+      end;
+    26:
+      begin
+
+        if not OpenFinished(0, 2) then
+        begin
+          Exit;
+        end;
+        Check((RunReport(0, jwcOpen).Field('failed').AsInteger = 1) and
+          (RunReport(0, jwcOpen).Field('failure').AsText <> '') and
+          (GApps[0].State.Revision = GOpenRevision),
+          'invalid JSON rejects the entire selected read with an inspectable diagnostic');
+        Check((GApps[0].State.GetValue(JSONWorkshopSource) = GOpenSourceBefore) and
+          (GApps[0].State.GetValue(JSONWorkshopPreview) = GOpenPreviewBefore) and
+          (GApps[0].State.GetValue(JSONWorkshopOpenedName) = ''),
+          'a parser failure publishes no source, preview or filename prefix');
+        Click(0, jwcOpen);
+      end;
+    27:
+      begin
+
+        if GOpenHosts[0].Calls <> 3 then
+        begin
+          Exit;
+        end;
+        GOpenHosts[0].Request.Finish(nfooRead, InvalidUTF8Snapshot);
+      end;
+    28:
+      begin
+
+        if not OpenFinished(0, 3) then
+        begin
+          Exit;
+        end;
+        Check((RunReport(0, jwcOpen).Field('failed').AsInteger = 2) and
+          (GApps[0].State.Revision = GOpenRevision),
+          'malformed UTF-8 refuses before any selected output reaches application state');
+        Click(0, jwcOpen);
+      end;
+    29:
+      begin
+
+        if GOpenHosts[0].Calls <> 4 then
+        begin
+          Exit;
+        end;
+        Check((GOpenHosts[0].Options.ByteLimit = 1024 * 1024) and
+          (GOpenHosts[0].Options.ExtensionCount = 1) and
+          (GOpenHosts[0].Options.Extension(0) = 'json'),
+          'the real saved operation supplies its explicit byte budget and extension hint');
+        GOpenHosts[0].Request.Finish(nfooRead, OpenSnapshot(COpenedName, LoadedJSON));
+      end;
+    30:
+      begin
+
+        if not OpenFinished(0, 4) then
+        begin
+          Exit;
+        end;
+        Check((RunReport(0, jwcOpen).Field('succeeded').AsInteger = 2) and
+          (GApps[0].State.GetValue(JSONWorkshopSource) = LoadedJSON) and
+          (GApps[0].State.GetValue(JSONWorkshopPreview) = GOpenPretty) and
+          (GApps[0].State.GetValue(JSONWorkshopOpenedName) = COpenedName),
+          'a complete BOM/fenced UTF-8 file opens with exact source, values and supplementary filename');
+        Check(GApps[0].State.GetValue(NyxBooleanState('open-read')) and
+          not GApps[0].State.GetValue(NyxBooleanState('open-cancelled')) and
+          (GApps[0].State.Revision = GOpenRevision + 1),
+          'one admitted read replaces its complete source/preview/name and status frame atomically');
+        Check((GApps[1].State.GetValue(JSONWorkshopSource) = CExactJSON) and
+          (GApps[1].State.GetValue(JSONWorkshopPreview) = GCustomPretty),
+          'file input remains independent from the other App and its custom program');
+        GOpenRevision := GApps[0].State.Revision;
+        Click(0, jwcOpen);
+      end;
+    31:
+      begin
+
+        if GOpenHosts[0].Calls <> 5 then
+        begin
+          Exit;
+        end;
+        GOpenHosts[0].Request.Finish(nfooCancelled);
+      end;
+    32:
+      begin
+
+        if not OpenFinished(0, 5) then
+        begin
+          Exit;
+        end;
+        Check((GApps[0].State.GetValue(JSONWorkshopSource) = LoadedJSON) and
+          (GApps[0].State.GetValue(JSONWorkshopPreview) = GOpenPretty) and
+          (GApps[0].State.GetValue(JSONWorkshopOpenedName) = COpenedName) and
+          (GApps[0].State.Revision = GOpenRevision + 1),
+          'a later cancellation preserves the previously accepted file name as well as its content');
+        Click(0, jwcOpen);
+      end;
+    33:
+      begin
+
+        if GOpenHosts[0].Calls <> 6 then
+        begin
+          Exit;
+        end;
+        TypeSource(0, CNewerJSON);
+        GOpenRevision := GApps[0].State.Revision;
+        GOpenHosts[0].Request.Finish(nfooRead, OpenSnapshot('stale.json', CExactJSON));
+      end;
+    34:
+      begin
+
+        if not OpenFinished(0, 6) then
+        begin
+          Exit;
+        end;
+        Check((GApps[0].State.GetValue(JSONWorkshopSource) = CNewerJSON) and
+          (GApps[0].State.GetValue(JSONWorkshopPreview) = GOpenPretty) and
+          (GApps[0].State.GetValue(JSONWorkshopOpenedName) = COpenedName) and
+          (GApps[0].State.Revision = GOpenRevision),
+          'a late read cannot overwrite newer entered text or publish a partial filename/status frame');
+        Click(0, jwcOpen);
+      end;
+    35:
+      begin
+
+        if GOpenHosts[0].Calls <> 7 then
+        begin
+          Exit;
+        end;
+        Check(GOpenHosts[0].Request.IsPending, 'an actual open request is pending before navigation');
+        GApps[0].ShowPage('away');
+      end;
+    36:
+      begin
+        Check(not GOpenHosts[0].Request.IsPending, 'page retirement cancels its pending file read');
+        GOpenHosts[0].Request.Finish(nfooRead, OpenSnapshot('late.json', CExactJSON));
+        Check(GApps[0].State.GetValue(JSONWorkshopSource) = CNewerJSON,
+          'retired host completion cannot replace the preserved entered text');
+        Click(1, jwcOpen);
+      end;
+    37:
+      begin
+
+        if GOpenHosts[1].Calls <> 1 then
+        begin
+          Exit;
+        end;
+        GOpenHosts[1].Request.Finish(nfooRead, OpenSnapshot('Second.json', CExactJSON));
+      end;
+    38:
+      begin
+
+        if not OpenFinished(1, 1) then
+        begin
+          Exit;
+        end;
+        Check(GApps[1].State.GetValue(NyxBooleanState('open-read')) and
+          (GApps[1].State.GetValue(JSONWorkshopOpenedName) = 'Second.json'),
+          'the independent reopened App still completes its own file read');
+        Check(GApps[1].State.GetValue(JSONWorkshopPreview) = GOpenCustomPretty,
+          'Open executes the accepted custom program with its own saved formatting policy');
+        Check((GHosts[0].Calls = 3) and (GHosts[1].Calls = 2) and
+          (TNyxCodec.Encode(GDocument) = GBefore) and (TNyxCodec.Encode(GReopened) = GBefore),
+          'all open outcomes preserve portable blueprints and perform no unintended saving');
         GDone := True;
       end;
   end;
@@ -693,6 +1000,8 @@ begin
     GViews[LIndex] := nil;
     GHostLeases[LIndex] := nil;
     GHosts[LIndex] := nil;
+    GOpenLeases[LIndex] := nil;
+    GOpenHosts[LIndex] := nil;
     {$ifdef PAS2JS}
 
     if GElements[LIndex] <> nil then

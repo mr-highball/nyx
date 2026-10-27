@@ -4,6 +4,18 @@
 
 **Description:**
 
+The same starter now has Open JSON, with explicit runtime read/save hosts and
+typed completed-read conditions. UTF-8 decoding, interpreted preparation and JSON
+validation precede one source/preview/name publication. Actual native input
+preserves prior content/name on cancel, rejects invalid input without a prefix,
+protects newer edits from late reads and retires pending requests on navigation.
+WORK.md owns 115/117 Studio/reopened-App and 65/65 own-compiled-App checks, four
+clean heaps and three browser compilations. Snapshots are injected; actual
+dialogs/read effects, painted output, browser/assistive quality, broader resource/
+script/diagram/port interaction and original acceptance remain open. No full
+criterion/task or completion credit closes. Return to the catalog's DataToolbar
+binding/read-only/refusal matrix rather than another standalone JSON proof.
+
 The JSON Workshop now starts its useful Format and Save graphs with an authored,
 editable Pascal preparation step. Actual plain/Markdown-fenced input reaches the
 strict parser and exact save bytes. The ordinary Pascal workbench changes both

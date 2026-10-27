@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+JSON Workshop now composes the existing Open file, strict byte decoding, authored
+Pascal, JSON and conditional operations into a useful file-input chain. Cancel
+preserves source/preview/name; invalid bytes/JSON, newer edits and retirement
+publish no stale prefix. Read/save authority is independently injected. WORK.md
+owns 362 native Studio/saved-application assertions with four clean heaps and
+separates browser compilation from execution. No operation kind or full original
+criterion/credit is added. Real host/resource effects, broad operation coverage,
+painted/assistive quality, browser/parity and delivery acceptance remain required.
+
 JSON Workshop's Format and Save chains now begin with a pure, typed authored
 Pascal preparation program. Complete Markdown fences can be removed without
 changing entered text or projecting exact JSON numbers through script numbers.

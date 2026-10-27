@@ -9,6 +9,61 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Open JSON in the connected Workshop — 2026-10-26
+
+Previous goal turn: PROGRESS; f3df9c6 is pushed and remote-verified. Root remains
+SOLO. Batch eighteen advances Tool Canvas01's useful starter and Logic components01's
+file/control chain through existing open-host, conditional graph and publication
+owners. Deliver Open JSON with complete UTF-8/JSON validation before replacing
+source/preview/name. Cancellation must preserve the last accepted file/content;
+invalid input, stale replies and page retirement must publish no partial result.
+
+The same Studio Save/Open and own-compiled application journey now passes with
+the third graph, its conditional dependencies, typed route and copied open options.
+The launcher explicitly configures independent native/browser read and save hosts.
+No project option, filename or script grants file authority. Only completed reads
+select decoding and the accepted filename; skipped outputs preserve prior content.
+Selected UTF-8/JSON failures publish no successful prefix. The existing state
+revision/generation owner admits all source/preview/name/status changes together.
+The authored preparation program handles a leading BOM without rewriting input.
+
+Actual Open button input qualifies cancellation before/after a valid file,
+malformed JSON, malformed UTF-8, complete BOM/fenced source, supplementary file
+names, exact large numbers, one state revision per accepted frame and no prefix
+on refusal. New text entered during a pending read survives its late completion.
+Navigation cancels a pending request and its late callback is harmless. An
+independent reopened App still opens using its accepted custom Pascal program
+while an invalid draft remains local. All outcomes preserve authored blueprints
+and perform no unintended saves. File snapshots/outcomes are injected; these are
+not physical picker/read/download or painted/assistive-output results.
+
+Private json-workshop-open-02 joins all ten results: 115 desktop and 117 compact
+Studio/reopened-App assertions, then 65/65 own-compiled-App checks, 362 total with
+four complete clean heaps. Both widths export identical project/Pascal bytes.
+Three browser programs compile/stage with matching runtime and exact expected
+project; browser interaction remains unverified. Five source/build pins stay
+exact across the chain. Zero owned warnings; 21 installed Classes occurrences.
+The predecessor retains its final fixture expectation failure and clean heap:
+Open's independent formatter was compared to Format's edited policy. The fixture
+now derives each expectation from the corresponding saved graph; no product
+configuration was changed to satisfy it. All prior evidence remains retained.
+
+This completes the declared connected delivery, not full original criteria,
+prerequisites or completion credit. No operation kind or interpreter grammar was
+added. All owned readers are terminal; no freeze remains. All outputs/private
+orchestration and owned TEMP/TMP use external storage. No Nyx namespace is exposed
+in this turn's tool inventory, which does not establish server health. No refused
+browser route, physical cursor workaround, listener replacement or cleanup ran.
+
+Reassessment after the two preparation/open batches: the native starter now loads,
+customizes, formats and saves useful data, including Studio saving and its own
+compiled application. Stop further standalone JSON/script/constructor variants.
+Return to existing DataToolbar02/03 and authoring01's binding/read-only/refusal
+matrix using the qualified common owners and ordinary controls. Preserve broader
+file/resource/operation/diagram coverage, real host effects, direct painted/bound
+output, browser/physical/visual/assistive parity, MCP delivery and all original
+Tool Canvas and DataToolbar acceptance requirements.
+
 ## Current checkpoint — Editable JSON preparation — 2026-10-26
 
 Previous goal turn: PROGRESS; 0c5ea1a is pushed and remote-verified. Root stays

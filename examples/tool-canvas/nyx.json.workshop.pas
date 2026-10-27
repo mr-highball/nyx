@@ -45,6 +45,11 @@ const
     '  Size: Integer;' + #10 +
     'begin' + #10 +
     '  Result := Trim(Value);' + #10 +
+    '' + #10 +
+    '  if Copy(Result, 1, 1) = #$FEFF then' + #10 +
+    '  begin' + #10 +
+    '    Result := Trim(Copy(Result, 2, Length(Result) - 1));' + #10 +
+    '  end;' + #10 +
     '  Size := Length(Result);' + #10 +
     '  First := 0;' + #10 +
     '' + #10 +
@@ -73,20 +78,24 @@ const
 type
   { Closed identities let applications and input consumers address this example
     without duplicating its persisted control names. No reference owns a view. }
-  TJSONWorkshopControl = (jwcSource, jwcFormat, jwcSave, jwcPreview, jwcSavedName);
+  TJSONWorkshopControl = (jwcSource, jwcFormat, jwcSave, jwcPreview, jwcSavedName,
+    jwcOpen, jwcOpenedName);
   { Public stage identities keep graph wiring, saved placement and consumers
     independent of insertion order. The program stage has only text ports. }
-  TJSONWorkshopStep = (jwsPrepare, jwsParse, jwsFormat, jwsEncode, jwsSave);
+  TJSONWorkshopStep = (jwsPrepare, jwsParse, jwsFormat, jwsEncode, jwsSave,
+    jwsOpen, jwsDecode, jwsName);
 
 function JSONWorkshopControl(AControl: TJSONWorkshopControl): TNyxControlRef;
 function JSONWorkshopCanvas: TNyxControlRef;
 function JSONWorkshopItem: TNyxCanvasItemRef;
 function JSONWorkshopSaveFlow: TNyxFlowRef;
+function JSONWorkshopOpenFlow: TNyxFlowRef;
 function JSONWorkshopStep(AStep: TJSONWorkshopStep): TNyxFlowStepRef;
 function JSONWorkshopPreparation: TNyxProgramRef;
 function JSONWorkshopPreparationContract: TNyxProgramContract;
 function JSONWorkshopSource: TNyxTextStateRef;
 function JSONWorkshopPreview: TNyxTextStateRef;
+function JSONWorkshopOpenedName: TNyxTextStateRef;
 
 { An ordinary independently owned document with saved reusable controls, graphs,
   routes and node placement. It contains no executable file host. Applications
@@ -105,13 +114,14 @@ uses
   SysUtils, nyx.controls, nyx.root.types, nyx.logic, nyx.logic.files,
   nyx.files.save, nyx.flow, nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.geometry, nyx.canvas.workspace, nyx.canvas.declarations,
-  nyx.logic.programs;
+  nyx.logic.programs, nyx.files.open, nyx.logic.files.open, nyx.logic.http;
 
 const
   CCanvas = 'json-workshop';
   CTemplate = 'json-notebook';
   CControls: array[TJSONWorkshopControl] of TNyxText =
-    ('json-source', 'format-json', 'save-json', 'json-preview', 'saved-name');
+    ('json-source', 'format-json', 'save-json', 'json-preview', 'saved-name',
+     'open-json', 'opened-name');
 
 function JSONWorkshopControl(AControl: TJSONWorkshopControl): TNyxControlRef;
 begin
@@ -133,6 +143,11 @@ begin
   Result := NyxFlowRef('Save JSON');
 end;
 
+function JSONWorkshopOpenFlow: TNyxFlowRef;
+begin
+  Result := NyxFlowRef('Open JSON');
+end;
+
 function JSONWorkshopSource: TNyxTextStateRef;
 begin
   Result := NyxTextState('json-source');
@@ -141,6 +156,11 @@ end;
 function JSONWorkshopPreview: TNyxTextStateRef;
 begin
   Result := NyxTextState('json-preview');
+end;
+
+function JSONWorkshopOpenedName: TNyxTextStateRef;
+begin
+  Result := NyxTextState('opened-name');
 end;
 
 function JSONWorkshopPreparation: TNyxProgramRef;
@@ -158,7 +178,8 @@ end;
 function JSONWorkshopStep(AStep: TJSONWorkshopStep): TNyxFlowStepRef;
 const
   CNames: array[TJSONWorkshopStep] of TNyxText =
-    ('Prepare JSON', 'Parse JSON', 'Format JSON', 'Encode UTF-8', 'Save file');
+    ('Prepare JSON', 'Parse JSON', 'Format JSON', 'Encode UTF-8', 'Save file',
+     'Open file', 'Decode UTF-8', 'Accepted file name');
 begin
   Result := NyxFlowStep(CNames[AStep]);
 end;
@@ -171,6 +192,11 @@ end;
 function FilePort(AValue: TJSONWorkshopStep; APort: TNyxFilePort): TNyxFlowEndpoint;
 begin
   Result := NyxFlowEndpoint(JSONWorkshopStep(AValue), NyxFilePort(APort));
+end;
+
+function OpenPort(APort: TNyxOpenFilePort): TNyxFlowEndpoint;
+begin
+  Result := NyxFlowEndpoint(JSONWorkshopStep(jwsOpen), NyxOpenFilePort(APort));
 end;
 
 function BuildJSONWorkshopDocument: TNyxDocument;
@@ -194,6 +220,11 @@ begin
     Result.Title := 'JSON Workshop';
     Result.State.SetValue(JSONWorkshopSource, JSONWorkshopSample);
     Result.State.SetValue(JSONWorkshopPreview, 'Your formatted JSON appears here.');
+    Result.State.SetValue(JSONWorkshopOpenedName, '');
+    Result.State.SetValue(NyxTextState('open-error'), '');
+    Result.State.SetValue(NyxBooleanState('open-read'), False);
+    Result.State.SetValue(NyxBooleanState('open-cancelled'), False);
+    Result.State.SetValue(NyxBooleanState('open-activation'), False);
     Result.State.SetValue(NyxTextState('saved-name'), '');
     Result.State.SetValue(NyxTextState('save-error'), '');
     Result.State.SetValue(NyxBooleanState('save-written'), False);
@@ -203,7 +234,7 @@ begin
     LNotebook.Configure.Layout(nlColumn).Gap(12).Padding(20).Done;
     LNotebook.Add(NewNyxHeading('notebook-title').WithText('Your JSON'));
     LNotebook.Add(NewNyxLabel('notebook-help').WithText(
-      'Paste JSON or a fenced JSON example, format it, then keep a copy. ' +
+      'Open a JSON file or paste an example, format it, then keep a copy. ' +
       'Open Pascal programs / Prepare JSON to customize how input is prepared.'));
     LSource := NewNyxMemo(JSONWorkshopControl(jwcSource).ID).WithText('Source');
     LSource.Configure.Height(170).AccessibleName('JSON source').Done;
@@ -211,9 +242,22 @@ begin
     LNotebook.Add(LSource);
     LButtons := NewNyxRow('notebook-actions');
     LButtons.Configure.Gap(8).Done;
+    LButtons.Add(NewNyxButton(JSONWorkshopControl(jwcOpen).ID).WithText('Open JSON'));
     LButtons.Add(NewNyxButton(JSONWorkshopControl(jwcFormat).ID).WithText('Format JSON'));
     LButtons.Add(NewNyxButton(JSONWorkshopControl(jwcSave).ID).WithText('Save JSON'));
     LNotebook.Add(LButtons);
+    LLabel := NewNyxLabel(JSONWorkshopControl(jwcOpenedName).ID);
+    LLabel.Binds.Text(JSONWorkshopOpenedName).Done;
+    LNotebook.Add(LLabel);
+    LLabel := NewNyxLabel('open-cancelled').WithText('Open cancelled. Your JSON is still here.');
+    LLabel.Binds.Visible(NyxBooleanState('open-cancelled')).Done;
+    LNotebook.Add(LLabel);
+    LLabel := NewNyxLabel('open-activation').WithText('Choose Open JSON again to select a file.');
+    LLabel.Binds.Visible(NyxBooleanState('open-activation')).Done;
+    LNotebook.Add(LLabel);
+    LLabel := NewNyxLabel('open-error');
+    LLabel.Binds.Text(NyxTextState('open-error')).Done;
+    LNotebook.Add(LLabel);
     LNotebook.Add(NewNyxLabel('preview-caption').WithText('Last formatted result'));
     LPreview := NewNyxCode(JSONWorkshopControl(jwcPreview).ID);
     LPreview.Configure.Height(170).AccessibleName('Formatted JSON').Done;
@@ -242,6 +286,39 @@ begin
     Result.Programs.Define(JSONWorkshopPreparation, LPreparation);
     LSourcePort := NyxFlowEndpoint(JSONWorkshopStep(jwsPrepare), NyxFlowPort('Source'));
     LPreparedPort := NyxFlowEndpoint(JSONWorkshopStep(jwsPrepare), NyxFlowPort('Prepared'));
+    { Only a completed read selects decoding. Skip provenance then protects the
+      source, preview and last accepted name on cancel/unavailable outcomes.
+      Selected decode/parse failures expose no successful prefix at all. The
+      text join is an exact identity using the route's explicit empty right input. }
+    LGraph := NewNyxFlowGraph
+      .WithStep(JSONWorkshopStep(jwsOpen), NewNyxOpenFile(
+        NyxFileOpenOptions.Title('Open your JSON').Allow('json').MaximumBytes(1024 * 1024)))
+      .WithStep(JSONWorkshopStep(jwsDecode), NewNyxUTF8Decode)
+      .WithStep(JSONWorkshopStep(jwsPrepare), NewNyxProgramLogic(JSONWorkshopPreparation, LPreparation))
+      .WithStep(JSONWorkshopStep(jwsParse), NewNyxJSONParse)
+      .WithStep(JSONWorkshopStep(jwsFormat), NewNyxJSONFormat(njlIndented, 2))
+      .WithStep(JSONWorkshopStep(jwsName), NewNyxTextJoin)
+      .Connect(OpenPort(nofpBytes),
+        NyxFlowEndpoint(JSONWorkshopStep(jwsDecode), NyxHTTPPort(nhpBody)))
+      .Connect(LogicPort(jwsDecode, nlpText), LSourcePort)
+      .Connect(LPreparedPort, LogicPort(jwsParse, nlpText))
+      .Connect(LogicPort(jwsParse, nlpJSON), LogicPort(jwsFormat, nlpJSON))
+      .Connect(OpenPort(nofpName), LogicPort(jwsName, nlpLeft)).Build;
+    LGraph := NyxFlowConditions(LGraph)
+      .When(JSONWorkshopStep(jwsDecode), OpenPort(nofpRead))
+      .When(JSONWorkshopStep(jwsName), OpenPort(nofpRead)).Build;
+    Result.Flows.Define(JSONWorkshopOpenFlow, LGraph);
+    SetNyxFlowRoutes(Result.Find(JSONWorkshopControl(jwcOpen).ID), NewNyxFlowRoutes.WithRoute(
+      NyxFlowRoute(NyxFlowRouteID('Open notebook'), JSONWorkshopOpenFlow, ntClick, nfcmExclusive)
+        .InputSignal(OpenPort(nofpTrigger))
+        .InputConstant(LogicPort(jwsName, nlpRight), NyxFlowText(''))
+        .OutputState(LogicPort(jwsDecode, nlpText), JSONWorkshopSource)
+        .OutputState(LogicPort(jwsFormat, nlpText), JSONWorkshopPreview)
+        .OutputState(LogicPort(jwsName, nlpText), JSONWorkshopOpenedName)
+        .OutputState(OpenPort(nofpRead), NyxBooleanState('open-read'))
+        .OutputState(OpenPort(nofpCancelled), NyxBooleanState('open-cancelled'))
+        .OutputState(OpenPort(nofpActivationRequired), NyxBooleanState('open-activation'))
+        .OutputState(OpenPort(nofpError), NyxTextState('open-error'))));
     LFormatFlow := NyxFlowRef('Format JSON');
     LGraph := NewNyxFlowGraph
       .WithStep(JSONWorkshopStep(jwsPrepare), NewNyxProgramLogic(JSONWorkshopPreparation, LPreparation))
@@ -282,7 +359,7 @@ begin
       .WithCamera(NyxCanvasCamera(1200, 760, NyxCanvasPoint(0, 0), 1))
       .WithLayer(NyxCanvasLayer('Work'))
       .WithItem(JSONWorkshopItem, NyxReusableRoot(CTemplate),
-        NyxCanvasPlacement(NyxCanvasLayer('Work'), NyxCanvasBounds(20, 20, 450, 700)));
+        NyxCanvasPlacement(NyxCanvasLayer('Work'), NyxCanvasBounds(20, 20, 450, 800)));
     LScene := NyxCanvasGraphLayout(LScene)
       .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsPrepare), NyxCanvasPoint(520, 30))
       .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsParse), NyxCanvasPoint(820, 30))
