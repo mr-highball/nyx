@@ -429,6 +429,12 @@ begin
       raise ENyxModel.Create('Native LCL output: configure platform and widgetset in Target / output');
     end;
 
+    if FOutputs.HTTP and (LPlatform <> 'i386-win32') and (LPlatform <> 'x86_64-win64') then
+    begin
+      raise ENyxModel.Create('Native HTTP output: the built-in transport requires Windows; ' +
+        'disable HTTP in Outputs or supply a supported platform adapter');
+    end;
+
     if not DirectoryExists(LRoot + 'lcl/units/' + LPlatform + '/' + LWidgetset) then
     begin
       raise ENyxModel.Create('Native LCL output: matching Lazarus platform/widgetset units are missing');
@@ -1298,6 +1304,13 @@ begin
           '    NewNyxBrowserFileOpenHost);' + #10;
       end;
 
+      if FOutputs.HTTP then
+      begin
+        LFileUnits := LFileUnits + ', nyx.logic.http, nyx.resources.http.browser';
+        LFileSetup := LFileSetup + '  LApplication.ConfigureLogic(' + #10 +
+          '    NewNyxHTTPLogicResolver(NewNyxBrowserHTTPTransport));' + #10;
+      end;
+
       LSource := 'program nyx_preview;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
         'uses' + #10 +
@@ -1366,6 +1379,14 @@ begin
         LFileUnits := LFileUnits + ', nyx.files.open.lcl';
         LFileSetup := LFileSetup + '    LApplication.ConfigureFileOpening(' + #10 +
           '      NewNyxLCLFileOpenHost);' + #10;
+      end;
+
+      if FOutputs.HTTP then
+      begin
+        LFileUnits := LFileUnits + ', nyx.logic.http, nyx.resources.http.lcl';
+        LFileSetup := LFileSetup + '    LApplication.ConfigureLogic(' + #10 +
+          '      NewNyxHTTPLogicResolver(NewNyxNativeHTTPTransport(' + #10 +
+          '        LApplication.View.Events.Scheduler)));' + #10;
       end;
 
       LArguments.Add('-Fu' + LLazarus + 'lcl/units/' + LPlatform);

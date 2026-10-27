@@ -75,7 +75,7 @@ end;
 
 procedure CheckProfile;
 const
-  CInvalid: array[0..8] of TNyxText = (
+  CInvalid: array[0..13] of TNyxText = (
     '{"version":2,"fields":{},"fileSaving":"true"}',
     '{"version":2,"fields":{}}',
     '{"version":1,"fields":{},"fileSaving":true}',
@@ -84,7 +84,12 @@ const
     '{"version":3,"fields":{},"fileOpening":true}',
     '{"version":2,"fields":{},"fileSaving":false,"fileOpening":true}',
     '{"version":1,"fields":{},"fileOpening":true}',
-    '{"version":3,"fields":{},"fileSaving":false,"unexpected":true}');
+    '{"version":3,"fields":{},"fileSaving":false,"unexpected":true}',
+    '{"version":4,"fields":{},"fileSaving":false,"fileOpening":false,"http":"true"}',
+    '{"version":4,"fields":{},"fileSaving":false,"fileOpening":false}',
+    '{"version":4,"fields":{},"fileSaving":false,"http":true,"other":false}',
+    '{"version":4,"fields":{},"fileSaving":"false","fileOpening":false,"http":true}',
+    '{"version":3,"fields":{},"fileSaving":false,"fileOpening":false,"http":true}');
 var
   LOptions: TNyxOutputConfiguration;
   LDecoded: TNyxOutputConfiguration;
@@ -101,6 +106,7 @@ begin
     LLegacy := LOptions.Encode;
     Check(not LOptions.FileSaving, 'legacy runtime profiles grant no file host');
     Check(not LOptions.FileOpening, 'legacy profiles grant no independent read host');
+    Check(not LOptions.HTTP, 'legacy profiles grant no HTTP transport');
     LOptions.AllowFileSaving;
     LSaveOnly := LOptions.Encode;
     LDecoded := TNyxOutputConfiguration.Decode(LOptions.Encode);
@@ -132,6 +138,30 @@ begin
     end;
     LOptions.AllowFileOpening(False);
     Check(LOptions.Encode = LLegacy, 'revoking read-only authority restores exact legacy bytes');
+    LOptions.AllowHTTP;
+    LDecoded := TNyxOutputConfiguration.Decode(LOptions.Encode);
+    try
+      Check(LDecoded.HTTP and not LDecoded.FileSaving and not LDecoded.FileOpening,
+        'HTTP-only version-4 profile grants neither file host');
+      Check(LDecoded.Field('fpc') = LOptions.Field('fpc'),
+        'HTTP profiles preserve exact independent Unicode compiler paths');
+    finally
+      LDecoded.Free;
+    end;
+    LOptions.AllowHTTP(False);
+    Check(LOptions.Encode = LLegacy, 'revoking HTTP restores exact legacy encoding');
+    LOptions.AllowFileSaving.AllowFileOpening;
+    LSaveOnly := LOptions.Encode;
+    LOptions.AllowHTTP;
+    LDecoded := TNyxOutputConfiguration.Decode(LOptions.Encode);
+    try
+      Check(LDecoded.HTTP and LDecoded.FileSaving and LDecoded.FileOpening,
+        'HTTP composes with both independent file authorities');
+    finally
+      LDecoded.Free;
+    end;
+    LOptions.AllowHTTP(False);
+    Check(LOptions.Encode = LSaveOnly, 'revoking HTTP restores exact version-3 bytes');
     for LIndex := 0 to High(CInvalid) do
     begin
       LRefused := False;
@@ -176,6 +206,88 @@ begin
   {$endif}
 end;
 
+{$ifndef PAS2JS}
+procedure SettlePresentation;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+    CheckSynchronize;
+    Application.ProcessMessages;
+
+    if GFailure.Error <> '' then
+    begin
+      raise Exception.Create(GFailure.Error);
+    end;
+
+    if GetTickCount64 - LStarted > 15000 then
+    begin
+      raise Exception.Create('Native Outputs menu did not finish its presentation');
+    end;
+  until not GStudio.PresentationPending;
+end;
+
+{ Native menus own separate nonmodal popover forms, rather than shell-section
+  nodes. Search only this isolated test application's visible popup controls;
+  never use the browser's DOM identifiers as native renderer identities. }
+function MenuCaption(AParent: TWinControl; const ACaption: TNyxText): TControl;
+var
+  LIndex: Integer;
+  LChild: TControl;
+  LCaption: TNyxText;
+begin
+  Result := nil;
+  for LIndex := 0 to AParent.ControlCount - 1 do
+  begin
+    LChild := AParent.Controls[LIndex];
+    LCaption := TNyxText(TControlInput(LChild).Caption);
+
+    { The native menu decorates submenus with its public disclosure glyph. }
+    if LChild.IsVisible and ((LCaption = ACaption) or
+      (LCaption = ACaption + TNyxText('  ›'))) then
+    begin
+      Exit(LChild);
+    end;
+
+    if LChild is TWinControl then
+    begin
+      Result := MenuCaption(TWinControl(LChild), ACaption);
+
+      if Result <> nil then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+procedure ClickMenu(const ACaption: TNyxText);
+var
+  LIndex: Integer;
+  LControl: TControl;
+begin
+  for LIndex := 0 to Screen.FormCount - 1 do
+  begin
+
+    if (Screen.Forms[LIndex] <> GForm) and Screen.Forms[LIndex].Visible then
+    begin
+      LControl := MenuCaption(Screen.Forms[LIndex], ACaption);
+
+      if LControl <> nil then
+      begin
+        TControlInput(LControl).Click;
+        SettlePresentation;
+        Exit;
+      end;
+    end;
+  end;
+  raise Exception.Create('Native Outputs menu choice is not mounted: ' + ACaption +
+    ' / action visible=' + BoolToStr(GStudio.ShellView.ControlFor(NyxStudioActionMenuID).IsVisible, True) +
+    ' / forms=' + IntToStr(Screen.FormCount));
+end;
+{$endif}
+
 procedure ActivateOutputs;
 {$ifdef PAS2JS}
 var
@@ -192,6 +304,17 @@ begin
     Click(NyxStudioActionMenuID);
     Click('studio-menu-project');
     Click('studio-menu-outputs');
+    Exit;
+  end;
+  {$else}
+
+  if (GStudio.ShellView.ControlFor('action-outputs') = nil) or
+    not GStudio.ShellView.ControlFor('action-outputs').IsVisible then
+  begin
+    Click(NyxStudioActionMenuID);
+    SettlePresentation;
+    ClickMenu('Project');
+    ClickMenu('Outputs');
     Exit;
   end;
   {$endif}
@@ -262,6 +385,8 @@ begin
           'runtime save authority starts disabled before choosing a target');
         Check(OutputNode('output-file-opening').Prop('value') = 'false',
           'runtime opening authority also starts disabled without choosing a target');
+        Check(OutputNode('output-http').Prop('value') = 'false',
+          'HTTP starts disabled without requiring a selected target');
         Toggle;
       end;
     2:
@@ -269,6 +394,7 @@ begin
         Check(OutputNode('output-file-saving').Prop('value') = 'true',
           'actual target checkbox edits the typed runtime configuration');
         Toggle('output-file-opening');
+        Toggle('output-http');
         ActivateOutputs;
       end;
     3:
@@ -281,6 +407,8 @@ begin
           'runtime policy survives hiding and rebuilding Outputs');
         Check(OutputNode('output-file-opening').Prop('value') = 'true',
           'independent opening policy survives ordinary Outputs reconstruction');
+        Check(OutputNode('output-http').Prop('value') = 'true',
+          'ordinary checkbox editing retains HTTP through Outputs reconstruction');
         Toggle;
       end;
     5:
@@ -290,11 +418,14 @@ begin
         Check(OutputNode('output-file-opening').Prop('value') = 'true',
           'revoking saving leaves the read-only policy enabled');
         Toggle('output-file-opening');
+        Toggle('output-http');
       end;
     6:
       begin
         Check(OutputNode('output-file-opening').Prop('value') = 'false',
           'actual read checkbox can independently revoke future opening authority');
+        Check(OutputNode('output-http').Prop('value') = 'false',
+          'the HTTP checkbox independently revokes future generated transport');
         Check(EncodeNyxProject(GStudio.ProjectSnapshot) = GBefore,
           'configuration retains the exact accepted source/design/draft pair');
         Check(OutputNode('output-none') <> nil,
@@ -358,7 +489,7 @@ begin
   GChecks := 0;
   {$ifndef PAS2JS}
 
-  if (ParamCount <> 1) or DirectoryExists(ParamStr(1)) then
+  if not (ParamCount in [1, 2]) or DirectoryExists(ParamStr(1)) then
   begin
     raise Exception.Create('Supply a fresh owned Studio project directory');
   end;
@@ -367,6 +498,11 @@ begin
   Application.OnException := GFailure.Failed;
   GForm := TForm.CreateNew(nil);
   GForm.SetBounds(20, 20, 1280, 900);
+
+  if ParamCount = 2 then
+  begin
+    GForm.Width := StrToInt(ParamStr(2));
+  end;
   GForm.Show;
   GStudio := TNyxNativeStudio.Create(GForm, ParamStr(1));
   GStudio.Run;

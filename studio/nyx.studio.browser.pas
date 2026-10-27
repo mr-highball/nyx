@@ -4135,6 +4135,13 @@ begin
       FProjectName := ANode.Prop('value');
       LRetainCanvas := True;
     end
+    else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-http') then
+    begin
+      FOutputs.AllowHTTP(AEvent.Value.AsBoolean);
+      FOutputEdits.Mark(nosHTTP);
+      FStatus := 'HTTP runtime setting edited / applied when building';
+      LRetainCanvas := True;
+    end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-opening') then
     begin
       FOutputs.AllowFileOpening(AEvent.Value.AsBoolean);

@@ -697,6 +697,7 @@ begin
     'real output configuration begins without a selected target');
   ToggleOutput('output-file-opening');
   ToggleOutput('output-file-saving');
+  ToggleOutput('output-http');
   LSequence := GStudio.Agents.BuildReplySequence;
   Click('action-save-outputs');
   AwaitProfile(LSequence, 'configuration saved');
@@ -705,6 +706,7 @@ begin
   try
     Check(LProfile.FileOpening and LProfile.FileSaving,
       'ordinary Apply persists both independent permissions through the production byte writer');
+    Check(LProfile.HTTP, 'ordinary Apply persists HTTP through the same production byte writer');
   finally
     LProfile.Free;
   end;
@@ -741,6 +743,7 @@ begin
   end;
   ToggleOutput('output-file-opening');
   ToggleOutput('output-file-saving');
+  ToggleOutput('output-http');
   LSequence := GStudio.Agents.BuildReplySequence;
   Click('action-save-outputs');
   AwaitProfile(LSequence, 'configuration saved');

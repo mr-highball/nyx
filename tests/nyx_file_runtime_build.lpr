@@ -26,7 +26,8 @@ program nyx_file_runtime_build;
 
 uses Classes, SysUtils, fpjson, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.codegen, nyx.codec, nyx.studio.outputs, nyx.studio.directories,
-  nyx.studio.buildexecutor, nyx.test.files.runtime, nyx.test.flow.conditionfixture;
+  nyx.studio.buildexecutor, nyx.studio.projects, nyx.test.files.runtime,
+  nyx.test.flow.conditionfixture;
 
 var
   LRoot: String;
@@ -42,6 +43,8 @@ var
   LIndex: Integer;
   LPass: Integer;
   LOpening: Boolean;
+  LHTTP: Boolean;
+  LPair: TNyxProjectPair;
   LPolicy: TNyxText;
   LLauncher: TNyxText;
 
@@ -88,10 +91,11 @@ begin
   LDoc := nil;
   try
 
-    if not (ParamCount in [3, 4]) or
-      ((ParamCount = 4) and (ParamStr(4) <> '--opening')) then
+    if not (ParamCount in [3, 4, 5]) or
+      ((ParamCount = 4) and (ParamStr(4) <> '--opening')) or
+      ((ParamCount = 5) and (ParamStr(4) <> '--http')) then
     begin
-      raise Exception.Create('Supply source repository, fresh owned root, private toolchain JSON and optional --opening');
+      raise Exception.Create('Supply repository, fresh root, toolchain and optional --opening or --http <project>');
     end;
     LRoot := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
 
@@ -108,9 +112,21 @@ begin
     LOutputs.SetField('widgetset', 'win32');
     LOutputs.SetField('pas2js', LTools.Field('PAS2JS').AsText);
     LOutputs.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
-    LOpening := ParamCount = 4;
+    LOpening := (ParamCount = 4) and (ParamStr(4) = '--opening');
+    LHTTP := (ParamCount = 5) and (ParamStr(4) = '--http');
 
-    if LOpening then
+    if LHTTP then
+    begin
+      LPair := DecodeNyxProject(ReadText(ParamStr(5)));
+      LDoc := TNyxCodec.Decode(LPair.Design);
+      LSource := LPair.Source;
+
+      if LPair.Pending or not LPair.Files.IsEmpty then
+      begin
+        raise Exception.Create('HTTP qualification requires the exact accepted standalone Workshop pair');
+      end;
+    end
+    else if LOpening then
     begin
       LDoc := ConditionalFileDocument;
     end
@@ -120,16 +136,26 @@ begin
       LOutputs.AllowFileSaving;
     end;
     LBefore := TNyxCodec.Encode(LDoc);
-    LSource := TNyxCodegen.Generate(LDoc);
+
+    if not LHTTP then
+    begin
+      LSource := TNyxCodegen.Generate(LDoc);
+    end;
     Save(LRoot + 'nyx.generated.view.pas', LSource);
     for LPass := 0 to 2 do
     begin
-      if not LOpening and (LPass > 0) then
+      if not LOpening and not LHTTP and (LPass > 0) then
       begin
         Break;
       end;
 
       LPolicy := '';
+
+      if LHTTP then
+      begin
+        LOutputs.AllowHTTP(LPass > 0).AllowFileOpening(LPass = 2).AllowFileSaving(LPass = 2);
+        LPolicy := '-http-' + TNyxText(IntToStr(LPass));
+      end;
 
       if LOpening then
       begin
@@ -175,7 +201,7 @@ begin
           LJob := LReply.Get('build', '');
           Save(LRoot + String(LTarget + LPolicy) + '-job.txt', LJob);
 
-          if LOpening then
+          if LOpening or LHTTP then
           begin
 
             if LTarget = 'browser' then
@@ -188,8 +214,9 @@ begin
             end;
             LLauncher := ReadText(LRoot + 'build/studio/jobs/' + String(LJob) + '/' + String(LLauncher));
 
-            if ((Pos('ConfigureFileOpening(', LLauncher) > 0) <> (LPass > 0)) or
-              ((Pos('ConfigureFileSaving(', LLauncher) > 0) <> (LPass = 2)) then
+            if ((Pos('ConfigureFileOpening(', LLauncher) > 0) <> LOutputs.FileOpening) or
+              ((Pos('ConfigureFileSaving(', LLauncher) > 0) <> LOutputs.FileSaving) or
+              ((Pos('ConfigureLogic(', LLauncher) > 0) <> LOutputs.HTTP) then
             begin
               raise Exception.Create('Generated launcher changed independent runtime permissions');
             end;
@@ -205,7 +232,11 @@ begin
       end;
     end;
 
-    if LOpening then
+    if LHTTP then
+    begin
+      WriteLn('PASS six real Workshop compiler jobs; disabled/HTTP-only/HTTP+files; exact MCP source/design');
+    end
+    else if LOpening then
     begin
       WriteLn('PASS six real application compiler jobs; disabled/read-only/both authority; exact portable design');
     end

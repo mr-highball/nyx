@@ -54,6 +54,10 @@ begin
       begin
         AProfile.AllowFileOpening(Odd(AValue));
       end;
+    nosHTTP:
+      begin
+        AProfile.AllowHTTP(Odd(AValue));
+      end;
     else
       begin
         AProfile.SetField(NyxOutputFields[Ord(ASetting)], CPrefix + TNyxText(IntToStr(AValue)));
@@ -71,6 +75,10 @@ begin
     nosFileOpening:
       begin
         Result := BoolToStr(AProfile.FileOpening, True);
+      end;
+    nosHTTP:
+      begin
+        Result := BoolToStr(AProfile.HTTP, True);
       end;
     else
       begin

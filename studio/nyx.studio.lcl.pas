@@ -5389,6 +5389,12 @@ begin
       FState.CodeVisible := True;
       FState.Panel := nspDesign;
     end
+    else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-http') then
+    begin
+      FOutputs.AllowHTTP(AEvent.Value.AsBoolean);
+      FOutputEdits.Mark(nosHTTP);
+      FState.Status := 'HTTP runtime setting edited / applied when building';
+    end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-file-opening') then
     begin
       FOutputs.AllowFileOpening(AEvent.Value.AsBoolean);

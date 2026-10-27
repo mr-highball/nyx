@@ -1219,6 +1219,14 @@ begin
     'Uses interactive single-file selection and bounded reads. Browser activation is still required. ' +
     'This independent machine setting stays outside your design.'));
 
+  LPanel.Add(NewNyxCheckbox('output-http').Configure
+    .Text('Allow HTTP requests in built applications')
+    .Value((AState.Outputs <> nil) and AState.Outputs.HTTP).Done.Node);
+  LPanel.Add(Caption('output-http-help',
+    'Connects HTTP logic to the browser or Windows native transport. ' +
+    'Browser CORS and normal system security still apply. Other native platforms ' +
+    'need an adapter. This machine setting stays outside your design.'));
+
   if not AState.LocalSourceAvailable or AState.Agents.CanBuild then
   begin
     LPanel.Add(Caption('outputs-privacy', 'Compiler paths are saved only on this machine.'));

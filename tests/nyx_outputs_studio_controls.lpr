@@ -222,12 +222,24 @@ end;
 
 function TOutputStudio.CreateEditorExchange: TNyxStudioEditorExchange;
 begin
-  GExchange := TOutputExchange.Create;
-  Result := GExchange;
+  Result := TOutputExchange.Create;
+  { Studio also requests an independent completion exchange. Pump only the
+    first, ordinary editor channel; replacing this pointer with the unused
+    completion channel strands the actual connection before stage zero. }
+
+  if GExchange = nil then
+  begin
+    GExchange := TOutputExchange(Result);
+  end;
 end;
 
 destructor TOutputExchange.Destroy;
 begin
+
+  if GExchange = Self then
+  begin
+    GExchange := nil;
+  end;
   CancelRequest;
   CancelTick;
   inherited Destroy;
@@ -569,6 +581,7 @@ begin
     2:
       begin
         Check(Value('output-file-opening') = 'false', 'opening starts disabled without a selected target');
+        Check(Value('output-http') = 'false', 'HTTP starts disabled without a target or compiler');
         Check((Value('output-file-saving') = 'true') and (GSaves = 0),
           'delayed initial observation retains local input without unsolicited persistence');
         Click('action-save-outputs');
@@ -585,12 +598,14 @@ begin
         Click('action-reload-outputs');
         Check(GPrepared and (GPosted <> ''), 'overlapping Reload retains the original pending Apply');
         Toggle('output-file-opening');
+        Toggle('output-http');
         ReleaseReply;
       end;
     4:
       begin
         Check((Value('output-file-opening') = 'true') and not StoredOpening,
           'late Apply retains newer opening edits without falsely persisting them');
+        Check(Value('output-http') = 'true', 'late Apply also preserves the newer independent HTTP edit');
         Check(GSaves = 1, 'explicit Apply acknowledges its submitted snapshot only');
         LProfile := TNyxOutputConfiguration.Create;
         GStored := LProfile.Encode;
@@ -614,6 +629,7 @@ begin
       begin
         Check(Value('output-file-saving') = 'true', 'changed-back saving intent survives a delayed reload');
         Check(Value('output-file-opening') = 'false', 'reload adopts untouched saved opening despite earlier edits');
+        Check(Value('output-http') = 'false', 'reload adopts untouched saved HTTP despite earlier edits');
         Check(GSaves = 1, 'reload does not silently publish retained edits');
         Click('action-save-outputs');
       end;

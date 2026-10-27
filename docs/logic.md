@@ -362,11 +362,43 @@ Studio's optional Outputs panel exposes both policies independently of selecting
 a target or installing compilers. These machine-local choices affect future
 generated launchers; they do not enter portable design/source/history. Private
 profile version 3 requires Boolean opening/saving values. Disabling opening
-preserves exact legacy default/save-only encodings. The current frozen observing
-server does not yet admit this new profile version.
-Native's explicit Apply/Reload button routes remain a recorded Studio authoring
-gap; build-time reconciliation is present. These checks establish checkbox edits
-and generated execution, not the complete connected configuration lifecycle.
+preserves exact legacy default/save-only encodings. Native Apply/Reload now
+persists through the ordinary backend profile writer; in-flight edits retain
+their independent intent. Existing profile tests distinguish that production
+persistence from substituted delayed transport checks.
+
+**Allow HTTP requests in built applications** independently selects the existing
+HTTP logic resolver and target transport before mounting the generated app:
+
+```pascal
+LOutputs.AllowHTTP.AllowFileOpening.AllowFileSaving;
+```
+
+These are fluent `TNyxOutputConfiguration` machine settings, separate from a
+portable project. HTTP defaults off. Enabling it uses strict profile version 4
+with Boolean `http`, `fileOpening` and `fileSaving`; revoking HTTP restores the
+exact earlier encoding appropriate to the two file settings. Observe, Reload
+and Apply reconcile HTTP independently, preserving edits made during a request.
+The browser transport retains CORS/TLS rules. The built-in native transport
+currently supports Windows; other native outputs receive an actionable readiness
+diagnostic when HTTP is selected. Design work and configuration remain available
+without an installed compiler or selected output. Resource loading keeps its
+existing independent application configuration.
+
+`tools/test-http-output-hosts.ps1 -EvidenceDirectory <fresh directory>
+-Project <accepted-workshop.nyxproject> -HealthURL <existing-studio-health-url>`
+checks the same MCP-authored Workshop through six ordinary application builds
+(disabled, HTTP alone, HTTP with files, on both targets). Its native qualification
+copy never injects a test transport. It adds one
+observer unit to `uses`, retaining every generated setup statement; this avoids
+the installed compiler's unqualified `-Fa` route. The observer invokes inherited
+native input and uses the real selected HTTP adapter. Direct window-message
+activation remains unaccepted. It separately compiles the browser controls.
+Successful compilation, native control input,
+browser execution, physical input and visual quality remain distinct evidence.
+Current qualification proves the HTTP response/control behavior at both native
+widths but retains a shutdown access violation and pending-scope heap evidence;
+the task remains open. The runner rejects nonzero exits and nonempty traced heaps.
 
 `tools/test-file-open-runtime.ps1 -EvidenceDirectory <fresh directory>` checks
 configuration composition, strict profiles, ordinary native Studio controls,

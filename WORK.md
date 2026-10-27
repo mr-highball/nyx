@@ -9,6 +9,63 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Selected HTTP hosts in generated applications — 2026-10-27
+
+Batch twenty-six follows http-output-hosts01 for the same MCP-authored Workshop.
+38923de is pushed and remote-verified; agent-workflows03 is accepted. Deliver a
+typed local Outputs option, backward-compatible profile reconciliation and
+ordinary generated native/browser host setup, then exercise the actual emitted
+application's URL input. Stop at an honest compiler/runtime boundary if the
+existing browser gate prevents interaction; do not substitute manual test-only
+host injection. Preserve the three running sessions and accepted pairs. Current
+server64688 stays active until replacement qualification is ready. Root remains
+SOLO; private output and child TEMP/TMP stay on external storage.
+
+HTTP output configuration now has an independent fluent Boolean, strict
+version4 with exact revocation to legacy encodings, per-field reconciliation,
+ordinary native/browser checkbox routes and generated target setup before mount.
+Windows-only native readiness is explicit; browser CORS and independent resource
+configuration remain intact. No portable pair or existing session is changed.
+
+http-output-hosts-01 qualifies225 native reconciliation checks,34 delayed
+ordinary Outputs checks,29 profile admission checks and13/13 desktop/compact
+checkbox checks with clean heaps. The older delayed fixture pumped its unused
+completion exchange instead of the editor channel; this fixture is repaired.
+Compact input now uses the actual separate native popup and its disclosure
+caption. Existing assertions remain. Matching browser consumers compile only.
+
+The initial concurrent application compiler exceeds the unchanged60-second
+budget. Its receipt remains separate. Serial isolation completes all six actual
+MCP Workshop builds (disabled/HTTP-only/HTTP+files, browser/native), preserving
+the AA8B1E15 accepted pair/source. The complete seven-file Studio payload builds
+with zero owned warnings and is staged, not activated over64688.
+
+An external native window-message consumer initially selects LCL's empty taskbar
+facade, then confuses Canvas search with the URL. Those discoveries are fixed;
+its final input still does not activate the embedded fetch route. Preserve that
+unaccepted input proof rather than claiming physical/key/pointer acceptance.
+Its final source and unsupported -Fa bridge are independently hashed/archived
+beside the failed receipts. The installed -Fa route raises an internal error or
+spins; exact owned compiler55844 is stopped and its launch20848 joined.
+
+A native observer instead adds exactly one uses unit to a private emitted entry
+copy; reversing that insertion yields the original entry. It installs no host,
+resolver or state. Inherited native URL/button input exercises the selected real
+HTTP transport and preserves both accepted result frames after an empty URL at
+1280/390. Normal desktop exit then raises an AV in heaptrc FinalizeUnits, compact
+exit retains32 blocks/5444 bytes including scheduler/event/linked scopes; the
+same desktop binary under gdb exits with zero unfreed blocks. Do not dismiss this
+as an observer-only issue or mask it with sleeps. The runner rejects retained
+heaps as well as nonzero exits. Original black-box failure, compiler failures,
+AV, compact heap and debugger pass remain separate evidence.
+
+Next action is the concrete retirement gap under http-output-hosts01 and the
+existing scheduler/lifetime owner: identify retained queued scope ownership and
+qualify deterministic generated-app teardown before activation. Then complete
+HTTP+files runtime, real version4 profile persistence and browser/input/quality
+gates. This batch accepts no task or original criterion. All known jobs are
+joined; leave the existing LAN/MCP owner, three projects and profiles intact.
+
 ## Current checkpoint — Current Studio payload and semantic URL graph — 2026-10-27
 
 Previous goal turn: PROGRESS;110adfe is pushed and remote-verified. Root remains
