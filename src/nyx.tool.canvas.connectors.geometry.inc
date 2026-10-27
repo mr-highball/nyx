@@ -177,6 +177,15 @@ begin
 
   if LFace.NodeIndex >= 0 then
   begin
+
+    if FConnectorScaling = nccsUniform then
+    begin
+      { A stable world allocation prevents viewport/zoom from reflowing the
+        card. Its independent scroll host retains access to longer port lists. }
+      AWidth := 280;
+      AHeight := 320;
+      Exit;
+    end;
     AWidth := Min(280, Max(64, LWidth - 16));
     AHeight := Min(320, Max(128, LHeight - 16));
 
@@ -215,6 +224,16 @@ begin
   end;
 end;
 
+{ Renderer pointers are logical to their own control. Connector rectangles and
+  wire hit testing use viewport pixels. Use the last actually applied factor;
+  the camera may already have queued a later presentation. }
+function ConnectorViewportPointer(AFace: TConnectorFace;
+  const ABounds: TNyxCanvasBounds; const AEvent: TNyxEventInfo): TNyxCanvasPoint;
+begin
+  Result := NyxCanvasPoint(ABounds.Left + AEvent.Pointer.X * AFace.ContentScale,
+    ABounds.Top + AEvent.Pointer.Y * AFace.ContentScale);
+end;
+
 procedure TToolView.PlaceConnectorFaces;
 var
   LIndex: Integer;
@@ -230,6 +249,9 @@ var
   LVisible: Boolean;
   LPosition: TNyxCanvasPoint;
   LNodePosition: Integer;
+  LScale: Double;
+  LPhysicalWidth: Double;
+  LPhysicalHeight: Double;
 begin
   LViewportWidth := FCanvas.Surface.{$ifdef PAS2JS}clientWidth{$else}ClientWidth{$endif};
   LViewportHeight := FCanvas.Surface.{$ifdef PAS2JS}clientHeight{$else}ClientHeight{$endif};
@@ -248,6 +270,18 @@ begin
     end;
     LVisible := True;
     ConnectorFaceSize(LFace, LWidth, LHeight);
+    LScale := 1;
+
+    if (LFace.NodeIndex >= 0) and (FConnectorScaling = nccsUniform) then
+    begin
+      LScale := FCanvas.Camera.Zoom;
+    end;
+    LPhysicalWidth := LWidth * LScale;
+    LPhysicalHeight := LHeight * LScale;
+    {$ifndef PAS2JS}
+    LPhysicalWidth := Max(1, Round(LPhysicalWidth));
+    LPhysicalHeight := Max(1, Round(LPhysicalHeight));
+    {$endif}
 
     LFace.Bounds := Default(TNyxCanvasBounds);
 
@@ -258,13 +292,9 @@ begin
       LLeft := LPosition.X;
       LTop := LPosition.Y;
       LVisible := (LLeft < LViewportWidth) and (LTop < LViewportHeight) and
-        (LLeft + LWidth > 0) and (LTop + LHeight > 0);
+        (LLeft + LPhysicalWidth > 0) and (LTop + LPhysicalHeight > 0);
 
-      if LVisible then
-      begin
-        LFace.Bounds := NyxCanvasBounds(LLeft, LTop, LWidth, LHeight);
-      end
-      else
+      if not LVisible then
       begin
         { Never convert enormous off-screen world coordinates to native widget
           integers. The independently stored world position remains unchanged. }
@@ -317,6 +347,17 @@ begin
     LFace.Host.style.setProperty('top', IntToStr(Round(LTop)) + 'px');
     LFace.Host.style.setProperty('width', IntToStr(Round(LWidth)) + 'px');
     LFace.Host.style.setProperty('height', IntToStr(Round(LHeight)) + 'px');
+
+    if (LFace.NodeIndex >= 0) and (FConnectorScaling = nccsUniform) then
+    begin
+      LFace.Host.style.setProperty('transform-origin', '0 0');
+      LFace.Host.style.setProperty('transform', 'scale(' + NyxStateNumberText(LScale) + ')');
+    end
+    else
+    begin
+      LFace.Host.style.removeProperty('transform');
+      LFace.Host.style.removeProperty('transform-origin');
+    end;
     LFace.Host.style.setProperty('display', 'block');
     LFace.Host.style.setProperty('z-index', '10');
 
@@ -335,10 +376,24 @@ begin
       LFace.Host.style.setProperty('display', 'none');
     end;
     {$else}
-    LFace.Host.SetBounds(Round(LLeft), Round(LTop), Round(LWidth), Round(LHeight));
+    LFace.Host.SetBounds(Round(LLeft), Round(LTop), Round(LPhysicalWidth), Round(LPhysicalHeight));
+
+    if (LFace.NodeIndex >= 0) and (FConnectorScaling = nccsUniform) then
+    begin
+      LFace.Renderer.SetContentScale(Round(LWidth), Round(LHeight), LScale);
+    end;
     LFace.Host.Visible := LVisible;
     LFace.Host.BringToFront;
     {$endif}
+    LFace.ContentScale := LScale;
+
+    if (LFace.NodeIndex >= 0) and LVisible then
+    begin
+      { Bounds become queryable only after this face's actual projection.
+        A target exception leaves it undefined instead of advertising a frame
+        whose descendant controls have not accepted the requested factor. }
+      LFace.Bounds := NyxCanvasBounds(LLeft, LTop, LPhysicalWidth, LPhysicalHeight);
+    end;
   end;
   {$ifndef PAS2JS}
   { A revealed card stays reachable even when readable logical cards cannot all
@@ -784,8 +839,7 @@ begin
     FConnectorPointerSource := LPort;
     FConnectorPointerOrigin := LNode.ID;
     FConnectorPointerID := AEvent.Pointer.ID;
-    FConnectorPointerPosition := NyxCanvasPoint(LBounds.Left + AEvent.Pointer.X,
-      LBounds.Top + AEvent.Pointer.Y);
+    FConnectorPointerPosition := ConnectorViewportPointer(LFace, LBounds, AEvent);
     FConnectorPointerStart := FConnectorPointerPosition;
     FConnectorPanelStart := NyxCanvasPoint(FConnectorPanelBounds.Left, FConnectorPanelBounds.Top);
     LResponse.CapturePointer;
@@ -807,8 +861,7 @@ begin
 
   if ConnectorBounds(Self, LFace, LNode.ID, False, LBounds) then
   begin
-    FConnectorPointerPosition := NyxCanvasPoint(LBounds.Left + AEvent.Pointer.X,
-      LBounds.Top + AEvent.Pointer.Y);
+    FConnectorPointerPosition := ConnectorViewportPointer(LFace, LBounds, AEvent);
   end;
   FConnectorPointerMoved := FConnectorPointerMoved or
     (Abs(FConnectorPointerPosition.X - FConnectorPointerStart.X) > 4) or

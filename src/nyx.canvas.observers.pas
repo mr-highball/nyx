@@ -29,6 +29,16 @@ interface
 uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.canvas.types, nyx.canvas.geometry;
 
 type
+  { Optional UI-thread observation of the mounted control-scaling policy.
+    Standard views snapshot it at construction; changing a saved definition
+    never mutates a retained view. Retirement refuses access. This copied enum
+    retains no workspace/renderer and grants no camera or document authority. }
+  INyxCanvasScalingView = interface(IInterface)
+    ['{F330FE0C-230D-47DF-BBF4-D6F561986F54}']
+    function GetControlScaling: TNyxCanvasControlScaling;
+    property ControlScaling: TNyxCanvasControlScaling read GetControlScaling;
+  end;
+
   { Optional UI-only actual-control geometry in viewport logical pixels. False
     leaves bounds undefined when the exact item/control is absent, hidden or
     outside the allocated surface. Returned geometry owns no widget and grants

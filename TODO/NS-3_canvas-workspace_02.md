@@ -120,18 +120,31 @@ outcomes through explicit controlled hosts. The existing timing ceilings remain
 unchanged; WORK.md retains contention failures and isolated reruns. Full browser
 Studio interaction remains separate from its successful compilation.
 
-Browser visual review of the real formatted Notebook passes at wide/compact
-sizes. It also exposes a required gap: injected operation cards keep independent
-sizes while their positions zoom, so desktop Fit can overlap their faces. The
-Notebook-only and mixed-card screenshots remain separate. Next make those Tool
-Canvas card faces/navigation honor the selected scaling contract on both targets,
-preserving earlier policies, then finish ordinary browser Studio and delivery.
+Injected operation cards now honor the mounted uniform policy through an optional
+read-only typed facet. Their stable world allocations, navigation, culling and
+pointer conversion share the renderer factor; floating tools and earlier policies
+retain their semantics. Repeated zoom and actual native header dragging pass45
+checks in all four wide/compact mixed/empty cases, with zero unfreed blocks.
+Existing Keep size navigation passes61/64/62/65; browser counterparts pass37 in
+each uniform case and48/49 per width for Keep size, plus trusted half-zoom dragging.
+
+The exact saved/generated Workshop's browser journey passes169 at both widths.
+Its actual mixed-frame checks preserve positions and forbid zoom-induced overlap.
+Saved rows310 world units apart already overlap320-unit allocations, so the
+existing honest Limited result is required rather than silently moving them.
+The same full native journey passes175 per width with assertion/range/overflow
+checks and unchanged deadlines. The full heap-traced wide run times out at
+stage22 and remains separate; focused heaps are clean, but the complete traced
+journey and performance requirements are not accepted. Selective rendered review
+retains exact formatted Unicode/large-integer output through phone/desktop resize
+and actual Format/Zoom/Fit clicks. Both native formatted captures are diagnostic
+redraws. Ordinary browser Studio and observing delivery remain next.
 
 Other internal native scroll/drawing metrics, nested canvases, full drag/capture/
 keyboard/IME/assistive journeys and complete pre-publication admission for changed
 logical layouts remain implementation/qualification work. Full browser Studio
 selection, observing delivery and complete native/browser visual/assistive
 quality remain open. The installed LAN payload and example defaults are unchanged.
-Retain these gates and the observed operation-card failure on this owner rather
+Retain these gates and the authored overlap constraint on this owner rather
 than starting more standalone table/source variants;
 this task remains unaccepted with no duplicate completion credit.

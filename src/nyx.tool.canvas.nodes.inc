@@ -405,7 +405,7 @@ begin
     FConnectorPointerOrigin := LNode.ID;
     FConnectorPointerNode := LFace.Step;
     FConnectorPointerID := AEvent.Pointer.ID;
-    FConnectorPointerStart := NyxCanvasPoint(LBounds.Left + AEvent.Pointer.X, LBounds.Top + AEvent.Pointer.Y);
+    FConnectorPointerStart := ConnectorViewportPointer(LFace, LBounds, AEvent);
     FConnectorNodeStart := LWorld;
     FConnectorNodeCamera := FCanvas.Camera;
     LResponse.CapturePointer;
@@ -433,9 +433,10 @@ begin
 
   if ConnectorBounds(Self, LFace, LNode.ID, False, LBounds) then
   begin
+    LWorld := ConnectorViewportPointer(LFace, LBounds, AEvent);
     LWorld := FConnectorNodeStart.Offset(
-      (LBounds.Left + AEvent.Pointer.X - FConnectorPointerStart.X) / LCamera.Zoom,
-      (LBounds.Top + AEvent.Pointer.Y - FConnectorPointerStart.Y) / LCamera.Zoom);
+      (LWorld.X - FConnectorPointerStart.X) / LCamera.Zoom,
+      (LWorld.Y - FConnectorPointerStart.Y) / LCamera.Zoom);
     MovePipelineNode(FConnectorPointerNode, LWorld);
     Consume;
   end;

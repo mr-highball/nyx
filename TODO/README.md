@@ -80,9 +80,14 @@ journeys still need work.
 Ordinary native Studio now exposes the three scaling choices, with54/58 paired
 Inspector/Save/Open checks and identical saved Workshop bytes. That exact compiled
 pair passes126/126 native and120/120 browser runtime checks. Browser Studio input,
-delivery and full quality remain open. Visual review exposes overlapping injected
-operation cards after desktop Fit: next make their faces/navigation honor the
-selected scaling policy on both adapters. Keep this work on the existing owner;
+delivery and full quality remain open. Injected operation cards now follow
+uniform zoom, with45 native and37 browser checks in each mixed/empty wide/compact
+case, retained earlier-policy regressions and actual scaled dragging. The saved
+Workshop's browser journey passes169 and checked native journey175 per width;
+the full heap-traced native timeout remains a separate open performance gate.
+Authored overlapping allocations retain an honest Limited result and exact
+world positions. Next finish ordinary
+browser Studio and observing delivery. Keep this work on the existing owner;
 these checks establish no all-control parity or separate completion credit.
 
 After the two preparation/open and two binding batches, reassessment stops further

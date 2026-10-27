@@ -204,7 +204,9 @@ type
   end;
 
   { Copied runtime presentation position for a named operation in one graph.
-    World points move with the camera; the ordinary Nyx card keeps logical size.
+    World points move with the camera. A uniform canvas projects its ordinary
+    Nyx card from a stable 280x320 world allocation; earlier policies retain
+    viewport-sized readable cards. Long port lists remain independently scrollable.
     Home is the initial placement, independent of later pan/zoom. These values
     own no control or graph and are not implicitly saved into design/history. }
   TNyxToolPipelineNodePosition = record
@@ -217,8 +219,9 @@ type
   { Optional UI-only expansion of an already enabled canvas connection layer.
     Per-step Nyx cards share the captured route controller and internal graph
     metadata. Full face/port budgets admit before switching; no graph executes.
-    Move/Reset and pointer/keyboard input use world coordinates, with logical
-    card/font size on both adapters. Bounds are viewport-logical, undefined when
+    Move/Reset and pointer/keyboard input use world coordinates. Card geometry
+    and typography follow the mounted canvas's uniform policy when selected;
+    older policies retain logical size. Bounds are viewport-logical, undefined when
     the requested node is not mounted. Export is an explicit inert persistence
     boundary for current runtime positions, not a project save or live handle.
     Disconnect revokes all use before borrowed hosts/controls retire. }

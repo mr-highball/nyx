@@ -161,7 +161,7 @@ type
     INyxCanvasCoordinatedLayoutView, INyxCanvasFlowEditing, INyxCanvasRouteEditing,
     INyxCanvasPresentationObservation, INyxCanvasControlGeometry, INyxCanvasProgramEditing,
     INyxCanvasNavigationContributions, INyxCanvasPrecisionView,
-    INyxCanvasSourceLayoutView, INyxLCLCanvasRulerPresentation)
+    INyxCanvasSourceLayoutView, INyxLCLCanvasRulerPresentation, INyxCanvasScalingView)
   private
     FWorkspace: INyxCanvasWorkspace;
     FDocument: TNyxDocument;
@@ -267,6 +267,7 @@ type
     function SnapGuidePoint(const APoint: TNyxCanvasPoint;
       const AExclude: TNyxCanvasGuideRef): TNyxCanvasGuideSnap;
     function GetConnected: Boolean;
+    function GetControlScaling: TNyxCanvasControlScaling;
     function GetCamera: TNyxCanvasCamera;
     function GetMountedCount: Integer;
     function GetPresentationRevision: Integer;
@@ -1333,6 +1334,12 @@ end;
 function TCanvasView.GetConnected: Boolean;
 begin
   Result := FConnected;
+end;
+
+function TCanvasView.GetControlScaling: TNyxCanvasControlScaling;
+begin
+  RequireConnected;
+  Result := FScaling;
 end;
 
 function TCanvasView.GetSurface: TWinControl;

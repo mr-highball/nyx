@@ -364,6 +364,22 @@ budget; a small zoom cannot authorize an arbitrarily large logical layout.
 Browser item renderers use an independent logical host and a CSS transform,
 retaining their actual inputs and normal binding/events across camera changes.
 
+Mounted standard views expose the optional `INyxCanvasScalingView` in
+`nyx.canvas.observers`. Its read-only `ControlScaling` returns the copied typed
+policy on the UI thread; retirement refuses access. It grants no document or
+camera mutation and does not change an older view interface's ABI.
+
+Tool Canvas operation cards also follow an explicit uniform policy. Each uses a
+stable 280x320 world allocation with its own scrollable port list. Both adapters
+project its ordinary live renderer; navigation extents, culling, wire endpoints
+and pointer conversion follow that same factor. Floating connection tools and
+control-port strips retain their readable viewport sizes. Earlier scaling policies
+and custom views without the optional facet retain their existing card behavior.
+Uniform scaling preserves authored operation positions. If those world allocations
+already overlap, Fit reports Limited rather than moving the cards or claiming a
+complete unobstructed fit. Callers may deliberately move them through the typed
+operation-placement contract.
+
 Studio's Properties Inspector exposes **Embedded controls → Zoom behavior** for
 a selected saved canvas. In a Tool Canvas, select its authored workspace part.
 Reflow, Keep size and Uniform zoom correspond to the three typed policies above.
@@ -444,9 +460,11 @@ the complete saved/generated consumer's remaining checks.
 The saved/generated JSON Workshop now exercises this choice through ordinary
 native Inspector/history/Save/Open and its own native/browser applications.
 Visual review distinguishes the fitted Notebook from injected Tool Canvas
-operation cards: those cards still keep independent sizes while their positions
-zoom, so mixed-card Fit can overlap their faces. Consistent operation-card
-scaling/navigation, full browser Studio input and observing delivery remain open.
+operation cards. Their uniform projection now fixes the extra overlap caused by
+fixed-size faces following zoomed anchors. Existing authored overlap remains an
+honest navigation constraint. Full browser Studio input and observing delivery
+remain open; WORK.md separates focused adapter checks from the complete saved
+application, visual review and original quality requirements.
 
 Only uniform definitions emit descriptor version6. Its camera may be bounded or
 unbounded and precision remains optional. Switching back to an existing policy

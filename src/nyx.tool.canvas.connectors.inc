@@ -88,12 +88,14 @@ type
     copy. Gesture subscriptions keep their raw callback entries alive until
     disposal revokes them. NodeIndex -1 identifies control/combined faces; a
     nonnegative value belongs to a captured named graph step. Native parent
-    ownership is explicitly coordinated. }
+    ownership is explicitly coordinated. ContentScale is the last applied face
+    factor for input conversion, independently of a queued camera update. }
   TConnectorFace = class
   public
     Control: TNyxControlRef;
     NodeIndex: Integer;
     Bounds: TNyxCanvasBounds;
+    ContentScale: Double;
     Flow: TNyxFlowRef;
     Step: TNyxFlowStepRef;
     Root: INyxNode;
@@ -254,6 +256,7 @@ var
   LObserver: TConnectorPresentationObserver;
   LNavigation: INyxCanvasNavigationContributions;
   LSource: TConnectorNavigationSource;
+  LScaling: INyxCanvasScalingView;
 begin
 
   if not Supports(ACanvas,
@@ -264,6 +267,16 @@ begin
     Exit;
   end;
   FCanvas := LCanvas;
+  { Existing/custom canvases keep the established readable fixed-size faces.
+    Only the explicit uniform policy opts generated world-space cards into the
+    same live scaling as ordinary embedded controls. Floating tools stay fixed. }
+  FConnectorScaling := nccsLogicalSize;
+
+  if Supports(ACanvas, INyxCanvasScalingView, LScaling) and
+    (LScaling.ControlScaling = nccsUniform) then
+  begin
+    FConnectorScaling := nccsUniform;
+  end;
   { Retain immutable scheduler identity until final view release, so worker
     rejection never races disposal of a borrowed renderer/event router. }
   FConnectorScheduler := FRenderer.Events.Scheduler;
@@ -472,6 +485,12 @@ var
     FConnectorFaces[LCount] := LFace;
     LFace.Control := AControl;
     LFace.NodeIndex := ANodeIndex;
+    LFace.ContentScale := 1;
+
+    if (ANodeIndex >= 0) and (FConnectorScaling = nccsUniform) then
+    begin
+      LFace.ContentScale := FCanvas.Camera.Zoom;
+    end;
 
     if ANodeIndex >= 0 then
     begin
@@ -494,6 +513,12 @@ var
     LFace.Host.setAttribute('data-nyx-connectors', ARoot.Node.ID);
     LFace.Host.style.setProperty('width', IntToStr(Round(LWidth)) + 'px');
     LFace.Host.style.setProperty('height', IntToStr(Round(LHeight)) + 'px');
+
+    if (ANodeIndex >= 0) and (FConnectorScaling = nccsUniform) then
+    begin
+      LFace.Host.style.setProperty('transform-origin', '0 0');
+      LFace.Host.style.setProperty('transform', 'scale(' + NyxStateNumberText(LFace.ContentScale) + ')');
+    end;
     FCanvas.Surface.appendChild(LFace.Host);
     LFace.Renderer := TNyxBrowserRenderer.Create(FConnectorTheme);
     LFace.Renderer.OnEvent := @ConnectorEvent;
@@ -515,9 +540,15 @@ var
     end;
     { Admit the final viewport before native rendering. Shrinking a provisional
       wider root can leave automatic scrollbars feeding a second wrapped row. }
-    LFace.Host.SetBounds(0, 0, Round(LWidth), Round(LHeight));
+    LFace.Host.SetBounds(0, 0, Max(1, Round(LWidth * LFace.ContentScale)),
+      Max(1, Round(LHeight * LFace.ContentScale)));
     LFace.Renderer := TNyxLCLRenderer.Create(FConnectorTheme);
     LFace.Renderer.OnEvent := ConnectorEvent;
+
+    if (ANodeIndex >= 0) and (FConnectorScaling = nccsUniform) then
+    begin
+      LFace.Renderer.SetContentScale(Round(LWidth), Round(LHeight), LFace.ContentScale);
+    end;
     LFace.Renderer.Render(FConnectorDocument, ARoot.Node, LFace.Host, False, FState);
     {$endif}
     for LPort := 0 to LController.PortCount do

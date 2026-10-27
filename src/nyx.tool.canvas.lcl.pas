@@ -101,6 +101,7 @@ type
     FGestureSubscriptions: array of INyxEventSubscription;
 
     FCanvas: INyxLCLCanvasWorkspaceView;
+    FConnectorScaling: TNyxCanvasControlScaling;
     FConnectorGeometry: INyxCanvasControlGeometry;
     FConnectorObserver: TObject;
     FConnectorObserverLease: INyxCanvasPresentationObserver;

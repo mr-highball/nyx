@@ -27,7 +27,7 @@ program nyx_tool_canvas_navigation_controls;
 uses SysUtils, Math, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.controls, nyx.root.types, nyx.state, nyx.events, nyx.scheduler,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.declarations, nyx.canvas.workspace,
-  nyx.canvas.navigation, nyx.canvas.navigation.sources, nyx.tool.canvas,
+  nyx.canvas.navigation, nyx.canvas.navigation.sources, nyx.canvas.observers, nyx.tool.canvas,
   nyx.flow, nyx.flow.types, nyx.flow.declarations, nyx.logic
   {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.canvas.browser,
     nyx.render.browser, nyx.tool.canvas.browser
@@ -45,6 +45,9 @@ type
   end;
 
   {$ifndef PAS2JS}
+  { Exposes inherited font observation only; no native control is replaced. }
+  TControlAccess = class(TControl);
+
   { Test-owned exception observer remains alive through all queued UI retirement
     turns, replacing unattended framework dialogs with a retained test failure. }
   TFailure = class
@@ -82,6 +85,15 @@ var
   GDone: Boolean;
   GCompact: Boolean;
   GMixed: Boolean;
+  GUniform: Boolean;
+  GUniformWidth: Double;
+  GUniformHeight: Double;
+  GUniformHeaderWidth: Double;
+  GUniformFace: TObject;
+  GUniformHeader: TNyxControlRef;
+  {$ifndef PAS2JS}
+  GUniformFont: Integer;
+  {$endif}
   GStarted: {$ifdef PAS2JS}Double{$else}QWord{$endif};
   {$ifdef PAS2JS}
   GApp: TNyxBrowserApplication;
@@ -267,6 +279,11 @@ begin
       .WithCamera(NyxCanvasCamera(1000, 640, NyxCanvasPoint(0, 0), 1,
         NyxCanvasZoomLimits(0.001, 16))).WithScaling(nccsLogicalSize);
 
+    if GUniform then
+    begin
+      LScene := LScene.WithScaling(nccsUniform);
+    end;
+
     if GMixed then
     begin
       LScene := LScene.WithItem(NyxCanvasItem('Notes'), NyxReusableRoot('working-form'),
@@ -426,6 +443,149 @@ begin
   {$endif}
 end;
 
+{ Exercise the same actual operation faces under an opted-in uniform scene.
+  Old navigation cases below keep their fixed-size semantics and assertions. }
+procedure UniformStep;
+const
+  CZooms: array[0..4] of Double = (1, 0.5, 1.5, 0.5, 1);
+var
+  LBounds: TNyxCanvasBounds;
+  LOther: TNyxCanvasBounds;
+  LZoom: Double;
+  LWidth: Double;
+  LFace: {$ifdef PAS2JS}TNyxBrowserRenderer{$else}TNyxLCLRenderer{$endif};
+  LScaling: INyxCanvasScalingView;
+  {$ifndef PAS2JS}
+  LHeader: TWinControl;
+  LPositions: TNyxDataValue;
+  LPosition: TNyxDataValue;
+  LIndex: Integer;
+  LFound: Boolean;
+  {$endif}
+begin
+
+  if not Idle then
+  begin
+    Exit;
+  end;
+  case GStage of
+    0:
+      begin
+        GGraph.ShowGraphConnections(NyxFlowRef('Data workshop'));
+        GTools.Refresh;
+      end;
+    1:
+      begin
+        Check(Supports(GCanvas, INyxCanvasScalingView, LScaling) and
+          (LScaling.ControlScaling = nccsUniform), 'mounted view exposes the selected typed scaling policy');
+        GNav.ConfigureNavigation(NyxCanvasNavigationOptions, ntctCompact);
+        GNodes.MovePipelineNode(NyxFlowStep('read'), NyxCanvasPoint(0, 0));
+        GNodes.MovePipelineNode(NyxFlowStep('pretty'), NyxCanvasPoint(300, 0));
+        GPositions := GNodes.ExportPipelineNodePositions.ToJSON;
+        GFlowRevision := GFlows.FlowRevision;
+        GCanvas.SetCamera(GCanvas.Camera.AtCenter(NyxCanvasPoint(290, 160), 1));
+      end;
+    2..6:
+      begin
+        LZoom := CZooms[GStage - 2];
+        LBounds := GNodes.PipelineNodeBounds(NyxFlowStep('read'));
+        LOther := GNodes.PipelineNodeBounds(NyxFlowStep('pretty'));
+        LFace := GNodeFaces.PipelineNodeRenderer(NyxFlowStep('read'));
+        Check((LFace <> nil) and LBounds.Defined and LOther.Defined,
+          'uniform operation faces are actually mounted');
+
+        if GStage = 2 then
+        begin
+          GUniformFace := LFace;
+          GUniformWidth := LBounds.Width;
+          GUniformHeight := LBounds.Height;
+          GUniformHeader := NyxControl(LFace.Root.Part(NyxPart('move')).ID);
+          {$ifdef PAS2JS}
+          GUniformHeaderWidth := LFace.ElementFor(GUniformHeader.ID).getBoundingClientRect.width;
+          {$else}
+          GUniformHeaderWidth := LFace.ControlFor(GUniformHeader.ID).Width;
+          GUniformFont := TControlAccess(LFace.ControlFor(GUniformHeader.ID)).Font.Height;
+          {$endif}
+        end;
+        Check(LFace = GUniformFace, 'camera zoom retains the same operation renderer');
+        Check((Abs(LBounds.Width - GUniformWidth * LZoom) < 2) and
+          (Abs(LBounds.Height - GUniformHeight * LZoom) < 2),
+          'operation face extents scale with the same camera as their world positions');
+        Check(LBounds.Left + LBounds.Width <= LOther.Left + 1,
+          'separated world-space operation cards remain separated after zoom');
+        {$ifdef PAS2JS}
+        LWidth := LFace.ElementFor(GUniformHeader.ID).getBoundingClientRect.width;
+        {$else}
+        LWidth := LFace.ControlFor(GUniformHeader.ID).Width;
+        Check(Abs(TControlAccess(LFace.ControlFor(GUniformHeader.ID)).Font.Height -
+          Round(GUniformFont * LZoom)) <= 1, 'native operation typography follows uniform zoom');
+        {$endif}
+        Check(Abs(LWidth - GUniformHeaderWidth * LZoom) < 2,
+          'the actual operation move header scales with its face');
+
+        if GStage < 6 then
+        begin
+          GCanvas.SetCamera(GCanvas.Camera.AtCenter(NyxCanvasPoint(290, 160), CZooms[GStage - 1]));
+        end
+        else
+        begin
+          GFinalFit := GNav.FitContent;
+        end;
+      end;
+    7:
+      begin
+        Check(GFinalFit.Status = ncnsComplete, 'uniform operation extents admit complete Fit');
+        CheckVisible(NyxFlowStep('read'));
+        CheckVisible(NyxFlowStep('pretty'));
+        Check((GPositions = GNodes.ExportPipelineNodePositions.ToJSON) and
+          (GFlows.FlowRevision = GFlowRevision) and (TNyxCodec.Encode(GDocument) = GBefore),
+          'uniform projection/navigation retains exact graph, world positions and authored bytes');
+        { Mixed scenes also contain a distant embedded control. Fit legitimately
+          centers that larger union; return to the operation pair before testing
+          header input so the selected HWND/DOM element is actually visible. }
+        GCanvas.SetCamera(GCanvas.Camera.AtCenter(NyxCanvasPoint(290, 160), 0.5));
+      end;
+    8:
+      begin
+        {$ifndef PAS2JS}
+        LFace := GNodeFaces.PipelineNodeRenderer(NyxFlowStep('read'));
+        LHeader := TWinControl(LFace.ControlFor(GUniformHeader.ID));
+        LHeader.SetFocus;
+        { Ordinary native input moves 8x6 viewport pixels at half zoom. The
+          public world position must advance exactly16x12, not twice that. }
+        Windows.SendMessage(LHeader.Handle, WM_LBUTTONDOWN, MK_LBUTTON, LPARAM(4 shl 16 or 4));
+        Windows.SendMessage(LHeader.Handle, WM_MOUSEMOVE, MK_LBUTTON, LPARAM(10 shl 16 or 12));
+        Windows.SendMessage(LHeader.Handle, WM_LBUTTONUP, 0, LPARAM(10 shl 16 or 12));
+        LPositions := GNodes.ExportPipelineNodePositions.Field('nodes');
+        LFound := False;
+        for LIndex := 0 to LPositions.Count - 1 do
+        begin
+          LPosition := LPositions.Item(LIndex);
+
+          if LPosition.Field('step').AsText = 'read' then
+          begin
+            Check((Abs(LPosition.Field('x').AsNumber - 16) < 0.01) and
+              (Abs(LPosition.Field('y').AsNumber - 12) < 0.01),
+              'actual scaled-header pointer input moves the intended world distance');
+            LFound := True;
+          end;
+        end;
+        Check(LFound, 'the dragged operation retains its public typed identity');
+        GNodes.MovePipelineNode(NyxFlowStep('read'), NyxCanvasPoint(0, 0));
+        {$endif}
+      end;
+    9:
+      begin
+        Check((GPositions = GNodes.ExportPipelineNodePositions.ToJSON) and
+          (GFlows.FlowRevision = GFlowRevision) and (TNyxCodec.Encode(GDocument) = GBefore),
+          'input recovery preserves authored source and restored world placement');
+        GUniformFace := nil;
+        GDone := True;
+      end;
+  end;
+  Inc(GStage);
+end;
+
 procedure Step;
 var
   LResult: TNyxCanvasNavigationResult;
@@ -433,6 +593,12 @@ var
   LInput: {$ifdef PAS2JS}TJSHTMLElement{$else}TControl{$endif};
   LFailed: Boolean;
 begin
+
+  if GUniform then
+  begin
+    UniformStep;
+    Exit;
+  end;
 
   if not Idle then
   begin
@@ -664,7 +830,11 @@ begin
     begin
       document.body.setAttribute('data-tool-navigation', 'passed');
       document.body.setAttribute('data-tool-navigation-checks', IntToStr(GChecks));
-      Retire;
+
+      if Pos('review', window.location.search) = 0 then
+      begin
+        Retire;
+      end;
     end
     else
     begin
@@ -702,10 +872,13 @@ begin
     {$ifdef PAS2JS}
     GCompact := window.innerWidth <= 500;
     GMixed := Pos('empty', window.location.search) = 0;
+    GUniform := Pos('uniform', window.location.search) > 0;
     {$else}
-    Check(ParamCount = 3, 'supply capture path, viewport choice and mixed/empty choice');
+    Check((ParamCount = 3) or ((ParamCount = 4) and (ParamStr(4) = 'uniform')),
+      'supply capture path, viewport choice, mixed/empty choice and optional uniform policy');
     GCompact := ParamStr(2) = 'compact';
     GMixed := ParamStr(3) = 'mixed';
+    GUniform := ParamStr(4) = 'uniform';
     Application.Initialize;
     GFailure := TFailure.Create;
     Application.OnException := GFailure.Failed;

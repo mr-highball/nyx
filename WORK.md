@@ -9,7 +9,82 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Canvas scaling in ordinary Studio — 2026-10-27
+## Current checkpoint — Uniform Tool Canvas operation cards — 2026-10-27
+
+Previous goal turn: PROGRESS;8e32318 is pushed and remote-verified. Batch35 stays
+on canvas-workspace02's observed mixed-card Fit failure. Generated operation
+faces currently keep fixed sizes while their anchors follow camera zoom. Add a
+read-only typed mounted-scaling facet without changing existing view ABIs, then
+reuse normal renderer projection for uniformly scaled operation faces. Navigation,
+clipping, port endpoints and pointer conversion must describe the same painted
+frame. Preserve Reflow/Keep size, floating tools, world positions, graph/source
+ownership, cancellation and existing limits. Establish the native failure in
+the existing navigation consumer, exercise both adapters and return to the same
+saved Workshop. Root remains SOLO; owned artifacts/TEMP/TMP stay external. All
+earlier owned jobs are joined; preserve the installed LAN/MCP owner and unrelated
+1280/390. No cleanup or approval boundary is introduced.
+
+Implemented: optional INyxCanvasScalingView copies the mounted immutable policy
+on UI and refuses retired access. Original view GUIDs/ABIs remain unchanged.
+Standard Tool Canvas cards opt into the existing uniform renderer projection;
+older/custom policies retain fixed readable faces. Uniform allocations are stable
+280x320 world units, with independently scrolling long port lists. Navigation,
+culling, actual port endpoints and logical-to-viewport pointer conversion use the
+same factor. Floating tools/embedded-control port strips stay fixed. The last
+applied face factor remains separate from a queued camera update.
+
+Private canvas-uniform-operations-01 retains the checked native baseline failure:
+at half zoom, operation anchors move while face extents remain unchanged. The
+repaired navigation consumer passes45 at each wide/compact mixed/empty case,
+including repeated zoom, same renderer/header/font, complete separated Fit,
+actual Win32 header drag at half zoom and exact source/position recovery. The
+four Keep size regressions pass61/64/62/65. All eight native heaps report matching
+allocation/free counts/bytes and zero unfreed blocks; their trailing output is
+truncated at256 bytes. A first mixed input attempt tried focusing a legitimately
+culled header after the distant scene Fit; its failure remains. The fixture now
+returns the camera to the operation pair before actual input.
+
+The browser navigation consumer passes37 in all four uniform cases and48/49
+Keep size checks per width. A trusted browser half-zoom drag moves the actual
+face23x18 viewport pixels for a requested24x18, within integer rounding; it no
+longer doubles movement. The retained desktop screenshot follows that deliberate
+drag and is separate from fitted-scene screenshots. Browser cleanup cases execute
+ordinary retirement; the explicit review mode retains mounted controls.
+
+The same earlier saved/generated Workshop pair compiles independently on both
+targets. Its full browser journey passes169 at1280x900 and390x844, preserving
+existing formatting, interpreted Pascal, file and HTTP checks through controlled
+hosts. New actual mixed-frame checks compare every operation with its exact
+world anchor and allocation, preserve all exported positions and forbid added
+overlap. The first Complete assertion exposes an existing authored constraint:
+rows310 units apart overlap320-unit allocations. The initial assertion/screenshot/
+generated JS remain; checks now require honest Limited for that existing overlap
+and Complete for separated geometry. No source, position, zoom limit or timing
+ceiling was changed to hide it. Selective phone/desktop visual review clicks real
+Format/Zoom/Fit controls and reads the exact supplementary Unicode/large integer
+result. The same full native journey passes175 at both widths with assertions,
+range/overflow/I/O checks and debug lines enabled, within the unchanged per-phase
+timing ceilings. This behavior profile omits heap tracing. The full traced wide
+run hits the original interaction deadline at stage22; it retains matching
+53,573,819 allocation/free blocks and2,179,592,857 bytes, with a truncated
+zero-unfreed trailer. That failure remains separate from the passing checked
+profile and focused clean heaps. No full traced-journey or performance acceptance
+is claimed. Both widths' formatted mixed native captures were inspected as
+diagnostic redraws, separately from actual browser rendering/display evidence.
+Compilers report no owned warnings; the browser retains the seven installed
+Classes warnings. All owned compiler/application jobs are terminal and joined.
+
+Authenticated MCP inspection still lists the three existing projects at
+revisions1/4/7; this batch performs no design mutation. The user confirms phone
+LAN access. The installed service/payload stays unchanged. The verified temporary
+read-only browser host is stopped/joined, its tab closed and viewport override
+reset. Source identities remain stable through qualification. No original task,
+criterion or completion credit closes. Next finish ordinary browser Studio's
+scaling/history/Save/Open journey and observing delivery; preserve the existing
+native drawing/nested-canvas, complete changed-layout admission, physical input,
+IME/assistive and visual/performance gates. No user input is missing.
+
+## Earlier checkpoint — Canvas scaling in ordinary Studio — 2026-10-27
 
 Previous goal turn: PROGRESS;ddb6413 is pushed and remote-verified. Batch34
 returns canvas-workspace02 to its ordinary Inspector and saved JSON Workshop.

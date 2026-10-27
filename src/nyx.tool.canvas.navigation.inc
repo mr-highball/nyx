@@ -112,7 +112,7 @@ begin
     ConnectorFaceSize(LFace, LWidth, LHeight);
     Result.Items[LIndex] := NyxCanvasNavigationItem(NyxCanvasBounds(
       FConnectorNodePositions[LPosition].Position.X,
-      FConnectorNodePositions[LPosition].Position.Y, LWidth, LHeight), nccsLogicalSize, True);
+      FConnectorNodePositions[LPosition].Position.Y, LWidth, LHeight), FConnectorScaling, True);
   end;
 
   for LFaceIndex := 0 to High(FConnectorFaces) do

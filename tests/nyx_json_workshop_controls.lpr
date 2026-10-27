@@ -29,7 +29,7 @@ uses
   nyx.state, nyx.logic, nyx.logic.http, nyx.http.types, nyx.resources.loader,
   nyx.resource.sources, nyx.files.save, nyx.files.open, nyx.scheduler,
   nyx.json.workshop, nyx.tool.canvas, nyx.canvas.types, nyx.canvas.workspace,
-  nyx.canvas.geometry, nyx.canvas.observers,
+  nyx.canvas.geometry, nyx.canvas.observers, nyx.canvas.navigation,
   nyx.flow.routing, nyx.flow.declarations, nyx.view.behavior,
   nyx.programs, nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}nyx.test.json.workshop.studio,{$endif}
@@ -152,6 +152,9 @@ var
   GNetworkRevision: Integer;
   GInteractionStarted: Double;
   GNodes: array of INyxToolCanvasPipelineNodes;
+  GUniformOperationsFitted: Boolean;
+  GUniformOperationPositions: array[0..1] of TNyxText;
+  GUniformOperationFits: array[0..1] of TNyxCanvasNavigationStatus;
   GBefore: TNyxText;
   GPretty: TNyxText;
   GStage: Integer;
@@ -430,6 +433,133 @@ begin
   {$ifdef PAS2JS}
   document.body.setAttribute('data-uniform-notebook', 'complete / ' + IntToStr(AApp));
   {$endif}
+end;
+
+{ Return to the same saved application's mixed scene after graph publication.
+  Fit and its queued face projection occupy separate UI turns. Compare actual
+  mounted extents, rather than inferring them from the camera or definition. }
+function CheckUniformOperations: Boolean;
+var
+  LApp: Integer;
+  LIndex: Integer;
+  LOtherIndex: Integer;
+  LScaling: INyxCanvasScalingView;
+  LNavigation: INyxToolCanvasNavigation;
+  LTools: INyxToolCanvasView;
+  LFlow: INyxFlowDefinition;
+  LBounds: TNyxCanvasBounds;
+  LOther: TNyxCanvasBounds;
+  LFit: TNyxCanvasNavigationResult;
+  LPositions: TNyxDataValue;
+  LPoint: TNyxCanvasPoint;
+  LWorlds: array of TNyxCanvasBounds;
+  LSavedOverlap: Boolean;
+  LActualOverlap: Boolean;
+  LAnyOverlap: Boolean;
+
+  { The export is the explicit inert persistence boundary. Compare this saved
+    graph's exact world anchors with the stable 280x320 operation allocation. }
+  function SavedBounds(AStep: Integer): TNyxCanvasBounds;
+  var
+    LRow: Integer;
+    LValue: TNyxDataValue;
+  begin
+    for LRow := 0 to LPositions.Count - 1 do
+    begin
+      LValue := LPositions.Item(LRow);
+
+      if (LValue.Field('graph').AsText = JSONWorkshopSaveFlow.Name) and
+        (LValue.Field('step').AsText = LFlow.Step(AStep).Name) then
+      begin
+        Exit(NyxCanvasBounds(LValue.Field('x').AsNumber, LValue.Field('y').AsNumber, 280, 320));
+      end;
+    end;
+    raise Exception.Create('The saved operation has no exported placement');
+  end;
+
+  function Overlap(const ALeft, ARight: TNyxCanvasBounds; ATolerance: Double): Boolean;
+  begin
+    Result := (ALeft.Left < ARight.Left + ARight.Width - ATolerance) and
+      (ALeft.Left + ALeft.Width > ARight.Left + ATolerance) and
+      (ALeft.Top < ARight.Top + ARight.Height - ATolerance) and
+      (ALeft.Top + ALeft.Height > ARight.Top + ATolerance);
+  end;
+begin
+  Result := True;
+
+  if not Supports(GViews[0], INyxCanvasScalingView, LScaling) or
+    (LScaling.ControlScaling <> nccsUniform) then
+  begin
+    Exit;
+  end;
+  for LApp := 0 to 1 do
+  begin
+    LTools := GApps[LApp].View.ToolCanvasView(JSONWorkshopCanvas.ID);
+
+    if (LTools.RefreshExecution <> nil) and
+      (LTools.RefreshExecution.Status in [nesPending, nesRunning]) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
+  if not GUniformOperationsFitted then
+  begin
+    for LApp := 0 to 1 do
+    begin
+      GUniformOperationPositions[LApp] := GNodes[LApp].ExportPipelineNodePositions.ToJSON;
+      LTools := GApps[LApp].View.ToolCanvasView(JSONWorkshopCanvas.ID);
+      Check(Supports(LTools, INyxToolCanvasNavigation, LNavigation),
+        'the same saved Workshop supplies public mixed-scene navigation');
+      LFit := LNavigation.FitContent;
+      GUniformOperationFits[LApp] := LFit.Status;
+      Check(LFit.Status <> ncnsEmpty,
+        'the same saved Workshop supplies a mixed Notebook/operation Fit proposal');
+    end;
+    GUniformOperationsFitted := True;
+    Result := False;
+    Exit;
+  end;
+  LFlow := GDocument.Flows.Definition(JSONWorkshopSaveFlow);
+  for LApp := 0 to 1 do
+  begin
+    LPositions := GNodes[LApp].ExportPipelineNodePositions.Field('nodes');
+    SetLength(LWorlds, LFlow.StepCount);
+    for LIndex := 0 to LFlow.StepCount - 1 do
+    begin
+      LWorlds[LIndex] := SavedBounds(LIndex);
+    end;
+    LAnyOverlap := False;
+    for LIndex := 0 to LFlow.StepCount - 1 do
+    begin
+      LBounds := GNodes[LApp].PipelineNodeBounds(LFlow.Step(LIndex));
+      Check(LBounds.Defined and (LBounds.Left >= -1) and (LBounds.Top >= -1) and
+        (LBounds.Left + LBounds.Width <= GViews[LApp].Camera.ViewportWidth + 1) and
+        (LBounds.Top + LBounds.Height <= GViews[LApp].Camera.ViewportHeight + 1),
+        'mixed Fit exposes the complete actual saved operation face');
+      LPoint := GViews[LApp].Camera.WorldToViewport(
+        NyxCanvasPoint(LWorlds[LIndex].Left, LWorlds[LIndex].Top));
+      Check((Abs(LBounds.Left - LPoint.X) <= 1) and (Abs(LBounds.Top - LPoint.Y) <= 1) and
+        (Abs(LBounds.Width - LWorlds[LIndex].Width * GViews[LApp].Camera.Zoom) <= 1) and
+        (Abs(LBounds.Height - LWorlds[LIndex].Height * GViews[LApp].Camera.Zoom) <= 1),
+        'actual mixed operation extents retain their authored world projection');
+      for LOtherIndex := LIndex + 1 to LFlow.StepCount - 1 do
+      begin
+        LOther := GNodes[LApp].PipelineNodeBounds(LFlow.Step(LOtherIndex));
+        LSavedOverlap := Overlap(LWorlds[LIndex], LWorlds[LOtherIndex], 0);
+        LAnyOverlap := LAnyOverlap or LSavedOverlap;
+        LActualOverlap := Overlap(LBounds, LOther, 1);
+        Check(LOther.Defined and (LActualOverlap = LSavedOverlap),
+          'mixed Fit introduces no overlap beyond the existing authored world placement');
+      end;
+    end;
+    Check(((not LAnyOverlap) and (GUniformOperationFits[LApp] = ncnsComplete)) or
+      (LAnyOverlap and (GUniformOperationFits[LApp] = ncnsLimited)),
+      'mixed Fit honestly reports existing authored overlap without moving saved cards');
+    Check(GNodes[LApp].ExportPipelineNodePositions.ToJSON = GUniformOperationPositions[LApp],
+      'mixed Fit does not rewrite the saved application operation positions');
+  end;
 end;
 
 procedure Click(AApp: Integer; AControl: TJSONWorkshopControl);
@@ -774,6 +904,11 @@ begin
         end;
         Check(GNodes[0].PipelineNodesVisible and GNodes[1].PipelineNodesVisible,
           'both real operation-card presentations have published');
+
+        if not CheckUniformOperations then
+        begin
+          Exit;
+        end;
         TypeSource(0, CExactJSON);
         Click(0, jwcFormat);
       end;
@@ -788,6 +923,14 @@ begin
           'embedded editing remains independent in a reopened peer application');
         Check((Pos('9007199254740993', GPretty) > 0) and (Pos('River 🌙', GPretty) > 0),
           'real formatting preserves exact large numbers and supplementary Unicode');
+        {$ifndef PAS2JS}
+
+        if GUniformOperationsFitted then
+        begin
+          SaveNyxNativeCapture(GApps[0].Window,
+            GDirectory + 'uniform-workshop-mixed-formatted.png', ncmPrint);
+        end;
+        {$endif}
         {$ifdef PAS2JS}
 
         if Pos('&review=uniform&', '&' + Copy(window.location.search, 2,
