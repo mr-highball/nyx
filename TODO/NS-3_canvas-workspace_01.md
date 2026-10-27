@@ -4,6 +4,14 @@
 
 **Description:**
 
+Actual2026-10-27 browser Workshop inspection exposes the remaining interactive
+zoom/paint prerequisite in [workspace02](NS-3_canvas-workspace_02.md). Existing
+reflow deliberately preserves font size; its fitted host can clip the taller
+reflowed subtree. Both browser HTTP and real file opening work, which does not
+qualify that presentation. The follow-up owns uniform live-control scaling,
+actual extents/input and the same saved/generated consumer without duplicate
+credit. Preserve the existing reflow/logical-size contracts and original scope.
+
 Live diagram-source refresh now consumes optional prepared source-context
 replacement through the existing canvas owner. It stages changed reusable content
 and deliberately retains unchanged actual controls. WORK.md separates native
@@ -122,6 +130,8 @@ independent coordinate primitives may be prepared without replacing that return 
 
 **Blockers**
 
+- [Interactive canvas zoom](NS-3_canvas-workspace_02.md) must qualify the remaining
+  live-control transform and visual requirements above.
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
 - [Owned document model](DONE/NS-1_model_01.md).
 - [Portable resources](DONE/NS-1_resources_01.md).

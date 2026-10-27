@@ -9,7 +9,73 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Owned scheduler retirement — 2026-10-27
+## Current checkpoint — Browser runtime integration — 2026-10-27
+
+The preceding cleanup follow-up verified an already completed retirement; it
+added no product acceptance. Return to http-output-hosts01's same accepted MCP
+Workshop and ordinary Outputs browser controls. Root remains SOLO. Batch28's
+deliverable is executed selected-host browser behavior at wide/compact sizes,
+with unchanged generated scripts and retained native evidence. Stop to repair
+an actual failed assertion or interaction; do not create more native variants.
+
+Read-only historical review corrects the inherited browser-access diagnosis:
+the recorded refusals concern a local-file protocol and acquisition of an
+unreachable/generated error page, not an HTTP origin prohibition. Current
+Studio loads through its ordinary HTTP endpoint without permission changes.
+Initial navigation observation expired, but inspection of that same tab proved
+the running page. Preserve the original refusals; they do not prohibit ordinary
+authorized HTTP qualification. No alternate browser, raw CDP route or security
+setting change is used. Athena's browser standard also requires HTTP hosting.
+
+browser-http-integration-01 stages the three existing application scripts with
+exact copied hashes and their matched runtime. Only their HTML script basename
+changes for flat hosting. The maintained Pascal preview host is temporarily
+bound to loopback on the existing review origin; its exact identity is recorded
+for retirement. The installed LAN/MCP service and three user projects stay in
+place. All private output and child TEMP/TMP use external storage.
+
+The completed packet retains12 browser scenarios. All three generated host
+configurations execute at1280/390: HTTP-only and HTTP+files receive200 and
+format the exact Unicode fixture; missing transport preserves the initial frame
+and reports its refusal. Empty/malformed URL input retains both accepted text
+frames. Selecting the fetch control exposes its existing runtime diagnostic in
+Tool Canvas; the default card selection does not show a child route's failure.
+The combined generated app also uses the real browser chooser/FileReader at
+both widths and formats that exact UTF-8 file. Its Save picker is not exercised.
+
+The unchanged delayed Outputs fixture passes36/36 browser checks; ordinary
+runtime host controls pass13/13 with29 profile checks per width. Outputs XHR is
+controlled, so those passes do not establish installed profile HTTP or native
+file persistence. The desktop Outputs run is1280x720, compact390x844; subsequent
+desktop app/runtime checks use1280x900. Browser creation did not inherit the
+earlier viewport override, so sizes are measured again on the actual pages.
+Some frame/DOM observations expire during fixture activity; subsequent reads of
+the same tab establish terminal pass markers. Retain those observation failures
+without claiming a measured responsiveness pass or starting duplicate work.
+
+Rendered/DOM inspection exposes a real remaining usability requirement: Fit
+allocates285x609 to the authored450x960 notebook, while unchanged-font reflow
+makes the card977 pixels tall and clips its result below the host. Compact
+input works but also has horizontal clipping. This matches the documented
+reflow policy; it does not supply the original goal's full live-control zoom.
+The existing two policies remain unchanged. Granular canvas-workspace02 owns
+the missing uniform live scaling, actual painted extents, input and saved/source
+integration under canvas-workspace01, without duplicate completion allocation.
+Next implement that user-facing library prerequisite, then return to the
+catalog's remaining browser journeys. Do not resume native HTTP/queue variants.
+
+All three existing projects retain their revision/selection/view/draft/history
+metadata through a real bounded semantic read. The three generated scripts stay
+hash-identical and the four prior source pins still match. Only this run's two
+browser tabs are closed and the viewport override reset. Preview5820 is identity-
+verified and stopped; LAN/MCP39908 remains. The first retirement comparison
+refused before mutation because JSON decoded its timestamp as DateTime; exact
+UTC ticks, path and binary hash establish the same owner before retirement.
+No helper, project mutation, installed configuration change or cleanup is run.
+Original physical/assistive, visual/performance, platform breadth and full owner
+acceptance remain open. No whole task or north-star completion credit closes.
+
+## Earlier checkpoint — Owned scheduler retirement — 2026-10-27
 
 Previous goal turn: PROGRESS; da1dff5 is pushed and remote-verified. Batch
 twenty-seven repairs the generated-app shutdown failure under http-output-hosts01

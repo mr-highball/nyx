@@ -4,6 +4,15 @@
 
 **Description:**
 
+Actual2026-10-27 browser execution now qualifies the same Studio-built Workshop's
+HTTP-only/HTTP+files responses and explicit absent-host refusal at both widths.
+Real browser file selection/UTF-8 reading also feeds its formatter at both widths.
+WORK.md separates these results from controlled Outputs transport, an untested
+Save picker and physical/visual/assistive quality. Fit clips the result under
+unchanged-font reflow; [canvas-workspace02](NS-3_canvas-workspace_02.md) owns the
+missing uniform interactive zoom and actual-extents prerequisite. No original
+full criterion/task or duplicate credit closes from these scoped results.
+
 The same starter now has Open JSON, with explicit runtime read/save hosts and
 typed completed-read conditions. UTF-8 decoding, interpreted preparation and JSON
 validation precede one source/preview/name publication. Actual native input

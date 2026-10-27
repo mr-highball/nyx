@@ -16,9 +16,10 @@ remaining browser/input and full authoring qualification.
 This serves shell criterion one and the full-authoring workspace criteria; it
 does not accept either task or waive browser, compilation/recovery or target
 quality requirements. The [splitter regression](NS-2_split-platform_02.md) remains
-an explicit resize/reflow input. Browser observing remains a separate gate;
-do not retry or bypass the previously refused surface. WORK.md owns the next
-bounded source snapshot, checks and stop point.
+an explicit resize/reflow input. Browser observing and physical/visual quality
+remain separate gates. Current ordinary HTTP browser qualification is available;
+the older file/error-page protocol refusals remain preserved. WORK.md owns the
+current browser results, next bounded source snapshot, checks and stop point.
 
 **Ordinary component editing and preview — 2026-10-26:**
 

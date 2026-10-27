@@ -47,6 +47,32 @@ at any time, with no compiler prerequisite for opening/authoring Studio.
   profile and builder are present. Full acceptance still requires the runtime
   interaction evidence above and the original owners' remaining quality gates.
 
+## Browser runtime checkpoint — 2026-10-27
+
+The same accepted MCP-authored Workshop now executes all three generated host
+configurations at desktop/compact widths in the ordinary HTTP browser surface.
+HTTP-only and HTTP+files obtain200 and format exact Unicode JSON from the real
+Pascal preview host. An absent transport refuses explicitly through the existing
+selected-control runtime inspector. Invalid URL input preserves accepted frames.
+The combined application also opens a real UTF-8 file through the browser
+chooser/FileReader at both widths; the Save picker is not exercised.
+
+Existing delayed ordinary Outputs browser checks pass36/36. Runtime host-control
+checks pass13/13 and29 profile checks per width. Delayed Outputs uses controlled
+XHR, separately from production native persistence already qualified below.
+Generated scripts remain exact copies; only HTML script basenames change for
+flat preview hosting. Earlier navigation/frame observation timeouts are retained;
+terminal markers are subsequently read from the same tabs, without duplicate
+jobs or browser permission changes. WORK.md owns all12 scenario receipts.
+
+Browser execution is no longer a blanket access blocker. Physical/assistive,
+visual/performance and supported-host breadth remain open. In particular, actual
+Fit/compact inspection finds clipped reflowed content, now owned by
+[canvas-workspace02](NS-3_canvas-workspace_02.md). Both temporary tabs close,
+viewport resets and the exact preview host stops; the installed LAN/MCP service
+and three projects' revision/navigation/draft/history metadata remain unchanged.
+This is executed browser integration, not whole-task or full-parity acceptance.
+
 ## Native integration checkpoint — 2026-10-27
 
 The owned scheduler repair resolves the earlier generated-app shutdown failure

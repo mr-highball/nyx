@@ -49,9 +49,17 @@ This adds no server tool or credit to the original agent-workflows owner.
 HTTP execution and clean teardown through the same MCP Workshop, six actual
 application builds and both native widths. Ordinary Outputs persists version4
 profiles through the production writer. The current LAN payload preserves all
-three projects. Browser execution, direct input/quality and full parity remain
-open. Stop native HTTP/queue variants; assess the existing browser validation
-surface/site-access gate without bypassing the retained URL denial.
+three projects. Current ordinary HTTP browser access works; the older protocol
+refusals remain evidence rather than a blanket localhost prohibition. The same
+three generated configurations execute at both widths, with real HTTP/UTF-8
+responses, explicit absent-host refusal and real browser file opening. Ordinary
+Outputs/runtime browser consumers pass36/36 and13/13 with29 profile checks per
+width. Physical input/quality and full parity remain open. Stop native HTTP/queue
+variants. The next concrete user-facing prerequisite is the observed fitted-card
+clipping under [interactive canvas zoom](NS-3_canvas-workspace_02.md): a609-pixel
+host clips its977-pixel reflowed child. Preserve existing scaling semantics and
+implement uniform live zoom in the library/adapters, then return to the ranked
+workflows' remaining browser journeys. This adds no original completion credit.
 
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON
