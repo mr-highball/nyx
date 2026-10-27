@@ -69,8 +69,12 @@ with clean heaps; its existing workspace regression passes38. Its next native
 input/paint consumer passes67 at both widths; the browser passes46/46 plus actual
 click/edit/action interaction. Button/surface paint and pointer round trips are
 implemented, with native redraw inspection kept separate from displayed output.
-Internal data/scroll/drawing metrics and remaining input/quality journeys still
-need implementation/qualification. Ordinary Studio selection and the same-pair Workshop
+Native table metrics/query refresh now pass107/129/112 plain/wrapped/resizable
+checks at each width, including real editor drafts, logical header dragging and
+retirement. The stronger wrapped checks require admitted multiline text after
+final scroll recovery. Pinned-pane rows, auto-fit measurement, other internal
+scroll/drawing metrics and remaining input/quality journeys still need work.
+Ordinary Studio selection and the same-pair Workshop
 journey remain required. Keep this work on the existing owner; do not treat this
 memo/card checkpoint as all-control parity or start another source-only sequence.
 

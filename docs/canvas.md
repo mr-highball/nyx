@@ -374,6 +374,23 @@ rounded faces, strokes, padding and original decoded glyphs; measurement restore
 scale one first. Neither the theme tokens nor the original image are resampled
 in place. Native strokes also retain a one-pixel minimum.
 
+Native collection grids additionally retain absolute column widths, default and
+header row heights, title typography, toolbar and alignment metrics. Their copied
+body-height directory contains only the explicitly measured window, independently
+of the dataset size. The LCL default-height setter itself still traverses its
+native row storage; this is not a qualified large-dataset zoom performance budget.
+A native logical-update lease restores the accepted subtree before an adapter
+refresh and projects it after that synchronous update. Nested updates reuse that
+section. The lease pins the original physical frame and revokes its renderer
+access on retirement; callers must close it before returning to the event loop.
+
+Projection-generated resize, selection and scroll notifications do not become
+new collection commands. A reentrant canvas admission reads the complete copied
+logical baseline while faces change, rather than capturing partially scaled
+fonts. Native header resizing converts screen width through both monitor DPI
+and canvas zoom, and refuses a drag whose projection epoch changed before its
+release. Ordinary runtime queries retain the same grid, selected item and draft.
+
 Pointer and drag payloads use logical outer-face positions. The inverse screen
 mapping applies the same transform, including native clipped-content offsets.
 Browser axis-aligned face ratios include ancestor uniform transforms; arbitrary
@@ -388,8 +405,13 @@ binding, pointer round trips and ordinary action callbacks at wide/compact host
 sizes. Actual browser clicks, editing and action activation also pass after Fit.
 Native paint inspection uses an explicitly labelled diagnostic redraw; the
 foreground-only display capture refused and remains separate evidence.
-Internal grid/scroll/drawing metrics, nested canvases, full drag/capture/keyboard
-journeys and complete visual/assistive quality still need work.
+The native data consumer additionally qualifies plain, wrapped and resizable
+tables at both host widths, including retained scroll anchors, real F2 editor
+draft/caret/selection, query refresh, header dragging and retirement during an
+entered update. Native data-control paint inspection is also a diagnostic redraw.
+Pinned-pane row geometry, fit-to-content measurement under zoom, other internal
+scroll/drawing metrics, nested canvases, full drag/capture/keyboard journeys,
+large-dataset performance and complete visual/assistive quality still need work.
 Existing policies and standalone example defaults remain unchanged. Follow
 [workspace02](../TODO/NS-3_canvas-workspace_02.md) for ordinary Studio selection and
 the complete saved/generated consumer's remaining checks.

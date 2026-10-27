@@ -31,7 +31,8 @@ uses
   nyx.collections.arrangement, nyx.formatting, nyx.state,
   nyx.collections.text.layout,
   nyx.collections.alignment,
-  nyx.collections.clipboard.actions, nyx.collections.range.pointer;
+  nyx.collections.clipboard.actions, nyx.collections.range.pointer,
+  nyx.content.projection.lcl;
 
 type
   { Native-only pure text reader. The grid borrows its receiver; its mount must
@@ -240,9 +241,17 @@ type
     establishes neither browser row windowing nor complete memory/frame budgets.
     Counted internal column transitions and a withdrawn attached input lifetime
     suppress setter-generated Click. Admitted physical/canonical user Click
-    outside those transitions and raw grids without input retain LCL behavior. }
+    outside those transitions and raw grids without input retain LCL behavior.
+    An optional managed projection port exposes logical update sections without
+    owning a renderer. Its sparse row directory contains only explicit bounded
+    text-height overrides, never a second dataset-sized row array. }
   TNyxCollectionStringGrid = class(TStringGrid)
   private
+    FContentProjection: INyxLCLContentProjection;
+    FProjectionChanged: TNotifyEvent;
+    FProjectionRows: array of Integer;
+    FProjectionEpoch: Integer;
+    FPresentedScale: Double;
     FReader: TNyxGridTextReader;
     { Paint-only accepted display. Cells and LCL's edit/validation path retain
       their canonical reader; formatted labels can never become editor input. }
@@ -343,6 +352,23 @@ type
       var NewValue: String): Boolean; override;
   public
     destructor Destroy; override;
+    { Renderer-owned revocable port. The grid retains the port, whose receiver
+      remains weak. Nil restores ordinary unprojected LCL behavior. }
+    procedure ConfigureContentProjection(const AProjection: INyxLCLContentProjection);
+    function BeginLogicalUpdate: INyxLCLLogicalUpdate;
+    function ContentProjectionChanging: Boolean;
+    function ContentProjectionScale: Double;
+    { Native mount borrows this post-projection notification until detach. It
+      copies accepted physical caches only; it must not publish model commands. }
+    procedure ObserveContentProjection(AReply: TNotifyEvent);
+    procedure ContentProjectionChanged(AVisual: Boolean);
+    { Only explicit body-row overrides join projection. Header/default metrics
+      are captured separately; no operation enumerates the complete dataset. }
+    procedure ConfigureProjectionRows(const ARows: array of Integer);
+    function ProjectionRowCount: Integer;
+    function ProjectionRow(AIndex: Integer): Integer;
+    property ProjectionEpoch: Integer read FProjectionEpoch;
+    property AlignmentVerticalInset: Integer read FAlignmentVerticalInset;
     { Opt-in native input ownership. Install before Activate/handle exposure;
       the renderer supplies its exact existing frame. No mount, view or model
       is retained by either surface. Detach precedes destruction/reader release. }
@@ -2129,6 +2155,8 @@ var
   LBlockLayout: TTextLayout;
   LPolicy: TNyxColumnAlignmentPolicy;
   LHasAlignment: Boolean;
+  LPadding: Integer;
+  LVerticalInset: Integer;
 begin
   LSurface := FInputSurface;
   LFrame := nil;
@@ -2147,6 +2175,7 @@ begin
 
     LHasLayout := (ARow > 0) and CellTextLayout(AColumn, ARow, LLayout);
     LHasAlignment := CellAlignment(AColumn, ARow, LPolicy);
+    LPadding := Max(0, Round(varCellPadding * ContentProjectionScale));
 
     if not LHasLayout and Assigned(FDisplayReader) then
     begin
@@ -2184,8 +2213,8 @@ begin
       LStyle.Layout := tlTop;
       LHeight := Max(1, Canvas.TextHeight('Ag'));
       LRect := ARect;
-      Inc(LRect.Left, varCellPadding);
-      Dec(LRect.Right, varCellPadding);
+      Inc(LRect.Left, LPadding);
+      Dec(LRect.Right, LPadding);
       case LBlockLayout of
         tlTop: Inc(LRect.Top, FAlignmentVerticalInset);
         tlCenter: Inc(LRect.Top, Max(0, (ARect.Height - LHeight * LLayout.Count) div 2));
@@ -2201,13 +2230,25 @@ begin
       Exit;
     end;
 
-    if LHasAlignment and LPolicy.HasVertical then
+    if Canvas.Font.Orientation = 0 then
     begin
-      { Inherited drawing applies varCellPadding itself. Adjust only the
-        difference, so logical density is scaled/applied exactly once. }
+      { LCL adds its fixed global padding below. Correct the rectangle by the
+        difference without changing a global shared by unrelated controls. }
+      Dec(ARect.Right, LPadding - varCellPadding);
+
+      if Canvas.TextStyle.Alignment = taLeftJustify then
+      begin
+        Inc(ARect.Left, LPadding - varCellPadding);
+      end;
+      LVerticalInset := LPadding;
+
+      if LHasAlignment and LPolicy.HasVertical then
+      begin
+        LVerticalInset := FAlignmentVerticalInset;
+      end;
       case Canvas.TextStyle.Layout of
-        tlTop: Inc(ARect.Top, FAlignmentVerticalInset - varCellPadding);
-        tlBottom: Dec(ARect.Bottom, FAlignmentVerticalInset - varCellPadding);
+        tlTop: Inc(ARect.Top, LVerticalInset - varCellPadding);
+        tlBottom: Dec(ARect.Bottom, LVerticalInset - varCellPadding);
         tlCenter:
           begin
             { Centering already divides the full remaining allocation. }
@@ -3056,10 +3097,110 @@ begin
   end;
 end;
 
+procedure TNyxCollectionStringGrid.ConfigureContentProjection(
+  const AProjection: INyxLCLContentProjection);
+begin
+  FContentProjection := AProjection;
+end;
+
+function TNyxCollectionStringGrid.BeginLogicalUpdate: INyxLCLLogicalUpdate;
+var
+  LProjection: INyxLCLContentProjection;
+begin
+  Result := nil;
+  LProjection := FContentProjection;
+
+  if LProjection <> nil then
+  begin
+    Result := LProjection.BeginLogicalUpdate;
+  end;
+end;
+
+function TNyxCollectionStringGrid.ContentProjectionChanging: Boolean;
+begin
+  Result := (FContentProjection <> nil) and FContentProjection.ChangingFaces;
+end;
+
+function TNyxCollectionStringGrid.ContentProjectionScale: Double;
+begin
+  Result := 1;
+
+  if FContentProjection <> nil then
+  begin
+    Result := FContentProjection.Scale;
+  end;
+end;
+
+procedure TNyxCollectionStringGrid.ObserveContentProjection(AReply: TNotifyEvent);
+begin
+  FProjectionChanged := AReply;
+end;
+
+procedure TNyxCollectionStringGrid.ContentProjectionChanged(AVisual: Boolean);
+var
+  LReply: TNotifyEvent;
+  LScale: Double;
+begin
+  LScale := ContentProjectionScale;
+
+  if AVisual and (FPresentedScale <> LScale) then
+  begin
+
+    if FProjectionEpoch = High(Integer) then
+    begin
+      raise ENyxCollection.Create('Native grid projection epoch is exhausted');
+    end;
+    Inc(FProjectionEpoch);
+    FPresentedScale := LScale;
+  end;
+  LReply := FProjectionChanged;
+
+  if Assigned(LReply) then
+  begin
+    { LAST: an adapter callback may retire this grid. }
+    LReply(Self);
+  end;
+end;
+
+procedure TNyxCollectionStringGrid.ConfigureProjectionRows(const ARows: array of Integer);
+var
+  LRows: array of Integer;
+  LIndex: Integer;
+begin
+  SetLength(LRows, Length(ARows));
+  for LIndex := Low(ARows) to High(ARows) do
+  begin
+
+    if (ARows[LIndex] <= 0) or (ARows[LIndex] >= RowCount) then
+    begin
+      raise ENyxCollection.Create('Native projected body row is outside the current grid');
+    end;
+    LRows[LIndex] := ARows[LIndex];
+  end;
+  FProjectionRows := LRows;
+end;
+
+function TNyxCollectionStringGrid.ProjectionRowCount: Integer;
+begin
+  Result := Length(FProjectionRows);
+end;
+
+function TNyxCollectionStringGrid.ProjectionRow(AIndex: Integer): Integer;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FProjectionRows)) then
+  begin
+    raise ENyxCollection.Create('Native projected row directory index is invalid');
+  end;
+  Result := FProjectionRows[AIndex];
+end;
+
 destructor TNyxCollectionStringGrid.Destroy;
 var
   LIndex: Integer;
 begin
+  FProjectionChanged := nil;
+  FContentProjection := nil;
   DetachColumnInput;
 
   if FValidationActivity <> nil then

@@ -9,7 +9,85 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Scaled input and native faces — 2026-10-27
+## Current checkpoint — Live data controls under canvas zoom — 2026-10-27
+
+The preceding cleanup follow-up adds no product progress: fresh reads confirm an
+already completed retirement, with no further deletion needed. Revalidate the
+unfinished implementation rather than repeating cleanup.9d610ec is pushed and
+remote-verified. Batch32
+continues canvas-workspace02's native data/scroll boundary. Root remains SOLO.
+Use a real bound, scrollable table with fixed logical columns, retained item
+selection and a runtime query at nonunit zoom. Establish its failure before
+changing native metric ownership, then carry absolute projection through grid
+rows, headers and columns without scanning every dataset row or saving projected
+pixels as authored widths. Preserve active editing, native DPI, input lifetime
+and shared source/history contracts. Keep all original acceptance and the return
+path to ordinary Studio/the same saved Workshop. Private output and child
+TEMP/TMP stay external; the installed service, projects and unrelated1280/390
+remain outside this batch. All previous jobs are terminal; no helper or approval
+boundary is introduced.
+
+Current implementation: native tables retain absolute column/default/header/
+sparse measured-body metrics independently of monitor DPI. A managed logical
+update section restores the existing subtree before native dataset/layout work
+and projects its final metrics afterward. Nested work reuses that section;
+retirement revokes the weak generation while the original physical frame remains
+balanced. Native geometry notifications cannot issue new selection/scroll
+commands. Physical observation caches follow restoration/projection without
+rewriting authored widths. Header dragging converts through DPI and content
+scale, refusing a changed projection epoch before its late release. Cell padding
+scales locally without changing LCL's global value.
+
+The private canvas-uniform-data-01 packet retains the initial unscaled-column
+failure and repeated title-font failures, all with zero leaked blocks reported.
+The native04 stack identifies ancestor canvas Resize → admission → Capture
+during a partial physical projection. Admission now reads the complete retained
+logical baseline while faces change. Debug tracing is removed. A later visual
+inspection catches unavailable wrapped descriptions despite passing geometry:
+guarded query/editor recovery scrolls after the first text-window measurement.
+Both ordinary and arranged dataset paths now remeasure only their settled bounded
+viewport. The stronger consumer requires usable, genuinely multiline display.
+Earlier geometry-only wrapped passes do not establish this result.
+
+The broad table regression initially fails its usable-client setup. A clean
+export/build of9d610ec reproduces exactly343 client pixels from364 outer pixels
+at96 PPI. The preserved current/baseline failures distinguish this existing test
+assumption from the new scaling path. The fixture now settles its intended360
+logical client pixels using measured native chrome, retaining every original
+pin-budget and physical-scroll assertion; it does not enlarge those tolerances.
+Missing test/declaration imports remain in their original compiler failure logs.
+
+Final candidate native consumers pass107 plain,129 wrapped and112 resizable
+checks at each configured1280/390 width. They cover exact Unicode, real F2
+draft/caret/selection, scroll anchors, live typed queries, logical user widths,
+stale header-release refusal and retirement during an entered section. All six
+runs report zero leaked blocks. Captures use explicit ncmPrint diagnostic
+redraws; wide resizable and compact wrapped presentations are inspected separately
+from displayed pixels. Native scrollbar chrome remains system-sized. Existing
+uniform/workspace/column-activation consumers pass67/38/243. The desktop table
+query workbench passes1498/1496 at desktop/compact widths. Browser
+uniform and query-workbench consumers compile with only the seven installed
+Classes warnings; this native batch adds no new browser execution claim.
+Final lease review also makes constructor unwind leave only a successfully
+entered frame; all six data cases rerun with the same counts and zero leaked
+blocks. That local guard changes no plain non-canvas regression path. Every
+compiler/runtime reader is joined before the checkpoint; functional source pins,
+original failures and final summaries remain in the private packet. The user
+also confirms phone LAN loading; that is transport evidence, not new canvas
+behavior acceptance or an installed-payload update by this batch.
+
+No original task criterion closes. Pinned-pane row projection and auto-fit
+measurement under nonunit zoom remain concrete native grid follow-ups, alongside
+Drawing/scroll internals, nested canvases, complete input/IME/assistive quality,
+large-dataset performance and changed-layout pre-publication admission. Sparse
+Nyx metric copying does not remove the RTL default-height setter's row traversal.
+Finish those paths and return to ordinary Studio selection and the same saved/
+generated Workshop; do not replace that return with more scalar/source variants.
+Root remains SOLO. This batch changes no installed service/project/profile,
+starts no listener and performs no cleanup. All private outputs and child
+TEMP/TMP remain external, and unrelated1280/390 stay untouched.
+
+## Earlier checkpoint — Scaled input and native faces — 2026-10-27
 
 Previous goal turn: PROGRESS;bb71247 is pushed and remote-verified. Batch31
 continues canvas-workspace02's actual input and widget boundaries. Root remains

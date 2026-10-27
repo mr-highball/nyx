@@ -40,7 +40,8 @@ uses
   nyx.collections.recovery,
   nyx.collections.clipboard.actions, nyx.collections.draft,
   nyx.collections.lcl.grid, nyx.collections.range.stroke,
-  nyx.collections.range.pointer, nyx.gestures, nyx.scheduler;
+  nyx.collections.range.pointer, nyx.gestures, nyx.scheduler,
+  nyx.content.projection.lcl;
 
 type
   { Borrowed synchronous canonical Click port. False covers blocked/rejected,
@@ -378,7 +379,9 @@ type
   { One physical column intention. Waiting work retains immutable model/input
     leases and copied map facts, never its mount. The active call/final participant
     separately retains the mount. OnHeaderSized supplies a Resize width; Fit
-    measures accepted text later. No callback may recapture its launch proof. }
+    measures accepted text later. Monitor DPI and canvas projection are captured
+    independently; a zoom epoch change retires an unfinished physical resize.
+    No callback may recapture its launch proof. }
   TNativeColumnLayoutRequest = class(TInterfacedObject)
   public
     View: INyxCollectionView;
@@ -390,6 +393,8 @@ type
     Field: TNyxColumnIdentity;
     Grid, Target: TStringGrid;
     Serial, Epoch, Column, Physical, Revision, LayoutSerial, Mutation, PPI: Integer;
+    ProjectionEpoch: Integer;
+    ContentScale: Double;
     Width, Minimum, Maximum, ReleaseStamp: Integer;
     Action: TNativeColumnLayoutAction;
     DoubleStamp: Integer;
@@ -752,6 +757,10 @@ type
     procedure SizeGridColumns;
     procedure ReserveHeader;
     procedure GridResized(Sender: TObject);
+    procedure GridProjectionChanged(Sender: TObject);
+    procedure SizeLogicalGridColumns;
+    procedure RenderLogicalDataset;
+    procedure PrepareLogicalTextRows(const AData: INyxCollectionSnapshot);
     procedure ListSelected(Sender: TObject; User: Boolean);
     procedure GridSelected(Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
     procedure GridEdited(Sender: TObject; ACol, ARow: Integer;
@@ -1818,9 +1827,17 @@ begin
     Maximum := LSizing.Bounds.MaximumValue;
   end;
 
+  ContentScale := 1;
+
   if Target <> nil then
   begin
     PPI := Target.Font.PixelsPerInch;
+
+    if Target is TNyxCollectionStringGrid then
+    begin
+      ProjectionEpoch := TNyxCollectionStringGrid(Target).ProjectionEpoch;
+      ContentScale := TNyxCollectionStringGrid(Target).ContentProjectionScale;
+    end;
   end;
 
   if Grid is TNyxCollectionStringGrid then
@@ -5328,6 +5345,16 @@ begin
       FGrid.TopRow := Min(Max(1, LTop), FGrid.RowCount - 1);
       SynchronizePaneRows;
     end;
+    { Editor/source recovery can scroll after the first bounded measurement.
+      Its guarded native notification does not run GridTopLeft, so settle the
+      actual final row window before exposing wrapped cells again. }
+
+    if InputLifetimeCurrent and FHasTablePresentation and
+      (FTextLayoutFirst <> Max(1, FGrid.TopRow)) then
+    begin
+      PrepareTextRows(AData);
+      SynchronizePaneRows;
+    end;
     { Consume geometry only after the admitted layout and copied editor have
       settled. A deferred/refused refresh retains the pending request. }
     FColumnGeometryPending := False;
@@ -5504,7 +5531,9 @@ begin
     (TNyxCollectionStringGrid(LGrid).ColumnReleaseStamp = LRequest.ReleaseStamp) then
   begin
 
-    if LGrid.Font.PixelsPerInch <> LRequest.PPI then
+    if (LGrid.Font.PixelsPerInch <> LRequest.PPI) or
+      ((LGrid is TNyxCollectionStringGrid) and
+      (TNyxCollectionStringGrid(LGrid).ProjectionEpoch <> LRequest.ProjectionEpoch)) then
     begin
       RetireColumnResize(LRequest);
     end
@@ -5516,6 +5545,7 @@ begin
       begin
         LScale := LRequest.PPI / 96;
       end;
+      LScale := LScale * LRequest.ContentScale;
       LWidth := Double(LGrid.ColWidths[AIndex]) / LScale;
       LRequest.Width := Round(Max(LRequest.Minimum, Min(LRequest.Maximum, LWidth)));
       LRequest.Pending := True;
@@ -5984,6 +6014,12 @@ var
   LGrid: TStringGrid;
 begin
 
+  if (FGrid is TNyxCollectionStringGrid) and
+    TNyxCollectionStringGrid(FGrid).ContentProjectionChanging then
+  begin
+    Exit;
+  end;
+
   if not GetConnected or FPaneSync or FUpdating or FTextLayoutApplying then
   begin
     Exit;
@@ -6176,6 +6212,11 @@ begin
         FPreviousPrepare := FGrid.OnPrepareCanvas;
         FPreviousGridResize := FGrid.OnResize;
         FGrid.OnResize := GridResized;
+
+        if FGrid is TNyxCollectionStringGrid then
+        begin
+          TNyxCollectionStringGrid(FGrid).ObserveContentProjection(GridProjectionChanged);
+        end;
         FGrid.OnKeyDown := KeyDown;
         FGrid.OnMouseDown := GridMouseDown;
         FGrid.OnHeaderClick := GridHeaderClicked;
@@ -6399,6 +6440,14 @@ var
   LColumn, LRevision, LCount: Integer;
   LShift: TShiftState;
 begin
+
+  if (FGrid is TNyxCollectionStringGrid) and
+    TNyxCollectionStringGrid(FGrid).ContentProjectionChanging then
+  begin
+    { Geometry normalization may move the native cursor, but it is not a new
+      portable selection command and must not reenter the collection refresh. }
+    Exit;
+  end;
 
   if (FHasColumnLayout or FHasTablePresentation) and not GetInputReady and
     not (FUpdating and not FEditsSuspended) then
@@ -7018,6 +7067,26 @@ end;
 
 procedure TNativeMount.PrepareTextRows(const AData: INyxCollectionSnapshot);
 var
+  LUpdate: INyxLCLLogicalUpdate;
+begin
+
+  if FGrid is TNyxCollectionStringGrid then
+  begin
+    LUpdate := TNyxCollectionStringGrid(FGrid).BeginLogicalUpdate;
+  end;
+  try
+    PrepareLogicalTextRows(AData);
+  finally
+
+    if LUpdate <> nil then
+    begin
+      LUpdate.Close;
+    end;
+  end;
+end;
+
+procedure TNativeMount.PrepareLogicalTextRows(const AData: INyxCollectionSnapshot);
+var
   LBitmap: TBitmap;
   LLayouts: array of array of TNyxTableTextLayout;
   LHeights: array of Integer;
@@ -7240,6 +7309,11 @@ begin
     end;
     FTextLayouts := LLayouts;
     FTextLayoutRows := LRows;
+
+    if FGrid is TNyxCollectionStringGrid then
+    begin
+      TNyxCollectionStringGrid(FGrid).ConfigureProjectionRows(LRows);
+    end;
     FTextLayoutFirst := LFirst;
     FTextLayoutTotal := LCount;
     for LIndex := 0 to High(LHeights) do
@@ -7389,6 +7463,12 @@ var
 begin
   LKeepAlive := Self as INyxCollectionMount;
 
+  if (FGrid is TNyxCollectionStringGrid) and
+    TNyxCollectionStringGrid(FGrid).ContentProjectionChanging then
+  begin
+    Exit;
+  end;
+
   if FColumnApplying or (FHasColumnLayout and FUpdating) then
   begin
     { Internal pane/scrollbar geometry must settle before an external observer
@@ -7408,7 +7488,62 @@ begin
   end;
 end;
 
+procedure TNativeMount.GridProjectionChanged(Sender: TObject);
+var
+  LIndex: Integer;
+  LPhysical: Integer;
+  LGrid: TStringGrid;
+begin
+
+  if not GetConnected or (FGrid <> Sender) then
+  begin
+    Exit;
+  end;
+  { These are physical observation caches, never authored policy. Refreshing
+    them after both logical restoration and visual projection prevents the
+    ordinary resize detector from mistaking zoom for a user column override. }
+  for LIndex := 0 to High(FColumnApplied) do
+  begin
+
+    if FHasColumnLayout then
+    begin
+      LGrid := GridForColumn(LIndex, LPhysical);
+    end
+    else
+    begin
+      LGrid := FGrid;
+      LPhysical := LIndex;
+    end;
+
+    if (LGrid <> nil) and (LPhysical >= 0) and (LPhysical < LGrid.ColCount) then
+    begin
+      FColumnApplied[LIndex] := LGrid.ColWidths[LPhysical];
+    end;
+  end;
+  FColumnToolbarHeight := TNyxCollectionStringGrid(FGrid).ColumnToolbarHeight;
+end;
+
 procedure TNativeMount.SizeGridColumns;
+var
+  LUpdate: INyxLCLLogicalUpdate;
+begin
+
+  if FGrid is TNyxCollectionStringGrid then
+  begin
+    LUpdate := TNyxCollectionStringGrid(FGrid).BeginLogicalUpdate;
+  end;
+  try
+    SizeLogicalGridColumns;
+  finally
+
+    if LUpdate <> nil then
+    begin
+      LUpdate.Close;
+    end;
+  end;
+end;
+
+procedure TNativeMount.SizeLogicalGridColumns;
 var
   LPolicies: TNyxColumnSizings;
   LWidths: TNyxFlowSizes;
@@ -7504,6 +7639,26 @@ begin
 end;
 
 procedure TNativeMount.RenderDataset;
+var
+  LUpdate: INyxLCLLogicalUpdate;
+begin
+
+  if FGrid is TNyxCollectionStringGrid then
+  begin
+    LUpdate := TNyxCollectionStringGrid(FGrid).BeginLogicalUpdate;
+  end;
+  try
+    RenderLogicalDataset;
+  finally
+
+    if LUpdate <> nil then
+    begin
+      LUpdate.Close;
+    end;
+  end;
+end;
+
+procedure TNativeMount.RenderLogicalDataset;
 var
   LPosition: TNyxCollectionPositionRecovery;
   LReveal: TNyxTreeRevealRequest;
@@ -8032,6 +8187,14 @@ begin
   begin
     FGrid.TopRow := Min(LPosition.Index + 1, FGrid.RowCount - 1);
   end;
+
+  if InputLifetimeCurrent and (FGrid <> nil) and FHasTablePresentation and
+    (FTextLayoutFirst <> Max(1, FGrid.TopRow)) then
+  begin
+    { Selection and source recovery run under the update guard. Re-admit only
+      their final bounded viewport; no dataset-wide text layout is introduced. }
+    PrepareTextRows(LData);
+  end;
   FRendered := LData;
   FCellRefreshPending := False;
   LReveal := PendingTreeReveal;
@@ -8135,6 +8298,12 @@ begin
 
       if FGrid <> nil then
       begin
+
+        if FGrid is TNyxCollectionStringGrid then
+        begin
+          TNyxCollectionStringGrid(FGrid).ObserveContentProjection(nil);
+          TNyxCollectionStringGrid(FGrid).ConfigureContentProjection(nil);
+        end;
 
         if FHasColumnLayout then
         begin

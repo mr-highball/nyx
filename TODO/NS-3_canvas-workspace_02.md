@@ -87,10 +87,24 @@ input revision retains124 native group,38 native workspace and74/74 browser grou
 regression checks. Native painted output is a diagnostic redraw; the real display
 capture refused its foreground guard and is not replaced with a display claim.
 
-Internal native grid/scroll/drawing metrics, nested canvases, full drag/capture/
+Native grids now retain absolute columns, default/header/sparse measured body
+heights and title/toolbar/alignment metrics through logical adapter updates.
+Reentrant native resize admission no longer captures a partially projected tree.
+Plain/wrapped/resizable consumers pass107/129/112 checks respectively at each
+configured1280/390 width, including actual native F2 drafts/caret/selection,
+scroll anchors, query refresh, zoom-aware header dragging, stale release refusal
+and retirement during an entered update. All six runs report zero leaked blocks.
+Wrapped checks require admitted multi-line text in the current visible window;
+query/editor recovery remeasures that bounded window after its final scroll.
+Their captures are diagnostic redraws, separately inspected from displayed output.
+The native default-height setter still visits its own row storage; bounded Nyx
+metric copying alone establishes no large-dataset zoom performance budget.
+
+Pinned-pane row projection, fit-to-content under zoom, other internal native
+scroll/drawing metrics, nested canvases, full drag/capture/
 keyboard/IME/assistive journeys and complete pre-publication admission for changed
 logical layouts remain implementation/qualification work. Ordinary Studio
 selection and the same saved/generated Workshop also stay open. The LAN service/
-example defaults are unchanged. Next exercise useful data/scroll controls under
-the same transform, then complete ordinary Studio and saved Workshop integration;
+example defaults are unchanged. Next finish the remaining native metric paths
+under the same transform, then complete ordinary Studio and saved Workshop integration;
 this task remains unaccepted with no duplicate completion credit.

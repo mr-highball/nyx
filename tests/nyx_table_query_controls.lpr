@@ -2460,6 +2460,10 @@ var
   {$ifdef PAS2JS}
   var
     LOuterWidth: Integer;
+  {$else}
+  var
+    LPass: Integer;
+    LClientWidth: Integer;
   {$endif}
   begin
     {$ifdef PAS2JS}
@@ -2473,12 +2477,25 @@ var
     LScrollOwner.style.setProperty('max-width', IntToStr(LOuterWidth) + 'px');
     LScrollOwner.style.setProperty('min-width', '0');
     LScrollOwner.style.setProperty('overflow-x', 'auto');
+    LMount.Refresh;
     {$else}
     LGrid.Align := alNone;
     LGrid.Anchors := [akLeft, akTop];
-    LGrid.Width := Round(364 * LScrollPPI / 96);
+    { Match the browser's usable-client allocation. Native borders/scrollbars
+      vary with Windows settings; a fixed outer width cannot promise the same
+      pin budgets. Keep all overflow/displacement assertions independent. }
+    LClientWidth := Round(360 * LScrollPPI / 96);
+    for LPass := 0 to 2 do
+    begin
+      LGrid.Width := LClientWidth + LGrid.Width - LGrid.ClientWidth;
+      LMount.Refresh;
+
+      if Abs(LGrid.ClientWidth - LClientWidth) <= 1 then
+      begin
+        Break;
+      end;
+    end;
     {$endif}
-    LMount.Refresh;
   end;
 
   procedure Resolve;
@@ -3489,7 +3506,9 @@ begin
     Pump;
     Check((LGrid.ClientWidth * 96 >= 346 * LScrollPPI) and
       (LGrid.ClientWidth * 96 <= 364 * LScrollPPI),
-      'existing native clip keeps both pin budgets while constraining its middle');
+      'existing native clip keeps both pin budgets while constraining its middle / client ' +
+        TNyxText(IntToStr(LGrid.ClientWidth)) + ' outer ' + TNyxText(IntToStr(LGrid.Width)) +
+        ' PPI ' + TNyxText(IntToStr(LScrollPPI)));
     PaintedPin(NyxColumnIdentity(PersonName), ncpStart);
     PaintedPin(NyxColumnIdentity(Score), ncpEnd);
     LGrid.LeftCol := LGrid.FixedCols;

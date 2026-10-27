@@ -20,6 +20,11 @@
   SOFTWARE.
 }
 
+function NativeScalePixel(AValue: Integer; AScale: Double): Integer; forward;
+function NativeScaleFont(AValue: Integer; AScale: Double): Integer; forward;
+
+{$I nyx.render.lcl.gridscale.inc}
+
 type
   { A local managed lease keeps copied projection metrics alive if a native
     setter retires the calling renderer. Every callout checks the same weak
@@ -32,6 +37,12 @@ type
       const AGeneration: INyxLCLBindingGeneration);
     procedure Project(AHost: TWinControl; ARoot: TControl; AScale: Double;
       const AGeneration: INyxLCLBindingGeneration);
+    function IsProjected: Boolean;
+    function ChangingFaces: Boolean;
+    procedure OpenLogical(const AGeneration: INyxLCLBindingGeneration);
+    procedure CloseLogical(const AGeneration: INyxLCLBindingGeneration);
+    procedure RequestSync;
+    procedure DeferredSyncEntered;
   end;
 
   { One absolute logical baseline. Control is borrowed and revoked by component
@@ -48,6 +59,7 @@ type
     MaximumWidth: Integer;
     MaximumHeight: Integer;
     Seen: Boolean;
+    Grid: TNativeGridMetrics;
   end;
 
   { Non-owning address lookup avoids repeated whole-tree scans per native face.
@@ -56,6 +68,45 @@ type
 
   { Forward implementation identity for a weak component-removal receiver. }
   TNativeContentScale = class;
+
+  { Grid retains this managed port, not a renderer. The exact generation supplies
+    its current weak receiver after candidate adoption and revokes on retirement. }
+  TNativeGridProjectionPort = class(TInterfacedObject, INyxLCLContentProjection)
+  private
+    FScale: INyxNativeContentScale;
+    FGeneration: INyxLCLBindingGeneration;
+  public
+    constructor Create(const AScale: INyxNativeContentScale;
+      const AGeneration: INyxLCLBindingGeneration);
+    function BeginLogicalUpdate: INyxLCLLogicalUpdate;
+    function GetChangingFaces: Boolean;
+    function GetScale: Double;
+  end;
+
+  { One logical metric update owns the original entered native frame and scale
+    lease. Close projects only a still-current receiver, then balances that frame.
+    Final release is a no-throw safety net; explicit Close reports failures. }
+  TNativeLogicalUpdate = class(TInterfacedObject, INyxLCLLogicalUpdate)
+  private
+    FScale: INyxNativeContentScale;
+    FGeneration: INyxLCLBindingGeneration;
+    FFrame: INyxNativeGestureFrame;
+    FClosed: Boolean;
+  public
+    constructor Create(const AScale: INyxNativeContentScale;
+      const AGeneration: INyxLCLBindingGeneration);
+    destructor Destroy; override;
+    procedure Close;
+  end;
+
+  { Coalesced deferred scalar catch-up after a logical metric section. Neither
+    scheduler nor work owns a renderer; a retired exact generation is a no-op. }
+  TNativeProjectionSync = class(TInterfacedObject, INyxWork)
+  public
+    Scale: INyxNativeContentScale;
+    Generation: INyxLCLBindingGeneration;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
 
   { LCL owns the notification relation, not this object. Its borrowed scale
     owner disconnects before freeing the notice, removing all remaining links. }
@@ -78,6 +129,12 @@ type
     FNotice: TNativeScaleNotice;
     FDead: Integer;
     FProjected: Boolean;
+    FChangingFaces: Boolean;
+    FLogicalOpen: Boolean;
+    FClosingLogical: Boolean;
+    FHadUpdating: Boolean;
+    FNeedsSync: Boolean;
+    FSyncQueued: Boolean;
     function Track(AControl: TControl): Integer;
     procedure Removed(AControl: TControl);
     procedure Compact;
@@ -86,6 +143,11 @@ type
     procedure RestoreTree(AControl: TControl; AChildren: Boolean;
       const AGeneration: INyxLCLBindingGeneration);
     procedure CheckRows(AHost: TWinControl; AScale: Double);
+    procedure NotifyGrids(const AGeneration: INyxLCLBindingGeneration);
+    procedure RestoreFaces(AHost: TWinControl; ARoot: TControl;
+      const AGeneration: INyxLCLBindingGeneration);
+    procedure ProjectFaces(AHost: TWinControl; ARoot: TControl; AScale: Double;
+      const AGeneration: INyxLCLBindingGeneration);
   public
     constructor Create;
     destructor Destroy; override;
@@ -95,6 +157,12 @@ type
       const AGeneration: INyxLCLBindingGeneration);
     procedure Project(AHost: TWinControl; ARoot: TControl; AScale: Double;
       const AGeneration: INyxLCLBindingGeneration);
+    function IsProjected: Boolean;
+    function ChangingFaces: Boolean;
+    procedure OpenLogical(const AGeneration: INyxLCLBindingGeneration);
+    procedure CloseLogical(const AGeneration: INyxLCLBindingGeneration);
+    procedure RequestSync;
+    procedure DeferredSyncEntered;
   end;
 
 function NativeScalePixel(AValue: Integer; AScale: Double): Integer;
@@ -140,6 +208,250 @@ begin
   end;
 end;
 
+constructor TNativeGridProjectionPort.Create(const AScale: INyxNativeContentScale;
+  const AGeneration: INyxLCLBindingGeneration);
+begin
+  inherited Create;
+  FScale := AScale;
+  FGeneration := AGeneration;
+end;
+
+function TNativeGridProjectionPort.BeginLogicalUpdate: INyxLCLLogicalUpdate;
+begin
+  Result := nil;
+
+  if NativeGenerationCurrent(FGeneration) and FScale.IsProjected and
+    not FScale.ChangingFaces then
+  begin
+    Result := TNativeLogicalUpdate.Create(FScale, FGeneration);
+  end;
+end;
+
+function TNativeGridProjectionPort.GetChangingFaces: Boolean;
+begin
+  Result := not NativeGenerationCurrent(FGeneration) or FScale.ChangingFaces;
+end;
+
+function TNativeGridProjectionPort.GetScale: Double;
+var
+  LOwner: TNyxLCLRenderer;
+begin
+  Result := 1;
+
+  if NativeGenerationCurrent(FGeneration) and FScale.IsProjected then
+  begin
+    LOwner := FGeneration.Receiver;
+    Result := LOwner.FContentScaleFactor;
+  end;
+end;
+
+constructor TNativeLogicalUpdate.Create(const AScale: INyxNativeContentScale;
+  const AGeneration: INyxLCLBindingGeneration);
+begin
+  inherited Create;
+  FClosed := True;
+  FScale := AScale;
+  FGeneration := AGeneration;
+  FFrame := AGeneration.PhysicalFrame;
+  { A refused Enter acquired no count. Constructor unwinding must not call
+    Leave for that unentered frame, including nesting-exhaustion refusal. }
+  FFrame.Enter;
+  FClosed := False;
+  try
+    FScale.OpenLogical(FGeneration);
+  except
+    FClosed := True;
+    FFrame.Leave;
+    FFrame := nil;
+    raise;
+  end;
+end;
+
+destructor TNativeLogicalUpdate.Destroy;
+begin
+  try
+    Close;
+  except
+    { Explicit Close reports failures. Final release must still balance the
+      original frame without masking another exception already unwinding. }
+  end;
+  inherited Destroy;
+end;
+
+procedure TNativeLogicalUpdate.Close;
+var
+  LFrame: INyxNativeGestureFrame;
+begin
+
+  if FClosed then
+  begin
+    Exit;
+  end;
+  FClosed := True;
+  LFrame := FFrame;
+  FFrame := nil;
+  try
+    FScale.CloseLogical(FGeneration);
+  finally
+    { LAST: callback-driven retirement can release old native components here. }
+    LFrame.Leave;
+  end;
+end;
+
+procedure TNativeProjectionSync.Execute(const AExecution: INyxExecution);
+var
+  LOwner: TNyxLCLRenderer;
+begin
+  Scale.DeferredSyncEntered;
+
+  if not AExecution.Cancelled and NativeGenerationCurrent(Generation) then
+  begin
+    LOwner := Generation.Receiver;
+    LOwner.Sync;
+  end;
+end;
+
+function TNativeContentScale.IsProjected: Boolean;
+begin
+  Result := FProjected;
+end;
+
+function TNativeContentScale.ChangingFaces: Boolean;
+begin
+  Result := FChangingFaces;
+end;
+
+procedure TNativeContentScale.OpenLogical(const AGeneration: INyxLCLBindingGeneration);
+var
+  LOwner: TNyxLCLRenderer;
+  LLayouting: Boolean;
+begin
+  RequireNativeGeneration(AGeneration);
+
+  if FLogicalOpen or FChangingFaces or not FProjected then
+  begin
+    raise ENyxModel.Create('Native logical metric section is not available');
+  end;
+  LOwner := AGeneration.Receiver;
+  CheckRows(LOwner.FPanel, LOwner.FContentScaleFactor);
+  FHadUpdating := LOwner.FUpdating;
+  LLayouting := LOwner.FLayouting;
+  FLogicalOpen := True;
+  LOwner.FUpdating := True;
+  LOwner.FLayouting := True;
+  try
+    try
+      Restore(LOwner.FPanel, LOwner.Binding(LOwner.FRoot).FControl, AGeneration);
+    except
+      FLogicalOpen := False;
+
+      if NativeGenerationCurrent(AGeneration) then
+      begin
+        LOwner.FUpdating := FHadUpdating;
+      end;
+      raise;
+    end;
+  finally
+
+    if NativeGenerationCurrent(AGeneration) then
+    begin
+      LOwner.FLayouting := LLayouting;
+    end;
+  end;
+end;
+
+procedure TNativeContentScale.CloseLogical(const AGeneration: INyxLCLBindingGeneration);
+var
+  LOwner: TNyxLCLRenderer;
+  LLayouting: Boolean;
+  LWork: TNativeProjectionSync;
+  LWorkLease: INyxWork;
+begin
+
+  if not FLogicalOpen then
+  begin
+    Exit;
+  end;
+  try
+
+    if NativeGenerationCurrent(AGeneration) then
+    begin
+      LOwner := AGeneration.Receiver;
+      LLayouting := LOwner.FLayouting;
+      LOwner.FLayouting := True;
+      try
+        try
+          FClosingLogical := True;
+          try
+            Project(LOwner.FPanel, LOwner.Binding(LOwner.FRoot).FControl,
+              LOwner.FContentScaleFactor, AGeneration);
+          finally
+            FClosingLogical := False;
+          end;
+        except
+          on ENyxNativeGenerationRetired do
+          begin
+            { A callback retired this exact receiver; never project a successor. }
+          end;
+        end;
+      finally
+
+        if NativeGenerationCurrent(AGeneration) then
+        begin
+          LOwner.FLayouting := LLayouting;
+          LOwner.FUpdating := FHadUpdating;
+        end;
+      end;
+    end;
+  finally
+    FLogicalOpen := False;
+  end;
+
+  if FNeedsSync and not FHadUpdating and not FSyncQueued and
+    NativeGenerationCurrent(AGeneration) then
+  begin
+    FNeedsSync := False;
+    LOwner := AGeneration.Receiver;
+    LWork := TNativeProjectionSync.Create;
+    LWorkLease := LWork;
+    LWork.Scale := Self as INyxNativeContentScale;
+    LWork.Generation := AGeneration;
+    FSyncQueued := True;
+    try
+      LOwner.FEvents.Scheduler.PostUI(LWorkLease);
+    except
+      FSyncQueued := False;
+      raise;
+    end;
+  end;
+end;
+
+procedure TNativeContentScale.RequestSync;
+begin
+
+  if FLogicalOpen then
+  begin
+    FNeedsSync := True;
+  end;
+end;
+
+procedure TNativeContentScale.DeferredSyncEntered;
+begin
+  FSyncQueued := False;
+end;
+
+procedure TNyxLCLRenderer.DeferContentProjectionSync;
+var
+  LScale: INyxNativeContentScale;
+begin
+
+  if FContentScaleState <> nil then
+  begin
+    LScale := FContentScaleState as INyxNativeContentScale;
+    LScale.RequestSync;
+  end;
+end;
+
 constructor TNativeContentScale.Create;
 begin
   inherited Create;
@@ -149,9 +461,15 @@ begin
 end;
 
 destructor TNativeContentScale.Destroy;
+var
+  LIndex: Integer;
 begin
   FNotice.FScale := nil;
   FNotice.Free;
+  for LIndex := 0 to High(FRows) do
+  begin
+    FRows[LIndex].Grid.Free;
+  end;
   FIndex.Free;
   inherited Destroy;
 end;
@@ -185,6 +503,8 @@ begin
 
   if FIndex.TryGetValue(AControl, LIndex) then
   begin
+    FRows[LIndex].Grid.Free;
+    FRows[LIndex].Grid := nil;
     FRows[LIndex].Control := nil;
     FIndex.Remove(AControl);
     Inc(FDead);
@@ -266,6 +586,12 @@ begin
     RequireNativeGeneration(AGeneration);
   end;
 
+  if LRow.Grid <> nil then
+  begin
+    LRow.Grid.Apply(1, AGeneration);
+    RequireNativeGeneration(AGeneration);
+  end;
+
   if AChildren then
   begin
     AControl.BoundsRect := LRow.Bounds;
@@ -294,6 +620,20 @@ end;
 
 procedure TNativeContentScale.Restore(AHost: TWinControl; ARoot: TControl;
   const AGeneration: INyxLCLBindingGeneration);
+var
+  LChanging: Boolean;
+begin
+  LChanging := FChangingFaces;
+  FChangingFaces := True;
+  try
+    RestoreFaces(AHost, ARoot, AGeneration);
+  finally
+    FChangingFaces := LChanging;
+  end;
+end;
+
+procedure TNativeContentScale.RestoreFaces(AHost: TWinControl; ARoot: TControl;
+  const AGeneration: INyxLCLBindingGeneration);
 begin
   RequireNativeGeneration(AGeneration);
   Compact;
@@ -304,6 +644,7 @@ begin
     RestoreTree(ARoot, True, AGeneration);
     RequireNativeGeneration(AGeneration);
     FProjected := False;
+    NotifyGrids(AGeneration);
   end;
 end;
 
@@ -323,6 +664,17 @@ begin
   FRows[LIndex].MaximumWidth := AControl.Constraints.MaxWidth;
   FRows[LIndex].MaximumHeight := AControl.Constraints.MaxHeight;
   FRows[LIndex].Seen := True;
+
+  if AControl is TNyxCollectionStringGrid then
+  begin
+    if FRows[LIndex].Grid = nil then
+    begin
+      FRows[LIndex].Grid := TNativeGridMetrics.Create(TNyxCollectionStringGrid(AControl));
+      TNyxCollectionStringGrid(AControl).ConfigureContentProjection(
+        TNativeGridProjectionPort.Create(Self as INyxNativeContentScale, AGeneration));
+    end;
+    FRows[LIndex].Grid.Capture(AGeneration);
+  end;
 
   if AChildren and (AControl is TWinControl) then
   begin
@@ -358,6 +710,11 @@ begin
     NativeScalePixel(LRow.MaximumWidth, AScale);
     NativeScalePixel(LRow.MaximumHeight, AScale);
 
+    if LRow.Grid <> nil then
+    begin
+      LRow.Grid.Validate(AScale);
+    end;
+
     if LRow.Control is TNyxLCLButton then
     begin
       TNyxLCLButton(LRow.Control).ValidateContentScale(AScale);
@@ -389,7 +746,10 @@ procedure TNativeContentScale.Validate(AHost: TWinControl; ARoot: TControl; ASca
 begin
   RequireNativeGeneration(AGeneration);
 
-  if not FProjected then
+  { Native setters can synchronously resize an ancestor canvas while only part
+    of this tree has been projected/restored. Admission must use the complete
+    copied logical baseline during that callout, never capture a mixed face. }
+  if not FProjected and not FChangingFaces then
   begin
     Capture(AHost, False, AGeneration);
     Capture(ARoot, True, AGeneration);
@@ -398,6 +758,27 @@ begin
 end;
 
 procedure TNativeContentScale.Project(AHost: TWinControl; ARoot: TControl; AScale: Double;
+  const AGeneration: INyxLCLBindingGeneration);
+var
+  LChanging: Boolean;
+begin
+
+  if FChangingFaces or (FLogicalOpen and not FClosingLogical) then
+  begin
+    { A nested resize may lay out logical faces, but only the outer section
+      publishes their final projection after the data receiver has returned. }
+    Exit;
+  end;
+  LChanging := FChangingFaces;
+  FChangingFaces := True;
+  try
+    ProjectFaces(AHost, ARoot, AScale, AGeneration);
+  finally
+    FChangingFaces := LChanging;
+  end;
+end;
+
+procedure TNativeContentScale.ProjectFaces(AHost: TWinControl; ARoot: TControl; AScale: Double;
   const AGeneration: INyxLCLBindingGeneration);
 var
   LIndex: Integer;
@@ -469,8 +850,33 @@ begin
       LControl.Constraints.MaxHeight := NativeScalePixel(LRow.MaximumHeight, AScale);
       RequireNativeGeneration(AGeneration);
     end;
+
+    if LRow.Grid <> nil then
+    begin
+      LRow.Grid.Apply(AScale, AGeneration);
+      RequireNativeGeneration(AGeneration);
+    end;
   end;
   FProjected := True;
+  NotifyGrids(AGeneration);
+end;
+
+procedure TNativeContentScale.NotifyGrids(const AGeneration: INyxLCLBindingGeneration);
+var
+  LIndex: Integer;
+  LControl: TControl;
+begin
+  for LIndex := 0 to High(FRows) do
+  begin
+    RequireNativeGeneration(AGeneration);
+    LControl := FRows[LIndex].Control;
+
+    if FRows[LIndex].Seen and (LControl is TNyxCollectionStringGrid) then
+    begin
+      TNyxCollectionStringGrid(LControl).ContentProjectionChanged(FProjected);
+      RequireNativeGeneration(AGeneration);
+    end;
+  end;
 end;
 
 procedure TNyxLCLRenderer.ValidateContentScale(AScale: Double);

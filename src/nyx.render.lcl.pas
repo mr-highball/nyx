@@ -126,7 +126,8 @@ uses
   nyx.composition,
   nyx.content.mount,
   nyx.scheduler,
-  nyx.projection.refresh;
+  nyx.projection.refresh,
+  nyx.content.projection.lcl;
 
 type
   TNyxLCLRenderer = class;
@@ -136,6 +137,9 @@ type
     function Current: Boolean;
     function Coordinator: TNyxLiveBindings;
     function PhysicalFrame: INyxNativeGestureFrame;
+    { Borrow only after Current. A detached candidate adopts its final weak
+      receiver at publication; retained ports must never cache that raw owner. }
+    function Receiver: TNyxLCLRenderer;
   end;
   { Saved widget slots preserve a custom factory's handlers. Two snapshots are
     needed for the outer face and a separate framed input; neither owns controls. }
@@ -624,6 +628,7 @@ type
     function LayoutColumns(ANode: TNyxNode; AWidth: Integer): Integer;
     function ContentLayoutWidth(ADefault: Integer): Integer;
     function ContentLayoutHeight(ADefault: Integer): Integer;
+    procedure DeferContentProjectionSync;
     procedure Layout(ANode: TNyxNode; AX, AY, AWidth: Integer; AHeight: Integer = -1;
       AAllocatedWidth: Boolean = False);
     class function BindingHash(ANode: TNyxNode; ACapacity: Integer): Integer; static;
@@ -1016,6 +1021,7 @@ type
 implementation
 
 uses
+  nyx.collections.arrangement,
   InterfaceBase,
   Generics.Collections,
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
@@ -1077,6 +1083,7 @@ type
     function Current: Boolean;
     function Coordinator: TNyxLiveBindings;
     function PhysicalFrame: INyxNativeGestureFrame;
+    function Receiver: TNyxLCLRenderer;
   end;
 
   { The FIRST component owned by a physical panel is destroyed after its later
@@ -1607,6 +1614,11 @@ end;
 function TNativeBindingGeneration.PhysicalFrame: INyxNativeGestureFrame;
 begin
   Result := Frame;
+end;
+
+function TNativeBindingGeneration.Receiver: TNyxLCLRenderer;
+begin
+  Result := Owner;
 end;
 
 function TNyxLCLBinding.GenerationLease: INyxLCLBindingGeneration;
@@ -13813,6 +13825,11 @@ begin
 
   Result := False;
 
+  if FUpdating then
+  begin
+    DeferContentProjectionSync;
+  end;
+
   if FUpdating or FDesignMode or FForceValues or (ANode = nil) or
     not ((ANode.ProjectionKind = 'input') or (ANode.ProjectionKind = 'memo')) or
     (ANode.Prop('width-sizing') = 'content') or (ANode.Prop('height-sizing') = 'content') then
@@ -13940,6 +13957,7 @@ begin
 
       if FUpdating then
       begin
+        DeferContentProjectionSync;
         Exit;
       end;
       { Native visibility changes may transfer focus before the remaining controls
