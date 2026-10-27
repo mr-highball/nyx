@@ -29,6 +29,7 @@ uses
   nyx.state, nyx.logic, nyx.logic.http, nyx.http.types, nyx.resources.loader,
   nyx.resource.sources, nyx.files.save, nyx.files.open, nyx.scheduler,
   nyx.json.workshop, nyx.tool.canvas, nyx.canvas.types, nyx.canvas.workspace,
+  nyx.canvas.geometry, nyx.canvas.observers,
   nyx.flow.routing, nyx.flow.declarations, nyx.view.behavior,
   nyx.programs, nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}nyx.test.json.workshop.studio,{$endif}
@@ -36,7 +37,7 @@ uses
   JS, Web, nyx.application.browser, nyx.canvas.browser, nyx.tool.canvas.browser
   {$else}
   Classes, Interfaces, Forms, Controls, StdCtrls, nyx.application.lcl, nyx.canvas.lcl,
-  nyx.files.lcl, nyx.tool.canvas.lcl, nyx.resources.http.lcl
+  nyx.files.lcl, nyx.tool.canvas.lcl, nyx.resources.http.lcl, nyx.test.capture.lcl
   {$endif}
   {$ifdef NYX_COMPILED_JSON_WORKSHOP}, nyx.generated.json.workshop{$endif};
 
@@ -157,6 +158,9 @@ var
   GChecks: Integer;
   GDone: Boolean;
   GInitialized: Boolean;
+  {$ifdef PAS2JS}
+  GUniformReviewReady: Boolean;
+  {$endif}
   GWidth: Integer = 1280;
   GTools: INyxToolCanvasView;
   GToolFace: TReviewTools;
@@ -332,6 +336,102 @@ begin
   {$endif}
 end;
 
+{ The same saved/generated Workshop opts into this path only when its authored
+  scene requests uniform zoom. Use live controls before adding optional graph
+  cards: Fit must expose the Notebook's final result and actions, not merely
+  its allocation. Existing reflow/fixed-size journeys keep their own behavior. }
+procedure CheckUniformNotebook(AApp: Integer);
+const
+  CZooms: array[0..3] of Double = (1, 0.5, 1.25, 0.5);
+  CDraft: TNyxText = 'Keep this live draft / 🌙';
+var
+  LCanvas: TNyxNode;
+  LGeometry: INyxCanvasControlGeometry;
+  LBounds: TNyxCanvasBounds;
+  LIndex: Integer;
+  LControl: TJSONWorkshopControl;
+  {$ifdef PAS2JS}
+  LInput: TJSHTMLTextAreaElement;
+  {$else}
+  LInput: TCustomMemo;
+  {$endif}
+begin
+  LCanvas := GDocument.Find(JSONWorkshopCanvas.ID).Part(NyxPart('workspace'));
+
+  if GDocument.Canvases.Definition(LCanvas.CanvasScene).Scaling <> nccsUniform then
+  begin
+    Exit;
+  end;
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-uniform-notebook', 'start / ' + IntToStr(AApp));
+  {$endif}
+  GViews[AApp].SetCamera(GViews[AApp].Camera.AtCenter(NyxCanvasPoint(245, 500), 1));
+  {$ifdef PAS2JS}
+  LInput := TJSHTMLTextAreaElement(GViews[AApp].InputFor(JSONWorkshopItem,
+    JSONWorkshopControl(jwcSource)));
+  LInput.focus;
+  {$else}
+  LInput := TCustomMemo(GViews[AApp].InputFor(JSONWorkshopItem,
+    JSONWorkshopControl(jwcSource)));
+  LInput.SetFocus;
+  {$endif}
+  TypeSource(AApp, CDraft);
+  {$ifdef PAS2JS}
+  LInput.selectionStart := 2;
+  LInput.selectionEnd := 5;
+  {$else}
+  LInput.SelStart := 2;
+  LInput.SelLength := 3;
+  {$endif}
+  for LIndex := Low(CZooms) to High(CZooms) do
+  begin
+    {$ifdef PAS2JS}
+    document.body.setAttribute('data-uniform-notebook', 'zoom / ' + IntToStr(AApp) +
+      ' / ' + IntToStr(LIndex));
+    {$endif}
+    GViews[AApp].SetCamera(GViews[AApp].Camera.AtCenter(
+      NyxCanvasPoint(245, 500), CZooms[LIndex]));
+    Check(GViews[AApp].InputFor(JSONWorkshopItem, JSONWorkshopControl(jwcSource)) = LInput,
+      'the saved uniform Workshop retains its actual source editor through zoom');
+    {$ifdef PAS2JS}
+    Check((LInput.value = CDraft) and (LInput.selectionStart = 2) and
+      (LInput.selectionEnd = 5), 'uniform Workshop retains the browser Unicode draft and caret');
+    {$else}
+    Check((TNyxText(LInput.Text) = CDraft) and (LInput.SelStart = 2) and
+      (LInput.SelLength = 3), 'uniform Workshop retains the native Unicode draft and caret');
+    {$endif}
+    Check(GApps[AApp].State.GetValue(JSONWorkshopSource) = CDraft,
+      'uniform Workshop zoom retains the independently bound runtime source');
+  end;
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-uniform-notebook', 'fit / ' + IntToStr(AApp));
+  {$endif}
+  GViews[AApp].Execute(nccFit);
+  Check(Supports(GViews[AApp], INyxCanvasControlGeometry, LGeometry),
+    'the saved uniform Workshop exposes its actual control geometry');
+  for LControl := Low(TJSONWorkshopControl) to High(TJSONWorkshopControl) do
+  begin
+
+    if LControl in [jwcSource, jwcFormat, jwcSave, jwcPreview] then
+    begin
+      Check(LGeometry.TryControlBounds(JSONWorkshopItem, JSONWorkshopControl(LControl), LBounds),
+        'Fit exposes each actual Notebook editor, result and principal action');
+      Check((LBounds.Left >= -1) and (LBounds.Top >= -1) and
+        (LBounds.Left + LBounds.Width <= GViews[AApp].Camera.ViewportWidth + 1) and
+        (LBounds.Top + LBounds.Height <= GViews[AApp].Camera.ViewportHeight + 1),
+        'the fitted Notebook control lies completely inside the actual viewport');
+    end;
+  end;
+  {$ifndef PAS2JS}
+  SaveNyxNativeCapture(GApps[AApp].Window,
+    GDirectory + 'uniform-workshop-fit-' + TNyxText(IntToStr(AApp)) + '.png', ncmPrint);
+  {$endif}
+  TypeSource(AApp, JSONWorkshopSample);
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-uniform-notebook', 'complete / ' + IntToStr(AApp));
+  {$endif}
+end;
+
 procedure Click(AApp: Integer; AControl: TJSONWorkshopControl);
 begin
   {$ifdef PAS2JS}
@@ -495,6 +595,7 @@ var
   LWorkspace: TNyxSourceWorkspace;
   LSource: TNyxText;
   LTools: INyxToolCanvasView;
+  LNodes: INyxToolCanvasPipelineNodes;
   LFormatter: INyxJSONFormat;
 begin
   SetLength(GViews, 2);
@@ -590,15 +691,24 @@ begin
       GApps[LIndex].View.Root.Find(JSONWorkshopCanvas.ID).Part(NyxPart('workspace')).ID) as TReviewCanvas;
     {$endif}
     LTools := GApps[LIndex].View.ToolCanvasView(JSONWorkshopCanvas.ID);
+    CheckUniformNotebook(LIndex);
     ShowJSONWorkshopGraph(LTools);
-    Check(Supports(LTools, INyxToolCanvasPipelineNodes, GNodes[LIndex]),
+    { pas2js must finalize a scalar interface result, not an indexed global
+      array passed as an out parameter. Assign the retained array slot only
+      after Supports has completed its ordinary local-interface ownership. }
+    Check(Supports(LTools, INyxToolCanvasPipelineNodes, LNodes),
       'the example exposes its managed operation-card capability');
+    GNodes[LIndex] := LNodes;
   end;
 end;
 
 {$I nyx_json_workshop_network.inc}
 
 procedure Stage;
+var
+  LToolFace: TReviewTools;
+  LProgramAuthoring: INyxToolCanvasProgramAuthoring;
+  LProgramEditing: INyxCanvasProgramEditing;
 begin
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}
 
@@ -632,7 +742,7 @@ begin
     end;
     if GTools.RefreshExecution.Status <> nesSucceeded then
     begin
-      raise Exception.Create('Actual program presentation failed');
+      raise Exception.Create('Actual program presentation failed: ' + GTools.RefreshExecution.Failure);
     end;
   end;
 
@@ -678,6 +788,19 @@ begin
           'embedded editing remains independent in a reopened peer application');
         Check((Pos('9007199254740993', GPretty) > 0) and (Pos('River 🌙', GPretty) > 0),
           'real formatting preserves exact large numbers and supplementary Unicode');
+        {$ifdef PAS2JS}
+
+        if Pos('&review=uniform&', '&' + Copy(window.location.search, 2,
+          Length(window.location.search)) + '&') > 0 then
+        begin
+          { A selective visual review stops after real formatting and uniform
+            Fit, before the separate file/program/network regression stages.
+            It grants no full-journey acceptance and leaves controls interactive. }
+          GUniformReviewReady := True;
+          document.body.setAttribute('data-uniform-review', 'ready');
+          Exit;
+        end;
+        {$endif}
         TypeSource(0, FencedJSON);
         Click(0, jwcSave);
       end;
@@ -784,11 +907,17 @@ begin
           (TNyxCodec.Encode(GReopened) = GBefore),
           'all runtime editing, graph results and retirement preserve both authored documents');
         GTools := GApps[1].View.ToolCanvasView(JSONWorkshopCanvas.ID);
-        Check(Supports(GTools, TReviewTools, GToolFace), 'the reopened App exposes its actual Tool Canvas');
-        Check(Supports(GTools.Inspector, INyxToolCanvasProgramAuthoring, GProgramAuthoring),
+        { Receive interface queries in local leases before retaining globals.
+          pas2js otherwise emits final release of those global out arguments at
+          this procedure's return, prematurely retiring the still-visible tool. }
+        Check(Supports(GTools, TReviewTools, LToolFace), 'the reopened App exposes its actual Tool Canvas');
+        Check(Supports(GTools.Inspector, INyxToolCanvasProgramAuthoring, LProgramAuthoring),
           'the useful tool exposes its ordinary interpreted-program workbench');
-        Check(Supports(GViews[1], INyxCanvasProgramEditing, GProgramEditing),
+        Check(Supports(GViews[1], INyxCanvasProgramEditing, LProgramEditing),
           'the useful tool exposes managed runtime program ownership');
+        GToolFace := LToolFace;
+        GProgramAuthoring := LProgramAuthoring;
+        GProgramEditing := LProgramEditing;
         GProgramAuthoring.SelectProgram(JSONWorkshopPreparation);
         GTools.Refresh;
       end;
@@ -1124,12 +1253,18 @@ end;
 procedure Drive;
 begin
   try
+    document.body.setAttribute('data-json-workshop-stage', IntToStr(GStage));
 
     if {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioReady and {$endif}JourneyTimedOut then
     begin
       raise Exception.Create('JSON Workshop timed out at stage ' + IntToStr(GStage));
     end;
     Stage;
+
+    if GUniformReviewReady then
+    begin
+      Exit;
+    end;
 
     if GDone then
     begin
@@ -1143,8 +1278,15 @@ begin
   except
     on E: Exception do
     begin
-      Cleanup;
+      { Retain the failed browser frame for inspection. Cleanup can itself
+        enter platform callbacks and must not hide the original diagnostic.
+        No further Drive timer is scheduled; page teardown owns final release. }
       document.body.setAttribute('data-json-workshop-error', E.Message);
+    end;
+    else
+    begin
+      document.body.setAttribute('data-json-workshop-error',
+        'Unexpected platform exception; inspect the retained browser console');
     end;
   end;
 end;

@@ -65,6 +65,33 @@ begin
     'unsuccessful network input preserves the entire previously accepted notebook');
 end;
 
+{ Read the actual saved request through its specialized operation contract.
+  Imported Workshop projects may deliberately change headers/deadline/limits;
+  comparing the complete derived request keeps those options under assertion
+  without imposing this repository's starter defaults on an accepted project. }
+function SavedNetworkRequest: TNyxHTTPRequest;
+var
+  LDefinition: INyxFlowDefinition;
+  LIndex: Integer;
+  LOperation: INyxLogicOperation;
+  LHTTP: INyxHTTPCall;
+begin
+  LDefinition := GDocument.Flows.Definition(JSONWorkshopFetchFlow);
+  for LIndex := 0 to LDefinition.StepCount - 1 do
+  begin
+
+    if LDefinition.Step(LIndex).Name = JSONWorkshopStep(jwsHTTP).Name then
+    begin
+      LOperation := NewNyxHTTPLogicResolver(nil).Resolve(
+        LDefinition.Descriptor(LIndex).Kind, LDefinition.Configuration(LIndex));
+      Check(Supports(LOperation, INyxHTTPCall, LHTTP),
+        'the saved network step retains its specialized request contract');
+      Exit(LHTTP.Request);
+    end;
+  end;
+  raise Exception.Create('The saved Workshop has no HTTP request');
+end;
+
 procedure NetworkStage;
 var
   LBytes: TNyxBytes;
@@ -105,11 +132,8 @@ begin
           Exit;
         end;
         Check(GNetworkHosts[0].Request.IsPending and
-          (GNetworkHosts[0].Last.URL.Address = GNetworkURL) and
-          (GNetworkHosts[0].Last.RequestMethod.Name = 'GET') and
-          (GNetworkHosts[0].Last.Headers.First('accept') = 'application/json') and
-          (GNetworkHosts[0].Last.DeadlineMS = 15000) and
-          (GNetworkHosts[0].Last.ByteLimit = 1024 * 1024),
+          (GNetworkHosts[0].Last.ToData.ToJSON = SavedNetworkRequest.WithURL(
+            NyxResourceURL(GNetworkURL)).ToData.ToJSON),
           'the actual URL input reaches a pending request while retaining all configured options');
         GNetworkHosts[0].Request.Finish(200, NyxEncodeUTF8(LoadedJSON));
       end;

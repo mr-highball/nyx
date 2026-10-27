@@ -77,9 +77,13 @@ plain/wrapped/resizable/pinned checks at each width, including distinct vertical
 horizontal scrolls, matching screen row tops, logical fit widths and retained
 pinned drafts. Other internal scroll/drawing metrics and remaining input/quality
 journeys still need work.
-Ordinary Studio selection and the same-pair Workshop
-journey remain required. Keep this work on the existing owner; do not treat this
-memo/card checkpoint as all-control parity or start another source-only sequence.
+Ordinary native Studio now exposes the three scaling choices, with54/58 paired
+Inspector/Save/Open checks and identical saved Workshop bytes. That exact compiled
+pair passes126/126 native and120/120 browser runtime checks. Browser Studio input,
+delivery and full quality remain open. Visual review exposes overlapping injected
+operation cards after desktop Fit: next make their faces/navigation honor the
+selected scaling policy on both adapters. Keep this work on the existing owner;
+these checks establish no all-control parity or separate completion credit.
 
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON

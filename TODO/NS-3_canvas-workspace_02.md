@@ -109,11 +109,29 @@ pass107/129/122/145 plain/wrapped/resizable/pinned checks at each1280/390 width;
 all eight runs report zero leaked blocks. WORK.md retains the initial logical
 fit-width, pinned-row, horizontal-scroll and post-scroll button failures.
 
+The reusable Embedded controls form now exposes Reflow, Keep size and Uniform
+zoom through ordinary native Studio's paired Inspector queue. Seeded workspace
+selection, actual select/button/menu input, exact Undo/Redo, stale/draft refusal
+and warned Save/Open pass54/58 at1280/390. Both widths save identical project and
+crafted Pascal bytes from the accepted MCP Workshop. Its own compiled application
+passes126/126 native and120/120 browser checks, including live Unicode edits,
+actual fitted result/action bounds, formatting, program edits and file/HTTP
+outcomes through explicit controlled hosts. The existing timing ceilings remain
+unchanged; WORK.md retains contention failures and isolated reruns. Full browser
+Studio interaction remains separate from its successful compilation.
+
+Browser visual review of the real formatted Notebook passes at wide/compact
+sizes. It also exposes a required gap: injected operation cards keep independent
+sizes while their positions zoom, so desktop Fit can overlap their faces. The
+Notebook-only and mixed-card screenshots remain separate. Next make those Tool
+Canvas card faces/navigation honor the selected scaling contract on both targets,
+preserving earlier policies, then finish ordinary browser Studio and delivery.
+
 Other internal native scroll/drawing metrics, nested canvases, full drag/capture/
 keyboard/IME/assistive journeys and complete pre-publication admission for changed
-logical layouts remain implementation/qualification work. Ordinary Studio
-selection and the same saved/generated Workshop also stay open. The LAN service/
-example defaults are unchanged. Next return this typed choice to ordinary Studio
-and the same saved/generated Workshop; retain the remaining native metric and
-quality gates on this owner rather than starting more standalone table variants;
+logical layouts remain implementation/qualification work. Full browser Studio
+selection, observing delivery and complete native/browser visual/assistive
+quality remain open. The installed LAN payload and example defaults are unchanged.
+Retain these gates and the observed operation-card failure on this owner rather
+than starting more standalone table/source variants;
 this task remains unaccepted with no duplicate completion credit.

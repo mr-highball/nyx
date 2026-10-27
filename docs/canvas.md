@@ -364,6 +364,20 @@ budget; a small zoom cannot authorize an arbitrarily large logical layout.
 Browser item renderers use an independent logical host and a CSS transform,
 retaining their actual inputs and normal binding/events across camera changes.
 
+Studio's Properties Inspector exposes **Embedded controls → Zoom behavior** for
+a selected saved canvas. In a Tool Canvas, select its authored workspace part.
+Reflow, Keep size and Uniform zoom correspond to the three typed policies above.
+**Apply zoom behavior** changes the shared scene definition through the ordinary
+paired design/Pascal transaction; every use of that scene receives the choice.
+The selection alone changes no design. Stale forms and unfinished Pascal refuse
+publication through the existing guards. Earlier projects keep their saved policy.
+
+Applications may embed the same public `NewNyxCanvasScalingEditor` Nyx form.
+`NyxCanvasScalingPart` supplies typed stable part references, and
+`CaptureNyxCanvasScalingEditor` returns a copied scene proposal on explicit Apply.
+The host rechecks its complete project context and publishes the returned change;
+the form retains no document or mounted view and cannot publish by itself.
+
 LCL now retains a separate world layout frame and projects absolute native
 geometry, constraints and font heights after layout. Repeated zoom restores the
 logical baseline first, retaining the actual controls, text, focus and selection.
@@ -426,6 +440,13 @@ large-dataset performance and complete visual/assistive quality still need work.
 Existing policies and standalone example defaults remain unchanged. Follow
 [workspace02](../TODO/NS-3_canvas-workspace_02.md) for ordinary Studio selection and
 the complete saved/generated consumer's remaining checks.
+
+The saved/generated JSON Workshop now exercises this choice through ordinary
+native Inspector/history/Save/Open and its own native/browser applications.
+Visual review distinguishes the fitted Notebook from injected Tool Canvas
+operation cards: those cards still keep independent sizes while their positions
+zoom, so mixed-card Fit can overlap their faces. Consistent operation-card
+scaling/navigation, full browser Studio input and observing delivery remain open.
 
 Only uniform definitions emit descriptor version6. Its camera may be bounded or
 unbounded and precision remains optional. Switching back to an existing policy

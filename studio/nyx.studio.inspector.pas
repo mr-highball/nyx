@@ -301,6 +301,8 @@ begin
 
       if LProjection.CanvasScene.Defined then
       begin
+        AParent.Add(NewNyxCanvasScalingEditor('inspector-canvas-scaling',
+          LProjection.CanvasScene, ASession.Document));
         AParent.Add(NewNyxCanvasBoundaryEditor('inspector-canvas-navigation',
           LProjection.CanvasScene, ASession.Document));
         AParent.Add(NewNyxCanvasPrecisionEditor('inspector-canvas-precision',
@@ -331,7 +333,9 @@ var
 begin
   AEdit := Default(TNyxStudioDesignEdit);
 
-  if ((ASession <> nil) and CaptureNyxCanvasBoundaryEditor(AButton, AShellRoot,
+  if ((ASession <> nil) and CaptureNyxCanvasScalingEditor(AButton, AShellRoot,
+    ASession.Document, LBoundary)) or
+    ((ASession <> nil) and CaptureNyxCanvasBoundaryEditor(AButton, AShellRoot,
     ASession.Document, LBoundary)) or
     ((ASession <> nil) and CaptureNyxCanvasPrecisionEditor(AButton, AShellRoot,
       ASession.Document, LBoundary)) then

@@ -9,7 +9,80 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Pinned and fitted canvas tables — 2026-10-27
+## Current checkpoint — Canvas scaling in ordinary Studio — 2026-10-27
+
+Previous goal turn: PROGRESS;ddb6413 is pushed and remote-verified. Batch34
+returns canvas-workspace02 to its ordinary Inspector and saved JSON Workshop.
+The existing library/generator/semantic definition supports uniform scaling, but
+the reusable scene forms expose no scaling choice. Add the missing public Nyx
+form and route its exact scene proposal through the existing paired transaction.
+Exercise it through actual Inspector controls, stale/draft refusal and ordinary
+Save/Open on the same accepted Workshop pair, then compile/run that pair's own
+application at wide/compact widths. Preserve the two earlier policy semantics,
+all original criteria and the remaining native/input/quality gates. Root remains
+SOLO. Private outputs and child TEMP/TMP stay external; no cleanup or observing
+service/project mutation is part of this batch. Preserve unrelated1280/390.
+
+Implemented: NewNyxCanvasScalingEditor is a reusable public Nyx Card/Select/Button
+form with typed part references and a copied exact scene baseline. UI labels map
+to the existing enum only on explicit Apply. Studio consumes its public capture
+through the existing revision-aware paired transaction; no new publication owner,
+runtime property string, target requirement or default-policy migration is added.
+
+Private canvas-uniform-studio-01 retains bounded authenticated MCP workspace/
+outline/canvas inspection of the accepted revision7 Workshop. The primary and
+other projects are not mutated. Its isolated ordinary native Inspector journey
+passes54/58 at1280/390: actual controls, exact paired Undo/Redo, stale refusal,
+unfinished Unicode Pascal protection, older-policy selection and warned Save/Open.
+Initial selection uses the public controller, not a physical selection claim.
+Both widths export identical accepted project/Pascal bytes. The first Open failure
+was the fixture skipping the existing unsaved-work warning; the repaired journey
+follows Back up mine and open saved. Native Inspector and post-Open captures were
+inspected as diagnostic redraws. Both checked runs report matching complete
+allocation/free totals; the wide zero-unfreed trailer is truncated at256 bytes.
+
+That exact saved constructor independently compiles for both targets. Its current
+runtime consumer passes126 native checks at each width and120 browser checks at
+1280x900/390x844. Native final wide/serial compact heaps have matching allocation/
+free counts and bytes, with truncated zero-unfreed trailers. Earlier complete
+zero-unfreed lines are retained separately. Browser DOM results are actual HTTP
+execution, not compilation credit. The new checks use real source editors,
+retained supplementary Unicode/caret/binding, repeated camera transitions and
+actual fitted Notebook result/action bounds. Existing formatting, interpreted
+program, cancellation, file and HTTP journeys remain; hosts are controlled here.
+
+The first runtime request assertion assumed the starter's15000ms deadline while
+the accepted project requests12000. It now resolves the saved specialized HTTP
+operation and compares the entire URL-derived request, preserving stronger
+method/header/body/limit checks. Browser execution exposes premature global/out
+interface finalization, including an array slot and later program-workbench
+capabilities. Local interface receivers followed by retained assignments repair
+the fixture without changing library ownership. Failed generated JS and first
+failure artifacts remain. Failed browser frames retain diagnostics; the explicit
+visual mode stops after actual formatting, separately from full regression passes.
+
+Overlapping heavy native/browser runs hit the existing60000ms setup/interaction
+ceilings. Both failures remain; isolated compact reruns pass with unchanged
+ceilings. This is no general performance-budget acceptance. The native source
+journey's high debug allocation cost and original performance requirements remain
+open. Compilers report no owned warnings; full browser Studio and its generated
+consumer retain only the seven installed Classes warnings per compilation.
+
+Actual browser review reads the formatted supplementary Unicode/large integer,
+clicks Format/Fit and inspects phone/desktop renderings. It finds the next required
+failure: fixed-size injected operation cards overlap after mixed-card desktop Fit.
+browser-desktop-mixed-fit.png retains it; Notebook-only and phone captures remain
+separate. Next make Tool Canvas operation-card faces/navigation follow the chosen
+scaling policy on both adapters, then finish ordinary browser Studio and observing
+delivery. No original criterion/task/credit/DONE closes. Retain native drawing/
+other internal metrics, nested canvases, full changed-layout admission and input/
+visual/assistive/performance gates on canvas-workspace02. The installed LAN payload
+and example defaults remain unchanged; no user input is missing.
+All owned compiler/runtime jobs are joined. The temporary read-only loopback host
+was stopped after exact path/arguments/start-time verification; its tab is closed
+and the browser viewport override is reset. No cleanup of existing artifacts ran.
+
+## Earlier checkpoint — Pinned and fitted canvas tables — 2026-10-27
 
 Previous goal turn: PROGRESS;152e3fd is pushed and remote-verified. Batch33
 continues the same canvas-workspace02 owner with the two named native table

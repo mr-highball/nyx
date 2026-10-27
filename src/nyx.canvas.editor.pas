@@ -31,6 +31,10 @@ uses
   nyx.canvas.declarations;
 
 type
+  { Stable references into the embedded-control scaling form. Closed choices
+    map to TNyxCanvasControlScaling only on explicit Apply; labels are UI text. }
+  TNyxCanvasScalingPart = (ncspTitle, ncspScope, ncspChoice, ncspHelp, ncspApply);
+
   { Stable references into the ordinary precision form. Field identities are
     target-independent; the host owns the form and deliberate publication. }
   TNyxCanvasPrecisionPart = (ncppTitle, ncppScope, ncppFields, ncppHelp,
@@ -54,7 +58,7 @@ type
     Change: TNyxCanvasChange;
   end;
 
-  { Captured shared-scene settings proposal, shared by navigation and precision
+  { Captured shared-scene settings proposal, shared by scaling, navigation and precision
     forms. Names/data are independent of the form/document. The owning editor
     publishes Change through its existing
     revision-aware transaction; Baseline is exact scene intent, not runtime pan. }
@@ -121,6 +125,20 @@ function NewNyxCanvasSceneEditor(const AID: TNyxText; const AOwner: TNyxControlR
   choice from the exact mounted form; malformed/missing fields refuse. }
 function CaptureNyxCanvasSceneEditor(AButton, ARoot: TNyxNode;
   out AChange: TNyxCanvasEditorChange): Boolean;
+
+{ Reusable Nyx form for a saved scene's live embedded-control zoom policy.
+  It copies exact scene intent without retaining the document or runtime view.
+  A choice remains uncommitted until the owning host admits the captured Apply. }
+function NewNyxCanvasScalingEditor(const AID: TNyxText; const AScene: TNyxCanvasRef;
+  ADocument: TNyxDocument): INyxCard;
+{ Stable nonempty identity of one public scaling-form part. }
+function NyxCanvasScalingPart(const AID: TNyxText;
+  APart: TNyxCanvasScalingPart): TNyxControlRef;
+{ Unrelated controls return False. Unknown choices, missing fields and stale
+  scene definitions refuse without changing authored or unfinished form data.
+  The host still guards the complete project revision/source before publication. }
+function CaptureNyxCanvasScalingEditor(AButton, ARoot: TNyxNode;
+  ADocument: TNyxDocument; out AChange: TNyxCanvasBoundaryEditorChange): Boolean;
 
 { Ordinary reusable Nyx form for a saved scene's shared navigation policy.
   AID is a nonempty stable form identity.
@@ -552,5 +570,6 @@ end;
 {$I nyx.canvas.editor.precision.inc}
 {$I nyx.canvas.editor.precision.draft.inc}
 {$I nyx.canvas.editor.draft.inc}
+{$I nyx.canvas.editor.scaling.inc}
 
 end.
