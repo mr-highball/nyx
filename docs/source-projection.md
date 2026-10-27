@@ -220,6 +220,26 @@ omits the strategy and retains existing literal authoring without compilers.
 attached command context; it does not modify a draft, document or history.
 Native Studio carries the explicit strategy into its independent project contexts.
 
+### Literal browser worker failures
+
+Ordinary browser commands distinguish worker script/startup errors from the
+unchanged thirty-second execution deadline. They copy the browser-owned error
+message before retiring the worker. Both outcomes retain the complete accepted
+pair and independent draft/base. Metadata-only agent observations leave this
+actionable status visible; their receipts remain in the Agents view.
+
+The [browser regression](../tests/nyx_source_worker_failure_browser.lpr) executes
+a missing worker, an [inert Pascal worker](../tests/nyx_source_worker_inert.lpr)
+and a subsequent healthy source Apply. Compile the regression for `-Tbrowser`
+with the normal source/studio unit paths and matched RTL. Compile the inert
+helper and production `studio/nyx_source_worker.lpr` with `-Tmodule -Jirtl.js`
+into the same external web output. Serve these through the local Pascal host;
+the test HTML must create its body before loading/running the regression.
+Read `data-worker-check-status`, `data-worker-checks` and the failure attributes
+from that body. Its inert leg really waits for the production deadline; the
+harness does not shorten the worker timeout. PASS10 proves these failure/draft
+and recovery boundaries, separately from ordinary full Studio responsiveness.
+
 ### Native strategy shutdown
 
 The native strategy exclusively owns its scheduler and bounded admitted jobs.

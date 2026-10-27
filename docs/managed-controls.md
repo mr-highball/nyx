@@ -63,6 +63,19 @@ therefore remains usable after the original variable is released, without a
 reference cycle. Compilers may retain fluent-result temporaries until routine
 exit; routine scopes give an operation a precise final-release boundary.
 
+Default wrappers also hold a construction reference until the most-derived
+constructor returns. A compound constructor can therefore use fluent `Self`
+methods before its factory hands the first interface to the caller. Native FPC
+provides this through `TInterfacedObject`; Nyx supplies the equivalent pin for
+the browser RTL. Descendants overriding browser `AfterConstruction` must call
+the inherited method exactly once. Constructor failure still releases the
+partially built wrapper and its owned parts exactly once.
+
+The shared [canvas Inspector regression](../tests/nyx_canvas_scaling_inspector_tests.lpr)
+checks this constructor boundary, failure unwinding and ordinary compound-form
+adoption/teardown. It executes alongside the managed-control checks on both
+targets; a native pass alone cannot establish browser construction lifetime.
+
 Renderers borrow documents and own target controls separately. Dispose a renderer
 before its borrowed document. A retained component preserves authored model
 meaning; it does not retain a DOM element or an LCL widget.

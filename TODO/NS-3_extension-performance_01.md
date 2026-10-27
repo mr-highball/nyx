@@ -2,6 +2,18 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current concrete consumer: ordinary browser Studio's canvas scaling Apply on
+the saved JSON Workshop reaches its existing30000ms source-worker deadline.
+The accepted pair/draft remain intact. The matching independent full-import
+producer completes in23.557s, so this is not a missing worker or malformed
+request. Startup/schema decoding and real design preparation need complete
+critical-path measurement; the partial overlapping samples in WORK.md do not
+prove observing overhead or a particular optimization. Repair this same journey
+without raising deadlines, skipping strict admission or substituting smaller
+source/field fixtures. Return to the existing
+[canvas scaling owner](NS-3_canvas-workspace_02.md) for actual browser Inspector,
+paired history/Save/Open and delivery. This adds no task or completion credit.
+
 The shared button-style form repair now preserves actual Inspector controls and
 event-router identity through Apply/Undo/Redo, while retiring old callbacks.
 Its strict owner/unknown-metadata boundaries, native57/61 and pure95 checks,

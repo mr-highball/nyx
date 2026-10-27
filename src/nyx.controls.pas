@@ -229,7 +229,10 @@ type
     may retain an existing node without transferring its ownership token.
     New controls transfer that token after acquiring their reference. Destroy
     releases it; final unowned release frees the descriptor and its descendants.
-    Descendant references survive ancestor disposal with their Parent cleared. }
+    Descendant references survive ancestor disposal with their Parent cleared.
+    Browser construction also pins the wrapper through the most-derived
+    constructor: fluent Self interfaces must not retire a partially built
+    compound before its factory can return the first caller reference. }
   TNyxControl = class(TInterfacedObject, INyxControl, INyxNode)
   private
     FNode: TNyxNode;
@@ -242,6 +245,12 @@ type
     constructor Create(AKind: TNyxKind; const AID: TNyxText;
       AConstruction: TNyxConstruction = ncoDefault); overload;
     constructor CreateFromNode(ANode: TNyxNode);
+    {$ifdef PAS2JS}
+    { Match native TInterfacedObject's construction reference. The browser RTL
+      starts at zero and supplies no equivalent hook. Decrement directly after
+      complete construction; _Release would destroy a not-yet-returned object. }
+    procedure AfterConstruction; override;
+    {$endif}
     destructor Destroy; override;
     function GetNode: TNyxNode;
     function GetID: TNyxText;
@@ -473,6 +482,9 @@ constructor TNyxControl.Create(AKind: TNyxKind; const AID: TNyxText;
   AConstruction: TNyxConstruction);
 begin
   inherited Create;
+  {$ifdef PAS2JS}
+  Inc(fRefCount);
+  {$endif}
 
   if (AConstruction = ncoDefault) and (AKind >= nkLabeledButton) and
     (AKind <> nkSlotOverride) then
@@ -495,6 +507,9 @@ end;
 constructor TNyxControl.CreateFromNode(ANode: TNyxNode);
 begin
   inherited Create;
+  {$ifdef PAS2JS}
+  Inc(fRefCount);
+  {$endif}
 
   if ANode = nil then
   begin
@@ -503,6 +518,14 @@ begin
   FNode := ANode;
   FNode.AcquireReference;
 end;
+
+{$ifdef PAS2JS}
+procedure TNyxControl.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  Dec(fRefCount);
+end;
+{$endif}
 
 destructor TNyxControl.Destroy;
 begin

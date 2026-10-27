@@ -87,7 +87,12 @@ Workshop's browser journey passes169 and checked native journey175 per width;
 the full heap-traced native timeout remains a separate open performance gate.
 Authored overlapping allocations retain an honest Limited result and exact
 world positions. Next finish ordinary
-browser Studio and observing delivery. Keep this work on the existing owner;
+browser Studio and observing delivery. Its browser construction/form boundary
+now passes13 focused and194 existing managed-control checks per target; actual
+scaling Apply still reaches the existing worker deadline and retains its pair.
+The concrete preparation cost is shared with the existing measured-performance
+owner in WORK.md. Error/timeout/draft recovery passes10 browser checks; this is
+not acceptance of the unfinished full-editor journey. Keep this work on the existing owner;
 these checks establish no all-control parity or separate completion credit.
 
 After the two preparation/open and two binding batches, reassessment stops further

@@ -2954,17 +2954,31 @@ begin
 end;
 
 function TNyxSourceCommands.WorkerError(AEvent: TJSEvent): Boolean;
+var
+  LMessage: TNyxText;
 begin
   Result := False;
+  { The browser owns this transient ErrorEvent. Copy its plain diagnostic before
+    retiring the worker; suppressing the default console report must not erase
+    the actual failure or turn a script error into an apparent timeout. }
+  LMessage := 'Editor processor failed / current files and draft retained';
+
+  if isString(TJSObject(AEvent)['message']) and
+    (String(TJSObject(AEvent)['message']) <> '') then
+  begin
+    LMessage := 'Editor processor failed: ' + TNyxText(String(TJSObject(AEvent)['message'])) +
+      ' / current files and draft retained';
+  end;
   AEvent.preventDefault;
-  WorkerTimeout;
+  RetireWorker;
+  Finish(FActive.Sequence, nil, nil, LMessage);
 end;
 
 procedure TNyxSourceCommands.WorkerTimeout;
 begin
   RetireWorker;
   Finish(FActive.Sequence, nil, nil,
-    'Editor processor failed or timed out / current files and draft retained');
+    'Editor processor timed out / current files and draft retained');
 end;
 {$endif}
 

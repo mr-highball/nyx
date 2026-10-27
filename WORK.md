@@ -9,7 +9,78 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Uniform Tool Canvas operation cards — 2026-10-27
+## Current checkpoint — Browser Studio scaling and delivery — 2026-10-27
+
+Previous goal turn: PROGRESS; c442209 is pushed and remote-verified. Batch36
+returns canvas-workspace02 to ordinary browser Studio. Build the matched current
+server/browser payload into external storage, qualify an isolated loopback owner
+with a separate runtime/enrollment, and use authenticated semantic tools to seed
+the accepted Workshop. Exercise actual Inspector choice/Apply, exact paired
+history, stale/draft guards and ordinary Save/Open at wide/compact widths. Then
+stage a reviewable matched payload and preserve the existing projects/configuration
+when updating the authorized LAN service. Do not silently migrate saved scaling
+policies. Retain the traced native timing failure and all original quality gates.
+Root remains SOLO. All previous jobs are terminal/joined; all new artifacts and
+process TEMP/TMP stay external. Preserve unrelated1280/390. No missing user input,
+new approval gate, cleanup or task credit is introduced.
+
+The first actual browser Inspector catches a premature construction release in
+the canvas item palette. pas2js TInterfacedObject starts at zero and lacks the
+native construction pin; a creator compound's fluent Self temporaries can retire
+it before its factory returns. TNyxControl now supplies that pin on both browser
+constructor paths and removes it directly after the most-derived constructor.
+Dependency sources remain untouched. New shared regression checks successful
+construction, exactly-once failure cleanup, managed/raw form adoption and three
+ordinary Inspector teardown cycles. It passes13 on both targets; the existing
+managed-control suite passes194 on both, with complete clean native heaps.
+The initial browser console/screenshot/generated failure artifacts remain.
+
+A matched isolated backend restart retains the three review projects, revisions
+and selections. The fresh seeded Workshop opens through ordinary browser Studio;
+its typed choice starts Reflow and selecting Uniform alone keeps revision3.
+Ordinary server-backed Save writes a baseline whose design/source exactly match
+the accepted MCP seed. The older failed tab's recovered selection legitimately
+reaches the explicit shared/local guard and is retained separately.
+
+Actual Apply still times out: the source editor retains Reflow and each tested
+service project stays at revision3. Metadata-only agent refreshes no longer
+overwrite Preparing/failure with old read receipts; the existing Agents activity
+view retains those receipts. Content changes and conflicts still publish status.
+Worker script errors now copy their borrowed ErrorEvent's plain diagnostic and
+retire explicitly, separately from an actual timeout. A browser regression checks
+the missing-worker error, an inert worker's unchanged30000ms deadline, exact
+accepted design/source/draft/base preservation and subsequent healthy Unicode
+Apply: PASS10. Its initial healthy leg encountered the temporary profiler's
+nonproduction packets; that failure is retained separately from the normal-worker
+rerun. Temporary profiling source changes are saved externally and removed from
+the implementation; normal Studio/worker compilers pass afterward.
+
+Private canvas-uniform-browser-studio-01 retains the exact baseline Save, first
+construction failures, source identities, timing patch/generated artifacts and
+DOM phase evidence. Request serialization takes41–44ms. Worker startup/schema
+decoding reaches its request phase, then independent design preparation consumes
+the remaining budget. The same full-import producer without editor rendering
+has a23.557s worker round trip; this is diagnostic evidence, not full Studio acceptance or a
+causal measurement of observing overhead. The retained source samples overlap:
+render2336ms, candidate validation1457ms and candidate reconstruction3986ms.
+They do not explain the entire deadline or prove a specific optimization. Keep
+the30000ms limit and strict admission. Next profile the complete preparation
+critical path on this same Workshop under the existing measured-performance
+owner, repair the concrete cost, and finish actual browser Apply/history/draft/
+Save/Open at both widths before authorized LAN delivery. Do not add more
+equivalent source/field proofs or silently regenerate user source.
+
+The user confirms phone LAN access. Authenticated production inspection still
+lists the same three projects at revisions1/4/7; HTTP returns200. No production
+payload, configuration, user pair or scaling policy is changed by this batch.
+All owned compiler/test jobs are terminal and joined. The isolated owner is
+identity-verified, stopped and joined; both test ports are closed. Its runtime
+and seven review projects remain retained externally. Owned tabs are closed and
+the viewport override is reset. The existing native timing, physical/IME/
+assistive, nested-canvas and visual-quality gates remain open. No task moves to
+DONE and no completion credit is assigned.
+
+## Earlier checkpoint — Uniform Tool Canvas operation cards — 2026-10-27
 
 Previous goal turn: PROGRESS;8e32318 is pushed and remote-verified. Batch35 stays
 on canvas-workspace02's observed mixed-card Fit failure. Generated operation

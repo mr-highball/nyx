@@ -2869,7 +2869,6 @@ end;
 procedure TNyxStudio.AgentRefresh(AContentChanged: Boolean);
 var
   LState: TNyxStudioAgentView;
-  LActivity: TNyxDataValue;
   LCompiledURL: TNyxText;
 begin
 
@@ -2914,12 +2913,10 @@ begin
     FStatus := 'Shared design updated · revision ' + IntToStr(LState.Revision);
   end;
 
-  if LState.Activity.Count > 0 then
-  begin
-    LActivity := LState.Activity.Item(LState.Activity.Count - 1);
-    FStatus := LActivity.Field('actor').AsText + ' · ' +
-      LActivity.Field('operation').AsText + ' · ' + LActivity.Field('outcome').AsText;
-  end;
+  { Read-only agent traffic belongs in the existing Agents activity view.
+    Replaying its last receipt here would erase a pending command or actionable
+    source rejection on every observing poll. Actual shared content changes and
+    conflicts still publish their own status below/above. }
 
   if LState.Conflict then
   begin
