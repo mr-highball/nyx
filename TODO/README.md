@@ -39,6 +39,18 @@ service; retain browser, resources, host breadth and quality gates in WORK.md.
 Use the Pascal client as the primary semantic
 path; preserve original host/parity/delivery criteria and the browser-route gate.
 
+[Client project import03](DONE/NS-4_agent-workflows_03.md) is accepted. One
+connection now retains upload/review tickets through literal matching Apply;
+actual grouped authoring, exact history, Unicode filenames and unrelated-project
+preservation pass. Return the same Workshop through ordinary Studio/runtime.
+This adds no server tool or credit to the original agent-workflows owner.
+
+[HTTP output hosts](NS-4_http-output-hosts_01.md) owns the next concrete runtime
+gap: generated application entries configure file hosts but no HTTP resolver.
+Expose the existing transport through typed local Outputs configuration before
+claiming the Studio-built network Workshop can execute. Keep all original
+compiler/runtime, browser, quality and parity acceptance requirements.
+
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON
 Workshop is now a useful integrated tool, not full Tool Canvas acceptance.

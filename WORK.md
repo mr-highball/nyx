@@ -9,6 +9,118 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Current Studio payload and semantic URL graph — 2026-10-27
+
+Previous goal turn: PROGRESS;110adfe is pushed and remote-verified. Root remains
+SOLO. Batch twenty-five returns the qualified network-input work to the running
+Studio/MCP service under logic-components01 and agent-workflows01. The seven-file
+payload is now active; LAN/MCP owner64688 runs the repaired server. Preserve
+both existing user sessions, accepted pairs, history/drafts, output configuration
+and unrelated client settings while switching that verified owner. Existing
+authorization to replace the owned LAN process and refresh enrollment persists.
+
+Then inspect the actual optional URL port and compose an independent useful
+network tool with revision-aware grouped semantic operations. Preserve exact
+Undo/Redo and export its accepted pair; use the existing backend for both target
+builds and carry the same project into ordinary Studio/runtime qualification.
+Connection/source tests alone do not accept the original observing, physical,
+visual, assistive, performance or parity requirements. Keep the earlier browser
+security refusal intact. All new evidence, backup, private runners and child
+TEMP/TMP use external storage. No helper, recurring cleanup or substitute browser
+route is introduced. Current preflight sees two existing sessions, no primary
+build and no server child compiler; inspect the second session before switching.
+
+The second project is also idle. Both accepted pairs are captured in bounded
+windows. Root's first export runner incorrectly expected null after the final
+window; the actual API returns nextOffset=total. The read-only loop repeated that
+empty window until its exact owned process48772 was identified, stopped and
+joined. The corrected runner enforces forward progress and completes both pairs;
+no document mutation was requested by the failed reader.
+
+The firewall is program-path scoped. Preserve the old2C75601D binary as
+prior-server-pristine.exe before replacing that approved executable slot with
+the qualified9829CAEE build. This avoids another administrative firewall change
+while retaining the actual prior artifact. Its original qualification path is
+now the active deployment slot; do not mistake it for the archived old binary.
+New service28996/launcher1356 owns LAN8088 and loopback8089. All690 durable files
+have independently verified external copies and unchanged original hashes after
+activation. Both accepted pairs and revision/navigation/draft/Undo flags match.
+Only managed MCP credentials refreshed; unrelated project/global client bytes
+match, and both new managed entries agree. The private web-root hint now points
+to the qualified payload. All four served JavaScript/runtime files match staged
+hashes. No browser interaction or physical phone check follows from those reads.
+
+An independent JSON Workshop workspace is created without retargeting either
+existing project. Discovery identifies the client prerequisite in
+agent-workflows03: one-shot CLI calls disconnect, while imports correctly retain
+upload/review tickets only for their owner. Implement the explicit one-connection
+native import command, then resume this same semantic graph workflow. No server
+authority/lifetime relaxation or alternate browser route is introduced.
+
+The maintained client now has import-project with an explicit workspace,
+revision, local file and final operation identity. It validates bounded UTF-8,
+tracks scalar offsets independently from byte positions and keeps one actual
+connection through literal review/Apply. Its first run expected staging context
+at the response root; real protocol places it inside projectImport. The repair
+preserves the first failure and retains compact final/error envelopes.
+mcp-project-import-02 builds through the maintained target, passes22 existing
+configuration checks and imports the exact65893-byte Workshop at revision2.
+Stale, malformed UTF-8/JSON, empty and oversized inputs return the expected
+semantic/local refusal codes without another accepted change.
+
+The actual current service exposes the optional Text URL port through a one-row
+semantic query. One three-operation transaction changes HTTP deadline to12seconds,
+the URL placeholder and an English heading with a supplementary moon symbol.
+One Undo restores the original41FF2BE3 pair; Redo restores the entire group.
+A subsequent one-connection import preserves its exact65905-byte pair
+(SHA256AA8B1E15 prefix), with65899 Unicode scalars. The independent workspace is
+revision7; no compiler admission or browser execution is claimed. Keep this
+same accepted pair for the ordinary Studio/runtime return.
+
+Source review finds a required end-to-end gap before that application can be
+claimed: generated entry points configure file hosts but never ConfigureLogic,
+and the output profile has no HTTP choice. http-output-hosts01 owns the typed
+local setting, target setup and actual generated-runtime checks. Do not substitute
+another successful compiler job or manual test-only host injection for that
+functional integration. Finish client protocol qualification/preservation, then
+follow this prerequisite before returning to the same Workshop.
+
+The additional real ticket-retirement consumer exposed a dispatch defect:
+review-import advertises optional admission defaulting to literal, but the
+compiler-path classifier reads that absent member unconditionally. The failed
+protocol receipts say “Data member is missing: admission”; both candidate files
+were refused before publication, with clean client heaps. Add the presence check
+so only explicit compiler admission selects execution. The maintained opt-in
+nyx_mcp_import_retirement consumer now covers real slot pressure/release, omitted
+versus explicit literal review, invalid admission, ticket retirement, exact pair
+preservation and unchanged retained compiler jobs without starting another host.
+Its existing isolated destructive/browser predecessor retains its original
+runtime marker and guard. All mcp-default-import-01 readers are joined. Both
+Studio payloads build with zero owned warnings; the installed Classes warnings
+remain external. The repaired server is active in the existing firewall-approved
+slot. All three sessions recover,690 durable files remain exact and the two
+original accepted pairs and unrelated client settings are unchanged. Nineteen
+actual protocol checks now pass, including omitted/default admission, upload
+slot release, ready-ticket retirement and unchanged retained compiler jobs.
+
+Windows filename checks then found an ANSI command-line/file-open loss. The
+client now copies Unicode argv through the native wide API and reads bounded
+files through an owned wide-path handle. mcp-unicode-input-01 passes the maintained
+build and22 configuration checks. Actual import and JSON-argument filenames with
+a supplementary moon work; invalid UTF-8 reaches the intended rejection. The
+same65905-byte/65899-scalar pair remains exact at revision7 after a no-op import.
+Stale, empty, oversized and malformed JSON refusals retain their exit semantics.
+Explicit registration, initialized discovery and ordinary call remain qualified.
+Only Unicode input filenames are qualified; non-ASCII enrollment/repository
+roots remain an existing separate RTL/configuration boundary.
+
+Agent-workflows03 is accepted for its unchanged scoped criteria, with exact
+export/Undo/Redo, failure and preservation receipts in mcp-project-import-02,
+mcp-default-import-activation-01 and mcp-unicode-input-01. No original parent
+criterion or completion credit closes. The next action is http-output-hosts01:
+ordinary Studio-generated applications must acquire selected HTTP services
+before the same semantic Workshop can be claimed as an executing network tool.
+
 ## Current checkpoint — Network input for useful Tool Canvas tools — 2026-10-27
 
 Previous goal turn: NO PROGRESS; it restated the already completed on-demand

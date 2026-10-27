@@ -1622,8 +1622,11 @@ begin
       ((AArguments.Field('mode').AsText = 'edit-unit') or
         (AArguments.Field('mode').AsText = 'edit-files') or
         (AArguments.Field('mode').AsText = 'edit-routines'));
+    { Omission selects the advertised literal default. Only an explicit compiler
+      choice enters constructor execution; do not read an absent optional field. }
     LImports := (ATool = 'nyx_project') and
       (AArguments.Field('mode').AsText = 'review-import') and
+      NyxAgentHas(AArguments, 'admission') and
       (AArguments.Field('admission').AsText = 'compiler');
     LDataDomain := ntdDesign;
 

@@ -439,6 +439,47 @@ semantic operations exit with status 2. No design is claimed, loaded, replaced
 or mutated implicitly. Mutations use the same revision/operation identity rules
 below. Timed-out mutations are never retried automatically.
 
+For a complete portable project, use the explicit import command:
+
+```text
+nyx_studio_mcp import-project <nyx-repository> <workspace> <revision> <project-file> <operation-id>
+```
+
+It retains one initialized connection through upload, literal matching review and
+Apply, then closes it. The named workspace is required; the command never selects
+the primary project implicitly. Apply replaces that workspace through ordinary
+paired history and preserves the server's revision/draft checks. Upload and review
+tickets expire on disconnect, so separate `call` invocations cannot reproduce
+this sequence. The local filename is read only by the client and is not sent as
+a server filesystem path.
+
+On Windows the client reads Unicode command-line arguments and opens the exact
+wide filename, including supplementary characters. This covers project and JSON
+argument files; it does not qualify non-ASCII repository/enrollment paths through
+the separate configuration-file APIs. No process-wide codepage is changed.
+
+Input must contain 1..4194304 UTF-8 bytes. Chunks contain at most 4096 Unicode
+scalars; scalar offsets and byte counts are tracked separately, preserving
+supplementary text and original bytes. Literal matching admission executes no
+uploaded Pascal and never switches to compiler admission when matching fails.
+Exit `0` reports successful application, exit `2` retains a structured semantic refusal,
+and exit `1` reports an argument, file or transport failure. After an ambiguous
+timeout, inspect the named workspace/revision and accepted pair before deciding
+what to do next; the command does not retry publication automatically.
+
+The same build stages an opt-in native protocol check:
+
+```text
+nyx_mcp_import_retirement <nyx-repository> <workspace> <revision> <literal-project-file>
+```
+
+It temporarily reserves the named project's eight upload slots, verifies refusal
+and disconnect cleanup, compares default/explicit literal review, then retires
+the ready ticket. It publishes no project, starts no server or compiler, and
+checks the exact accepted pair and retained compiler-job set afterward. Use an
+explicit test workspace that is idle; ordinary `mcp-client` builds only compile
+this program. Browser observation and application execution are separate checks.
+
 Other MCP clients can use the URL and Authorization header from that same local
 configuration. No Node process, package manager or JavaScript service is needed.
 The backend, model, tool implementation, browser controller and preview program

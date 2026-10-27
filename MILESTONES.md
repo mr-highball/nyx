@@ -8,8 +8,10 @@ from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-wo
 table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a
 useful connected Tool Canvas. Native table and Studio journeys now have bounded
 checkpoints; their browser/input and full original acceptance stay open. The
-next active outcome is DataToolbar Search/Sort/Clear, first following its existing
-coordinator/parity/renderer prerequisites. Saved live-inspection recovery defaults
+next active outcome is the connected Tool Canvas: native DataToolbar and JSON
+Workshop checkpoints now return through semantic authoring. The discovered
+[HTTP output-host prerequisite](TODO/NS-4_http-output-hosts_01.md) must wire
+ordinary generated applications before claiming network execution. Saved live-inspection recovery defaults
 are a checkpoint; its remaining scale/parity work is parked with an explicit
 return path. The resolver remains deferred. Existing scope, prerequisites,
 original acceptance criteria and pending completion assessments are unchanged.

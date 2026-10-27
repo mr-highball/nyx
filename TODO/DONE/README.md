@@ -3,6 +3,13 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Native MCP project import](NS-4_agent-workflows_03.md) was accepted on2026-10-27.
+One initialized connection retains bounded literal matching upload/review/Apply.
+Nineteen actual lifecycle checks,22 configuration checks, exact grouped
+Undo/Redo and supplementary-text/filename import pass, preserving unrelated
+projects and settings. Browser/application execution and original parent
+acceptance remain open; no extra completion credit is assigned.
+
 [Kanban query-policy preservation](NS-3_control-usefulness_05.md) was accepted
 on 2026-10-25. Explicit column/table declarations survive lane reconfiguration,
 Disable and Inherit; absent defaults stay absent. Native editor/candidate checks

@@ -3255,6 +3255,8 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     # Native Pascal configuration/client tooling needs neither an application
     # output compiler nor a browser. No live document mutation is implicit.
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tools/nyx_studio_mcp.lpr'))
+    # Opt-in scoped protocol regression publishes no project and starts no host.
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_import_retirement.lpr'))
     # Compile the opt-in real transport journey. It accepts an existing MCP
     # configuration, owns a temporary review and preserves the primary project;
     # building this target never connects or starts a Studio service.
