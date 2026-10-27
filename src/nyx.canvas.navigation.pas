@@ -171,7 +171,7 @@ function NyxCanvasNavigationItem(const ABounds: TNyxCanvasBounds;
   AScaling: TNyxCanvasControlScaling; AIndependent: Boolean): TNyxCanvasNavigationItem;
 begin
 
-  if not ABounds.Defined or not (AScaling in [nccsReflow, nccsLogicalSize]) then
+  if not ABounds.Defined or not (AScaling in [nccsReflow, nccsLogicalSize, nccsUniform]) then
   begin
     raise ENyxCanvasGeometry.Create('Navigation requires admitted bounds and scaling policy');
   end;
@@ -311,7 +311,7 @@ begin
   LY := (AItem.Bounds.Top - ACamera.WorldCenter.Y) * ACamera.Zoom + ACamera.ViewportHeight / 2;
   LScale := 1;
 
-  if AItem.Scaling = nccsReflow then
+  if AItem.Scaling in [nccsReflow, nccsUniform] then
   begin
     LScale := ACamera.Zoom;
   end;
@@ -361,7 +361,7 @@ var
     begin
       LScale := 1;
 
-      if AItems[LItem].Scaling = nccsReflow then
+      if AItems[LItem].Scaling in [nccsReflow, nccsUniform] then
       begin
         LScale := AZoom;
       end;
@@ -393,7 +393,7 @@ var
       end;
       LFirstScale := 1;
 
-      if AItems[LFirst].Scaling = nccsReflow then
+      if AItems[LFirst].Scaling in [nccsReflow, nccsUniform] then
       begin
         LFirstScale := AZoom;
       end;
@@ -408,7 +408,7 @@ var
         end;
         LSecondScale := 1;
 
-        if AItems[LSecond].Scaling = nccsReflow then
+        if AItems[LSecond].Scaling in [nccsReflow, nccsUniform] then
         begin
           LSecondScale := AZoom;
         end;
@@ -577,7 +577,7 @@ begin
   LAnchor := ACamera.WorldToViewport(NyxCanvasPoint(AItem.Bounds.Left, AItem.Bounds.Top));
   LScale := 1;
 
-  if AItem.Scaling = nccsReflow then
+  if AItem.Scaling in [nccsReflow, nccsUniform] then
   begin
     LScale := ACamera.Zoom;
   end;

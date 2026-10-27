@@ -2044,6 +2044,7 @@ begin
   RegisterEnum(vkSplitOrientation, Ord(nsoStacked), 'nsoStacked');
   RegisterEnum(vkCanvasScaling, Ord(nccsReflow), 'nccsReflow');
   RegisterEnum(vkCanvasScaling, Ord(nccsLogicalSize), 'nccsLogicalSize');
+  RegisterEnum(vkCanvasScaling, Ord(nccsUniform), 'nccsUniform');
   RegisterEnum(vkCanvasGridStyle, Ord(ncgsNone), 'ncgsNone');
   RegisterEnum(vkCanvasGridStyle, Ord(ncgsDots), 'ncgsDots');
   RegisterEnum(vkCanvasGridStyle, Ord(ncgsLines), 'ncgsLines');

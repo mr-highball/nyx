@@ -43,6 +43,7 @@ const
     The defining type now lives in the document-independent declaration layer. }
   nccsReflow = nyx.canvas.types.nccsReflow;
   nccsLogicalSize = nyx.canvas.types.nccsLogicalSize;
+  nccsUniform = nyx.canvas.types.nccsUniform;
   { Live native child windows have finite extents. Both adapters refuse visible
     allocations above this shared budget before changing camera or controls.
     Off-screen world coordinates remain unbounded within geometry limits. }
@@ -81,14 +82,20 @@ type
 
   { Admitted logical-pixel placement. Invisible frames carry zero allocation;
     callers retain mounted controls but do not convert huge off-screen positions
-    into widget integers. Reflow scales live allocation, never an affine image or
-    font; LogicalSize keeps allocation fixed while position follows the camera. }
+    into widget integers. Layout extents are the renderer's stable logical frame;
+    ContentScale maps that layout into the physical allocation. Reflow and
+    LogicalSize retain unit content scale; Uniform retains world layout. Both
+    the visible physical allocation and uniform logical layout admit the shared
+    extent budget before any target control changes. }
   TNyxCanvasControlFrame = record
     Visible: Boolean;
     Left: Integer;
     Top: Integer;
     Width: Integer;
     Height: Integer;
+    LayoutWidth: Integer;
+    LayoutHeight: Integer;
+    ContentScale: Double;
   end;
 
   { Public Nyx composition, with ordinary Panel/Row/Button parts. Scene ownership
@@ -665,7 +672,7 @@ function TNyxCanvasWorkspace.WithScaling(
   AScaling: TNyxCanvasControlScaling): INyxCanvasWorkspace;
 begin
 
-  if not (AScaling in [nccsReflow, nccsLogicalSize]) then
+  if not (AScaling in [nccsReflow, nccsLogicalSize, nccsUniform]) then
   begin
     raise ENyxCanvasScene.Create('Unknown embedded control scaling');
   end;
@@ -684,7 +691,7 @@ var
 begin
 
   if not ACamera.Defined or not ABounds.Defined or
-    not (AScaling in [nccsReflow, nccsLogicalSize]) then
+    not (AScaling in [nccsReflow, nccsLogicalSize, nccsUniform]) then
   begin
     raise ENyxCanvasScene.Create('Live allocation requires camera, bounds and typed scaling');
   end;
@@ -703,7 +710,7 @@ begin
   LWidth := ABounds.Width;
   LHeight := ABounds.Height;
 
-  if AScaling = nccsReflow then
+  if AScaling in [nccsReflow, nccsUniform] then
   begin
     LWidth := LWidth * ACamera.Zoom;
     LHeight := LHeight * ACamera.Zoom;
@@ -721,11 +728,28 @@ begin
   begin
     raise ENyxCanvasScene.Create('Visible live control allocation exceeds the shared extent budget');
   end;
+
+  if (AScaling = nccsUniform) and
+    ((ABounds.Width > MaximumNyxCanvasControlExtent) or
+    (ABounds.Height > MaximumNyxCanvasControlExtent)) then
+  begin
+    raise ENyxCanvasScene.Create('Uniform live layout exceeds the shared extent budget');
+  end;
   Result.Visible := True;
   Result.Left := Floor(LLeft + 0.5);
   Result.Top := Floor(LTop + 0.5);
   Result.Width := Max(1, Floor(LWidth + 0.5));
   Result.Height := Max(1, Floor(LHeight + 0.5));
+  Result.LayoutWidth := Result.Width;
+  Result.LayoutHeight := Result.Height;
+  Result.ContentScale := 1;
+
+  if AScaling = nccsUniform then
+  begin
+    Result.LayoutWidth := Max(1, Floor(ABounds.Width + 0.5));
+    Result.LayoutHeight := Max(1, Floor(ABounds.Height + 0.5));
+    Result.ContentScale := ACamera.Zoom;
+  end;
 end;
 
 function FitNyxCanvasScene(const ACamera: TNyxCanvasCamera;
@@ -775,7 +799,7 @@ var
 begin
 
   if not ACamera.Defined or (ASnapshot = nil) or
-    not (AScaling in [nccsReflow, nccsLogicalSize]) then
+    not (AScaling in [nccsReflow, nccsLogicalSize, nccsUniform]) then
   begin
     raise ENyxCanvasScene.Create('Fit requires a camera and scene snapshot');
   end;

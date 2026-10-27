@@ -61,6 +61,14 @@ host clips its977-pixel reflowed child. Preserve existing scaling semantics and
 implement uniform live zoom in the library/adapters, then return to the ranked
 workflows' remaining browser journeys. This adds no original completion credit.
 
+Its first implementation checkpoint now passes the shared30 and existing54/36
+native contract/history/navigation checks, plus23/23 browser live-control checks
+and direct editing/binding/click interaction. The native uniform transform still
+refuses explicitly and remains the next implementation step. Ordinary Studio
+selection and the complete same-pair Workshop journey remain required. Keep this
+work on the existing owner; do not treat browser-only support as parity or start
+another browser/source fixture sequence.
+
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON
 Workshop is now a useful integrated tool, not full Tool Canvas acceptance.

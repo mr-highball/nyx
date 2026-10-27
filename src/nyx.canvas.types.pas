@@ -104,8 +104,10 @@ type
     PaintOrder: Integer;
   end;
 
-  { Closed allocation policy shared by saved definitions and both adapters. }
-  TNyxCanvasControlScaling = (nccsReflow, nccsLogicalSize);
+  { Closed live-control transform policy. Reflow changes allocation without
+    scaling typography; LogicalSize keeps its allocation. Uniform retains world
+    layout and scales its live presentation. Existing ordinals remain stable. }
+  TNyxCanvasControlScaling = (nccsReflow, nccsLogicalSize, nccsUniform);
 
   { A saved canvas identity is distinct from an item, layer or UI control. }
   TNyxCanvasRef = record

@@ -477,6 +477,10 @@ begin
       begin
         Result := 'logical-size';
       end;
+    Ord(nccsUniform):
+      begin
+        Result := 'uniform';
+      end;
   else
     raise ENyxCanvasScene.Create('Unknown canvas live control scaling');
   end;
@@ -808,6 +812,19 @@ begin
     LFields[High(LFields)] := NyxField('precision', FPrecision.ToData);
     Result := NyxObject(LFields);
   end;
+
+  if FScaling = nccsUniform then
+  begin
+    { A new closed choice requires a new descriptor version. Older documents
+      retain their exact bytes, including their precision/boundary variants. }
+    SetLength(LFields, Result.Count);
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[0] := NyxField('version', NyxData(6));
+    Result := NyxObject(LFields);
+  end;
 end;
 
 function NyxCanvasDefinitionFromData(const AValue: TNyxDataValue): INyxCanvasDefinition;
@@ -848,6 +865,19 @@ begin
   end;
   LVersion := AValue.Field('version').AsInteger;
   LHasPrecision := LVersion = 5;
+
+  if LVersion = 6 then
+  begin
+
+    if not (AValue.Count in [6, 7, 8, 9]) then
+    begin
+      raise ENyxCanvasScene.Create('Uniform canvas requires its exact bounded structure');
+    end;
+    for LIndex := 0 to AValue.Count - 1 do
+    begin
+      LHasPrecision := LHasPrecision or (AValue.Key(LIndex) = 'precision');
+    end;
+  end;
   LStructure := AValue;
 
   if LHasPrecision then
@@ -896,7 +926,7 @@ begin
   end;
   LVersion := AValue.Field('version').AsInteger;
 
-  if not (LVersion in [1, 2, 3, 4, 5]) or
+  if not (LVersion in [1, 2, 3, 4, 5, 6]) or
     ((LVersion < 4) and ((LHasConnections <> (LVersion >= 2)) or
       (LHasGraphNodes <> (LVersion = 3)))) then
   begin
@@ -904,7 +934,7 @@ begin
   end;
   LCamera := AValue.Field('camera');
   LCameraValue := NyxCanvasCameraFromData(LCamera,
-    (LVersion = 4) or ((LVersion = 5) and (LCamera.Count = 8)));
+    (LVersion = 4) or ((LVersion in [5, 6]) and (LCamera.Count = 8)));
   LGrid := AValue.Field('grid');
   ExactFields(LGrid, ['style', 'snap', 'spacing', 'originX', 'originY']);
   LText := LGrid.Field('style').AsText;
@@ -940,9 +970,18 @@ begin
   begin
     LScaling := nccsLogicalSize;
   end
+  else if LText = 'uniform' then
+  begin
+    LScaling := nccsUniform;
+  end
   else if LText <> 'reflow' then
   begin
     raise ENyxCanvasScene.Create('Unknown saved live control scaling');
+  end;
+
+  if (LVersion = 6) <> (LScaling = nccsUniform) then
+  begin
+    raise ENyxCanvasScene.Create('Uniform live scaling requires descriptor version six');
   end;
   Result := NewNyxCanvasDefinition
     .WithCamera(LCameraValue)

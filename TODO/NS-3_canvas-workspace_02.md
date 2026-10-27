@@ -57,3 +57,22 @@ the shared library/adapters rather than special-casing the example or Studio.
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
 - No missing external input prevents implementation. Existing canvas ownership,
   source/history, navigation and target renderer contracts are editable sources.
+
+## Partial implementation checkpoint — 2026-10-27
+
+The opt-in typed choice, shared logical/physical frame, navigation, descriptor6,
+crafted generation/literal replay and current-source semantic shapes exist.
+Browser transforms preserve a live logical subtree and pass23/23 actual control
+checks at desktop/compact widths, plus direct typing/binding/button interaction.
+The old Fit passes with more vertical space and fails at the original review
+height; both observations are retained. Native contracts pass30, with54 existing
+document/history and36 navigation checks and clean heaps. WORK.md owns snapshots,
+failed first attempts and final executed evidence.
+
+Native uniform projection remains implementation work: its explicit pre-mount
+refusal is not a fallback acceptance or parity result. The native consumer must
+pass after real absolute projection is implemented. Ordinary Studio selection,
+the same saved/generated Workshop, input-coordinate/IME/assistive quality and
+remaining original criteria also stay open. The LAN service/example defaults are
+unchanged. Stop browser/source-only variants and implement the native path next;
+this task remains unaccepted with no duplicate completion credit.

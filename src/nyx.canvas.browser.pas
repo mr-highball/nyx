@@ -91,12 +91,15 @@ uses
 type
   { One owned browser item presentation. The scene content is retained, while
     this mount owns its copied context, renderer and behavior attachment. The
-    borrowed host DOM is removed only after behavior authority is revoked. }
+    borrowed host DOM is removed only after behavior authority is revoked.
+    Uniform scaling adds an owned logical layout host inside the clipped face;
+    the renderer and its live inputs are retained across camera changes. }
   TCanvasItemMount = class
   public
     Reference: TNyxCanvasItemRef;
     Content: INyxNode;
     Host: TJSHTMLElement;
+    LayoutHost: TJSHTMLElement;
     Document: TNyxDocument;
     Renderer: TNyxBrowserRenderer;
     Behavior: INyxViewBehavior;
@@ -347,6 +350,24 @@ begin
   AHost.style.setProperty('height', IntToStr(AFrame.Height) + 'px');
 end;
 
+procedure SetLayoutFrame(AMount: TCanvasItemMount;
+  const AFrame: TNyxCanvasControlFrame);
+var
+  LFormat: TFormatSettings;
+begin
+
+  if AMount.LayoutHost = AMount.Host then
+  begin
+    Exit;
+  end;
+  LFormat := FormatSettings;
+  LFormat.DecimalSeparator := '.';
+  AMount.LayoutHost.style.setProperty('width', IntToStr(AFrame.LayoutWidth) + 'px');
+  AMount.LayoutHost.style.setProperty('height', IntToStr(AFrame.LayoutHeight) + 'px');
+  AMount.LayoutHost.style.setProperty('transform',
+    'scale(' + FloatToStr(AFrame.ContentScale, LFormat) + ')');
+end;
+
 destructor TCanvasItemMount.Destroy;
 begin
 
@@ -582,6 +603,18 @@ begin
       would make the normal renderer measure a zero-width host. }
     Result.Host.style.setProperty('visibility', 'hidden');
     SetFrame(Result.Host, AFrame);
+    Result.LayoutHost := Result.Host;
+
+    if FScaling = nccsUniform then
+    begin
+      Result.LayoutHost := TJSHTMLElement(document.createElement('div'));
+      Result.LayoutHost.style.setProperty('position', 'absolute');
+      Result.LayoutHost.style.setProperty('left', '0px');
+      Result.LayoutHost.style.setProperty('top', '0px');
+      Result.LayoutHost.style.setProperty('transform-origin', '0 0');
+      Result.Host.appendChild(Result.LayoutHost);
+      SetLayoutFrame(Result, AFrame);
+    end;
     FSurface.appendChild(Result.Host);
     Result.Renderer := TNyxBrowserRenderer.Create(FTheme);
 
@@ -622,7 +655,7 @@ begin
     end;
     { This local input grant never changes the application-behavior gate above.
       Other source content retains its normal design-preview renderer policy. }
-    Result.Renderer.Render(Result.Document, LRoot, Result.Host, LDesignMode, FState);
+    Result.Renderer.Render(Result.Document, LRoot, Result.LayoutHost, LDesignMode, FState);
     Result.Renderer.Root.AttachEnabledPolicy(FGate.EnabledPolicy);
     Result.Renderer.Root.AttachReadOnlyPolicy(FGate.ReadOnlyPolicy);
     Result.Renderer.Sync;
@@ -878,6 +911,7 @@ begin
         if LFrames[LIndex].Visible then
         begin
           SetFrame(LMounts[LIndex].Host, LFrames[LIndex]);
+          SetLayoutFrame(LMounts[LIndex], LFrames[LIndex]);
 
           if not FConnected then
           begin

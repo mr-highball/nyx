@@ -356,6 +356,29 @@ They are not arbitrary affine or typography scaling. A visible control exceeding
 32,768 logical pixels on either axis refuses before camera or mount changes;
 huge off-screen coordinates cull before integer allocation.
 
+The new opt-in `nccsUniform` policy keeps a stable world layout and scales its
+live presentation, including text, instead of making the layout reflow at each
+zoom. `TNyxCanvasControlFrame` distinguishes physical bounds from `LayoutWidth`,
+`LayoutHeight` and `ContentScale`. Both visible allocations admit the same extent
+budget; a small zoom cannot authorize an arbitrarily large logical layout.
+Browser item renderers use an independent logical host and a CSS transform,
+retaining their actual inputs and normal binding/events across camera changes.
+
+Uniform scaling is still being implemented on LCL. Current native mounting
+refuses that choice explicitly before mounting; it does not silently substitute
+reflow. This is an unfinished capability, not target parity. Existing policies
+and standalone example defaults remain unchanged. Follow
+[workspace02](../TODO/NS-3_canvas-workspace_02.md) for native projection, ordinary
+Studio selection and the complete saved/generated consumer's remaining checks.
+
+Only uniform definitions emit descriptor version6. Its camera may be bounded or
+unbounded and precision remains optional. Switching back to an existing policy
+restores its applicable older encoding. Crafted Pascal emits
+`.WithScaling(nccsUniform)` through the existing fluent contract. Current-source
+semantic scene operations describe version6 as well; this does not update an
+already running Studio server. WORK.md distinguishes compilation, actual browser
+controls, native refusal and observing deployment.
+
 The view supplies typed pan/anchored zoom/fit/home operations. Ordinary Nyx
 buttons provide non-gesture navigation. The background supports keyboard, wheel
 and captured pointer pan; browser contacts additionally support anchored pinch

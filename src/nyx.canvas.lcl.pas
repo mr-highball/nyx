@@ -433,6 +433,13 @@ begin
   begin
     raise ENyxCanvasScene.Create('Native workspace mount requires workspace, document and host');
   end;
+
+  if AWorkspace.Scaling = nccsUniform then
+  begin
+    { Refuse before mounting rather than silently rendering a new transform as
+      legacy reflow. Native absolute live projection is still being implemented. }
+    raise ENyxCanvasScene.Create('Uniform native control projection is not implemented yet');
+  end;
   FWorkspace := AWorkspace;
   FParentContext := AContext;
   FResolver := AResolver;

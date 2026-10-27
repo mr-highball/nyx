@@ -3598,6 +3598,9 @@ var
   LPrecisionDefinition: TNyxDataValue;
   LPrecisionConnections: TNyxDataValue;
   LPrecisionLayout: TNyxDataValue;
+  LUniformDefinition: TNyxDataValue;
+  LUniformConnections: TNyxDataValue;
+  LUniformLayout: TNyxDataValue;
   LGraphNode: TNyxDataValue;
   LConnection: TNyxDataValue;
   LChanges: TNyxDataValue;
@@ -3751,10 +3754,34 @@ begin
     NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections)),
     NyxField('graphNodes', Items(LGraphNode, MaximumNyxCanvasGraphNodes))],
     ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'precision', 'connections', 'graphNodes']);
+  { Uniform has its own version. Optional precision retains the same bounded
+    shape, and graph placement still requires an explicit connections array. }
+  LUniformDefinition := Closed([NyxField('version', IntSchema(6, 6)),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['uniform'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)), NyxField('precision', LPrecision)],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items']);
+  LUniformConnections := Closed([NyxField('version', IntSchema(6, 6)),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['uniform'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)), NyxField('precision', LPrecision),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections']);
+  LUniformLayout := Closed([NyxField('version', IntSchema(6, 6)),
+    NyxField('camera', LCamera), NyxField('grid', LGrid),
+    NyxField('scaling', Choice(['uniform'])),
+    NyxField('layers', Items(LLayer, MaximumNyxCanvasLayers)),
+    NyxField('items', Items(LItem, MaximumNyxCanvasItems)), NyxField('precision', LPrecision),
+    NyxField('connections', Items(LConnection, MaximumNyxCanvasConnections)),
+    NyxField('graphNodes', Items(LGraphNode, MaximumNyxCanvasGraphNodes))],
+    ['version', 'camera', 'grid', 'scaling', 'layers', 'items', 'connections', 'graphNodes']);
   LDefinition := NyxObject([NyxField('oneOf', NyxArray([
     LDefinition, LConnectedDefinition, LLayoutDefinition,
     LBoundedDefinition, LBoundedConnections, LBoundedLayout,
-    LPrecisionDefinition, LPrecisionConnections, LPrecisionLayout]))]);
+    LPrecisionDefinition, LPrecisionConnections, LPrecisionLayout,
+    LUniformDefinition, LUniformConnections, LUniformLayout]))]);
   LChanges := NyxObject([NyxField('type', NyxData('array')), NyxField('items', LConnection),
     NyxField('minItems', NyxData(1)), NyxField('maxItems', NyxData(MaximumNyxCanvasConnectionEdits))]);
   Result := NyxObject([NyxField('oneOf', NyxArray([

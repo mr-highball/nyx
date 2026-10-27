@@ -9,7 +9,73 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Browser runtime integration — 2026-10-27
+## Current checkpoint — Live canvas scaling — 2026-10-27
+
+Previous goal turn: PROGRESS; c83f612 is pushed and remote-verified. Actual
+browser execution removes the inherited access diagnosis and exposes the fitted
+Workshop clipping case. Batch29 follows canvas-workspace02 under the original
+canvas/Tool Canvas owners. Root remains SOLO. Deliver an opt-in uniform live
+transform, retaining the exact two existing scaling policies, and qualify the
+same composed controls through zoom/Fit and source persistence. The browser
+keeps a stable logical layout; native projection must use absolute logical
+measurements rather than repeated rounded relative resizing. Both-target input,
+focus/selection, actual bounds and ordinary Studio/source integration remain
+required; browser-only support cannot accept this task or establish parity.
+
+Use the retained failed-fit measurements as the differential case. Keep existing
+admission limits and source/refusal/retirement assertions. Stop for a concrete
+failed boundary, repair it and rerun that consumer; do not replace the complete
+outcome with an allocation-only or picture-based substitute. Preserve the
+installed LAN/MCP owner, three accepted projects and unrelated1280/390. Every
+new private artifact, script and child TEMP/TMP stays on external storage.
+
+Current partial result: nccsUniform appends to the stable enum. Shared frames
+carry a separately admitted logical allocation and content scale, with physical
+and logical extent limits checked before target changes. Navigation treats the
+new policy as a scaled world extent. Only the new choice emits descriptor6;
+versions1–5 and their exact encodings remain available. Bounded/unbounded camera,
+optional precision, typed generation/literal replay and current-source semantic
+descriptor shapes consume that choice. It is not deployed to the LAN service.
+
+The browser adds one private logical layout host and transforms its live
+subtree. Retained editors do not reflow at each zoom. canvas-uniform-01 retains30
+native contract checks,54 existing document/source/history and36 navigation
+checks, all with complete clean heaps. First new-test compiler errors concern
+missing test imports/result-field spelling; its first runtime fixture exceeded
+the original portable coordinate edge before culling. Corrected inputs retain
+those outcomes separately. Final contract checks pass after the logical-budget/
+descriptor-field-count preflight refinements. No admission budget is increased.
+
+The actual browser control consumer passes23/23 at1280x720/390x844 through
+repeated1/0.5/1.5 zoom, stable input identity, exact Unicode, focus/selection and
+ancestor-clip checks after Fit. Direct browser typing updates its second bound
+memo and a real click updates the result at both widths. The legacy policy
+passes its Fit at1280x900 but fails the same final-result check at1280x720;
+retain both outcomes rather than claiming that reflow always fails. Final
+browser-compile-05 is reloaded/re-executed at both widths. Only the seven
+installed Classes warnings remain; final consumer compilation has no owned
+warnings. Earlier callback-import/textarea-bridge compile failures are preserved.
+
+Native uniform projection is NOT implemented. Its current explicit pre-mount
+refusal is temporary, not an acceptable fallback or parity evidence. The same
+native control consumer compiles and fails at that guard, with a clean heap.
+Next implement absolute logical-to-native projection in the actual renderer/
+canvas adapter, including font/geometry baseline restoration, generation-safe
+retirement and input coordinates. Repeated relative ScaleBy/Font changes alone
+cannot establish retained-layout correctness. Pass this native consumer, then
+qualify ordinary Studio scaling selection and the same saved/generated Workshop
+through semantic paired operations. Do not add more browser/source-only variants
+or accept the task while that native/integration work remains. Existing public
+Workshop defaults and all three installed projects stay unchanged.
+
+All compiler/runtime readers are terminal. This run's one browser tab is closed,
+viewport reset and exact loopback host64432 stopped. Installed LAN/MCP39908
+remains. The packet retains759 source pins and final summaries. No helper,
+installed profile/enrollment change or storage cleanup occurs. This is partial
+implementation with executed browser evidence; no full original criterion,
+task, prerequisite acceptance or completion credit closes.
+
+## Earlier checkpoint — Browser runtime integration — 2026-10-27
 
 The preceding cleanup follow-up verified an already completed retirement; it
 added no product acceptance. Return to http-output-hosts01's same accepted MCP

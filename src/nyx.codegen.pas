@@ -1171,7 +1171,8 @@ const
     ('ncbUnbounded', 'ncbCenter', 'ncbViewport');
   CGridStyles: array[TNyxCanvasGridStyle] of TNyxText = ('ncgsNone', 'ncgsDots', 'ncgsLines');
   CSnapModes: array[TNyxCanvasSnapMode] of TNyxText = ('ncsmFree', 'ncsmGrid');
-  CScalingModes: array[TNyxCanvasControlScaling] of TNyxText = ('nccsReflow', 'nccsLogicalSize');
+  CScalingModes: array[TNyxCanvasControlScaling] of TNyxText =
+    ('nccsReflow', 'nccsLogicalSize', 'nccsUniform');
   CPrecisionAxes: array[TNyxCanvasAxis] of TNyxText = ('ncaxX', 'ncaxY');
   CGuideSnapping: array[TNyxCanvasGuideSnapping] of TNyxText =
     ('ncgspOff', 'ncgspVisible', 'ncgspAll');
