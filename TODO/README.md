@@ -45,11 +45,13 @@ actual grouped authoring, exact history, Unicode filenames and unrelated-project
 preservation pass. Return the same Workshop through ordinary Studio/runtime.
 This adds no server tool or credit to the original agent-workflows owner.
 
-[HTTP output hosts](NS-4_http-output-hosts_01.md) owns the next concrete runtime
-gap: generated application entries configure file hosts but no HTTP resolver.
-Expose the existing transport through typed local Outputs configuration before
-claiming the Studio-built network Workshop can execute. Keep all original
-compiler/runtime, browser, quality and parity acceptance requirements.
+[HTTP output hosts](NS-4_http-output-hosts_01.md) now delivers selected native
+HTTP execution and clean teardown through the same MCP Workshop, six actual
+application builds and both native widths. Ordinary Outputs persists version4
+profiles through the production writer. The current LAN payload preserves all
+three projects. Browser execution, direct input/quality and full parity remain
+open. Stop native HTTP/queue variants; assess the existing browser validation
+surface/site-access gate without bypassing the retained URL denial.
 
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON

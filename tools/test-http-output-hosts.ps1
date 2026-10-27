@@ -44,7 +44,7 @@ if (Test-Path -LiteralPath $nyxHTTPRoot) {
   throw 'HTTP output qualification requires fresh evidence; preserve prior runs.'
 }
 if (-not $IsWindows) {
-  throw 'The emitted native window-message consumer currently qualifies Windows only.'
+  throw 'The emitted-entry native control observer currently qualifies Windows only.'
 }
 if (-not (Test-Path -LiteralPath $nyxHTTPProject -PathType Leaf)) {
   throw 'Supply the accepted MCP Workshop export.'

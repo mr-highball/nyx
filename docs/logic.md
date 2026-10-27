@@ -396,9 +396,13 @@ native input and uses the real selected HTTP adapter. Direct window-message
 activation remains unaccepted. It separately compiles the browser controls.
 Successful compilation, native control input,
 browser execution, physical input and visual quality remain distinct evidence.
-Current qualification proves the HTTP response/control behavior at both native
-widths but retains a shutdown access violation and pending-scope heap evidence;
-the task remains open. The runner rejects nonzero exits and nonempty traced heaps.
+Current native qualification passes HTTP alone and with file services at both
+widths, including clean shutdown and unchanged accepted frames after invalid
+input. Event routers now retire their privately owned schedulers, resolving the
+earlier queued-work shutdown leak. Ordinary native Apply also reopens version4
+profile bytes through the production writer under controlled transport. The
+runner rejects nonzero exits and nonempty traced heaps. Browser execution and
+original input/quality/parity requirements remain open.
 
 `tools/test-file-open-runtime.ps1 -EvidenceDirectory <fresh directory>` checks
 configuration composition, strict profiles, ordinary native Studio controls,

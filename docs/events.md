@@ -193,6 +193,19 @@ avoid a callback retaining its own router/view. Explicit Close also releases
 registrations when an application itself owns a router. Renderer disposal calls
 Close automatically.
 
+When `NewNyxEvents` creates its default scheduler, that router owns the terminal
+scheduling boundary. `Close` shuts the private scheduler down even if queued work
+or a caller still holds an interface to it. Native queued work retires before
+`Close` returns, so a view can close without requiring another event-loop turn
+to break a scheduler/work reference cycle. Running worker cancellation keeps the
+existing nonblocking contract. `CancelPending` remains a reusable view-generation
+operation and leaves the scheduler open.
+
+An explicitly supplied `NewNyxEvents(LSharedScheduler)` retains a shared
+reference without taking terminal control. Closing that router cancels its own
+event scopes and registrations; unrelated work on the shared scheduler remains
+usable until its caller shuts it down.
+
 Guarded callback scopes retain independent parent and delivery readiness leases.
 Retiring a completed child leaves a caller's delivery and the router's canonical
 generation usable; closing the router instead makes retained readiness report

@@ -28,7 +28,8 @@ uses Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.studio.outputs,
   nyx.studio.projects, nyx.studio.menu, nyx.studio.workspaces
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, nyx.studio.lcl,
-    nyx.studio.agents, nyx.studio.exchange{$endif};
+    nyx.studio.agents, nyx.studio.exchange, nyx.studio.outputstore, nyx.files,
+    nyx.files.lcl{$endif};
 
 type
   { Controlled service outcomes are qualification data. They grant no compiler
@@ -46,8 +47,9 @@ type
   {$else}
   { Controlled private exchange owns one request and one timer callback. It
     borrows the independent real agent session and never delivers inside Post.
-    Only profile service I/O is substituted; ordinary agent admission is real.
-    This qualifies editor publication, not HTTP authentication or disk storage. }
+    Profile transport/delay is substituted; ordinary agent admission is real.
+    Successful saves use the production byte writer in a private file, then
+    reopen its exact Unicode data. This grants no installed-host/socket authority. }
   TOutputExchange = class(TNyxStudioEditorExchange)
   private
     FBody: TNyxDataValue;
@@ -153,7 +155,17 @@ begin
     begin
       LProfile := TNyxOutputConfiguration.Decode(GPosted);
       try
+        {$ifdef PAS2JS}
         GStored := LProfile.Encode;
+        {$else}
+        { Keep controlled delivery/delay, but use the production native byte
+          writer and reopen its real file. This qualifies persisted version4
+          input from ordinary Apply without claiming a real HTTP exchange. }
+        SaveNyxOutputProfile(TNyxText(ParamStr(1)) + TNyxText('.profile'), LProfile);
+        GStored := ReadNyxTextFile(TNyxText(ParamStr(1)) + TNyxText('.profile')).Text;
+        Check(GStored = LProfile.Encode,
+          'ordinary Apply reopens the exact production-written Unicode profile bytes');
+        {$endif}
         Inc(GSaves);
       finally
         LProfile.Free;
@@ -525,6 +537,18 @@ begin
   end;
 end;
 
+function StoredHTTP: Boolean;
+var
+  LProfile: TNyxOutputConfiguration;
+begin
+  LProfile := TNyxOutputConfiguration.Decode(GStored);
+  try
+    Result := LProfile.HTTP;
+  finally
+    LProfile.Free;
+  end;
+end;
+
 procedure Step;
 var
   LProfile: TNyxOutputConfiguration;
@@ -677,6 +701,7 @@ begin
         if GStage = 13 then
         begin
           Check(Value('output-file-opening') = 'true', 'malformed reload retains the independent local edit');
+          Check(Value('output-http') = 'true', 'malformed reload retains the newer HTTP edit');
           Click('action-save-outputs');
         end;
       end;
@@ -690,6 +715,7 @@ begin
       begin
         Check(GSaves = 3, 'failed reload retains dirty intent for the next Apply');
         Toggle('output-file-opening');
+        Toggle('output-http');
         GMode := rmMalformed;
         Click('action-reload-outputs');
       end;
@@ -697,6 +723,7 @@ begin
       begin
         Check(GSaves = 4, 'malformed reload also retains edits until successful Apply');
         Check(StoredOpening, 'the exact newer opening policy is persisted by explicit Apply');
+        Check(StoredHTTP, 'ordinary Apply persists the version4 HTTP choice after a refused reload');
         Click('output-browser');
       end;
     16:

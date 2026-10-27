@@ -9,6 +9,53 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Owned scheduler retirement — 2026-10-27
+
+Previous goal turn: PROGRESS; da1dff5 is pushed and remote-verified. Batch
+twenty-seven repairs the generated-app shutdown failure under http-output-hosts01
+and the existing scheduler owner. Root remains SOLO. The differential test fails
+against the old router on pending work that retains its private scheduler, with
+a clean failure heap. TNyxEvents now records default-scheduler ownership and
+shuts only that private instance down in Close's final cleanup. Caller-supplied
+shared schedulers remain open. Nonblocking worker behavior, public GUIDs and
+reusable view-only CancelPending remain unchanged.
+
+Native scheduler/registration checks pass93; actual bounded-worker and work-scope
+regressions pass118/53, all with complete clean heaps. The matching scheduler
+browser consumer compiles. Its first unquoted runtime-flag refusal is retained
+separately from the successful argument-array invocation. The complete maintained
+HTTP runner passes both ordinary Outputs widths, all six application builds and
+HTTP-only/HTTP+files response/invalid-input behavior at1280/390 with clean native
+exits/heaps. No shutdown sleep or changed execution budget is introduced. The
+earlier AV,32-block heap, black-box failures and debugger-only pass are preserved.
+
+Delayed native Outputs Apply/Reload now uses the production byte writer in a
+private file and reopens exact Unicode bytes, including a version4 HTTP save
+after refused Reload. Native controls pass42 with a clean heap; matching browser
+assertions compile. Transport/delay remain substituted, so this is real file/
+control evidence, not HTTP authentication. profile-io retains the first missing
+native file-unit import; profile-io-02 is the corrected successful snapshot.
+
+The rebuilt seven-file payload is active in the existing firewall-approved
+deployment slot: service39908/launcher58172, LAN8088 and loopback MCP8089. The
+old AE5FE043 binary and all690 durable files have verified independent copies.
+All three exact pairs, revision/selection/view/draft/history flags and all690
+runtime hashes survive. Unrelated project/global Codex bytes remain exact;
+managed blocks agree and24 tools discover through the actual client. Only the
+STUDIO_WEB_ROOT machine hint changes. All six served web files match the new
+payload. Distinguish this deployment slot from its pristine archived binaries.
+
+Evidence is under owned-event-scheduler-01 and its activation companion. No full
+original criterion/task/credit closes from native-only evidence. This is the
+second batch after import03 without original criterion closure; reassessment
+ends native HTTP/queue variants at this delivered outcome. Next assess legitimate
+browser validation surface/site access read-only and the concrete unblock for
+the existing authorized checks. Preserve the prior URL denial; no alternate
+port/browser/CDP route is authorized by this handoff. Browser execution, physical/
+assistive input, visual/performance quality and other native systems remain open.
+All readers/jobs are joined. Private output and child TEMP/TMP stay on external
+storage; do not repeat cleanup, refill helpers or return to the deferred resolver.
+
 ## Current checkpoint — Selected HTTP hosts in generated applications — 2026-10-27
 
 Batch twenty-six follows http-output-hosts01 for the same MCP-authored Workshop.

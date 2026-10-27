@@ -910,6 +910,121 @@ begin
 end;
 {$endif}
 
+{ Default event routers own their scheduler's terminal boundary. Direct queued
+  descendants can retain that scheduler even after all event registrations are
+  gone; Close must retire their native queue without requiring another pump.
+  An explicitly shared scheduler belongs to its caller and remains usable. }
+function RunRouterSchedulerOwnershipTests: Integer;
+var
+  LRouter: INyxEvents;
+  LScheduler: INyxScheduler;
+  LShared: INyxScheduler;
+  LRejected: Boolean;
+  {$ifndef PAS2JS}
+  LFacts: TNativeQueueFacts;
+  LFactsLease: IInterface;
+  LWork: INyxWork;
+  LTicket: INyxExecution;
+  {$endif}
+begin
+  Result := 0;
+  LRouter := nil;
+  LScheduler := nil;
+  LShared := nil;
+  {$ifndef PAS2JS}
+  LFacts := TNativeQueueFacts.Create;
+  LFactsLease := LFacts;
+  {$endif}
+  try
+    LRouter := NewNyxEvents;
+    LScheduler := LRouter.Scheduler;
+    {$ifndef PAS2JS}
+    LFacts.Scheduler := LScheduler;
+    LWork := TNativeQueueWork.Create(LFacts);
+    LTicket := LScheduler.PostUI(LWork);
+    LWork := nil;
+    {$endif}
+    LRouter.Close;
+    {$ifndef PAS2JS}
+    Check((LFacts.Calls = 0) and (LFacts.Destroyed = 1) and LTicket.Cancelled,
+      'owned router Close retires queued scheduler-retaining work before any pump', Result);
+    {$endif}
+    LRejected := False;
+    try
+      LScheduler.Admit(neSequential);
+    except
+      on ENyxSchedule do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'retaining a default scheduler does not extend its closed router authority', Result);
+    LRouter.Close;
+    LRouter := nil;
+    {$ifndef PAS2JS}
+    LFacts.Reset;
+    {$endif}
+    LScheduler := nil;
+
+    LRouter := NewNyxEvents;
+    LScheduler := LRouter.Scheduler;
+    {$ifndef PAS2JS}
+    LFacts.Scheduler := LScheduler;
+    LWork := TNativeQueueWork.Create(LFacts);
+    LTicket := LScheduler.PostUI(LWork);
+    LWork := nil;
+    {$endif}
+    LRouter := nil;
+    {$ifndef PAS2JS}
+    Check((LFacts.Calls = 0) and (LFacts.Destroyed = 1) and LTicket.Cancelled,
+      'last router release also retires its default scheduler without a queue drain', Result);
+    LFacts.Reset;
+    {$endif}
+    LScheduler := nil;
+
+    LShared := NewNyxScheduler;
+    LRouter := NewNyxEvents(LShared);
+    {$ifndef PAS2JS}
+    LFacts.Scheduler := LShared;
+    LWork := TNativeQueueWork.Create(LFacts);
+    LTicket := LShared.PostUI(LWork);
+    LWork := nil;
+    {$endif}
+    LRouter.Close;
+    LShared.Admit(neSequential);
+    Check(True, 'closing a router leaves its caller-supplied scheduler open', Result);
+    {$ifndef PAS2JS}
+    Check(not LTicket.Cancelled and (LFacts.Calls = 0),
+      'borrowed router closure preserves unrelated pending shared work', Result);
+    CheckSynchronize(0);
+    Check((LFacts.Calls = 1) and (LFacts.Destroyed = 1),
+      'unrelated shared work still executes exactly once after router closure', Result);
+    {$endif}
+  finally
+
+    if LRouter <> nil then
+    begin
+      LRouter.Close;
+    end;
+
+    if LScheduler <> nil then
+    begin
+      LScheduler.Shutdown;
+    end;
+
+    if LShared <> nil then
+    begin
+      LShared.Shutdown;
+    end;
+    {$ifndef PAS2JS}
+    LFacts.Scheduler := nil;
+    LWork := nil;
+    LTicket := nil;
+    LFactsLease := nil;
+    {$endif}
+  end;
+end;
+
 constructor TScopeLeaseProbe.Create(AFacts: TScopeLeaseFacts);
 begin
   inherited Create;
@@ -1135,6 +1250,7 @@ begin
     LThird.Router := nil;
   end;
   {$ifndef PAS2JS}Inc(Result, RunNativeQueueRetirementTests);{$endif}
+  Inc(Result, RunRouterSchedulerOwnershipTests);
 end;
 
 {$ifndef PAS2JS}

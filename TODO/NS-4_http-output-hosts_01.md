@@ -4,10 +4,10 @@
 
 **Description:**
 
-JSON Workshop's connected URL graph executes through explicitly configured HTTP
-transports in its public application and native consumers. The current Studio
-build executor generates file-reading/saving setup but no HTTP resolver, and
-`TNyxOutputConfiguration` has no HTTP service choice. Compiling a document with
+At task start, JSON Workshop's connected URL graph executed through explicitly
+configured HTTP transports in its public application and native consumers. The
+Studio build executor generated file-reading/saving setup but no HTTP resolver,
+and `TNyxOutputConfiguration` had no HTTP service choice. Compiling a document with
 an HTTP graph therefore does not establish a functional Studio-built network
 tool. Use the existing typed transports/resolver; do not create another HTTP
 engine or grant host authority from saved graph data.
@@ -47,7 +47,29 @@ at any time, with no compiler prerequisite for opening/authoring Studio.
   profile and builder are present. Full acceptance still requires the runtime
   interaction evidence above and the original owners' remaining quality gates.
 
-## Current qualification — 2026-10-27
+## Native integration checkpoint — 2026-10-27
+
+The owned scheduler repair resolves the earlier generated-app shutdown failure
+below. Default event-router Close now retires its private queue even when work
+retains that scheduler; explicitly shared schedulers stay open. Native scheduler
+checks93, actual worker118 and work-scope53 pass with clean heaps. The complete
+HTTP runner passes all six ordinary builds and HTTP-only/HTTP+files native
+response and invalid-URL preservation at1280/390, with clean exits/heaps and no
+new shutdown delay. Both Outputs widths pass; browser counterparts compile.
+
+The delayed native Outputs journey passes42 checks using the production profile
+writer and reopening exact Unicode bytes, including a version4 HTTP save after
+refused Reload. Its transport is controlled; no socket/authentication evidence
+is inferred. The complete current Studio payload is installed on the existing
+LAN/loopback service paths, preserving all three exact projects,690 durable
+files, output profile and unrelated client settings. Real24-tool discovery and
+served-byte checks pass. WORK.md owns source/evidence identities.
+
+Browser application execution, original quality/input/parity and supported-host
+breadth remain open. This task stays in TODO; no extra completion credit closes.
+Stop native HTTP/queue variants and assess legitimate browser validation access.
+
+## Earlier qualification and retained failures — 2026-10-27
 
 The local fluent HTTP Boolean, strict version-4 profile, both ordinary Outputs
 controls and target entry setup are implemented. Revocation retains exact older

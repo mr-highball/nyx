@@ -159,7 +159,9 @@ type
     and policy before invoking anything; additions start with the next dispatch,
     cancellation suppresses not-yet-started calls and nested dispatch is supported.
     CancelPending invalidates a view generation without removing registrations.
-    Close also removes registrations and prevents further authoring/dispatch. }
+    Close also removes registrations and prevents further authoring/dispatch.
+    A default private scheduler retires with this owner; an explicitly supplied
+    shared scheduler belongs to its caller and is never shut down by the router. }
   INyxEvents = interface(IInterface)
     ['{739BC309-7893-48E3-9600-001002000004}']
     function On(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger): INyxEventStream;
@@ -251,6 +253,9 @@ function NyxControlEvents(const AID: TNyxText;
   AIdentity: TNyxIdentityKind = niDesign): TNyxEventTarget;
 function NyxCompoundEvents(const AID: TNyxText;
   AIdentity: TNyxIdentityKind = niDesign): TNyxEventTarget;
+{ Omission creates a scheduler owned by the router's Close/last-release boundary.
+  Supplying one retains a shared reference without transferring terminal control.
+  Borrowed scheduler work remains subject to its own parent's cancellation. }
 function NewNyxEvents(const AScheduler: INyxScheduler = nil): INyxEvents;
 
 type
@@ -562,7 +567,9 @@ type
 
   { Router owns registrations and tickets; prepared plans retain it through a
     weak reservation. Dispatch depth and preview state are UI-thread-only
-    admission flags, never substitutes for worker ticket completion. }
+    admission flags, never substitutes for worker ticket completion. A default
+    scheduler requires explicit terminal ownership: queued work may retain it
+    beyond the router's interface fields, so last reference is insufficient. }
   TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration,
     INyxEventObservation, INyxEventObservationEditing, INyxEventViewPreparation,
     INyxGestureInputEvents)
@@ -572,6 +579,7 @@ type
     FScope: INyxEventScope;
     FSerial: Integer;
     FScheduler: INyxScheduler;
+    FOwnsScheduler: Boolean;
     FGroups: array of TNyxEventGroup;
     FExecutions: TNyxExecutions;
     FDispatchDepth: Integer;
@@ -1617,6 +1625,7 @@ begin
   if FScheduler = nil then
   begin
     FScheduler := NewNyxScheduler;
+    FOwnsScheduler := True;
   end;
 end;
 
@@ -2311,6 +2320,7 @@ procedure TNyxEvents.Close;
 var
   LIndex: Integer;
   LEntryIndex: Integer;
+  LOwnedScheduler: INyxScheduler;
 begin
 
   if FClosed then
@@ -2318,14 +2328,32 @@ begin
     Exit;
   end;
   FClosed := True;
-  CancelPending;
-  for LIndex := 0 to Length(FGroups) - 1 do
+
+  if FOwnsScheduler then
   begin
-    for LEntryIndex := 0 to Length(FGroups[LIndex].Registrations) - 1 do
+    LOwnedScheduler := FScheduler;
+  end;
+  try
+    CancelPending;
+    for LIndex := 0 to Length(FGroups) - 1 do
     begin
-      FGroups[LIndex].Registrations[LEntryIndex].Cancel;
+      for LEntryIndex := 0 to Length(FGroups[LIndex].Registrations) - 1 do
+      begin
+        FGroups[LIndex].Registrations[LEntryIndex].Cancel;
+      end;
+      FGroups[LIndex].Prune;
     end;
-    FGroups[LIndex].Prune;
+  finally
+    { Cancel is a delivery gate, not queue ownership retirement. Closing the
+      private scheduler removes native method targets and releases couriers even
+      when their work retains that scheduler or a registration destructor fails.
+      The local lease keeps it alive across outward cleanup; no Self access
+      follows Shutdown. Running workers retain their existing nonblocking policy. }
+
+    if LOwnedScheduler <> nil then
+    begin
+      LOwnedScheduler.Shutdown;
+    end;
   end;
 end;
 

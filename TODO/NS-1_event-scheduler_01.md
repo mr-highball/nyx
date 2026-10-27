@@ -4,6 +4,17 @@
 
 ## Description
 
+The 2026-10-27 generated HTTP application return exposed a default-router
+ownership gap. Close now shuts down only its privately created scheduler,
+retiring native pending work that can retain that scheduler; caller-supplied
+shared schedulers remain usable. Differential baseline failure and repaired93
+event/scheduler,118 worker,53 work-scope checks plus four actual generated-entry
+runtime/clean-heap passes qualify the native repair. Existing nonblocking worker
+semantics and GUIDs are unchanged. The complete LAN payload is refreshed with
+all three projects preserved. Browser consumers compile; full input/quality/
+parity acceptance remains with its existing owners. See WORK.md and
+[HTTP output hosts](NS-4_http-output-hosts_01.md); no extra completion credit.
+
 NS-1 owns fluent typed multiple callback registrations and their execution policy
 through a portable scheduler abstraction. The user requires complete supported
 control event metadata, including focus entry/exit lifecycle callbacks, rather
