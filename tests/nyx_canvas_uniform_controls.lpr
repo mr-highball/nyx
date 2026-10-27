@@ -25,9 +25,10 @@ program nyx_canvas_uniform_controls;
 
 uses SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.state,
   nyx.events, nyx.behavior, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.types,
-  nyx.canvas.scene, nyx.canvas.workspace
+  nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.observers
   {$ifdef PAS2JS}, JS, Web, nyx.canvas.browser
-  {$else}, Interfaces, Forms, Controls, StdCtrls, Types, nyx.canvas.lcl{$endif};
+  {$else}, Interfaces, Forms, Controls, StdCtrls, Types, nyx.canvas.lcl,
+    nyx.widgets.lcl{$endif};
 
 type
   { The router retains this callback, which uses only harness-owned state.
@@ -37,8 +38,20 @@ type
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
 
+  {$ifndef PAS2JS}
+  { Keep asynchronous LCL failures observable to the test process rather than
+    opening an interactive exception dialog. The application borrows this
+    receiver until its hook is explicitly cleared before receiver retirement. }
+  TNativeFailures = class
+  public
+    MessageText: TNyxText;
+    procedure Failed(ASender: TObject; AException: Exception);
+  end;
+  {$endif}
+
 const
   CNote: TNyxText = 'Notes 🌙 stay yours across every zoom.';
+  CEditedNote: TNyxText = 'Notes 🌙 stay yours across every zoom. Edited 🌿';
   CZooms: array[0..4] of Double = (1, 0.5, 1.5, 0.5, 1);
 
 var
@@ -63,6 +76,8 @@ var
   GHost: TForm;
   GView: INyxLCLCanvasWorkspaceView;
   GInput: TMemo;
+  GBaseFont: Integer;
+  GNativeFailures: TNativeFailures;
   {$endif}
 
 procedure Check(ACondition: Boolean; const AMessage: TNyxText);
@@ -74,6 +89,13 @@ begin
   end;
   Inc(GChecks);
 end;
+
+{$ifndef PAS2JS}
+procedure TNativeFailures.Failed(ASender: TObject; AException: Exception);
+begin
+  MessageText := AException.Message;
+end;
+{$endif}
 
 procedure TActionCallback.Invoke(const AEvent: TNyxEventInfo;
   const AExecution: INyxExecution);
@@ -148,8 +170,10 @@ begin
   GInput := TJSHTMLTextAreaElement(GView.InputFor(GItem, NyxControl('note')));
   {$else}
   Application.Initialize;
+  GNativeFailures := TNativeFailures.Create;
+  Application.OnException := GNativeFailures.Failed;
   GHost := TForm.CreateNew(nil);
-  GHost.SetBounds(20, 20, 1280, 800);
+  GHost.SetBounds(20, 20, StrToIntDef(ParamStr(1), 1280), 800);
   GHost.Show;
   GView := MountNyxLCLCanvasWorkspace(GWorkspace, GDocument, GHost, GState);
   Application.ProcessMessages;
@@ -171,6 +195,13 @@ var
   LResult: TControl;
   LPoint: TPoint;
   LSurface: TPoint;
+  LAncestor: TWinControl;
+  LClip: TPoint;
+  LBounds: TNyxCanvasBounds;
+  LFormerBounds: TRect;
+  LMirror: TMemo;
+  LButton: TNyxLCLButton;
+  LGeometry: INyxCanvasControlGeometry;
   {$endif}
 begin
 
@@ -189,6 +220,7 @@ begin
     GInput.SelLength := 3;
     GBaseWidth := GInput.Width;
     GBaseHeight := GInput.Height;
+    GBaseFont := GInput.Font.Height;
     {$endif}
 
     if GLegacy then
@@ -218,6 +250,8 @@ begin
     Check((GInput.SelStart = 2) and (GInput.SelLength = 3), 'zoom retains native selection');
     Check((Abs(GInput.Width - GBaseWidth * LZoom) < 2) and
       (Abs(GInput.Height - GBaseHeight * LZoom) < 2), 'native editor uses absolute logical geometry');
+    Check(Abs(GInput.Font.Height - Round(GBaseFont * LZoom)) <= 1,
+      'native editor font projects from the absolute logical baseline');
     {$endif}
   end
   else
@@ -249,6 +283,49 @@ begin
     Check((LPoint.Y >= LSurface.Y) and
       (LPoint.Y + LResult.Height <= LSurface.Y + GView.Surface.ClientHeight + 1),
       'native Fit retains the final live result in the viewport');
+    LAncestor := LResult.Parent;
+    while LAncestor <> nil do
+    begin
+      LClip := LAncestor.ClientToScreen(Point(0, 0));
+      Check((LPoint.X >= LClip.X) and (LPoint.Y >= LClip.Y) and
+        (LPoint.X + LResult.Width <= LClip.X + LAncestor.ClientWidth + 1) and
+        (LPoint.Y + LResult.Height <= LClip.Y + LAncestor.ClientHeight + 1),
+        'native fitted result survives every ancestor client clip');
+
+      if LAncestor = GView.Surface then
+      begin
+        Break;
+      end;
+      LAncestor := LAncestor.Parent;
+    end;
+    Check(Supports(GView, INyxCanvasControlGeometry, LGeometry),
+      'native workspace exposes its existing optional geometry facet');
+    Check(LGeometry.TryControlBounds(GItem, NyxControl('result'), LBounds),
+      'canvas bounds query finds the actual visible fitted result');
+    { A surface intersection alone cannot establish visibility. Temporarily
+      crop the immediate native parent without changing the accepted document. }
+    LFormerBounds := LResult.Parent.BoundsRect;
+    try
+      LResult.Parent.Width := LResult.Left;
+      Check(not LGeometry.TryControlBounds(GItem, NyxControl('result'), LBounds),
+        'canvas bounds query refuses a result hidden entirely by an ancestor');
+    finally
+      LResult.Parent.BoundsRect := LFormerBounds;
+    end;
+    GInput.Text := CEditedNote;
+    Check(Assigned(GInput.OnChange), 'the retained memo keeps its native input hook');
+    GInput.OnChange(GInput);
+    Application.ProcessMessages;
+    LMirror := TMemo(GView.InputFor(GItem, NyxControl('prepared-note')));
+    Check(TNyxText(LMirror.Text) = CEditedNote,
+      'editing the retained fitted memo updates the second live bound memo');
+    Check(GView.InputFor(GItem, NyxControl('note')) = GInput,
+      'a binding update does not replace the zoomed editor');
+    LButton := TNyxLCLButton(GView.RendererFor(GItem).ControlFor('try-action'));
+    LButton.Click;
+    Check((GActionCount = 1) and
+      (TNyxText(TLabel(GView.RendererFor(GItem).ControlFor('result')).Caption) =
+        'Action received 1'), 'the retained fitted native action updates its bound result');
     {$endif}
     GDone := True;
   end;
@@ -287,7 +364,17 @@ begin
     while not GDone do
     begin
       Application.ProcessMessages;
+
+      if GNativeFailures.MessageText <> '' then
+      begin
+        raise Exception.Create(GNativeFailures.MessageText);
+      end;
       Step;
+    end;
+
+    if GNativeFailures.MessageText <> '' then
+    begin
+      raise Exception.Create(GNativeFailures.MessageText);
     end;
     WriteLn('PASS ', GChecks, ' live uniform canvas checks');
   except
@@ -309,5 +396,7 @@ begin
   GHost.Free;
   GState.Free;
   GDocument.Free;
+  Application.OnException := nil;
+  GNativeFailures.Free;
   {$endif}
 end.

@@ -440,6 +440,13 @@ type
       const APublicationSource: INyxViewPublicationSource = nil);
   private
     FPanel: TNyxLogicalScrollBox;
+    { Adapter-private, reference-counted projection state owns only copied
+      native metrics and revocable component notices, never this renderer.
+      A local lease survives a control callback retiring the renderer. }
+    FContentScaleState: IInterface;
+    FContentScaleFactor: Double;
+    FContentLayoutWidth: Integer;
+    FContentLayoutHeight: Integer;
     { One detached LCL label measures intrinsic text without changing a live
       face's wrap policy or parent child list. Owned directly until Clear; no
       native window, document node or borrowed parent is retained. }
@@ -615,6 +622,8 @@ type
     function RowPlan(ANode: TNyxNode; AWidth: Integer; out AWidths, ALefts,
       ATops, AHeights: TNyxFlowSizes): Integer;
     function LayoutColumns(ANode: TNyxNode; AWidth: Integer): Integer;
+    function ContentLayoutWidth(ADefault: Integer): Integer;
+    function ContentLayoutHeight(ADefault: Integer): Integer;
     procedure Layout(ANode: TNyxNode; AX, AY, AWidth: Integer; AHeight: Integer = -1;
       AAllocatedWidth: Boolean = False);
     class function BindingHash(ANode: TNyxNode; ACapacity: Integer): Integer; static;
@@ -897,6 +906,13 @@ type
     property CoordinatorRegistry: INyxCoordinatorRegistry
       read FCoordinatorRegistry write FCoordinatorRegistry;
     procedure Sync;
+    { Uniform embedded hosts retain world layout independently of their physical
+      clipping HWND. This factor projects the actual LCL subtree after logical
+      layout. Setting it retains controls and input state; callers validate
+      before publication. Ordinary views retain their existing host sizing. }
+    procedure SetContentScale(ALayoutWidth, ALayoutHeight: Integer; AScale: Double);
+    procedure ValidateContentScale(AScale: Double);
+    property ContentScale: Double read FContentScaleFactor;
     property OnEvent: TNyxLCLEvent read FOnEvent write FOnEvent;
     { Configure before mounting. Opted-in designer drops use a synchronous
       value-only receiver and keep application/custom native callbacks bypassed.
@@ -1001,6 +1017,7 @@ implementation
 
 uses
   InterfaceBase,
+  Generics.Collections,
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
   nyx.collections, nyx.collections.query.lcl, nyx.collections.query.controls,
   nyx.collections.query.workbench,
@@ -1444,6 +1461,8 @@ begin
   end;
 end;
 
+{$I nyx.render.lcl.scale.inc}
+
 constructor TNativePanelGenerationLease.CreateFor(AOwner: TComponent;
   const AGeneration: INyxLCLBindingGeneration);
 begin
@@ -1632,6 +1651,7 @@ end;
 constructor TNyxLCLRenderer.Create(ATheme: TNyxTheme);
 begin
   inherited Create;
+  FContentScaleFactor := 1;
   FTableTextLimits := TNyxTableTextWorkLimits.Defaults;
   FFocusReplay := TNyxLCLFocusReplay.Create;
   FButtonGlyphCache := TNyxLCLButtonGlyphCache.Create;
@@ -1790,6 +1810,8 @@ begin
     FMeasurementLabel := nil;
     LOld.FPanel := FPanel;
     FPanel := nil;
+    LOld.FContentScaleState := FContentScaleState;
+    FContentScaleState := nil;
     LOld.FProjectionBaseline := FProjectionBaseline;
     FProjectionBaseline := nil;
     LOld.FBindings := FBindings;
@@ -5756,14 +5778,16 @@ begin
     LMeasurements := MeasureContainers;
     RequireNativeGeneration(LGeneration);
   end;
-  Result := FRoot.ApplyViewport(Max(0, FPanel.Parent.ClientWidth),
-    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL, FPresentationSelection, LMeasurements);
+  Result := FRoot.ApplyViewport(ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth)),
+    ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight)), npfNativeLCL,
+    FPresentationSelection, LMeasurements);
     RequireNativeGeneration(LGeneration);
 end;
 
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
 var
   LGeneration: INyxLCLBindingGeneration;
+  LScale: INyxNativeContentScale;
   LPhysicalFrame: INyxNativeGestureFrame;
   LHeight: Integer;
   LPanel: TNyxLogicalScrollBox;
@@ -5794,6 +5818,23 @@ begin
       if FLayouting or FProjecting then
       begin
         Exit;
+      end;
+      LScale := nil;
+
+      if (FContentScaleState <> nil) and (FPanel <> nil) and (FRoot <> nil) then
+      begin
+        LScale := FContentScaleState as INyxNativeContentScale;
+        FLayouting := True;
+        try
+          LScale.Restore(FPanel, Binding(FRoot).FControl, LGeneration);
+        finally
+
+          if NativeGenerationCurrent(LGeneration) then
+          begin
+            FLayouting := False;
+          end;
+        end;
+        RequireNativeGeneration(LGeneration);
       end;
       {$ifdef NYX_STUDIO_PROFILE}
       LResizeStarted := GetTickCount64;
@@ -5845,7 +5886,8 @@ begin
 
             if not FVirtualLayout then
             begin
-              FVirtualLayout := (Measure(FBindings[LIndex].FNode, FPanel.ClientWidth, True) >
+              FVirtualLayout := (Measure(FBindings[LIndex].FNode,
+                ContentLayoutWidth(FPanel.ClientWidth), True) >
                 High(SmallInt)) or
                 (Abs(Double(Metric(FBindings[LIndex].FNode, 'top', 0))) > High(SmallInt)) or
                 (Abs(Double(Metric(FBindings[LIndex].FNode, 'left', 0))) > High(SmallInt));
@@ -5871,7 +5913,8 @@ begin
                   begin
                     RequireNativeGeneration(LGeneration);
                     LContentHeight := LContentHeight + Measure(
-                      FBindings[LIndex].FNode.Children[LChild], FPanel.ClientWidth, True) +
+                      FBindings[LIndex].FNode.Children[LChild],
+                      ContentLayoutWidth(FPanel.ClientWidth), True) +
                       Metric(FBindings[LIndex].FNode, 'gap', 12);
                       RequireNativeGeneration(LGeneration);
 
@@ -5897,9 +5940,9 @@ begin
               layout or sizing the root from the previous viewport width. }
             for LPass := 0 to 2 do
             begin
-              LWidth := FPanel.ViewportWidth;
+              LWidth := ContentLayoutWidth(FPanel.ViewportWidth);
               RequireNativeGeneration(LGeneration);
-              LClientHeight := FPanel.ViewportHeight;
+              LClientHeight := ContentLayoutHeight(FPanel.ViewportHeight);
               RequireNativeGeneration(LGeneration);
               LHeight := -1;
               RequireNativeGeneration(LGeneration);
@@ -5913,12 +5956,22 @@ begin
               RequireNativeGeneration(LGeneration);
               Layout(FRoot, 0, 0, LWidth, LHeight);
               RequireNativeGeneration(LGeneration);
-              FPanel.SetLogicalExtent(Binding(FRoot).FLogicalBox.Width,
-                Binding(FRoot).FLogicalBox.Height, ProjectViewport);
-                RequireNativeGeneration(LGeneration);
 
-              if (LWidth = FPanel.ViewportWidth) and
-                (LClientHeight = FPanel.ViewportHeight) then
+              if FContentLayoutWidth > 0 then
+              begin
+                { The canvas owns camera navigation and clipping. Do not let
+                  a smaller physical HWND introduce scrollbars into world layout. }
+                FPanel.UseClippedContent;
+              end
+              else
+              begin
+                FPanel.SetLogicalExtent(Binding(FRoot).FLogicalBox.Width,
+                  Binding(FRoot).FLogicalBox.Height, ProjectViewport);
+              end;
+              RequireNativeGeneration(LGeneration);
+
+              if (FContentLayoutWidth > 0) or ((LWidth = FPanel.ViewportWidth) and
+                (LClientHeight = FPanel.ViewportHeight)) then
               begin
                 RequireNativeGeneration(LGeneration);
                 Break;
@@ -5930,7 +5983,15 @@ begin
           end
           else
           begin
-            FPanel.UseNativeScrolling;
+
+            if FContentLayoutWidth > 0 then
+            begin
+              FPanel.UseClippedContent;
+            end
+            else
+            begin
+              FPanel.UseNativeScrolling;
+            end;
             RequireNativeGeneration(LGeneration);
             LHeight := -1;
             RequireNativeGeneration(LGeneration);
@@ -5938,11 +5999,11 @@ begin
             if FRoot.Prop('height-sizing') = 'fill' then
             begin
               RequireNativeGeneration(LGeneration);
-              LHeight := Max(0, FPanel.ClientHeight);
+              LHeight := ContentLayoutHeight(Max(0, FPanel.ClientHeight));
               RequireNativeGeneration(LGeneration);
             end;
             RequireNativeGeneration(LGeneration);
-            Layout(FRoot, 0, 0, Max(0, FPanel.ClientWidth), LHeight);
+            Layout(FRoot, 0, 0, ContentLayoutWidth(Max(0, FPanel.ClientWidth)), LHeight);
             RequireNativeGeneration(LGeneration);
             for LIndex := 0 to High(FBindings) do
             begin
@@ -5953,6 +6014,12 @@ begin
                 RequireNativeGeneration(LGeneration);
               end;
             end;
+            RequireNativeGeneration(LGeneration);
+          end;
+
+          if LScale <> nil then
+          begin
+            LScale.Project(FPanel, Binding(FRoot).FControl, FContentScaleFactor, LGeneration);
             RequireNativeGeneration(LGeneration);
           end;
         finally
@@ -6523,7 +6590,8 @@ begin
   FPublishingContent := True;
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
-      TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL),
+      TNyxViewFrame.At(ContentLayoutWidth(Max(0, AHost.ClientWidth)),
+        ContentLayoutHeight(Max(0, AHost.ClientHeight)), npfNativeLCL),
       nil, False, nil, AResourceMode);
   finally
     { Notifications may dispose this renderer after adoption. The existing
@@ -6576,7 +6644,8 @@ begin
   FPublishingContent := True;
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
-      TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL), nil, False, nil,
+      TNyxViewFrame.At(ContentLayoutWidth(Max(0, AHost.ClientWidth)),
+        ContentLayoutHeight(Max(0, AHost.ClientHeight)), npfNativeLCL), nil, False, nil,
       AResourceMode, True, AContext, AResolver, APublicationSource);
   finally
 
@@ -7243,6 +7312,14 @@ begin
       LCandidate.FCollectionInputPhase := ncipStaged;
       LCandidate.FTableWorkbenchServices := FTableWorkbenchServices;
       LCandidate.FTableTextLimits := FTableTextLimits;
+      LCandidate.FContentScaleFactor := FContentScaleFactor;
+      LCandidate.FContentLayoutWidth := FContentLayoutWidth;
+      LCandidate.FContentLayoutHeight := FContentLayoutHeight;
+
+      if FContentScaleState <> nil then
+      begin
+        LCandidate.FContentScaleState := TNativeContentScale.Create;
+      end;
       { Build may mount saved canvases before this outer candidate commits. }
       LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
       RequireAttempt;
@@ -7331,7 +7408,8 @@ begin
       RequireAttempt;
       ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
       RequireAttempt;
-      LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight),
+      LCandidate.FRoot.ApplyViewport(LCandidate.ContentLayoutWidth(Max(0, AHost.ClientWidth)),
+        LCandidate.ContentLayoutHeight(Max(0, AHost.ClientHeight)),
         npfNativeLCL, LFrame.Selection, LMeasurements);
         RequireAttempt;
       LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
@@ -7966,6 +8044,11 @@ begin
     LCandidate.FProjectionBaseline := nil;
     RequireAttempt;
     FVirtualLayout := LCandidate.FVirtualLayout;
+    FContentScaleState := LCandidate.FContentScaleState;
+    LCandidate.FContentScaleState := nil;
+    FContentScaleFactor := LCandidate.FContentScaleFactor;
+    FContentLayoutWidth := LCandidate.FContentLayoutWidth;
+    FContentLayoutHeight := LCandidate.FContentLayoutHeight;
     FPanel := LCandidate.FPanel;
     LCandidate.FPanel := nil;
     RequireAttempt;

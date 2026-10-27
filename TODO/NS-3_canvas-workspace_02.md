@@ -69,10 +69,18 @@ height; both observations are retained. Native contracts pass30, with54 existing
 document/history and36 navigation checks and clean heaps. WORK.md owns snapshots,
 failed first attempts and final executed evidence.
 
-Native uniform projection remains implementation work: its explicit pre-mount
-refusal is not a fallback acceptance or parity result. The native consumer must
-pass after real absolute projection is implemented. Ordinary Studio selection,
-the same saved/generated Workshop, input-coordinate/IME/assistive quality and
-remaining original criteria also stay open. The LAN service/example defaults are
-unchanged. Stop browser/source-only variants and implement the native path next;
-this task remains unaccepted with no duplicate completion credit.
+The native implementation now separates world layout from physical HWND clipping
+and restores absolute geometry/font/constraint baselines before each projection.
+Its same composed consumer passes37 checks at configured1280/390 host widths:
+retained Unicode/focus/selection, geometry/font scaling, full ancestor clipping,
+live bound memo edits and button callbacks. Both heaps are clean. The existing
+native workspace consumer passes38 checks with a clean heap. WORK.md retains the
+first zoom-in/leaked-panel failure and the repaired runs separately.
+
+Native input-coordinate transforms, widget-specific chrome/glyph/grid/scroll/
+drawing metrics, nested canvases and full visual/IME/assistive quality remain
+implementation/qualification work. Ordinary Studio selection and the same saved/
+generated Workshop also stay open. The LAN service/example defaults are unchanged.
+Stop source-only variants and carry the native transform through those concrete
+input/widget boundaries next; this task remains unaccepted with no duplicate
+completion credit.

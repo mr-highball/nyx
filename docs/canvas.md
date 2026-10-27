@@ -364,12 +364,22 @@ budget; a small zoom cannot authorize an arbitrarily large logical layout.
 Browser item renderers use an independent logical host and a CSS transform,
 retaining their actual inputs and normal binding/events across camera changes.
 
-Uniform scaling is still being implemented on LCL. Current native mounting
-refuses that choice explicitly before mounting; it does not silently substitute
-reflow. This is an unfinished capability, not target parity. Existing policies
-and standalone example defaults remain unchanged. Follow
-[workspace02](../TODO/NS-3_canvas-workspace_02.md) for native projection, ordinary
-Studio selection and the complete saved/generated consumer's remaining checks.
+LCL now retains a separate world layout frame and projects absolute native
+geometry, constraints and font heights after layout. Repeated zoom restores the
+logical baseline first, retaining the actual controls, text, focus and selection.
+Native integer coordinates round once per frame; nonzero fonts have a one-pixel
+minimum. Item hosts retain physical HWND clipping, while responsive layout sees
+the logical frame. The native geometry facet checks the complete ancestor client
+clip chain before reporting a visible control.
+
+This remains an unfinished capability, not complete target parity. The composed
+memo/card consumer qualifies native geometry/font retention, fitted visibility,
+binding and ordinary action callbacks at wide/compact configured host sizes.
+Widget-specific chrome, glyphs, internal grid/scroll/drawing metrics, scaled input
+coordinates, nested canvases and full visual/assistive quality still need work.
+Existing policies and standalone example defaults remain unchanged. Follow
+[workspace02](../TODO/NS-3_canvas-workspace_02.md) for ordinary Studio selection and
+the complete saved/generated consumer's remaining checks.
 
 Only uniform definitions emit descriptor version6. Its camera may be bounded or
 unbounded and precision remains optional. Switching back to an existing policy
@@ -377,7 +387,7 @@ restores its applicable older encoding. Crafted Pascal emits
 `.WithScaling(nccsUniform)` through the existing fluent contract. Current-source
 semantic scene operations describe version6 as well; this does not update an
 already running Studio server. WORK.md distinguishes compilation, actual browser
-controls, native refusal and observing deployment.
+controls, native implementation checkpoints and observing deployment.
 
 The view supplies typed pan/anchored zoom/fit/home operations. Ordinary Nyx
 buttons provide non-gesture navigation. The background supports keyboard, wheel

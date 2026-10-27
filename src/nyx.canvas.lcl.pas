@@ -131,7 +131,9 @@ type
 
   { One owned native item presentation. This mount retains scene content and
     owns its copied context, renderer and behavior; its host panel belongs to
-    the native surface and outlives the mounted renderer's disconnection. }
+    the native surface and outlives the mounted renderer's disconnection.
+    Uniform mode keeps world layout dimensions in its renderer while the host
+    uses physical dimensions for real HWND clipping, including zoom above one. }
   TCanvasItemMount = class
   public
     Reference: TNyxCanvasItemRef;
@@ -434,12 +436,6 @@ begin
     raise ENyxCanvasScene.Create('Native workspace mount requires workspace, document and host');
   end;
 
-  if AWorkspace.Scaling = nccsUniform then
-  begin
-    { Refuse before mounting rather than silently rendering a new transform as
-      legacy reflow. Native absolute live projection is still being implemented. }
-    raise ENyxCanvasScene.Create('Uniform native control projection is not implemented yet');
-  end;
   FWorkspace := AWorkspace;
   FParentContext := AContext;
   FResolver := AResolver;
@@ -598,6 +594,11 @@ begin
     Result.Host.Parent := FSurface;
     Result.Host.SetBounds(AFrame.Left, AFrame.Top, AFrame.Width, AFrame.Height);
     Result.Renderer := TNyxLCLRenderer.Create(FTheme);
+
+    if FScaling = nccsUniform then
+    begin
+      Result.Renderer.SetContentScale(AFrame.LayoutWidth, AFrame.LayoutHeight, AFrame.ContentScale);
+    end;
 
     if Assigned(FSetup) then
     begin
@@ -768,6 +769,13 @@ begin
       if (LFormer >= 0) and (FMounts[LFormer].Content.Node = LContent.Node) then
       begin
         LMounts[LIndex] := FMounts[LFormer];
+
+        if (FScaling = nccsUniform) and LFrames[LIndex].Visible then
+        begin
+          { Admit every retained native font/face before scene/camera publication.
+            This reads copied logical metrics and does not resize accepted input. }
+          LMounts[LIndex].Renderer.ValidateContentScale(LFrames[LIndex].ContentScale);
+        end;
         LRetained[LFormer] := True;
       end
       else if LFrames[LIndex].Visible then
@@ -897,6 +905,12 @@ begin
         begin
           LMounts[LIndex].Host.SetBounds(LFrames[LIndex].Left, LFrames[LIndex].Top,
             LFrames[LIndex].Width, LFrames[LIndex].Height);
+
+          if FScaling = nccsUniform then
+          begin
+            LMounts[LIndex].Renderer.SetContentScale(LFrames[LIndex].LayoutWidth,
+              LFrames[LIndex].LayoutHeight, LFrames[LIndex].ContentScale);
+          end;
 
           if not FConnected then
           begin
@@ -1447,6 +1461,8 @@ var
   LAncestor: TControl;
   LPosition: TPoint;
   LBounds: TNyxCanvasBounds;
+  LVisibleBounds: TRect;
+  LClip: TRect;
 begin
   ABounds := Default(TNyxCanvasBounds);
   RequireConnected;
@@ -1484,7 +1500,30 @@ begin
   LPosition := FSurface.ScreenToClient(LControl.Parent.ClientToScreen(
     Types.Point(LControl.Left, LControl.Top)));
   LBounds := NyxCanvasBounds(LPosition.X, LPosition.Y, LControl.Width, LControl.Height);
-  Result := LBounds.Intersects(NyxCanvasBounds(0, 0, FSurface.ClientWidth, FSurface.ClientHeight));
+  { A descendant can lie inside the surface yet outside a smaller item/card
+    HWND. Test the complete client clip chain, preserving the full face bounds
+    in the successful result for existing callers' reveal/hit-test semantics. }
+  LVisibleBounds := Types.Rect(LPosition.X, LPosition.Y,
+    LPosition.X + LControl.Width, LPosition.Y + LControl.Height);
+  LAncestor := LControl.Parent;
+  while LAncestor <> nil do
+  begin
+    LPosition := FSurface.ScreenToClient(LAncestor.ClientToScreen(Types.Point(0, 0)));
+    LClip := Types.Rect(LPosition.X, LPosition.Y,
+      LPosition.X + LAncestor.ClientWidth, LPosition.Y + LAncestor.ClientHeight);
+
+    if not Types.IntersectRect(LVisibleBounds, LVisibleBounds, LClip) then
+    begin
+      Exit;
+    end;
+
+    if LAncestor = FSurface then
+    begin
+      Break;
+    end;
+    LAncestor := LAncestor.Parent;
+  end;
+  Result := True;
 
   if Result then
   begin

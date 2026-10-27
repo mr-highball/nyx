@@ -63,11 +63,13 @@ workflows' remaining browser journeys. This adds no original completion credit.
 
 Its first implementation checkpoint now passes the shared30 and existing54/36
 native contract/history/navigation checks, plus23/23 browser live-control checks
-and direct editing/binding/click interaction. The native uniform transform still
-refuses explicitly and remains the next implementation step. Ordinary Studio
-selection and the complete same-pair Workshop journey remain required. Keep this
-work on the existing owner; do not treat browser-only support as parity or start
-another browser/source fixture sequence.
+and direct editing/binding/click interaction. Native absolute geometry/font
+projection now passes37 actual-control checks at each configured1280/390 width,
+with clean heaps; its existing workspace regression passes38. Scaled input,
+widget-specific metrics and remaining native quality still need implementation/
+qualification. Ordinary Studio selection and the complete same-pair Workshop
+journey remain required. Keep this work on the existing owner; do not treat this
+memo/card checkpoint as all-control parity or start another source-only sequence.
 
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON

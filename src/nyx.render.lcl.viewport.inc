@@ -145,7 +145,8 @@ begin
           RequireNativeGeneration(LGeneration);
           LOriginY := -FPanel.VertScrollBar.Position;
           RequireNativeGeneration(LGeneration);
-          LParentClip := NyxViewportBox(0, 0, FPanel.ViewportWidth, FPanel.ViewportHeight);
+          LParentClip := NyxViewportBox(0, 0, ContentLayoutWidth(FPanel.ViewportWidth),
+            ContentLayoutHeight(FPanel.ViewportHeight));
           RequireNativeGeneration(LGeneration);
 
           if LParent <> nil then

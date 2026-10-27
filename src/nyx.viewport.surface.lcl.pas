@@ -103,6 +103,9 @@ type
       must remain alive until another rebind or Detach, on the owning UI thread. }
     procedure RebindProjection(AReceiver: TNotifyEvent);
     procedure UseNativeScrolling;
+    { A containing canvas owns navigation. Keep native HWND clipping while
+      layout uses an independent world frame; no automatic bar may reflow it. }
+    procedure UseClippedContent;
     procedure Detach;
     function Snapshot: TNyxViewportSnapshot;
     property Logical: Boolean read FLogical;
@@ -411,6 +414,17 @@ begin
   TScrollBox(Self).HorzScrollBar.Visible := True;
   TScrollBox(Self).VertScrollBar.Visible := True;
   AutoScroll := True;
+end;
+
+procedure TNyxLogicalScrollBox.UseClippedContent;
+begin
+  FOnLogicalScroll := nil;
+  FHorizontal.FControl.Visible := False;
+  FVertical.FControl.Visible := False;
+  FLogical := False;
+  TScrollBox(Self).HorzScrollBar.Visible := False;
+  TScrollBox(Self).VertScrollBar.Visible := False;
+  AutoScroll := False;
 end;
 
 procedure TNyxLogicalScrollBox.RebindProjection(AReceiver: TNotifyEvent);

@@ -9,7 +9,69 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Live canvas scaling — 2026-10-27
+## Current checkpoint — Native live canvas projection — 2026-10-27
+
+Previous goal turn: PROGRESS;736b0a6 is pushed and remote-verified. Batch30
+continues canvas-workspace02's native requirement rather than extending its
+browser/source proof. Root remains SOLO. Implement stable logical layout with
+absolute native geometry/font projection, retaining actual controls and their
+text/focus/selection. Qualify the existing cross-target consumer natively, then
+carry the same transform through input coordinates and concrete widget details.
+Retain the browser passes and native refusal as differential evidence. A passing
+memo does not alone establish all-control, ordinary Studio or full parity.
+Do not change existing scaling semantics, raise budgets, substitute pictures or
+deploy an unfinished mode over the three installed projects. The existing
+generation/physical-frame owners govern callbacks and retirement; there is no
+new source restriction or approval boundary. Private output and child TEMP/TMP
+stay on external storage. All previous jobs are joined before this source work.
+
+Current partial result: the native renderer separates logical world dimensions
+from physical HWND clipping. A managed non-owning metric index restores absolute
+bounds/fonts/constraints before layout and projects once afterward; component
+notifications revoke dead controls. Existing generation and physical-frame leases
+guard callouts/retirement. Candidate renderers own independent projection state.
+Responsive frames use logical dimensions, canvas-owned clipping suppresses host
+autoscroll reflow, and actual-control geometry checks every ancestor client clip.
+
+Private canvas-uniform-native-01 preserves the first runtime failure at zoom1.5
+and its23 leaked blocks/2504bytes from a nil-owner intermediate panel. The repair
+removes that panel rather than masking heap output: the renderer retains logical
+dimensions while its existing owned host keeps physical clipping. Native-02 then
+passes21 original live checks with zero unfreed blocks. Expanded consumer build03
+fails on test access through the wrong interface and mixed literal text warnings;
+the test now queries the existing optional geometry facet and uses typed Unicode
+constants. No dependency sources or admission budgets change.
+
+Build04 passes without owned warnings. Its actual native control consumer passes
+37 checks at each configured1280/390 host width, with two complete clean heaps.
+It retains actual memo identity/text/focus/selection over repeated1/0.5/1.5 zoom,
+projects fonts and bounds from an absolute baseline, keeps the fitted result
+inside every ancestor client clip, refuses geometry for an intentionally cropped
+parent, edits the retained memo into its second live binding and activates the
+retained button into its bound result. Input editing calls the installed native
+hook and button activation entry, not physical hardware. The unchanged existing
+workspace consumer passes38 with a complete clean heap. The updated cross-target
+consumer compiles for pas2js; only the seven installed Classes warnings remain.
+These native-only changes do not replace the retained executed browser evidence.
+The final consumer adds an asynchronous-exception check before reporting success;
+compile-final and both final-width reruns retain37 passes and clean heaps. All
+compiler/runtime jobs are terminal. The unchanged LAN/MCP executable remains
+39908; no preview listener or browser tab is started for this native batch.
+
+Input-coordinate round trips still require scale-aware adapter work. Native
+rounded chrome/glyphs, internal grid/scroll/drawing metrics, nested canvases,
+container-query border measurements and complete pre-publication admission for
+changed logical layouts remain under review. Runtime memo/card success does not
+qualify every design/virtualization path or establish visual/IME/assistive quality.
+Next carry the transform through those concrete input/widget boundaries, then
+ordinary Studio controls and the same saved/generated Workshop. All original
+criteria, prerequisite acceptance and full parity remain open; no task closes.
+The LAN/MCP owner and three installed projects are unchanged. The approved old
+C: cleanup is already complete and both roots remain absent; no further deletion
+is needed. Its E: archives remain in place. Root stays SOLO, with outputs and
+child TEMP/TMP on external storage and unrelated1280/390 untouched.
+
+## Earlier checkpoint — Live canvas scaling — 2026-10-27
 
 Previous goal turn: PROGRESS; c83f612 is pushed and remote-verified. Actual
 browser execution removes the inherited access diagnosis and exposes the fitted
