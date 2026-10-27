@@ -29,6 +29,9 @@ param(
   [string]$JSONWorkshopEvidenceDirectory,
   [string]$JSONWorkshopPlatform,
   [string[]]$JSONWorkshopNativeUnitCache = @(),
+  # Extend that same example with ordinary Tool Canvas Logic editing/history
+  # and actual Studio Save/Open before compiling its resulting constructor.
+  [switch]$JSONWorkshopStudio,
   # NEW packet for saved inspection defaults, Studio/semantic admission and
   # the public native monitoring journey plus its own generated application.
   [string]$InspectionAuthoringEvidenceDirectory = 'build/inspection-authoring/maintained',
@@ -7892,7 +7895,11 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         @('example','examples/tool-canvas/json_workshop.lpr'),
         @('controls','tests/nyx_json_workshop_controls.lpr'))) {
         $nyxWorkshopTag = 'compile-' + $nyxWorkshopConsumer[0]
-        $nyxWorkshopResult = RunOwned $nyxLclFpc ($nyxWorkshopFlags + @(
+        $nyxWorkshopStudioFlags = @()
+        if ($JSONWorkshopStudio -and $nyxWorkshopConsumer[0] -eq 'controls') {
+          $nyxWorkshopStudioFlags = @('-dNYX_JSON_WORKSHOP_STUDIO')
+        }
+        $nyxWorkshopResult = RunOwned $nyxLclFpc ($nyxWorkshopStudioFlags + $nyxWorkshopFlags + @(
           $nyxWorkshopConsumer[1])) $nyxWorkshopTag 600 $false
         $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
           Join-Path $output ($nyxWorkshopTag+'-result.json')) -Encoding utf8
@@ -7904,8 +7911,9 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       foreach ($nyxWorkshopWidth in @('1280','390')) {
         $output = Join-Path $nyxWorkshopRoot ('native-'+$nyxWorkshopWidth)
         New-Item -ItemType Directory -Path $output | Out-Null
+        $nyxWorkshopTimeout = if ($JSONWorkshopStudio) { 300 } else { 120 }
         $nyxWorkshopResult = RunOwned (Join-Path $nyxWorkshopNative (
-          'nyx_json_workshop_controls'+$nyxWorkshopSuffix)) @($output,$nyxWorkshopWidth) 'journey' 120 $true
+          'nyx_json_workshop_controls'+$nyxWorkshopSuffix)) @($output,$nyxWorkshopWidth) 'journey' $nyxWorkshopTimeout $true
         $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
           Join-Path $output 'journey-result.json') -Encoding utf8
         Get-Content $nyxWorkshopResult.stdout -Tail 3
@@ -7960,7 +7968,11 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         @('example','examples/tool-canvas/json_workshop.lpr','json_workshop'),
         @('controls','tests/nyx_json_workshop_controls.lpr','nyx_json_workshop_controls'))) {
         $nyxWorkshopTag = 'compile-' + $nyxWorkshopConsumer[0]
-        $nyxWorkshopResult = RunOwned $nyxPas2js ($nyxWorkshopBrowserFlags + @(
+        $nyxWorkshopStudioFlags = @()
+        if ($JSONWorkshopStudio -and $nyxWorkshopConsumer[0] -eq 'controls') {
+          $nyxWorkshopStudioFlags = @('-dNYX_JSON_WORKSHOP_STUDIO')
+        }
+        $nyxWorkshopResult = RunOwned $nyxPas2js ($nyxWorkshopStudioFlags + $nyxWorkshopBrowserFlags + @(
           ('-FE'+$output),$nyxWorkshopConsumer[1])) $nyxWorkshopTag 600 $false
         $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
           Join-Path $output ($nyxWorkshopTag+'-result.json')) -Encoding utf8

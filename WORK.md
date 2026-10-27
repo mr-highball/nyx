@@ -9,6 +9,60 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — JSON Workshop through Studio saving — 2026-10-26
+
+Previous goal turn: PROGRESS. Parent de81d8c is remote-verified; root remains
+SOLO. Batch sixteen advances existing Tool Canvas01's portable project/history
+criterion and Logic components01's graph/source/history integration through the
+same practical tool. The deliverable is ordinary Studio graph editing and
+Save/Open followed by that journey's own compiled application. Its stop condition
+is this integrated outcome or an actual failed boundary, not a replacement
+standalone graph/source fixture. No full criterion/task or completion credit closes.
+
+The maintained json-workshop target accepts JSONWorkshopStudio. Its actual form
+journey opens both Save and Format graphs, loads the formatter and changes two
+spaces to four. Leaving/reopening the Logic tab retains unfinished input while
+the authored pair stays exact. Set stages a proposal; Apply changes runtime
+graphs without rewriting the project. Save graphs then publishes design/source
+together. One Undo and Redo restore the exact respective pairs. Ordinary native
+project Save/Open preserves them, including placement and crafted Pascal.
+
+The original actual-control journey consumes that saved pair rather than an
+unrelated regenerated fixture. The command compiles its saved constructor,
+compares the reconstructed design to that same project and runs the same
+Unicode/large-number/escaped-NUL formatting, exact UTF-8 save bytes, cancellation,
+invalid JSON, page retirement and independent-App cases with the edited format.
+The expected formatter is reconstructed through its specialized interface from
+the saved typed operation configuration; it no longer assumes the starter's two
+spaces. File outcomes remain injected, with no physical save/dialog claim.
+
+Private json-workshop-studio-01 joins all ten compiler/runtime results: 69 desktop
+and 71 compact Studio/reopened-App assertions, then 19/19 own-compiled-App checks,
+178 total across four complete clean heaps. Both widths export identical project
+and Pascal bytes. Three browser programs compile/stage with matching runtime and
+the exact compiled-project input; browser interaction is unverified. There are
+zero owned warnings and 21 installed Classes warning occurrences. The browser
+journey uses separate owner-retained editor exchanges and injected file bytes;
+compilation does not prove their interaction or authenticated HTTP/MCP delivery.
+No Nyx tool namespace is exposed in this turn's inventory, which says nothing
+about server health. No refused browser route or physical cursor workaround ran.
+
+All owned readers are terminal and source pins are retained externally; no freeze
+remains. New artifacts/private orchestration and owned TEMP/TMP use external
+storage. The separately completed on-demand C: cleanup remains complete; both
+legacy roots are still absent and its archive/deletion receipts are retained.
+No additional cleanup or preserved-archive mutation was performed. Unrelated
+1280/390 directories remain untouched.
+
+Reassessment after these two connected-example batches: there is now a useful
+native control/graph tool and an ordinary Studio-to-compiled-application path,
+but neither batch closes the full original multi-target criteria. Stop further
+constructor/history proof variants. Next extend the useful tool through its
+remaining script/resource or port-wire interaction outcomes using existing
+public owners. Preserve real file outcomes, browser/visual/assistive quality,
+MCP observing delivery, broader hosts/operations/diagrams and the DataToolbar
+return matrix; existing acceptance and prerequisites remain unchanged.
+
 ## Current checkpoint — Connected JSON Workshop — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent 30d7bd3 is remote-verified. Root remains

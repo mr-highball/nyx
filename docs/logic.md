@@ -989,8 +989,12 @@ UTF-8 encoding and the injected file service; its operation cards and positions
 use the public Tool Canvas contract. The portable design contains no file host.
 `tools/build.ps1 -Target json-workshop` runs the native control journey and the
 constructor exported by that same journey, then stages matching browser programs.
+Add `-JSONWorkshopStudio` to edit both formatter graphs through ordinary Studio
+controls before running the same journey. Unfinished tab input, Apply versus
+project publication, paired Undo/Redo and actual native Save/Open are checked;
+the compiled application consumes that journey's own saved four-space format.
 Injected file receipts establish ownership/bytes/outcomes, not physical dialogs
-or disk/download success. Ordinary Studio authoring, browser interaction and
+or disk/download success. Broader graph/port authoring, browser interaction and
 full host/visual/accessibility parity remain separate requirements.
 
 `NewNyxToolCanvas('data-tool').WithScene(NyxCanvasRef('tools'))` is a specialized

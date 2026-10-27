@@ -32,6 +32,16 @@ Build and qualify from the repository root:
 ./tools/build.ps1 -Target json-workshop
 ```
 
+Add `-JSONWorkshopStudio` to begin that same journey in ordinary Nyx Studio.
+It opens the Save and Format graphs, changes their indentation from two to four
+spaces through the Logic form, and checks that unfinished input survives a tab
+change. Apply changes the running graphs; **Save graphs** publishes their design
+and Pascal together. Undo/Redo and ordinary project Save/Open preserve that pair.
+The command then compiles the saved constructor and runs the original control
+journey against its four-space configuration. Native file outcomes remain
+injected; the browser assertion page substitutes only file bytes and editor
+transport. Browser execution is a separate check.
+
 Configure `LCL_FPC`, `LAZARUS`, `PAS2JS`, `PAS2JS_RUNTIME`, `EVIDENCE_ROOT` and
 `TEMP_ROOT` in the private toolchain configuration. Alternatively pass a fresh
 absolute `-JSONWorkshopEvidenceDirectory`. The command prints its output packet,
@@ -56,6 +66,6 @@ alone does not establish browser interaction, accessibility or visual quality.
 
 Open the exported `workshop.nyxproject` in Nyx Studio to continue designing.
 File saving is an explicit local output-host setting when launching from Studio;
-it is deliberately absent from the portable project. Ordinary Studio authoring,
-actual file outcomes and full browser/LCL parity retain their broader backlog
-acceptance requirements.
+it is deliberately absent from the portable project. Broader graph/port authoring,
+actual file outcomes and full browser/LCL parity retain their backlog acceptance
+requirements.

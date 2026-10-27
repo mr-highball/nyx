@@ -4,6 +4,17 @@
 
 **Description:**
 
+The same example now passes an ordinary native Studio journey at desktop/compact
+widths: select/load/configure its Save and Format graphs, retain unfinished input
+across tabs, Apply, Save graphs, paired Undo/Redo and actual project Save/Open.
+Its own saved constructor then executes the original useful control journey with
+the edited four-space configuration. WORK.md owns 69/71 Studio/reopened-App and
+19/19 compiled-App checks, four clean heaps and three browser compilations.
+File outcomes remain injected; browser interaction, broader port-wire creation,
+physical/visual/assistive quality and all original acceptance remain open. No
+criterion/task or completion credit closes. Continue the useful tool's remaining
+script/resource/host and interaction outcomes rather than another isolated proof.
+
 Current-source 2026-10-26 adds the public English
 [JSON Workshop](../examples/tool-canvas/README.md). Ordinary embedded controls
 drive separate Format and Save graphs, with editable operation cards, saved
@@ -14,13 +25,11 @@ pending-save retirement and independent reopened Apps pass through actual
 controls with injected file outcomes. WORK.md owns 17/17 base and 18/18 compiled
 checks, four clean heaps and three browser compilations/staged programs.
 
-This is a useful starter and connected runtime result, not ordinary Studio UI
-Save/Open or physical file/browser/visual/assistive acceptance. No original
-criterion, prerequisite, task or completion credit closes. Next use this same
-example through ordinary Studio graph/port authoring and paired saving, preserving
-unfinished proposals, before its own compiled application. Retain full script,
-image/resource, creator/host/operation breadth, diagram and browser/parity scope;
-do not substitute another standalone graph or constructor variant.
+This initial packet is a useful starter and connected runtime result; the later
+ordinary Studio saving evidence is recorded above. No original criterion,
+prerequisite, task or completion credit closes. Retain full script, image/resource,
+creator/host/operation breadth, diagram and browser/parity scope; do not substitute
+another standalone graph or constructor variant.
 
 Current-source 2026-10-16 semantic saved placement advances criterion four through
 bounded explicit graph/step queries, typed grouped position/reset operations and

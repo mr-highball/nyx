@@ -28,7 +28,8 @@ uses
   nyx.source, nyx.files, nyx.studio.files, nyx.studio.projects,
   nyx.state, nyx.logic, nyx.files.save, nyx.scheduler,
   nyx.json.workshop, nyx.tool.canvas, nyx.canvas.types, nyx.canvas.workspace,
-  nyx.flow.routing, nyx.view.behavior,
+  nyx.flow.routing, nyx.flow.declarations, nyx.view.behavior,
+  {$ifdef NYX_JSON_WORKSHOP_STUDIO}nyx.test.json.workshop.studio,{$endif}
   {$ifdef PAS2JS}
   JS, Web, nyx.application.browser, nyx.canvas.browser
   {$else}
@@ -93,6 +94,11 @@ var
   GDone: Boolean;
   GInitialized: Boolean;
   GWidth: Integer = 1280;
+  {$ifdef NYX_JSON_WORKSHOP_STUDIO}
+  GStudioJourney: INyxJSONWorkshopStudioJourney;
+  GStudioPair: TNyxProjectPair;
+  GStudioReady: Boolean;
+  {$endif}
   {$ifdef PAS2JS}
   GStarted: Double;
   GElements: array[0..1] of TJSHTMLElement;
@@ -215,6 +221,9 @@ var
   LWorkspace: TNyxSourceWorkspace;
   LSource: TNyxText;
   LTools: INyxToolCanvasView;
+  LDefinition: INyxFlowDefinition;
+  LOperation: INyxLogicOperation;
+  LFormatter: INyxJSONFormat;
 begin
   SetLength(GViews, 2);
   SetLength(GHostLeases, 2);
@@ -229,10 +238,18 @@ begin
   Check(TNyxCodec.Encode(GDocument) = LPair.Design,
     'the independently compiled constructor reconstructs its own saved example exactly');
   {$else}
+  {$ifdef NYX_JSON_WORKSHOP_STUDIO}
+  GDocument := TNyxCodec.Decode(GStudioPair.Design);
+  {$else}
   GDocument := BuildJSONWorkshopDocument;
   {$endif}
+  {$endif}
   GBefore := TNyxCodec.Encode(GDocument);
+  {$ifdef NYX_JSON_WORKSHOP_STUDIO}
+  LSource := GStudioPair.Source;
+  {$else}
   LSource := TNyxCodegen.Generate(GDocument, 'nyx.generated.json.workshop');
+  {$endif}
   LPair := NyxProjectPair(GBefore, LSource);
   LWorkspace := nil;
   AdmitNyxProject(LPair, nprRequireMatch, GReopened, LWorkspace, LResolved);
@@ -248,7 +265,11 @@ begin
   Check(ReadNyxTextFile(GDirectory + 'workshop.nyxproject').Text = EncodeNyxProject(LPair),
     'saved project bytes remain exact on the isolated file boundary');
   {$endif}
-  GPretty := NewNyxJSONFormat(njlIndented, 2).Format(NewNyxJSONParse.Parse(CExactJSON));
+  LDefinition := GDocument.Flows.Definition(NyxFlowRef('Format JSON'));
+  LOperation := NyxLogicFromData(LDefinition.Descriptor(1).Kind, LDefinition.Configuration(1));
+  Check(Supports(LOperation, INyxJSONFormat, LFormatter),
+    'the saved formatter is reconstructed through its specialized typed interface');
+  GPretty := LFormatter.Format(NewNyxJSONParse.Parse(CExactJSON));
   for LIndex := 0 to 1 do
   begin
     GHosts[LIndex] := TSaveHost.Create;
@@ -294,6 +315,28 @@ end;
 
 procedure Stage;
 begin
+  {$ifdef NYX_JSON_WORKSHOP_STUDIO}
+
+  if not GStudioReady then
+  begin
+
+    if GStudioJourney = nil then
+    begin
+      GStudioJourney := NewJSONWorkshopStudioJourney(
+        {$ifdef PAS2JS}''{$else}GDirectory{$endif}, GWidth);
+    end;
+
+    if not GStudioJourney.Tick then
+    begin
+      Exit;
+    end;
+    GStudioPair := GStudioJourney.Pair;
+    Inc(GChecks, GStudioJourney.Checks);
+    GStudioJourney := nil;
+    GStudioReady := True;
+    {$ifdef PAS2JS}GStarted := TJSDate.now;{$else}GStarted := GetTickCount64;{$endif}
+  end;
+  {$endif}
   case GStage of
     0:
       begin
@@ -439,6 +482,7 @@ procedure Cleanup;
 var
   LIndex: Integer;
 begin
+  {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioJourney := nil;{$endif}
   for LIndex := 0 to 1 do
   begin
     FreeAndNil(GApps[LIndex]);
@@ -463,7 +507,7 @@ procedure Drive;
 begin
   try
 
-    if TJSDate.now - GStarted > 60000 then
+    if {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioReady and {$endif}(TJSDate.now - GStarted > 60000) then
     begin
       raise Exception.Create('JSON Workshop timed out at stage ' + IntToStr(GStage));
     end;
@@ -511,7 +555,7 @@ begin
         CheckSynchronize(1);
         Application.ProcessMessages;
 
-        if GetTickCount64 - GStarted > 60000 then
+        if {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioReady and {$endif}(GetTickCount64 - GStarted > 60000) then
         begin
           raise Exception.Create('JSON Workshop timed out at stage ' + IntToStr(GStage));
         end;

@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The same JSON Workshop now edits both formatter graphs through ordinary native
+Studio input, retains unfinished fields across tabs, distinguishes Apply from
+paired publication and preserves exact Undo/Redo plus project Save/Open. The
+journey's own saved constructor runs the same useful control/JSON/save cases
+with its changed four-space configuration. WORK.md owns 178 assertions/four clean
+heaps and separates browser compilation from execution. This advances existing
+graph/source/history integration; it adds no operation kind or completion credit.
+Broader operations, scripts/resources, real file/network outcomes, port-wire
+authoring and original browser/parity/quality acceptance remain required.
+
 Current-source 2026-10-26 contributes the public
 [JSON Workshop](../examples/tool-canvas/README.md) under the existing useful-tool
 priority. Its embedded control event → JSON parse/format → UTF-8 → Save chain uses
@@ -10,8 +20,8 @@ and the example's own compiled constructor preserve exact bytes, cancellation,
 invalid-input refusal, page retirement and independent reopened state. File
 outcomes are injected; this is not physical disk/picker/download evidence.
 WORK.md owns the four clean heaps and distinct browser compilation/staging.
-No operation kind, full criterion/task or completion credit is added. Next use
-the same tool through ordinary Studio authoring/Save/Open; retain every broader
+No operation kind, full criterion/task or completion credit is added. The later
+Studio saving packet is recorded above; retain every broader
 coverage, script, resource, HTTP/cache, host, browser/quality and delivery outcome.
 
 Current-source semantic placement exposes explicit saved positions for this
