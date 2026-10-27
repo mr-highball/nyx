@@ -990,6 +990,25 @@ The Pascal API exposes `NyxSetDataToolbarPolicy`, `NyxDisableDataToolbarPolicy`
 and `NyxInheritDataToolbarPolicy` for the same copied operations. Existing
 Inspector proposals retain their exact baseline-bearing public editor contract.
 
+Open the portable [People directory project](../examples/data-toolbar/people-directory.nyxproject)
+in Studio to explore a real MCP-authored collection, table and Search/Sort/Clear
+toolbar. It includes name and priority ordering plus query details. It keeps
+the optional New record/Refresh actions hidden until an application wires
+their semantic callbacks, rather than exposing inert buttons in the starter.
+The project contains its own design and crafted Pascal; output/compiler configuration stays
+with the host. It uses English starter data and the repository's MIT license.
+
+The maintained `data-toolbar -DataToolbarStudio` journey also accepts
+`-DataToolbarProject examples/data-toolbar/people-directory.nyxproject`. This
+explicit mode consumes that exact exported example, edits it through ordinary
+Inspector forms, verifies complete Undo/Redo, performs named Save/Open, and runs
+the application compiled from its own saved Pascal at desktop/compact widths.
+It preserves the imported owning unit and untouched multi-key choice. The
+default mode retains its original reusable/protected-input coverage. Configure
+external evidence/temporary storage as described in [building](building.md).
+Browser consumers stage the same input and saved companion; compilation alone
+does not qualify browser interaction, observing delivery or visual quality.
+
 ## Reusable components
 
 The source candidate adds four operations to `nyx_transaction`; the protected

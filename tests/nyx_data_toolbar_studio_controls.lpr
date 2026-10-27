@@ -25,7 +25,7 @@ program nyx_data_toolbar_studio_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  {$ifdef PAS2JS}JS, Web,{$else}Interfaces, Classes, Forms, Controls, StdCtrls,
+  {$ifdef PAS2JS}JS, Web,{$else}Interfaces, Classes, Forms, Controls, StdCtrls, Grids,
   LCLType, LMessages, nyx.files.lcl, nyx.studio.projectstore,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
   nyx.state, nyx.binding.types, nyx.binding.inputs, nyx.studio.authoring,
@@ -37,7 +37,9 @@ uses
   {$ifdef PAS2JS}nyx.studio.browser, nyx.studio.agents, nyx.studio.exchange,
   nyx.test.editor.exchange, nyx.application.browser, nyx.render.browser, nyx.collections.query.browser
   {$else}nyx.studio.lcl, nyx.application.lcl, nyx.render.lcl, nyx.collections.query.lcl{$endif}
-  {$ifdef NYX_COMPILED_TOOLBAR_STUDIO}, nyx.generated.toolbar.studio{$endif};
+  {$ifdef NYX_COMPILED_TOOLBAR_STUDIO}
+  {$ifdef NYX_IMPORTED_TOOLBAR_STUDIO}, nyx.generated.view
+  {$else}, nyx.generated.toolbar.studio{$endif}{$endif};
 
 const
   CQueryCaption: TNyxText = 'People 🌙';
@@ -93,7 +95,9 @@ type
   TQueryPresenter = INyxLCLQueryFormPresenter;
   {$endif}
   { Every source-producing action settles before the next assertion/input.
-    A stage is an ordinary controller turn, never a direct document rewrite. }
+    A stage is an ordinary controller turn, never a direct document rewrite.
+    The imported MCP journey uses the relevant subset without replacing the
+    original fixture/reusable/protected-input sequence. }
   TStage = (ksSelect, ksConfigure, ksUndo, ksRedo, ksDesignPanel, ksPreviewOpen,
     ksPreview, ksInspector, ksSelectNamed, ksConfigureNamed, ksCheckNamed,
     ksCaseSelect, ksCaseConfigure, ksSearchSelect, ksBindingsOpen, ksValueTarget,
@@ -123,7 +127,7 @@ var
   GInstancePair: TNyxText;
   GSaved: TNyxText;
   GDefinition: TNyxText;
-  GBindingCase: TBindingCase;
+  GBindingCase: TBindingCase = bcProjected;
   GCaseBefore: TNyxText;
   GCaseAfter: TNyxText;
   {$ifdef PAS2JS}
@@ -652,8 +656,10 @@ var
   {$endif}
 begin
   LRows := AView.CollectionView(ATarget);
-  Check((LRows <> nil) and (LRows.Snapshot.Count = 2), 'ordinary bound table starts with both people');
+  Check(LRows <> nil, 'ordinary bound table is mounted');
   LSource := LRows.Store.Snapshot;
+  Check((LSource.Count >= 2) and (LRows.Snapshot.Count = LSource.Count),
+    'ordinary bound table starts with the complete source collection');
   LSelected := NyxItem(LSource.Key, 'grace');
   { Seed selection through the public typed view command; this journey qualifies
     query controls, not a physical row-selection gesture. Filtering hides Grace
@@ -677,7 +683,7 @@ begin
   Check(Supports(AView.CoordinatorBinding(AToolbar), INyxDataToolbarQueryBinding, LQuery),
     'Studio-configured application exposes its specialized query context');
   Check((LQuery.Observation.Count = 1) and (LQuery.Observation.MatchedRows = 1) and
-    (LQuery.Observation.SourceRows = 2), 'query context reports the accepted filter and source counts');
+    (LQuery.Observation.SourceRows = LSource.Count), 'query context reports the accepted filter and source counts');
   CheckQueryStatus(AView, AToolbar, LQuery);
   LID := AView.Root.Find(AToolbar).Part(NyxPart(NyxDataToolbarQueryDetailsPart)).ID;
   AView.Reveal(LID, niRuntime);
@@ -706,7 +712,7 @@ begin
   Check(TCustomEdit(AView.InputFor(LSearchID)).Text = 'Ada',
     'explicit filter removal preserves the local search entry');
   {$endif}
-  Check((LRows.Snapshot.Count = 2) and (LQuery.Observation.Count = 0) and
+  Check((LRows.Snapshot.Count = LSource.Count) and (LQuery.Observation.Count = 0) and
     LRows.Selection.Contains(LSelected) and (LRows.Store.Snapshot = LSource),
     'real popup removes one contribution while preserving source data and hidden selection');
   Check(not LPresenter.Connected and not LPresenter.IsOpen,
@@ -720,7 +726,7 @@ begin
   TControlAccess(AView.ControlFor(LID)).Click;
   Application.ProcessMessages;
   {$endif}
-  Check(LRows.Snapshot.Count = 2, 'ordinary accessible Clear restores the table');
+  Check(LRows.Snapshot.Count = LSource.Count, 'ordinary accessible Clear restores the table');
   {$ifdef PAS2JS}
   Check(TJSHTMLInputElement(AView.InputFor(LSearchID)).value = '',
     'local Clear resets the retained entry after explicit query removal');
@@ -907,6 +913,10 @@ begin
   end;
 end;
 
+{$ifdef NYX_IMPORTED_TOOLBAR_STUDIO}
+{$include nyx.test.toolbar.imported.inc}
+{$endif}
+
 procedure Stage;
 {$ifndef PAS2JS}
 var
@@ -914,6 +924,9 @@ var
   LRevision: TNyxText;
 {$endif}
 begin
+  {$ifdef NYX_IMPORTED_TOOLBAR_STUDIO}
+  ImportedStage;
+  {$else}
   case GStage of
     ksSelect:
       begin
@@ -1152,10 +1165,16 @@ begin
   begin
     GStage := Succ(GStage);
   end;
+  {$endif}
 end;
 
 
 procedure ApplicationProof(ADocument: TNyxDocument);
+{$ifdef NYX_IMPORTED_TOOLBAR_STUDIO}
+begin
+  ImportedApplicationProof(ADocument);
+end;
+{$else}
 var
   LApplication: TApplicationHost;
   LBefore: TNyxText;
@@ -1209,6 +1228,7 @@ begin
   Check((LControls <> nil) and not LControls.Connected,
     'application disposal also revokes retained query-detail authority');
 end;
+{$endif}
 
 procedure Finish;
 var
@@ -1350,10 +1370,24 @@ begin
     document.body.setAttribute('data-toolbar-checks', IntToStr(GChecks));
     {$endif}
     {$else}
+    {$ifdef NYX_IMPORTED_TOOLBAR_STUDIO}
+    {$ifdef PAS2JS}
+    LPair := DecodeNyxProject(document.getElementById('input-project').textContent);
+    {$else}
+
+    if ParamCount <> 3 then
+    begin
+      raise Exception.Create('Imported Studio journey needs the exact MCP-exported project');
+    end;
+    LPair := DecodeNyxProject(ReadNyxTextFile(ParamStr(3)).Text);
+    {$endif}
+    GBefore := EncodeNyxProject(LPair);
+    {$else}
     LDocument := Fixture;
     LPair := NyxProjectPair(TNyxCodec.Encode(LDocument),
       TNyxCodegen.Generate(LDocument, 'nyx.generated.toolbar.studio'));
     FreeAndNil(LDocument);
+    {$endif}
     GFiles := TProjectFiles.Create;
     GFileLease := GFiles;
     {$ifdef PAS2JS}

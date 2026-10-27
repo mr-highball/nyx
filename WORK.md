@@ -9,6 +9,69 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — MCP project in ordinary Studio — 2026-10-27
+
+Previous goal turn: PROGRESS;0bdf6f1 is pushed and remote-verified. Root remains
+SOLO. Batch twenty-three follows agent-workflows02's same-project Studio return.
+The maintained ordinary DataToolbar consumer now has an explicit imported-project
+mode. It opens the actual MCP export without reconstructing a fixture, edits the
+policy through ordinary Inspector controls, verifies exact Undo/Redo, exercises
+preview, performs real named Save/Open and runs its own saved/compiled application
+at desktop/compact widths. Existing fixture/reusable/protected-input journeys
+remain available; shared row-count assertions now compare with the complete
+captured source, supporting both the original two and imported three records.
+
+The first complete packet passes840 assertions/nine clean native heaps and five
+browser compilations, retaining an imported-mode unused-global warning. Explicit
+enum initialization removes that warning; packet02 passes the same complete
+journey. Both default Studio branches also compile separately. Neither packet
+nor the correction changes library or adapter behavior.
+
+Review found the demonstration exposed optional New record/Refresh slots without
+application handlers. A fresh authenticated temporary Pascal MCP host composes
+the same directory with both slots explicitly hidden in the grouped transaction.
+Bounded readback confirms Boolean false. Its exact15115-byte export is the public
+examples/data-toolbar/people-directory.nyxproject (SHA25657460AF7 prefix); it
+contains no host paths, endpoint/session identities or compiler configuration.
+The recipe's reusable callback slots remain intact. The temporary host/launcher
+and both listeners are verified retired; the preserved earlier MCP export remains
+separate evidence. This fixes the demo, without changing library recipe defaults.
+
+Final agent-toolbar-studio-03 runs that exact public input through the maintained
+command. All19 compiler/runtime receipts succeed: base139/139, reusable137/137,
+authoring38, ordinary Studio93/101 and the application compiled from its own saved
+Pascal36/36. Total856 assertions and nine complete clean native heaps, zero owned
+warnings and35 installed Classes warning occurrences. Five browser consumers
+compile/stage only; the staged initial project matches the public export exactly.
+The additional default native/browser consumer builds remain separate compile
+evidence. No browser route retry, physical-input workaround or visual/assistive
+acceptance follows from these native callbacks and compilations.
+
+Both widths save identical15233-byte projects (SHA256C27C5F9F prefix) and9405-byte
+Pascal files (SHA256C68E0004 prefix). The original owning unit, hidden optional
+actions and untouched multi-key MCP choice survive Inspector configuration and
+Save/Open. The real application dropdown selects both the Inspector-edited name
+order and original priority/name order, with assertions against actual grid cells.
+Search/Clear/query-detail removal preserve source rows and hidden selection;
+retained toolbar/detail authorities retire with the independent application.
+
+The complete Studio journeys take86s/59s. Those include many actions and startup;
+they establish neither per-keystroke latency nor acceptable near-real-time
+performance. Original performance, observing-browser, physical, visual, assistive
+and parity/dependency requirements remain open. No task/criterion/credit closes.
+All actual readers are joined and source pins remain exact; no freeze remains.
+All new private orchestration, outputs and child TEMP/TMP use external storage.
+The existing LAN service, user project store and client enrollment are unchanged;
+unrelated1280/390 remain untouched and no additional cleanup occurs.
+
+This delivers the native MCP-to-Studio return. Stop further DataToolbar/connection
+or standalone source/fixture variants. Return to priority4's useful Tool Canvas
+under logic-components01: assess its existing HTTP/resource prerequisites and
+deliver network/resource input in the public JSON Workshop through the existing
+typed operations and explicit hosts. Preserve all original host, browser, quality,
+performance and delivery criteria rather than treating another format example as
+their substitute.
+
 ## Current checkpoint — Semantic DataToolbar authoring — 2026-10-27
 
 Previous goal turn: NO PROGRESS toward product delivery; it rechecked the already

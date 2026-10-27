@@ -417,7 +417,10 @@ param(
   [switch]$VerifyDesignSource,
   # Appended to preserve existing positional callers. This host/tool output
   # overrides configured scratch without moving maintained source.
-  [string]$NativeOutput
+  [string]$NativeOutput,
+  # Optional exact MCP-exported People directory input for the existing Studio
+  # journey. Appended for positional compatibility; never recreates that design.
+  [string]$DataToolbarProject
 )
 
 $ErrorActionPreference = 'Stop'
@@ -8182,7 +8185,17 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         $nyxToolbarPrograms += @('nyx_data_toolbar_source_tests','nyx_data_toolbar_generated_application')
       }
       if ($DataToolbarStudio) {
-        $nyxToolbarStudioFlags = @('-Fustudio') + $nyxToolbarFlags
+        $nyxToolbarStudioModeFlags = @()
+        $nyxToolbarStudioSourceName = 'nyx.generated.toolbar.studio.pas'
+        if ($DataToolbarProject) {
+          $DataToolbarProject = [IO.Path]::GetFullPath($DataToolbarProject)
+          if (-not (Test-Path -LiteralPath $DataToolbarProject -PathType Leaf)) {
+            throw 'DataToolbarProject must name the existing exact MCP export'
+          }
+          $nyxToolbarStudioModeFlags = @('-dNYX_IMPORTED_TOOLBAR_STUDIO')
+          $nyxToolbarStudioSourceName = 'nyx.generated.view.pas'
+        }
+        $nyxToolbarStudioFlags = $nyxToolbarStudioModeFlags + @('-Fustudio') + $nyxToolbarFlags
         foreach ($nyxToolbarProgram in @('nyx_data_toolbar_authoring_tests','nyx_data_toolbar_studio_controls')) {
           $output = $nyxToolbarNative
           $nyxToolbarResult = RunOwned $nyxLclFpc ($nyxToolbarStudioFlags + @(
@@ -8209,8 +8222,10 @@ body[data-query-authoring="passed"] script#query-authoring-project {
           New-Item -ItemType Directory -Path $output | Out-Null
           # This journey also authors four protected-input examples. Preserve
           # Pascal's per-action deadline while bounding the larger whole run.
+          $nyxToolbarStudioArguments = @($output,$nyxToolbarWidth)
+          if ($DataToolbarProject) { $nyxToolbarStudioArguments += $DataToolbarProject }
           $nyxToolbarResult = RunOwned (Join-Path $nyxToolbarNative (
-            'nyx_data_toolbar_studio_controls'+$nyxToolbarSuffix)) @($output,$nyxToolbarWidth) 'studio' 720 $true
+            'nyx_data_toolbar_studio_controls'+$nyxToolbarSuffix)) $nyxToolbarStudioArguments 'studio' 720 $true
           $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
             Join-Path $output 'studio-result.json') -Encoding utf8
           Get-Content -LiteralPath (Join-Path $output 'studio-stdout.log') -Tail 4
@@ -8220,7 +8235,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
           }
         }
         $nyxToolbarSaved = Join-Path $nyxToolbarRoot 'studio-1280'
-        foreach ($nyxToolbarSavedName in @('accepted-project.nyxproject','nyx.generated.toolbar.studio.pas')) {
+        foreach ($nyxToolbarSavedName in @('accepted-project.nyxproject',$nyxToolbarStudioSourceName)) {
           $nyxToolbarWideHash = (Get-FileHash -LiteralPath (
             Join-Path $nyxToolbarSaved $nyxToolbarSavedName) -Algorithm SHA256).Hash
           $nyxToolbarCompactHash = (Get-FileHash -LiteralPath (
@@ -8268,6 +8283,10 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         if ($DataToolbarSource) {
           $nyxToolbarBrowserFlags = @('-Fu'+$nyxToolbarGenerated) + $nyxToolbarBrowserFlags
         }
+        if ($DataToolbarStudio -and $DataToolbarProject -and
+            $nyxToolbarProgram -eq 'nyx_data_toolbar_studio_controls') {
+          $nyxToolbarBrowserFlags = $nyxToolbarStudioModeFlags + $nyxToolbarBrowserFlags
+        }
         $nyxToolbarResult = RunOwned $nyxPas2js $nyxToolbarBrowserFlags ('compile-'+$nyxToolbarProgram) 600 $false
         $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
           Join-Path $output ('compile-'+$nyxToolbarProgram+'-result.json')) -Encoding utf8
@@ -8281,6 +8300,13 @@ body[data-query-authoring="passed"] script#query-authoring-project {
 <script src="rtl.js"></script><script src="$nyxToolbarProgram.js"></script>
 <script>rtl.run();</script></body></html>
 "@
+        if ($DataToolbarStudio -and $DataToolbarProject -and
+            $nyxToolbarProgram -eq 'nyx_data_toolbar_studio_controls') {
+          $nyxToolbarImportedText = [IO.File]::ReadAllText($DataToolbarProject).Replace('<','\u003c')
+          $nyxToolbarHTML = $nyxToolbarHTML.Replace('<script src="rtl.js">',
+            '<script type="application/json" id="input-project">' + $nyxToolbarImportedText +
+            '</script><script src="rtl.js">')
+        }
         [IO.File]::WriteAllText((Join-Path $output ($nyxToolbarProgram+'.html')),
           $nyxToolbarHTML, (New-Object Text.UTF8Encoding($false)))
       }
@@ -8288,10 +8314,10 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       if ($DataToolbarStudio) {
         $output = Join-Path $nyxToolbarBrowser 'studio-generated'
         New-Item -ItemType Directory -Path $output | Out-Null
-        $nyxToolbarResult = RunOwned $nyxPas2js @('-Mdelphi','-Tbrowser','-Jirtl.js',
+        $nyxToolbarResult = RunOwned $nyxPas2js ($nyxToolbarStudioModeFlags + @('-Mdelphi','-Tbrowser','-Jirtl.js',
           '-Fusrc','-Fustudio','-Fisrc','-Futests',('-Fu'+$nyxToolbarSaved),
           '-dNYX_COMPILED_TOOLBAR_STUDIO',('-FE'+$output),
-          'tests/nyx_data_toolbar_studio_controls.lpr') 'compile' 600 $false
+          'tests/nyx_data_toolbar_studio_controls.lpr')) 'compile' 600 $false
         $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
           Join-Path $output 'compile-result.json') -Encoding utf8
         if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {

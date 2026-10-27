@@ -5,9 +5,9 @@
 **Description:**
 
 An agent should configure a useful DataToolbar through the same typed policy
-candidate as Studio's Inspector. Current authenticated transaction discovery
-supports scalar/state/collection edits and several compound contracts, but exposes
-no DataToolbar Configure/Disable/Inherit operation. Ordinary scalar properties
+candidate as Studio's Inspector. Before this delivery authenticated transaction
+discovery supported scalar/state/collection edits and several compound contracts,
+but exposed no DataToolbar Configure/Disable/Inherit operation. Ordinary scalar properties
 do not describe its scoped target, search field, sort choices and query context.
 Editing Pascal or injecting an opaque extension is not the focused semantic
 authoring experience requested for Studio.
@@ -31,6 +31,19 @@ unchanged. Browser test consumers compile only. Ordinary observing Studio
 Inspector/preview/Save/Open adoption, runtime execution and every original
 quality/dependency requirement remain open. See WORK.md for scoped evidence;
 no original criterion, task or completion credit closes here.
+
+The same-project native return now passes through ordinary Inspector/preview,
+exact Undo/Redo and real named Save/Open at desktop/compact sizes, followed by
+its own compiled application. Both widths retain identical project/Pascal bytes.
+The [public People directory](../examples/data-toolbar/people-directory.nyxproject)
+is an exact authenticated MCP export, with unwired optional actions explicitly
+hidden. Inspector preserves those slots and the original multi-key choice; actual
+application dropdowns/grid cells qualify both edited and retained sorting. The
+maintained imported-project mode supplies856 native assertions/nine clean heaps
+and five browser compilations. WORK.md distinguishes the retained predecessors,
+default-mode compile checks and unverified browser/physical/quality/performance/
+observing delivery requirements. All original dependencies/criteria remain open;
+stop further standalone DataToolbar/MCP fixture variants at this checkpoint.
 
 **Acceptance Criteria:**
 

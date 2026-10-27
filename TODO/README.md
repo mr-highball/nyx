@@ -25,11 +25,16 @@ physical/quality gates stay separate. Next is the discovered
 configures the existing typed policy through ordinary transactions/inspection
 and the same Inspector candidate. Authenticated isolated composition, exact
 history and both own-application compiler jobs pass; existing LAN projects and
-configuration remain unchanged. Next return that same project through ordinary
-Studio Inspector/preview/Save/Open and runtime use, retaining all original
-observing/physical/quality prerequisites. Use the Pascal client as the primary
-semantic path. Do not add connection reports, generic source variants or a
-browser-route workaround.
+configuration remain unchanged. The same project now passes ordinary native
+Inspector/preview/Save/Open and its own compiled runtime at both widths. The
+[portable example](../examples/data-toolbar/people-directory.nyxproject) hides
+unwired optional actions and preserves both MCP and Inspector sort choices.
+All original observing/physical/quality/performance prerequisites remain open.
+Stop more DataToolbar/connection or standalone source variants. Next return to
+priority4's useful Tool Canvas: assess existing HTTP/resource prerequisites and
+deliver network/resource input in the public JSON Workshop through its typed
+operations and explicit hosts. Use the Pascal client as the primary semantic
+path; preserve original host/parity/delivery criteria and the browser-route gate.
 
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON
