@@ -8168,8 +8168,10 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         foreach ($nyxToolbarWidth in @('1280','390')) {
           $output = Join-Path $nyxToolbarRoot ('studio-'+$nyxToolbarWidth)
           New-Item -ItemType Directory -Path $output | Out-Null
+          # This journey also authors four protected-input examples. Preserve
+          # Pascal's per-action deadline while bounding the larger whole run.
           $nyxToolbarResult = RunOwned (Join-Path $nyxToolbarNative (
-            'nyx_data_toolbar_studio_controls'+$nyxToolbarSuffix)) @($output,$nyxToolbarWidth) 'studio' 180 $true
+            'nyx_data_toolbar_studio_controls'+$nyxToolbarSuffix)) @($output,$nyxToolbarWidth) 'studio' 720 $true
           $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
             Join-Path $output 'studio-result.json') -Encoding utf8
           Get-Content -LiteralPath (Join-Path $output 'studio-stdout.log') -Tail 4

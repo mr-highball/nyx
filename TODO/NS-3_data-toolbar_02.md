@@ -38,8 +38,10 @@ and post-commit errors keep their semantics. Actual native controls qualify
 two-way, one-way, read-only, shared-state, recovery and retired-command behavior.
 WORK.md owns 1,053 assertions/fifteen clean heaps, including the existing source/
 Studio/saved-application regressions and unchanged input suites. Nine browser
-programs compile only. New binding cases still need ordinary Studio authoring/
-saved-app adoption and full browser/physical/assistive/parity acceptance. No full
+programs compile only. The subsequent ordinary Inspector/preview/Save/Open and
+its own compiled App now qualify projected, read-only and shared-state cases,
+including a protected Sort selector. Authoring01 and WORK.md own that checkpoint;
+full browser/physical/assistive/parity acceptance remains. No full
 criterion, prerequisite or completion credit closes.
 
 The later authoring01 checkpoint now exercises this runtime through actual

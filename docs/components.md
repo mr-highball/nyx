@@ -475,6 +475,15 @@ with a copied control reference and exact portable `Diagnostic`. Other errors
 and all failures after installation still propagate. A bounded Unicode-safe
 message preview keeps the status useful; the typed receipt keeps its diagnostic.
 
+In Studio, select the toolbar's Search or Sort child, open **Bindings**, choose
+**Value** and the compatible state default. **Read and write** permits input
+commands to update that state; **State to control** keeps the state authoritative.
+The ordinary **Read only** property is also available for scalar selectors and
+editors, and can itself bind to Boolean state. Selectors without a native
+read-only widget mode restore refused physical drafts through the shared input
+policy. These choices remain distinct: a supplied value can equal Clear's reset
+value, while an explicit read-only policy continues to forbid that command.
+
 Two-way input resets and their query edit publish together. A one-way projection
 can participate only when the reset needs no change to its supplied value; update
 its authoritative source before retrying. Explicit read-only/disabled/hidden

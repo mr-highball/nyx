@@ -9,6 +9,67 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Authoring protected toolbar inputs — 2026-10-26
+
+Previous goal turn: PROGRESS for the completed on-demand storage retirement and
+fresh archive/report checks; c440476 is the starting product baseline. Root stays
+SOLO. Batch twenty follows authoring01's existing ordinary Studio-to-saved-app
+finish line. The actual Inspector now authors projected Search, read-only Search,
+shared Search/Sort state and read-only Sort on four ordinary pages. Their actual
+preview Clear commands retain inputs/state/query/data and explain refusals;
+exact Undo/Redo and real Save/Open preserve each paired design and Pascal.
+
+The shared schema omitted read-only discovery for selectors and several scalar
+editors despite their existing runtime interaction policy. It now exposes that
+Boolean property/binding target for Select, Checkbox, Switch, Radio, Slider, Spin,
+Date, Time and Color. The ordinary Sort property form and the exact saved/compiled
+application qualify the selector repair, including restored refused physical
+drafts. This is a discovery repair through the existing policy, not a new input
+engine or a native read-only widget claim. Existing protected Search still permits
+ordinary Sort; a compatible authoritative projected value permits Clear recovery.
+
+Private data-toolbar-studio-bindings-02 joins19 successful compiler/runtime
+results: base139/139, reusable137/137, authoring38, ordinary Studio325/349 and its
+own saved/compiled application77/77. Total1,418 assertions and nine complete clean
+heaps. Both widths save identical project/Pascal bytes. Five browser consumers
+compile/stage only. The first retained packet exhausted its old180s whole-journey
+watchdog while advancing through the new forms; it has no complete heap and earns
+no acceptance. The expanded sequence uses720s overall with the existing60s native
+per-action deadline. Complete journeys take383s/247s, not evidence of acceptable
+near-real-time editing or performance quality.
+
+All seven source/build pins remain exact throughout that main run. Subsequent
+PAS2JS-only selection changes give each new page/selection intent a fresh operation
+identity rather than incorrectly reusing another intent's idempotency key. Both
+browser variants and the final native conditional program compile in three more
+joined receipts; the native executed branch is unchanged by that repair. Final
+source identities and the earlier native snapshot are recorded separately. Zero
+owned warnings;49 installed Classes warning occurrences across all compiler
+receipts. No browser interaction, visual, physical-input, assistive or full parity
+acceptance follows from these compilations/native synthetic-input checks.
+
+Keep every original runtime02/query-detail03/coordinator/parity requirement and
+browser/physical/visual/assistive gate open until its actual evidence exists. No
+Nyx semantic namespace is exposed in the current tool inventory. Fresh read-only
+inspection additionally finds no listener at the configured loopback MCP port;
+this is stronger than tool-inventory absence, but no authentication or service
+health claim follows. The ordinary consumer uses its maintained typed exchange,
+not authenticated observing delivery. No refused browser route, listener change
+or cursor workaround. New private orchestration, outputs and child TEMP/TMP remain
+on external storage. No cleanup ran; unrelated1280/390 directories stay untouched.
+
+All owned jobs are terminal and no source freeze remains. This delivers the
+declared native authoring checkpoint, not a full original criterion, prerequisite
+or completion credit. After these two binding batches, stop further scalar/query
+or standalone source variants. Next restore the already authorized semantic MCP
+connection through agent-workflows01 before composing more demos: inspect current
+service/configuration and preserved projects, use maintained Pascal launch/client
+owners on external storage, initialize authenticated bounded discovery and use an
+isolated review/session for a useful design operation. Preserve original runtime,
+authoring, coordinator/parity and all browser/quality acceptance. The near-real-
+time authoring/performance requirement also remains explicit, rather than treating
+the larger regression watchdog as a product performance repair.
+
 ## Current checkpoint — DataToolbar binding refusals — 2026-10-26
 
 Previous goal turn: PROGRESS; 155a161 is pushed and remote-verified. Root remains

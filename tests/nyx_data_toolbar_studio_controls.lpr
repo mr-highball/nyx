@@ -28,6 +28,7 @@ uses
   {$ifdef PAS2JS}JS, Web,{$else}Interfaces, Classes, Forms, Controls, StdCtrls,
   LCLType, LMessages, nyx.files.lcl, nyx.studio.projectstore,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
+  nyx.state, nyx.binding.types, nyx.binding.inputs, nyx.studio.authoring,
   nyx.codegen, nyx.composition, nyx.source, nyx.files, nyx.studio.files, nyx.responsive,
   nyx.collections, nyx.collections.selection, nyx.collections.view,
   nyx.collections.view.types, nyx.menu.editor, nyx.data.toolbar,
@@ -95,8 +96,21 @@ type
     A stage is an ordinary controller turn, never a direct document rewrite. }
   TStage = (ksSelect, ksConfigure, ksUndo, ksRedo, ksDesignPanel, ksPreviewOpen,
     ksPreview, ksInspector, ksSelectNamed, ksConfigureNamed, ksCheckNamed,
+    ksCaseSelect, ksCaseConfigure, ksSearchSelect, ksBindingsOpen, ksValueTarget,
+    ksValueFlow, ksSearchBinding, ksSearchBound, ksReadOnlySet, ksSortSelect,
+    ksSortTarget, ksSortBinding, ksCaseUndo, ksCaseRedo, ksCaseDesign,
+    ksCasePreviewOpen, ksCasePreview, ksCaseNext,
     ksProjectPanel, ksOpenFiles, ksOpenFileBranch, ksOpenFileCommand,
     ksSave, {$ifdef PAS2JS}ksUndoSaved,{$endif} ksOpen, ksReopened);
+  { Each protected-input example is authored through the same ordinary forms.
+    The enum coordinates assertions, never bypasses a Studio command. }
+  TBindingCase = (bcProjected, bcReadOnly, bcSharedState, bcReadOnlySort);
+
+const
+  CCaseToolbar: array[TBindingCase] of TNyxText =
+    ('projected-tools', 'protected-tools', 'shared-tools', 'protected-sort-tools');
+  CCaseState: array[TBindingCase] of TNyxText =
+    ('projected-search', 'protected-search', 'shared-search-and-sort', 'sortable-search');
 
 var
   GStudio: TWorkshopStudio;
@@ -109,10 +123,14 @@ var
   GInstancePair: TNyxText;
   GSaved: TNyxText;
   GDefinition: TNyxText;
+  GBindingCase: TBindingCase;
+  GCaseBefore: TNyxText;
+  GCaseAfter: TNyxText;
   {$ifdef PAS2JS}
   GCore: TNyxAgentSession;
   GExchange: TNyxTestEditorExchange;
   GStarted: Double;
+  GSelectionSerial: Integer;
   {$else}
   GForm: TForm;
   GObserver: TFailureObserver;
@@ -146,6 +164,7 @@ var
   LToolbar: INyxDataToolbar;
   LTable: INyxTable;
   LInstance: INyxComponent;
+  LCase: TBindingCase;
 begin
   Result := TNyxDocument.Create;
   try
@@ -179,6 +198,27 @@ begin
     LInstance.Reference := NyxComponent('workspace');
     LPage.Add(LInstance);
     Result.AddPage(LPage);
+    { Only blank recipes, data and state defaults are fixture input. The actual
+      Inspector must configure intent, bindings and read-only policy below. }
+    for LCase := Low(TBindingCase) to High(TBindingCase) do
+    begin
+      LPage := NewNyxPage(CCaseToolbar[LCase] + '-page');
+      LPage.Add(NewNyxDataToolbar(CCaseToolbar[LCase]));
+      LTable := NewNyxTable(CCaseToolbar[LCase] + '-people');
+      LTable.Binds.Collection(NyxCollectionView(NyxCollection('people')).
+        Column(NyxTextField('name'), 'Name'));
+      LPage.Add(LTable);
+
+      if LCase = bcSharedState then
+      begin
+        Result.State.SetValue(NyxTextState(CCaseState[LCase]), 'Name descending');
+      end
+      else
+      begin
+        Result.State.SetValue(NyxTextState(CCaseState[LCase]), 'Ada');
+      end;
+      Result.AddPage(LPage);
+    end;
     Result.Validate;
   except
     Result.Free;
@@ -252,31 +292,36 @@ begin
   end;
 end;
 
-procedure SelectOwner(const AID: TNyxText; ADefinition: Boolean);
+procedure SelectOwner(const AID: TNyxText; ADefinition: Boolean;
+  const APage: TNyxText = 'home');
 begin
   {$ifdef PAS2JS}
+  { Each navigation/selection is a new semantic intent. Reusing an operation
+    identity for a different page would correctly trigger server idempotency
+    refusal; transport retries of this call still retain its original packet. }
+  Inc(GSelectionSerial);
 
   if not ADefinition then
   begin
     GCore.Call('nyx_select', 'DataToolbar workshop', NyxObject([
       NyxField('expectedRevision', NyxData(GCore.Revision)),
-      NyxField('operationId', NyxData('toolbar-activate-home')),
-      NyxField('id', NyxData('home')), NyxField('activate', NyxData(True))]),
+      NyxField('operationId', NyxData('toolbar-activate-' + IntToStr(GSelectionSerial))),
+      NyxField('id', NyxData(APage)), NyxField('activate', NyxData(True))]),
       'toolbar-workshop');
   end;
   GCore.Call('nyx_select', 'DataToolbar workshop', NyxObject([
     NyxField('expectedRevision', NyxData(GCore.Revision)),
-    NyxField('operationId', NyxData('toolbar-select-' + AID)),
+    NyxField('operationId', NyxData('toolbar-select-' + IntToStr(GSelectionSerial))),
     NyxField('id', NyxData(AID)), NyxField('activate', NyxData(ADefinition))]), 'toolbar-workshop');
   {$else}
 
   if ADefinition then
   begin
-    GStudio.Session.Activate('home');
+    GStudio.Session.Activate(APage);
   end
   else
   begin
-    GStudio.Session.Activate('home');
+    GStudio.Session.Activate(APage);
   end;
   GStudio.Session.Select(AID);
   GStudio.RequestRefresh(True);
@@ -429,11 +474,44 @@ begin
 end;
 {$endif}
 
-procedure ConfigureForm;
+{ Resolve the displayed typed choice, rather than depending on a target's
+  incidental position in a composed page. No source/design value is changed. }
+procedure ChooseTarget(const ATarget: TNyxText);
+var
+  LField: TNyxNode;
+  LItems: TNyxStrings;
+  LIndex: Integer;
+begin
+  LField := GStudio.ShellView.RootFor(NyxStudioDataToolbarEditorID).Find(
+    NyxDataToolbarEditorFieldID(NyxStudioDataToolbarEditorID, ntefTarget));
+  LItems := TNyxStrings.Create;
+  try
+    LItems.Text := LField.Prop('items');
+    for LIndex := 0 to LItems.Count - 1 do
+    begin
+
+      if LItems[LIndex] = NyxMenuEditorChoiceCaption(LIndex, ATarget) then
+      begin
+        Change(LField.ID, LItems[LIndex]);
+        Exit;
+      end;
+    end;
+    raise Exception.Create('The requested toolbar target is not offered by Studio');
+  finally
+    LItems.Free;
+  end;
+end;
+
+procedure ConfigureForm(const ATarget: TNyxText = '');
 var
   LRow: TNyxText;
   LKey: TNyxText;
 begin
+
+  if ATarget <> '' then
+  begin
+    ChooseTarget(ATarget);
+  end;
   LRow := NyxDataToolbarEditorSortID(NyxStudioDataToolbarEditorID, 0);
   LKey := NyxDataToolbarEditorKeyID(LRow, 0);
   Change(NyxDataToolbarEditorFieldID(LRow, ntefCaption), 'Name descending');
@@ -445,6 +523,81 @@ begin
   Change(NyxDataToolbarEditorFieldID(NyxStudioDataToolbarEditorID, ntefQueryCaption), CQueryCaption);
   Change(NyxDataToolbarEditorFieldID(NyxStudioDataToolbarEditorID, ntefQueryButton), CQueryButtonCaption);
   Click(NyxDataToolbarEditorActionID(NyxStudioDataToolbarEditorID, nteaConfigure));
+end;
+
+{ Inspect copied accepted data only to locate the actual child selected by
+  Studio. Recipe role names remain open typed part references. }
+function AuthoredRole(const AToolbar, APart: TNyxText): TNyxText;
+var
+  LDocument: TNyxDocument;
+begin
+  LDocument := TNyxCodec.Decode(GStudio.ProjectSnapshot.Design);
+  try
+    Result := LDocument.Find(AToolbar).Part(NyxPart(APart)).ID;
+  finally
+    LDocument.Free;
+  end;
+end;
+
+procedure BindCurrentValue(const AState: TNyxText);
+var
+  LRoot: TNyxNode;
+  LIndex: Integer;
+begin
+  LRoot := GStudio.ShellView.RootFor('studio-bindings').Find('studio-bindings');
+  for LIndex := 0 to LRoot.Count - 1 do
+  begin
+
+    if LRoot.Children[LIndex].Prop(NyxStudioStateKey) = AState then
+    begin
+      Click(LRoot.Children[LIndex].ID);
+      Exit;
+    end;
+  end;
+  raise Exception.Create('Studio did not offer the compatible state default');
+end;
+
+procedure CheckAuthoredBindings;
+var
+  LDocument: TNyxDocument;
+  LToolbar: TNyxNode;
+  LSpec: TNyxBindingSpec;
+  LDirection: TNyxBindingDirection;
+begin
+  LDocument := TNyxCodec.Decode(GStudio.ProjectSnapshot.Design);
+  try
+    LToolbar := LDocument.Find(CCaseToolbar[GBindingCase]);
+    LDirection := bdTwoWay;
+
+    if GBindingCase = bcProjected then
+    begin
+      LDirection := bdFromState;
+    end;
+    Check(LToolbar.Part(NyxPart('search')).FindBinding(bpValue, LSpec) and
+      (LSpec.StateName = CCaseState[GBindingCase]) and (LSpec.Direction = LDirection),
+      'ordinary binding form admits the exact state reference and typed flow');
+
+    if GBindingCase = bcReadOnly then
+    begin
+      Check(LToolbar.Part(NyxPart('search')).Prop('readonly') = 'true',
+        'ordinary property form admits the read-only policy beside its binding');
+    end;
+
+    if GBindingCase = bcSharedState then
+    begin
+      Check(LToolbar.Part(NyxPart('sort')).FindBinding(bpValue, LSpec) and
+        (LSpec.StateName = CCaseState[GBindingCase]) and (LSpec.Direction = bdTwoWay),
+        'both ordinary binding forms deliberately choose the same writable state');
+    end;
+
+    if GBindingCase = bcReadOnlySort then
+    begin
+      Check(LToolbar.Part(NyxPart('sort')).Prop('readonly') = 'true',
+        'ordinary selector properties expose the shared read-only interaction policy');
+    end;
+  finally
+    LDocument.Free;
+  end;
 end;
 
 procedure InspectorPanel;
@@ -577,6 +730,183 @@ begin
   {$endif}
 end;
 
+{ Read the physical editor, including Select text, without confusing authored
+  defaults with the runtime state projected by the actual adapter. }
+function RuntimeInput(AView: TView; const AID: TNyxText): TNyxText;
+{$ifdef PAS2JS}
+var
+  LInput: TJSHTMLElement;
+begin
+  LInput := AView.InputFor(AID);
+
+  if LInput.tagName = 'SELECT' then
+  begin
+    Result := TJSHTMLSelectElement(LInput).value;
+  end
+  else
+  begin
+    Result := TJSHTMLInputElement(LInput).value;
+  end;
+end;
+{$else}
+var
+  LInput: TControl;
+begin
+  LInput := AView.InputFor(AID);
+
+  if LInput is TComboBox then
+  begin
+    Result := TComboBox(LInput).Text;
+  end
+  else
+  begin
+    Result := TCustomEdit(LInput).Text;
+  end;
+end;
+{$endif}
+
+procedure RuntimeClick(AView: TView; const AID: TNyxText);
+begin
+  AView.Reveal(AID, niRuntime);
+  {$ifdef PAS2JS}
+  AView.ElementFor(AID).click;
+  {$else}
+  TControlAccess(AView.ControlFor(AID)).Click;
+  Application.ProcessMessages;
+  {$endif}
+end;
+
+{ The same exact saved design is used in Studio preview, independent project
+  admission and its own compiled application. Only application runs perform
+  recovery; preview checks leave each case ready for its next fresh mounting. }
+procedure ProtectedClear(AView: TView; ACase: TBindingCase; ARecover: Boolean);
+var
+  LToolbar: TNyxNode;
+  LSearch: TNyxText;
+  LSort: TNyxText;
+  LSearchValue: TNyxText;
+  LSortValue: TNyxText;
+  LQueryBefore: TNyxText;
+  LRevision: Integer;
+  LSource: INyxCollectionSnapshot;
+  LRows: INyxCollectionView;
+  LBinding: INyxDataToolbarBinding;
+  LFeedback: INyxDataToolbarCommandFeedback;
+  LQuery: INyxDataToolbarQueryBinding;
+  LRefused: Boolean;
+  LKind: TNyxInputRefusalKind;
+begin
+  LToolbar := AView.Root.Find(CCaseToolbar[ACase]);
+  LSearch := LToolbar.Part(NyxPart('search')).ID;
+  LSort := LToolbar.Part(NyxPart('sort')).ID;
+  LSearchValue := RuntimeInput(AView, LSearch);
+  LSortValue := RuntimeInput(AView, LSort);
+  Check(LSearchValue = AView.State.Value(CCaseState[ACase]).TextValue,
+    'the authored binding reaches the actual application input');
+  Check(Supports(AView.CoordinatorBinding(LToolbar.ID), INyxDataToolbarBinding, LBinding) and
+    Supports(LBinding, INyxDataToolbarCommandFeedback, LFeedback) and
+    Supports(LBinding, INyxDataToolbarQueryBinding, LQuery),
+    'the Studio-authored toolbar exposes live typed commands, feedback and query context');
+  LRows := AView.CollectionView(CCaseToolbar[ACase] + '-people');
+  LSource := LRows.Store.Snapshot;
+  LQueryBefore := LRows.QueryPolicy.ToData.ToJSON;
+  LRevision := AView.State.Revision;
+  RuntimeClick(AView, LToolbar.Part(NyxPart('clear')).ID);
+  Check((LFeedback.LastCommand.Command = ntcClear) and
+    (LFeedback.LastCommand.Outcome = ntcoRefused),
+    'ordinary preview/application Clear reports an unchanged refusal');
+  Check((AView.State.Revision = LRevision) and
+    (LRows.QueryPolicy.ToData.ToJSON = LQueryBefore) and (LRows.Store.Snapshot = LSource) and
+    (RuntimeInput(AView, LSearch) = LSearchValue) and (RuntimeInput(AView, LSort) = LSortValue),
+    'refused Clear preserves physical inputs, state, query and original collection data');
+  CheckQueryStatus(AView, LToolbar.ID, LQuery);
+  Check(Pos('Clear was not applied', LQuery.QueryStatus) > 0,
+    'the ordinary visible query status explains why Clear did not change the view');
+  LKind := nirkProjection;
+
+  if ACase in [bcReadOnly, bcReadOnlySort] then
+  begin
+    LKind := nirkInteraction;
+
+    if ACase = bcReadOnly then
+    begin
+      {$ifdef PAS2JS}
+      Check(TJSHTMLInputElement(AView.InputFor(LSearch)).readOnly,
+        'Studio read-only policy reaches the physical browser input');
+      {$else}
+      Check(TCustomEdit(AView.InputFor(LSearch)).ReadOnly,
+        'Studio read-only policy reaches the physical native input');
+      {$endif}
+    end;
+  end
+  else if ACase = bcSharedState then
+  begin
+    LKind := nirkConflictingState;
+  end;
+  LRefused := False;
+  try
+    LBinding.Clear;
+  except
+    on LError: ENyxInputAssignmentRefused do
+    begin
+      LRefused := True;
+      Check((LError.Kind = LKind) and (LError.Diagnostic = LFeedback.LastCommand.Message),
+        'direct API preserves the exact typed reason behind the user-facing feedback');
+
+      if ACase = bcReadOnlySort then
+      begin
+        Check(LError.Control.ID = LSort, 'the typed refusal identifies the protected Sort role');
+      end;
+    end;
+  end;
+  Check(LRefused and (AView.State.Revision = LRevision),
+    'the direct refused command retains exception semantics and publishes no state');
+
+  if ARecover and (ACase = bcProjected) then
+  begin
+    AView.State.SetValue(NyxTextState(CCaseState[ACase]), '');
+    RuntimeClick(AView, LToolbar.Part(NyxPart('clear')).ID);
+    Check((LFeedback.LastCommand.Outcome = ntcoSucceeded) and
+      (LRows.Snapshot.Count = 2) and (Pos('Clear was not applied', LQuery.QueryStatus) = 0),
+      'a compatible authoritative value permits Clear and replaces stale refusal feedback');
+  end;
+
+  if ARecover and (ACase = bcReadOnly) then
+  begin
+    AView.Reveal(LSort, niRuntime);
+    {$ifdef PAS2JS}
+    TJSHTMLSelectElement(AView.InputFor(LSort)).value := 'Name descending';
+    AView.InputFor(LSort).dispatchEvent(TJSEvent.new('change'));
+    {$else}
+    TComboBox(AView.InputFor(LSort)).ItemIndex :=
+      TComboBox(AView.InputFor(LSort)).Items.IndexOf('Name descending');
+    TComboBox(AView.InputFor(LSort)).OnChange(AView.InputFor(LSort));
+    Application.ProcessMessages;
+    {$endif}
+    Check((LFeedback.LastCommand.Command = ntcSort) and
+      (LFeedback.LastCommand.Outcome = ntcoSucceeded) and
+      (RuntimeInput(AView, LSearch) = LSearchValue),
+      'ordinary Sort remains useful next to a protected Search and replaces old feedback');
+  end;
+
+  if ARecover and (ACase = bcReadOnlySort) then
+  begin
+    AView.Reveal(LSort, niRuntime);
+    {$ifdef PAS2JS}
+    TJSHTMLSelectElement(AView.InputFor(LSort)).value := 'Name descending';
+    AView.InputFor(LSort).dispatchEvent(TJSEvent.new('change'));
+    {$else}
+    TComboBox(AView.InputFor(LSort)).ItemIndex :=
+      TComboBox(AView.InputFor(LSort)).Items.IndexOf('Name descending');
+    TComboBox(AView.InputFor(LSort)).OnChange(AView.InputFor(LSort));
+    Application.ProcessMessages;
+    {$endif}
+    Check((RuntimeInput(AView, LSort) = LSortValue) and
+      (AView.State.Revision = LRevision) and (LRows.QueryPolicy.ToData.ToJSON = LQueryBefore),
+      'read-only selector restores a refused physical draft without changing state or query');
+  end;
+end;
+
 procedure Stage;
 {$ifndef PAS2JS}
 var
@@ -623,6 +953,120 @@ begin
       begin
         Check(Pair <> GInstancePair, 'named reusable toolbar configures through ordinary Inspector');
         GInstancePair := Pair;
+      end;
+    ksCaseSelect: SelectOwner(CCaseToolbar[GBindingCase], False,
+      CCaseToolbar[GBindingCase] + '-page');
+    ksCaseConfigure: ConfigureForm(CCaseToolbar[GBindingCase] + '-people');
+    ksSearchSelect: SelectOwner(AuthoredRole(CCaseToolbar[GBindingCase], 'search'), False,
+      CCaseToolbar[GBindingCase] + '-page');
+    ksBindingsOpen:
+      begin
+
+        if GStudio.ShellView.RootFor('studio-bindings') = nil then
+        begin
+          Click(NyxStudioBindingsToggleID);
+        end;
+      end;
+    ksValueTarget: Change(NyxStudioBindingTargetID, NyxBindingPropertyTitle(bpValue));
+    ksValueFlow:
+      begin
+
+        if GBindingCase = bcProjected then
+        begin
+          Change(NyxStudioBindingFlowID, NyxStudioBindingDirectionTitle(bdFromState));
+        end
+        else
+        begin
+          Change(NyxStudioBindingFlowID, NyxStudioBindingDirectionTitle(bdTwoWay));
+        end;
+      end;
+    ksSearchBinding:
+      begin
+        GCaseBefore := Pair;
+        BindCurrentValue(CCaseState[GBindingCase]);
+      end;
+    ksSearchBound:
+      begin
+
+        if GBindingCase = bcProjected then
+        begin
+          CheckAuthoredBindings;
+        end;
+      end;
+    ksReadOnlySet:
+      begin
+
+        if GBindingCase = bcReadOnly then
+        begin
+          GCaseBefore := Pair;
+          Change('inspector-readonly', 'true');
+        end;
+      end;
+    ksSortSelect:
+      begin
+
+        if GBindingCase in [bcSharedState, bcReadOnlySort] then
+        begin
+          SelectOwner(AuthoredRole(CCaseToolbar[GBindingCase], 'sort'), False,
+            CCaseToolbar[GBindingCase] + '-page');
+        end;
+      end;
+    ksSortTarget:
+      begin
+
+        if GBindingCase = bcSharedState then
+        begin
+          Change(NyxStudioBindingTargetID, NyxBindingPropertyTitle(bpValue));
+        end;
+      end;
+    ksSortBinding:
+      begin
+
+        if GBindingCase = bcSharedState then
+        begin
+          GCaseBefore := Pair;
+          BindCurrentValue(CCaseState[GBindingCase]);
+        end
+        else if GBindingCase = bcReadOnlySort then
+        begin
+          GCaseBefore := Pair;
+          Change('inspector-readonly', 'true');
+        end;
+      end;
+    ksCaseUndo:
+      begin
+        CheckAuthoredBindings;
+        GCaseAfter := Pair;
+        Check(GCaseAfter <> GCaseBefore, 'ordinary input configuration produces a new accepted pair');
+        Click('action-undo');
+      end;
+    ksCaseRedo:
+      begin
+        Check(Pair = GCaseBefore, 'one Undo restores exact design and Pascal before the input edit');
+        Click('action-redo');
+      end;
+    ksCaseDesign:
+      begin
+        Check(Pair = GCaseAfter, 'one Redo restores the complete typed input configuration');
+        DesignPanel;
+      end;
+    ksCasePreviewOpen: Click('action-preview');
+    ksCasePreview:
+      begin
+        ProtectedClear(GStudio.CanvasView, GBindingCase, False);
+        Check(Pair = GCaseAfter, 'refused preview commands do not rewrite authored defaults or Pascal');
+        Click('action-preview');
+      end;
+    ksCaseNext:
+      begin
+        InspectorPanel;
+
+        if GBindingCase < High(TBindingCase) then
+        begin
+          GBindingCase := Succ(GBindingCase);
+          GStage := ksCaseSelect;
+          Exit;
+        end;
       end;
     ksProjectPanel:
       begin
@@ -718,6 +1162,7 @@ var
   LBinding: INyxDataToolbarBinding;
   LQuery: INyxDataToolbarQueryBinding;
   LControls: INyxCollectionQueryWorkbench;
+  LCase: TBindingCase;
   {$ifdef PAS2JS}
   LHost: TJSHTMLElement;
   {$endif}
@@ -748,6 +1193,14 @@ begin
     LBinding.Sort(NyxToolbarSort('Name descending'));
     Check(LApplication.View.CollectionView('people').Snapshot.ItemAt(0).GetValue(NyxTextField('name')) = 'Grace',
       'saved typed sort choice orders the actual application table');
+    for LCase := Low(TBindingCase) to High(TBindingCase) do
+    begin
+      LApplication.ShowPage(CCaseToolbar[LCase] + '-page');
+      {$ifndef PAS2JS}
+      Application.ProcessMessages;
+      {$endif}
+      ProtectedClear(LApplication.View, LCase, True);
+    end;
     Check(TNyxCodec.Encode(ADocument) = LBefore, 'runtime commands never modify saved defaults');
   finally
     LApplication.Free;
@@ -799,7 +1252,7 @@ begin
       GExchange.FireTick;
     end;
 
-    if TJSDate.now - GStarted > 180000 then
+    if TJSDate.now - GStarted > 720000 then
     begin
       raise Exception.Create('DataToolbar Studio timed out');
     end;

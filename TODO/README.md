@@ -14,11 +14,20 @@ adds no tasks, credit, dependency waivers or approval gates.
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |
 | 2 — Checkpoint delivered; gates open | A comfortable Studio workspace | [Studio slice](NS-4_studio-slice_01.md), consumed by [full authoring](NS-4_studio-authoring_01.md): native desktop/compact selection → Properties → Events → source → preview now passes with exact draft/history preservation and a visible active preview toggle. Browser, physical/assistive and full original acceptance remain open. Retain the [splitter regression](NS-2_split-platform_02.md) as an explicit input/resize check; stop further chrome variants. |
-| 3 — Current; gates open | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), [authoring01](NS-3_data-toolbar_01.md) and [query detail03](NS-3_data-toolbar_03.md): native Search/Sort/Clear and retained-filter removal reach Studio Save/Open and its own compiled application. Ordinary one-way/read-only/shared-state cases now preserve refused transactions and explain them through typed feedback and rendered status. Next carry useful binding/refusal cases through ordinary Studio authoring and its saved app. Browser/physical/visual and full coordinator/parity acceptance stay open; stop generic query/source variants. |
+| 3 — Checkpoint delivered; gates open | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), [authoring01](NS-3_data-toolbar_01.md) and [query detail03](NS-3_data-toolbar_03.md): Search/Sort/Clear, retained-filter details and protected-input settings now reach ordinary native Inspector/preview/history/Save/Open and the exact compiled application. The shared schema exposes selector read-only properties/bindings. Browser/physical/visual, near-real-time quality and full coordinator/parity acceptance stay open; stop generic query/source variants. |
 | 4 — Checkpoint delivered; gates open | A useful connected Tool Canvas | [Logic components](NS-3_logic-components_01.md) and [Tool Canvas](NS-3_tool-canvas_01.md): the public JSON Workshop opens files, runs editable Pascal preparation, formats and saves through typed graphs/hosts, including cancellation, invalid input, newer edits and retirement. Native Studio Save/Open and its own compiled application pass. Real host effects, resources/operations/diagrams, browser/physical/visual/assistive quality and original prerequisites remain open; stop standalone JSON/script/source proofs. |
 
-After the two preparation/open batches, reassessment returns implementation to
-DataToolbar's remaining binding/read-only/refusal matrix above. The native JSON
+Current prerequisite: restore [primary semantic workflows](NS-4_agent-workflows_01.md)
+before composing more demos. Fresh read-only inspection finds no listener at the
+configured loopback MCP port. Use maintained Pascal hosts/client, external scratch
+and an isolated review/session for authenticated bounded discovery and a useful
+revision-aware operation. Preserve projects and distinguish configuration,
+connectivity, observing delivery and tool-handle availability. Existing launch
+authorization persists; do not retry the refused browser surface or add a new
+tool/wire rollout. WORK.md owns the exact handoff and remaining quality gates.
+
+After the two preparation/open and two binding batches, reassessment stops further
+scalar/query/source variants at the integrated native checkpoint. The native JSON
 Workshop is now a useful integrated tool, not full Tool Canvas acceptance.
 Its 362 assertions/four clean heaps and three browser compilations remain scoped
 evidence in WORK.md. No task, original criterion or completion credit closes.

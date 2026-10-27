@@ -4,14 +4,17 @@
 
 **Description:**
 
-The runtime binding/refusal return now has typed unchanged-versus-committed
-feedback and actual native one-way/read-only/shared-state cases. Existing ordinary
-Studio Save/Open and its own compiled application continue to pass. WORK.md owns
-the scoped results and distinguishes those regressions from authoring every new
-case through Studio. Next carry useful binding/refusal cases through the existing
-ordinary property/binding UI and that journey's own saved application. No options
-wire/source change, full criterion or completion credit is added; all original
-browser/physical/quality and coordinator/parity acceptance remains required.
+The binding/refusal return now reaches actual ordinary Inspector authoring,
+preview, exact history and real Save/Open for projected Search, protected Search,
+shared Search/Sort state and protected Sort. The shared schema now exposes the
+existing read-only policy for selectors and other scalar editors, including its
+Boolean binding target. Native Studio325/349 and its own saved/compiled App77/77
+pass, with identical saved bytes across widths. WORK.md owns the1,418 combined
+assertions/nine clean heaps, retained watchdog failure and compiled-only browser
+limits. Stop further scalar/query/source variants; restore the semantic connection
+through agent-workflows01 before more demos. No full criterion, prerequisite or
+credit closes. Original browser/physical/quality, near-real-time authoring and
+coordinator/parity acceptance remains required.
 
 Make the existing DataToolbar an opt-in useful collection-control experience
 inside Studio. The public runtime now coordinates actual List/Table targets;

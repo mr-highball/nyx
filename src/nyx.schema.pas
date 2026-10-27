@@ -1695,7 +1695,13 @@ begin
     Add('placeholder', 'Placeholder', npText);
   end;
 
-  if KindIn(LKind, 'input|memo|code-editor|list|table|tree|column|row|grid|panel|card|group|toolbar') then
+  { Discover the interaction policy for every scalar editor, including selectors
+    whose host widget emulates read-only admission. This metadata also supplies
+    typed Boolean binding targets; omitting a selector hides both authoring paths.
+    Container policies continue to govern descendants through the shared scope. }
+
+  if KindIn(LKind, 'input|memo|code-editor|select|checkbox|switch|radio|slider|spin|' +
+    'date|time|color|list|table|tree|column|row|grid|panel|card|group|toolbar') then
   begin
     Add('readonly', 'Read only', npBoolean, 'false');
   end;
