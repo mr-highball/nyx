@@ -17,14 +17,15 @@ adds no tasks, credit, dependency waivers or approval gates.
 | 3 — Checkpoint delivered; gates open | Searchable data controls without application glue | [DataToolbar runtime02](NS-3_data-toolbar_02.md), [authoring01](NS-3_data-toolbar_01.md) and [query detail03](NS-3_data-toolbar_03.md): Search/Sort/Clear, retained-filter details and protected-input settings now reach ordinary native Inspector/preview/history/Save/Open and the exact compiled application. The shared schema exposes selector read-only properties/bindings. Browser/physical/visual, near-real-time quality and full coordinator/parity acceptance stay open; stop generic query/source variants. |
 | 4 — Checkpoint delivered; gates open | A useful connected Tool Canvas | [Logic components](NS-3_logic-components_01.md) and [Tool Canvas](NS-3_tool-canvas_01.md): the public JSON Workshop opens files, runs editable Pascal preparation, formats and saves through typed graphs/hosts, including cancellation, invalid input, newer edits and retirement. Native Studio Save/Open and its own compiled application pass. Real host effects, resources/operations/diagrams, browser/physical/visual/assistive quality and original prerequisites remain open; stop standalone JSON/script/source proofs. |
 
-Current prerequisite: restore [primary semantic workflows](NS-4_agent-workflows_01.md)
-before composing more demos. Fresh read-only inspection finds no listener at the
-configured loopback MCP port. Use maintained Pascal hosts/client, external scratch
-and an isolated review/session for authenticated bounded discovery and a useful
-revision-aware operation. Preserve projects and distinguish configuration,
-connectivity, observing delivery and tool-handle availability. Existing launch
-authorization persists; do not retry the refused browser surface or add a new
-tool/wire rollout. WORK.md owns the exact handoff and remaining quality gates.
+The [semantic connection](NS-4_agent-workflows_01.md) is restored:24 tools,
+authenticated isolated composition, stale refusal, exact Undo/Redo and two actual
+backend application builds pass. Current chat-native handles and observing/
+physical/quality gates stay separate. Next is the discovered
+[DataToolbar semantic authoring gap](NS-4_agent-workflows_02.md): configure the
+existing typed policy through ordinary transactions/inspection and the same
+Inspector candidate. Use the restored Pascal client as the primary semantic path;
+preserve projects and every original prerequisite. Do not add more connection
+reports, generic source variants or a browser-route workaround.
 
 After the two preparation/open and two binding batches, reassessment stops further
 scalar/query/source variants at the integrated native checkpoint. The native JSON

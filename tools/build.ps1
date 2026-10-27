@@ -414,7 +414,10 @@ param(
   [switch]$VerifyLogicalViewport,
   # Detached visual/structural admission, exact compiled companion and actual
   # original-size native controls. Browser programs are staged, not hosted.
-  [switch]$VerifyDesignSource
+  [switch]$VerifyDesignSource,
+  # Appended to preserve existing positional callers. This host/tool output
+  # overrides configured scratch without moving maintained source.
+  [string]$NativeOutput
 )
 
 $ErrorActionPreference = 'Stop'
@@ -691,7 +694,25 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
 }
 
 Push-Location $nyxRoot
+$nyxPreviousProcessTemp = $env:TEMP
+$nyxPreviousProcessTmp = $env:TMP
 try {
+  # Compiler subprocesses may use host temporary files independently of -FU/-FE.
+  # Scope the configured override to this invocation and restore its caller.
+  $nyxProcessTemp = [Environment]::GetEnvironmentVariable('NYX_TEMP_ROOT')
+  if (-not $nyxProcessTemp -and $nyxConfig.ContainsKey('TEMP_ROOT')) {
+    $nyxProcessTemp = $nyxConfig.TEMP_ROOT
+  }
+  if ($nyxProcessTemp) {
+    $nyxProcessTemp = [IO.Path]::GetFullPath($nyxProcessTemp)
+    New-Item -ItemType Directory -Force -Path $nyxProcessTemp | Out-Null
+    $env:TEMP = $nyxProcessTemp
+    $env:TMP = $nyxProcessTemp
+  }
+  $nyxScratchRoot = [Environment]::GetEnvironmentVariable('NYX_SCRATCH_ROOT')
+  if (-not $nyxScratchRoot -and $nyxConfig.ContainsKey('SCRATCH_ROOT')) {
+    $nyxScratchRoot = $nyxConfig.SCRATCH_ROOT
+  }
   $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
   if ($Target -eq 'inspection-authoring') {
     $nyxInspectionRoot = [IO.Path]::GetFullPath($InspectionAuthoringEvidenceDirectory)
@@ -1504,6 +1525,13 @@ body[data-query-authoring="passed"] script#query-authoring-project {
   $nyxCPU = (& $nyxFpc '-iTP').Trim()
   $nyxOS = (& $nyxFpc '-iTO').Trim()
   $nyxNativeDir = Join-Path $nyxRoot ("build/native/$nyxVersion/$nyxCPU-$nyxOS")
+  if ($nyxScratchRoot) {
+    $nyxNativeDir = Join-Path ([IO.Path]::GetFullPath($nyxScratchRoot)) (
+      "native/$nyxVersion/$nyxCPU-$nyxOS")
+  }
+  if ($NativeOutput) {
+    $nyxNativeDir = [IO.Path]::GetFullPath($NativeOutput)
+  }
   New-Item -ItemType Directory -Force $nyxNativeDir | Out-Null
   Write-Host "FPC: $nyxFpc / $nyxVersion / $nyxCPU-$nyxOS"
   $nyxNativeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
@@ -3230,7 +3258,8 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_source_workflow.lpr'))
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tools/nyx_resource_companion.lpr'))
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_config_tests.lpr'))
-    & (Join-Path $nyxNativeDir 'nyx_mcp_config_tests.exe')
+    & (Join-Path $nyxNativeDir 'nyx_mcp_config_tests.exe') (
+      Join-Path $nyxNativeDir ('mcp-config-' + [Guid]::NewGuid().ToString('N')))
 
     if ($LASTEXITCODE -ne 0) {
       throw 'MCP configuration preservation checks failed'
@@ -10994,17 +11023,55 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     }
   }
 
-  if ($Target -in @('browser', 'studio', 'generated', 'collections', 'collection-views', 'all')) {
+  if ($Target -eq 'studio') {
+    # Build the actual editor payload. General compiler/control regression
+    # consumers belong to their focused targets and all, not every host refresh.
+    # The explicit browser target also admits the separate module worker below.
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxBrowserDir = Join-Path $nyxRoot 'build/browser'
+    if ($nyxScratchRoot) {
+      $nyxBrowserDir = Join-Path ([IO.Path]::GetFullPath($nyxScratchRoot)) 'browser'
+    }
+    if ($BrowserOutput) { $nyxBrowserDir = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force -Path $nyxBrowserDir | Out-Null
+    $nyxBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxBrowserDir")
+    Invoke-NyxCompiler $nyxPas2js ($nyxBrowserFlags + @('studio/nyx_studio.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxBrowserFlags + @('studio/nyx_studio_preview.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
+    foreach ($nyxHost in @('index.html', 'agent-preview.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/'+$nyxHost)) -Destination $nyxBrowserDir
+    }
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('studio/nyx_studio_server.lpr'))
+    foreach ($nyxPayload in @('index.html','agent-preview.html','rtl.js',
+        'nyx_studio.js','nyx_source_worker.js','nyx_studio_preview.js')) {
+      $nyxPayloadFile = Join-Path $nyxBrowserDir $nyxPayload
+      if (-not (Test-Path -LiteralPath $nyxPayloadFile -PathType Leaf) -or
+          (Get-Item -LiteralPath $nyxPayloadFile).Length -eq 0) {
+        throw ('Studio payload is incomplete: '+$nyxPayload)
+      }
+    }
+    Write-Host "Studio server: $(Join-Path $nyxNativeDir 'nyx_studio_server.exe')"
+    Write-Host "Studio editor, source worker and preview staged: $nyxBrowserDir"
+    exit 0
+  }
+
+  if ($Target -in @('browser', 'generated', 'collections', 'collection-views', 'all')) {
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxBrowserDir = Join-Path $nyxRoot 'build/browser'
+
+    if ($nyxScratchRoot) {
+      $nyxBrowserDir = Join-Path ([IO.Path]::GetFullPath($nyxScratchRoot)) 'browser'
+    }
 
     if ($BrowserOutput) {
       $nyxBrowserDir = [IO.Path]::GetFullPath($BrowserOutput)
     }
     New-Item -ItemType Directory -Force $nyxBrowserDir | Out-Null
     Write-Host "pas2js: $nyxPas2js / $(& $nyxPas2js '-iV')"
-    $nyxBrowserFlags = @('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+    $nyxBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio', '-Futests',
       "-FE$nyxBrowserDir")
 
     if ($Target -in @('collections', 'collection-views')) {
@@ -11064,7 +11131,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     }
   }
 
-  if ($Target -in @('studio', 'all')) {
+  if ($Target -eq 'all') {
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('studio/nyx_studio_server.lpr'))
     Write-Host "Studio server: $(Join-Path $nyxNativeDir 'nyx_studio_server.exe')"
   }
@@ -11131,5 +11198,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     }
   }
 } finally {
+  $env:TEMP = $nyxPreviousProcessTemp
+  $env:TMP = $nyxPreviousProcessTmp
   Pop-Location
 }

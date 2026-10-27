@@ -42,6 +42,8 @@ var
   LPort: Integer;
   LMCPPort: Integer;
   LWebRoot: TNyxText;
+  LRuntimeRoot: TNyxText;
+  LEnrollmentRoot: TNyxText;
   LDirectories: TNyxStudioDirectories;
   LRecoveryMode: TNyxRuntimeRecoveryMode;
   LRecoveryChoice: TNyxText;
@@ -116,6 +118,25 @@ begin
     { The optional sixth argument selects a pristine release with a separate
       private runtime home. Earlier repository invocations retain their layout. }
     LDirectories := TNyxStudioDirectories.ForRelease(LRepository, ParamStr(6));
+  end
+  else
+  begin
+    { Repository launch keeps source identity while placing writable jobs,
+      projects and recovery on an explicitly configured host volume. These
+      process-only paths never enter portable designs or HTTP request input.
+      Existing positional release launches retain verified manifest admission. }
+    LRuntimeRoot := GetEnvironmentVariable('NYX_STUDIO_RUNTIME_ROOT');
+
+    if LRuntimeRoot <> '' then
+    begin
+      LDirectories := LDirectories.RunningIn(LRuntimeRoot);
+    end;
+    LEnrollmentRoot := GetEnvironmentVariable('NYX_STUDIO_ENROLLMENT_ROOT');
+
+    if LEnrollmentRoot <> '' then
+    begin
+      LDirectories := LDirectories.EnrollingProject(LEnrollmentRoot);
+    end;
   end;
 
   if ParamCount > 6 then

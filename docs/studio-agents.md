@@ -353,6 +353,25 @@ See [the qualification packet](../WORK.md#current-return-path-semantic-project-f
 
 ## Connect
 
+The maintained `studio` build produces the backend, browser editor, module source
+worker and preview together. It checks the complete payload before reporting
+success; `all` and the focused regression targets retain compiler/control tests.
+The repository launcher also refuses an incomplete web payload before starting a
+service or changing enrollment, including when `-SkipBuild` is selected.
+
+Host storage is separate from portable designs. `SCRATCH_ROOT` in the ignored
+toolchain configuration selects common compiler/browser output; `-NativeOutput`
+and `-BrowserOutput` override those locations. `TEMP_ROOT` scopes compiler and
+service child temporary files, with caller environment restored afterward.
+The launcher's optional `-RuntimeRoot` and `-WebRoot` select separate repository
+runtime storage and a staged frontend. Equivalent private hints are
+`STUDIO_RUNTIME_ROOT`, `STUDIO_WEB_ROOT` and, for an already built `-SkipBuild`
+launch, `STUDIO_SERVER`. Scratch configuration alone does not move a durable
+project store. Preserve existing project/checkpoint/profile files before an
+explicit runtime migration; the launcher neither migrates nor deletes them.
+Release launches retain their existing positional arguments, sealed payload
+verification and disjoint runtime rules.
+
 The Pascal Studio service starts a separate MCP listener on **127.0.0.1**, using
 the Studio port plus one unless explicitly configured. Its URL contains a fresh
 session identifier and requires a private bearer credential. LAN access to the

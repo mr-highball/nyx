@@ -2,18 +2,23 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
-Current return — 2026-10-26: after the useful DataToolbar authoring checkpoint,
-restore semantic testing before further demo composition. The current inventory
-exposes no Nyx handles, and fresh read-only inspection finds no listener on the
-configured loopback MCP port. Inspect current service/configuration and preserved
-projects, then use the maintained Pascal launch/client owners and external scratch
-storage. Existing launch/update authorization persists. Initialize authenticated,
-bounded discovery and demonstrate a revision-aware operation in an isolated
-review/session without replacing a user's primary project. Distinguish configured,
-listening, authenticated, observing and native tool-handle availability. Preserve
-all original criteria, browser restrictions and delivery requirements below;
-inventory absence alone is not server-health evidence. No new tool/wire rollout,
-resolver expansion, repeated planning or completion credit is implied.
+Connection restored — 2026-10-27: the maintained Pascal service now serves the
+complete editor/source-worker/preview payload from external storage, with a LAN
+editor and loopback-only MCP. Initialized authenticated discovery advertises24
+tools. The semantic client creates an independent Input playground with one
+grouped control/state-binding command; stale revision refusal and exact paired
+Undo/Redo pass. That same accepted project compiles through both browser and LCL
+backend jobs. Primary revision/navigation/history,80 saved project files and
+unrelated configuration bytes remain unchanged. WORK.md owns receipts, the
+retained missing-worker failure and the guarded replacement process.
+
+Current chat-native handles are still absent; the maintained Pascal client is the
+primary semantic path while that connection awaits refresh. Browser execution,
+observing delivery, physical LAN/input, visual/assistive quality and complete
+original criteria remain separate gates. Source review of actual discovery finds
+no typed DataToolbar policy operation in the transaction schema; the focused
+[compound authoring gap](NS-4_agent-workflows_02.md) now owns that user-facing next
+delivery. Do not replace it with more connection reports or resolver variants.
 
 Current-source [semantic completion](../docs/pascal-projects.md#semantic-completion-queries)
 uses existing nyx_pascal with exact acknowledged revision/caret, bounded typed rows

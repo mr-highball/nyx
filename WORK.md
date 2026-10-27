@@ -9,6 +9,81 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Restoring primary semantic testing — 2026-10-27
+
+Previous goal turn: PROGRESS; bb020e1 is pushed and remote-verified. Root remains
+SOLO. Batch twenty-one follows agent-workflows01's connection return. The maintained
+Pascal host/client now run with external compiler, browser, runtime and temporary
+storage. The editor binds LAN and MCP binds only loopback. Project and enrolled
+user configuration contain the same fresh connection; unrelated bytes remain
+exact. All80 saved-project files have verified external copies and unchanged
+originals. The existing primary revision, navigation and history remain unchanged.
+
+Common build output honors configured scratch or explicit NativeOutput/
+BrowserOutput. TEMP_ROOT scopes compiler and service subprocess temporary files
+and restores callers. Repository launch consumes existing typed RunningIn and
+staged-web choices without changing the established positional release contract.
+Runtime storage is explicit: scratch alone must not silently select another
+durable project store. Private host hints point to the qualified external paths.
+New optional shell parameters are appended to preserve earlier positional calls.
+
+The first maintained build exposed a missing-source-worker packaging bug: its
+implicit browser target did not activate the separate module-worker compiler.
+Root's initial artifact check also continued after that missing-file error and
+prematurely launched the service. Retained restoration01 records both failures;
+its authenticated read-only session worked, but its web payload was incomplete.
+Only that exact newly launched owner was stopped after path/hash/parent/listener
+and child checks. Existing runtime/project data was preserved.
+
+The repaired studio target explicitly builds editor, module worker, preview and
+backend, then checks its full payload. General compiler/control regressions stay
+in all/focused targets. Repository SkipBuild launch now refuses an incomplete
+frontend before starting a listener or changing enrollment. The actual first
+failed payload exercises that refusal with no runtime creation, enrollment change
+or new listener. No placeholder worker or private replacement host is used.
+
+Private studio-mcp-restoration-02 records the complete45s maintained host build,
+seven verified required files and the22 configuration checks from restoration01.
+Source/build identities remained stable during compilation. Later shell-only
+compatibility/store/preflight repairs have separate AST checks and final pins;
+the running native program and named positive launch arguments are unchanged.
+The source worker is staged; its browser execution is not inferred from presence.
+
+Initialized authenticated discovery advertises24 tools. The Pascal semantic
+client creates an independent Input playground. One ordinary transaction admits
+its page/card/controls plus Boolean default, two-way Switch and read-only Select
+binding. Bounded properties/binding/source queries confirm typed metadata and
+specialized Pascal. An intentionally stale command refuses at revision2. One
+Undo restores the complete empty project; Redo restores exact exported project
+bytes (5587bytes, A316DF84 SHA prefix), including the source/design pair. The
+project survives client disconnects. A revision-specific compact preview is
+prepared without capture, not rendered/observed proof.
+
+Both actual MCP backend application jobs finish successfully for that same
+revision4 project and matching design/source fingerprints. Browser has seven
+installed Classes warnings; LCL has zero warnings. These are actual delegated
+constructor/application builds, not executed applications or full parity proof.
+Primary preservation,80 original/copied saved files, matching managed connections,
+unchanged unrelated configuration and absent old C qualification roots are freshly
+checked. No cleanup ran and unrelated1280/390 directories remain untouched.
+
+The qualified service remains live intentionally, with private PID/path/hash and
+listener receipts. Compiler jobs/build readers are terminal; no source freeze
+remains. This chat still exposes no native Nyx tool handles, so the Pascal client
+is the primary semantic path. A physical phone LAN check is pending; actual
+browser/observing, physical/visual/assistive and full original acceptance remain
+open. No refused browser route or cursor workaround was attempted. Future service
+updates should use a fresh staged payload and the same actual-owner checks;
+running artifact identities are lifecycle evidence, not source restrictions.
+
+No task or original criterion closes. The actual advertised schema exposes a
+useful next gap: scalar edits do not offer the Inspector's typed DataToolbar
+policy candidate. Agent-workflows02 owns bounded inspection and grouped
+Configure/Disable/Inherit, reusing authoring01/runtime02. Proceed there using the
+restored real semantic service, rather than another connection report, source
+variant or resolver expansion. Keep original coordinator, authoring and parity
+acceptance intact.
+
 ## Current checkpoint — Authoring protected toolbar inputs — 2026-10-26
 
 Previous goal turn: PROGRESS for the completed on-demand storage retirement and

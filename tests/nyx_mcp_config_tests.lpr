@@ -88,8 +88,26 @@ begin
   try
     LChecks := 0;
     CreateGUID(LID);
-    LRoot := IncludeTrailingPathDelimiter(ExpandFileName('build/mcp-client/config-' +
-      GUIDToString(LID)));
+    { The build passes an explicit external fixture root. Standalone execution
+      follows the caller's temporary directory instead of writing the checkout;
+      neither path may overwrite an earlier fixture or a user's configuration. }
+
+    if ParamCount > 1 then
+    begin
+      raise Exception.Create('Supply at most one fresh MCP configuration fixture directory');
+    end;
+    LRoot := IncludeTrailingPathDelimiter(GetTempDir(False)) + 'NyxMCPConfig-' + GUIDToString(LID);
+
+    if ParamCount = 1 then
+    begin
+      LRoot := ParamStr(1);
+    end;
+    LRoot := IncludeTrailingPathDelimiter(ExpandFileName(LRoot));
+
+    if DirectoryExists(LRoot) then
+    begin
+      raise Exception.Create('MCP configuration fixture directory must be new');
+    end;
     LPath := LRoot + '.codex' + PathDelim + 'config.toml';
     LTarget := LRoot + 'user' + PathDelim + 'config.toml';
     LBlock := NyxMCPConfigBegin + #10 + '[mcp_servers.nyx_studio]' + #10 +
