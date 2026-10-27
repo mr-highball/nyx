@@ -704,7 +704,12 @@ Positions start at the control's outer logical face, including its frame. An
 inner native input or group client origin is converted into that face's space;
 clipped native faces retain their logical content offset. The native renderer's
 `ScreenPointFor` converts this snapshot back to an actual screen point, removing
-the projection offset exactly once. Actual captioned-group and cropped-page
+the projection offset exactly once. Uniform canvas zoom normalizes positions
+before dispatch and reapplies scale in the inverse mapping. Native positions may
+therefore be fractional even though the widgetset supplies integer pixels.
+Browsers include axis-aligned ancestor scale in their face mapping; arbitrary
+rotation/skew is not inferred from a bounding rectangle. Actual captioned-group
+and cropped-page
 round trips are qualified in [the native group packet](../WORK.md#current-return-path-native-group-content-geometry--2026-10-07).
 Browsers retain mouse/touch/pen data; ordinary LCL slots report mouse, identity
 zero and unavailable pressure zero. Keyboard menu requests have

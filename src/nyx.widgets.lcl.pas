@@ -62,6 +62,8 @@ type
     supplied-DC painting, caller-disabled buffering and unsupported widgetsets
     retain LCL's path. Both HWND scopes retire before local paint resources;
     nested window creation retires an already installed field-owned scope.
+    Uniform projection changes only a copied paint factor: theme metrics and
+    the independently decoded glyph remain logical and are never resampled in place.
     Custom factories may still return standard TButton or other LCL controls. }
   TNyxLCLButton = class(TCDButton)
   private
@@ -71,6 +73,7 @@ type
     FTransparentFace: Boolean;
     FBorderVisible: Boolean;
     FRadius: Integer;
+    FContentScale: Double;
     FKeyboardActivation: Word;
     FPresentation: TNyxLCLButtonPresentation;
     FMenuEnabled: Boolean;
@@ -91,6 +94,8 @@ type
     function AccessibleButtonState: TNyxLCLAccessibleButtonState;
     function DisclosureSpace: Integer;
     function GetGlyphAvailable: Boolean;
+    function PaintMetric(AValue: Integer): Integer;
+    procedure SetContentScale(AValue: Double);
   protected
     { Install after ordinary HWND initialization, and retire before LCL destroys
       it. Recreated windows receive independent native proxy/receiver leases. }
@@ -137,6 +142,11 @@ type
       reservation. Repeating the accepted state does not invalidate the widget. }
     procedure Disclosure(ACue: TNyxLCLDisclosureCue);
     procedure Paint; override;
+    { Adapter-only absolute paint projection. Validate is read-only so a canvas
+      can admit all retained faces before publication. Logical layout restores
+      scale one before measurement; this property owns no theme/resource/view. }
+    procedure ValidateContentScale(AValue: Double);
+    property ContentScale: Double read FContentScale write SetContentScale;
     { Copy native diagnostics without retaining a window/DC. A missing handle
       or unsupported widgetset reports the same zero value as other hosts. }
     function PaintBufferStats: TNyxLCLPaintBufferStats;
@@ -154,7 +164,9 @@ type
   { Rounded themed surface retains TPanel's child ownership/layout behavior.
     Painting fills the parent's backdrop outside the rounded face, so a dark
     surface never acquires white corners. Ordinary padded child controls remain
-    LCL controls; clipping children to a curved region is a separate capability. }
+    LCL controls; clipping children to a curved region is a separate capability.
+    Uniform projection keeps radius and original viewport face in logical units,
+    applying its copied factor only when painting the physical window. }
   TNyxLCLSurface = class(TPanel)
   private
     FViewportFace: TNyxViewportBox;
@@ -162,6 +174,8 @@ type
     FAccentColor: TColor;
     FControlSurface: Boolean;
     FRadius: Integer;
+    FContentScale: Double;
+    procedure SetContentScale(AValue: Double);
   protected
     procedure Paint; override;
   public
@@ -172,6 +186,10 @@ type
       window bounds remain safe while GDI paints the logical border/rounded face
       under its real clip. Default bounds restore ordinary ClientRect painting. }
     procedure ProjectFace(const ABounds: TNyxViewportBox);
+    { Read-only admission plus an absolute native paint factor. No logical face
+      or theme metric is rewritten; ordinary controls retain scale one. }
+    procedure ValidateContentScale(AValue: Double);
+    property ContentScale: Double read FContentScale write SetContentScale;
     property BorderColor: TColor read FBorderColor;
     property CornerRadius: Integer read FRadius;
   end;
@@ -231,6 +249,26 @@ begin
   end;
 end;
 
+{ Native paint coordinates have the GDI signed-integer domain. Validate before
+  rounding or changing any face, including factors supplied by custom adapters. }
+function ScaledPaintMetric(AValue: Integer; AScale: Double): Integer;
+var
+  LValue: Double;
+begin
+
+  if IsNan(AScale) or IsInfinite(AScale) or (AScale <= 0) then
+  begin
+    raise ENyxModel.Create('Native paint scale requires a finite positive factor');
+  end;
+  LValue := AValue * AScale;
+
+  if IsNan(LValue) or IsInfinite(LValue) or (Abs(LValue) > High(Integer) - 1.0) then
+  begin
+    raise ENyxModel.Create('Native paint metric exceeds its integer projection');
+  end;
+  Result := Round(LValue);
+end;
+
 procedure Face(ACanvas: TCanvas; const ABounds: TRect; ARadius: Integer);
 var
   LRadius: Integer;
@@ -261,6 +299,7 @@ end;
 constructor TNyxLCLButton.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FContentScale := 1;
   TabStop := True;
   ParentFont := True;
   DoubleBuffered := True;
@@ -446,13 +485,42 @@ begin
   Invalidate;
 end;
 
+function TNyxLCLButton.PaintMetric(AValue: Integer): Integer;
+begin
+  Result := ScaledPaintMetric(AValue, FContentScale);
+end;
+
+procedure TNyxLCLButton.ValidateContentScale(AValue: Double);
+begin
+  ScaledPaintMetric(44, AValue);
+  ScaledPaintMetric(FRadius, AValue);
+  ScaledPaintMetric(FButtonFace.GlyphBoxSize, AValue);
+  ScaledPaintMetric(FButtonFace.GlyphSpacing, AValue);
+  ScaledPaintMetric(FGlyph.Width, AValue);
+  ScaledPaintMetric(FGlyph.Height, AValue);
+end;
+
+procedure TNyxLCLButton.SetContentScale(AValue: Double);
+begin
+  ValidateContentScale(AValue);
+
+  if FContentScale = AValue then
+  begin
+    Exit;
+  end;
+  FContentScale := AValue;
+  InvalidatePreferredSize;
+  Invalidate;
+end;
+
 function TNyxLCLButton.DisclosureSpace: Integer;
 begin
   Result := 0;
 
   if (FDisclosureCue <> ndcNone) and (FPresentation = nbpControl) then
   begin
-    Result := 2 * Max(4, Abs(Font.Height) div 3) + Max(8, Abs(Font.Height) div 2);
+    Result := 2 * Max(PaintMetric(4), Abs(Font.Height) div 3) +
+      Max(PaintMetric(8), Abs(Font.Height) div 2);
   end;
 end;
 
@@ -612,7 +680,13 @@ var
   LCueSpace: Integer;
   LCueLeft: Integer;
   LCueCenter: Integer;
-  LGlyphSpace, LGroupWidth, LGroupLeft: Integer;
+  LGlyphSpace: Integer;
+  LGroupWidth: Integer;
+  LGroupLeft: Integer;
+  LGlyphWidth: Integer;
+  LGlyphHeight: Integer;
+  LGlyphLeft: Integer;
+  LGlyphTop: Integer;
   LCaption: String;
 begin
 
@@ -646,9 +720,9 @@ begin
   begin
     LFace := Blend(LFace, FAccentColor, 10);
   end;
-  LBounds := Rect(1, 1, Width - 1, Height - 1);
+  LBounds := Rect(PaintMetric(1), PaintMetric(1), Width - PaintMetric(1), Height - PaintMetric(1));
   Canvas.Pen.Style := psSolid;
-  Canvas.Pen.Width := 1;
+  Canvas.Pen.Width := Max(1, PaintMetric(1));
   Canvas.Pen.Color := FBorderColor;
 
   if not FBorderVisible then
@@ -656,15 +730,16 @@ begin
     Canvas.Pen.Style := psClear;
   end;
   Canvas.Brush.Color := LFace;
-  Face(Canvas, LBounds, FRadius);
+  Face(Canvas, LBounds, PaintMetric(FRadius));
 
   if Focused and IsEnabled then
   begin
     Canvas.Brush.Style := bsClear;
     Canvas.Pen.Style := psSolid;
     Canvas.Pen.Color := FTextColor;
-    Canvas.Pen.Width := 2;
-    Face(Canvas, Rect(4, 4, Width - 4, Height - 4), FRadius - 2);
+    Canvas.Pen.Width := Max(1, PaintMetric(2));
+    Face(Canvas, Rect(PaintMetric(4), PaintMetric(4), Width - PaintMetric(4),
+      Height - PaintMetric(4)), PaintMetric(FRadius - 2));
   end;
   Canvas.Font.Assign(Font);
   Canvas.Font.Color := LText;
@@ -681,7 +756,7 @@ begin
 
   if not FGlyph.Empty and (FButtonFace.ContentMode <> nbcCaption) then
   begin
-    LGlyphSpace := FButtonFace.GlyphBoxSize;
+    LGlyphSpace := PaintMetric(FButtonFace.GlyphBoxSize);
 
     if FButtonFace.ContentMode = nbcGlyphOnly then
     begin
@@ -689,30 +764,44 @@ begin
     end
     else if LCaption <> '' then
     begin
-      Inc(LGlyphSpace, FButtonFace.GlyphSpacing);
+      Inc(LGlyphSpace, PaintMetric(FButtonFace.GlyphSpacing));
     end;
   end;
   LGroupWidth := LGlyphSpace + Canvas.TextWidth(LCaption);
-  LGroupLeft := Max(12, (Width - LGroupWidth) div 2);
+  LGroupLeft := Max(PaintMetric(12), (Width - LGroupWidth) div 2);
 
   if FButtonFace.ContentAlignment = nbaStart then
   begin
-    LGroupLeft := 12;
+    LGroupLeft := PaintMetric(12);
   end;
 
   if LGlyphSpace > 0 then
   begin
-    Canvas.Draw(LGroupLeft + (FButtonFace.GlyphBoxSize - FGlyph.Width) div 2,
-      (Height - FGlyph.Height) div 2, FGlyph);
+    LGlyphWidth := Max(1, PaintMetric(FGlyph.Width));
+    LGlyphHeight := Max(1, PaintMetric(FGlyph.Height));
+    LGlyphLeft := LGroupLeft + (PaintMetric(FButtonFace.GlyphBoxSize) - LGlyphWidth) div 2;
+    LGlyphTop := (Height - LGlyphHeight) div 2;
+
+    if FContentScale = 1 then
+    begin
+      Canvas.Draw(LGlyphLeft, LGlyphTop, FGlyph);
+    end
+    else
+    begin
+      { Stretch the owned original only for this draw. Repeated zoom never
+        replaces/resamples its bitmap or changes the resource cache entry. }
+      Canvas.StretchDraw(Rect(LGlyphLeft, LGlyphTop,
+        LGlyphLeft + LGlyphWidth, LGlyphTop + LGlyphHeight), FGlyph);
+    end;
     LTextStyle.Alignment := taLeftJustify;
     LBounds.Left := LGroupLeft + LGlyphSpace;
-    LBounds.Right := Width - 12;
+    LBounds.Right := Width - PaintMetric(12);
   end
   else if FButtonFace.ContentAlignment = nbaStart then
   begin
     LTextStyle.Alignment := taLeftJustify;
-    LBounds.Left := 12;
-    LBounds.Right := Width - 12;
+    LBounds.Left := PaintMetric(12);
+    LBounds.Right := Width - PaintMetric(12);
   end;
   LCueSpace := DisclosureSpace;
 
@@ -720,12 +809,12 @@ begin
   begin
     { Center the complete cue/caption group, preserving a distinct caption for
       accessibility and custom text. Drawn lines avoid font-dependent symbols. }
-    LCueHalf := Max(4, Abs(Font.Height) div 3);
-    LCueLeft := Max(16, (Width - Canvas.TextWidth(Caption) - LCueSpace) div 2);
+    LCueHalf := Max(PaintMetric(4), Abs(Font.Height) div 3);
+    LCueLeft := Max(PaintMetric(16), (Width - Canvas.TextWidth(Caption) - LCueSpace) div 2);
     LCueCenter := Height div 2;
     Canvas.Pen.Style := psSolid;
     Canvas.Pen.Color := LText;
-    Canvas.Pen.Width := Max(2, Abs(Font.Height) div 10);
+    Canvas.Pen.Width := Max(1, Max(PaintMetric(2), Abs(Font.Height) div 10));
 
     if FDisclosureCue = ndcExpanded then
     begin
@@ -741,14 +830,14 @@ begin
     end;
     LTextStyle.Alignment := taLeftJustify;
     LBounds.Left := LCueLeft + LCueSpace;
-    Dec(LBounds.Right, 16);
+    Dec(LBounds.Right, PaintMetric(16));
   end;
 
   if FPresentation = nbpMenuItem then
   begin
     LTextStyle.Alignment := taLeftJustify;
-    Inc(LBounds.Left, 16);
-    Dec(LBounds.Right, 16);
+    Inc(LBounds.Left, PaintMetric(16));
+    Dec(LBounds.Right, PaintMetric(16));
   end;
   LTextStyle.Layout := tlCenter;
   LTextStyle.SingleLine := True;
@@ -772,37 +861,47 @@ begin
   begin
     LCaption := AccessibleName;
   end;
-  APreferredWidth := Canvas.TextWidth(LCaption) + 38;
+  APreferredWidth := Canvas.TextWidth(LCaption) + PaintMetric(38);
 
   if not FGlyph.Empty and (FButtonFace.ContentMode <> nbcCaption) then
   begin
 
     if FButtonFace.ContentMode = nbcGlyphOnly then
     begin
-      APreferredWidth := 24 + FButtonFace.GlyphBoxSize;
+      APreferredWidth := PaintMetric(24 + FButtonFace.GlyphBoxSize);
     end
     else
     begin
-      Inc(APreferredWidth, FButtonFace.GlyphBoxSize + FButtonFace.GlyphSpacing);
+      Inc(APreferredWidth, PaintMetric(FButtonFace.GlyphBoxSize + FButtonFace.GlyphSpacing));
     end;
   end;
   Inc(APreferredWidth, DisclosureSpace);
-  APreferredHeight := (Abs(Font.Height) * 3 div 2) + 22;
+  APreferredHeight := (Abs(Font.Height) * 3 div 2) + PaintMetric(22);
   case FButtonFace.ControlDensity of
-    nbdNormal: ; { Preserve the ordinary button's preferred height. }
-    nbdCompact: APreferredHeight := Max(32, Abs(Font.Height) + 16);
-    nbdTouch: APreferredHeight := Max(44, Abs(Font.Height) + 24);
+    nbdNormal:
+      begin
+        { Preserve the ordinary button's preferred height. }
+      end;
+    nbdCompact:
+      begin
+        APreferredHeight := Max(PaintMetric(32), Abs(Font.Height) + PaintMetric(16));
+      end;
+    nbdTouch:
+      begin
+        APreferredHeight := Max(PaintMetric(44), Abs(Font.Height) + PaintMetric(24));
+      end;
   end;
 
   if not FGlyph.Empty and (FButtonFace.ContentMode <> nbcCaption) then
   begin
-    APreferredHeight := Max(APreferredHeight, FButtonFace.GlyphBoxSize + 8);
+    APreferredHeight := Max(APreferredHeight, PaintMetric(FButtonFace.GlyphBoxSize + 8));
   end;
 end;
 
 constructor TNyxLCLSurface.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FContentScale := 1;
   BevelOuter := bvNone;
   Caption := '';
   DoubleBuffered := True;
@@ -845,7 +944,7 @@ begin
   Canvas.FillRect(Rect(0, 0, Width, Height));
   Canvas.Brush.Color := Color;
   Canvas.Pen.Style := psSolid;
-  Canvas.Pen.Width := 1;
+  Canvas.Pen.Width := Max(1, ScaledPaintMetric(1, FContentScale));
   Canvas.Pen.Color := FBorderColor;
   LForm := GetParentForm(Self);
 
@@ -858,10 +957,33 @@ begin
 
   if FViewportFace.Defined then
   begin
-    LBounds := Rect(FViewportFace.X, FViewportFace.Y,
-      FViewportFace.Right, FViewportFace.Bottom);
+    LBounds := Rect(ScaledPaintMetric(FViewportFace.X, FContentScale),
+      ScaledPaintMetric(FViewportFace.Y, FContentScale),
+      ScaledPaintMetric(FViewportFace.Right, FContentScale),
+      ScaledPaintMetric(FViewportFace.Bottom, FContentScale));
   end;
-  Face(Canvas, LBounds, FRadius);
+  Face(Canvas, LBounds, ScaledPaintMetric(FRadius, FContentScale));
+end;
+
+procedure TNyxLCLSurface.ValidateContentScale(AValue: Double);
+begin
+  ScaledPaintMetric(FRadius, AValue);
+  ScaledPaintMetric(FViewportFace.X, AValue);
+  ScaledPaintMetric(FViewportFace.Y, AValue);
+  ScaledPaintMetric(FViewportFace.Right, AValue);
+  ScaledPaintMetric(FViewportFace.Bottom, AValue);
+end;
+
+procedure TNyxLCLSurface.SetContentScale(AValue: Double);
+begin
+  ValidateContentScale(AValue);
+
+  if FContentScale = AValue then
+  begin
+    Exit;
+  end;
+  FContentScale := AValue;
+  Invalidate;
 end;
 
 procedure TNyxLCLSurface.ProjectFace(const ABounds: TNyxViewportBox);

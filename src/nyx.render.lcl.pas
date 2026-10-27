@@ -4866,11 +4866,9 @@ end;
 
 function TNyxLCLRenderer.CanvasResizePoint(AAxis: TNyxResizeAxis;
   const APointer: TNyxPointerSnapshot): TNyxResizePoint;
-var
-  LOrigin: TPoint;
 begin
-  LOrigin := CanvasResizeControl(AAxis).ClientToScreen(Point(0, 0));
-  Result := NyxResizePoint(LOrigin.X + APointer.X, LOrigin.Y + APointer.Y);
+  Result := LogicalPointFor(FCanvasResizeGrips.Owner.ID,
+    FCanvasGripViews[AAxis].ScreenPointFor(NyxCanvasResizeGripID(AAxis), APointer), niDesign);
 end;
 
 procedure TNyxLCLRenderer.UpdateCanvasResizeGrips;
@@ -9356,16 +9354,17 @@ begin
   end;
   LOrigin := LBinding.FControl.Parent.ClientToScreen(
     Point(LBinding.FControl.Left, LBinding.FControl.Top));
-  Dec(LOrigin.X, LBinding.FPlacement.ContentOffsetX);
-  Dec(LOrigin.Y, LBinding.FPlacement.ContentOffsetY);
   LParent := Default(TNyxControlRef);
 
   if LBinding.FNode.Parent <> nil then
   begin
     LParent := NyxControl(LBinding.FNode.Parent.ID);
   end;
-  Result := NyxDropFrame(NyxGuideBox(LOrigin.X, LOrigin.Y,
-    LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height),
+  Result := NyxDropFrame(NyxGuideBox(
+    LOrigin.X - LBinding.FPlacement.ContentOffsetX * FContentScaleFactor,
+    LOrigin.Y - LBinding.FPlacement.ContentOffsetY * FContentScaleFactor,
+    LBinding.FLogicalBox.Width * FContentScaleFactor,
+    LBinding.FLogicalBox.Height * FContentScaleFactor),
     LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height, LParent,
     NyxDesignerParentAxis(LBinding.FNode), NyxDesignerTarget(LBinding.FNode).Container);
 end;
@@ -9385,9 +9384,9 @@ begin
   LBinding := IdentityBinding(AID, niAutomatic);
   LOrigin := LBinding.FControl.Parent.ClientToScreen(
     Point(LBinding.FControl.Left, LBinding.FControl.Top));
-  Dec(LOrigin.X, LBinding.FPlacement.ContentOffsetX);
-  Dec(LOrigin.Y, LBinding.FPlacement.ContentOffsetY);
-  Result := NyxResizePoint(LOrigin.X + APointer.X, LOrigin.Y + APointer.Y);
+  Result := NyxResizePoint(LOrigin.X +
+    (APointer.X - LBinding.FPlacement.ContentOffsetX) * FContentScaleFactor,
+    LOrigin.Y + (APointer.Y - LBinding.FPlacement.ContentOffsetY) * FContentScaleFactor);
 end;
 
 function TNyxLCLRenderer.LogicalPointFor(const AID: TNyxText;
@@ -9399,7 +9398,7 @@ begin
   begin
     raise ENyxModel.Create('Logical pointer mapping requires mounted geometry');
   end;
-  Result := AScreen;
+  Result := NyxResizePoint(AScreen.X / FContentScaleFactor, AScreen.Y / FContentScaleFactor);
 end;
 
 function TNyxLCLRenderer.AlignmentFor(const AID: TNyxText;
@@ -10168,9 +10167,11 @@ begin
         RequireNativeGeneration(LGeneration);
         Dec(LPosition.X, FControl.Left);
         Dec(LPosition.Y, FControl.Top);
-        LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
+        LDispatch.Info.Pointer.X := Double(LPosition.X) / FRenderer.FContentScaleFactor +
+          FPlacement.ContentOffsetX;
         RequireNativeGeneration(LGeneration);
-        LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
+        LDispatch.Info.Pointer.Y := Double(LPosition.Y) / FRenderer.FContentScaleFactor +
+          FPlacement.ContentOffsetY;
         RequireNativeGeneration(LGeneration);
       end;
       RequireNativeGeneration(LGeneration);
@@ -10596,9 +10597,11 @@ begin
         RequireNativeGeneration(LGeneration);
         Dec(LPosition.X, FControl.Left);
         Dec(LPosition.Y, FControl.Top);
-        LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
+        LDispatch.Info.Pointer.X := Double(LPosition.X) / FRenderer.FContentScaleFactor +
+          FPlacement.ContentOffsetX;
         RequireNativeGeneration(LGeneration);
-        LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
+        LDispatch.Info.Pointer.Y := Double(LPosition.Y) / FRenderer.FContentScaleFactor +
+          FPlacement.ContentOffsetY;
         RequireNativeGeneration(LGeneration);
       end;
 

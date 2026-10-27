@@ -65,9 +65,12 @@ Its first implementation checkpoint now passes the shared30 and existing54/36
 native contract/history/navigation checks, plus23/23 browser live-control checks
 and direct editing/binding/click interaction. Native absolute geometry/font
 projection now passes37 actual-control checks at each configured1280/390 width,
-with clean heaps; its existing workspace regression passes38. Scaled input,
-widget-specific metrics and remaining native quality still need implementation/
-qualification. Ordinary Studio selection and the complete same-pair Workshop
+with clean heaps; its existing workspace regression passes38. Its next native
+input/paint consumer passes67 at both widths; the browser passes46/46 plus actual
+click/edit/action interaction. Button/surface paint and pointer round trips are
+implemented, with native redraw inspection kept separate from displayed output.
+Internal data/scroll/drawing metrics and remaining input/quality journeys still
+need implementation/qualification. Ordinary Studio selection and the same-pair Workshop
 journey remain required. Keep this work on the existing owner; do not treat this
 memo/card checkpoint as all-control parity or start another source-only sequence.
 

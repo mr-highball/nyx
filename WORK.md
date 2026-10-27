@@ -9,7 +9,89 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Native live canvas projection — 2026-10-27
+## Current checkpoint — Scaled input and native faces — 2026-10-27
+
+Previous goal turn: PROGRESS;bb71247 is pushed and remote-verified. Batch31
+continues canvas-workspace02's actual input and widget boundaries. Root remains
+SOLO. Normalize pointer/drag positions into logical outer-face coordinates and
+keep screen round trips and designer grips consistent on both adapters. Carry
+the native scale into copied button/surface paint metrics without changing theme
+tokens, glyph ownership or the logical layout baseline. Exercise the same live
+consumer and relevant group/gesture regressions; actual browser execution and
+rendered inspection remain separate from compilation. Preserve existing policies,
+admission limits, the installed LAN/MCP owner and all three accepted projects.
+All new artifacts and process TEMP/TMP remain on external storage. No prior job
+is running and no source restriction or approval boundary is introduced.
+
+Current result: browser face transforms copy origin and axis ratios into a small
+value, normalizing ordinary pointer, claimed header double-click and drag payloads.
+ScreenPointFor applies the inverse, designer drag no longer corrects twice and
+resize grips share the move path's coordinate helpers. Native pointer/drag data
+divides physical distances by content scale, preserving logical clipping offsets;
+screen/drop frames and grip helpers use the matching inverse. Ordinary scale-one
+paths keep their established outer-face semantics. Arbitrary CSS rotation/skew
+is not represented by these axis-aligned face ratios.
+
+Native button/surface faces keep a copied paint factor independently of theme
+tokens, logical radius/viewport face and the owned decoded bitmap. Geometry,
+strokes, glyph reservation/draw size, spacing, preferred-size chrome and disclosure
+cues use projected metrics. The renderer restores scale one before measurement,
+validates paint coordinates before projection and checks generation after setters.
+Glyph StretchDraw never replaces/resamples the original or a shared resource.
+Native strokes/fonts retain their documented one-pixel quantization minimum.
+Browser geometry now intersects each ancestor's actual overflow client clip,
+rejecting hidden/detached/fully cropped descendants while returning the full
+visible face geometry. The existing native clip query remains unchanged.
+
+Private canvas-uniform-input-01 retains native compile01's missing Classes/ssLeft
+test import and sibling-cast warning; the test now explicitly borrows
+Controls.TControl and imports the declaring unit. Browser compile passes with only seven
+installed Classes warnings. Relative pas2js -o initially overrides -FE and writes
+this batch's ignored generated JS to the checkout. That exact owned output is
+moved to external storage and hash-verified before browser use; subsequent output
+arguments use absolute external paths. Initial staging misses the expected file,
+but the owned host is not duplicated and no browser loads until staging is repaired.
+
+The native consumer reaches its final capture, then refuses the foreground-only
+display guard. Keep native-02's failure and clean heap: it is not a product
+assertion pass or evidence of displayed pixels. Native-03 and the final build
+explicitly request ncmPrint and pass67 at each configured1280/390 host width with
+complete clean heaps. These actual controls qualify repeated geometry/fonts,
+Unicode/focus/selection, native pointer producer and screen/drop-frame mapping,
+retained glyph/paint-factor admission, ancestor clipping, bound edits and action
+callbacks. Installed LCL hooks are invoked directly; physical hardware/capture
+and complete drag-manager behavior are not qualified by them. Both final redraws
+are visually inspected: rounded card/action, proportional red/blue fixture glyph,
+reachable result and retained memos are present. System-native scrollbar metrics
+and complete typography/pixel parity remain separate work.
+
+The actual browser consumer first passes43/43 through input transforms and then
+46/46 after ancestor-clip admission, at1280x720/390x844. Direct browser clicks map
+within one logical pixel of the memo center at both widths. Real fill updates
+both live memos with supplementary Unicode, and action clicks update the result.
+Final screenshots/DOM receipts inspect the visible glyph canvas, not its hidden
+decoded-source img, and show proportional28x14 logical content. The final current
+script is executed at both widths. Earlier43-pass screenshots remain differential
+evidence. Existing group consumers pass124 natively and74/74 in the browser; native
+workspace passes38, with both native heaps clean. An empty completed group body
+causes one visible-selector observation timeout; reading the same tab's terminal
+markers establishes the pass without restarting its runtime.
+
+All compiler/runtime jobs are terminal. The one temporary browser tab is closed,
+viewport reset and exact host52100 is retired after path/hash/start-time checks;
+8766 is free. LAN/MCP39908 remains and this batch mutates no installed project,
+service payload, profile or enrollment. All private artifacts and child TEMP/TMP
+remain external; no cleanup, helper or unrelated1280/390 change occurs.
+
+No complete original criterion closes. Native internal grid/scroll/drawing
+metrics, nested canvases, complete input/capture/IME/assistive journeys, container
+border measurements and full changed-layout pre-publication admission remain.
+Next use a meaningful data/scroll control in the same canvas transform, rather
+than adding more source or memo-only variants, then complete ordinary Studio
+selection and the same accepted saved/generated Workshop. Preserve every original
+criterion and prerequisite; no new task identity or duplicate credit is allocated.
+
+## Earlier checkpoint — Native live canvas projection — 2026-10-27
 
 Previous goal turn: PROGRESS;736b0a6 is pushed and remote-verified. Batch30
 continues canvas-workspace02's native requirement rather than extending its

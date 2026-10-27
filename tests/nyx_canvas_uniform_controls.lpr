@@ -22,13 +22,16 @@
 program nyx_canvas_uniform_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
+{$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
 uses SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.state,
   nyx.events, nyx.behavior, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.types,
-  nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.observers
+  nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.observers,
+  nyx.designer.resize, nyx.designer.placement, nyx.images,
+  nyx.button.presentation, nyx.button.configuration
   {$ifdef PAS2JS}, JS, Web, nyx.canvas.browser
-  {$else}, Interfaces, Forms, Controls, StdCtrls, Types, nyx.canvas.lcl,
-    nyx.widgets.lcl{$endif};
+  {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, Types, nyx.canvas.lcl,
+    nyx.widgets.lcl, nyx.test.capture.lcl{$endif};
 
 type
   { The router retains this callback, which uses only harness-owned state.
@@ -38,7 +41,39 @@ type
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
 
+  { The router owns this receiver. It copies only inert pointer facts into the
+    harness; no view/control/renderer is retained through a callback cycle. }
+  TPointerCallback = class(TNyxEventCallback)
+  public
+    procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
+  end;
+
+  {$ifdef PAS2JS}
+  { Standard PointerEvent initialization borrows no application objects. The
+    browser creates a synchronous synthetic event, not a trusted hardware action. }
+  TUniformPointerOptions = class external name 'Object'(TJSObject)
+    clientX: Double;
+    clientY: Double;
+    pointerId: Integer;
+    pointerType: String;
+    button: Integer;
+    buttons: Integer;
+    bubbles: Boolean;
+    cancelable: Boolean;
+  end;
+
+  { The installed Web unit lacks this constructor overload. Only browsers with
+    the standard PointerEvent constructor can run this input qualification. }
+  TUniformPointerEvent = class external name 'PointerEvent'(TJSPointerEvent)
+    constructor new(const AType: String; AOptions: TUniformPointerOptions);
+  end;
+  {$endif}
+
   {$ifndef PAS2JS}
+  { Access the actual memo's installed LCL mouse producer without claiming
+    physical hardware input. The cast never creates, owns or reparents a control. }
+  TControlAccess = class(Controls.TControl);
+
   { Keep asynchronous LCL failures observable to the test process rather than
     opening an interactive exception dialog. The application borrows this
     receiver until its hook is explicitly cleared before receiver retirement. }
@@ -52,6 +87,17 @@ type
 const
   CNote: TNyxText = 'Notes 🌙 stay yours across every zoom.';
   CEditedNote: TNyxText = 'Notes 🌙 stay yours across every zoom. Edited 🌿';
+  { Reuse the existing owned button-presentation PNG fixture. Its decoded image
+    is an ordinary embedded project resource, not a painted control snapshot. }
+  CGlyphPNG: TNyxText =
+    'iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyEAIAAAB1xzWqAAAACXBIWXMAAAAAAAAAAACdYiYy' +
+    'AAABMElEQVR4nO3OsQ0AIAzAsP7/dOEEtsgSGTxnduf2fbE/gMwHIPsDyHwAsj+AzAcg+wPI' +
+    'fACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsD' +
+    'yHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7' +
+    'A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg' +
+    '+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwH' +
+    'IPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDxwO6T+sr8laFkAAAAABJRU5E' +
+    'rkJggg==';
   CZooms: array[0..4] of Double = (1, 0.5, 1.5, 0.5, 1);
 
 var
@@ -60,6 +106,9 @@ var
   GWorkspace: INyxCanvasWorkspace;
   GScene: INyxCanvasScene;
   GSubscription: INyxEventSubscription;
+  GPointerSubscription: INyxEventSubscription;
+  GPointerCount: Integer;
+  GPointer: TNyxPointerSnapshot;
   GItem: TNyxCanvasItemRef;
   GChecks: Integer;
   GStage: Integer;
@@ -104,6 +153,17 @@ begin
   GState.SetValue(NyxTextState('result'), 'Action received ' + TNyxText(IntToStr(GActionCount)));
 end;
 
+procedure TPointerCallback.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Inc(GPointerCount);
+  GPointer := AEvent.Pointer;
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-uniform-pointer-x', FloatToStr(GPointer.X));
+  document.body.setAttribute('data-uniform-pointer-y', FloatToStr(GPointer.Y));
+  {$endif}
+end;
+
 procedure Build;
 var
   LCard: INyxCard;
@@ -112,6 +172,7 @@ var
   LMemo: INyxMemo;
   LResult: INyxLabel;
   LLayer: TNyxCanvasLayerRef;
+  LButton: INyxButton;
 begin
   GDocument := TNyxDocument.Create;
   GDocument.AddPage(NewNyxPage('home'));
@@ -138,7 +199,10 @@ begin
   LMemo.Configure.Height(170).Done;
   LMemo.Binds.Value(NyxTextState('note'));
   LCard.Add(LMemo);
-  LCard.Add(NewNyxButton('try-action').Configure.Text('Try the action').Done);
+  LButton := NewNyxButton('try-action').WithText('Try the action');
+  NyxButtonConfigure(LButton.Configure).Presentation(NyxButtonPresentation
+    .Glyph(NyxEmbeddedImage(nimPNG, CGlyphPNG)).Content(nbcGlyphCaption));
+  LCard.Add(LButton);
   LHelp := NewNyxLabel('result-help');
   LHelp.Text := 'This last section belongs to the same live compound. Its text '
     + 'should scale with the rest of the card instead of reflowing outside a '
@@ -181,27 +245,104 @@ begin
   {$endif}
   GSubscription := GView.EventsFor(GItem).On(NyxControlEvents('try-action'), ntClick)
     .Subscribe(TActionCallback.Create);
+  GPointerSubscription := GView.EventsFor(GItem).OnPointerDown(NyxControlEvents('note'))
+    .Subscribe(TPointerCallback.Create);
+end;
+
+{ Exercise actual adapter producers at the current zoom, then independently
+  compare logical face positions and their inverse against the supplied screen
+  point. No event is obtained from hidden renderer state. }
+procedure CheckPointer(AZoom: Double);
+var
+  LBefore: Integer;
+  LActualX: Double;
+  LActualY: Double;
+  LOriginX: Double;
+  LOriginY: Double;
+  LScreen: TNyxResizePoint;
+  LFrame: TNyxDropFrame;
+  {$ifdef PAS2JS}
+  LInputBox: TJSDOMRect;
+  LFaceBox: TJSDOMRect;
+  LOptions: TUniformPointerOptions;
+  {$else}
+  LPoint: TPoint;
+  LFace: TControl;
+  {$endif}
+begin
+  LBefore := GPointerCount;
+  {$ifdef PAS2JS}
+  LInputBox := GInput.getBoundingClientRect;
+  LFaceBox := GView.RendererFor(GItem).ElementFor('note').getBoundingClientRect;
+  LActualX := LInputBox.left + 12 * AZoom;
+  LActualY := LInputBox.top + 18 * AZoom;
+  LOriginX := LFaceBox.left;
+  LOriginY := LFaceBox.top;
+  LOptions := TUniformPointerOptions.new;
+  LOptions.clientX := LActualX;
+  LOptions.clientY := LActualY;
+  LOptions.pointerId := 17;
+  LOptions.pointerType := 'mouse';
+  LOptions.button := 0;
+  LOptions.buttons := 1;
+  LOptions.bubbles := True;
+  LOptions.cancelable := True;
+  GInput.dispatchEvent(TUniformPointerEvent.new('pointerdown', LOptions));
+  {$else}
+  LPoint := GInput.ClientToScreen(Point(Round(12 * AZoom), Round(18 * AZoom)));
+  LActualX := LPoint.X;
+  LActualY := LPoint.Y;
+  LFace := GView.RendererFor(GItem).ControlFor('note');
+  LPoint := LFace.Parent.ClientToScreen(Point(LFace.Left, LFace.Top));
+  LOriginX := LPoint.X;
+  LOriginY := LPoint.Y;
+  TControlAccess(Controls.TControl(GInput)).MouseDown(mbLeft, [ssLeft],
+    Round(12 * AZoom), Round(18 * AZoom));
+  {$endif}
+  Check((GPointerCount = LBefore + 1) and GPointer.HasPosition,
+    'one actual adapter pointer producer reaches the owning logical face');
+  Check((Abs(GPointer.X - (LActualX - LOriginX) / AZoom) < 1) and
+    (Abs(GPointer.Y - (LActualY - LOriginY) / AZoom) < 1),
+    'zoomed pointer positions use logical outer-face pixels exactly once');
+  LScreen := GView.RendererFor(GItem).ScreenPointFor('note', GPointer);
+  Check((Abs(LScreen.X - LActualX) < 0.01) and (Abs(LScreen.Y - LActualY) < 0.01),
+    'the pointer snapshot round-trips to its actual screen point');
+  LFrame := GView.RendererFor(GItem).DropFrameFor('note');
+  Check(LFrame.Defined and (Abs(LFrame.Face.Width - LFrame.Width * AZoom) < 2),
+    'drop frames retain distinct physical and logical face extents');
+  {$ifndef PAS2JS}
+  Check((TNyxLCLButton(GView.RendererFor(GItem).ControlFor('try-action')).ContentScale = AZoom) and
+    (TNyxLCLSurface(GView.RendererFor(GItem).ControlFor('notebook')).ContentScale = AZoom),
+    'the native action and surface share the absolute paint projection');
+  Check(TNyxLCLButton(GView.RendererFor(GItem).ControlFor('try-action')).GlyphAvailable,
+    'uniform zoom retains the independently decoded embedded action glyph');
+  GInput.SelStart := 2;
+  GInput.SelLength := 3;
+  {$endif}
 end;
 
 procedure Step;
 var
   LZoom: Double;
+  LGeometry: INyxCanvasControlGeometry;
+  LBounds: TNyxCanvasBounds;
   {$ifdef PAS2JS}
   LInputBox: TJSDOMRect;
   LResultBox: TJSDOMRect;
   LClip: TJSDOMRect;
   LElement: TJSHTMLElement;
+  LParent: TJSHTMLElement;
+  LFormerMaxHeight: TNyxText;
+  LFormerOverflow: TNyxText;
   {$else}
   LResult: TControl;
   LPoint: TPoint;
   LSurface: TPoint;
   LAncestor: TWinControl;
   LClip: TPoint;
-  LBounds: TNyxCanvasBounds;
   LFormerBounds: TRect;
   LMirror: TMemo;
   LButton: TNyxLCLButton;
-  LGeometry: INyxCanvasControlGeometry;
   {$endif}
 begin
 
@@ -253,6 +394,7 @@ begin
     Check(Abs(GInput.Font.Height - Round(GBaseFont * LZoom)) <= 1,
       'native editor font projects from the absolute logical baseline');
     {$endif}
+    CheckPointer(LZoom);
   end
   else
   begin
@@ -273,6 +415,22 @@ begin
         Check((LResultBox.top >= LClip.top - 1) and (LResultBox.bottom <= LClip.bottom + 1),
           'the fitted result is not hidden by an ancestor clip');
       end;
+    end;
+    Check(Supports(GView, INyxCanvasControlGeometry, LGeometry),
+      'browser workspace exposes its existing optional geometry facet');
+    Check(LGeometry.TryControlBounds(GItem, NyxControl('result'), LBounds),
+      'browser bounds query finds the visible fitted result');
+    LParent := TJSHTMLElement(GView.RendererFor(GItem).ElementFor('result').parentElement);
+    LFormerMaxHeight := LParent.style.getPropertyValue('max-height');
+    LFormerOverflow := LParent.style.getPropertyValue('overflow');
+    try
+      LParent.style.setProperty('max-height', '1px');
+      LParent.style.setProperty('overflow', 'hidden');
+      Check(not LGeometry.TryControlBounds(GItem, NyxControl('result'), LBounds),
+        'browser bounds query refuses a result hidden by an ancestor overflow clip');
+    finally
+      LParent.style.setProperty('max-height', LFormerMaxHeight);
+      LParent.style.setProperty('overflow', LFormerOverflow);
     end;
     document.body.setAttribute('data-uniform-canvas', 'passed');
     document.body.setAttribute('data-uniform-checks', IntToStr(GChecks));
@@ -372,6 +530,23 @@ begin
       Step;
     end;
 
+    if ParamCount >= 2 then
+    begin
+      Application.ProcessMessages;
+      GHost.Update;
+
+      if ParamStr(3) = '--print' then
+      begin
+        { Explicit diagnostic redraw. It qualifies paint output, not displayed
+          clipping or foreground-window behavior. Display remains the default. }
+        SaveNyxNativeCapture(GHost, ParamStr(2), ncmPrint);
+      end
+      else
+      begin
+        SaveNyxNativeCapture(GHost, ParamStr(2), ncmDisplay);
+      end;
+    end;
+
     if GNativeFailures.MessageText <> '' then
     begin
       raise Exception.Create(GNativeFailures.MessageText);
@@ -390,6 +565,7 @@ begin
     GView.Disconnect;
   end;
   GSubscription := nil;
+  GPointerSubscription := nil;
   GView := nil;
   GWorkspace := nil;
   GScene := nil;

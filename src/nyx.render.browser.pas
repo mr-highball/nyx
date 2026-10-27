@@ -825,6 +825,20 @@ uses
   nyx.application.resources, nyx.projection.context, nyx.coordinators.internal;
 
 type
+  { Copied axis-aligned DOM face transform. Browser layout owns the borrowed
+    element; the value retains only screen origin and positive pixel ratios.
+    Ancestor uniform zoom is included in getBoundingClientRect. This is not an
+    arbitrary rotation/skew transform; empty axes retain the legacy unit ratio. }
+  TBrowserFaceTransform = record
+    X: Double;
+    Y: Double;
+    ScaleX: Double;
+    ScaleY: Double;
+    class function Capture(AElement: TJSHTMLElement): TBrowserFaceTransform; static;
+    function LogicalPoint(AX, AY: Double): TNyxResizePoint;
+    function ScreenPoint(AX, AY: Double): TNyxResizePoint;
+  end;
+
   { One exact owned palette shared by the renderer and an entered generation.
     Replacing a palette releases only the replacing owner's lease. Supplied
     caller palettes remain borrowed and are never adopted by this helper. }
@@ -948,6 +962,37 @@ type
     procedure Unlisten(const AName: String; AHandler: TJSEventHandler;
       ACapture: Boolean); external name 'removeEventListener';
   end;
+
+class function TBrowserFaceTransform.Capture(AElement: TJSHTMLElement): TBrowserFaceTransform;
+var
+  LFace: TJSDOMRect;
+begin
+  LFace := AElement.getBoundingClientRect;
+  Result.X := LFace.left;
+  Result.Y := LFace.top;
+  Result.ScaleX := 1;
+  Result.ScaleY := 1;
+
+  if (AElement.offsetWidth > 0) and (LFace.width > 0) then
+  begin
+    Result.ScaleX := LFace.width / AElement.offsetWidth;
+  end;
+
+  if (AElement.offsetHeight > 0) and (LFace.height > 0) then
+  begin
+    Result.ScaleY := LFace.height / AElement.offsetHeight;
+  end;
+end;
+
+function TBrowserFaceTransform.LogicalPoint(AX, AY: Double): TNyxResizePoint;
+begin
+  Result := NyxResizePoint((AX - X) / ScaleX, (AY - Y) / ScaleY);
+end;
+
+function TBrowserFaceTransform.ScreenPoint(AX, AY: Double): TNyxResizePoint;
+begin
+  Result := NyxResizePoint(X + AX * ScaleX, Y + AY * ScaleY);
+end;
 
 constructor TColumnKeyboardSnapshot.Create(const AEvents: INyxEvents;
   ARevision: Integer; const ACommand: INyxBrowserColumnCommand;
@@ -1095,7 +1140,7 @@ end;
 function TNyxBrowserRenderer.ScreenPointFor(const AID: TNyxText;
   const APointer: TNyxPointerSnapshot): TNyxResizePoint;
 var
-  LFace: TJSDOMRect;
+  LTransform: TBrowserFaceTransform;
 begin
   FEvents.Scheduler.RequireUI;
 
@@ -1103,8 +1148,8 @@ begin
   begin
     raise ENyxModel.Create('Pointer mapping requires actual position');
   end;
-  LFace := ElementFor(AID).getBoundingClientRect;
-  Result := NyxResizePoint(LFace.left + APointer.X, LFace.top + APointer.Y);
+  LTransform := TBrowserFaceTransform.Capture(ElementFor(AID));
+  Result := LTransform.ScreenPoint(APointer.X, APointer.Y);
 end;
 
 function TNyxBrowserRenderer.LogicalPointFor(const AID: TNyxText;
@@ -5986,30 +6031,9 @@ end;
 
 function TNyxBrowserRenderer.CanvasResizePoint(AAxis: TNyxResizeAxis;
   const APointer: TNyxPointerSnapshot): TNyxResizePoint;
-var
-  LGrip: TJSDOMRect;
-  LFace: TJSHTMLElement;
-  LBounds: TJSDOMRect;
-  LScaleX: Double;
-  LScaleY: Double;
 begin
-  LGrip := CanvasResizeElement(AAxis).getBoundingClientRect;
-  LFace := ElementFor(FCanvasResizeGrips.Owner.ID, niDesign);
-  LBounds := LFace.getBoundingClientRect;
-  LScaleX := 1;
-  LScaleY := 1;
-
-  if (LFace.offsetWidth > 0) and (LBounds.width > 0) then
-  begin
-    LScaleX := LBounds.width / LFace.offsetWidth;
-  end;
-
-  if (LFace.offsetHeight > 0) and (LBounds.height > 0) then
-  begin
-    LScaleY := LBounds.height / LFace.offsetHeight;
-  end;
-  Result := NyxResizePoint((LGrip.left + APointer.X) / LScaleX,
-    (LGrip.top + APointer.Y) / LScaleY);
+  Result := LogicalPointFor(FCanvasResizeGrips.Owner.ID,
+    FCanvasGripViews[AAxis].ScreenPointFor(NyxCanvasResizeGripID(AAxis), APointer), niDesign);
 end;
 
 procedure TNyxBrowserRenderer.UpdateCanvasResizeGrips;
@@ -7580,7 +7604,8 @@ var
   LDispatch: TNyxDispatch;
   LInfo: TNyxEventInfo;
   LPointer: TNyxPointerSnapshot;
-  LBounds: TJSDOMRect;
+  LTransform: TBrowserFaceTransform;
+  LPoint: TNyxResizePoint;
   LContentGuard: INyxContentGuard;
   LCoordinators: TNyxCoordinatorMounts;
   LPager: INyxCollectionPager;
@@ -7661,9 +7686,10 @@ begin
           end;
         end;
         LPointer.HasPosition := True;
-        LBounds := LElement.getBoundingClientRect;
-        LPointer.X := AEvent.clientX - LBounds.left;
-        LPointer.Y := AEvent.clientY - LBounds.top;
+        LTransform := TBrowserFaceTransform.Capture(LElement);
+        LPoint := LTransform.LogicalPoint(AEvent.clientX, AEvent.clientY);
+        LPointer.X := LPoint.X;
+        LPointer.Y := LPoint.Y;
         LPointer.Button := npbNone;
         LPointer.Buttons := [];
 
@@ -8114,7 +8140,8 @@ var
   LEvents: INyxEvents;
   LRevision: Integer;
   LDispatch: TNyxDispatch;
-  LBounds: TJSDOMRect;
+  LTransform: TBrowserFaceTransform;
+  LPoint: TNyxResizePoint;
   LPointer: TNyxPointerSnapshot;
   LConsumed: Boolean;
   LTarget: TJSHTMLElement;
@@ -8175,9 +8202,10 @@ begin
     end;
     LPointer.HasPosition := not ((ATrigger = ntContextMenu) and
       (AEvent.detail = 0) and (AEvent.clientX = 0) and (AEvent.clientY = 0));
-    LBounds := FElement.getBoundingClientRect;
-    LPointer.X := AEvent.clientX - LBounds.left;
-    LPointer.Y := AEvent.clientY - LBounds.top;
+    LTransform := TBrowserFaceTransform.Capture(FElement);
+    LPoint := LTransform.LogicalPoint(AEvent.clientX, AEvent.clientY);
+    LPointer.X := LPoint.X;
+    LPointer.Y := LPoint.Y;
 
     if not LPointer.HasPosition then
     begin
@@ -8549,7 +8577,8 @@ var
   LCapabilities: TNyxGestureCapabilities;
   LDecision: INyxGestureDecision;
   LResponse: TNyxGestureResult;
-  LBounds: TJSDOMRect;
+  LTransform: TBrowserFaceTransform;
+  LPoint: TNyxResizePoint;
   LTarget: TJSHTMLElement;
   LSource: Boolean;
   LDesignerTarget: TNyxDesignerTarget;
@@ -8647,9 +8676,10 @@ begin
       LOperation, '', LCapabilities <> []);
     LDispatch.Info.HasPointer := True;
     LDispatch.Info.Pointer.Kind := npiMouse;
-    LBounds := FElement.getBoundingClientRect;
-    LDispatch.Info.Pointer.X := AEvent.clientX - LBounds.left;
-    LDispatch.Info.Pointer.Y := AEvent.clientY - LBounds.top;
+    LTransform := TBrowserFaceTransform.Capture(FElement);
+    LPoint := LTransform.LogicalPoint(AEvent.clientX, AEvent.clientY);
+    LDispatch.Info.Pointer.X := LPoint.X;
+    LDispatch.Info.Pointer.Y := LPoint.Y;
     LDispatch.Info.Pointer.HasPosition := True;
 
     if AEvent.shiftKey then
@@ -8680,16 +8710,8 @@ begin
         if Assigned(CurrentRenderer.FOnDesignerGesture) then
         begin
           LDesignerTarget := NyxDesignerTarget(FNode).WithFrame(CurrentRenderer.DropFrameFor(FNode.ID));
-
-          if LDesignerTarget.Frame.Defined then
-          begin
-            { Designer placement operates in copied logical face pixels. Ordinary
-              application pointer notifications retain their existing contract. }
-            LDispatch.Info.Pointer.X := LDispatch.Info.Pointer.X *
-              LDesignerTarget.Frame.Width / LDesignerTarget.Frame.Face.Width;
-            LDispatch.Info.Pointer.Y := LDispatch.Info.Pointer.Y *
-              LDesignerTarget.Frame.Height / LDesignerTarget.Frame.Face.Height;
-          end;
+          { Drag and ordinary pointer callbacks now share the same logical face
+            mapping. A second designer-only correction would apply zoom twice. }
           CurrentRenderer.FOnDesignerGesture(LDesignerTarget, LDispatch.Info, LDecision);
         end;
       end

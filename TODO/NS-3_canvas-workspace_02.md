@@ -77,10 +77,20 @@ live bound memo edits and button callbacks. Both heaps are clean. The existing
 native workspace consumer passes38 checks with a clean heap. WORK.md retains the
 first zoom-in/leaked-panel failure and the repaired runs separately.
 
-Native input-coordinate transforms, widget-specific chrome/glyph/grid/scroll/
-drawing metrics, nested canvases and full visual/IME/assistive quality remain
-implementation/qualification work. Ordinary Studio selection and the same saved/
-generated Workshop also stay open. The LAN service/example defaults are unchanged.
-Stop source-only variants and carry the native transform through those concrete
-input/widget boundaries next; this task remains unaccepted with no duplicate
-completion credit.
+The next checkpoint normalizes pointer/drag payloads and inverse screen mapping
+on both adapters, removes the second browser designer correction, and scales
+native button/surface paint metrics and original glyph draws. The same consumer
+passes67 native checks at both configured widths, with clean heaps, and46 actual
+browser checks at1280/390. Browser clicks, typing/binding and action activation
+also pass. Browser visibility queries now include ancestor overflow clips. The
+input revision retains124 native group,38 native workspace and74/74 browser group
+regression checks. Native painted output is a diagnostic redraw; the real display
+capture refused its foreground guard and is not replaced with a display claim.
+
+Internal native grid/scroll/drawing metrics, nested canvases, full drag/capture/
+keyboard/IME/assistive journeys and complete pre-publication admission for changed
+logical layouts remain implementation/qualification work. Ordinary Studio
+selection and the same saved/generated Workshop also stay open. The LAN service/
+example defaults are unchanged. Next exercise useful data/scroll controls under
+the same transform, then complete ordinary Studio and saved Workshop integration;
+this task remains unaccepted with no duplicate completion credit.

@@ -369,14 +369,27 @@ geometry, constraints and font heights after layout. Repeated zoom restores the
 logical baseline first, retaining the actual controls, text, focus and selection.
 Native integer coordinates round once per frame; nonzero fonts have a one-pixel
 minimum. Item hosts retain physical HWND clipping, while responsive layout sees
-the logical frame. The native geometry facet checks the complete ancestor client
-clip chain before reporting a visible control.
+the logical frame. Buttons/surfaces use a separate absolute paint factor for
+rounded faces, strokes, padding and original decoded glyphs; measurement restores
+scale one first. Neither the theme tokens nor the original image are resampled
+in place. Native strokes also retain a one-pixel minimum.
+
+Pointer and drag payloads use logical outer-face positions. The inverse screen
+mapping applies the same transform, including native clipped-content offsets.
+Browser axis-aligned face ratios include ancestor uniform transforms; arbitrary
+rotation/skew remains outside this mapping. Designer resize/move helpers consume
+that same inverse instead of applying another local correction. Geometry queries
+check native ancestor client clips or browser ancestor overflow clips before
+reporting a visible descendant, retaining the full face bounds on success.
 
 This remains an unfinished capability, not complete target parity. The composed
 memo/card consumer qualifies native geometry/font retention, fitted visibility,
-binding and ordinary action callbacks at wide/compact configured host sizes.
-Widget-specific chrome, glyphs, internal grid/scroll/drawing metrics, scaled input
-coordinates, nested canvases and full visual/assistive quality still need work.
+binding, pointer round trips and ordinary action callbacks at wide/compact host
+sizes. Actual browser clicks, editing and action activation also pass after Fit.
+Native paint inspection uses an explicitly labelled diagnostic redraw; the
+foreground-only display capture refused and remains separate evidence.
+Internal grid/scroll/drawing metrics, nested canvases, full drag/capture/keyboard
+journeys and complete visual/assistive quality still need work.
 Existing policies and standalone example defaults remain unchanged. Follow
 [workspace02](../TODO/NS-3_canvas-workspace_02.md) for ordinary Studio selection and
 the complete saved/generated consumer's remaining checks.

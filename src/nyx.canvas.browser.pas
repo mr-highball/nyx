@@ -1511,6 +1511,24 @@ var
   LOuter: TJSDOMRect;
   LSurface: TJSDOMRect;
   LBounds: TNyxCanvasBounds;
+  LAncestor: TJSHTMLElement;
+  LClip: TJSDOMRect;
+  LLeft: Double;
+  LTop: Double;
+  LRight: Double;
+  LBottom: Double;
+  LScaleX: Double;
+  LScaleY: Double;
+  LOverflowX: TNyxText;
+  LOverflowY: TNyxText;
+
+  function Clips(const AOverflow: TNyxText): Boolean;
+  begin
+    { Closed CSS overflow names stay at this browser boundary. Visible overflow
+      intentionally contributes no clip on that axis. }
+    Result := (AOverflow = 'hidden') or (AOverflow = 'clip') or
+      (AOverflow = 'auto') or (AOverflow = 'scroll');
+  end;
 begin
   ABounds := Default(TNyxCanvasBounds);
   RequireConnected;
@@ -1537,11 +1555,68 @@ begin
   begin
     Exit;
   end;
+  LLeft := Max(LOuter.left, LSurface.left);
+  LTop := Max(LOuter.top, LSurface.top);
+  LRight := Min(LOuter.right, LSurface.right);
+  LBottom := Min(LOuter.bottom, LSurface.bottom);
+  LAncestor := LElement;
+  while LAncestor <> nil do
+  begin
+
+    if window.getComputedStyle(LAncestor).getPropertyValue('visibility') = 'hidden' then
+    begin
+      Exit;
+    end;
+    LOverflowX := window.getComputedStyle(LAncestor).getPropertyValue('overflow-x');
+    LOverflowY := window.getComputedStyle(LAncestor).getPropertyValue('overflow-y');
+
+    if (LAncestor <> LElement) and (Clips(LOverflowX) or Clips(LOverflowY)) then
+    begin
+      LClip := LAncestor.getBoundingClientRect;
+
+      if (LAncestor.offsetWidth <= 0) or (LAncestor.offsetHeight <= 0) then
+      begin
+        Exit;
+      end;
+      LScaleX := LClip.width / LAncestor.offsetWidth;
+      LScaleY := LClip.height / LAncestor.offsetHeight;
+
+      if Clips(LOverflowX) then
+      begin
+        LLeft := Max(LLeft, LClip.left + LAncestor.clientLeft * LScaleX);
+        LRight := Min(LRight, LClip.left +
+          (LAncestor.clientLeft + LAncestor.clientWidth) * LScaleX);
+      end;
+
+      if Clips(LOverflowY) then
+      begin
+        LTop := Max(LTop, LClip.top + LAncestor.clientTop * LScaleY);
+        LBottom := Min(LBottom, LClip.top +
+          (LAncestor.clientTop + LAncestor.clientHeight) * LScaleY);
+      end;
+    end;
+
+    if (LLeft >= LRight) or (LTop >= LBottom) then
+    begin
+      Exit;
+    end;
+
+    if LAncestor = FSurface then
+    begin
+      Break;
+    end;
+    LAncestor := TJSHTMLElement(LAncestor.parentElement);
+  end;
+
+  if LAncestor <> FSurface then
+  begin
+    Exit;
+  end;
   LBounds := NyxCanvasBounds((LOuter.left - LSurface.left) * FSurface.clientWidth / LSurface.width,
     (LOuter.top - LSurface.top) * FSurface.clientHeight / LSurface.height,
     LOuter.width * FSurface.clientWidth / LSurface.width,
     LOuter.height * FSurface.clientHeight / LSurface.height);
-  Result := LBounds.Intersects(NyxCanvasBounds(0, 0, FSurface.clientWidth, FSurface.clientHeight));
+  Result := True;
 
   if Result then
   begin

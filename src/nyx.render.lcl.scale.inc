@@ -227,6 +227,19 @@ begin
   RequireNativeGeneration(AGeneration);
   LIndex := Track(AControl);
   LRow := FRows[LIndex];
+  { Restore paint metrics too, before intrinsic measurement observes a themed
+    button. The copied theme/glyph data itself always remains logical. }
+
+  if AControl is TNyxLCLButton then
+  begin
+    TNyxLCLButton(AControl).ContentScale := 1;
+    RequireNativeGeneration(AGeneration);
+  end
+  else if AControl is TNyxLCLSurface then
+  begin
+    TNyxLCLSurface(AControl).ContentScale := 1;
+    RequireNativeGeneration(AGeneration);
+  end;
   { Ordinary Sync may deliberately replace an explicit role font before Resize.
     Preserve that logical value instead of reviving the previous projection. }
 
@@ -345,6 +358,15 @@ begin
     NativeScalePixel(LRow.MaximumWidth, AScale);
     NativeScalePixel(LRow.MaximumHeight, AScale);
 
+    if LRow.Control is TNyxLCLButton then
+    begin
+      TNyxLCLButton(LRow.Control).ValidateContentScale(AScale);
+    end
+    else if LRow.Control is TNyxLCLSurface then
+    begin
+      TNyxLCLSurface(LRow.Control).ValidateContentScale(AScale);
+    end;
+
     if LRow.Control = AHost then
     begin
       Continue;
@@ -402,6 +424,17 @@ begin
     if (LControl = nil) or not LRow.Seen then
     begin
       Continue;
+    end;
+
+    if LControl is TNyxLCLButton then
+    begin
+      TNyxLCLButton(LControl).ContentScale := AScale;
+      RequireNativeGeneration(AGeneration);
+    end
+    else if LControl is TNyxLCLSurface then
+    begin
+      TNyxLCLSurface(LControl).ContentScale := AScale;
+      RequireNativeGeneration(AGeneration);
     end;
     FRows[LIndex].ProjectedFontHeight := NativeScaleFont(LRow.FontHeight, AScale);
 
