@@ -9,6 +9,56 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Editable JSON preparation — 2026-10-26
+
+Previous goal turn: PROGRESS; 0c5ea1a is pushed and remote-verified. Root stays
+SOLO. Batch seventeen advances Tool Canvas01's useful English interpreted-script
+consumer and Logic components01's control-event chain, through the existing
+behavior-program prerequisite. The concrete delivery is an authored Prepare JSON
+program before parsing in both Format and Save graphs: accept plain JSON or a
+complete Markdown JSON fence while preserving strict parser failure otherwise.
+Use the existing interpreter/workbench, without another grammar or host grant.
+
+The same ordinary Studio/save/own-compiled application journey now passes with
+the additional program and operation card. Stage identity is public/typed;
+consumers find the formatter by identity rather than relying on its old numeric
+index. Exact project/Pascal bytes agree at both widths. Preparation keeps the
+entered source intact, including cancellation, and feeds the existing exact JSON
+and UTF-8 operations without introducing a numeric projection or host grant.
+
+Actual embedded plain/fenced input reaches formatting and the injected Save host.
+The authored program's eight boundary cases retain exact text for incomplete or
+differently labelled fences. The real Pascal workbench can replace that program
+live: both Format and Save execute its changed output. A malformed draft has a
+source-line diagnostic; failed Apply preserves accepted membership, unfinished
+source survives tab navigation, and Save continues with the accepted code. The
+other application returns from page retirement with its original program/result
+and no extra file effects. Runtime edits preserve both authored blueprints.
+
+Private json-workshop-preparation-02 joins all ten results: 105 desktop and 107
+compact Studio/reopened-App assertions, then 55/55 checks in its own independently
+compiled saved application, 322 total with four complete clean heaps. Three
+browser programs compile/stage with matching runtime and exact expected project;
+browser interaction remains unverified. Zero owned warnings; 21 installed Classes
+warning occurrences. All four source/build pins remain exact across the chain.
+The preceding packet retains a fixture-only compile failure from concatenating
+typed text constants; runtime TNyxText factories correct it. Its product example
+compiled successfully. No failed evidence is overwritten or hidden.
+
+This closes the declared integrated batch, not the full original task criteria,
+prerequisites or completion credit. No interpreter grammar, operation kind or
+execution authority was added. All owned readers are terminal; no freeze remains.
+All new outputs/private orchestration and owned TEMP/TMP use external storage.
+No Nyx namespace appears in this turn's tool inventory; that does not establish
+server health or authenticated observing delivery. No refused browser route,
+physical cursor workaround, listener replacement or cleanup was attempted.
+
+Next advance this useful tool's file/resource inputs or interactive typed port
+connections through existing owning hosts, rather than another isolated script/
+constructor/history proof. Preserve broader script/resource/operation/diagram
+coverage, real file/network outcomes, browser/visual/assistive parity, MCP delivery
+and the DataToolbar return matrix. Existing acceptance remains unchanged.
+
 ## Current checkpoint — JSON Workshop through Studio saving — 2026-10-26
 
 Previous goal turn: PROGRESS. Parent de81d8c is remote-verified; root remains

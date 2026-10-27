@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+JSON Workshop's Format and Save chains now begin with a pure, typed authored
+Pascal preparation program. Complete Markdown fences can be removed without
+changing entered text or projecting exact JSON numbers through script numbers.
+Ordinary live source replacement affects both chains; invalid drafts preserve
+the accepted program and exact Save result. WORK.md owns 322 native assertions,
+four clean heaps, independent applications and the ordinary Studio-to-generated
+application path, separately from browser compilation. This reuses the existing
+program operation and adds no grammar, host authority, task/criterion or completion
+credit. Actual file/resource inputs, broader operations and original browser/
+parity/quality/delivery acceptance remain open.
+
 The same JSON Workshop now edits both formatter graphs through ordinary native
 Studio input, retains unfinished fields across tabs, distinguishes Apply from
 paired publication and preserves exact Undo/Redo plus project Save/Open. The

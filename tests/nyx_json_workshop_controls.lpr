@@ -29,17 +29,20 @@ uses
   nyx.state, nyx.logic, nyx.files.save, nyx.scheduler,
   nyx.json.workshop, nyx.tool.canvas, nyx.canvas.types, nyx.canvas.workspace,
   nyx.flow.routing, nyx.flow.declarations, nyx.view.behavior,
+  nyx.programs, nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}nyx.test.json.workshop.studio,{$endif}
   {$ifdef PAS2JS}
-  JS, Web, nyx.application.browser, nyx.canvas.browser
+  JS, Web, nyx.application.browser, nyx.canvas.browser, nyx.tool.canvas.browser
   {$else}
   Classes, Interfaces, Forms, Controls, StdCtrls, nyx.application.lcl, nyx.canvas.lcl,
-  nyx.files.lcl
+  nyx.files.lcl, nyx.tool.canvas.lcl
   {$endif}
   {$ifdef NYX_COMPILED_JSON_WORKSHOP}, nyx.generated.json.workshop{$endif};
 
 const
   CExactJSON: TNyxText = '{"name":"River 🌙","count":9007199254740993,"note":"line\u0000end"}';
+  CReplacement: TNyxText = 'begin Prepared := ''{"custom":"Made with Pascal 🌙"}''; end.';
+  CUnfinished: TNyxText = 'begin Prepared := ; { unfinished input } end.';
 
 type
   {$ifdef PAS2JS}
@@ -47,11 +50,17 @@ type
   TReviewApplication = TNyxBrowserApplication;
   { A retained presentation capability never owns or reparents borrowed DOM. }
   TReviewCanvas = INyxBrowserCanvasWorkspaceView;
+  { Optional presentation facade borrows only the actual Tool Canvas renderer. }
+  TReviewTools = INyxBrowserToolCanvasView;
   {$else}
   { The test uses the ordinary native application and its real embedded inputs. }
   TReviewApplication = TNyxLCLApplication;
   { A retained presentation capability never owns or reparents borrowed widgets. }
   TReviewCanvas = INyxLCLCanvasWorkspaceView;
+  { Optional presentation facade borrows only the actual Tool Canvas renderer. }
+  TReviewTools = INyxLCLToolCanvasView;
+  { Expose inherited standard button input without replacing any controller. }
+  TControlInput = class(TControl);
   { Unexpected widget exceptions fail the finite journey instead of opening a modal. }
   TFailures = class
   public
@@ -94,6 +103,13 @@ var
   GDone: Boolean;
   GInitialized: Boolean;
   GWidth: Integer = 1280;
+  GTools: INyxToolCanvasView;
+  GToolFace: TReviewTools;
+  GProgramAuthoring: INyxToolCanvasProgramAuthoring;
+  GProgramEditing: INyxCanvasProgramEditing;
+  GAcceptedPrograms: TNyxText;
+  GCustomPretty: TNyxText;
+  GPeerPretty: TNyxText;
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}
   GStudioJourney: INyxJSONWorkshopStudioJourney;
   GStudioPair: TNyxProjectPair;
@@ -188,6 +204,16 @@ begin
   {$endif}
 end;
 
+function FencedJSON: TNyxText;
+begin
+  Result := '```json' + #10 + CExactJSON + #10 + '```';
+end;
+
+function PlainFence: TNyxText;
+begin
+  Result := '```' + #13#10 + CExactJSON + #13#10 + '```';
+end;
+
 { Copied diagnostic counters establish actual run completion. A timer tick alone
   cannot prove that a rejected asynchronous graph has finished without effects. }
 function SaveReport(AApp: Integer): TNyxDataValue;
@@ -196,6 +222,7 @@ var
   LRoutes: INyxFlowRouteBinding;
   LIndex: Integer;
 begin
+
   if not Supports(GViews[AApp], INyxCanvasRuntimeView, LRuntime) then
   begin
     raise Exception.Create('The embedded canvas has no runtime behavior capability');
@@ -213,9 +240,64 @@ begin
   raise Exception.Create('The embedded Save route has no diagnostic record');
 end;
 
+function ToolID(const ASuffix: TNyxText): TNyxText;
+begin
+  Result := GTools.Inspector.Root.ID + '-' + ASuffix;
+end;
+
+procedure ClickTool(const ASuffix: TNyxText);
+begin
+  GToolFace.Renderer.Reveal(ToolID(ASuffix), niRuntime);
+  {$ifdef PAS2JS}
+  GToolFace.Renderer.ElementFor(ToolID(ASuffix)).click;
+  {$else}
+  Check(GToolFace.Renderer.ControlFor(ToolID(ASuffix)).IsVisible,
+    'ordinary program action is visible: ' + ASuffix);
+  TControlInput(GToolFace.Renderer.ControlFor(ToolID(ASuffix))).Click;
+  {$endif}
+end;
+
+procedure TypeProgram(const ASource: TNyxText);
+begin
+  {$ifdef PAS2JS}
+  TJSHTMLTextAreaElement(GToolFace.Renderer.InputFor(ToolID('program-source'))).value := ASource;
+  GToolFace.Renderer.InputFor(ToolID('program-source')).dispatchEvent(TJSEvent.new('input'));
+  {$else}
+  TCustomEdit(GToolFace.Renderer.InputFor(ToolID('program-source'))).Text := ASource;
+  {$endif}
+end;
+
+{ Exercise the exact authored program, not a separate native fence remover.
+  Non-fences are retained for the strict parser; all text operations must keep
+  supplementary scalars, escaped NUL and exact numeric spelling unchanged. }
+procedure CheckPreparation;
+var
+  LProgram: INyxProgram;
+  LResult: INyxProgramResult;
+  LInputs: array of TNyxText;
+  LExpected: array of TNyxText;
+  LIndex: Integer;
+begin
+  LProgram := GDocument.Programs.Definition(JSONWorkshopPreparation).Compile;
+  LInputs := [CExactJSON, FencedJSON, PlainFence,
+    '```JSON' + #13#10 + CExactJSON + #13#10 + '```',
+    '```json' + #10 + CExactJSON, '```javascript' + #10 + CExactJSON + #10 + '```',
+    '```', '  ' + CExactJSON + #9];
+  LExpected := [CExactJSON, CExactJSON, CExactJSON, CExactJSON,
+    LInputs[4], LInputs[5], LInputs[6], CExactJSON];
+  for LIndex := 0 to High(LInputs) do
+  begin
+    LResult := LProgram.Run(NyxProgramValues.WithValue(
+      NyxProgramSymbol('Source'), NyxProgramValue(LInputs[LIndex])));
+    Check((LResult.Outputs.Value(NyxProgramSymbol('Prepared')).AsText = LExpected[LIndex]) and
+      (LResult.ProposalCount = 0), 'authored preparation preserves exact input case ' + IntToStr(LIndex));
+  end;
+end;
+
 procedure Initialize;
 var
   LIndex: Integer;
+  LStepIndex: Integer;
   LPair: TNyxProjectPair;
   LResolved: TNyxProjectPair;
   LWorkspace: TNyxSourceWorkspace;
@@ -266,10 +348,23 @@ begin
     'saved project bytes remain exact on the isolated file boundary');
   {$endif}
   LDefinition := GDocument.Flows.Definition(NyxFlowRef('Format JSON'));
-  LOperation := NyxLogicFromData(LDefinition.Descriptor(1).Kind, LDefinition.Configuration(1));
+  LOperation := nil;
+  for LStepIndex := 0 to LDefinition.StepCount - 1 do
+  begin
+
+    if LDefinition.Step(LStepIndex).Name = JSONWorkshopStep(jwsFormat).Name then
+    begin
+      LOperation := NyxLogicFromData(LDefinition.Descriptor(LStepIndex).Kind,
+        LDefinition.Configuration(LStepIndex));
+      Break;
+    end;
+  end;
   Check(Supports(LOperation, INyxJSONFormat, LFormatter),
     'the saved formatter is reconstructed through its specialized typed interface');
   GPretty := LFormatter.Format(NewNyxJSONParse.Parse(CExactJSON));
+  GCustomPretty := LFormatter.Format(NewNyxJSONParse.Parse('{"custom":"Made with Pascal 🌙"}'));
+  GPeerPretty := LFormatter.Format(NewNyxJSONParse.Parse('{"peer":"Still independent 🌙"}'));
+  CheckPreparation;
   for LIndex := 0 to 1 do
   begin
     GHosts[LIndex] := TSaveHost.Create;
@@ -337,6 +432,16 @@ begin
     {$ifdef PAS2JS}GStarted := TJSDate.now;{$else}GStarted := GetTickCount64;{$endif}
   end;
   {$endif}
+
+  if (GTools <> nil) and (GTools.RefreshExecution <> nil) then
+  begin
+
+    if GTools.RefreshExecution.Status in [nesPending, nesRunning] then
+    begin
+      Exit;
+    end;
+    Check(GTools.RefreshExecution.Status = nesSucceeded, 'actual program presentation completes');
+  end;
   case GStage of
     0:
       begin
@@ -368,6 +473,7 @@ begin
           'embedded editing remains independent in a reopened peer application');
         Check((Pos('9007199254740993', GPretty) > 0) and (Pos('River 🌙', GPretty) > 0),
           'real formatting preserves exact large numbers and supplementary Unicode');
+        TypeSource(0, FencedJSON);
         Click(0, jwcSave);
       end;
     2:
@@ -389,8 +495,8 @@ begin
           Exit;
         end;
         Check(not GApps[0].State.GetValue(NyxBooleanState('save-written')) and
-          (GApps[0].State.GetValue(JSONWorkshopSource) = CExactJSON),
-          'user cancellation publishes an honest outcome and preserves the source');
+          (GApps[0].State.GetValue(JSONWorkshopSource) = FencedJSON),
+          'user cancellation preserves the original fenced input without publishing preparation into it');
         Click(0, jwcSave);
       end;
     4:
@@ -429,7 +535,7 @@ begin
         Check((GHosts[0].Calls = 2) and
           (GApps[0].State.GetValue(JSONWorkshopPreview) = GPretty),
           'invalid JSON cannot request saving or replace the last accepted preview');
-        TypeSource(0, CExactJSON);
+        TypeSource(0, PlainFence);
         Click(0, jwcSave);
       end;
     8:
@@ -472,6 +578,99 @@ begin
         Check((TNyxCodec.Encode(GDocument) = GBefore) and
           (TNyxCodec.Encode(GReopened) = GBefore),
           'all runtime editing, graph results and retirement preserve both authored documents');
+        GTools := GApps[1].View.ToolCanvasView(JSONWorkshopCanvas.ID);
+        Check(Supports(GTools, TReviewTools, GToolFace), 'the reopened App exposes its actual Tool Canvas');
+        Check(Supports(GTools.Inspector, INyxToolCanvasProgramAuthoring, GProgramAuthoring),
+          'the useful tool exposes its ordinary interpreted-program workbench');
+        Check(Supports(GViews[1], INyxCanvasProgramEditing, GProgramEditing),
+          'the useful tool exposes managed runtime program ownership');
+        GProgramAuthoring.SelectProgram(JSONWorkshopPreparation);
+        GTools.Refresh;
+      end;
+    12:
+      begin
+        Check(not GProgramAuthoring.HasPendingProgram, 'opening the saved preparation has no proposal');
+        TypeProgram(CReplacement);
+        ClickTool('program-apply');
+      end;
+    13:
+      begin
+        Check(GProgramEditing.RuntimePrograms.Definition(JSONWorkshopPreparation).Source = CReplacement,
+          'actual Apply replaces the live interpreted source');
+        Click(1, jwcFormat);
+      end;
+    14:
+      begin
+
+        if GApps[1].State.GetValue(JSONWorkshopPreview) <> GCustomPretty then
+        begin
+          Exit;
+        end;
+        Check(GApps[1].State.GetValue(JSONWorkshopSource) = CExactJSON,
+          'custom preparation changes the result without overwriting entered JSON');
+        GAcceptedPrograms := GProgramEditing.RuntimePrograms.ToData.ToJSON;
+        TypeProgram(CUnfinished);
+        ClickTool('program-check');
+      end;
+    15:
+      begin
+        Check(Pos('Line ', GToolFace.Renderer.Root.Find(ToolID('program-feedback')).Prop('text')) = 1,
+          'an invalid script has an actual source-line diagnostic beside its editor');
+        ClickTool('program-apply');
+      end;
+    16:
+      begin
+        Check((GProgramEditing.RuntimePrograms.ToData.ToJSON = GAcceptedPrograms) and
+          GProgramAuthoring.HasPendingProgram, 'invalid Apply preserves the complete accepted program and draft');
+        ClickTool('tab-ports');
+      end;
+    17: ClickTool('tab-programs');
+    18:
+      begin
+        Check(GToolFace.Renderer.Root.Find(ToolID('program-source')).Prop('value') = CUnfinished,
+          'the exact unfinished source survives ordinary tab navigation');
+        Click(1, jwcSave);
+      end;
+    19:
+      begin
+
+        if GHosts[1].Calls <> 2 then
+        begin
+          Exit;
+        end;
+        Check(NyxDecodeUTF8(GHosts[1].Request.Payload) = GCustomPretty,
+          'Save still executes the last accepted custom program while an invalid draft is open');
+        GHosts[1].Request.Finish(nfsoWritten);
+      end;
+    20:
+      begin
+
+        if not GApps[1].State.GetValue(NyxBooleanState('save-written')) then
+        begin
+          Exit;
+        end;
+        Check((TNyxCodec.Encode(GDocument) = GBefore) and
+          (TNyxCodec.Encode(GReopened) = GBefore),
+          'runtime custom source and invalid drafts preserve both portable project blueprints');
+        GApps[0].ShowPage('home');
+      end;
+    21:
+      begin
+        GViews[0] := GApps[0].View.CanvasView(
+          GApps[0].View.Root.Find(JSONWorkshopCanvas.ID).Part(NyxPart('workspace')).ID) as TReviewCanvas;
+        TypeSource(0, '{"peer":"Still independent 🌙"}');
+        Click(0, jwcFormat);
+      end;
+    22:
+      begin
+
+        if GApps[0].State.GetValue(JSONWorkshopPreview) <> GPeerPretty then
+        begin
+          Exit;
+        end;
+        Check((GApps[1].State.GetValue(JSONWorkshopPreview) = GCustomPretty) and
+          (GHosts[0].Calls = 3) and (GHosts[1].Calls = 2),
+          'the other App returns with its original program and independent result, without extra file effects');
         GDone := True;
       end;
   end;
@@ -483,6 +682,10 @@ var
   LIndex: Integer;
 begin
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioJourney := nil;{$endif}
+  GProgramEditing := nil;
+  GProgramAuthoring := nil;
+  GToolFace := nil;
+  GTools := nil;
   for LIndex := 0 to 1 do
   begin
     FreeAndNil(GApps[LIndex]);

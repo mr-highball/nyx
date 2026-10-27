@@ -127,6 +127,7 @@ type
     function EncodedPair: TNyxText;
     function ID(const ASuffix: TNyxText): TNyxText;
     function ToolValue(const ASuffix: TNyxText): TNyxText;
+    function FormatterIndent(const AFlow: TNyxFlowRef): Integer;
     procedure ClickShell(const AID: TNyxText);
     procedure ChangeShell(const AID, AValue: TNyxText);
     procedure ClickTool(const ASuffix: TNyxText);
@@ -284,6 +285,23 @@ end;
 function TJourney.ToolValue(const ASuffix: TNyxText): TNyxText;
 begin
   Result := FTarget.Renderer.Root.Find(ID(ASuffix)).Prop(NyxAttributeName(atValue));
+end;
+
+function TJourney.FormatterIndent(const AFlow: TNyxFlowRef): Integer;
+var
+  LDefinition: INyxFlowDefinition;
+  LIndex: Integer;
+begin
+  LDefinition := FEditing.RuntimeFlows.Definition(AFlow);
+  for LIndex := 0 to LDefinition.StepCount - 1 do
+  begin
+
+    if LDefinition.Step(LIndex).Name = JSONWorkshopStep(jwsFormat).Name then
+    begin
+      Exit(LDefinition.Configuration(LIndex).Field('indent').AsInteger);
+    end;
+  end;
+  raise Exception.Create('The useful graph has no saved formatter');
 end;
 
 procedure TJourney.ClickShell(const AID: TNyxText);
@@ -539,8 +557,7 @@ begin
       end;
     9:
       begin
-        Check(FEditing.RuntimeFlows.Definition(JSONWorkshopSaveFlow).Configuration(1).
-          Field('indent').AsInteger = 4, 'actual Apply updates the running Save graph');
+        Check(FormatterIndent(JSONWorkshopSaveFlow) = 4, 'actual Apply updates the running Save graph');
         ChangeTool('logic-graph', 'Format JSON');
         ClickTool('logic-open');
       end;
@@ -557,8 +574,7 @@ begin
     12: ClickTool('logic-apply');
     13:
       begin
-        Check((FEditing.RuntimeFlows.Definition(NyxFlowRef('Format JSON')).Configuration(1).
-          Field('indent').AsInteger = 4) and (EncodedPair = FBase),
+        Check((FormatterIndent(NyxFlowRef('Format JSON')) = 4) and (EncodedPair = FBase),
           'both useful runtime graphs change without silently rewriting the authored project');
         ClickTool('save-connections');
       end;

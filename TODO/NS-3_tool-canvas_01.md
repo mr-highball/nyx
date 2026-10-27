@@ -4,6 +4,18 @@
 
 **Description:**
 
+The JSON Workshop now starts its useful Format and Save graphs with an authored,
+editable Pascal preparation step. Actual plain/Markdown-fenced input reaches the
+strict parser and exact save bytes. The ordinary Pascal workbench changes both
+running graphs; invalid source retains the accepted program, local draft and
+usable Save behavior. Independent Apps and returning pages retain their owners.
+WORK.md owns 105/107 ordinary Studio/reopened-App and 55/55 own-compiled-App
+assertions, four clean heaps and three browser compilations. No grammar, operation
+kind, full criterion or completion credit is added. Browser interaction, real
+file/resource inputs, typed port-wire gestures and original script/resource/host/
+diagram/quality scope remain required. Continue useful inputs/connections rather
+than another standalone script/source proof.
+
 The same example now passes an ordinary native Studio journey at desktop/compact
 widths: select/load/configure its Save and Format graphs, retain unfinished input
 across tabs, Apply, Save graphs, paired Undo/Redo and actual project Save/Open.

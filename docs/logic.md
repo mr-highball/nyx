@@ -987,6 +987,13 @@ starting point: a reusable notebook contains actual Memo/Button/Code controls,
 with typed Format and Save graphs. The save graph connects JSON parse/format,
 UTF-8 encoding and the injected file service; its operation cards and positions
 use the public Tool Canvas contract. The portable design contains no file host.
+Both graphs begin with the authored **Prepare JSON** Pascal program. It accepts
+plain or completely fenced Markdown JSON without changing the input state. Its
+typed text ports feed the strict parser; it preserves exact JSON values rather
+than projecting them through script numbers. **Pascal programs** exposes its
+source, checking and live replacement. Invalid drafts retain the accepted program
+and survive tab changes. Runtime edits stay local until explicitly saved through
+Studio's graph/program adoption host.
 `tools/build.ps1 -Target json-workshop` runs the native control journey and the
 constructor exported by that same journey, then stages matching browser programs.
 Add `-JSONWorkshopStudio` to edit both formatter graphs through ordinary Studio

@@ -27,21 +27,64 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.model, nyx.state, nyx.canvas.types,
-  nyx.flow.declarations, nyx.tool.canvas;
+  nyx.flow.types, nyx.flow.declarations, nyx.tool.canvas,
+  nyx.programs.types, nyx.programs.contract, nyx.programs.declarations;
 
 const
   JSONWorkshopSample: TNyxText =
     '{"project":"Weekend workshop","owner":"Alex","tasks":["Sketch","Build","Share"]}';
+  { This is authored interpreted Pascal, independently editable in the canvas's
+    Pascal programs tab. Only a complete newline-delimited Markdown fence is
+    removed. Incomplete or differently labelled fences remain parser input,
+    so preparation cannot silently repair or truncate malformed JSON. }
+  JSONWorkshopPreparationSource: TNyxText =
+    '{ Accept JSON copied from a Markdown example while preserving its values. }' + #10 +
+    'function WithoutFence(const Value: String): String;' + #10 +
+    'var' + #10 +
+    '  First: Integer;' + #10 +
+    '  Size: Integer;' + #10 +
+    'begin' + #10 +
+    '  Result := Trim(Value);' + #10 +
+    '  Size := Length(Result);' + #10 +
+    '  First := 0;' + #10 +
+    '' + #10 +
+    '  if (Size >= 7) and ((Copy(Result, 1, 7) = ''```json'') or' + #10 +
+    '    (Copy(Result, 1, 7) = ''```JSON'')) then' + #10 +
+    '  begin' + #10 +
+    '    First := 8;' + #10 +
+    '  end' + #10 +
+    '  else if (Size >= 4) and (Copy(Result, 1, 3) = ''```'') then' + #10 +
+    '  begin' + #10 +
+    '    First := 4;' + #10 +
+    '  end;' + #10 +
+    '' + #10 +
+    '  if (First > 0) and (Size >= First + 3) and' + #10 +
+    '    ((Copy(Result, First, 1) = #10) or (Copy(Result, First, 1) = #13)) and' + #10 +
+    '    (Copy(Result, Size - 2, 3) = ''```'') then' + #10 +
+    '  begin' + #10 +
+    '    Result := Trim(Copy(Result, First, Size - First - 2));' + #10 +
+    '  end;' + #10 +
+    'end;' + #10 +
+    '' + #10 +
+    'begin' + #10 +
+    '  Prepared := WithoutFence(Source);' + #10 +
+    'end.';
 
 type
   { Closed identities let applications and input consumers address this example
     without duplicating its persisted control names. No reference owns a view. }
   TJSONWorkshopControl = (jwcSource, jwcFormat, jwcSave, jwcPreview, jwcSavedName);
+  { Public stage identities keep graph wiring, saved placement and consumers
+    independent of insertion order. The program stage has only text ports. }
+  TJSONWorkshopStep = (jwsPrepare, jwsParse, jwsFormat, jwsEncode, jwsSave);
 
 function JSONWorkshopControl(AControl: TJSONWorkshopControl): TNyxControlRef;
 function JSONWorkshopCanvas: TNyxControlRef;
 function JSONWorkshopItem: TNyxCanvasItemRef;
 function JSONWorkshopSaveFlow: TNyxFlowRef;
+function JSONWorkshopStep(AStep: TJSONWorkshopStep): TNyxFlowStepRef;
+function JSONWorkshopPreparation: TNyxProgramRef;
+function JSONWorkshopPreparationContract: TNyxProgramContract;
 function JSONWorkshopSource: TNyxTextStateRef;
 function JSONWorkshopPreview: TNyxTextStateRef;
 
@@ -60,19 +103,15 @@ implementation
 
 uses
   SysUtils, nyx.controls, nyx.root.types, nyx.logic, nyx.logic.files,
-  nyx.files.save, nyx.flow, nyx.flow.types, nyx.flow.routes, nyx.flow.route.model,
-  nyx.canvas.geometry, nyx.canvas.workspace, nyx.canvas.declarations;
+  nyx.files.save, nyx.flow, nyx.flow.routes, nyx.flow.route.model,
+  nyx.canvas.geometry, nyx.canvas.workspace, nyx.canvas.declarations,
+  nyx.logic.programs;
 
 const
   CCanvas = 'json-workshop';
   CTemplate = 'json-notebook';
   CControls: array[TJSONWorkshopControl] of TNyxText =
     ('json-source', 'format-json', 'save-json', 'json-preview', 'saved-name');
-
-type
-  { One shared stage vocabulary keeps graph construction and route mappings
-    aligned. Names remain open persisted references at the public boundary. }
-  TWorkshopStep = (wsParse, wsFormat, wsEncode, wsSave);
 
 function JSONWorkshopControl(AControl: TJSONWorkshopControl): TNyxControlRef;
 begin
@@ -104,21 +143,34 @@ begin
   Result := NyxTextState('json-preview');
 end;
 
-function Step(AValue: TWorkshopStep): TNyxFlowStepRef;
+function JSONWorkshopPreparation: TNyxProgramRef;
+begin
+  Result := NyxProgramRef('Prepare JSON');
+end;
+
+function JSONWorkshopPreparationContract: TNyxProgramContract;
+begin
+  Result := NyxProgramContract
+    .Input(NyxProgramSymbol('Source'), NyxProgramType(npkText))
+    .Output(NyxProgramSymbol('Prepared'), NyxProgramType(npkText));
+end;
+
+function JSONWorkshopStep(AStep: TJSONWorkshopStep): TNyxFlowStepRef;
 const
-  CNames: array[TWorkshopStep] of TNyxText = ('Parse JSON', 'Format JSON', 'Encode UTF-8', 'Save file');
+  CNames: array[TJSONWorkshopStep] of TNyxText =
+    ('Prepare JSON', 'Parse JSON', 'Format JSON', 'Encode UTF-8', 'Save file');
 begin
-  Result := NyxFlowStep(CNames[AValue]);
+  Result := NyxFlowStep(CNames[AStep]);
 end;
 
-function LogicPort(AValue: TWorkshopStep; APort: TNyxLogicPort): TNyxFlowEndpoint;
+function LogicPort(AValue: TJSONWorkshopStep; APort: TNyxLogicPort): TNyxFlowEndpoint;
 begin
-  Result := NyxFlowEndpoint(Step(AValue), NyxLogicPort(APort));
+  Result := NyxFlowEndpoint(JSONWorkshopStep(AValue), NyxLogicPort(APort));
 end;
 
-function FilePort(AValue: TWorkshopStep; APort: TNyxFilePort): TNyxFlowEndpoint;
+function FilePort(AValue: TJSONWorkshopStep; APort: TNyxFilePort): TNyxFlowEndpoint;
 begin
-  Result := NyxFlowEndpoint(Step(AValue), NyxFilePort(APort));
+  Result := NyxFlowEndpoint(JSONWorkshopStep(AValue), NyxFilePort(APort));
 end;
 
 function BuildJSONWorkshopDocument: TNyxDocument;
@@ -133,6 +185,9 @@ var
   LScene: INyxCanvasDefinition;
   LCanvas: INyxToolCanvas;
   LFormatFlow: TNyxFlowRef;
+  LPreparation: INyxProgramDefinition;
+  LSourcePort: TNyxFlowEndpoint;
+  LPreparedPort: TNyxFlowEndpoint;
 begin
   Result := TNyxDocument.Create;
   try
@@ -148,7 +203,8 @@ begin
     LNotebook.Configure.Layout(nlColumn).Gap(12).Padding(20).Done;
     LNotebook.Add(NewNyxHeading('notebook-title').WithText('Your JSON'));
     LNotebook.Add(NewNyxLabel('notebook-help').WithText(
-      'Paste some JSON, format it, then keep a copy. The logic behind this tool is yours to reshape.'));
+      'Paste JSON or a fenced JSON example, format it, then keep a copy. ' +
+      'Open Pascal programs / Prepare JSON to customize how input is prepared.'));
     LSource := NewNyxMemo(JSONWorkshopControl(jwcSource).ID).WithText('Source');
     LSource.Configure.Height(170).AccessibleName('JSON source').Done;
     LSource.Binds.Value(JSONWorkshopSource).Done;
@@ -181,37 +237,46 @@ begin
     LNotebook.Add(LLabel);
     Result.AddComponent(LNotebook);
 
+    LPreparation := NewNyxProgramDefinition(JSONWorkshopPreparationSource,
+      JSONWorkshopPreparationContract, NyxProgramLimits.Steps(10000));
+    Result.Programs.Define(JSONWorkshopPreparation, LPreparation);
+    LSourcePort := NyxFlowEndpoint(JSONWorkshopStep(jwsPrepare), NyxFlowPort('Source'));
+    LPreparedPort := NyxFlowEndpoint(JSONWorkshopStep(jwsPrepare), NyxFlowPort('Prepared'));
     LFormatFlow := NyxFlowRef('Format JSON');
     LGraph := NewNyxFlowGraph
-      .WithStep(Step(wsParse), NewNyxJSONParse)
-      .WithStep(Step(wsFormat), NewNyxJSONFormat(njlIndented, 2))
-      .Connect(LogicPort(wsParse, nlpJSON), LogicPort(wsFormat, nlpJSON)).Build;
+      .WithStep(JSONWorkshopStep(jwsPrepare), NewNyxProgramLogic(JSONWorkshopPreparation, LPreparation))
+      .WithStep(JSONWorkshopStep(jwsParse), NewNyxJSONParse)
+      .WithStep(JSONWorkshopStep(jwsFormat), NewNyxJSONFormat(njlIndented, 2))
+      .Connect(LPreparedPort, LogicPort(jwsParse, nlpText))
+      .Connect(LogicPort(jwsParse, nlpJSON), LogicPort(jwsFormat, nlpJSON)).Build;
     Result.Flows.Define(LFormatFlow, LGraph);
     SetNyxFlowRoutes(Result.Find(JSONWorkshopControl(jwcFormat).ID), NewNyxFlowRoutes.WithRoute(
       NyxFlowRoute(NyxFlowRouteID('Format notebook'), LFormatFlow, ntClick, nfcmExclusive)
-        .InputState(LogicPort(wsParse, nlpText), JSONWorkshopSource)
-        .OutputState(LogicPort(wsFormat, nlpText), JSONWorkshopPreview)));
+        .InputState(LSourcePort, JSONWorkshopSource)
+        .OutputState(LogicPort(jwsFormat, nlpText), JSONWorkshopPreview)));
 
     LGraph := NewNyxFlowGraph
-      .WithStep(Step(wsParse), NewNyxJSONParse)
-      .WithStep(Step(wsFormat), NewNyxJSONFormat(njlIndented, 2))
-      .WithStep(Step(wsEncode), NewNyxUTF8Encode)
-      .WithStep(Step(wsSave), NewNyxSaveFile(NyxFileSaveOptions('workshop.json')
+      .WithStep(JSONWorkshopStep(jwsPrepare), NewNyxProgramLogic(JSONWorkshopPreparation, LPreparation))
+      .WithStep(JSONWorkshopStep(jwsParse), NewNyxJSONParse)
+      .WithStep(JSONWorkshopStep(jwsFormat), NewNyxJSONFormat(njlIndented, 2))
+      .WithStep(JSONWorkshopStep(jwsEncode), NewNyxUTF8Encode)
+      .WithStep(JSONWorkshopStep(jwsSave), NewNyxSaveFile(NyxFileSaveOptions('workshop.json')
         .Title('Save your JSON').MediaType(NyxMediaType(nfmtJSON)).Allow('json').Mode(nfsmPreferPicker)))
-      .Connect(LogicPort(wsParse, nlpJSON), LogicPort(wsFormat, nlpJSON))
-      .Connect(LogicPort(wsFormat, nlpText), LogicPort(wsEncode, nlpText))
-      .Connect(FilePort(wsEncode, nfpBytes), FilePort(wsSave, nfpBytes)).Build;
+      .Connect(LPreparedPort, LogicPort(jwsParse, nlpText))
+      .Connect(LogicPort(jwsParse, nlpJSON), LogicPort(jwsFormat, nlpJSON))
+      .Connect(LogicPort(jwsFormat, nlpText), LogicPort(jwsEncode, nlpText))
+      .Connect(FilePort(jwsEncode, nfpBytes), FilePort(jwsSave, nfpBytes)).Build;
     Result.Flows.Define(JSONWorkshopSaveFlow, LGraph);
     SetNyxFlowRoutes(Result.Find(JSONWorkshopControl(jwcSave).ID), NewNyxFlowRoutes.WithRoute(
       NyxFlowRoute(NyxFlowRouteID('Save notebook'), JSONWorkshopSaveFlow, ntClick, nfcmExclusive)
-        .InputState(LogicPort(wsParse, nlpText), JSONWorkshopSource)
-        .InputSignal(FilePort(wsSave, nfpTrigger))
-        .OutputState(LogicPort(wsFormat, nlpText), JSONWorkshopPreview)
-        .OutputState(FilePort(wsSave, nfpName), NyxTextState('saved-name'))
-        .OutputState(FilePort(wsSave, nfpWritten), NyxBooleanState('save-written'))
-        .OutputState(FilePort(wsSave, nfpDelivered), NyxBooleanState('save-delivered'))
-        .OutputState(FilePort(wsSave, nfpCancelled), NyxBooleanState('save-cancelled'))
-        .OutputState(FilePort(wsSave, nfpError), NyxTextState('save-error'))));
+        .InputState(LSourcePort, JSONWorkshopSource)
+        .InputSignal(FilePort(jwsSave, nfpTrigger))
+        .OutputState(LogicPort(jwsFormat, nlpText), JSONWorkshopPreview)
+        .OutputState(FilePort(jwsSave, nfpName), NyxTextState('saved-name'))
+        .OutputState(FilePort(jwsSave, nfpWritten), NyxBooleanState('save-written'))
+        .OutputState(FilePort(jwsSave, nfpDelivered), NyxBooleanState('save-delivered'))
+        .OutputState(FilePort(jwsSave, nfpCancelled), NyxBooleanState('save-cancelled'))
+        .OutputState(FilePort(jwsSave, nfpError), NyxTextState('save-error'))));
 
     LScene := NewNyxCanvasDefinition
       .WithCamera(NyxCanvasCamera(1200, 760, NyxCanvasPoint(0, 0), 1))
@@ -219,10 +284,11 @@ begin
       .WithItem(JSONWorkshopItem, NyxReusableRoot(CTemplate),
         NyxCanvasPlacement(NyxCanvasLayer('Work'), NyxCanvasBounds(20, 20, 450, 700)));
     LScene := NyxCanvasGraphLayout(LScene)
-      .Place(JSONWorkshopSaveFlow, Step(wsParse), NyxCanvasPoint(520, 30))
-      .Place(JSONWorkshopSaveFlow, Step(wsFormat), NyxCanvasPoint(820, 30))
-      .Place(JSONWorkshopSaveFlow, Step(wsEncode), NyxCanvasPoint(520, 340))
-      .Place(JSONWorkshopSaveFlow, Step(wsSave), NyxCanvasPoint(820, 340)).Done;
+      .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsPrepare), NyxCanvasPoint(520, 30))
+      .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsParse), NyxCanvasPoint(820, 30))
+      .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsFormat), NyxCanvasPoint(1120, 30))
+      .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsEncode), NyxCanvasPoint(820, 340))
+      .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsSave), NyxCanvasPoint(1120, 340)).Done;
     Result.Canvases.Define(NyxCanvasRef('JSON workbench'), LScene);
     LCanvas := NewNyxToolCanvas(JSONWorkshopCanvas.ID).WithScene(NyxCanvasRef('JSON workbench'));
     LCanvas.WorkspaceCanvas.Configure.Height(720).MinimumHeight(360).Done;

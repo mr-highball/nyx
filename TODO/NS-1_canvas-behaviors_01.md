@@ -4,6 +4,14 @@
 
 **Description:**
 
+The public [JSON Workshop](../examples/tool-canvas/README.md) now supplies a
+practical existing-language consumer: its authored Prepare JSON program feeds
+both formatting and saving. Actual workbench replacement, invalid draft/refusal,
+tab retention and independent applications execute through saved Studio/generated
+applications. WORK.md distinguishes the native evidence and browser compilation.
+This adds no grammar, capability, full criterion or completion credit; all original
+scene/event/resource/transaction/quality/parity acceptance below remains required.
+
 The user's canvas request includes a lightweight Pascal interpreter for complex
 creator-defined interaction. NS-1 owns an optional portable, typed Pascal subset
 with a documented grammar and capabilities. Existing source parsing and computed

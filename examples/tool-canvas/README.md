@@ -2,8 +2,10 @@
 
 A practical Tool Canvas made from ordinary Nyx controls and reusable logic.
 Edit the JSON in the notebook, choose **Format JSON**, or choose **Save JSON**
-to format and save the current input. The operation cards expose the saved
-Parse JSON → Format JSON → Encode UTF-8 → Save file graph for further editing.
+to format and save the current input. Plain JSON and complete Markdown fences
+labelled `json` or `JSON`, or without a language label, are accepted. The
+operation cards expose the saved Prepare JSON → Parse JSON → Format JSON →
+Encode UTF-8 → Save file graph for further editing.
 Pan the workspace to explore the notebook and its operation cards.
 
 [nyx.json.workshop.pas](nyx.json.workshop.pas) is the portable document builder.
@@ -11,6 +13,24 @@ It composes a reusable Card, Memo, buttons, Code display and receipt labels.
 Two typed graphs distinguish formatting from saving. Routes bind the real
 control events and state directly; there is no handwritten JSON-result handler.
 The canvas declaration retains embedded content and operation positions.
+
+**Prepare JSON** is an authored Pascal program, executed by Nyx's portable
+interpreter. It removes surrounding whitespace and a complete newline-delimited
+fence; incomplete or differently labelled fences still reach the strict JSON
+parser. It does not rewrite the entered source, round JSON numbers or acquire
+file/network authority. Its typed contract accepts `Source: String` and returns
+`Prepared: String`, with a caller-visible execution budget.
+
+Open **Pascal programs**, choose **Prepare JSON**, and customize the source.
+**Check program** reports source-line diagnostics. **Apply live program** updates
+the referencing Format and Save graphs in this canvas. Invalid or unfinished
+source leaves the accepted program working and survives tab navigation. Separate
+applications own their live definitions independently.
+
+Live edits in the standalone example last for that runtime. To retain a customized
+tool, open its exported project in Studio, apply the program, choose **Save graphs
+and connections**, then save the project. This deliberately preserves the
+difference between a live experiment and an authored application.
 
 [json_workshop.lpr](json_workshop.lpr) hosts that document with LCL or pas2js.
 Its file host is supplied explicitly by the application. The saved document
@@ -58,8 +78,9 @@ services; choosing Save may open a picker or request a browser download.
 The same build runs the actual-control consumer at desktop and compact widths,
 exports its exact project/Pascal pair, compiles that constructor and repeats the
 journey in its generated application. The native consumer injects file outcomes
-and checks exact UTF-8 bytes, cancellation, invalid-input refusal, page retirement
-and independent reopened applications. Those injected receipts are not evidence
+and checks exact UTF-8 bytes, cancellation, invalid-input refusal, page retirement,
+live Pascal replacement/refusal and independent reopened applications. Those
+injected receipts are not evidence
 of a physical picker, disk write or download. Browser assertion pages and the
 compiled constructor's exact project input are staged separately; compilation
 alone does not establish browser interaction, accessibility or visual quality.
