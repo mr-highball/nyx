@@ -391,6 +391,15 @@ fonts. Native header resizing converts screen width through both monitor DPI
 and canvas zoom, and refuses a drag whose projection epoch changed before its
 release. Ordinary runtime queries retain the same grid, selected item and draft.
 
+Pinned panes copy only the middle grid's current measured row window, clearing
+their preceding sparse overrides before installing the new window. Text-window,
+pane and header-button updates share one logical section. Scroll anchors restore
+after the complete subtree has its final bounds and metrics; a temporary lack of
+overflow while normalizing the tree cannot silently reset horizontal scrolling.
+Native auto-fit uses owned copies of the exact logical header/body font heights,
+retaining monitor DPI independently of canvas zoom. It never infers a logical
+font by dividing rounded physical pixels or changes a live font to measure it.
+
 Pointer and drag payloads use logical outer-face positions. The inverse screen
 mapping applies the same transform, including native clipped-content offsets.
 Browser axis-aligned face ratios include ancestor uniform transforms; arbitrary
@@ -405,12 +414,14 @@ binding, pointer round trips and ordinary action callbacks at wide/compact host
 sizes. Actual browser clicks, editing and action activation also pass after Fit.
 Native paint inspection uses an explicitly labelled diagnostic redraw; the
 foreground-only display capture refused and remains separate evidence.
-The native data consumer additionally qualifies plain, wrapped and resizable
-tables at both host widths, including retained scroll anchors, real F2 editor
-draft/caret/selection, query refresh, header dragging and retirement during an
-entered update. Native data-control paint inspection is also a diagnostic redraw.
-Pinned-pane row geometry, fit-to-content measurement under zoom, other internal
-scroll/drawing metrics, nested canvases, full drag/capture/keyboard journeys,
+The native data consumer additionally qualifies plain, wrapped, resizable and
+pinned tables at both host widths, including retained scroll anchors, real F2
+editor draft/caret/selection, query refresh, header dragging and retirement during
+an entered update. Repeated zoom and actual vertical/horizontal scrolling retain
+pinned cell alignment and Fit-button size; native keyboard auto-fit publishes
+the same logical width through zoom and preserves an unfinished pinned edit.
+Native data-control paint inspection is also a diagnostic redraw.
+Other internal scroll/drawing metrics, nested canvases, full drag/capture/keyboard journeys,
 large-dataset performance and complete visual/assistive quality still need work.
 Existing policies and standalone example defaults remain unchanged. Follow
 [workspace02](../TODO/NS-3_canvas-workspace_02.md) for ordinary Studio selection and

@@ -72,8 +72,11 @@ implemented, with native redraw inspection kept separate from displayed output.
 Native table metrics/query refresh now pass107/129/112 plain/wrapped/resizable
 checks at each width, including real editor drafts, logical header dragging and
 retirement. The stronger wrapped checks require admitted multiline text after
-final scroll recovery. Pinned-pane rows, auto-fit measurement, other internal
-scroll/drawing metrics and remaining input/quality journeys still need work.
+final scroll recovery. Pinned panes and auto-fit now pass107/129/122/145
+plain/wrapped/resizable/pinned checks at each width, including distinct vertical/
+horizontal scrolls, matching screen row tops, logical fit widths and retained
+pinned drafts. Other internal scroll/drawing metrics and remaining input/quality
+journeys still need work.
 Ordinary Studio selection and the same-pair Workshop
 journey remain required. Keep this work on the existing owner; do not treat this
 memo/card checkpoint as all-control parity or start another source-only sequence.

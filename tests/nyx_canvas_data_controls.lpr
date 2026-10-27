@@ -76,6 +76,7 @@ var
   GLeftColumn: Integer;
   GWrapped: Boolean;
   GArranged: Boolean;
+  GPinned: Boolean;
   GBefore: TNyxText;
 
 function Services: TNyxCollectionRef;
@@ -147,8 +148,19 @@ begin
   LTable.Configure.Height(300).Done;
   LSpec := NyxCollectionView(Services)
     .Column(NyxTextField('name'), 'Service', cmEditable)
-      .ColumnSizing(NyxColumnSizing.Fixed(220))
-    .Column(NyxTextField('status'), 'Status').ColumnSizing(NyxColumnSizing.Fixed(180))
+      .ColumnSizing(NyxColumnSizing.Fixed(220));
+
+  if GPinned then
+  begin
+    LSpec := LSpec.ColumnLayout(NyxColumnLayout.PinStart);
+  end;
+  LSpec := LSpec.Column(NyxTextField('status'), 'Status').ColumnSizing(NyxColumnSizing.Fixed(180));
+
+  if GPinned then
+  begin
+    LSpec := LSpec.ColumnLayout(NyxColumnLayout.PinEnd.AllowOnly([nclfAutoSize]));
+  end;
+  LSpec := LSpec
     .Column(NyxIntegerField('requests'), 'Requests').ColumnSizing(NyxColumnSizing.Fixed(140))
     .Column(NyxTextField('description'), 'Description').ColumnSizing(NyxColumnSizing.Fixed(260));
 
@@ -358,6 +370,235 @@ begin
   Check(not GView.Connected, 'retired logical work closes idempotently without reviving a renderer');
 end;
 
+{ Use the actual native Ctrl+Shift+F route on one logical field at each zoom.
+  The physical glyph size is not the user's new persisted column preference. }
+procedure CheckColumnFit(AGrid: TNyxCollectionStringGrid; APhysical: Integer);
+var
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LPreference: Integer;
+  LWidth: Integer;
+  LExpected: Integer;
+  LIndex: Integer;
+  LTurn: Integer;
+  LKey: Word;
+begin
+  LColumns := NyxCollectionColumns(GData);
+  LExpected := 0;
+  for LIndex := Low(CZooms) to High(CZooms) do
+  begin
+    GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(360, 300), CZooms[LIndex]));
+    AGrid.Col := APhysical;
+    AGrid.Row := 6;
+    AGrid.SetFocus;
+    Pump;
+    LKey := Ord('F');
+    TGridInput(AGrid).KeyDown(LKey, [ssCtrl, ssShift]);
+    for LTurn := 1 to 3 do
+    begin
+      Pump;
+      Application.Idle(False);
+    end;
+    LCapture := LColumns.CaptureColumns;
+    LPreference := LCapture.Preferences.IndexOf(NyxColumnIdentity(NyxTextField('name')));
+    Check(LPreference >= 0, 'native Fit publishes its actual typed field preference');
+    LWidth := LCapture.Preferences.ColumnAt(LPreference).WidthValue;
+
+    if LIndex = Low(CZooms) then
+    begin
+      LExpected := LWidth;
+    end;
+    Check(LWidth = LExpected,
+      'Fit keeps the same logical width across zoom / actual ' + TNyxText(IntToStr(LWidth)) +
+      ' expected ' + TNyxText(IntToStr(LExpected)) +
+      ' zoom ' + TNyxText(FloatToStr(CZooms[LIndex])));
+  end;
+end;
+
+{ Resolve a typed fixture field in its actual native grid or pinned pane. The
+  bounded visible header walk observes physical controls, not a private mount. }
+function FieldGrid(const AField: TNyxColumnIdentity; out AColumn: Integer):
+  TNyxCollectionStringGrid;
+var
+  LTitle: TNyxText;
+  LIndex: Integer;
+
+  function Matches(AGrid: TNyxCollectionStringGrid): Boolean;
+  var
+    LColumn: Integer;
+  begin
+    Result := False;
+    for LColumn := 0 to AGrid.ColCount - 1 do
+    begin
+
+      if Pos(LTitle, TNyxText(AGrid.Cells[LColumn, 0])) = 1 then
+      begin
+        AColumn := LColumn;
+        Exit(True);
+      end;
+    end;
+  end;
+
+begin
+  LTitle := GData.Spec.ColumnAt(GData.Spec.ColumnIndex(AField)).Title;
+  AColumn := -1;
+  Result := GGrid;
+
+  if Matches(Result) then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to GGrid.ControlCount - 1 do
+  begin
+
+    if (GGrid.Controls[LIndex] is TNyxCollectionStringGrid) and
+      GGrid.Controls[LIndex].Visible then
+    begin
+      Result := TNyxCollectionStringGrid(GGrid.Controls[LIndex]);
+
+      if Matches(Result) then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+  Result := nil;
+end;
+
+procedure CheckPinnedRows;
+var
+  LStart: TNyxCollectionStringGrid;
+  LEnd: TNyxCollectionStringGrid;
+  LStartColumn: Integer;
+  LEndColumn: Integer;
+  LDescriptionColumn: Integer;
+  LIndex: Integer;
+  LRow: Integer;
+  LLayout: TNyxTableTextLayout;
+  LEditor: TCustomEdit;
+  LRevision: Integer;
+  LStartPoint: TPoint;
+  LEndPoint: TPoint;
+  LMiddlePoint: TPoint;
+  LKey: Word;
+  LTurn: Integer;
+  LFit: TNyxCollectionFitButton;
+  LFitWidth: Integer;
+  LFitHeight: Integer;
+
+  procedure CheckRows;
+  var
+    LRow: Integer;
+    LMainPoint: TPoint;
+    LStartPoint: TPoint;
+    LEndPoint: TPoint;
+  begin
+    Check((LStart.TopRow = GGrid.TopRow) and (LEnd.TopRow = GGrid.TopRow),
+      'both pinned panes share the actual scrolling-middle row anchor');
+    for LRow := GGrid.TopRow to Min(GGrid.RowCount - 1, GGrid.TopRow + 2) do
+    begin
+      Check((Abs(LStart.RowHeights[LRow] - GGrid.RowHeights[LRow]) <= 1) and
+        (Abs(LEnd.RowHeights[LRow] - GGrid.RowHeights[LRow]) <= 1),
+        'pinned body heights match the wrapped middle / row ' + TNyxText(IntToStr(LRow)));
+      LMainPoint := GGrid.ClientToScreen(GGrid.CellRect(LDescriptionColumn, LRow).TopLeft);
+      LStartPoint := LStart.ClientToScreen(LStart.CellRect(LStartColumn, LRow).TopLeft);
+      LEndPoint := LEnd.ClientToScreen(LEnd.CellRect(LEndColumn, LRow).TopLeft);
+      Check((Abs(LMainPoint.Y - LStartPoint.Y) <= 1) and
+        (Abs(LMainPoint.Y - LEndPoint.Y) <= 1),
+        'both pinned cell tops align with the real middle on screen');
+    end;
+    Check(GGrid.CellTextLayout(LDescriptionColumn, GGrid.TopRow, LLayout) and
+      (LLayout.Admission = nttaReady) and (LLayout.Count >= 2),
+      'the current pinned-table viewport contains usable wrapped descriptions');
+    Check(LFit.Visible and (Abs(LFit.Width - Round(LFitWidth * CZooms[GStage])) <= 1) and
+      (Abs(LFit.Height - Round(LFitHeight * CZooms[GStage])) <= 1),
+      'the real pinned Fit button keeps its projected chrome after scrolling');
+  end;
+
+begin
+  LStart := FieldGrid(NyxColumnIdentity(NyxTextField('name')), LStartColumn);
+  LEnd := FieldGrid(NyxColumnIdentity(NyxTextField('status')), LEndColumn);
+  Check((LStart <> nil) and (LEnd <> nil) and (LStart <> GGrid) and
+    (LEnd <> GGrid) and (LStart <> LEnd), 'the table has two distinct real pinned editor panes');
+  Check(FieldGrid(NyxColumnIdentity(NyxTextField('description')), LDescriptionColumn) = GGrid,
+    'wrapped description remains in the real scrolling middle');
+  LFit := nil;
+  for LIndex := 0 to LEnd.ControlCount - 1 do
+  begin
+
+    if LEnd.Controls[LIndex] is TNyxCollectionFitButton then
+    begin
+      LFit := TNyxCollectionFitButton(LEnd.Controls[LIndex]);
+      Break;
+    end;
+  end;
+  Check((LFit <> nil) and LFit.Visible, 'the pinned auto-fit-only field exposes its actual button');
+  LFitWidth := LFit.Width;
+  LFitHeight := LFit.Height;
+  for LIndex := Low(CZooms) to High(CZooms) do
+  begin
+    GStage := LIndex;
+    GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(360, 300), CZooms[LIndex]));
+    Pump;
+    Check(FieldGrid(NyxColumnIdentity(NyxTextField('name')), LRow) = LStart,
+      'zoom retains the original pinned editable name pane');
+    CheckRows;
+    GGrid.TopRow := 7 + LIndex;
+    Pump;
+    CheckRows;
+    GGrid.LeftCol := GGrid.FixedCols;
+    Pump;
+    LStartPoint := LStart.ClientToScreen(Point(0, 0));
+    LEndPoint := LEnd.ClientToScreen(Point(0, 0));
+    LMiddlePoint := GGrid.ClientToScreen(GGrid.CellRect(LDescriptionColumn, GGrid.TopRow).TopLeft);
+    GGrid.LeftCol := Min(GGrid.ColCount - 2, GGrid.FixedCols + 1);
+    Pump;
+    Check(GGrid.ClientToScreen(GGrid.CellRect(LDescriptionColumn, GGrid.TopRow).TopLeft).X <
+      LMiddlePoint.X - 8 * CZooms[LIndex], 'horizontal scrolling moves the actual middle cell');
+    Check((LStart.ClientToScreen(Point(0, 0)).X = LStartPoint.X) and
+      (LEnd.ClientToScreen(Point(0, 0)).X = LEndPoint.X),
+      'both real pinned edges remain fixed during horizontal scrolling at each zoom');
+  end;
+  GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(360, 300), 0.5));
+  GStage := 1;
+  GData.ConfigureQuery(NyxCollectionQuery.OrderBy(NyxIntegerField('requests'), nsdDescending));
+  Pump;
+  CheckRows;
+  Check(GData.Selection.Contains(Service('5')), 'query refresh retains the selected pinned-table item');
+  CheckColumnFit(LStart, LStartColumn);
+  LStart.Col := LStartColumn;
+  LStart.Row := GData.Snapshot.IndexOf(Service('5')) + 1;
+  LStart.SetFocus;
+  SendMessage(LStart.Handle, LM_KEYDOWN, VK_F2, 0);
+  Pump;
+  Check(LStart.EditorMode and (LStart.Editor is TCustomEdit),
+    'native F2 enters the actual pinned editor');
+  LEditor := TCustomEdit(LStart.Editor);
+  LRevision := GData.Store.Snapshot.Revision;
+  LEditor.Text := TNyxText('Pinned draft / 🌙');
+  LEditor.SelStart := 2;
+  LEditor.SelLength := 4;
+  for LIndex := Low(CZooms) to High(CZooms) do
+  begin
+    GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(360, 300), CZooms[LIndex]));
+    Pump;
+    LKey := Ord('F');
+    TGridInput(LStart).KeyDown(LKey, [ssCtrl, ssShift]);
+    for LTurn := 1 to 3 do
+    begin
+      Pump;
+      Application.Idle(False);
+    end;
+    Check((LStart.Editor = LEditor) and LStart.EditorMode and
+      (TNyxText(LEditor.Text) = TNyxText('Pinned draft / 🌙')) and
+      (LEditor.SelStart = 2) and (LEditor.SelLength = 4),
+      'zoom preserves the same pinned editor, Unicode draft and caret');
+    Check(GData.Store.Snapshot.Revision = LRevision, 'pinned zoom never commits an unfinished draft');
+  end;
+  SendMessage(LEditor.Handle, LM_KEYDOWN, VK_ESCAPE, 0);
+  Pump;
+end;
+
 procedure Run;
 var
   LIndex: Integer;
@@ -365,6 +606,21 @@ var
 begin
   Build;
   Check((GData <> nil) and (GData.Snapshot.Count = 40), 'the real collection remains bound');
+
+  if GPinned then
+  begin
+    CheckPinnedRows;
+    Check(TNyxCodec.Encode(GDocument) = GBefore, 'pinned runtime work leaves the authored document exact');
+    GView.Execute(nccFit);
+    Pump;
+
+    if ParamCount >= 2 then
+    begin
+      SaveNyxNativeCapture(GHost, ParamStr(2), ncmPrint);
+    end;
+    CheckLogicalRetirement;
+    Exit;
+  end;
 
   if GWrapped then
   begin
@@ -403,6 +659,7 @@ begin
   if GArranged then
   begin
     CheckColumnResize;
+    CheckColumnFit(GGrid, 0);
   end;
   Check(TNyxCodec.Encode(GDocument) = GBefore, 'runtime zoom/query leave the authored document exact');
   GView.Execute(nccFit);
@@ -417,8 +674,9 @@ end;
 
 begin
   Application.Initialize;
-  GWrapped := ParamStr(3) = 'wrapped';
-  GArranged := ParamStr(3) = 'arranged';
+  GPinned := ParamStr(3) = 'pinned';
+  GWrapped := (ParamStr(3) = 'wrapped') or GPinned;
+  GArranged := (ParamStr(3) = 'arranged') or GPinned;
   GFailures := TFailureReceiver.Create;
   Application.OnException := GFailures.Failed;
   try

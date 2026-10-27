@@ -100,11 +100,20 @@ Their captures are diagnostic redraws, separately inspected from displayed outpu
 The native default-height setter still visits its own row storage; bounded Nyx
 metric copying alone establishes no large-dataset zoom performance budget.
 
-Pinned-pane row projection, fit-to-content under zoom, other internal native
-scroll/drawing metrics, nested canvases, full drag/capture/
+Pinned panes now retain matching sparse body heights and actual screen row tops
+through repeated zoom, distinct vertical scrolls, horizontal scrolling and query
+refresh. Keyboard Fit keeps the same logical field width across zoom, including
+a pinned field, without committing its unfinished Unicode editor. Its actual
+header button keeps scaled bounds after scrolling. The strengthened consumers
+pass107/129/122/145 plain/wrapped/resizable/pinned checks at each1280/390 width;
+all eight runs report zero leaked blocks. WORK.md retains the initial logical
+fit-width, pinned-row, horizontal-scroll and post-scroll button failures.
+
+Other internal native scroll/drawing metrics, nested canvases, full drag/capture/
 keyboard/IME/assistive journeys and complete pre-publication admission for changed
 logical layouts remain implementation/qualification work. Ordinary Studio
 selection and the same saved/generated Workshop also stay open. The LAN service/
-example defaults are unchanged. Next finish the remaining native metric paths
-under the same transform, then complete ordinary Studio and saved Workshop integration;
+example defaults are unchanged. Next return this typed choice to ordinary Studio
+and the same saved/generated Workshop; retain the remaining native metric and
+quality gates on this owner rather than starting more standalone table variants;
 this task remains unaccepted with no duplicate completion credit.

@@ -358,6 +358,10 @@ type
     function BeginLogicalUpdate: INyxLCLLogicalUpdate;
     function ContentProjectionChanging: Boolean;
     function ContentProjectionScale: Double;
+    { Exact native-DPI font heights from the current logical baseline. Ordinary
+      unprojected grids read their own fonts. An installed projection without
+      usable copied typography refuses instead of guessing from rounded pixels. }
+    function LogicalFontHeights: TNyxLCLLogicalFontHeights;
     { Native mount borrows this post-projection notification until detach. It
       copies accepted physical caches only; it must not publish model commands. }
     procedure ObserveContentProjection(AReply: TNotifyEvent);
@@ -3128,6 +3132,26 @@ begin
   if FContentProjection <> nil then
   begin
     Result := FContentProjection.Scale;
+  end;
+end;
+
+function TNyxCollectionStringGrid.LogicalFontHeights: TNyxLCLLogicalFontHeights;
+var
+  LTypography: INyxLCLLogicalTypography;
+begin
+  Result := Default(TNyxLCLLogicalFontHeights);
+
+  if FContentProjection = nil then
+  begin
+    Result.BodyHeight := Font.Height;
+    Result.TitleHeight := TitleFont.Height;
+    Exit;
+  end;
+
+  if not Supports(FContentProjection, INyxLCLLogicalTypography, LTypography) or
+    not LTypography.ReadFontHeights(Result) then
+  begin
+    raise ENyxCollection.Create('Native content has no current logical typography snapshot');
   end;
 end;
 

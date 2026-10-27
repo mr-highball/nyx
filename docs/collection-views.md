@@ -1175,6 +1175,16 @@ styles, the resolved target PPI and already-scaled total horizontal chrome inset
 The header text includes the current query/header adornments. The adapter copies
 these facts before any sample getter and borrows no active grid or cell editor.
 
+For a table embedded with uniform canvas zoom, the adapter copies fonts with
+their exact logical heights from the grid's current projection port. The optional
+`INyxLCLLogicalTypography` facet supplies detached native-DPI heights without
+changing the original projection interface. A retired or partially projected
+observation refuses; a projected grid without that facet cannot guess by dividing
+rounded physical heights. Unprojected grids use their ordinary fonts. Private
+managed copies survive outward sample getters and retain no grid or renderer.
+The existing metric and publication fences still apply; copied typography alone
+grants no authority to publish a width.
+
 Measurement follows native single-line, prefix, tab and bidi flags, using the
 same NUL-to-quoted-JSON conversion as native cell display. Natural width removes
 soft wrapping and ellipsis before authored clamping. Physical metrics are

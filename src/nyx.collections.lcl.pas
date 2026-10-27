@@ -364,13 +364,30 @@ type
     Selection: TNyxTextSelection;
   end;
 
-  { Borrowed synchronous drawing facts. Only the managed platform metric copies
-    fonts; this record must not escape acquisition/Matches on the UI thread. }
+  { Managed logical font copies outlive every outward sample getter. Typography
+    is copied without modifying live controls, including native height rounding
+    under canvas zoom. This owner retains no grid, mount or renderer. }
+  TNativeColumnFitFonts = class(TInterfacedObject)
+  public
+    Header: TFont;
+    Body: TFont;
+    constructor Create(AGrid: TNyxCollectionStringGrid);
+    destructor Destroy; override;
+  end;
+
+  { Drawing facts share a managed font-copy lease across record copies. Font
+    pointers borrow that lease, never native controls. The metric then owns its
+    separate witness; acquisition/Matches still belong to the UI thread. }
   TNativeColumnFitSurface = record
-    HeaderFont, BodyFont: TFont;
+    Fonts: IInterface;
+    HeaderFont: TFont;
+    BodyFont: TFont;
     HeaderText: TNyxText;
-    HeaderStyle, BodyStyle: TTextStyle;
-    PPI, HeaderInset, BodyInset: Integer;
+    HeaderStyle: TTextStyle;
+    BodyStyle: TTextStyle;
+    PPI: Integer;
+    HeaderInset: Integer;
+    BodyInset: Integer;
   end;
 
   { Adapter-local actions keep Fit permission independent of manual Resize. }
@@ -677,6 +694,8 @@ type
     procedure ColumnValidationIdle(Sender: TObject);
     procedure RenderArrangedGrid(const AData: INyxCollectionSnapshot);
     procedure SynchronizePaneRows;
+    procedure SynchronizeLogicalPaneRows;
+    procedure SynchronizeViewportMetrics;
     procedure GridTopLeft(Sender: TObject);
     procedure GridHeaderSized(Sender: TObject; AIsColumn: Boolean; AIndex: Integer);
     procedure PublishColumnLayout(AData: PtrInt);
@@ -2255,12 +2274,36 @@ begin
   FRetired := True;
 end;
 
+constructor TNativeColumnFitFonts.Create(AGrid: TNyxCollectionStringGrid);
+var
+  LHeights: TNyxLCLLogicalFontHeights;
+begin
+  inherited Create;
+  LHeights := AGrid.LogicalFontHeights;
+  Header := TFont.Create;
+  Body := TFont.Create;
+  Header.PixelsPerInch := AGrid.TitleFont.PixelsPerInch;
+  Header.Assign(AGrid.TitleFont);
+  Body.PixelsPerInch := AGrid.Font.PixelsPerInch;
+  Body.Assign(AGrid.Font);
+  Header.Height := LHeights.TitleHeight;
+  Body.Height := LHeights.BodyHeight;
+end;
+
+destructor TNativeColumnFitFonts.Destroy;
+begin
+  Header.Free;
+  Body.Free;
+  inherited Destroy;
+end;
+
 function TNativeMount.ColumnFitSurface(AColumn: Integer): TNativeColumnFitSurface;
 var
   LGrid: TStringGrid;
   LPhysical: Integer;
   LCurrent, LExpected: TOnPrepareCanvasEvent;
   LAlignment: TNyxColumnAlignmentPolicy;
+  LFonts: TNativeColumnFitFonts;
 
   procedure ResolveStyle(var AStyle: TTextStyle);
   begin
@@ -2319,8 +2362,10 @@ begin
   begin
     raise ENyxCollection.Create('Native column drawing no longer belongs to its mount');
   end;
-  Result.HeaderFont := LGrid.TitleFont;
-  Result.BodyFont := LGrid.Font;
+  LFonts := TNativeColumnFitFonts.Create(TNyxCollectionStringGrid(LGrid));
+  Result.Fonts := LFonts;
+  Result.HeaderFont := LFonts.Header;
+  Result.BodyFont := LFonts.Body;
   Result.HeaderText := CanonicalText(AColumn, 0);
   ResolveStyle(Result.HeaderStyle);
   ResolveStyle(Result.BodyStyle);
@@ -5441,12 +5486,42 @@ end;
 
 procedure TNativeMount.SynchronizePaneRows;
 var
-  LIndex, LFirst, LLast: Integer;
+  LUpdate: INyxLCLLogicalUpdate;
+begin
+
+  if (FStartPane = nil) and (FEndPane = nil) then
+  begin
+    Exit;
+  end;
+
+  if FGrid is TNyxCollectionStringGrid then
+  begin
+    LUpdate := TNyxCollectionStringGrid(FGrid).BeginLogicalUpdate;
+  end;
+  try
+    SynchronizeLogicalPaneRows;
+  finally
+
+    if LUpdate <> nil then
+    begin
+      LUpdate.Close;
+    end;
+  end;
+end;
+
+procedure TNativeMount.SynchronizeLogicalPaneRows;
+var
+  LIndex: Integer;
+  LFirst: Integer;
+  LLast: Integer;
   LUpdating: Boolean;
 
   procedure Synchronize(APane: TColumnPane);
   var
     LRow: Integer;
+    LIndex: Integer;
+    LCount: Integer;
+    LRows: array of Integer;
   begin
 
     if (APane = nil) or not APane.Grid.Visible then
@@ -5455,12 +5530,33 @@ var
     end;
     APane.Grid.DefaultRowHeight := FGrid.DefaultRowHeight;
     APane.Grid.RowHeights[0] := FGrid.RowHeights[0];
+    { Retire only the previous explicit window. Default-height assignment may
+      be a no-op, so it cannot be relied on to erase old wrapped overrides. }
+    for LIndex := 0 to APane.Grid.ProjectionRowCount - 1 do
+    begin
+      LRow := APane.Grid.ProjectionRow(LIndex);
+
+      if (LRow > 0) and (LRow < APane.Grid.RowCount) then
+      begin
+        APane.Grid.RowHeights[LRow] := FGrid.DefaultRowHeight;
+      end;
+    end;
     { Only currently visible rows need exact nondefault heights. The outer grid
       remains the source of row geometry; panes never infer independent pages. }
+    SetLength(LRows, Max(0, LLast - LFirst + 1));
+    LCount := 0;
     for LRow := LFirst to LLast do
     begin
       APane.Grid.RowHeights[LRow] := FGrid.RowHeights[LRow];
+
+      if (LRow > 0) and (FGrid.RowHeights[LRow] <> FGrid.DefaultRowHeight) then
+      begin
+        LRows[LCount] := LRow;
+        Inc(LCount);
+      end;
     end;
+    SetLength(LRows, LCount);
+    APane.Grid.ConfigureProjectionRows(LRows);
     APane.Grid.TopRow := FGrid.TopRow;
     APane.Grid.Invalidate;
   end;
@@ -6008,6 +6104,31 @@ begin
   end;
 end;
 
+procedure TNativeMount.SynchronizeViewportMetrics;
+var
+  LUpdate: INyxLCLLogicalUpdate;
+begin
+
+  if FGrid is TNyxCollectionStringGrid then
+  begin
+    LUpdate := TNyxCollectionStringGrid(FGrid).BeginLogicalUpdate;
+  end;
+  try
+    { One world frame owns the text window, matching pinned heights and header
+      actions. Closing the row helper first would let button setters overwrite
+      an already projected face. Nested helpers reuse this same section. }
+    PrepareTextRows(FRendered);
+    SynchronizePaneRows;
+    SynchronizeFitButtons;
+  finally
+
+    if LUpdate <> nil then
+    begin
+      LUpdate.Close;
+    end;
+  end;
+end;
+
 procedure TNativeMount.GridTopLeft(Sender: TObject);
 var
   LKeepAlive: INyxCollectionMount;
@@ -6040,8 +6161,7 @@ begin
 
     if GetConnected then
     begin
-      SynchronizePaneRows;
-      SynchronizeFitButtons;
+      SynchronizeViewportMetrics;
     end;
     Exit;
   end;
@@ -6053,9 +6173,9 @@ begin
 
   if GetConnected then
   begin
-    PrepareTextRows(FRendered);
-    SynchronizePaneRows;
-    SynchronizeFitButtons;
+    { The previous native observer above still sees the physical frame. Only
+      Nyx's subsequent metric work opens a temporary logical section. }
+    SynchronizeViewportMetrics;
   end;
 end;
 

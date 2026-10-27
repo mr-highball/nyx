@@ -23,7 +23,9 @@
 type
   { Absolute native grid metrics. The containing scale row revokes this borrowed
     grid on component removal. Columns are bounded by the portable table domain;
-    body heights cover only explicitly registered sparse overrides. No model,
+    body heights cover only explicitly registered sparse overrides. Viewport
+    anchors are copied before normalization and restored after the whole tree
+    settles, so intermediate clipping cannot become a new scroll intention. No model,
     cell values, selection, editor draft or dataset-sized height copy is owned. }
   TNativeGridMetrics = class
   private
@@ -38,11 +40,15 @@ type
     FLine: Integer;
     FToolbar: Integer;
     FInset: Integer;
+    FTopRow: Integer;
+    FLeftColumn: Integer;
   public
     constructor Create(AGrid: TNyxCollectionStringGrid);
     procedure Capture(const AGeneration: INyxLCLBindingGeneration);
     procedure Validate(AScale: Double);
     procedure Apply(AScale: Double; const AGeneration: INyxLCLBindingGeneration);
+    procedure RememberViewport(const AGeneration: INyxLCLBindingGeneration);
+    procedure RestoreViewport(const AGeneration: INyxLCLBindingGeneration);
   end;
 
 constructor TNativeGridMetrics.Create(AGrid: TNyxCollectionStringGrid);
@@ -116,13 +122,9 @@ procedure TNativeGridMetrics.Apply(AScale: Double;
   const AGeneration: INyxLCLBindingGeneration);
 var
   LIndex: Integer;
-  LTop: Integer;
-  LLeft: Integer;
 begin
   RequireNativeGeneration(AGeneration);
   Validate(AScale);
-  LTop := FGrid.TopRow;
-  LLeft := FGrid.LeftCol;
   FGrid.BeginPresentationChange;
   FGrid.BeginColumnTransition;
   FGrid.BeginUpdate;
@@ -155,13 +157,37 @@ begin
         RequireNativeGeneration(AGeneration);
       end;
     end;
-    FGrid.TopRow := Max(FGrid.FixedRows, Min(LTop, FGrid.RowCount - 1));
-    RequireNativeGeneration(AGeneration);
-    FGrid.LeftCol := Max(FGrid.FixedCols, Min(LLeft, FGrid.ColCount - 1));
-    RequireNativeGeneration(AGeneration);
   finally
     { The entered physical frame retains the component even after renderer
       retirement, so its counted LCL guards can always unwind. }
+    FGrid.EndUpdate;
+    FGrid.EndColumnTransition;
+    FGrid.EndPresentationChange;
+  end;
+end;
+
+procedure TNativeGridMetrics.RememberViewport(const AGeneration: INyxLCLBindingGeneration);
+begin
+  RequireNativeGeneration(AGeneration);
+  FTopRow := FGrid.TopRow;
+  FLeftColumn := FGrid.LeftCol;
+end;
+
+procedure TNativeGridMetrics.RestoreViewport(const AGeneration: INyxLCLBindingGeneration);
+begin
+  RequireNativeGeneration(AGeneration);
+  { A mixed-size intermediate frame can temporarily have no overflow. Restore
+    only after the entire tree's bounds/fonts and grid metrics have settled,
+    under the same native guards that prevent geometry from committing edits. }
+  FGrid.BeginPresentationChange;
+  FGrid.BeginColumnTransition;
+  FGrid.BeginUpdate;
+  try
+    FGrid.TopRow := Max(FGrid.FixedRows, Min(FTopRow, FGrid.RowCount - 1));
+    RequireNativeGeneration(AGeneration);
+    FGrid.LeftCol := Max(FGrid.FixedCols, Min(FLeftColumn, FGrid.ColCount - 1));
+    RequireNativeGeneration(AGeneration);
+  finally
     FGrid.EndUpdate;
     FGrid.EndColumnTransition;
     FGrid.EndPresentationChange;

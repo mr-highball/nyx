@@ -9,7 +9,63 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Live data controls under canvas zoom — 2026-10-27
+## Current checkpoint — Pinned and fitted canvas tables — 2026-10-27
+
+Previous goal turn: PROGRESS;152e3fd is pushed and remote-verified. Batch33
+continues the same canvas-workspace02 owner with the two named native table
+gaps. Reuse the live consumer: fit must measure logical typography independently
+of camera zoom, and pinned body rows must share the middle's measured geometry
+through zoom, scroll and query recovery. Establish actual failures before
+changing copied metric ownership. Preserve current fit/publication contracts,
+editor drafts, Unicode, monitor DPI, bounded row work and all original criteria.
+Then return to ordinary Studio/the same saved Workshop rather than another
+standalone scalar/source sequence. Root stays SOLO; all earlier jobs are terminal.
+Private artifacts and child TEMP/TMP stay external. Preserve the installed
+LAN/MCP owner/projects and unrelated1280/390; no cleanup or approval boundary.
+
+Implemented: native auto-fit owns detached copies of exact logical header/body
+font heights through an optional projection facet, preserving native DPI and the
+original projection/measurement/publication interfaces. Sparse pinned row windows
+clear their preceding overrides and copy the middle's current measured heights.
+Whole-tree normalization/projection remembers native row/column anchors before
+changing any geometry and restores them after the complete subtree settles.
+Text-window, pinned-row and Fit-button setters share one logical update section;
+earlier native observers still receive physical geometry before that section.
+No copied font or viewport value acquires model-publication authority.
+
+Private canvas-uniform-panes-01 preserves four actual failures: baseline Fit
+publishes83 instead of158 logical pixels at0.5 zoom; the first pinned consumer
+finds mismatched row7 heights; stronger horizontal scrolling exposes temporary
+overflow clamping at1.5; distinct vertical scrolls at each zoom expose an unscaled
+Fit button. The original first-final matrix remains failed evidence. The repaired
+accepted-native matrix passes107/129/122/145 plain/wrapped/resizable/pinned checks
+at each1280/390 width, with zero leaked blocks reported in all eight runs. It uses
+real grid panes, native F2, Ctrl+Shift+F and actual scrolling, retaining the same
+Unicode draft/caret, selected item, store revision and authored document. Both
+final pinned diagnostic redraws were inspected; they do not prove displayed
+HWND composition, physical hardware input or assistive quality.
+
+Current-source companions pass67/67 uniform,243/243 native column activation and
+1498/1496 ordinary table-workbench checks. All six processes exit0; eight canvas
+runs and four companion heaps report zero unfreed blocks explicitly. The two
+activation heap trailers truncate at256 bytes after the zero-unfreed prefix;
+their complete allocation/free counts and byte totals match. Do not describe
+those truncated trailers as complete heap reports. All jobs are joined, accepted
+source hashes retain the six functional inputs, and all owned output/child
+TEMP/TMP remain external. Native compilers issue existing notes without warnings;
+the two unchanged browser consumers compile with only the installed Classes
+warnings. This batch changes only native adapter behavior; earlier actual browser
+interaction evidence remains scoped to its own revision.
+
+The user confirms normal phone loading at the changed LAN endpoint. This is
+transport evidence; this batch does not replace its service, mutate its projects
+or deploy the unfinished uniform feature. No criterion/task/credit/DONE closes.
+Next return the typed scaling choice to ordinary Studio and the same accepted
+saved/generated JSON Workshop. Keep drawing/other internal metrics, nested
+canvases, complete changed-layout admission, large-dataset performance and full
+input/visual/assistive parity on this existing owner; stop standalone table variants.
+
+## Earlier checkpoint — Live data controls under canvas zoom — 2026-10-27
 
 The preceding cleanup follow-up adds no product progress: fresh reads confirm an
 already completed retirement, with no further deletion needed. Revalidate the

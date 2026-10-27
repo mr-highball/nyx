@@ -26,6 +26,23 @@ unit nyx.content.projection.lcl;
 interface
 
 type
+  { Detached native font heights before canvas projection. Values retain the
+    target's monitor-DPI pixel units; they are not rescaled to 96 DPI here.
+    No font, control, renderer or native handle is retained by this value. }
+  TNyxLCLLogicalFontHeights = record
+    BodyHeight: Integer;
+    TitleHeight: Integer;
+  end;
+
+  { Optional copied typography facet leaves the original projection ABI intact.
+    Read only through the target's currently installed port, on the UI thread.
+    False clears the output when retirement or partial projection prevents an
+    exact observation. A copied height is evidence, never mutation authority. }
+  INyxLCLLogicalTypography = interface(IInterface)
+    ['{6F8E7B34-F141-43CB-8459-85B9611A0282}']
+    function ReadFontHeights(out AHeights: TNyxLCLLogicalFontHeights): Boolean;
+  end;
+
   { UI-only logical-metric section. Explicit Close is idempotent and reports
     projection failures. Final release also balances the section without throwing
     over an active exception. Implementations retain the original physical

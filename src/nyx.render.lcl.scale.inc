@@ -69,15 +69,20 @@ type
   { Forward implementation identity for a weak component-removal receiver. }
   TNativeContentScale = class;
 
-  { Grid retains this managed port, not a renderer. The exact generation supplies
-    its current weak receiver after candidate adoption and revokes on retirement. }
-  TNativeGridProjectionPort = class(TInterfacedObject, INyxLCLContentProjection)
+  { Grid retains this managed port and a copied logical font-height observation,
+    not a renderer. Each complete logical capture installs its current snapshot.
+    The exact generation supplies a weak receiver and revokes on retirement. }
+  TNativeGridProjectionPort = class(TInterfacedObject, INyxLCLContentProjection,
+    INyxLCLLogicalTypography)
   private
     FScale: INyxNativeContentScale;
     FGeneration: INyxLCLBindingGeneration;
+    FHeights: TNyxLCLLogicalFontHeights;
   public
     constructor Create(const AScale: INyxNativeContentScale;
-      const AGeneration: INyxLCLBindingGeneration);
+      const AGeneration: INyxLCLBindingGeneration;
+      const AHeights: TNyxLCLLogicalFontHeights);
+    function ReadFontHeights(out AHeights: TNyxLCLLogicalFontHeights): Boolean;
     function BeginLogicalUpdate: INyxLCLLogicalUpdate;
     function GetChangingFaces: Boolean;
     function GetScale: Double;
@@ -144,6 +149,8 @@ type
       const AGeneration: INyxLCLBindingGeneration);
     procedure CheckRows(AHost: TWinControl; AScale: Double);
     procedure NotifyGrids(const AGeneration: INyxLCLBindingGeneration);
+    procedure RememberGridViewports(const AGeneration: INyxLCLBindingGeneration);
+    procedure RestoreGridViewports(const AGeneration: INyxLCLBindingGeneration);
     procedure RestoreFaces(AHost: TWinControl; ARoot: TControl;
       const AGeneration: INyxLCLBindingGeneration);
     procedure ProjectFaces(AHost: TWinControl; ARoot: TControl; AScale: Double;
@@ -209,11 +216,24 @@ begin
 end;
 
 constructor TNativeGridProjectionPort.Create(const AScale: INyxNativeContentScale;
-  const AGeneration: INyxLCLBindingGeneration);
+  const AGeneration: INyxLCLBindingGeneration; const AHeights: TNyxLCLLogicalFontHeights);
 begin
   inherited Create;
   FScale := AScale;
   FGeneration := AGeneration;
+  FHeights := AHeights;
+end;
+
+function TNativeGridProjectionPort.ReadFontHeights(
+  out AHeights: TNyxLCLLogicalFontHeights): Boolean;
+begin
+  AHeights := Default(TNyxLCLLogicalFontHeights);
+  Result := NativeGenerationCurrent(FGeneration) and not FScale.ChangingFaces;
+
+  if Result then
+  begin
+    AHeights := FHeights;
+  end;
 end;
 
 function TNativeGridProjectionPort.BeginLogicalUpdate: INyxLCLLogicalUpdate;
@@ -640,9 +660,11 @@ begin
 
   if FProjected then
   begin
+    RememberGridViewports(AGeneration);
     RestoreTree(AHost, False, AGeneration);
     RestoreTree(ARoot, True, AGeneration);
     RequireNativeGeneration(AGeneration);
+    RestoreGridViewports(AGeneration);
     FProjected := False;
     NotifyGrids(AGeneration);
   end;
@@ -653,6 +675,7 @@ procedure TNativeContentScale.Capture(AControl: TControl; AChildren: Boolean;
 var
   LIndex: Integer;
   LChild: Integer;
+  LHeights: TNyxLCLLogicalFontHeights;
 begin
   RequireNativeGeneration(AGeneration);
   LIndex := Track(AControl);
@@ -670,10 +693,12 @@ begin
     if FRows[LIndex].Grid = nil then
     begin
       FRows[LIndex].Grid := TNativeGridMetrics.Create(TNyxCollectionStringGrid(AControl));
-      TNyxCollectionStringGrid(AControl).ConfigureContentProjection(
-        TNativeGridProjectionPort.Create(Self as INyxNativeContentScale, AGeneration));
     end;
     FRows[LIndex].Grid.Capture(AGeneration);
+    LHeights.BodyHeight := FRows[LIndex].FontHeight;
+    LHeights.TitleHeight := TNyxCollectionStringGrid(AControl).TitleFont.Height;
+    TNyxCollectionStringGrid(AControl).ConfigureContentProjection(
+      TNativeGridProjectionPort.Create(Self as INyxNativeContentScale, AGeneration, LHeights));
   end;
 
   if AChildren and (AControl is TWinControl) then
@@ -797,6 +822,7 @@ begin
   { Capture/validation completes before the first physical metric changes. The
     host itself keeps physical dimensions; only its font and live children
     project from world metrics. Its private scrollbar faces are not content. }
+  RememberGridViewports(AGeneration);
   for LIndex := 0 to High(FRows) do
   begin
     LRow := FRows[LIndex];
@@ -857,8 +883,42 @@ begin
       RequireNativeGeneration(AGeneration);
     end;
   end;
+  RestoreGridViewports(AGeneration);
   FProjected := True;
   NotifyGrids(AGeneration);
+end;
+
+procedure TNativeContentScale.RememberGridViewports(
+  const AGeneration: INyxLCLBindingGeneration);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FRows) do
+  begin
+
+    if (FRows[LIndex].Control <> nil) and FRows[LIndex].Seen and
+      (FRows[LIndex].Grid <> nil) then
+    begin
+      FRows[LIndex].Grid.RememberViewport(AGeneration);
+    end;
+  end;
+end;
+
+procedure TNativeContentScale.RestoreGridViewports(
+  const AGeneration: INyxLCLBindingGeneration);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FRows) do
+  begin
+    RequireNativeGeneration(AGeneration);
+
+    if (FRows[LIndex].Control <> nil) and FRows[LIndex].Seen and
+      (FRows[LIndex].Grid <> nil) then
+    begin
+      FRows[LIndex].Grid.RestoreViewport(AGeneration);
+    end;
+  end;
 end;
 
 procedure TNativeContentScale.NotifyGrids(const AGeneration: INyxLCLBindingGeneration);
