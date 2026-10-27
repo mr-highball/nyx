@@ -33,7 +33,10 @@ All original observing/physical/quality/performance prerequisites remain open.
 Stop more DataToolbar/connection or standalone source variants. Next return to
 priority4's useful Tool Canvas: assess existing HTTP/resource prerequisites and
 deliver network/resource input in the public JSON Workshop through its typed
-operations and explicit hosts. Use the Pascal client as the primary semantic
+operations and explicit hosts. Its connected URL input now has native
+control/saved-application evidence and real native HTTP to a read-only existing
+service; retain browser, resources, host breadth and quality gates in WORK.md.
+Use the Pascal client as the primary semantic
 path; preserve original host/parity/delivery criteria and the browser-route gate.
 
 After the two preparation/open and two binding batches, reassessment stops further

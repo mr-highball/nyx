@@ -77,29 +77,35 @@ const
 
 type
   { Closed identities let applications and input consumers address this example
-    without duplicating its persisted control names. No reference owns a view. }
+    without duplicating its persisted control names. Appended network controls
+    preserve existing identities/ordinals. No reference owns a view. }
   TJSONWorkshopControl = (jwcSource, jwcFormat, jwcSave, jwcPreview, jwcSavedName,
-    jwcOpen, jwcOpenedName);
+    jwcOpen, jwcOpenedName, jwcURL, jwcFetch, jwcHTTPStatus);
   { Public stage identities keep graph wiring, saved placement and consumers
-    independent of insertion order. The program stage has only text ports. }
+    independent of insertion order. The program stage has only text ports;
+    optional network loading appends its existing typed HTTP operation. }
   TJSONWorkshopStep = (jwsPrepare, jwsParse, jwsFormat, jwsEncode, jwsSave,
-    jwsOpen, jwsDecode, jwsName);
+    jwsOpen, jwsDecode, jwsName, jwsHTTP, jwsURLName);
 
 function JSONWorkshopControl(AControl: TJSONWorkshopControl): TNyxControlRef;
 function JSONWorkshopCanvas: TNyxControlRef;
 function JSONWorkshopItem: TNyxCanvasItemRef;
 function JSONWorkshopSaveFlow: TNyxFlowRef;
 function JSONWorkshopOpenFlow: TNyxFlowRef;
+function JSONWorkshopFetchFlow: TNyxFlowRef;
 function JSONWorkshopStep(AStep: TJSONWorkshopStep): TNyxFlowStepRef;
 function JSONWorkshopPreparation: TNyxProgramRef;
 function JSONWorkshopPreparationContract: TNyxProgramContract;
 function JSONWorkshopSource: TNyxTextStateRef;
 function JSONWorkshopPreview: TNyxTextStateRef;
 function JSONWorkshopOpenedName: TNyxTextStateRef;
+function JSONWorkshopURL: TNyxTextStateRef;
+function JSONWorkshopHTTPStatus: TNyxIntegerStateRef;
 
 { An ordinary independently owned document with saved reusable controls, graphs,
-  routes and node placement. It contains no executable file host. Applications
-  explicitly configure saving; Studio may inspect/edit the same portable design. }
+  routes and node placement. It contains no executable file/network host.
+  Applications explicitly configure these authorities; Studio may inspect/edit
+  the same portable design. URL text is validated only by the typed HTTP boundary. }
 function BuildJSONWorkshopDocument: TNyxDocument;
 { Optional initial editor presentation through public Tool Canvas interfaces.
   It authors no source/history and retains no controller. Hosts call it after
@@ -114,14 +120,15 @@ uses
   SysUtils, nyx.controls, nyx.root.types, nyx.logic, nyx.logic.files,
   nyx.files.save, nyx.flow, nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.geometry, nyx.canvas.workspace, nyx.canvas.declarations,
-  nyx.logic.programs, nyx.files.open, nyx.logic.files.open, nyx.logic.http;
+  nyx.logic.programs, nyx.files.open, nyx.logic.files.open, nyx.logic.http,
+  nyx.http.types, nyx.resource.sources;
 
 const
   CCanvas = 'json-workshop';
   CTemplate = 'json-notebook';
   CControls: array[TJSONWorkshopControl] of TNyxText =
     ('json-source', 'format-json', 'save-json', 'json-preview', 'saved-name',
-     'open-json', 'opened-name');
+     'open-json', 'opened-name', 'json-url', 'fetch-json', 'http-status');
 
 function JSONWorkshopControl(AControl: TJSONWorkshopControl): TNyxControlRef;
 begin
@@ -146,6 +153,21 @@ end;
 function JSONWorkshopOpenFlow: TNyxFlowRef;
 begin
   Result := NyxFlowRef('Open JSON');
+end;
+
+function JSONWorkshopFetchFlow: TNyxFlowRef;
+begin
+  Result := NyxFlowRef('Load URL');
+end;
+
+function JSONWorkshopURL: TNyxTextStateRef;
+begin
+  Result := NyxTextState('json-url');
+end;
+
+function JSONWorkshopHTTPStatus: TNyxIntegerStateRef;
+begin
+  Result := NyxIntegerState('http-status');
 end;
 
 function JSONWorkshopSource: TNyxTextStateRef;
@@ -179,7 +201,7 @@ function JSONWorkshopStep(AStep: TJSONWorkshopStep): TNyxFlowStepRef;
 const
   CNames: array[TJSONWorkshopStep] of TNyxText =
     ('Prepare JSON', 'Parse JSON', 'Format JSON', 'Encode UTF-8', 'Save file',
-     'Open file', 'Decode UTF-8', 'Accepted file name');
+     'Open file', 'Decode UTF-8', 'Accepted file name', 'Fetch URL', 'Accepted URL');
 begin
   Result := NyxFlowStep(CNames[AStep]);
 end;
@@ -199,11 +221,17 @@ begin
   Result := NyxFlowEndpoint(JSONWorkshopStep(jwsOpen), NyxOpenFilePort(APort));
 end;
 
+function HTTPPort(APort: TNyxHTTPPort): TNyxFlowEndpoint;
+begin
+  Result := NyxFlowEndpoint(JSONWorkshopStep(jwsHTTP), NyxHTTPPort(APort));
+end;
+
 function BuildJSONWorkshopDocument: TNyxDocument;
 var
   LPage: INyxPage;
   LNotebook: INyxCard;
   LSource: INyxMemo;
+  LURL: INyxInput;
   LPreview: INyxCode;
   LButtons: INyxRow;
   LLabel: INyxLabel;
@@ -221,6 +249,9 @@ begin
     Result.State.SetValue(JSONWorkshopSource, JSONWorkshopSample);
     Result.State.SetValue(JSONWorkshopPreview, 'Your formatted JSON appears here.');
     Result.State.SetValue(JSONWorkshopOpenedName, '');
+    Result.State.SetValue(JSONWorkshopURL, '');
+    Result.State.SetValue(JSONWorkshopHTTPStatus, 0);
+    Result.State.SetValue(NyxTextState('fetch-error'), '');
     Result.State.SetValue(NyxTextState('open-error'), '');
     Result.State.SetValue(NyxBooleanState('open-read'), False);
     Result.State.SetValue(NyxBooleanState('open-cancelled'), False);
@@ -234,8 +265,24 @@ begin
     LNotebook.Configure.Layout(nlColumn).Gap(12).Padding(20).Done;
     LNotebook.Add(NewNyxHeading('notebook-title').WithText('Your JSON'));
     LNotebook.Add(NewNyxLabel('notebook-help').WithText(
-      'Open a JSON file or paste an example, format it, then keep a copy. ' +
+      'Open a JSON file, load a URL, or paste an example, then format and keep a copy. ' +
       'Open Pascal programs / Prepare JSON to customize how input is prepared.'));
+    LButtons := NewNyxRow('notebook-network');
+    LButtons.Configure.Gap(8).Done;
+    LURL := NewNyxInput(JSONWorkshopControl(jwcURL).ID).WithText('JSON URL');
+    LURL.Configure.Placeholder('https://example.com/data.json').Flex(1).
+      AccessibleName('JSON URL').Done;
+    LURL.Binds.Value(JSONWorkshopURL).Done;
+    LButtons.Add(LURL);
+    LButtons.Add(NewNyxButton(JSONWorkshopControl(jwcFetch).ID).WithText('Load URL'));
+    LNotebook.Add(LButtons);
+    LNotebook.Add(NewNyxLabel('http-status-caption').WithText('Last reported HTTP status'));
+    LLabel := NewNyxLabel(JSONWorkshopControl(jwcHTTPStatus).ID);
+    LLabel.Binds.Text(JSONWorkshopHTTPStatus).Done;
+    LNotebook.Add(LLabel);
+    LLabel := NewNyxLabel('fetch-error');
+    LLabel.Binds.Text(NyxTextState('fetch-error')).Done;
+    LNotebook.Add(LLabel);
     LSource := NewNyxMemo(JSONWorkshopControl(jwcSource).ID).WithText('Source');
     LSource.Configure.Height(170).AccessibleName('JSON source').Done;
     LSource.Binds.Value(JSONWorkshopSource).Done;
@@ -319,6 +366,41 @@ begin
         .OutputState(OpenPort(nofpCancelled), NyxBooleanState('open-cancelled'))
         .OutputState(OpenPort(nofpActivationRequired), NyxBooleanState('open-activation'))
         .OutputState(OpenPort(nofpError), NyxTextState('open-error'))));
+
+    { The route always supplies the entered URL, including empty text: malformed
+      input refuses before network admission and never silently uses the saved
+      fallback. Request options remain editable data. Only a complete successful
+      HTTP response selects decoding and publication; non-2xx/transport outcomes
+      retain the notebook while reporting their status/error. Strict decoding,
+      preparation or JSON failure publishes no successful prefix. }
+    LGraph := NewNyxFlowGraph
+      .WithStep(JSONWorkshopStep(jwsHTTP), NewNyxHTTPCall(
+        NyxHTTPRequest(NyxResourceURL('https://example.com/data.json')).
+          Header('accept', 'application/json').WholeRequest(15000).MaximumBytes(1024 * 1024)))
+      .WithStep(JSONWorkshopStep(jwsDecode), NewNyxUTF8Decode)
+      .WithStep(JSONWorkshopStep(jwsPrepare), NewNyxProgramLogic(JSONWorkshopPreparation, LPreparation))
+      .WithStep(JSONWorkshopStep(jwsParse), NewNyxJSONParse)
+      .WithStep(JSONWorkshopStep(jwsFormat), NewNyxJSONFormat(njlIndented, 2))
+      .WithStep(JSONWorkshopStep(jwsURLName), NewNyxTextJoin)
+      .Connect(HTTPPort(nhpBody), NyxFlowEndpoint(JSONWorkshopStep(jwsDecode), NyxHTTPPort(nhpBody)))
+      .Connect(LogicPort(jwsDecode, nlpText), LSourcePort)
+      .Connect(LPreparedPort, LogicPort(jwsParse, nlpText))
+      .Connect(LogicPort(jwsParse, nlpJSON), LogicPort(jwsFormat, nlpJSON)).Build;
+    LGraph := NyxFlowConditions(LGraph)
+      .When(JSONWorkshopStep(jwsDecode), HTTPPort(nhpSucceeded))
+      .When(JSONWorkshopStep(jwsURLName), HTTPPort(nhpSucceeded)).Build;
+    Result.Flows.Define(JSONWorkshopFetchFlow, LGraph);
+    SetNyxFlowRoutes(Result.Find(JSONWorkshopControl(jwcFetch).ID), NewNyxFlowRoutes.WithRoute(
+      NyxFlowRoute(NyxFlowRouteID('Load notebook URL'), JSONWorkshopFetchFlow, ntClick, nfcmExclusive)
+        .InputSignal(HTTPPort(nhpTrigger))
+        .InputState(HTTPPort(nhpURL), JSONWorkshopURL)
+        .InputState(LogicPort(jwsURLName, nlpLeft), JSONWorkshopURL)
+        .InputConstant(LogicPort(jwsURLName, nlpRight), NyxFlowText(''))
+        .OutputState(LogicPort(jwsDecode, nlpText), JSONWorkshopSource)
+        .OutputState(LogicPort(jwsFormat, nlpText), JSONWorkshopPreview)
+        .OutputState(LogicPort(jwsURLName, nlpText), JSONWorkshopOpenedName)
+        .OutputState(HTTPPort(nhpStatus), JSONWorkshopHTTPStatus)
+        .OutputState(HTTPPort(nhpError), NyxTextState('fetch-error'))));
     LFormatFlow := NyxFlowRef('Format JSON');
     LGraph := NewNyxFlowGraph
       .WithStep(JSONWorkshopStep(jwsPrepare), NewNyxProgramLogic(JSONWorkshopPreparation, LPreparation))
@@ -359,13 +441,19 @@ begin
       .WithCamera(NyxCanvasCamera(1200, 760, NyxCanvasPoint(0, 0), 1))
       .WithLayer(NyxCanvasLayer('Work'))
       .WithItem(JSONWorkshopItem, NyxReusableRoot(CTemplate),
-        NyxCanvasPlacement(NyxCanvasLayer('Work'), NyxCanvasBounds(20, 20, 450, 800)));
+        NyxCanvasPlacement(NyxCanvasLayer('Work'), NyxCanvasBounds(20, 20, 450, 960)));
     LScene := NyxCanvasGraphLayout(LScene)
       .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsPrepare), NyxCanvasPoint(520, 30))
       .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsParse), NyxCanvasPoint(820, 30))
       .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsFormat), NyxCanvasPoint(1120, 30))
       .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsEncode), NyxCanvasPoint(820, 340))
-      .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsSave), NyxCanvasPoint(1120, 340)).Done;
+      .Place(JSONWorkshopSaveFlow, JSONWorkshopStep(jwsSave), NyxCanvasPoint(1120, 340))
+      .Place(JSONWorkshopFetchFlow, JSONWorkshopStep(jwsHTTP), NyxCanvasPoint(520, 30))
+      .Place(JSONWorkshopFetchFlow, JSONWorkshopStep(jwsDecode), NyxCanvasPoint(820, 30))
+      .Place(JSONWorkshopFetchFlow, JSONWorkshopStep(jwsPrepare), NyxCanvasPoint(1120, 30))
+      .Place(JSONWorkshopFetchFlow, JSONWorkshopStep(jwsParse), NyxCanvasPoint(520, 340))
+      .Place(JSONWorkshopFetchFlow, JSONWorkshopStep(jwsFormat), NyxCanvasPoint(820, 340))
+      .Place(JSONWorkshopFetchFlow, JSONWorkshopStep(jwsURLName), NyxCanvasPoint(1120, 340)).Done;
     Result.Canvases.Define(NyxCanvasRef('JSON workbench'), LScene);
     LCanvas := NewNyxToolCanvas(JSONWorkshopCanvas.ID).WithScene(NyxCanvasRef('JSON workbench'));
     LCanvas.WorkspaceCanvas.Configure.Height(720).MinimumHeight(360).Done;

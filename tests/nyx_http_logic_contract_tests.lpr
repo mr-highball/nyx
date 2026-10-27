@@ -32,8 +32,11 @@ uses
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
+  { Closed transport/target scenarios keep legacy configured calls beside
+    connected-target admission, including refusal before any external effect. }
   TMode = (hmInline, hmDeferred, hmError, hmStatus, hmNoAuthority, hmNoToken,
-    hmThrow, hmCancel, hmGeneration, hmInlineNoToken);
+    hmThrow, hmCancel, hmGeneration, hmInlineNoToken, hmConnectedURL,
+    hmEmptyURL, hmBadURL, hmWrongURLType);
   TRequest = class(TNyxResourceRequest)
   public
     procedure Send(const AResult: TNyxResourceHTTPResult);
@@ -109,7 +112,16 @@ var
   LFailed: Boolean;
 begin
   LRequest := NyxHTTPRequest(NyxResourceURL('https://example.invalid/api'))
-    .Method(nhmPost).WithBody(NyxEncodeUTF8('owned'));
+    .Method(nhmPost).WithBody(NyxEncodeUTF8('owned')).Header('x-kept', 'original').
+      WholeRequest(3210).MaximumBytes(1024);
+  LCandidate := LRequest.WithURL(NyxResourceURL('https://example.invalid/derived'));
+  Check((LRequest.URL.Address = 'https://example.invalid/api') and
+    (LCandidate.URL.Address = 'https://example.invalid/derived') and
+    (LCandidate.RequestMethod.Name = 'POST') and
+    (LCandidate.Headers.First('x-kept') = 'original') and
+    (NyxDecodeUTF8(LCandidate.Body) = 'owned') and
+    (LCandidate.DeadlineMS = 3210) and (LCandidate.ByteLimit = 1024),
+    'derived target preserves its independent configured request and every non-target option');
   LHeaders := NyxHTTPHeaders.Append('x', TNyxText(StringOfChar('a', 8191)) + TNyxText('é'));
   Check(LHeaders.Count = 1, 'Latin-1 header limit is equal on UTF-8/native and browser strings');
   for LIndex := 0 to 8 do
@@ -247,6 +259,7 @@ var
   LBytes: TNyxBytes;
   LCopy: TNyxHTTPRequest;
   LRejected: Boolean;
+  LInputs: array of TNyxFlowInput;
 begin
 
   if not GWaiting then
@@ -283,7 +296,7 @@ begin
     LBuilder := NewNyxFlowGraph.WithStep(NyxFlowStep('request'),
       NewNyxHTTPCall(LRequest, LAuthority));
 
-    if TMode(GCase) in [hmInline, hmDeferred, hmInlineNoToken] then
+    if TMode(GCase) in [hmInline, hmDeferred, hmInlineNoToken, hmConnectedURL] then
     begin
       LBuilder.WithStep(NyxFlowStep('decode'), NewNyxUTF8Decode)
         .WithStep(NyxFlowStep('parse'), NewNyxJSONParse)
@@ -306,9 +319,58 @@ begin
       end;
     end;
     Check(LRejected, 'header injection refuses before transport');
-    GRun := TNyxFlowExecution.Submit(GGraph,
-      [NyxFlowInput(NyxFlowEndpoint(NyxFlowStep('request'), NyxHTTPPort(nhpTrigger)),
-        NyxFlowSignal)], GScheduler, GPortLease, neAsynchronous, GScope);
+    SetLength(LInputs, 1);
+    LInputs[0] := NyxFlowInput(NyxFlowEndpoint(NyxFlowStep('request'), NyxHTTPPort(nhpTrigger)),
+      NyxFlowSignal);
+
+    if TMode(GCase) in [hmConnectedURL, hmEmptyURL, hmBadURL, hmWrongURLType] then
+    begin
+      SetLength(LInputs, 2);
+      LInputs[1] := NyxFlowInput(NyxFlowEndpoint(NyxFlowStep('request'), NyxHTTPPort(nhpURL)),
+        NyxFlowText('https://example.invalid/connected?name=River%20Moon'));
+
+      if TMode(GCase) = hmEmptyURL then
+      begin
+        LInputs[1].Value := NyxFlowText('');
+      end;
+
+      if TMode(GCase) = hmBadURL then
+      begin
+        LInputs[1].Value := NyxFlowText('file:///private/input.json');
+      end;
+
+      if TMode(GCase) = hmWrongURLType then
+      begin
+        LInputs[1].Value := NyxFlowInteger(42);
+      end;
+    end;
+    LRejected := False;
+    try
+      GRun := TNyxFlowExecution.Submit(GGraph,
+        LInputs, GScheduler, GPortLease, neAsynchronous, GScope);
+    except
+      on E: ENyxFlow do
+      begin
+
+        if TMode(GCase) <> hmWrongURLType then
+        begin
+          raise;
+        end;
+        LRejected := True;
+      end;
+    end;
+
+    if TMode(GCase) = hmWrongURLType then
+    begin
+      Check(LRejected and (GTransport.Calls = 0) and (GPort.Calls = 0),
+        'wrong URL value family refuses synchronously before scheduling or transport');
+      GGraph := nil;
+      GPortLease := nil;
+      GScope := nil;
+      GTransportLease := nil;
+      Inc(GCase);
+      Exit;
+    end;
     GCaseAt := Clock;
     GWaiting := True;
     Exit;
@@ -348,13 +410,13 @@ begin
       Exit;
     end;
 
-    if TMode(GCase) in [hmNoAuthority, hmNoToken, hmThrow] then
+    if TMode(GCase) in [hmNoAuthority, hmNoToken, hmThrow, hmEmptyURL, hmBadURL, hmWrongURLType] then
     begin
       Check((GRun.Phase = nqpFailed) and (GPort.Calls = 0), 'host admission failure publishes no prefix');
 
-      if TMode(GCase) = hmNoAuthority then
+      if TMode(GCase) in [hmNoAuthority, hmEmptyURL, hmBadURL, hmWrongURLType] then
       begin
-        Check(GTransport.Calls = 0, 'saved declaration has no host authority');
+        Check(GTransport.Calls = 0, 'missing authority or invalid target has no transport effect');
       end;
     end
     else
@@ -389,13 +451,27 @@ begin
           .AsJSON.Count = 2, 'duplicate observable headers survive');
       end;
 
-      if TMode(GCase) in [hmInline, hmDeferred, hmInlineNoToken] then
+      if TMode(GCase) in [hmInline, hmDeferred, hmInlineNoToken, hmConnectedURL] then
       begin
         Check(LOutputs.Value(NyxFlowEndpoint(NyxFlowStep('parse'), NyxLogicPort(nlpJSON)))
           .AsJSON.Field('exact').ToJSON = '9007199254740993', 'resumed parse retains exact numbers');
         Check(LOutputs.Value(NyxFlowEndpoint(NyxFlowStep('parse'), NyxLogicPort(nlpJSON)))
           .AsJSON.Field('text').AsText = TNyxText('Hello 🌟') + #0 + TNyxText('!'),
           'resumed decode retains supplementary text and NUL');
+      end;
+
+      if TMode(GCase) = hmConnectedURL then
+      begin
+        Check((GTransport.Last.URL.Address = 'https://example.invalid/connected?name=River%20Moon') and
+          (GTransport.Last.RequestMethod.Name = 'PATCH') and
+          (GTransport.Last.Headers.First('x-owned') = 'first') and
+          (NyxDecodeUTF8(GTransport.Last.Body) = TNyxText('Upload 🌟') + #0 + TNyxText(' bytes')),
+          'connected URL reaches the transport while preserving method, owned headers and exact payload');
+      end
+      else
+      begin
+        Check(GTransport.Last.URL.Address = 'https://example.invalid/api',
+          'unwired legacy graphs retain their exact configured target');
       end;
     end;
   end;

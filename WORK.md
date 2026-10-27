@@ -9,6 +9,111 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current checkpoint — Network input for useful Tool Canvas tools — 2026-10-27
+
+Previous goal turn: NO PROGRESS; it restated the already completed on-demand
+cleanup. Both retired C roots remain absent and their external archives intact;
+no repeat cleanup is needed.09d0e95 is pushed and remote-verified. Root remains
+SOLO. Batch twenty-four follows priority4/logic-components01's existing HTTP and
+resource return. Managed interfaces/resources are accepted prerequisites; original
+graph/host/quality/parity acceptance remains open. HTTP already has typed request
+options, owned bytes, explicit transports and cancellable async execution. Its
+previous trigger-only input could not accept a URL from a control or script.
+
+The same operation now has an optional URL input, validated through the existing
+nominal HTTP(S) reference and independent request derivation. Existing static
+graphs/configuration/GUIDs keep their meaning. JSON Workshop loads a URL through
+HTTP → guarded UTF-8 → authored preparation → strict JSON → preview, using explicit
+platform hosts and no handwritten result receiver. Newer edits, failure/cancel/
+retirement and the complete Open/Format/Save journey remain protected. This does
+not accept every hosted-resource, retry/cache, native-platform or browser/parity
+requirement. All private outputs and child TEMP/TMP use external storage.
+
+The optional URL input, validated request derivation, source replay/enum emission
+and public application host wiring are implemented. Substituted native contract
+checks pass110 with a complete clean heap. Initial consumer compilation found
+two ordinal-name arrays that needed the appended port; both are repaired.
+Retained warm-cache compiler failure and earlier missing-array failures remain
+separate from successful cold compilation and runtime evidence.
+
+The existing full control journey exceeded its internal60-second total at
+stage21. A flushed trace shows progress rather than a stuck event: setup takes
+about35seconds, live program operations continue, and the page remount finishes
+at63seconds. The maintained external process limit is120seconds. The consumer
+now bounds setup and each complete existing/new interaction journey at60seconds
+within that same outer limit; cumulative timestamps retain startup cost. This is not a product
+performance fix or near-real-time acceptance. The original Open/Format/Save and
+live program assertions remain, followed by actual URL-control, bad reply,
+atomic publication, peer, newer edit and HTTP retirement cases.
+
+Automatic approval review rejected the combined temporary loopback HTTP fixture
+and maintained build command before execution, stating only “blocked by policy.”
+No fixture was started. A safer independent client later validates actual native
+HTTP against the existing server's read-only health response without starting a
+listener or changing any project. The optional maintained `/json` fixture branch
+remains unexecuted. Network07's readers are joined:82/82 desktop/compact checks and clean heaps pass;
+its own compiled constructor completes the original39 stages but exceeds the
+single interaction-phase budget when the added network remount begins. The new
+network phase now has its own60-second bound while the external120-second total
+is unchanged. Its unexecuted native real-network assertion also compared the
+32-bit AsInteger accessor to an exact JSON number; use original JSON spelling
+instead, removing the warning and preserving cross-target numeric meaning.
+
+Network08 then passes all330 actual native checks/four clean heaps, but its
+browser consumer refuses a static COM-interface array in the new test host.
+Use an explicitly sized dynamic interface vector on both compilers. Final
+json-workshop-network-09 passes all10 maintained receipts:82/82 native example
+and83/83 own saved-constructor checks at desktop/compact widths, with four clean
+heaps. All three browser programs compile/stage only. No owned warning remains;
+21 installed Classes warning occurrences remain external dependency diagnostics.
+Both widths export identical65893-byte projects (SHA25641FF2BE3 prefix) and
+29393-byte Pascal (SHA256599AC302 prefix), including the new typed URL route.
+
+http-url-authoring-02 adds36 native source/editor/semantic checks with a clean
+heap and browser compilation. An actual authored WithURL chain reconstructs the
+same request while retaining exact source. Bounded existing semantic port reads
+expose URL, text family and optionality on an existing saved graph. Native
+contract110 checks/one clean heap are freshly rebuilt in http-url-contract-final-01;
+its browser compilation remains in the separate component packet. The authoring
+test has its own final source pin; product sources remain exact. Final review
+also checks the setup deadline before resetting the interaction clock, so slow
+blocking setup cannot silently lose its watchdog. http-url-fixture-final-01
+reruns82 native controls with a clean heap and compiles that final fixture for
+the browser. This guard-only delta changes no application behavior or original
+assertion and is not added as another82 unique checks. It has its own source pin.
+
+Private http-url-live-consumer-01 compiles the actual Workshop saved constructor
+and runs7/7 native checks through its real embedded URL input and Load URL button.
+The existing Nyx server supplies only a GET health response; WinHTTP bytes travel
+through the authored preparation/JSON graph into source, preview, accepted URL
+and the actual status label. Two clean heaps and unchanged690 pre-existing
+durable file hashes qualify this narrower real-network path. The initial audit
+hit the server's active exclusive lock; only that lock is excluded. No server,
+session, project, configuration, firewall or enrollment is changed.
+
+Unique current assertions total490 across nine clean native heaps; repeated
+earlier packets are not added. Five distinct browser consumers compile only, with
+installed Classes warnings and zero owned warnings. Full http-url-studio-01 also
+builds the backend plus editor/source-worker/preview payload, with zero owned
+warnings and21 installed Classes occurrences. Its seven required files are
+staged externally; the new server SHA256 starts9829CAEE. It is not activated:
+existing LAN/MCP owner37824 remains the older running payload. No observing,
+physical-input, screenshot/assistive, TLS/broad-network, cache/retry, other native
+adapter or full parity/quality acceptance is inferred. Native journey totals
+remain about70–80seconds under heap instrumentation; these are not per-input
+latency measurements. All actual readers are joined and no source freeze remains.
+
+This delivers useful connected URL input without adding an operation kind,
+complete original criterion/task or credit. Stop standalone URL/form/source
+variants. Next activate the qualified current payload through the existing
+preserving Studio/MCP owner and inspect/author this same graph using bounded
+semantic tools, then carry it through ordinary Studio/saved application and
+observing-browser qualification when that surface is available. Preserve the
+prior browser security refusal; do not try substitute browser routes. Resource/
+cache input, broader operations/diagrams and every original delivery gate remain
+with their existing owners. Unrelated1280/390 and the completed cleanup remain
+untouched. All maintained changes are ready for the branch checkpoint.
+
 ## Current checkpoint — MCP project in ordinary Studio — 2026-10-27
 
 Previous goal turn: PROGRESS;0bdf6f1 is pushed and remote-verified. Root remains

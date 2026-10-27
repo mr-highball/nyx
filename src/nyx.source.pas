@@ -1870,6 +1870,7 @@ begin
   RegisterEnum(vkHTTPPort, Ord(nhpError), 'nhpError');
   RegisterEnum(vkHTTPPort, Ord(nhpSucceeded), 'nhpSucceeded');
   RegisterEnum(vkHTTPPort, Ord(nhpHeaderVisibility), 'nhpHeaderVisibility');
+  RegisterEnum(vkHTTPPort, Ord(nhpURL), 'nhpURL');
   RegisterEnum(vkFileSaveMode, Ord(nfsmPreferPicker), 'nfsmPreferPicker');
   RegisterEnum(vkOpenFilePort, Ord(nofpTrigger), 'nofpTrigger');
   RegisterEnum(vkOpenFilePort, Ord(nofpBytes), 'nofpBytes');

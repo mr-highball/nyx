@@ -26,7 +26,8 @@ program nyx_json_workshop_controls;
 uses
   SysUtils, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.source, nyx.files, nyx.studio.files, nyx.studio.projects,
-  nyx.state, nyx.logic, nyx.files.save, nyx.files.open, nyx.scheduler,
+  nyx.state, nyx.logic, nyx.logic.http, nyx.http.types, nyx.resources.loader,
+  nyx.resource.sources, nyx.files.save, nyx.files.open, nyx.scheduler,
   nyx.json.workshop, nyx.tool.canvas, nyx.canvas.types, nyx.canvas.workspace,
   nyx.flow.routing, nyx.flow.declarations, nyx.view.behavior,
   nyx.programs, nyx.programs.types, nyx.programs.contract, nyx.programs.declarations,
@@ -35,7 +36,7 @@ uses
   JS, Web, nyx.application.browser, nyx.canvas.browser, nyx.tool.canvas.browser
   {$else}
   Classes, Interfaces, Forms, Controls, StdCtrls, nyx.application.lcl, nyx.canvas.lcl,
-  nyx.files.lcl, nyx.tool.canvas.lcl
+  nyx.files.lcl, nyx.tool.canvas.lcl, nyx.resources.http.lcl
   {$endif}
   {$ifdef NYX_COMPILED_JSON_WORKSHOP}, nyx.generated.json.workshop{$endif};
 
@@ -109,6 +110,30 @@ type
       AReply: TNyxFileOpenReply): INyxFileOpenRequest;
   end;
 
+  { A controlled byte response uses the real revocable transport receiver.
+    Retaining this token owns no application or view; a late Finish after Cancel
+    cannot enter the retired graph. It grants no actual network authority. }
+  TNetworkRequest = class(TNyxResourceRequest)
+  public
+    procedure Finish(AStatus: Integer; const ABytes: TNyxBytes;
+      const AError: TNyxText = '');
+    function IsPending: Boolean;
+  end;
+
+  { Each App gets an independent explicitly injected transport. Captured request
+    data and the pending token retain no document. The optional native delegate
+    is supplied only by the test's explicit loopback-origin qualification. }
+  TNetworkHost = class(TInterfacedObject, INyxHTTPTransport)
+  public
+    Calls: Integer;
+    Last: TNyxHTTPRequest;
+    Request: TNetworkRequest;
+    Lease: INyxResourceRequest;
+    Delegate: INyxHTTPTransport;
+    function Send(const ARequest: TNyxHTTPRequest;
+      AReply: TNyxResourceHTTPReply): INyxResourceRequest;
+  end;
+
 var
   GDocument: TNyxDocument;
   GReopened: TNyxDocument;
@@ -118,6 +143,13 @@ var
   GHostLeases: array of INyxFileSaveHost;
   GOpenHosts: array[0..1] of TOpenHost;
   GOpenLeases: array of INyxFileOpenHost;
+  GNetworkHosts: array[0..1] of TNetworkHost;
+  { Dynamic interface vectors retain the same ownership on FPC and pas2js;
+    pas2js does not support static arrays of COM interfaces. }
+  GNetworkLeases: array of INyxHTTPTransport;
+  GNetworkURL: TNyxText;
+  GNetworkRevision: Integer;
+  GInteractionStarted: Double;
   GNodes: array of INyxToolCanvasPipelineNodes;
   GBefore: TNyxText;
   GPretty: TNyxText;
@@ -150,6 +182,7 @@ var
   GStarted: QWord;
   GDirectory: TNyxText;
   GFailures: TFailures;
+  GLoggedStage: Integer = -1;
   {$endif}
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
@@ -169,12 +202,66 @@ begin
   Inc(GChecks);
 end;
 
+function Clock: Double;
+begin
+  {$ifdef PAS2JS}Result := TJSDate.now;{$else}Result := GetTickCount64;{$endif}
+end;
+
+{ Building/admitting two applications, their existing file/program journey and
+  the added network journey are distinct bounded phases. Each has a 60-second
+  allowance; the maintained runner enforces an independent 120-second total.
+  Stage timestamps include all phases so their actual costs remain visible. }
+function JourneyTimedOut: Boolean;
+begin
+
+  if GInitialized then
+  begin
+    Result := Clock - GInteractionStarted > 60000;
+  end
+  else
+  begin
+    Result := Clock - GStarted > 60000;
+  end;
+end;
+
 {$ifndef PAS2JS}
 procedure TFailures.Failed(ASender: TObject; AException: Exception);
 begin
   Error := AException.ClassName + ': ' + AException.Message;
 end;
 {$endif}
+
+procedure TNetworkRequest.Finish(AStatus: Integer; const ABytes: TNyxBytes;
+  const AError: TNyxText);
+var
+  LResult: TNyxResourceHTTPResult;
+begin
+  LResult := Default(TNyxResourceHTTPResult);
+  LResult.Status := AStatus;
+  LResult.Bytes := Copy(ABytes, 0, Length(ABytes));
+  LResult.Error := AError;
+  Complete(LResult);
+end;
+
+function TNetworkRequest.IsPending: Boolean;
+begin
+  Result := Active;
+end;
+
+function TNetworkHost.Send(const ARequest: TNyxHTTPRequest;
+  AReply: TNyxResourceHTTPReply): INyxResourceRequest;
+begin
+  Inc(Calls);
+  Last := TNyxHTTPRequest.FromData(ARequest.ToData);
+
+  if Delegate <> nil then
+  begin
+    Exit(Delegate.Send(ARequest, AReply));
+  end;
+  Request := TNetworkRequest.Create(AReply);
+  Result := Request;
+  Lease := Result;
+end;
 
 procedure TSaveRequest.Finish(AOutcome: TNyxFileSaveOutcome);
 var
@@ -413,6 +500,7 @@ begin
   SetLength(GViews, 2);
   SetLength(GHostLeases, 2);
   SetLength(GOpenLeases, 2);
+  SetLength(GNetworkLeases, 2);
   SetLength(GNodes, 2);
   {$ifdef NYX_COMPILED_JSON_WORKSHOP}
   GDocument := BuildNyxDocument;
@@ -466,6 +554,9 @@ begin
     GOpenHosts[LIndex] := TOpenHost.Create;
     GOpenLeases[LIndex] := GOpenHosts[LIndex];
     GApps[LIndex] := TReviewApplication.Create;
+    GNetworkHosts[LIndex] := TNetworkHost.Create;
+    GNetworkLeases[LIndex] := GNetworkHosts[LIndex];
+    GApps[LIndex].ConfigureLogic(NewNyxHTTPLogicResolver(GNetworkLeases[LIndex]));
     GApps[LIndex].ConfigureFileSaving(GHostLeases[LIndex]);
     GApps[LIndex].ConfigureFileOpening(GOpenLeases[LIndex]);
     {$ifdef PAS2JS}
@@ -505,6 +596,8 @@ begin
   end;
 end;
 
+{$I nyx_json_workshop_network.inc}
+
 procedure Stage;
 begin
   {$ifdef NYX_JSON_WORKSHOP_STUDIO}
@@ -542,6 +635,12 @@ begin
       raise Exception.Create('Actual program presentation failed');
     end;
   end;
+
+  if GStage >= 39 then
+  begin
+    NetworkStage;
+    Exit;
+  end;
   case GStage of
     0:
       begin
@@ -549,7 +648,13 @@ begin
         if not GInitialized then
         begin
           Initialize;
+
+          if JourneyTimedOut then
+          begin
+            raise Exception.Create('JSON Workshop setup timed out');
+          end;
           GInitialized := True;
+          GInteractionStarted := Clock;
           Exit;
         end;
 
@@ -978,7 +1083,6 @@ begin
         Check((GHosts[0].Calls = 3) and (GHosts[1].Calls = 2) and
           (TNyxCodec.Encode(GDocument) = GBefore) and (TNyxCodec.Encode(GReopened) = GBefore),
           'all open outcomes preserve portable blueprints and perform no unintended saving');
-        GDone := True;
       end;
   end;
   Inc(GStage);
@@ -1002,6 +1106,8 @@ begin
     GHosts[LIndex] := nil;
     GOpenLeases[LIndex] := nil;
     GOpenHosts[LIndex] := nil;
+    GNetworkLeases[LIndex] := nil;
+    GNetworkHosts[LIndex] := nil;
     {$ifdef PAS2JS}
 
     if GElements[LIndex] <> nil then
@@ -1019,7 +1125,7 @@ procedure Drive;
 begin
   try
 
-    if {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioReady and {$endif}(TJSDate.now - GStarted > 60000) then
+    if {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioReady and {$endif}JourneyTimedOut then
     begin
       raise Exception.Create('JSON Workshop timed out at stage ' + IntToStr(GStage));
     end;
@@ -1064,10 +1170,17 @@ begin
     try
       while not GDone do
       begin
+
+        if GLoggedStage <> GStage then
+        begin
+          WriteLn('JSON Workshop stage ', GStage, ' at ', GetTickCount64 - GStarted, 'ms');
+          Flush(Output);
+          GLoggedStage := GStage;
+        end;
         CheckSynchronize(1);
         Application.ProcessMessages;
 
-        if {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioReady and {$endif}(GetTickCount64 - GStarted > 60000) then
+        if {$ifdef NYX_JSON_WORKSHOP_STUDIO}GStudioReady and {$endif}JourneyTimedOut then
         begin
           raise Exception.Create('JSON Workshop timed out at stage ' + IntToStr(GStage));
         end;

@@ -728,6 +728,12 @@ begin
               Result.HTTPRequest := Result.HTTPRequest.Method(NyxHTTPMethod(LArgs[0].Text));
             end;
           end
+          else if LMethod = 'withurl' then
+          begin
+            Count(1, 1);
+            Kind(0, vkResourceURL);
+            Result.HTTPRequest := Result.HTTPRequest.WithURL(NyxResourceURL(LArgs[0].Text));
+          end
           else if (LMethod = 'header') or (LMethod = 'appendheader') then
           begin
             Count(2, 2);

@@ -97,6 +97,18 @@ begin
     Check(LWorkspace.Render(LParsed) = LSource, 'HTTP no-op source remains exact');
     FreeAndNil(LWorkspace);
     FreeAndNil(LParsed);
+    LBefore := StringReplace(LSource,
+      'NyxHTTPRequest(NyxResourceURL(''https://example.invalid/api/profile''))',
+      'NyxHTTPRequest(NyxResourceURL(''https://example.invalid/initial''))' +
+        '.WithURL(NyxResourceURL(''https://example.invalid/api/profile''))', []);
+    Check(LBefore <> LSource, 'derived-target source changes the actual emitted HTTP constructor');
+    LParsed := TNyxSourceWorkspace.PrepareDraft(LBefore, LWorkspace);
+    Check(TNyxCodec.Encode(LParsed) = TNyxCodec.Encode(LDocument),
+      'fluent WithURL source retains the final configured request and all graph meaning');
+    Check(LWorkspace.Render(LParsed) = LBefore,
+      'the crafted WithURL chain remains exact through source admission');
+    FreeAndNil(LWorkspace);
+    FreeAndNil(LParsed);
     LRejected := False;
     try
       LParsed := TNyxSourceWorkspace.PrepareDraft(StringReplace(LSource,
@@ -226,6 +238,16 @@ begin
     Check((LReply.Field('items').Count = 1) and
       (LReply.Field('items').Item(0).Field('kind').AsText = 'http-call'),
       'bounded semantic discovery exposes the typed HTTP default');
+    LReply := LAgent.Call('nyx_logic', 'HTTP authoring qualification', NyxObject([
+      NyxField('scope', NyxData('ports')), NyxField('flow', NyxData('Download')),
+      NyxField('step', NyxData('request')), NyxField('offset', NyxData(1)),
+      NyxField('limit', NyxData(1)), NyxField('expectedRevision', NyxData(LRevision))]));
+    Check((LReply.Field('items').Count = 1) and
+      (LReply.Field('items').Item(0).Field('port').AsText = 'url') and
+      (LReply.Field('items').Item(0).Field('direction').AsText = 'input') and
+      (LReply.Field('items').Item(0).Field('type').AsText = NyxFlowTypeName(nftText)) and
+      LReply.Field('items').Item(0).Field('optional').AsBoolean,
+      'bounded semantic port inspection exposes URL type and optionality on an existing saved graph');
     LArguments := NyxObject([NyxField('expectedRevision', NyxData(LRevision)),
       NyxField('operationId', NyxData('http-request-group')),
       NyxField('operations', NyxArray([

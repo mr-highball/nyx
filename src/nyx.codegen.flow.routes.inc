@@ -63,7 +63,7 @@ var
       ('nlpText', 'nlpJSON', 'nlpValue', 'nlpLeft', 'nlpRight');
     CHTTPPorts: array[TNyxHTTPPort] of TNyxText =
       ('nhpTrigger', 'nhpBody', 'nhpStatus', 'nhpHeaders', 'nhpError', 'nhpSucceeded',
-       'nhpHeaderVisibility');
+       'nhpHeaderVisibility', 'nhpURL');
   var
     LPort: TNyxLogicPort;
     LHTTPPort: TNyxHTTPPort;

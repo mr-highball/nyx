@@ -24,12 +24,13 @@ program json_workshop;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.model, nyx.json.workshop,
+  SysUtils, nyx.model, nyx.json.workshop, nyx.logic.http,
   {$ifdef PAS2JS}
   Web, nyx.application.browser, nyx.files.save.browser, nyx.files.save.activation.browser,
-  nyx.files.open.browser;
+  nyx.files.open.browser, nyx.resources.http.browser;
   {$else}
-  Interfaces, Forms, nyx.application.lcl, nyx.files.save.lcl, nyx.files.open.lcl;
+  Interfaces, Forms, nyx.application.lcl, nyx.files.save.lcl, nyx.files.open.lcl,
+  nyx.resources.http.lcl;
   {$endif}
 
 type
@@ -70,6 +71,7 @@ begin
   GDocument := BuildJSONWorkshopDocument;
   GApplication := TWorkshopApplication.Create;
   try
+    GApplication.ConfigureLogic(NewNyxHTTPLogicResolver(NewNyxBrowserHTTPTransport));
     GApplication.ConfigureFileSaving(NewNyxBrowserActivatedFileSaveHost(NewNyxBrowserFileSaveHost));
     GApplication.ConfigureFileOpening(NewNyxBrowserFileOpenHost);
     GApplication.Run(GDocument, TJSHTMLElement(document.body));
@@ -93,6 +95,8 @@ begin
   GDocument := BuildJSONWorkshopDocument;
   GApplication := TWorkshopApplication.Create;
   try
+    GApplication.ConfigureLogic(NewNyxHTTPLogicResolver(
+      NewNyxNativeHTTPTransport(GApplication.View.Events.Scheduler)));
     GApplication.ConfigureFileSaving(NewNyxLCLFileSaveHost);
     GApplication.ConfigureFileOpening(NewNyxLCLFileOpenHost);
     GApplication.Mount(GDocument);

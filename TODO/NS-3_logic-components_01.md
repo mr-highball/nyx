@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+JSON Workshop now adds connected URL input through the existing HTTP operation,
+strict UTF-8 and the same authored preparation/JSON chain. An optional typed port
+derives a validated per-invocation target without replacing saved request options
+or granting transport authority. Native actual controls qualify unsuccessful
+responses, exact status binding, newer edits, independent Apps and retirement;
+the own saved constructor exercises the same cases. Real native HTTP also reaches
+the generated application's controls through an existing read-only service.
+WORK.md distinguishes those results from browser compilation, broad HTTP/cache/
+retry and full host/observing/parity/quality acceptance. No operation kind or full
+original criterion/task/credit closes.
+
 JSON Workshop now composes the existing Open file, strict byte decoding, authored
 Pascal, JSON and conditional operations into a useful file-input chain. Cancel
 preserves source/preview/name; invalid bytes/JSON, newer edits and retirement

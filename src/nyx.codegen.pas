@@ -560,7 +560,7 @@ var
       ('nlpText', 'nlpJSON', 'nlpValue', 'nlpLeft', 'nlpRight');
     CHTTPPorts: array[TNyxHTTPPort] of TNyxText =
       ('nhpTrigger', 'nhpBody', 'nhpStatus', 'nhpHeaders', 'nhpError', 'nhpSucceeded',
-       'nhpHeaderVisibility');
+       'nhpHeaderVisibility', 'nhpURL');
     CFilePorts: array[TNyxFilePort] of TNyxText =
       ('nfpTrigger', 'nfpBytes', 'nfpOutcome', 'nfpName', 'nfpWritten',
        'nfpDelivered', 'nfpCancelled', 'nfpError', 'nfpByteCount', 'nfpActivationRequired');

@@ -31,14 +31,20 @@ uses
   nyx.logic, nyx.flow, nyx.flow.types, nyx.scheduler;
 
 type
+  { Stable port identities append optional per-invocation URL data without
+    changing earlier ordinals. Text becomes a nominal HTTP(S) URL only at the
+    validated request boundary; it never grants transport authority. }
   TNyxHTTPPort = (nhpTrigger, nhpBody, nhpStatus, nhpHeaders, nhpError, nhpSucceeded,
-    nhpHeaderVisibility);
+    nhpHeaderVisibility, nhpURL);
 
   { Managed, immutable nonvisual HTTP component. The saved request contains data
     only. An explicitly injected transport supplies host authority at runtime.
     Each BeginInvoke owns an independent cancellable request. Transport failures
     and non-2xx status are usable output data; malformed configuration/schema or
-    missing authority refuse the invocation. Cancellation publishes no outcome. }
+    missing authority refuse the invocation. Cancellation publishes no outcome.
+    A present URL input replaces the configured target for that invocation only;
+    absent input keeps it. Empty/malformed present input refuses before sending.
+    Request always returns the independent saved configuration, never run data. }
   INyxHTTPCall = interface(INyxLogicOperation)
     ['{D1411014-6120-4C84-A708-00000000002C}']
     function GetRequest: TNyxHTTPRequest;
@@ -64,6 +70,8 @@ function NewNyxHTTPLogicResolver(const ATransport: INyxHTTPTransport): INyxLogic
 
 implementation
 
+uses nyx.resource.sources;
+
 type
   THTTPInvocation = class(TInterfacedObject, INyxLogicInvocation)
   private
@@ -79,6 +87,9 @@ type
     procedure Start(const AHTTP: TNyxHTTPRequest; const ATransport: INyxHTTPTransport);
     procedure Cancel;
   end;
+  { Immutable configured operation. Connected URL data derives a request value
+    before allocating a pending invocation; concurrent calls cannot replace the
+    configured target or another call's method, payload, headers or limits. }
   THTTPCall = class(TNyxLogicOperation, INyxHTTPCall, INyxAsyncLogicOperation)
   private
     FHTTP: TNyxHTTPRequest;
@@ -114,7 +125,7 @@ type
 function NyxHTTPPort(APort: TNyxHTTPPort): TNyxFlowPortRef;
 const
   CNames: array[TNyxHTTPPort] of TNyxText =
-    ('trigger', 'body', 'status', 'headers', 'error', 'succeeded', 'header-visibility');
+    ('trigger', 'body', 'status', 'headers', 'error', 'succeeded', 'header-visibility', 'url');
 begin
 
   if (Ord(APort) < Ord(Low(TNyxHTTPPort))) or (Ord(APort) > Ord(High(TNyxHTTPPort))) then
@@ -238,6 +249,8 @@ begin
     'Status and transport errors remain available for connected error handling.',
     nlgNetwork, nlaUI)
     .Input(NyxHTTPPort(nhpTrigger), nftSignal, 'Explicit invocation trigger')
+    .OptionalInput(NyxHTTPPort(nhpURL), nftText,
+      'Absolute HTTP(S) URL for this invocation; absence uses the configured URL')
     .Output(NyxHTTPPort(nhpBody), nftBytes, 'Complete response bytes')
     .Output(NyxHTTPPort(nhpStatus), nftInteger, 'HTTP status; zero without a response')
     .Output(NyxHTTPPort(nhpHeaders), nftJSON, 'Observable ordered header name/value pairs')
@@ -265,6 +278,7 @@ function THTTPCall.BeginInvoke(const AInputs: TNyxFlowValues;
   const ACompletion: INyxLogicCompletion): INyxLogicInvocation;
 var
   LInvocation: THTTPInvocation;
+  LRequest: TNyxHTTPRequest;
 begin
 
   if (AScheduler = nil) or (ACompletion = nil) or (FTransport = nil) then
@@ -278,9 +292,15 @@ begin
   begin
     raise ENyxFlowCancelled.Create('HTTP invocation cancelled before admission');
   end;
+  LRequest := FHTTP;
+
+  if AInputs.Has(NyxHTTPPort(nhpURL)) then
+  begin
+    LRequest := LRequest.WithURL(NyxResourceURL(AInputs.Value(NyxHTTPPort(nhpURL)).AsText));
+  end;
   LInvocation := THTTPInvocation.Create(AScheduler, ACancellation, ACompletion);
   Result := LInvocation;
-  LInvocation.Start(FHTTP, FTransport);
+  LInvocation.Start(LRequest, FTransport);
 end;
 
 constructor TUTF8Decode.Create;

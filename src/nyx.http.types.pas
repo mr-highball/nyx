@@ -64,7 +64,8 @@ type
     Body returns detached bytes. WholeRequest includes queue/I/O time; response
     maximum and request bytes use the existing portable packed-byte ceiling.
     GET/HEAD bodies refuse for Fetch parity; HTTP response status is never
-    fabricated from successful transport completion. }
+    fabricated from successful transport completion. WithURL derives one
+    independently validated target while retaining method, bytes and limits. }
   TNyxHTTPRequest = record
   private
     FURL: TNyxResourceURL;
@@ -74,6 +75,7 @@ type
     FDeadline: Integer;
     FMaximum: Integer;
   public
+    function WithURL(const AValue: TNyxResourceURL): TNyxHTTPRequest;
     function Method(AValue: TNyxHTTPMethod): TNyxHTTPRequest; overload;
     function Method(const AValue: TNyxHTTPMethodRef): TNyxHTTPRequest; overload;
     function Header(const AName, AValue: TNyxText): TNyxHTTPRequest;
@@ -354,6 +356,13 @@ begin
   Result.FMethod := NyxHTTPMethod(nhmGet);
   Result.FDeadline := 15000;
   Result.FMaximum := NyxMaximumPackedBytes;
+end;
+
+function TNyxHTTPRequest.WithURL(const AValue: TNyxResourceURL): TNyxHTTPRequest;
+begin
+  Result := Self;
+  Result.FURL := NyxResourceURL(AValue.Address);
+  Result.Validate;
 end;
 
 function TNyxHTTPRequest.Method(AValue: TNyxHTTPMethod): TNyxHTTPRequest;

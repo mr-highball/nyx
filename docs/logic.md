@@ -1921,8 +1921,15 @@ host-managed headers refuse at this portable boundary. These choices follow the
 framing follows [HTTP semantics](https://www.rfc-editor.org/rfc/rfc9110.html#name-head):
 its Content-Length describes the GET representation, not a received body.
 
-Typed HTTP ports expose trigger, body bytes, status, headers, error, success and
-header visibility. Header visibility carries `TNyxHTTPHeaderVisibility`'s ordinal,
+Typed HTTP ports expose trigger, optional URL input, body bytes, status, headers,
+error, success and header visibility. Connect text to `NyxHTTPPort(nhpURL)` to
+derive the request target for one invocation through the validated HTTP(S) URL
+contract. Absent input keeps the configured target; present empty or invalid
+input refuses before transport admission. `LRequest.WithURL(NyxResourceURL(...))`
+provides the same typed value derivation in application/source authoring. Other
+request options and the saved operation configuration remain independent.
+
+Header visibility carries `TNyxHTTPHeaderVisibility`'s ordinal,
 distinguishing native headers from Fetch's observable filtered subset. A complete
 non-2xx response retains its status/body and empty transport error. A transport
 failure is usable output data; success requires both complete transport and 2xx
@@ -1940,8 +1947,8 @@ native handle retirement. The current one-shot transport inherits the resource
 adapter's cache bypass behavior. Tunable cache/retry, other native widgetsets,
 real network qualification and full HTTP acceptance remain required.
 
-The default Studio catalog contains ten operations. HTTP and UTF-8 decoding
-participate in intent grouping/search/help, typed configuration, saved connections
+The default Studio catalog includes HTTP and UTF-8 decoding. Both participate
+in intent grouping/search/help, typed configuration, saved connections
 and ordinary paired commands. `nyx.http.editor` supplies a public reusable Nyx
 request form: method enum/custom token, URL, individual header rows, UTF-8/Base64
 body presentation and numeric deadline/response limits. Changing body presentation
