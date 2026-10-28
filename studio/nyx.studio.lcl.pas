@@ -289,7 +289,12 @@ type
     FSourceOutline: INyxStudioSourceOutline;
     FPendingProject: TNyxNativeStudioProject;
     FChangingProject: Boolean;
-    FRestoreProject: Boolean;
+    { Compact panels may be absent during project admission. Retain each lane's
+      restoration until that project's corresponding panel is actually mounted. }
+    FRestoreProjectLeft: Boolean;
+    FRestoreProjectRight: Boolean;
+    FRestoreProjectCode: Boolean;
+    FRestoreProjectCanvas: Boolean;
     FAgentCompilerSequence: Integer;
     FInitialPair: TNyxText;
     FOutputLoaded: Boolean;
@@ -360,6 +365,9 @@ type
     procedure ExportProject(ACompanion: Boolean; AInput: Boolean = False);
     procedure AcceptRemote;
     procedure CapturePresentation;
+    { Capture only the current published source frame. Parked controls may still
+      contain another project's text until the optional source pane is revealed. }
+    procedure CaptureProjectSource;
     { Target widgets remain borrowed; only visible pane positions enter copied
       presentation. Compact switching never owns a second resource proposal. }
     procedure CaptureResourcePaneScroll;
@@ -471,6 +479,10 @@ type
     property SourceModal: INyxLCLModalHost read FSourceModal;
     { Borrowed target observations for ordinary input/accessibility consumers. }
     property CompletionPopover: INyxLCLPopover read FCompletionPopover;
+    { Borrowed action family for embedding and real native input qualification.
+      Nil before composition; its registrations retire with this Studio. Do not
+      hold menu callbacks or widget observations beyond the owning editor. }
+    property ActionMenu: INyxLCLMenu read FActionMenu;
     { Borrowed hosting seam for embedded viewers/input qualification, not edits. }
     property QueryPreviewModal: INyxLCLModalHost read FQueryPreviewModal;
     property QueryPreviewView: TNyxLCLRenderer read FQueryPreviewView;
@@ -1951,8 +1963,6 @@ end;
 
 procedure TNyxNativeStudio.CaptureProject;
 var
-  LInput: TWinControl;
-  LSelection: TNyxTextSelection;
   LViewport: TNyxViewportSnapshot;
 begin
   CapturePresentation;
@@ -1965,16 +1975,15 @@ begin
   FCurrentProject.RemoteRevision := FRemoteRevision;
   FCurrentProject.ImportPacket := FImportPacket;
 
-  if FCodeView.Root <> nil then
+  if FShellView.SectionView(nssProject) <> nil then
   begin
-    LInput := TWinControl(FCodeView.InputFor('studio-code'));
-    LSelection := CaptureNyxLCLSelection(LInput);
-    FCurrentProject.CodeStart := LSelection.Start;
-    FCurrentProject.CodeEnd := LSelection.Finish;
-    FCurrentProject.CodeFocused := Screen.ActiveControl = LInput;
+    FCurrentProject.LeftTop := NativeScrollTop(FShellView.SectionView(nssProject), 'studio-left');
   end;
-  FCurrentProject.LeftTop := NativeScrollTop(FShellView.SectionView(nssProject), 'studio-left');
-  FCurrentProject.RightTop := NativeScrollTop(FShellView.SectionView(nssInspector), 'studio-right');
+
+  if FShellView.SectionView(nssInspector) <> nil then
+  begin
+    FCurrentProject.RightTop := NativeScrollTop(FShellView.SectionView(nssInspector), 'studio-right');
+  end;
 
   if FCanvasView.Root <> nil then
   begin
@@ -1993,13 +2002,12 @@ var
   LControl: TControl;
 begin
 
-  if not FRestoreProject or (FCurrentProject = nil) then
+  if FCurrentProject = nil then
   begin
     Exit;
   end;
-  FRestoreProject := False;
 
-  if FCodeView.Root <> nil then
+  if FRestoreProjectCode and MatchesSourceInputFrame then
   begin
     LInput := TWinControl(FCodeView.InputFor('studio-code'));
     LLength := NyxTextScalarCount(NyxLCLInputText(LInput));
@@ -2011,23 +2019,39 @@ begin
     begin
       LInput.SetFocus;
     end;
-  end;
-  LControl := FShellView.ControlFor('studio-left');
-
-  if LControl is TScrollBox then
-  begin
-    TScrollBox(LControl).VertScrollBar.Position := FCurrentProject.LeftTop;
-  end;
-  LControl := FShellView.ControlFor('studio-right');
-
-  if LControl is TScrollBox then
-  begin
-    TScrollBox(LControl).VertScrollBar.Position := FCurrentProject.RightTop;
+    FRestoreProjectCode := False;
   end;
 
-  if FCanvasView.Root <> nil then
+  if FRestoreProjectCanvas and (FCanvasView.Root <> nil) and
+    FSession.MatchesCommandContext(FCanvasCommandContext) then
   begin
     FCanvasView.ScrollView(FCurrentProject.CanvasLeft, FCurrentProject.CanvasTop);
+    FRestoreProjectCanvas := False;
+  end;
+  { ViewFor deliberately refuses absent controls. In compact mode a missing
+    lane is ordinary navigation, not a display failure; apply its saved position
+    once when the user next reveals it, without resetting later user scrolling. }
+
+  if FRestoreProjectLeft and (FShellView.RootFor('studio-left') <> nil) then
+  begin
+    LControl := FShellView.ControlFor('studio-left');
+
+    if LControl is TScrollBox then
+    begin
+      TScrollBox(LControl).VertScrollBar.Position := FCurrentProject.LeftTop;
+    end;
+    FRestoreProjectLeft := False;
+  end;
+
+  if FRestoreProjectRight and (FShellView.RootFor('studio-right') <> nil) then
+  begin
+    LControl := FShellView.ControlFor('studio-right');
+
+    if LControl is TScrollBox then
+    begin
+      TScrollBox(LControl).VertScrollBar.Position := FCurrentProject.RightTop;
+    end;
+    FRestoreProjectRight := False;
   end;
 end;
 
@@ -2161,7 +2185,10 @@ begin
     FProjectFiles.Cancel;
   end;
   FCanvasID := '';
-  FRestoreProject := True;
+  FRestoreProjectCode := True;
+  FRestoreProjectCanvas := True;
+  FRestoreProjectLeft := True;
+  FRestoreProjectRight := True;
   FSourceLine := 0;
   FSourceColumn := 0;
   FAgentCompilerSequence := 0;
@@ -2676,6 +2703,23 @@ begin
   RequestRefresh;
 end;
 
+procedure TNyxNativeStudio.CaptureProjectSource;
+var
+  LInput: TWinControl;
+  LSelection: TNyxTextSelection;
+begin
+
+  if (FCurrentProject = nil) or FRestoreProjectCode or not MatchesSourceInputFrame then
+  begin
+    Exit;
+  end;
+  LInput := TWinControl(FCodeView.InputFor('studio-code'));
+  LSelection := CaptureNyxLCLSelection(LInput);
+  FCurrentProject.CodeStart := LSelection.Start;
+  FCurrentProject.CodeEnd := LSelection.Finish;
+  FCurrentProject.CodeFocused := Screen.ActiveControl = LInput;
+end;
+
 procedure TNyxNativeStudio.CapturePresentation;
 var
   LNode: TNyxNode;
@@ -2690,6 +2734,10 @@ begin
 
   if FSession.MatchesCommandContext(FShellCommandContext) then
   begin
+    { Retain the last real selection before a compact panel parks this editor.
+      The published input frame prevents a departing mount from contaminating
+      its successor's per-project selection. }
+    CaptureProjectSource;
 
     if ReadNyxEventFilterEditor(NyxStudioEventFilterID,
       FShellView.RootFor(NyxStudioEventFilterID), LEventFilter) then
@@ -3444,6 +3492,9 @@ begin
 
       if FSourceLine > 0 then
       begin
+        { An explicit callback/diagnostic destination supersedes the optional
+          return-to-project caret that has not yet found a mounted source pane. }
+        FRestoreProjectCode := False;
         FCodeView.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
         { A deliberate admitted-handler/diagnostic navigation owns focus. An
           earlier policy field must not reclaim it after the source caret moves. }

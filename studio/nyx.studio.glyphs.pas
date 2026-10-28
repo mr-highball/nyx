@@ -1,4 +1,24 @@
-{ Nyx. Copyright (c) 2020 mr-highball. MIT license; see LICENSE. }
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
 unit nyx.studio.glyphs;
 
 {$mode delphi}{$H+}{$codepage utf8}
@@ -34,6 +54,8 @@ uses SysUtils;
 
 {$I assets/glyphs/nyx.studio.glyphs.inc}
 {$I assets/glyphs/nyx.studio.editglyphs.inc}
+{$I assets/glyphs/nyx.studio.movedownglyph.inc}
+{$I assets/glyphs/nyx.studio.deleteglyph.inc}
 
 var
   GAtlas: TNyxImageSource;
@@ -68,6 +90,24 @@ begin
   LResource := NyxStudioGlyphResource;
   LCell := Ord(AGlyph);
 
+  if AGlyph in [nsgMoveDown, nsgDelete] then
+  begin
+    { The sheet's preceding documents cross these cell boundaries. Dedicated
+      immutable images keep the semantic roles/ordinals and remove neighboring
+      pixels without target-specific cropping or changing the source atlas. }
+
+    if AGlyph = nsgMoveDown then
+    begin
+      LResource := NyxResourceRef('nyx.studio.move-down-glyph');
+    end
+    else
+    begin
+      LResource := NyxResourceRef('nyx.studio.delete-glyph');
+    end;
+    Exit(NyxButtonPresentation.Glyph(NyxResourceImage(LResource))
+      .Content(nbcGlyphCaption).Density(nbdCompact).FontWeight(nbwSemibold));
+  end;
+
   if LCell >= Ord(nsgNewProject) then
   begin
     LResource := NyxResourceRef('nyx.studio.edit-glyph-atlas');
@@ -89,6 +129,12 @@ initialization
   GResources.Define(NyxResourceRef('nyx.studio.edit-glyph-atlas'),
     NyxImageResource(NyxEmbeddedImage(nimPNG, CStudioEditGlyphAtlas)).Describe(
       'Studio editing glyphs', 'Project, selection and Inspector command glyphs.'));
+  GResources.Define(NyxResourceRef('nyx.studio.move-down-glyph'),
+    NyxImageResource(NyxEmbeddedImage(nimPNG, CStudioMoveDownGlyph)).Describe(
+      'Move down glyph', 'An isolated downward arrow with transparent padding.'));
+  GResources.Define(NyxResourceRef('nyx.studio.delete-glyph'),
+    NyxImageResource(NyxEmbeddedImage(nimPNG, CStudioDeleteGlyph)).Describe(
+      'Delete glyph', 'An isolated trash can with transparent padding.'));
 
 {$ifndef PAS2JS}
 finalization

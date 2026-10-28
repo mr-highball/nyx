@@ -26,6 +26,35 @@ Toolbar review retains a padding follow-up: the first-row document's lower edge
 can produce a thin neighboring-cell mark above Move down. A generated correction
 did not solve the alignment and was rejected; it is not a project asset. This
 sheet does not establish complete visual acceptance of Studio's action family.
+The isolated replacement below now repairs the Move down source without changing
+these original sheet bytes or role ordinals.
+
+## Isolated Move down repair
+
+`nyx-studio-move-down.png` is an original transparent PNG generated with the
+built-in imagegen tool, using the editing atlas only as a style reference. It
+replaces the Move down role's source; every other atlas selector remains exact.
+The PNG bytes are embedded unchanged in `nyx.studio.movedownglyph.inc` through
+the same Pascal packer. The selector uses the whole isolated image, so there is
+no neighboring document edge to bleed into the button. The image is1254x1254
+RGBA8; SHA256 is
+`5815E64DADDA43892818D119C34529FC0BDCF7CEAF0597BDEB0BD23CEBD2DE5A`.
+
+Selected built-in prompt:
+
+> Use case: logo-brand. Asset type: one isolated production button glyph for Nyx Studio. Use the attached bitmap only as a style reference. Create ONE clean downward-pointing arrow matching the Move down glyph at column 1 row 2 of that reference: a simple straight vertical shaft and two diagonal strokes forming a downward chevron, consistent rounded ends and corners, thick dark slate (#4B4C64) strokes, flat crisp geometry. Center this ONE arrow on a genuinely transparent square PNG. The arrow should occupy about 60 percent of the square's width and 65 percent of its height, with ample symmetric transparent padding. No other symbols, neighboring icons, border, grid, lettering, background, texture, shadow, highlight or detached horizontal marks. The existing atlas remains unchanged; this standalone icon will replace only that glyph's source in the program. It must remain clean and legible at a 20-pixel button glyph size.
+
+## Isolated Delete repair
+
+The same final browser review exposed a document-edge mark above Delete too.
+`nyx-studio-delete.png` is a second isolated built-in imagegen repair, embedded
+unchanged in `nyx.studio.deleteglyph.inc`; it uses the whole image and retains
+the existing foreground tint on destructive buttons. It is1254x1254 RGBA8;
+SHA256 is `9BE5FD5C1A169F60A84E50F93238558E701C3281161389D0A6F841F56939785A`.
+
+Selected built-in prompt:
+
+> Use case: logo-brand. Asset type: ONE isolated transparent production Delete button glyph for Nyx Studio. Use the attached atlas ONLY as a style reference. Create one centered familiar trash-can symbol matching column 3 row 2 of that reference: rounded dark slate #4B4C64 thick outline, small centered lid handle, horizontal lid, tapered bin sides and three simple violet #7357E8 interior vertical bars. Crisp flat geometry, rounded caps, strong small-size readability. The single trash-can icon occupies approximately 60 percent of the square width and 65 percent of height with generous transparent padding on every side. Genuinely transparent PNG background. No adjacent artwork, detached stray horizontal line, labels, text, grid, tile, shadow, texture, glow or backdrop. This isolated source will replace only the Delete glyph, retaining the original atlas bytes and every other icon.
 
 ## Original toolbar commands
 

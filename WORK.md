@@ -9,7 +9,99 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Project navigation and everyday action faces — 2026-10-27
+## Current work — Native project lifecycle with unfinished Pascal — 2026-10-27
+
+This batch is delivered as PROGRESS; the goal and original acceptance remain open.
+Root stays SOLO. The next useful return is the recorded native viewport/caption
+prerequisite and compact recovery access, then remaining full authoring quality;
+do not repeat the now-qualified project journey or create another planning variant.
+
+Previous goal turn: PROGRESS.99400ad is pushed and remote-verified, and the LAN
+owner is live with its exact three prior projects. This batch follows Studio
+slice's ordinary project lifecycle at actual1280/390 native client widths:
+create through Project while the current project has a pending Unicode Pascal
+draft and Undo history, save/open the new pair through ordinary controls, then
+switch back through the visible switcher with the exact original pair/caret.
+Extend the existing native workspace/service journey, keeping its semantic
+composition and prior assertions. Use one fresh isolated runtime, retain all
+failures and stop to repair actual product defects before adding other styling.
+Browser phone viewport qualification remains separate. Root stays SOLO, new
+artifacts/TEMP/TMP remain on E:, and production/user projects remain untouched.
+
+The native desktop ordinary New/Save/Open/Switch journey passes74 checks with
+37621258 matching allocations/frees and no unfreed blocks. Genuine compact input
+must use Actions > View > Pascal, rather than the hidden desktop face. Its
+retained project then reproduced a real display failure on project return:
+RestoreProjectControls called the strict ControlFor lookup for an omitted Project
+lane. A resumed exact-pair regression fails at that display status before repair.
+Restoration now defers each optional lane until mounted and does not overwrite
+its saved scroll position while absent. The repaired run clears that failure and
+executes native compact New and named Save. Its subsequent Open wait incorrectly
+required a mounted canvas while Project remained active; the rerun now navigates
+to Design explicitly. All failed packets/heaps are retained in the private
+studio-project-lifecycle-02 packet. The same unfinished pair and created project
+are reused at exact revisions; no user project or service reset is involved.
+
+Chrome previously replaced creator-authored button presentation before applying
+known roles, erasing custom glyphs. It now preserves those choices while applying
+host density and a default only for inherited font weight. The new shared check
+fails before repair and passes34 natively afterward, with1589117 matching
+allocations/frees and zero unfreed blocks; browser execution is still pending.
+A Pascal same-origin iframe host is built for a genuine390x844 browser viewport,
+since the browser override did not affect actual window dimensions. It embeds
+the unchanged production entry point and owns no design/model authority.
+
+Real native captures also reveal narrow Project captions and long switcher-name
+clipping. These are recorded in [section viewport meaning](TODO/NS-2_presentation-viewport_01.md)
+and [button caption flow](TODO/NS-2_button-caption_01.md), with separate typed
+library/adapter acceptance. Their cause/visual qualification remains open; no
+task, credit or full aesthetic acceptance is claimed by these functional checks.
+
+Final source-frame repair also defers source/canvas restoration until the returning
+project's published frame exists. Capture retains its real caret before a compact
+panel parks the editor; a parked predecessor never supplies another project's
+selection. Explicit callback/diagnostic navigation supersedes a pending return
+caret. The retained failed caret assertion is followed by a successful71-check
+compact continuation. On the matched final functional implementation, resumed
+desktop/compact lifecycle runs pass51/71 with exact protected pairs, saved files,
+caret and authoritative Undo; both heaps are completely clean. Actual compact New
+and named Save ran earlier in this same retained journey, before the corrected
+inactive-canvas waits. Resumption reuses that exact created pair, not another
+service/project or an assertion waiver. The original desktop journey passes74.
+
+Final native chrome input/source/preview journeys pass102/112 at1280/390; all
+heaps are clean. The final additional isolated Delete source is followed by the
+34-check contract consumer and112-check compact chrome rerun, again clean.
+Move down and Delete now use separately generated transparent imagegen PNGs;
+the old atlas bytes/role ordinals remain exact. Both new Pascal includes decode
+to the exact selected PNG SHA256. Prompts/provenance are beside the source assets.
+Final native Studio and complete browser/server/worker/preview builds succeed.
+Owned warnings are absent; installed pas2js Classes warnings remain separate.
+
+The built same-origin Pascal host establishes an actual390x844 child viewport.
+Final shared browser checks pass21, and ordinary Inspector navigation/collapsing
+and scrolling show all six clean glyphs with captions and red Delete. Semantic
+selection of the owned memo at exact revision9 is visibly reflected in this final
+browser review. The earlier19200 origin retained an older local review correctly,
+but Actions > Project > Agents and sync exposed no visible recovery controls.
+That unresolved observation has [its own owner](TODO/NS-4_project-recovery_01.md).
+The final19202 origin retains the same service runtime/projects, avoiding any
+reset of that browser's old draft; this is glyph evidence, not recovery acceptance.
+
+Authorized LAN replacement is complete on0.0.0.0:8088 with MCP loopback8089.
+HTTP returns200, served editor bytes match the qualified payload, and bounded
+semantic exports before/after retain all three complete project pairs byte-for-byte
+at revisions1/4/7. The output configuration is exact. The entire stopped runtime
+(691 files), private launcher/enrollment and pair hashes are preserved externally.
+The ignored launcher selects the matched delivery; qualification HTML/scripts are
+excluded from its web payload. Native redraws are software PaintTo evidence,
+separate from physical display, assistive input or native visual acceptance.
+All artifacts/scripts/process TEMP/TMP remain on E:; source assets remain in Git.
+All owned compiler/native jobs are terminal and joined. The temporary loopback
+hosts are identity-verified, stopped and joined; all owned browser tabs are closed.
+The authorized LAN owner alone remains live. Unrelated1280/390 remain untouched.
+
+## Previous checkpoint — Project navigation and everyday action faces — 2026-10-27
 
 The user identified missing/hidden New/Open/Save/Switch actions on the phone and
 unskinned everyday Inspector buttons. This is the active Studio-slice/full-

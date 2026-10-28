@@ -19,6 +19,19 @@ edit glyphs while retaining all three existing paired projects byte-for-byte.
 Native UI input, genuine compact viewport review, full all-button/aesthetic
 coverage and glyph-cell padding remain open; no original criterion or task closes.
 
+Follow-up qualification now executes the ordinary native lifecycle at both widths,
+including a pending Unicode draft and exact caret/history return. Compact project
+restoration handles absent panels and waits for its own published source frame.
+The general chrome pass preserves creator-authored glyphs. Both shared consumers
+pass34 native/21 browser checks, and actual390x844 browser review confirms the
+six captioned selection glyphs. Isolated Move down/Delete imagegen sources repair
+their neighboring-cell marks without altering original atlas bytes or ordinals.
+The matched LAN update retains all three exact pairs and output configuration.
+Remaining [viewport](NS-2_presentation-viewport_01.md), [caption](NS-2_button-caption_01.md)
+and observed [compact recovery](NS-4_project-recovery_01.md) gaps are explicit.
+Broader all-button/visual/input/performance and original acceptance remain open;
+WORK.md distinguishes the initial and resumed journeys and retained failures.
+
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
 **Current priority — everyday workspace usability — 2026-10-26:**

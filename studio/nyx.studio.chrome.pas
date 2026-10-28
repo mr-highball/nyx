@@ -94,7 +94,15 @@ var
 
     if ANode.ProjectionKind = 'button' then
     begin
-      LPresentation := NyxButtonPresentation.Density(LDensity).FontWeight(nbwRegular);
+      { A creator may already supply a glyph, source cell, ink or content mode.
+        Host density is Studio policy; those authored choices remain intact.
+        Only an inherited font weight needs the ordinary chrome default. }
+      LPresentation := NyxButtonPresentationOf(ANode).Density(LDensity);
+
+      if LPresentation.Weight = nbwInherit then
+      begin
+        LPresentation := LPresentation.FontWeight(nbwRegular);
+      end;
 
       if ANode.Parent <> nil then
       begin

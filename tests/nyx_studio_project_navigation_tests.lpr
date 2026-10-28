@@ -25,7 +25,8 @@ program nyx_studio_project_navigation_tests;
 
 uses SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.codec,
   nyx.controls, nyx.studio.projects, nyx.studio.agentview,
-  nyx.studio.projectnavigation, nyx.studio.workspaces
+  nyx.studio.projectnavigation, nyx.studio.workspaces, nyx.studio.chrome,
+  nyx.studio.glyphs, nyx.button.presentation, nyx.button.configuration, nyx.button.view
   {$ifdef PAS2JS}, JS, Web
   {$else}, nyx.studio.mcp, nyx.studio.directories, nyx.studio.outputs,
     nyx.studio.agents{$endif};
@@ -41,6 +42,58 @@ begin
     raise Exception.Create(AReason);
   end;
   Inc(GChecks);
+end;
+
+{ A component may author its own glyph/cell/content/ink/font. Studio's general
+  density profile must not erase that public contract before role-specific
+  commands are skinned. The expected value is the creator's exact copied plan. }
+procedure CreatorPresentation;
+var
+  LDocument: TNyxDocument;
+  LRoot: INyxColumn;
+  LButton: INyxButton;
+  LPlain: INyxButton;
+  LAuthored: TNyxButtonPresentation;
+  LActual: TNyxButtonPresentation;
+  LCompact: Boolean;
+  LDensity: TNyxButtonDensity;
+begin
+  for LCompact := False to True do
+  begin
+    LDocument := TNyxDocument.Create;
+    try
+      LRoot := NewNyxColumn('studio-shell');
+      LRoot.Add(NewNyxRow('studio-header'));
+      LButton := NewNyxButton('creator-action').WithText('Creator action');
+      LAuthored := NyxStudioGlyphPresentation(nsgHelp).Content(nbcGlyphOnly)
+        .GlyphSize(36).GlyphGap(9).Alignment(nbaStart).FontWeight(nbwSemibold)
+        .GlyphTone(ngtForeground);
+      NyxButtonConfigure(LButton.Configure).Presentation(LAuthored);
+      LPlain := NewNyxButton('creator-plain').WithText('Ordinary action');
+      LRoot.Add(LButton);
+      LRoot.Add(LPlain);
+      LDocument.AddPage(LRoot);
+      ApplyNyxStudioChrome(LDocument, LCompact);
+      LDensity := nbdCompact;
+
+      if LCompact then
+      begin
+        LDensity := nbdTouch;
+      end;
+      LActual := NyxButtonPresentationOf(LButton.Node);
+      Check(LActual.HasGlyph, 'Studio retains a component creator''s glyph');
+      Check(LActual.ToData.ToJSON = LAuthored.Density(LDensity).ToData.ToJSON,
+        'Studio retains authored glyph/cell/content/ink/font while selecting host density');
+      LActual := NyxButtonPresentationOf(LPlain.Node);
+      Check(not LActual.HasGlyph and (LActual.Weight = nbwRegular) and
+        (LActual.ControlDensity = LDensity), 'ordinary unstyled buttons retain Studio defaults');
+    finally
+      LButton := nil;
+      LPlain := nil;
+      LRoot := nil;
+      LDocument.Free;
+    end;
+  end;
 end;
 
 procedure Shared;
@@ -207,6 +260,7 @@ end;
 begin
   try
     Shared;
+    CreatorPresentation;
     {$ifndef PAS2JS}PrivateLifecycle;{$endif}
     WriteLn('PASS ', GChecks, ' project navigation checks');
     {$ifdef PAS2JS}

@@ -25,14 +25,19 @@ program nyx_native_workspace_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Graphics, IntfGraphics, FPWritePNG,
+  Interfaces, Classes, SysUtils, Types, Forms, Controls, StdCtrls, Graphics, IntfGraphics, FPWritePNG,
   nyx.text, nyx.data, nyx.model, nyx.codec, nyx.editing, nyx.editing.lcl,
-  nyx.render.lcl, nyx.studio.lcl, nyx.studio.workspaces, nyx.studio.agentview,
-  nyx.studio.projects, nyx.studio.agents, nyx.studio.exchange,
+  nyx.render.lcl, nyx.types, nyx.menu, nyx.menu.lcl,
+  nyx.studio.lcl, nyx.studio.workspaces, nyx.studio.agentview,
+  nyx.studio.projects, nyx.studio.projectstore, nyx.studio.agents, nyx.studio.exchange,
   nyx.studio.exchange.lcl, nyx.test.mcp.client;
 
 type
+  { Exposes ordinary widget activation to the native regression. The control
+    remains borrowed from Studio and must survive until its callback returns. }
   TControlAccess = class(TControl);
+  { Copies a native notification failure before the borrowed application/form
+    is retired, so asynchronous failures cannot become a false test pass. }
   TNativeFailureObserver = class
     Error: TNyxText;
     procedure Failed(ASender: TObject; AException: Exception);
@@ -401,6 +406,8 @@ begin
 
     if GetTickCount64 - LStarted > 60000 then
     begin
+      Save('workspace-wait-status.txt', GStudio.Status);
+      Capture('workspace-wait-failed');
       raise Exception.Create('Native workspace observation exceeded its functional wait');
     end;
   until False;
@@ -410,6 +417,7 @@ procedure Click(const AID: TNyxText);
 var
   LControl: TControl;
   LPaints: Integer;
+  LStarted: QWord;
 begin
   if GStudio.ShellView.Root.Find(AID) <> nil then
   begin
@@ -423,7 +431,69 @@ begin
   LPaints := GStudio.PaintCount;
   TControlAccess(LControl).Click;
   Check(GStudio.PaintCount = LPaints, 'native action retains its widget through callback: ' + AID);
-  Application.ProcessMessages;
+  { Host resize can require another deferred paint after this callback. A
+    single ProcessMessages pass does not promise that an optional pane exists. }
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+
+    if not GStudio.PresentationPending then
+    begin
+      Break;
+    end;
+
+    if GetTickCount64 - LStarted > 60000 then
+    begin
+      raise Exception.Create('Native presentation did not settle after ' + AID);
+    end;
+  until False;
+end;
+
+{ Compact Studio intentionally hides desktop command faces. Exercise its real
+  popup family and physical action widgets instead of invoking a hidden face. }
+procedure PascalAction;
+var
+  LDirect: TControl;
+  LParent: INyxLCLMenu;
+  LChild: INyxMenu;
+  LNative: INyxLCLMenu;
+  LControl: TControl;
+  LStarted: QWord;
+begin
+  LDirect := GStudio.ShellView.ControlFor('action-code');
+
+  if LDirect.IsVisible then
+  begin
+    Click('action-code');
+    Exit;
+  end;
+  Click('action-actions');
+  LParent := GStudio.ActionMenu;
+  Check((LParent <> nil) and LParent.IsOpen, 'compact action family is visibly open');
+  LControl := LParent.Presentation.Renderer.ControlFor('studio-menu-view');
+  Check(LControl.IsVisible, 'View is an actual visible popup action');
+  TControlAccess(LControl).Click;
+  Pump;
+  LChild := LParent.Submenu(NyxPart('view'));
+  Check((LChild <> nil) and LChild.IsOpen and Supports(LChild, INyxLCLMenu, LNative),
+    'View opens its independent native submenu');
+  LControl := LNative.Presentation.Renderer.ControlFor('studio-menu-code');
+  Check(LControl.IsVisible, 'Pascal source is an actual visible submenu action');
+  TControlAccess(LControl).Click;
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+
+    if not GStudio.PresentationPending then
+    begin
+      Break;
+    end;
+
+    if GetTickCount64 - LStarted > 60000 then
+    begin
+      raise Exception.Create('Compact Pascal navigation did not reach its presentation');
+    end;
+  until False;
 end;
 
 procedure WaitPublication(const AWorkspace: TNyxWorkspaceRef; const AValue: TNyxText;
@@ -454,6 +524,262 @@ begin
   until False;
 end;
 
+{ Use the same visible Project entry on compact hosts. Scrolling its own lane
+  to the beginning makes the four primary actions reachable without changing
+  canvas/source positions or accepting any document edit. }
+procedure ProjectPanel;
+var
+  LLeft: TControl;
+begin
+
+  if GStudio.ShellView.Root.Find('action-panel-project') <> nil then
+  begin
+    Click('action-panel-project');
+  end;
+  LLeft := GStudio.ShellView.ControlFor('studio-left');
+
+  if LLeft is TScrollBox then
+  begin
+    TScrollBox(LLeft).VertScrollBar.Position := 0;
+  end;
+  Pump;
+end;
+
+procedure WaitProject(const AWorkspace: TNyxWorkspaceRef; const ATitle: TNyxText);
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+
+    if GStudio.Agents.Conflict then
+    begin
+      raise Exception.Create(GStudio.Agents.Status);
+    end;
+
+    if GStudio.Agents.Connected and (GStudio.Agents.Workspace.ID = AWorkspace.ID) and
+      (GStudio.Session.Document.Title = ATitle) and not GStudio.SourceBusy and
+      (GStudio.CanvasView.Root <> nil) and (GStudio.CanvasView.Root.ID = 'home') then
+    begin
+      Exit;
+    end;
+
+    if GetTickCount64 - LStarted > 60000 then
+    begin
+      Save('project-wait-status.txt', GStudio.Status);
+      Capture('project-wait-failed');
+      raise Exception.Create('New project/open did not reach its ordinary native canvas');
+    end;
+  until False;
+end;
+
+procedure SwitchProject(const AWorkspace: TNyxWorkspaceRef);
+var
+  LIndex: Integer;
+  LNode: TNyxNode;
+  LJump: TNyxText;
+  LStarted: QWord;
+begin
+  ProjectPanel;
+  Click('action-project-switch');
+  LJump := '';
+  for LIndex := 0 to GStudio.Agents.Workspaces.Count - 1 do
+  begin
+    LNode := GStudio.ShellView.Root.Find('studio-project-switch-' + IntToStr(LIndex));
+
+    if (LNode <> nil) and
+      (LNode.Extensions.Value(NyxStudioWorkspaceJumpKey).AsText = AWorkspace.ID) then
+    begin
+      LJump := LNode.ID;
+    end;
+  end;
+  Check(LJump <> '', 'visible switcher identifies the exact project');
+  Capture('project-actions-switcher');
+  Click(LJump);
+  { A project retains its panel selection too. Wait for its acknowledged mount
+    before revealing Design; clicking the departing shell would target a stale
+    context, while requiring a canvas in the active Project lane is impossible. }
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+
+    if (GStudio.Agents.Workspace.ID = AWorkspace.ID) and
+      not GStudio.PresentationPending then
+    begin
+      Break;
+    end;
+
+    if GetTickCount64 - LStarted > 60000 then
+    begin
+      raise Exception.Create('Visible switcher did not mount its acknowledged project');
+    end;
+  until False;
+
+  if GStudio.ShellView.Root.Find('action-panel-design') <> nil then
+  begin
+    Click('action-panel-design');
+  end;
+end;
+
+procedure ProjectActions(const AOriginal: TNyxWorkspaceRef; const ABefore: TNyxText;
+  const ARange: TNyxTextSelection; const ACreated: TNyxWorkspaceRef);
+const
+  CProjectActions: array[0..3] of TNyxText = ('action-project-new',
+    'action-project-browse', 'action-project-save-current', 'action-project-switch');
+var
+  LName: TEdit;
+  LControl: TControl;
+  LPoint: TPoint;
+  LIndex: Integer;
+  LStarted: QWord;
+  LCreated: TNyxWorkspaceRef;
+  LPair: TNyxText;
+  LRevision: TNyxText;
+  LStore: TNyxProjectStore;
+  LCode: TMemo;
+begin
+  Check(GStudio.Agents.CanCreateWorkspace, 'current service advertises operator project creation');
+  Check(GStudio.Agents.CanCloseWorkspace, 'current service negotiates operator lifecycle independently');
+  ProjectPanel;
+  for LIndex := Low(CProjectActions) to High(CProjectActions) do
+  begin
+    LControl := GStudio.ShellView.ControlFor(CProjectActions[LIndex]);
+    Check((LControl <> nil) and LControl.IsVisible, 'primary project action is visible: ' + CProjectActions[LIndex]);
+    LPoint := GForm.ScreenToClient(LControl.ClientToScreen(Point(0, 0)));
+    Check((LPoint.X >= 0) and (LPoint.Y >= 0) and
+      (LPoint.X + LControl.Width <= GForm.ClientWidth) and
+      (LPoint.Y + LControl.Height <= GForm.ClientHeight),
+      'primary project action fits actual client bounds: ' + CProjectActions[LIndex]);
+  end;
+  Capture('project-actions-before-new');
+  LCreated := ACreated;
+
+  if LCreated.ID <> '' then
+  begin
+    { The earlier input run already created this exact disposable project. A
+      repaired continuation reuses it instead of consuming another project slot. }
+    SwitchProject(LCreated);
+  end
+  else
+  begin
+    Click('action-project-new');
+    LName := TEdit(GStudio.ShellView.InputFor('studio-new-project-name'));
+    Check(LName <> nil, 'New project exposes its ordinary name field');
+    LName.SetFocus;
+    LName.Text := 'A new native project';
+    Click('action-project-create');
+    LStarted := GetTickCount64;
+    repeat
+      Pump;
+
+      if GStudio.Agents.Conflict then
+      begin
+        raise Exception.Create(GStudio.Agents.Status);
+      end;
+
+      if (GStudio.Agents.Workspace.ID <> AOriginal.ID) and
+        (GStudio.Session.Document.Title = 'A new native project') then
+      begin
+        LCreated := GStudio.Agents.Workspace;
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 60000 then
+      begin
+        raise Exception.Create('Visible New project did not create and select an independent editor');
+      end;
+    until False;
+  end;
+  WaitProject(LCreated, 'A new native project');
+  Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) <> ABefore, 'New project has an independent pair');
+  Check((GStudio.Session.Document.Count = 1) and
+    (GStudio.Session.Document.Pages[0].Count = 0), 'New project starts with one empty page');
+  Check(not GStudio.Session.ProjectSnapshot.Pending, 'New project does not inherit unfinished Pascal');
+  Check(Snapshot(AOriginal).Field('project').AsText = ABefore, 'creation retains the exact original pair and draft');
+  ProjectPanel;
+  Click('action-project-save-current');
+  LName := TEdit(GStudio.ShellView.InputFor('project-file-name'));
+  Check(LName <> nil, 'Save project exposes storage without a guessed filename');
+  LName.SetFocus;
+  LName.Text := 'native-new-project';
+  Click('action-project-save');
+  LPair := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+  LStore := TNyxProjectStore.Create(GDirectory + 'projects');
+  try
+    Check(LStore.ReadProject('native-new-project', LRevision) = LPair,
+      'ordinary Save writes the exact new design/Pascal/draft pair');
+  finally
+    LStore.Free;
+  end;
+  ProjectPanel;
+  Click('action-project-browse');
+  Check(GStudio.ShellView.InputFor('project-file-name') <> nil, 'Open project exposes ordinary saved-file choices');
+  Click('action-project-open');
+
+  if GStudio.ShellView.Root.Find('action-panel-design') <> nil then
+  begin
+    { Opening a project retains the active Project lane. Reveal its canvas by
+      ordinary navigation before requiring an actual compact canvas mount. }
+    Click('action-panel-design');
+  end;
+  WaitProject(LCreated, 'A new native project');
+  Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LPair, 'ordinary Open retains the saved pair exactly');
+  SwitchProject(AOriginal);
+  WaitReady(AOriginal, 'Native input / 🌙 漢字');
+  Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = ABefore, 'visible Switch restores the exact pending Pascal pair');
+  LCode := TMemo(GStudio.CodeView.InputFor('studio-code'));
+  Check((LCode <> nil) and (CaptureNyxLCLSelection(LCode).Start = ARange.Start) and
+    (CaptureNyxLCLSelection(LCode).Finish = ARange.Finish), 'visible project lifecycle retains source scalar selection');
+  Check(Session(AOriginal).Field('canUndo').AsBoolean, 'visible project lifecycle preserves original authoritative Undo');
+  Capture('project-actions-returned');
+end;
+
+{ Resume a retained failed journey without accepting, clearing or replacing its
+  unfinished source. The caller has verified the exact revision and paired file;
+  ordinary navigation must preserve that same draft before the remaining actions. }
+procedure ResumeProjectActions(const AFirst: TNyxWorkspaceRef;
+  const ASecond: TNyxWorkspaceRef; const APair: TNyxText;
+  const ACreated: TNyxWorkspaceRef);
+var
+  LCode: TMemo;
+  LRange: TNyxTextSelection;
+begin
+  Application.Initialize;
+  Application.OnException := GObserver.Failed;
+  GForm := TForm.Create(nil);
+  GForm.Caption := 'Native Nyx Studio integration';
+  GForm.SetBounds(30, 30, StrToInt(ParamStr(5)), StrToInt(ParamStr(6)));
+  GForm.ClientWidth := StrToInt(ParamStr(5));
+  GForm.ClientHeight := StrToInt(ParamStr(6));
+  GForm.Show;
+  GStudio := TNyxNativeStudio.Create(GForm, GDirectory + 'projects');
+  GStudio.Run;
+  GStudio.ConnectService(ParamStr(1), AFirst);
+  WaitReady(AFirst, 'Native input / 🌙 漢字');
+  PascalAction;
+  LCode := TMemo(GStudio.CodeView.InputFor('studio-code'));
+  LCode.SetFocus;
+  LRange := NyxTextSelection(TNyxText(LCode.Text), 4, 7);
+  SelectNyxLCLText(LCode, LRange);
+  Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = APair,
+    'resumed native editor retains the exact protected pair');
+  GStudio.JumpWorkspace(ASecond);
+  WaitReady(ASecond, 'Prepared in the other project.');
+  GStudio.JumpWorkspace(AFirst);
+  WaitReady(AFirst, 'Native input / 🌙 漢字');
+  Save('returned-display-status.txt', GStudio.Status);
+  Capture('returned-display');
+  Check(Pos('Display needs attention', GStudio.Status) <> 1,
+    'returning to a compact project completes optional-panel restoration');
+  ProjectActions(AFirst, APair, LRange, ACreated);
+  GStudio.Free;
+  GStudio := nil;
+  Application.ProcessMessages;
+  Check(GObserver.Error = '', 'resumed native editor retires queued notifications');
+  WriteLn('PASS ', GChecks, ' resumed actual native project lifecycle checks');
+end;
+
 var
   LBaseline: TNyxDataValue;
   LList: TNyxDataValue;
@@ -470,6 +796,13 @@ var
   LFirstBefore: TNyxDataValue;
   LSecondBefore: TNyxDataValue;
   LPaints: Integer;
+  LWidth: Integer;
+  LHeight: Integer;
+  LReuseFile: TNyxText;
+  LReuseOwned: Boolean;
+  LReuseRoot: Boolean;
+  LResumePair: TNyxText;
+  LCreated: TNyxWorkspaceRef;
 begin
   GClient := nil;
   GStudio := nil;
@@ -477,18 +810,42 @@ begin
   GObserver := TNativeFailureObserver.Create;
   try
 
-    if not (ParamCount in [3, 4, 5]) or
+    if not (ParamCount in [3, 4, 5, 6]) or
       (Pos('http://127.0.0.1:', ParamStr(1)) <> 1) or
-      (Pos('build', ParamStr(2)) = 0) then
+      not FileExists(ParamStr(2)) then
     begin
       raise Exception.Create('Supply owned qualification service, private fixture MCP config and output directory');
     end;
     GDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(3)));
     ForceDirectories(GDirectory);
+    LReuseFile := '';
+
+    if ParamCount = 5 then
+    begin
+      LReuseFile := ParamStr(5);
+    end
+    else if ParamCount = 6 then
+    begin
+      { Explicit owned context input permits a repaired test to reuse its
+        retained projects without resetting the service or consuming variants. }
+      LReuseFile := GetEnvironmentVariable('NYX_TEST_WORKSPACE_CONTEXTS');
+    end;
+    LReuseOwned := LReuseFile <> '';
+    LWidth := 1280;
+    LHeight := 900;
+
+    if ParamCount = 6 then
+    begin
+      Check((ParamStr(4) = 'project-actions') or (ParamStr(4) = 'project-actions-resume'),
+        'explicit current-service project lifecycle mode');
+      LWidth := StrToInt(ParamStr(5));
+      LHeight := StrToInt(ParamStr(6));
+    end;
     CreateGUID(LGuid);
     GIdentity := Copy(GUIDToString(LGuid), 2, 36);
     GRoot := 'native-review-' + Copy(GIdentity, 1, 8);
     GReplyID := GRoot + '-reply';
+    LReuseRoot := False;
     GClient := TNyxMCPTestClient.Create(ParamStr(2), 'Scooty native Studio integration');
     LBaseline := Tool('nyx_session', NyxObject([]));
     LList := Tool('nyx_workspaces', NyxObject([NyxField('mode', NyxData('list'))]));
@@ -504,11 +861,15 @@ begin
     else
     begin
 
-      if ParamCount = 5 then
+      if LReuseOwned then
       begin
-        Check((ParamStr(4) = 'reuse-owned') or (ParamStr(4) = 'cleanup-owned'),
-          'existing context reuse or recovery is explicit');
-        LReferences := TNyxDataValue.ParseJSON(ReadBytes(ParamStr(5)));
+
+        if ParamCount = 5 then
+        begin
+          Check((ParamStr(4) = 'reuse-owned') or (ParamStr(4) = 'cleanup-owned'),
+            'existing context reuse or recovery is explicit');
+        end;
+        LReferences := TNyxDataValue.ParseJSON(ReadBytes(LReuseFile));
         LFirst := NyxWorkspace(LReferences.Field('first').Field('workspace').AsText);
         LSecond := NyxWorkspace(LReferences.Field('second').Field('workspace').AsText);
         Check((LFirst.ID <> '') and (LSecond.ID <> '') and (LFirst.ID <> LSecond.ID),
@@ -517,11 +878,45 @@ begin
           LReferences.Field('first').Field('revision').AsInteger, 'first existing context revision is exact');
         Check(Session(LSecond).Field('revision').AsInteger =
           LReferences.Field('second').Field('revision').AsInteger, 'second existing context revision is exact');
-        Check(not Session(LFirst).Field('pendingDraft').AsBoolean and
-          not Session(LSecond).Field('pendingDraft').AsBoolean,
-          'existing test contexts have no protected draft');
+        LResumePair := '';
 
-        if ParamStr(4) = 'cleanup-owned' then
+        if (ParamCount = 6) and (ParamStr(4) = 'project-actions-resume') then
+        begin
+          LResumePair := ReadBytes(LReferences.Field('pendingPair').AsText, 512 * 1024);
+          Check(Session(LFirst).Field('pendingDraft').AsBoolean and
+            not Session(LSecond).Field('pendingDraft').AsBoolean and
+            (Snapshot(LFirst).Field('project').AsText = LResumePair),
+            'resumption requires the exact retained protected pair');
+          LCreated := NyxPrimaryWorkspace;
+
+          if NyxAgentHas(LReferences, 'createdWorkspace') then
+          begin
+            LCreated := NyxWorkspace(LReferences.Field('createdWorkspace').AsText);
+            Check((LCreated.ID <> '') and
+              (Snapshot(LCreated).Field('project').AsText =
+                ReadBytes(LReferences.Field('createdPair').AsText, 512 * 1024)),
+              'continued lifecycle reuses only its exact earlier created pair');
+          end;
+        end
+        else
+        begin
+          Check(not Session(LFirst).Field('pendingDraft').AsBoolean and
+            not Session(LSecond).Field('pendingDraft').AsBoolean,
+            'existing test contexts have no protected draft');
+        end;
+
+        if (ParamCount = 6) and NyxAgentHas(LReferences, 'root') then
+        begin
+          { A failed current-service journey can retain its exact authored page.
+            Reset only that fixture's values; do not append another equivalent
+            review page on each repaired-input rerun. }
+          GRoot := LReferences.Field('root').AsText;
+          Check(Pos('native-review-', GRoot) = 1, 'reused current-service root belongs to this fixture');
+          GReplyID := GRoot + '-reply';
+          LReuseRoot := True;
+        end;
+
+        if (ParamCount = 5) and (ParamStr(4) = 'cleanup-owned') then
         begin
           { A failed journey may leave its own review page. Recover only that
             explicitly recorded root at exact revisions, through a fresh actor's
@@ -552,7 +947,11 @@ begin
         LSecond := CreateProject('Native component workshop', LBaseline.Field('revision').AsInteger);
       end;
 
-      if (ParamCount = 5) and (ParamStr(4) = 'cleanup-owned') then
+      if (ParamCount = 6) and (ParamStr(4) = 'project-actions-resume') then
+      begin
+        ResumeProjectActions(LFirst, LSecond, LResumePair, LCreated);
+      end
+      else if (ParamCount = 5) and (ParamStr(4) = 'cleanup-owned') then
       begin
         Cleanup(LFirst, LFirstBefore);
         Cleanup(LSecond, LSecondBefore);
@@ -562,15 +961,25 @@ begin
       end
       else
       begin
-        Compose(LFirst, 'Input workshop');
-        Compose(LSecond, 'Component workshop');
+        if LReuseRoot then
+        begin
+          ChangeValue(LFirst, 'Ready for your ideas.');
+          ChangeValue(LSecond, 'Ready for your ideas.');
+        end
+        else
+        begin
+          Compose(LFirst, 'Input workshop');
+          Compose(LSecond, 'Component workshop');
+        end;
 
         Application.Initialize;
         Application.OnException := GObserver.Failed;
         QualifyTransport(LFirst);
         GForm := TForm.Create(nil);
         GForm.Caption := 'Native Nyx Studio integration';
-        GForm.SetBounds(30, 30, 1280, 900);
+        GForm.SetBounds(30, 30, LWidth, LHeight);
+        GForm.ClientWidth := LWidth;
+        GForm.ClientHeight := LHeight;
         GForm.Show;
         GStudio := TNyxNativeStudio.Create(GForm, GDirectory + 'projects');
         GStudio.Run;
@@ -601,9 +1010,18 @@ begin
         Check(Session(LFirst).Field('canUndo').AsBoolean,
           'native history commands use the authoritative project history');
 
-        Click('action-code');
+        PascalAction;
+        Save('pascal-action-state.json', NyxObject([
+          NyxField('status', NyxData(GStudio.Status)),
+          NyxField('presentationPending', NyxData(GStudio.PresentationPending)),
+          NyxField('sourceMounted', NyxData(GStudio.CodeView.Root <> nil))]).ToJSON);
+        Capture('pascal-action');
         LCode := TMemo(GStudio.CodeView.InputFor('studio-code'));
-        LDraft := GStudio.Session.Source + #10 + TNyxText('{ Private draft / 🌙 漢字 }') + #10;
+        { Native input inserts the host line ending while the editing adapter
+          preserves the accepted file's existing LF prefix. Qualify those actual
+          inserted bytes, rather than requiring an LF the widget did not enter. }
+        LDraft := GStudio.Session.Source + TNyxText(LineEnding) +
+          TNyxText('{ Private draft / 🌙 漢字 }') + TNyxText(LineEnding);
         LCode.Text := LDraft;
         LCode.SetFocus;
         LRange := NyxTextSelection(TNyxText(LCode.Text), 4, 7);
@@ -652,14 +1070,21 @@ begin
         Save('primary-after.json', Tool('nyx_session', NyxObject([])).ToJSON);
         Save('first-after.json', Session(LFirst).ToJSON);
         Save('second-after.json', Session(LSecond).ToJSON);
-        Check(not GStudio.Agents.CanCloseWorkspace,
-          'older staged service exposes unavailable closure without claiming it ran');
+        if ParamCount = 6 then
+        begin
+          ProjectActions(LFirst, LBefore, LRange, NyxPrimaryWorkspace);
+        end
+        else
+        begin
+          Check(not GStudio.Agents.CanCloseWorkspace,
+            'older staged service exposes unavailable closure without claiming it ran');
+        end;
 
         if ParamCount = 5 then
         begin
           Click('action-reset-source');
           WaitPublication(LFirst, 'Native input / 🌙 漢字', False);
-          Click('action-code');
+          PascalAction;
           LReply := TMemo(GStudio.CanvasView.InputFor(GReplyID));
           LReply.Text := 'Your next idea starts here.';
           WaitPublication(LFirst, 'Your next idea starts here.', False);
@@ -689,7 +1114,7 @@ begin
   except
     on LException: Exception do
     begin
-      WriteLn(StdErr, 'FAIL ', LException.Message);
+      WriteLn(StdErr, 'FAIL ', LException.Message, ' at check ', GChecks);
       ExitCode := 1;
     end;
   end;

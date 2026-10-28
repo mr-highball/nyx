@@ -12,6 +12,15 @@ WORK.md owns remaining phone/native-input, glyph-padding and broader-quality
 checks. This supersedes further canvas preparation experiments; original ranked
 outcomes and prerequisites below remain open without additional completion credit.
 
+The follow-up executes native project lifecycle at both widths, repairs absent
+compact panel/caret restoration and creator-glyph erasure, and verifies the real
+390x844 browser faces. It isolates the two bleeding atlas glyphs and delivers the
+matched LAN payload with exact project/configuration preservation. Remaining
+native [viewport context](NS-2_presentation-viewport_01.md), [caption flow](NS-2_button-caption_01.md)
+and observed [compact recovery access](NS-4_project-recovery_01.md) have granular
+owners. Full all-button, physical/assistive, performance and original authoring
+criteria stay open. WORK.md retains qualification details and the return path.
+
 The user requested a return to high-value, user-facing backlog work. This order
 supersedes historical next-task notes below. Root remains in single-agent mode.
 Use the existing task identities and acceptance criteria; this reprioritization
@@ -2194,6 +2203,8 @@ blockers rather than filename order.
 | NS-2 | [Browser renderer slice](NS-2_browser-renderer_01.md) | Incremental DOM projection for M1 | Pending assessment |
 | NS-2 | [LCL renderer slice](NS-2_lcl-renderer_01.md) | Incremental native projection for M1 | Pending assessment |
 | NS-2 | [Efficient native geometry](NS-2_lcl-renderer_02.md) | Bounded native window publication and real resize qualification | Prerequisite; no separate credit |
+| NS-2 | [Section viewport meaning](NS-2_presentation-viewport_01.md) | Consistent viewport/container rules in independent hosts; native Project allocation gap | Prerequisite; no separate credit |
+| NS-2 | [Constrained button captions](NS-2_button-caption_01.md) | Typed caption flow with coherent glyph measurement and both adapter faces | Prerequisite; no separate credit |
 | NS-2 | [Staged view sections](DONE/NS-2_section-publication_01.md) | Accepted public grouped section ownership prerequisite; full Studio integration remains open | Pending assessment |
 | NS-2 | [Parity and accessibility](NS-2_parity-accessibility_01.md) | Shared semantics, keyboard and accessibility | Pending assessment |
 | NS-3 | [Production component catalog](NS-3_components_01.md) | Exhaustive control and layout families | Pending assessment |

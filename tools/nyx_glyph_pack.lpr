@@ -66,7 +66,7 @@ begin
   LOutput := TStringList.Create;
   try
     LOutput.LineBreak := #10;
-    LOutput.Add('{ Original PNG bytes; proportional 4 x 4 cells.');
+    LOutput.Add('{ Original PNG bytes; layout belongs to the typed glyph selector.');
     LOutput.Add('  Provenance, dimensions and SHA256: README.md beside this include. }');
     LOutput.Add('const');
     LOutput.Add('  ' + ParamStr(3) + ' =');
