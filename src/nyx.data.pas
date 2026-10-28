@@ -69,9 +69,10 @@ type
     unrelated siblings. No mutable JSON tree or descendant payload is retained.
     Text reads reuse the exact admitted scalar. Immediate text members retain
     only their decoded scalar, not nested payloads or JSON trees. Scalar child
-    extraction reuses admission when its formatter policy is unchanged; nested
-    containers and changed policies retain ordinary re-admission. A child owns
-    its snapshot and never retains a parent or its index. }
+    extraction reuses admission when its formatter policy is unchanged. Nested
+    containers rebuild only their own immediate index from that admitted text;
+    changed policies retain ordinary re-admission. A child owns its snapshot
+    and never retains a parent or its index. }
   TNyxDataValue = record
   private
     FKind: TNyxDataKind;
@@ -79,6 +80,8 @@ type
     FText: TNyxText;
     FReadBudget: Boolean;
     FStrictEscaping: Boolean;
+    FCompressedJSON: Boolean;
+    FQuotedMembers: Boolean;
     FMemberNames: array of TNyxText;
     FMemberStarts: array of Integer;
     FMemberLengths: array of Integer;
@@ -242,34 +245,34 @@ begin
   Result := EncodeNyxJSONString(AText, TJSONString.StrictEscaping);
 end;
 
-class function TNyxDataValue.ParseJSON(const ASource: TNyxText): TNyxDataValue;
-const
-  CKinds: array[TJSONType] of TNyxDataKind =
-    (ndNull, ndNumber, ndText, ndBoolean, ndNull, ndArray, ndObject);
+{ Index one owned, already admitted canonical container. AData is the borrowed
+  decoder tree during first admission, or nil when extracting a child from an
+  immutable parent under exactly the same formatter policy. No tree or parent
+  survives this call. Only immediate names/text and value spans are retained;
+  nested payloads are scanned for boundaries, never decoded into another tree.
+  This is private post-admission work, never an arbitrary JSON input boundary. }
+procedure IndexNyxCanonicalContainer(var AValue: TNyxDataValue; AData: TJSONData);
 var
-  LData: TJSONData;
-  LType: TJSONType;
   LPosition: Integer;
   LMember: Integer;
-  {$ifdef NYX_SOURCE_PROFILE}
-  LProfileStarted: Double;
-  {$endif}
-  {$ifdef PAS2JS}
-  LIndex: Integer;
-  LScalar: Integer;
-  LBytes: Integer;
-  {$endif}
+  LCapacity: Integer;
+  LClosing: Char;
+  LName: TNyxText;
 
-  { Only trusted formatter output reaches this cursor. Admission still belongs
-    to DecodeNyxJSON, including Unicode, exact numbers, duplicates and budgets.
-    The cursor locates immediate spans without reparsing/formatting each child;
-    it accepts formatter whitespace on either target and checks every boundary. }
   procedure SkipSpace;
   begin
-    while (LPosition <= Length(Result.FJSON)) and
-      (Result.FJSON[LPosition] in [#9, #10, #13, ' ']) do
+    while LPosition <= Length(AValue.FJSON) do
     begin
-      Inc(LPosition);
+      case AValue.FJSON[LPosition] of
+        #9, #10, #13, ' ':
+          begin
+            Inc(LPosition);
+          end;
+        else
+          begin
+            Break;
+          end;
+      end;
     end;
   end;
 
@@ -277,7 +280,7 @@ var
   begin
     SkipSpace;
 
-    if (LPosition > Length(Result.FJSON)) or (Result.FJSON[LPosition] <> AChar) then
+    if (LPosition > Length(AValue.FJSON)) or (AValue.FJSON[LPosition] <> AChar) then
     begin
       raise ENyxJSON.Create('Snapshot formatter emitted an unexpected boundary');
     end;
@@ -287,19 +290,58 @@ var
   procedure SkipString;
   begin
     Take('"');
-    while LPosition <= Length(Result.FJSON) do
+    while LPosition <= Length(AValue.FJSON) do
     begin
 
-      if Result.FJSON[LPosition] = '"' then
+      if AValue.FJSON[LPosition] = '"' then
       begin
         Inc(LPosition);
         Exit;
       end;
 
-      if Result.FJSON[LPosition] = '\' then
+      if AValue.FJSON[LPosition] = '\' then
       begin
-        { Escaped quotes/brackets are string data; strict admission has already
-          qualified escape/surrogate syntax, including the following character. }
+        Inc(LPosition);
+      end;
+      Inc(LPosition);
+    end;
+    raise ENyxJSON.Create('Snapshot formatter omitted a string terminator');
+  end;
+
+  function ReadText: TNyxText;
+  var
+    LStart: Integer;
+    LEscaped: Boolean;
+    LText: TJSONData;
+  begin
+    SkipSpace;
+    LStart := LPosition;
+    LEscaped := False;
+    Take('"');
+    while LPosition <= Length(AValue.FJSON) do
+    begin
+
+      if AValue.FJSON[LPosition] = '"' then
+      begin
+        Inc(LPosition);
+
+        if not LEscaped then
+        begin
+          Exit(System.Copy(AValue.FJSON, LStart + 1, LPosition - LStart - 2));
+        end;
+        { Escapes retain the one existing Unicode/NUL decoder. This decodes
+          only the selected immediate scalar, never its containing subtree. }
+        LText := DecodeNyxJSON(System.Copy(AValue.FJSON, LStart, LPosition - LStart));
+        try
+          Exit(LText.AsString);
+        finally
+          LText.Free;
+        end;
+      end;
+
+      if AValue.FJSON[LPosition] = '\' then
+      begin
+        LEscaped := True;
         Inc(LPosition);
       end;
       Inc(LPosition);
@@ -313,53 +355,178 @@ var
   begin
     SkipSpace;
 
-    if LPosition > Length(Result.FJSON) then
+    if LPosition > Length(AValue.FJSON) then
     begin
       raise ENyxJSON.Create('Snapshot formatter omitted a value');
     end;
 
-    if Result.FJSON[LPosition] = '"' then
+    if AValue.FJSON[LPosition] = '"' then
     begin
       SkipString;
     end
-    else if Result.FJSON[LPosition] in ['{', '['] then
+    else if (AValue.FJSON[LPosition] = '{') or (AValue.FJSON[LPosition] = '[') then
     begin
       LDepth := 0;
       repeat
 
-        if LPosition > Length(Result.FJSON) then
+        if LPosition > Length(AValue.FJSON) then
         begin
           raise ENyxJSON.Create('Snapshot formatter omitted a container terminator');
         end;
 
-        if Result.FJSON[LPosition] = '"' then
-        begin
-          SkipString;
-        end
-        else
-        begin
-
-          if Result.FJSON[LPosition] in ['{', '['] then
-          begin
-            Inc(LDepth);
-          end
-          else if Result.FJSON[LPosition] in ['}', ']'] then
-          begin
-            Dec(LDepth);
-          end;
-          Inc(LPosition);
+        { Case avoids constructing transient Pascal sets per source character
+          in pas2js. Strings consume their own escaped punctuation atomically. }
+        case AValue.FJSON[LPosition] of
+          '"':
+            begin
+              SkipString;
+            end;
+          '{', '[':
+            begin
+              Inc(LDepth);
+              Inc(LPosition);
+            end;
+          '}', ']':
+            begin
+              Dec(LDepth);
+              Inc(LPosition);
+            end;
+          else
+            begin
+              Inc(LPosition);
+            end;
         end;
       until LDepth = 0;
     end
     else
     begin
-      while (LPosition <= Length(Result.FJSON)) and
-        not (Result.FJSON[LPosition] in [#9, #10, #13, ' ', ',', '}', ']']) do
+      while LPosition <= Length(AValue.FJSON) do
       begin
-        Inc(LPosition);
+        case AValue.FJSON[LPosition] of
+          #9, #10, #13, ' ', ',', '}', ']':
+            begin
+              Exit;
+            end;
+          else
+            begin
+              Inc(LPosition);
+            end;
+        end;
       end;
     end;
   end;
+
+  procedure Reserve(ACapacity: Integer);
+  begin
+    SetLength(AValue.FMemberStarts, ACapacity);
+    SetLength(AValue.FMemberLengths, ACapacity);
+    SetLength(AValue.FMemberTexts, ACapacity);
+
+    if AValue.FKind = ndObject then
+    begin
+      SetLength(AValue.FMemberNames, ACapacity);
+    end;
+  end;
+begin
+  LPosition := 1;
+  LMember := 0;
+  LCapacity := 0;
+
+  if AData <> nil then
+  begin
+    LCapacity := AData.Count;
+    Reserve(LCapacity);
+  end;
+
+  if AValue.FKind = ndObject then
+  begin
+    Take('{');
+    LClosing := '}';
+  end
+  else
+  begin
+    Take('[');
+    LClosing := ']';
+  end;
+  SkipSpace;
+  while (LPosition <= Length(AValue.FJSON)) and (AValue.FJSON[LPosition] <> LClosing) do
+  begin
+
+    if LMember > 0 then
+    begin
+      Take(',');
+    end;
+
+    if LMember = LCapacity then
+    begin
+      { Unknown child counts grow geometrically and are trimmed before publish.
+        The admitted four-MiB text bounds the count and this arithmetic. }
+      LCapacity := LCapacity * 2 + 8;
+      Reserve(LCapacity);
+    end;
+
+    if AValue.FKind = ndObject then
+    begin
+
+      if AData <> nil then
+      begin
+        LName := TJSONObject(AData).Names[LMember];
+        SkipString;
+      end
+      else
+      begin
+        LName := ReadText;
+      end;
+      AValue.FMemberNames[LMember] := LName;
+      Take(':');
+    end;
+    SkipSpace;
+    AValue.FMemberStarts[LMember] := LPosition;
+
+    if (AData = nil) and (LPosition <= Length(AValue.FJSON)) and
+      (AValue.FJSON[LPosition] = '"') then
+    begin
+      AValue.FMemberTexts[LMember] := ReadText;
+    end
+    else
+    begin
+      SkipValue;
+
+      if (AData <> nil) and (AData.Items[LMember].JSONType = jtString) then
+      begin
+        AValue.FMemberTexts[LMember] := AData.Items[LMember].AsString;
+      end;
+    end;
+    AValue.FMemberLengths[LMember] := LPosition - AValue.FMemberStarts[LMember];
+    Inc(LMember);
+    SkipSpace;
+  end;
+  Take(LClosing);
+  SkipSpace;
+
+  if LPosition <= Length(AValue.FJSON) then
+  begin
+    raise ENyxJSON.Create('Snapshot formatter emitted trailing data');
+  end;
+  Reserve(LMember);
+end;
+
+class function TNyxDataValue.ParseJSON(const ASource: TNyxText): TNyxDataValue;
+const
+  CKinds: array[TJSONType] of TNyxDataKind =
+    (ndNull, ndNumber, ndText, ndBoolean, ndNull, ndArray, ndObject);
+var
+  LData: TJSONData;
+  LType: TJSONType;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LProfileStarted: Double;
+  {$endif}
+  {$ifdef PAS2JS}
+  LIndex: Integer;
+  LScalar: Integer;
+  LBytes: Integer;
+  {$endif}
+
 begin
   {$ifdef NYX_SOURCE_PROFILE}
   LProfileStarted := DataProfileClock;
@@ -372,6 +539,8 @@ begin
     LType := LData.JSONType;
     Result.FKind := CKinds[LType];
     Result.FStrictEscaping := TJSONString.StrictEscaping;
+    Result.FCompressedJSON := TJSONData.CompressedJSON;
+    Result.FQuotedMembers := not TJSONObject.UnquotedMemberNames;
     Result.FJSON := LData.AsJSON;
     Result.FText := '';
     Result.FMemberNames := nil;
@@ -428,63 +597,7 @@ begin
 
     if Result.FReadBudget and (Result.FKind in [ndObject, ndArray]) then
     begin
-      SetLength(Result.FMemberStarts, LData.Count);
-      SetLength(Result.FMemberLengths, LData.Count);
-      SetLength(Result.FMemberTexts, LData.Count);
-
-      if Result.FKind = ndObject then
-      begin
-        SetLength(Result.FMemberNames, LData.Count);
-      end;
-      LPosition := 1;
-
-      if Result.FKind = ndObject then
-      begin
-        Take('{');
-      end
-      else
-      begin
-        Take('[');
-      end;
-      for LMember := 0 to LData.Count - 1 do
-      begin
-
-        if LMember > 0 then
-        begin
-          Take(',');
-        end;
-
-        if Result.FKind = ndObject then
-        begin
-          Result.FMemberNames[LMember] := TJSONObject(LData).Names[LMember];
-          SkipString;
-          Take(':');
-        end;
-        SkipSpace;
-        Result.FMemberStarts[LMember] := LPosition;
-        SkipValue;
-        Result.FMemberLengths[LMember] := LPosition - Result.FMemberStarts[LMember];
-
-        if LData.Items[LMember].JSONType = jtString then
-        begin
-          Result.FMemberTexts[LMember] := LData.Items[LMember].AsString;
-        end;
-      end;
-
-      if Result.FKind = ndObject then
-      begin
-        Take('}');
-      end
-      else
-      begin
-        Take(']');
-      end;
-      SkipSpace;
-
-      if LPosition <= Length(Result.FJSON) then
-      begin
-        raise ENyxJSON.Create('Snapshot formatter emitted trailing data');
-      end;
+      IndexNyxCanonicalContainer(Result, LData);
     end;
   finally
     LData.Free;
@@ -539,16 +652,21 @@ begin
   end;
   LJSON := System.Copy(FJSON, FMemberStarts[AIndex], FMemberLengths[AIndex]);
   { The complete parent already admitted syntax, finite exact numbers, Unicode
-    and budgets. A scalar span cannot exceed that parent's formatted budget.
-    Reuse only this scalar's owned text; retaining a parent/index or eagerly
-    caching descendant snapshots would multiply memory for deep documents.
+    and budgets. A child span cannot exceed that parent's formatted budget or
+    nesting/member limits. Its new immediate index owns only the selected text;
+    retaining a parent/index or eagerly caching descendant snapshots would
+    multiply memory for deep documents.
 
     The formatter preference is mutable. Its change must still re-admit and
     reformat the selected span, including the established case where formatting
-    expands a child beyond its read budget. Containers keep full admission. }
+    expands a child beyond its read budget. Container whitespace also depends
+    on CompressedJSON. Unquoted-member output is not strict JSON, so neither
+    an old nor a current unquoted policy grants trusted container extraction. }
 
   if (FStrictEscaping = TJSONString.StrictEscaping) and
-    not (LJSON[1] in ['{', '[']) then
+    (not (LJSON[1] in ['{', '[']) or
+    ((FCompressedJSON = TJSONData.CompressedJSON) and FQuotedMembers and
+      not TJSONObject.UnquotedMemberNames)) then
   begin
     { Build before publishing: a compiler may reuse receiver storage when the
       caller replaces a container with its own child. All parent reads finish
@@ -557,6 +675,8 @@ begin
     LValue.FJSON := LJSON;
     LValue.FReadBudget := True;
     LValue.FStrictEscaping := FStrictEscaping;
+    LValue.FCompressedJSON := FCompressedJSON;
+    LValue.FQuotedMembers := FQuotedMembers;
     case LJSON[1] of
       '"':
         begin
@@ -571,10 +691,23 @@ begin
         begin
           LValue.FKind := ndBoolean;
         end;
+      '{':
+        begin
+          LValue.FKind := ndObject;
+        end;
+      '[':
+        begin
+          LValue.FKind := ndArray;
+        end;
       else
         begin
           LValue.FKind := ndNumber;
         end;
+    end;
+
+    if LValue.FKind in [ndObject, ndArray] then
+    begin
+      IndexNyxCanonicalContainer(LValue, nil);
     end;
     Result := LValue;
   end
@@ -589,8 +722,8 @@ var
   LValue: TNyxDataValue;
 begin
   Validate;
-  { ParseJSON is the only index writer and resets all private arrays before
-    allocation/fill. Their elements are private immutable text/integer values,
+  { Admission/extraction builds each index in a fresh candidate before
+    publication. Its elements are private immutable text/integer values,
     so a snapshot needs retained storage, not three fresh arrays on every read.
     There is still no shared mutable tree, parent snapshot or owner reference.
     Build the whole local first: a caller may replace the receiver with its own
@@ -600,6 +733,8 @@ begin
   LValue.FText := FText;
   LValue.FReadBudget := FReadBudget;
   LValue.FStrictEscaping := FStrictEscaping;
+  LValue.FCompressedJSON := FCompressedJSON;
+  LValue.FQuotedMembers := FQuotedMembers;
   LValue.FMemberNames := FMemberNames;
   LValue.FMemberStarts := FMemberStarts;
   LValue.FMemberLengths := FMemberLengths;

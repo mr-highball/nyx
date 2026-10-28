@@ -2,6 +2,22 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Admitted-container continuation,2026-10-28: immutable child reads now copy and
+index the selected canonical span without rebuilding its descendant JSON tree.
+Changed escaping/compression/unquoted-member policies retain full admission.
+Native188/browser195 value checks, native140 design/source and queue10 pass with
+clean native heaps; both editor targets and the backend compile. The original
+full Uniform Apply now returns from its worker in18200.5ms and delivers locally
+in15949.0ms, with normal acknowledgement on the updated isolated backend. Its
+exact pair is independently exported at18; ordinary Undo restores the original
+pair at19. Ordinary Redo20 and real server Save preserve that exact Uniform pair;
+Undo21 followed by ordinary Open restores it at22 with an independent full export.
+These are single observations, not near-real-time/full acceptance. The original
+desktop consumer now executes successfully; return to the canvas owner's same
+compact ordinary editor journey before more performance variants. Remaining
+shell/pending refresh and full refresh on read-only agent notifications remain
+concrete costs here. Physical backup download remains unverified. WORK owns setup.
+
 Critical-path continuation,2026-10-28: opt-in timing now separates worker decode,
 session construction, editing and result capture without changing its strict
 result protocol. A reverse scaling diagnostic on the full saved Workshop reaches
@@ -43,7 +59,7 @@ attributing savings; do not substitute a smaller recovery/field fixture or raise
 timeouts. Supporting exact pairs and observations remain in the
 project-recovery-review-01 packet and [WORK](../WORK.md).
 
-Current concrete consumer: ordinary browser Studio's canvas scaling Apply on
+Retained failing consumer: ordinary browser Studio's canvas scaling Apply on
 the saved JSON Workshop reaches its existing30000ms source-worker deadline.
 The accepted pair/draft remain intact. The matching independent full-import
 producer completes in23.557s, so this is not a missing worker or malformed

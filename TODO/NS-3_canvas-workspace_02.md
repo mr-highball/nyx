@@ -140,7 +140,7 @@ retains exact formatted Unicode/large-integer output through phone/desktop resiz
 and actual Format/Zoom/Fit clicks. Both native formatted captures are diagnostic
 redraws. Ordinary browser Studio and observing delivery remain next.
 
-Ordinary browser Studio now opens the selected canvas Inspector after repairing
+Retained failure: ordinary browser Studio opens the selected canvas Inspector after repairing
 the browser managed-control construction pin. The new shared constructor/form
 regression passes13 and the existing managed-control suite194 on each target,
 with complete clean native heaps. Choosing Uniform alone does not mutate the
@@ -152,6 +152,21 @@ acceptance is claimed. The preparation cost is also tracked by the existing
 [measured-performance owner](NS-3_extension-performance_01.md); preserve strict
 admission and the deadline while repairing its concrete critical path. WORK.md
 records the retained timing evidence and exact next journey.
+
+The full original desktop Studio journey now passes with the measured-performance
+container-read correction. Ordinary Uniform Apply completes within the unchanged
+worker deadline, acknowledges normally, and preserves the exact accepted pair at18.
+Ordinary Undo19 restores the complete original Reflow pair, Redo20 returns Uniform,
+and real server Save writes the identical project plus adjacent design/Pascal.
+After another ordinary Undo21, Open saved project restores that exact Uniform
+pair at22, independently exported through MCP. Its worker/local-delivery samples
+are18.2s/15.9s: improved, still not near-real-time qualification. Native188/browser195
+data checks and native140 source/design plus queue10 pass with clean native heaps;
+both editor targets/backend rebuild. The automatic pre-open browser backup has no
+observed download receipt and is not a physical save proof. Original compact
+ordinary Studio, full traced native, visual/assistive and remaining interaction
+criteria stay open. Next use this same public saved Workshop for compact editor
+qualification, then matched delivery; stop standalone container/source variants.
 
 Other internal native scroll/drawing metrics, nested canvases, full drag/capture/
 keyboard/IME/assistive journeys and complete pre-publication admission for changed

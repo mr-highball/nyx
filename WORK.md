@@ -9,7 +9,97 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Source preparation critical path — 2026-10-28
+## Current work — Admitted container reads and ordinary Studio return — 2026-10-28
+
+Previous goal turn: PROGRESS.0b100f5 is pushed/remote-verified; root remains SOLO.
+Continue [measured performance](TODO/NS-3_extension-performance_01.md) and return
+to the existing [canvas scaling journey](TODO/NS-3_canvas-workspace_02.md).
+The original full saved Workshop,30000ms worker and15000ms transport bounds stay
+exact. After two implementation checkpoints without original criterion closure,
+this bounded deliverable targets the measured large-container work and completes
+the same ordinary Apply/history/Save/Open journey before another investigation.
+No smaller fixture, extra scalar variant or raised wait substitutes for it.
+
+Private IndexNyxCanonicalContainer now serves both initial full admission and
+child extraction. The latter copies an already admitted, immutable canonical
+span and builds only its immediate index; it neither rebuilds the descendant
+JSON tree nor retains a parent/descendant cache. Escaped immediate text keeps
+the existing Unicode/NUL decoder. Current/source escaping, compression and
+quoted-member policies must match for trusted container extraction; any changed
+policy or unquoted output retains ordinary strict re-admission and prior refusal.
+Arbitrary JSON still enters through the complete strict decoder. Independent
+reader comparisons cover all formatting combinations, exact keys/decimals,
+escaped punctuation, empty/nested containers and parent-replacement ownership.
+The cursor uses case dispatch to avoid per-character temporary browser sets.
+
+Native188/browser195 strict JSON/value checks pass, as do native140 design/source
+and native10 real queue/presentation checks, with complete clean native heaps.
+Browser Studio compiles profiled/unflagged; the worker is unflagged. Native LCL
+Studio/backend also rebuild. Preserve the first misplaced test-declaration build
+failure and the incremental FPC internal error2016090204. Moving the fixture into
+implementation and rebuilding unchanged sources in fresh private output folders
+resolve those qualification setup failures; dependencies/toolchains are unchanged.
+All completed compiler/test readers are joined. New private output and TEMP/TMP
+remain on E:; external AGENTS/WORK edits and unrelated1280/390 remain untouched.
+
+QA previously shared the approved older backend executable with production LAN,
+which prevented independent backend replacement. Ignored configuration now has a
+separate reusable STUDIO_QA_SERVER path. Exact old QA owner56104 was stopped and
+its foreground handle joined; twelve runtime/enrollment files are backed up with
+length/SHA verification. One initial owner guard correctly refused before stopping
+because PowerShell's automatic JSON DateTime conversion lost fractions when
+reparsed as a culture-formatted string. Checking the original ISO text preserves
+the exact identity. The checked backend is staged in the fixed QA slot; new owner
+58248 binds both QA listeners to loopback; authenticated MCP retains revision17.
+No firewall mutation occurs. LAN owner62740/executable/assets/runtime are unchanged.
+Private qa-owner.json retains exact process identity; service handle12550 is live.
+
+Semantic Undo/export before the run restores a byte-identical complete original
+Workshop at17. The ordinary Inspector Uniform Apply on that same project returns
+from its production worker in18200.5ms, decodes in1515.5ms and delivers locally in
+15949.0ms, versus the previous26444.9ms local observation. Edit-to-delivery is
+36787.8ms. Local composition1706.1ms, shell9587.2ms, canvas3733.9ms and RecordLocal
+358.1ms locate remaining work. Inclusive ParseJSON time is6621.2ms/22580 calls,
+but the new private indexing work is outside that counter; wall time is the
+relevant improvement. The updated backend also changes this end-to-end setup;
+these single observations are not a robust latency guarantee or isolated causal
+measurement of every saving. The editor retains its normal success status after
+acknowledgement instead of a transport refusal. Independent MCP export at18 is
+exactly equal to the retained Uniform project/Pascal pair. No deadline changes.
+
+Ordinary browser Undo restores Reflow and the exact original full pair at19.
+An initial selector observation expires without dispatch; a later ready-editor
+Undo completes despite its post-action observation timing out. The same tab is
+re-observed rather than restarted or blindly clicked again. Source review finds
+AgentRefresh still calls full Refresh for read-only notifications; chunked semantic
+export is followed by slow input readiness. This is a concrete remaining host
+path, not an isolated timing attribution. Do not add another source/fixture variant.
+Ordinary Redo returns Uniform at20. Actual Save writes the complete expected
+65907-byte project packet and adjacent31401-byte design/29400-byte Pascal to the
+real private server store; its packet hash equals the accepted Uniform export.
+Studio acknowledges Paired project files saved. Another ordinary Undo returns
+Reflow at21, then Open saved project restores Uniform and its Pascal companion
+at22. Independent MCP export at22 is byte-identical to the saved/accepted pair.
+The browser download-event observer times out, so the automatic pre-open backup
+is a requested host effect, not a verified physical disk download. No native
+file picker or injected model shortcut substitutes for this ordinary server
+Save/Open journey. Selection resets to home on Open; project content stays exact.
+
+The original full desktop Apply/acknowledgement/paired history/Save/Open path now
+executes successfully. This does not close the task's near-real-time, compact
+Studio, physical/assistive, full native traced journey or broader original
+canvas criteria. Stop further container/scalar/timing variants. Return to the
+same saved Workshop's compact ordinary editor journey under the canvas owner,
+then prepare matched delivery. Full shell/status refresh remains a measured
+performance follow-up, including read-only agent notifications; do not replace
+the remaining user-facing journey with another report or narrower fixture.
+
+The source-critical-path-01 packet retains current source/artifact hashes,
+native/browser results, ordered original-Apply trace, exact exports and screenshots.
+Full performance/canvas acceptance remains open; neither
+scope nor completion credit is reduced. The pending isolated editor is tab224.
+
+## Previous checkpoint — Source preparation critical path — 2026-10-28
 
 Previous goal turn: PROGRESS.8696bea is pushed/remote-verified; LAN remains on
 the checked272fce3 client with exact project/configuration preservation. Root remains SOLO.

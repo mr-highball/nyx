@@ -351,6 +351,104 @@ begin
   end;
 end;
 
+{ A child container must equal independent full admission under every retained
+  formatter policy, and own its immediate index after the parent is replaced.
+  Mutable RTL formatting settings are restored even on a failed assertion. }
+procedure IndexedContainerValues(var ACount: Integer);
+const
+  CSource: TNyxText = '[{"":[],"moon\ud83c\udf19\u0000":' +
+    '{"path":"a/b","values":[null,true,-0.000E+00,9007199254740993]}},' +
+    '["literal {}[]","a\"b\\c",[]],{}]';
+var
+  LOriginalStrict: Boolean;
+  LOriginalCompressed: Boolean;
+  LOriginalUnquoted: Boolean;
+  LStrict: Boolean;
+  LCompressed: Boolean;
+  LParent: TNyxDataValue;
+  LSaved: TNyxDataValue;
+  LChild: TNyxDataValue;
+  LRead: TNyxDataValue;
+  LName: TNyxText;
+  LRejected: Boolean;
+begin
+  LOriginalStrict := TJSONString.StrictEscaping;
+  LOriginalCompressed := TJSONData.CompressedJSON;
+  LOriginalUnquoted := TJSONObject.UnquotedMemberNames;
+  try
+    TJSONObject.UnquotedMemberNames := False;
+    LName := TNyxText('moon') + NyxScalarText($1f319) + NyxScalarText(0);
+    for LCompressed := False to True do
+    begin
+      for LStrict := False to True do
+      begin
+        TJSONData.CompressedJSON := LCompressed;
+        TJSONString.StrictEscaping := LStrict;
+        LParent := TNyxDataValue.ParseJSON('{"keep":' + CSource + ',"sibling":true}');
+        LSaved := LParent.Copy;
+        LChild := LParent.Field('keep');
+        LParent := NyxNull;
+        LRead := TNyxDataValue.ParseJSON(CSource);
+        Check((LChild.ToJSON = LRead.ToJSON) and (LChild.Count = 3),
+          'owned child container matches independent full admission and ordering', ACount);
+        Check((LChild.Item(0).Key(1) = LName) and
+          (LChild.Item(1).Item(1).AsText = 'a"b\c') and
+          (LChild.Item(0).Field('').Count = 0) and (LChild.Item(2).Count = 0),
+          'child index preserves escaped punctuation, exact keys and empty containers', ACount);
+        LChild := LChild.Item(0).Field(LName);
+        Check((LChild.Field('path').AsText = 'a/b') and
+          (LChild.Field('values').Item(3).AsDecimal.Text = '9007199254740993'),
+          'nested container may replace its own receiver without losing text or precision', ACount);
+        Check(LSaved.Field('keep').ToJSON = LRead.ToJSON,
+          'extraction never mutates a copied parent index', ACount);
+      end;
+    end;
+    TJSONString.StrictEscaping := False;
+    TJSONData.CompressedJSON := False;
+    LParent := TNyxDataValue.ParseJSON('{"keep":' + CSource + '}');
+    for LCompressed := False to True do
+    begin
+      for LStrict := False to True do
+      begin
+        TJSONData.CompressedJSON := LCompressed;
+        TJSONString.StrictEscaping := LStrict;
+        LRead := TNyxDataValue.ParseJSON(CSource);
+        Check(LParent.Field('keep').ToJSON = LRead.ToJSON,
+          'changed whitespace/escaping policies retain ordinary child reformatting', ACount);
+      end;
+    end;
+    TJSONObject.UnquotedMemberNames := True;
+    LParent := TNyxDataValue.ParseJSON('[{"key":1}]');
+    TJSONObject.UnquotedMemberNames := False;
+    LRejected := False;
+    try
+      LParent.Item(0);
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'unquoted parent formatter output grants no trusted child admission', ACount);
+    LParent := TNyxDataValue.ParseJSON('[{"key":1}]');
+    TJSONObject.UnquotedMemberNames := True;
+    LRejected := False;
+    try
+      LParent.Item(0);
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'current unquoted formatter retains its former child extraction refusal', ACount);
+  finally
+    TJSONString.StrictEscaping := LOriginalStrict;
+    TJSONData.CompressedJSON := LOriginalCompressed;
+    TJSONObject.UnquotedMemberNames := LOriginalUnquoted;
+  end;
+end;
+
 function RunNyxDataTests: Integer;
 var
   LValue: TNyxDataValue;
@@ -650,6 +748,7 @@ begin
   TypedTextValues(Result);
   TypedScalarValues(Result);
   IndexedScalarValues(Result);
+  IndexedContainerValues(Result);
   IndexedReads;
   CopiedSnapshots;
   LReference := Default(TNyxExtensionRef);
