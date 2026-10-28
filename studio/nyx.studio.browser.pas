@@ -104,6 +104,19 @@ uses
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.studio.move;
 
 type
+  { Copied browser source position while a compact panel parks its editor.
+    Caret offsets are DOM UTF-16 indices; scroll positions are local pixels.
+    Pending survives absent mounts and is consumed only by the matching live
+    source frame. No widget, document, source buffer or transport is retained. }
+  TNyxStudioCodePresentation = record
+    CaretStart: Integer;
+    CaretEnd: Integer;
+    ScrollTop: Integer;
+    ScrollLeft: Integer;
+    Focused: Boolean;
+    Pending: Boolean;
+  end;
+
   { Managed revocation handle. Implementations borrow Studio without retaining
     it; revoke before cancelling transports or retiring any shell/model owner. }
   INyxStudioRuntimeRecoveryPort = interface(INyxBrowserRecoveryPort)
@@ -337,9 +350,12 @@ type
     FAgentsVisible: Boolean;
     FWorkspace: TNyxWorkspaceRef;
     FPendingPresentation: TNyxDataValue;
+    FCodePresentation: TNyxStudioCodePresentation;
     function RecoveryKey: TNyxText;
     function PresentationKey: TNyxText;
     procedure SavePresentation;
+    procedure CaptureCodePresentation(AMarkPending: Boolean = False);
+    procedure RestoreCodePresentation;
     { Capture only visible target panes; hidden controls may report zero extent.
       Copied positions survive compact switching and project/frame transitions. }
     procedure CaptureResourcePaneScroll;
@@ -1687,6 +1703,8 @@ begin
     end;
     Exit;
   end;
+  { Capture the old accepted source face before chrome can park or replace it. }
+  CaptureCodePresentation(True);
   FComponentHelp := nil;
   { Admitted callback creation and explicit source navigation share this path.
     Both choose Source before composing its host, including after Messages was
@@ -2295,6 +2313,7 @@ begin
     { A pending admitted-handler/diagnostic navigation owns focus after chrome
       retention, so an earlier inspector field cannot reclaim its caret. The
       same completion runs for worker results and presentation-only commands. }
+    FCodePresentation.Pending := False;
     FCodeRenderer.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
     FSourceLine := 0;
     FSourceColumn := 0;
@@ -2314,6 +2333,7 @@ begin
       remain usable, so persistence failure must not discard accepted edits. }
     FStatus := 'Automatic recovery unavailable. Download a project backup to keep your work.';
   end;
+  RestoreCodePresentation;
   FAgents.RecordLocal;
   FReplaceCanvas := False;
   FCanvasRestores := nil;
@@ -5693,6 +5713,9 @@ begin
       FCodeRenderer.SetTextSelection('studio-code', AFrame.Selection);
     end;
     PublishSourceInputFrame(LContext, LFile, AFrame.AuthoredText, LRoot, LHost);
+    { A successful explicit edit/completion/history selection supersedes an
+      older deferred presentation; failed physical writes retain that value. }
+    FCodePresentation.Pending := False;
   finally
     FSourceInputWriting := False;
   end;
@@ -6119,14 +6142,84 @@ begin
   end;
 end;
 
+procedure TNyxStudio.CaptureCodePresentation(AMarkPending: Boolean);
+var
+  LEditor: TJSHTMLTextAreaElement;
+begin
+  { Never capture a predecessor over a returning source position. The published
+    input frame also fences project/file/text identity before borrowing a face. }
+
+  if FCodePresentation.Pending or (FSourceLine > 0) or not MatchesSourceInputFrame then
+  begin
+    Exit;
+  end;
+  LEditor := TJSHTMLTextAreaElement(FCodeRenderer.InputFor('studio-code'));
+
+  if LEditor.getBoundingClientRect.height <= 0 then
+  begin
+    Exit;
+  end;
+  FCodePresentation.CaretStart := LEditor.selectionStart;
+  FCodePresentation.CaretEnd := LEditor.selectionEnd;
+  FCodePresentation.ScrollTop := NyxStudioScrollPosition(LEditor.scrollTop);
+  FCodePresentation.ScrollLeft := NyxStudioScrollPosition(LEditor.scrollLeft);
+  FCodePresentation.Focused := document.activeElement = LEditor;
+  FCodePresentation.Pending := AMarkPending;
+end;
+
+procedure TNyxStudio.RestoreCodePresentation;
+var
+  LEditor: TJSHTMLTextAreaElement;
+  LStart: Integer;
+  LFinish: Integer;
+begin
+
+  if not FCodePresentation.Pending or (FSourceLine > 0) or not MatchesSourceInputFrame then
+  begin
+    Exit;
+  end;
+  LEditor := TJSHTMLTextAreaElement(FCodeRenderer.InputFor('studio-code'));
+
+  if LEditor.getBoundingClientRect.height <= 0 then
+  begin
+    Exit;
+  end;
+  LStart := FCodePresentation.CaretStart;
+  LFinish := FCodePresentation.CaretEnd;
+
+  if LStart > Length(LEditor.value) then
+  begin
+    LStart := Length(LEditor.value);
+  end;
+
+  if LFinish > Length(LEditor.value) then
+  begin
+    LFinish := Length(LEditor.value);
+  end;
+  { This is the admitted local source frame, including when sharing is paused
+    or conflicted. Restoring a range grants no remote/source publication rights.
+    Consume before focus can call outward. An explicit navigation supersedes
+    this value; a temporarily absent pane leaves it pending for its own remount. }
+  FCodePresentation.Pending := False;
+  LEditor.selectionStart := LStart;
+  LEditor.selectionEnd := LFinish;
+  LEditor.scrollTop := FCodePresentation.ScrollTop;
+  LEditor.scrollLeft := FCodePresentation.ScrollLeft;
+
+  if FCodePresentation.Focused then
+  begin
+    NyxFocusWithoutScroll(LEditor);
+  end;
+end;
+
 procedure TNyxStudio.SavePresentation;
 var
   LValue: TNyxStudioPresentation;
-  LEditor: TJSHTMLTextAreaElement;
   LPane: TJSHTMLElement;
 begin
   CaptureNewStateDraft;
   CaptureMenuDraft;
+  CaptureCodePresentation;
   LValue := DefaultNyxStudioPresentation;
   LValue.CodeVisible := FCodeVisible;
   LValue.SourceTab := FSourceTab;
@@ -6219,21 +6312,11 @@ begin
   LValue.CanvasScrollLeft := NyxStudioScrollPosition(FCanvasScrollLeft);
   LValue.CanvasView := FCanvasViewID;
   LValue.Palette := FPalette;
-  LEditor := nil;
-
-  if MountedStudioElement(FCodeRenderer, 'studio-code') <> nil then
-  begin
-    LEditor := TJSHTMLTextAreaElement(FCodeRenderer.InputFor('studio-code'));
-  end;
-
-  if LEditor <> nil then
-  begin
-    LValue.CodeCaretStart := LEditor.selectionStart;
-    LValue.CodeCaretEnd := LEditor.selectionEnd;
-    LValue.CodeScrollTop := NyxStudioScrollPosition(LEditor.scrollTop);
-    LValue.CodeScrollLeft := NyxStudioScrollPosition(LEditor.scrollLeft);
-    LValue.CodeFocused := document.activeElement = LEditor;
-  end;
+  LValue.CodeCaretStart := FCodePresentation.CaretStart;
+  LValue.CodeCaretEnd := FCodePresentation.CaretEnd;
+  LValue.CodeScrollTop := FCodePresentation.ScrollTop;
+  LValue.CodeScrollLeft := FCodePresentation.ScrollLeft;
+  LValue.CodeFocused := FCodePresentation.Focused;
   window.sessionStorage.setItem(PresentationKey, EncodeNyxStudioPresentation(LValue));
 end;
 
@@ -6299,6 +6382,12 @@ begin
     { Decode all fields before publishing one. Project content remains owned by
       ordinary recovery/agent admission; preferences cannot replace its pair. }
     LValue := DecodeNyxStudioPresentation(LSaved);
+    FCodePresentation.CaretStart := LValue.CodeCaretStart;
+    FCodePresentation.CaretEnd := LValue.CodeCaretEnd;
+    FCodePresentation.ScrollTop := LValue.CodeScrollTop;
+    FCodePresentation.ScrollLeft := LValue.CodeScrollLeft;
+    FCodePresentation.Focused := LValue.CodeFocused;
+    FCodePresentation.Pending := True;
     FCodeVisible := LValue.CodeVisible;
     FSourceTab := LValue.SourceTab;
     FSourceExpanded := LValue.SourceExpanded;
@@ -6368,10 +6457,8 @@ procedure TNyxStudio.RestorePresentationControls;
 var
   LValue: TNyxStudioPresentation;
   LElement: TJSHTMLElement;
-  LEditor: TJSHTMLTextAreaElement;
-  LStart: Integer;
-  LFinish: Integer;
 begin
+  RestoreCodePresentation;
 
   if (FPendingPresentation.Kind <> ndObject) or not FAgents.State.Connected or
     FAgents.State.Conflict then
@@ -6403,37 +6490,6 @@ begin
   if LElement <> nil then
   begin
     LElement.scrollTop := LValue.AgentsScroll;
-  end;
-  LEditor := nil;
-
-  if MountedStudioElement(FCodeRenderer, 'studio-code') <> nil then
-  begin
-    LEditor := TJSHTMLTextAreaElement(FCodeRenderer.InputFor('studio-code'));
-  end;
-
-  if LEditor <> nil then
-  begin
-    LStart := LValue.CodeCaretStart;
-    LFinish := LValue.CodeCaretEnd;
-
-    if LStart > Length(LEditor.value) then
-    begin
-      LStart := Length(LEditor.value);
-    end;
-
-    if LFinish > Length(LEditor.value) then
-    begin
-      LFinish := Length(LEditor.value);
-    end;
-    LEditor.selectionStart := LStart;
-    LEditor.selectionEnd := LFinish;
-    LEditor.scrollTop := LValue.CodeScrollTop;
-    LEditor.scrollLeft := LValue.CodeScrollLeft;
-
-    if LValue.CodeFocused then
-    begin
-      NyxFocusWithoutScroll(LEditor);
-    end;
   end;
   FPendingPresentation := NyxNull;
 end;

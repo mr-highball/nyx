@@ -31,6 +31,11 @@ uses
   nyx.test.editor.exchange, nyx.test.hierarchy;
 
 type
+  { Initial recovery may restore a different navigation position without
+    changing either accepted files or the pending draft. Separate those cases
+    from a genuinely different buffer and edits made during connection. }
+  TRecoveryClaimCase = (rccSelection, rccView, rccDifferentDraft, rccInFlightDraft);
+
   { The persistence observer deliberately owns only exact bytes. It must not
     retain the controller/session or reread their trees during notification. }
   TCaptureObserver = class
@@ -455,8 +460,119 @@ begin
   end;
 end;
 
+{ Reuse the actual session protocol and controlled transport. No fabricated
+  response can grant admission: the peer owns its pair, navigation and history,
+  while the recovering editor independently loads the exact portable packet. }
+procedure RecoveryClaimJourney;
+var
+  LCase: TRecoveryClaimCase;
+  LSession: TNyxStudioSession;
+  LServer: TNyxAgentSession;
+  LBridge: TNyxStudioAgentBridge;
+  LExchange: TNyxTestEditorExchange;
+  LPair: TNyxProjectPair;
+  LBefore: TNyxDataValue;
+  LAfter: TNyxDataValue;
+  LLocal: TNyxText;
+  LDraft: TNyxText;
+begin
+  for LCase := Low(TRecoveryClaimCase) to High(TRecoveryClaimCase) do
+  begin
+    LSession := TNyxStudioSession.Create;
+    LServer := TNyxAgentSession.Create;
+    LBridge := nil;
+    try
+      LServer.Exchange(NyxObject([
+        NyxField('op', NyxData('claim')),
+        NyxField('project', NyxData(EncodeNyxProject(LSession.ProjectSnapshot))),
+        NyxField('selection', NyxData('eyebrow')),
+        NyxField('view', NyxData('home'))]));
+      LServer.Call('nyx_transaction', 'Recovery qualification', NyxObject([
+        NyxField('expectedRevision', NyxData(LServer.Revision)),
+        NyxField('operationId', NyxData('recovery-title')),
+        NyxField('operations', NyxArray([
+          NyxObject([NyxField('op', NyxData('title')),
+            NyxField('value', NyxData('A returning workshop'))])]))]));
+      LBefore := LServer.Exchange(NyxObject([NyxField('op', NyxData('observe'))]));
+      LPair := DecodeNyxProject(LBefore.Field('project').AsText);
+      LDraft := LPair.Source + TNyxText(#10'// Keep this unfinished idea 🌙');
+      LPair.Pending := True;
+      LPair.Draft := LDraft;
+      LPair.DraftBase := LPair.Source;
+      LServer.Exchange(NyxObject([
+        NyxField('op', NyxData('commit')),
+        NyxField('expectedRevision', NyxData(LServer.Revision)),
+        NyxField('project', NyxData(EncodeNyxProject(LPair))),
+        NyxField('selection', NyxData('eyebrow')),
+        NyxField('view', NyxData('home'))]));
+      LBefore := LServer.Exchange(NyxObject([NyxField('op', NyxData('observe'))]));
+      LSession.LoadProject(LPair);
+
+      if LCase = rccView then
+      begin
+        LSession.Activate('welcome-card');
+      end;
+
+      if LCase = rccDifferentDraft then
+      begin
+        LSession.SetSourceDraft(LDraft + #10 + '// A genuinely different local buffer');
+      end;
+      LExchange := TNyxTestEditorExchange.Create(LServer);
+      LBridge := TNyxStudioAgentBridge.Create(LSession, nil,
+        NyxPrimaryWorkspace, LExchange);
+      LBridge.Connect(True);
+
+      if LCase = rccInFlightDraft then
+      begin
+        LSession.SetSourceDraft(LDraft + #10 + '// Typed after this claim was sent');
+        LBridge.RecordDraft;
+      end;
+      LLocal := EncodeNyxProject(LSession.ProjectSnapshot);
+      LExchange.Deliver;
+      LAfter := LServer.Exchange(NyxObject([NyxField('op', NyxData('observe'))]));
+      Check(EncodeNyxProject(LSession.ProjectSnapshot) = LLocal,
+        'Recovery claim preserves every local accepted file, draft and draft baseline');
+      Check((LBefore.Field('project').AsText = LAfter.Field('project').AsText) and
+        (LBefore.Field('session').Field('revision').AsInteger =
+          LAfter.Field('session').Field('revision').AsInteger) and
+        LAfter.Field('session').Field('canUndo').AsBoolean,
+        'Recovery claim changes neither authoritative files, revision nor existing Undo');
+
+      if LCase in [rccSelection, rccView] then
+      begin
+        Check(LBridge.State.Connected and not LBridge.State.Conflict and
+          LBridge.SourceSynchronized,
+          'An exact recovered pair admits despite independently restored selection/view');
+        Check((LSession.SelectedID = 'eyebrow') and (LSession.ActiveViewID = 'home'),
+          'Successful recovery reconciles navigation through the acknowledged peer');
+        LBridge.History(nehUndo);
+        Drain(LBridge, LExchange);
+        Check(not LBridge.State.Conflict and
+          (LSession.Document.Title <> 'A returning workshop'),
+          'The reconnected editor can execute its existing authoritative Undo');
+        LBridge.History(nehRedo);
+        Drain(LBridge, LExchange);
+        Check(not LBridge.State.Conflict and
+          (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore.Field('project').AsText),
+          'Authoritative Redo restores the exact pending project after recovery');
+      end
+      else
+      begin
+        Check(LBridge.State.Conflict and not LBridge.SourceSynchronized and
+          not LBridge.CanSwitchWorkspace,
+          'Different recovered or in-flight draft still requires explicit resolution');
+      end;
+    finally
+      LBridge.Free;
+      LServer.Free;
+      LSession.Free;
+    end;
+  end;
+end;
+
 begin
   try
+    RecoveryClaimJourney;
     ObservationFailureJourney;
     CaptureJourney;
     FailureJourney;

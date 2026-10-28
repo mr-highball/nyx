@@ -50,3 +50,28 @@ or concurrent-edit protection. Next reproduce the same accepted/pending pair wit
 only presentation selection different, repair that distinction if confirmed, and
 return through actual project navigation with exact source range and authoritative
 history. Keep the original independently different-pair refusal/recovery journey.
+
+**Candidate checkpoint — 2026-10-28**
+
+The real bridge/deferred-transport regression reproduces the false initial-claim
+conflict and now passes80 checks on both targets. Admission compares the complete
+encoded project, including its pending draft/base, while retaining the separate
+in-flight frame guard. Different local drafts and edits during connection still
+refuse; admitted recovery exercises existing authoritative Undo/Redo. Native heap
+accounting is balanced. Compilation of both Studio targets and server succeeds.
+
+Actual compact project return exposed a second failure: exact source survives,
+but its range is lost when Project parks the source face. The browser now keeps
+copied caret/scroll pending until the matching live source face returns, with
+explicit source writes/navigation taking precedence. Preliminary editor returns
+are retained separately from final checks. The final ordinary editor now restores
+fresh range1–53 at actual1280x800 and fresh range2–53 at actual390x844 through
+Switch project away/back; compact Project/Design parking also preserves its range.
+The exact5836-character pending Unicode source and semantic full pair SHA/revision9/
+Undo availability are unchanged. No false mismatch appears. The unrelated unchanged section
+regression reruns also timed out waiting for external capture acknowledgment;
+they establish no new full pass. Stop equivalent reruns. None of the original
+genuine-mismatch recovery choice/backup/native criteria is waived or accepted by
+this checkpoint. The reviewed candidate is delivered with identical semantic
+exports for all three LAN projects and unchanged output profiles; stopped runtime
+backup verifies691 files. Continue the original genuinely different-pair journey.

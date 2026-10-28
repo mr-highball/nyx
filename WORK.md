@@ -9,7 +9,67 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Viewport meaning across composed hosts — 2026-10-28
+## Current work — Exact browser project return — 2026-10-28
+
+Previous goal turn: PROGRESS (qualified LAN service restarted; verification
+results and remaining work reconciled). Root remains SOLO.747c775 remains the
+last pushed commit before this candidate. Follow
+[project recovery](TODO/NS-4_project-recovery_01.md), then return to
+the viewport and Studio authoring criteria. Two candidate fixes are implemented:
+initial protected admission compares the complete encoded project pair rather
+than navigation, and the browser retains copied source caret/scroll while compact
+chrome parks its editor. Different drafts and in-flight edits still refuse
+admission; explicit source navigation/writes supersede deferred presentation.
+
+The maintained actual bridge/deferred-transport regression fails before the first
+fix and passes80 checks afterward on native and browser, including exact pending
+Unicode pairs, authoritative Undo/Redo and competing-edit refusal. Native reports
+6,974,656 matching allocation/free operations and no unfreed blocks. Native Studio,
+server and final browser Studio compile. Private project-return-01 evidence
+retains the ordinary compact failure (5836 exact source characters, lost range),
+subsequent preliminary returns and the corrected final source snapshot. Final
+ordinary browser checks now pass at actual1280x800 and390x844 child viewports:
+fresh desktop range1–53 survives Switch project away/back; fresh compact range2–53
+survives Project/Design parking and the full project round trip. Exact5836-character
+unfinished Unicode source survives each return with no false mismatch. Semantic
+export retains the exact full pair SHA, revision9, pending draft and available
+Undo. Final wide/compact before/after JSON and screenshots are distinct from
+preliminary captures. No source, storage or origin was cleared.
+
+Three unchanged full section-regression reruns stop at their external capture
+acknowledgment timeout after53 assertions. They are unqualified reruns, not new
+full passes; prior accepted section evidence remains in its original packet.
+Repeated browser-control/capture timeouts consumed excessive time. Stop those
+equivalent reruns. Bounded ordinary-editor returns are now complete; source review
+finds no additional issue in this candidate. Matched delivery is verified below.
+Genuine mismatch choice/backup, native recovery, performance and full task/goal
+criteria remain open. Do not create additional fixture variants or completion credit.
+
+During the user's stall/status check, the previous LAN process was absent and
+ports8088/8089 had no listeners. The same last-verified delivery was restarted
+without replacing its payload/configuration/runtime. Both loopback and LAN HTTP
+return200; authenticated semantic reads retain Untitled project/revision1,
+Input playground/revision4 and JSON Workshop/revision7. No cause for the previous
+process exit has been established.
+
+The candidate is now delivered through the maintained foreground launcher after
+exact-revision exports, verified stop/join and a691-file SHA-verified stopped
+runtime backup. Loopback/LAN HTTP return200; served browser bytes match the staged
+candidate. Authenticated exports retain all three exact full pairs, titles and
+revisions; output profiles are byte-identical. Only ignored local server/web launch
+hints change. Background startup was rejected by automatic approval review with
+only "blocked by policy"; the maintained foreground launcher succeeded. The
+ordinary LAN HTTP listener and loopback-only agent listener are healthy. Private
+owner/logs, runtime/configuration backups, staged payload and all new artifacts/
+runners/TEMP/TMP remain on E:. The isolated qualification host is retired after its
+completed checks; keep the LAN host running.
+
+Next continue the genuine different-pair recovery journey in the same task:
+reachable notice/menu, exact backup/use-shared and keep-local outcomes, stale/
+failed/cancelled protection and native/browser focus. These retain their original
+acceptance criteria; do not reopen equivalent viewport/source fixture variants.
+
+## Previous checkpoint — Viewport meaning across composed hosts — 2026-10-28
 
 Previous goal turn: PROGRESS.a4ff93a is pushed and remote-verified; the prior
 9065650 LAN owner retained the exact three projects/configuration. Root remains SOLO.

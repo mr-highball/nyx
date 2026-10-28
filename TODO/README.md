@@ -24,9 +24,13 @@ criteria stay open. WORK.md retains qualification details and the return path.
 Viewport continuation now closes the full browser section-recovery gate and adds
 actual zoom/scroll plus native project-lifecycle evidence. The matched LAN update
 retains all three exact project pairs/configuration. Ordinary browser project
-return preserves unfinished source but loses its caret and reports a mismatch;
-the next action is its existing [recovery owner](NS-4_project-recovery_01.md), then
-return to viewport acceptance. Stop further viewport fixture variants. Typing and
+return exposed a false mismatch and lost caret. Its existing
+[recovery owner](NS-4_project-recovery_01.md) now repairs both with80 protocol checks
+per target and actual wide/compact editor returns preserving fresh source ranges,
+the exact pending pair and authoritative revision/history availability. Matched
+LAN delivery retains the three exact projects/configuration. Continue genuine
+different-pair recovery choice/backup/native checks, then return to viewport
+acceptance. Stop further viewport fixture variants. Typing and
 navigation latency stay under [measured performance](NS-3_extension-performance_01.md).
 
 The user requested a return to high-value, user-facing backlog work. This order

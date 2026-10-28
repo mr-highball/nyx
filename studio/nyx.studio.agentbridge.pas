@@ -1941,8 +1941,16 @@ begin
           ((LOperation = 'history') and (Length(FQueue) = 0)) then
         begin
 
+          { Recovery protects the complete accepted/pending project, not a
+            presentation position. Loading the same portable pair may reset
+            local selection/view before this claim; those differences cannot
+            imply competing files. Both packets here are canonical project
+            encodings. Keep the subsequent in-flight frame guard independent:
+            a newer local edit must still refuse a competing response. }
+
           if (LOperation = 'claim') and FProtectLocal and
-            (LRemoteFrame <> FSentFrame) and not FAcceptRemote then
+            (LState.Field('project').AsText <> FSent.Field('project').AsText) and
+            not FAcceptRemote then
           begin
             raise Exception.Create('A different shared design is active; your recovered/local project and draft are retained');
           end;

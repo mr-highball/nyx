@@ -31,6 +31,7 @@ var
   LWidth: Integer;
   LHeight: Integer;
   LWorkspace: String;
+  LObserveSource: Boolean;
 
 { URLSearchParams returns an external nullable value. Only an actual string
   becomes a copied argument; absent keys retain explicit harmless defaults. }
@@ -59,10 +60,45 @@ begin
     IntToStr(GFrame.contentDocument.documentElement.clientHeight));
 end;
 
+{ Optional read-only qualification evidence for browser clients whose DOM reader
+  cannot traverse an iframe. Borrow only the currently mounted DOM textarea;
+  copy its exact text/range into this fixture's attributes. Never call a Studio
+  controller, retain a child widget, write its value or alter its selection.
+  The containing page owns this timer and retires it when the fixture closes. }
+procedure ObserveSource;
+var
+  LDocument: TJSDocument;
+  LEditor: TJSHTMLTextAreaElement;
+begin
+  LDocument := GFrame.contentDocument;
+  LEditor := nil;
+
+  if LDocument <> nil then
+  begin
+    LEditor := TJSHTMLTextAreaElement(
+      LDocument.querySelector('textarea[aria-label="Pascal source"]'));
+  end;
+  document.body.setAttribute('data-studio-source-mounted', BoolToStr(LEditor <> nil, True));
+
+  if LEditor <> nil then
+  begin
+    document.body.setAttribute('data-studio-source-text', LEditor.value);
+    document.body.setAttribute('data-studio-source-start', IntToStr(LEditor.selectionStart));
+    document.body.setAttribute('data-studio-source-end', IntToStr(LEditor.selectionEnd));
+  end
+  else
+  begin
+    document.body.removeAttribute('data-studio-source-text');
+    document.body.removeAttribute('data-studio-source-start');
+    document.body.removeAttribute('data-studio-source-end');
+  end;
+end;
+
 begin
   LParameters := TJSURLSearchParams.new(window.location.search);
   LWidth := StrToIntDef(ViewportArgument('width', '390'), 390);
   LHeight := StrToIntDef(ViewportArgument('height', '844'), 844);
+  LObserveSource := ViewportArgument('observe-source', 'false') = 'true';
 
   if (LWidth < 240) or (LWidth > 4096) or (LHeight < 240) or (LHeight > 4096) then
   begin
@@ -89,4 +125,9 @@ begin
     GFrame.src := GFrame.src + '?workspace=' + encodeURIComponent(LWorkspace);
   end;
   document.body.appendChild(GFrame);
+
+  if LObserveSource then
+  begin
+    window.setInterval(@ObserveSource, 100);
+  end;
 end.
