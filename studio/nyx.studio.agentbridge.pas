@@ -97,6 +97,9 @@ type
     FOnRefresh: TNyxAgentRefresh;
     FWorkspace: TNyxWorkspaceRef;
     FWorkspaceMetadata: TNyxText;
+    { One acknowledged creation result; consumed by the target UI only after
+      ordinary synchronization guards permit leaving the current project. }
+    FCreatedWorkspace: TNyxWorkspaceRef;
     FDraftCapturePending: Boolean;
     FOnProjectCaptured: TNyxProjectCaptured;
     FResourceReference: TNyxResourceRef;
@@ -233,6 +236,10 @@ type
     { Navigation must wait for every local pair/draft publication. Observations
       may be in flight because their immutable target never changes. }
     function CanSwitchWorkspace: Boolean;
+    { Explicit operator request, never retried after a transport failure. The
+      current pair must already be acknowledged; creation does not replace it. }
+    procedure CreateWorkspace(const AName: TNyxText);
+    function TakeCreatedWorkspace(out AReference: TNyxWorkspaceRef): Boolean;
     { Capture one other project's exact revision for a visible warning. Keeping
       or confirming that warning never changes this observer's fixed target. }
     procedure RequestWorkspaceClose(const AReference: TNyxWorkspaceRef);
@@ -264,6 +271,7 @@ type
 implementation
 
 uses
+  nyx.editing,
   {$ifdef PAS2JS}nyx.studio.exchange.browser{$else}nyx.studio.exchange.lcl{$endif};
 
 type
@@ -1068,6 +1076,38 @@ begin
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
 
+procedure TNyxStudioAgentBridge.CreateWorkspace(const AName: TNyxText);
+begin
+  RecordLocal;
+
+  if not CanSwitchWorkspace or not FView.CanCreateWorkspace or
+    (FCreatedWorkspace.ID <> '') then
+  begin
+    raise ENyxModel.Create('Finish synchronization before creating another project');
+  end;
+
+  if (Trim(AName) = '') or (NyxTextScalarCount(AName) > 256) then
+  begin
+    raise ENyxModel.Create('Enter a project name containing 1..256 characters');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('create-workspace')),
+    NyxField('expectedRevision', NyxData(FView.Revision)),
+    NyxField('name', NyxData(AName))]));
+  Tick;
+end;
+
+function TNyxStudioAgentBridge.TakeCreatedWorkspace(out AReference: TNyxWorkspaceRef): Boolean;
+begin
+  Result := (FCreatedWorkspace.ID <> '') and CanSwitchWorkspace;
+  AReference := NyxPrimaryWorkspace;
+
+  if Result then
+  begin
+    AReference := FCreatedWorkspace;
+    FCreatedWorkspace := NyxPrimaryWorkspace;
+  end;
+end;
+
 function TNyxStudioAgentBridge.Frame: TNyxText;
 begin
   Result := NyxObject([
@@ -1829,6 +1869,17 @@ begin
       if NyxAgentHas(LState, 'workspaceClosing') then
       begin
         FView.CanCloseWorkspace := LState.Field('workspaceClosing').AsBoolean;
+      end;
+
+      if NyxAgentHas(LState, 'workspaceCreation') then
+      begin
+        FView.CanCreateWorkspace := LState.Field('workspaceCreation').AsBoolean;
+      end;
+
+      if (LOperation = 'create-workspace') and NyxAgentHas(LState, 'createdWorkspace') then
+      begin
+        FCreatedWorkspace := NyxWorkspace(LState.Field('createdWorkspace').AsText);
+        LRefresh := True;
       end;
 
       if NyxAgentHas(LState, 'workspaces') then

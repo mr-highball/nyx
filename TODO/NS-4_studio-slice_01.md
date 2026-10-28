@@ -1,5 +1,24 @@
 # NS-4_studio-slice_01 — Studio end-to-end designer
 
+**User priority — project lifecycle and action clarity — 2026-10-27:**
+
+New/Open/Save/Switch must be immediately discoverable in Project on desktop and
+phone. Creation must preserve the prior project/draft/history, start a useful
+target-independent home page, and use acknowledged operator authority. Switching
+must use exact project identities and retain independent source/history. Cover
+ordinary creation/navigation, named persistence, compact allocation, failure and
+disabled-agent behavior, then deliver the matched observing payload. Extend the
+existing glyph family to cited Inspector commands with visible captions and
+destructive intent. This belongs to the existing shell/save-load criteria; it
+adds no acceptance credit or task split. WORK.md retains actual results and gaps.
+
+The first delivery now executes ordinary browser New/Save/Switch and confirms
+independent revisions/history, plus28 native private-protocol/model checks and15
+portable browser checks. The actual LAN payload exposes the actions and cited
+edit glyphs while retaining all three existing paired projects byte-for-byte.
+Native UI input, genuine compact viewport review, full all-button/aesthetic
+coverage and glyph-cell padding remain open; no original criterion or task closes.
+
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
 **Current priority — everyday workspace usability — 2026-10-26:**

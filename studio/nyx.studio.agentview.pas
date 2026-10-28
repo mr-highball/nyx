@@ -69,6 +69,9 @@ type
     { Explicit editor capability advertisement. A newer client must not offer
       confirmation against an older service that lacks operator closure. }
     CanCloseWorkspace: Boolean;
+    { Private operator creation is independent of MCP agent edit permission.
+      Older services do not advertise it and receive no creation packets. }
+    CanCreateWorkspace: Boolean;
     { Private compiler capability and its latest bounded reply. Job replies omit
       full source/document ownership. Operator profile replies contain local
       paths; never export this private view as a public MCP response or design. }

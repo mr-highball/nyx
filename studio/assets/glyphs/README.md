@@ -1,5 +1,34 @@
 # Nyx Studio glyphs
 
+## Editing and project commands
+
+`nyx-studio-edit-glyph-atlas.png` is a companion original generated with the
+built-in imagegen tool using the first atlas as a style reference. Its SHA256 is
+`C52E4EB0EADAC5291CC90F67695CB1C1C970890275C1237059A44AF9F499D7FA`.
+It is1254x1254 RGBA, preserves transparent PNG bytes and uses proportional4x4
+cells. The Pascal
+asset packer `tools/nyx_glyph_pack.lpr` emits `nyx.studio.editglyphs.inc` without
+resampling; it refuses to overwrite an existing include. Both atlases remain
+independent immutable resource definitions, retaining the original role ordinals.
+
+Reading order: New project, Switch project, Duplicate, Move up; Move down,
+Make reusable, Delete, Export; Properties, Events, Search, Add; Close, Help,
+Apply, Refresh. Command labels remain visible; the graphic is decorative and
+does not replace accessible names. Delete uses the foreground tint on its
+danger face.
+
+Generation specification: one transparent4x4 sprite sheet matching the existing
+rounded, thick slate/violet outlines, equal centered cells and generous padding,
+with exactly the reading order above. No labels, grid lines, shadows, gradients,
+tiles or backplates. The original atlas was a style reference only; its symbols
+and bytes were not replaced. Visual review checked every cell before embedding.
+Toolbar review retains a padding follow-up: the first-row document's lower edge
+can produce a thin neighboring-cell mark above Move down. A generated correction
+did not solve the alignment and was rejected; it is not a project asset. This
+sheet does not establish complete visual acceptance of Studio's action family.
+
+## Original toolbar commands
+
 `nyx-studio-glyph-atlas.png` is the selected original generated with the built-in
 OpenAI imagegen tool for this Studio facelift. No API-key script, package or
 external icon/font dependency is used. The original bytes are preserved:

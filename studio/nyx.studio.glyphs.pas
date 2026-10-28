@@ -12,7 +12,11 @@ type
     glyph from a button caption or font symbol; each command chooses its role. }
   TNyxStudioGlyph = (nsgUndo, nsgRedo, nsgPascal, nsgOpen, nsgSave, nsgOutputs,
     nsgAgents, nsgActions, nsgBuildView, nsgBuildApp, nsgDesktop, nsgPhone,
-    nsgInteract, nsgTools, nsgExpand, nsgTheme);
+    nsgInteract, nsgTools, nsgExpand, nsgTheme,
+    nsgNewProject, nsgSwitchProject, nsgDuplicate, nsgMoveUp,
+    nsgMoveDown, nsgReusable, nsgDelete, nsgExport,
+    nsgProperties, nsgEvents, nsgSearch, nsgAdd,
+    nsgClose, nsgHelp, nsgApply, nsgRefresh);
 
 function NyxStudioGlyphResource: TNyxResourceRef;
 { Validated immutable image data is initialized once; every shell document owns
@@ -29,6 +33,7 @@ implementation
 uses SysUtils;
 
 {$I assets/glyphs/nyx.studio.glyphs.inc}
+{$I assets/glyphs/nyx.studio.editglyphs.inc}
 
 var
   GAtlas: TNyxImageSource;
@@ -50,6 +55,9 @@ begin
 end;
 
 function NyxStudioGlyphPresentation(AGlyph: TNyxStudioGlyph): TNyxButtonPresentation;
+var
+  LResource: TNyxResourceRef;
+  LCell: Integer;
 begin
 
   if (Ord(AGlyph) < Ord(Low(TNyxStudioGlyph))) or
@@ -57,8 +65,16 @@ begin
   begin
     raise EArgumentException.Create('Unknown Studio glyph role');
   end;
-  Result := NyxButtonPresentation.Glyph(NyxResourceImage(NyxStudioGlyphResource))
-    .Cell(NyxGlyphCell(4, 4, Ord(AGlyph) mod 4, Ord(AGlyph) div 4))
+  LResource := NyxStudioGlyphResource;
+  LCell := Ord(AGlyph);
+
+  if LCell >= Ord(nsgNewProject) then
+  begin
+    LResource := NyxResourceRef('nyx.studio.edit-glyph-atlas');
+    Dec(LCell, Ord(nsgNewProject));
+  end;
+  Result := NyxButtonPresentation.Glyph(NyxResourceImage(LResource))
+    .Cell(NyxGlyphCell(4, 4, LCell mod 4, LCell div 4))
     .Content(nbcGlyphCaption).Density(nbdCompact).FontWeight(nbwSemibold);
 end;
 
@@ -70,6 +86,9 @@ initialization
   GResources.Define(NyxStudioGlyphResource,
     NyxImageResource(GAtlas).Describe('Studio glyphs',
       'A locally embedded family of decorative command glyphs.'));
+  GResources.Define(NyxResourceRef('nyx.studio.edit-glyph-atlas'),
+    NyxImageResource(NyxEmbeddedImage(nimPNG, CStudioEditGlyphAtlas)).Describe(
+      'Studio editing glyphs', 'Project, selection and Inspector command glyphs.'));
 
 {$ifndef PAS2JS}
 finalization

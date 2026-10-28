@@ -2,6 +2,17 @@
 
 [Project](../PROJECT.md) · [Building](building.md) · [Authoring owner](../TODO/NS-4_studio-authoring_01.md)
 
+Project now starts with labeled **New project**, **Open project**, **Save project**
+and **Switch project** actions, shared with browser Studio. New asks for a name
+and creates an empty home page through a connected Studio service. The previous
+project, Pascal draft and history stay open. Switch lists the service's projects
+by title and distinguishing label; switching does not retarget an agent.
+Open exposes saved-name and portable-file choices; Save retains design, Pascal
+and pending draft together. Local file Open/Save remain available without a
+service; creating another simultaneous project requires the service capability.
+Output configuration can be chosen later. Agent edit permission does not govern
+these human project actions.
+
 The native editor now has a standalone entry point in
 [nyx_studio_native.lpr](../studio/nyx_studio_native.lpr). It consumes the same
 `BuildNyxStudioView` composition, portable session and source/property/event

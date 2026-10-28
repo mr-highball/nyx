@@ -5,6 +5,13 @@
 
 ## Current priority — useful everyday workflows — 2026-10-26
 
+User steering on2026-10-27 prioritizes discoverable New/Open/Save/Switch and the
+cited missing Inspector glyphs under the existing Studio slice. Its first LAN
+delivery retains exact projects/configuration and real browser lifecycle evidence.
+WORK.md owns remaining phone/native-input, glyph-padding and broader-quality
+checks. This supersedes further canvas preparation experiments; original ranked
+outcomes and prerequisites below remain open without additional completion credit.
+
 The user requested a return to high-value, user-facing backlog work. This order
 supersedes historical next-task notes below. Root remains in single-agent mode.
 Use the existing task identities and acceptance criteria; this reprioritization

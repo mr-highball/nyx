@@ -84,6 +84,7 @@ uses
   nyx.studio.compiler,
   nyx.studio.diagnostics, nyx.studio.builddiagnostics,
   nyx.studio.agentview,
+  nyx.studio.projectnavigation,
   nyx.studio.outputs, nyx.studio.sourceconfiguration,
   nyx.studio.edits, nyx.studio.drag, nyx.studio.resize, nyx.studio.move;
 
@@ -186,6 +187,9 @@ type
     { File UI state is independent of output readiness. Conflicts are presented
       as explicit choices; no accepted session is replaced while one is pending. }
     FilesVisible: Boolean;
+    { Project commands are discoverable independently of agent activity. This
+      copied panel/name proposal carries no document or transport authority. }
+    ProjectNavigation: TNyxStudioProjectNavigation;
     ProjectName: TNyxText;
     ProjectConflict: Boolean;
     ImportConflict: Boolean;
@@ -627,6 +631,7 @@ begin
   Result.CompiledPreviewRunning := False;
   Result.FilesVisible := False;
   Result.ProjectName := '';
+  Result.ProjectNavigation.Name := 'Untitled project';
   Result.ProjectConflict := False;
   Result.ImportConflict := False;
   Result.ProjectBusy := False;
@@ -1455,6 +1460,7 @@ begin
     semantic add-kind metadata instead of retaining widget-specific callbacks. }
   LWorkspace.Add(LLeft);
   LLeft.Add(TNyxNode.Create(nkLabel, 'views-title').Configure.Text('Project').Done);
+  LLeft.Add(BuildNyxStudioProjectNavigation(AState.ProjectNavigation, AState.Agents));
   LLeft.Add(TNyxNode.Create('input', 'project-title').SetProp('text', 'Project title')
     .SetProp('value', ASession.Document.Title));
 
@@ -2284,12 +2290,18 @@ begin
       end;
     end;
   end;
-  LRight.Add(Button('action-duplicate', 'Duplicate'));
-  LRight.Add(Button('action-up', 'Move up'));
-  LRight.Add(Button('action-down', 'Move down'));
-  LRight.Add(Button('action-component', 'Make reusable'));
-  LRight.Add(Button('action-delete', 'Delete'));
-  LRight.Add(Button('action-export-source', 'Export Pascal'));
+  { Shared responsive grouping keeps touch actions together. Each original ID
+    and controller route is retained; presentation adds no document history. }
+  LViews := TNyxNode.Create(nkGrid, 'studio-edit-actions');
+  LViews.Configure.Columns(1).Gap(6)
+    .WhenPresentation(NyxPresentation('compact')).Columns(2).Done;
+  LRight.Add(LViews);
+  LViews.Add(Button('action-duplicate', 'Duplicate'));
+  LViews.Add(Button('action-up', 'Move up'));
+  LViews.Add(Button('action-down', 'Move down'));
+  LViews.Add(Button('action-component', 'Make reusable'));
+  LViews.Add(Button('action-export-source', 'Export Pascal'));
+  LViews.Add(Button('action-delete', 'Delete').Configure.Variant(nvDanger).Done);
   LRight.Add(TNyxNode.Create('heading', 'hierarchy-title').SetProp('text', 'HIERARCHY'));
   LRight.Add(BuildNyxStudioHierarchy(Result, ASession));
 

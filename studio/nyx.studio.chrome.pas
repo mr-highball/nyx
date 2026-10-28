@@ -25,7 +25,8 @@ procedure CaptureNyxStudioAssets(ARoot: TNyxNode; var AExpanded: Boolean);
 implementation
 
 uses SysUtils, Math, nyx.text, nyx.types, nyx.resources, nyx.controls,
-  nyx.layout.policy, nyx.button.presentation, nyx.button.view, nyx.studio.glyphs, nyx.disclosure;
+  nyx.layout.policy, nyx.button.presentation, nyx.button.view, nyx.studio.glyphs,
+  nyx.studio.inspector, nyx.disclosure;
 
 function NewNyxStudioChromeTheme: TNyxTheme;
 begin
@@ -137,7 +138,8 @@ var
       LValue := LValue.Alignment(nbaStart);
     end;
 
-    if LButton.Prop('variant') = NyxVariantName(nvPrimary) then
+    if (LButton.Prop('variant') = NyxVariantName(nvPrimary)) or
+      (LButton.Prop('variant') = NyxVariantName(nvDanger)) then
     begin
       LValue := LValue.GlyphTone(ngtForeground);
     end;
@@ -322,6 +324,30 @@ begin
   Glyph('action-preview', nsgInteract);
   Glyph('action-canvas-tools', nsgTools);
   Glyph('action-canvas-expand', nsgExpand);
+  { Stable semantic roles cover the ordinary project/Inspector workflow too.
+    Captions stay visible on compact hosts; glyph-only chrome is opt-in below. }
+  Glyph('action-project-new', nsgNewProject);
+  Glyph('action-project-browse', nsgOpen);
+  Glyph('action-project-save-current', nsgSave);
+  Glyph('action-project-switch', nsgSwitchProject);
+  Glyph('action-project-create', nsgAdd);
+  Glyph('action-project-navigation-close', nsgClose);
+  Glyph('action-project-open', nsgOpen);
+  Glyph('action-project-save', nsgSave);
+  Glyph('action-project-export', nsgExport);
+  Glyph('action-project-import', nsgOpen);
+  Glyph('action-project-export-files', nsgExport);
+  Glyph('action-duplicate', nsgDuplicate);
+  Glyph('action-up', nsgMoveUp);
+  Glyph('action-down', nsgMoveDown);
+  Glyph('action-component', nsgReusable);
+  Glyph('action-delete', nsgDelete);
+  Glyph('action-export-source', nsgExport);
+  Glyph('action-export-source-draft', nsgSave);
+  Glyph('action-add-page', nsgAdd);
+  Glyph('action-apply-source', nsgApply);
+  Glyph(NyxInspectorPropertiesID, nsgProperties);
+  Glyph(NyxInspectorEventsID, nsgEvents);
   ProjectTools;
 
   if ACompact then

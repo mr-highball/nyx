@@ -9,7 +9,63 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Complete canvas Apply preparation measurement — 2026-10-27
+## Current work — Project navigation and everyday action faces — 2026-10-27
+
+The user identified missing/hidden New/Open/Save/Switch actions on the phone and
+unskinned everyday Inspector buttons. This is the active Studio-slice/full-
+authoring outcome, ahead of further canvas preparation work. Deliver a visible
+shared Project action group, independent named project creation through private
+editor authority, exact project switching, and consistent custom glyph/caption
+faces for the cited edit commands. Preserve current design/draft/history and
+optional outputs; no additional approval is required. Root remains SOLO.
+
+Private studio-project-navigation-01 holds the companion generated atlas, exact
+embedded-byte SHA check, full browser/server and LCL builds, and28 executed native
+navigation/private-protocol checks (complete clean heap) plus15 browser checks.
+Actual UI review exposed a missing browser presentation-state copy, now repaired.
+An initial creation click correctly retained the project but refused because an
+ordinary observation request marked the bridge Busy. Creation now queues behind
+that read while retaining exact frame/revision guards; duplicate queued writes
+remain refused. Actual New now creates Component playground at independent
+revision1 while the earlier Workshop stays at revision7. Ordinary Save reveals
+the storage choices, writes the named pair, and Switch returns to the Workshop
+with revision/history retained. Duplicate titles now include distinguishing
+labels in visible switch buttons. New project defaults no longer open Agents
+details over the designer. Actual browser review confirms all six cited edit
+buttons carry glyphs, remain captioned, and use a compact grid with danger Delete.
+The companion imagegen sheet is embedded through a byte-preserving Pascal packer;
+the original toolbar sheet/role ordinals remain exact. One attempted padding
+correction was rejected; a thin neighboring-cell mark on Move down remains a
+visual-polish follow-up. Do not claim complete all-button/aesthetic acceptance.
+
+The final native protocol test starts with a real paired Undo command and pending
+supplementary-Unicode Pascal draft before creation, then verifies exact retained
+pair and session metadata. It also checks stale/bad-capability refusal and human
+creation with agents disabled. Final heap:1573706 matching allocations/frees,
+81001236 bytes, zero unfreed blocks. Final owned builds have no warnings; installed
+pas2js Classes warnings remain separate. Native Studio compiles; its new lifecycle
+input journey has not executed. Browser viewport.set390x844 reported success but
+actual old/new tabs remained1280x720; reset is complete. Retain this tool limitation,
+so phone visual/input acceptance remains open rather than counting desktop as phone.
+
+Authorized LAN delivery now runs matched current server/editor/worker/preview.
+HTTP on the existing LAN address returns200 and authenticated MCP retains exactly
+the same three projects at revisions1/4/7. Bounded semantic exports before/after
+are byte-identical for each complete project pair, and studio-outputs.nyx is exact.
+The complete stopped runtime/configuration backup and source/profile receipts are
+external. Bindings stay0.0.0.0:8088 and loopback-only8089; the ignored toolchain now
+selects the new payload. Actual LAN screenshot/served-JS hash confirm delivery.
+Every new artifact and TEMP/TMP stays on E:.
+Do not alter unrelated1280/390 or add helpers. Original quality gates remain open.
+All owned compiler/test jobs are terminal and joined. Both temporary review hosts
+are identity-verified, stopped and joined; their ports and owned tabs are closed.
+The viewport override is reset. The authorized LAN owner alone remains running.
+Next return to the existing ranked user workflows' genuine compact/native input,
+all-action styling and source/canvas stale/draft/quality gates, using these real
+failures and existing task owners. No resolver experiment, additional equivalent
+source fixture, cleanup loop or DONE/credit change is introduced.
+
+## Previous checkpoint — Complete canvas Apply preparation measurement — 2026-10-27
 
 Browser completion: the exact Workshop now passes ordinary Inspector Apply under
 the unchanged30000ms worker ceiling, then actual toolbar Undo/Redo and named

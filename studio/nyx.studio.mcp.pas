@@ -279,7 +279,7 @@ implementation
 
 uses
   nyx.studio.mcpconfig, nyx.studio.builds, nyx.studio.compiler,
-  nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
+  nyx.model, nyx.codec, nyx.studio.projectnavigation, nyx.studio.outputs, nyx.studio.stateedits,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
   nyx.studio.sourcebuilds, nyx.studio.projectimport,
@@ -874,7 +874,7 @@ begin
 
     if (LOperation = 'claim') or (LOperation = 'commit') or
       (LOperation = 'configure') or (LOperation = 'history') or
-      (LOperation = 'close-workspace') then
+      (LOperation = 'close-workspace') or (LOperation = 'create-workspace') then
     begin
       LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
     end;
@@ -1934,8 +1934,10 @@ var
   LPermission: TNyxAgentPermission;
   LPair: TNyxProjectPair;
   LCheckpoint: TNyxSourceCheckpoint;
+  LCreatedWorkspace: TNyxWorkspaceRef;
 begin
   RequireRecovered;
+  LCreatedWorkspace := NyxPrimaryWorkspace;
   LWorkspace := NyxWorkspaceArgument(ARequest);
   LSession := FWorkspaces.Find(LWorkspace);
 
@@ -1974,6 +1976,22 @@ begin
     end;
     LState := LSession.Exchange(NyxObject([NyxField('op', NyxData('observe')),
       NyxField('after', NyxData(LAfter))]));
+  end
+  else if ARequest.Field('op').AsText = 'create-workspace' then
+  begin
+    { The private editor capability authorizes operator creation even when MCP
+      agents are disabled. Revision admission and durable registry rollback use
+      the same lock as ordinary edits; the source project is never overwritten. }
+    LArguments := NyxWorkspaceArguments(ARequest);
+    NyxAgentFields(LArguments, '|op|after|expectedRevision|name|');
+
+    if LArguments.Field('expectedRevision').AsInteger <> LSession.Revision then
+    begin
+      raise ENyxProjectConflict.Create('Project changed before creation; inspect it and try again');
+    end;
+    LCreatedWorkspace := FWorkspaces.OpenProject(LArguments.Field('name').AsText,
+      NewNyxStudioProjectPair(LArguments.Field('name').AsText));
+    LState := LSession.Exchange(NyxObject([NyxField('op', NyxData('observe'))]));
   end
   else if ARequest.Field('op').AsText = 'close-workspace' then
   begin
@@ -2036,6 +2054,14 @@ begin
   end;
   SetLength(LFields, Length(LFields) + 1);
   LFields[High(LFields)] := NyxField('resourceRuntimeReporting', NyxData(True));
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('workspaceCreation', NyxData(True));
+
+  if LCreatedWorkspace.ID <> '' then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('createdWorkspace', NyxData(LCreatedWorkspace.ID));
+  end;
   SetLength(LFields, Length(LFields) + 1);
   LFields[High(LFields)] := NyxField('buildLaunch', CurrentLaunch(LWorkspace));
   SetLength(LFields, Length(LFields) + 1);

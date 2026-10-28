@@ -92,6 +92,7 @@ uses
   nyx.studio.sourceinput, nyx.editing, nyx.editing.history, nyx.text.projection,
   nyx.studio.completion, nyx.pascal.completion, nyx.pascal.drafts,
   nyx.studio.agentview,
+  nyx.studio.projectnavigation,
   nyx.studio.agents,
   nyx.studio.view, nyx.view.recovery,
   nyx.studio.builds,
@@ -872,9 +873,10 @@ begin
   FPointerBlurHandler := PointerBlur;
   FPointerRefreshTimer := -1;
   FRecoveryEnabled := True;
-  { Arriving through a project handle exposes its session switcher on the first
-    visit. Saved presentation remains authoritative on subsequent returns. }
-  FAgentsVisible := FWorkspace.ID <> '';
+  { Project navigation has its own always-discoverable home. New projects open
+    onto the design workspace; agent details remain an explicit operator choice.
+    Saved presentation and actual synchronization conflicts retain their routes. }
+  FAgentsVisible := False;
   FStatus := 'Ready to design';
 end;
 
@@ -1122,6 +1124,7 @@ begin
   LState.ButtonEditorDraft := FViewState.ButtonEditorDraft;
   LState.SelectionToolsExpanded := FViewState.SelectionToolsExpanded;
   LState.AssetPickerExpanded := FViewState.AssetPickerExpanded;
+  LState.ProjectNavigation := FViewState.ProjectNavigation;
   LState.ResourcesVisible := FViewState.ResourcesVisible;
   LState.LogicVisible := FViewState.LogicVisible;
   LState.LogicReference := FViewState.LogicReference;
@@ -2870,6 +2873,7 @@ procedure TNyxStudio.AgentRefresh(AContentChanged: Boolean);
 var
   LState: TNyxStudioAgentView;
   LCompiledURL: TNyxText;
+  LCreated: TNyxWorkspaceRef;
 begin
 
   if Length(FPressedPointers) > 0 then
@@ -2879,6 +2883,13 @@ begin
     Exit;
   end;
   LState := FAgents.State;
+
+  if not SourceBusy and (FProjectRequest = nil) and (FConfigurationRequest = nil) and
+    not FImportReading and FAgents.TakeCreatedWorkspace(LCreated) then
+  begin
+    JumpWorkspace(LCreated);
+    Exit;
+  end;
 
   if (LState.Compiler.Kind = ndObject) and
     (LState.Compiler.Field('sequence').AsInteger <> FAgentCompilerSequence) and
@@ -3956,6 +3967,41 @@ begin
     Exit;
   end;
 
+  if RouteNyxStudioProjectNavigation(FViewState.ProjectNavigation, ANode, AEvent.Trigger) then
+  begin
+    FPanel := nspProject;
+    FCanvasExpanded := False;
+
+    if AEvent.Trigger = ntClick then
+    begin
+      Refresh(True, True);
+    end;
+    Exit;
+  end;
+
+  if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-project-create') then
+  begin
+
+    if SourceBusy or (FProjectRequest <> nil) or (FConfigurationRequest <> nil) or FImportReading then
+    begin
+      FStatus := 'Finish the current project operation before creating another project';
+    end
+    else
+    begin
+      try
+        FAgents.CreateWorkspace(FViewState.ProjectNavigation.Name);
+        FStatus := 'Creating project / your current work stays open';
+      except
+        on LException: Exception do
+        begin
+          FStatus := LException.Message;
+        end;
+      end;
+    end;
+    Refresh(True, True);
+    Exit;
+  end;
+
   if (AEvent.Trigger = ntClick) and RouteNyxStudioWorkspace(FViewState, ANode.ID) then
   begin
     FCanvasExpanded := FViewState.CanvasExpanded;
@@ -4432,7 +4478,7 @@ begin
               LRetainCanvas := True;
             end;
           'action-preview': FPreview := not FPreview;
-          'action-save', 'action-project-save':
+          'action-save', 'action-project-save', 'action-project-save-current':
             begin
               ProjectRequest(npoSave);
               Exit;
@@ -4462,9 +4508,10 @@ begin
               FSourceInput.NavigateForward;
               Exit;
             end;
-          'action-import':
+          'action-import', 'action-project-browse':
             begin
-              FFilesVisible := not FFilesVisible;
+              FFilesVisible := True;
+              FViewState.ProjectNavigation.Panel := sppClosed;
               FPanel := nspProject;
               FCanvasExpanded := False;
               LRetainCanvas := True;

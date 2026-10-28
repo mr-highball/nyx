@@ -1,5 +1,15 @@
 # Agents in Nyx Studio
 
+Ordinary project navigation now lives at the top of **Project**, independently
+of this Agents view. **New project** creates a separate named workspace with an
+empty home page; **Switch project** lists open projects and retains each one's
+design, Pascal draft and history. Both use the operator's private editor
+connection, with exact revision checks on creation and acknowledged-frame guards
+before leaving. Agent enablement does not disable human creation. An old service
+without this capability explains the missing action instead of accepting a
+guessed protocol operation. New projects open on the designer; Agents details
+remain available explicitly and actual synchronization conflicts remain visible.
+
 Current-source `nyx_logic` discovery and ordinary grouped flow edits can compose
 [saved program routes](programs.md#saved-event-to-program-routes). The owned
 authenticated consumer qualifies exact retries, paired history and four actual

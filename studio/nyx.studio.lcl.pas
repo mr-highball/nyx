@@ -53,6 +53,7 @@ uses
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.sourceconfiguration,
   nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
+  nyx.studio.projectnavigation,
   nyx.studio.sourceinput, nyx.editing, nyx.editing.history, nyx.studio.completion,
   nyx.pascal.completion, nyx.pascal.drafts,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
@@ -1246,8 +1247,16 @@ end;
 procedure TNyxNativeStudio.AgentRefresh(AContentChanged: Boolean);
 var
   LState: TNyxStudioAgentView;
+  LCreated: TNyxWorkspaceRef;
 begin
   LState := GetAgentState;
+
+  if (CurrentBridge <> nil) and not SourceBusy and not FPainting and
+    CurrentBridge.TakeCreatedWorkspace(LCreated) then
+  begin
+    JumpWorkspace(LCreated);
+    Exit;
+  end;
 
   if FPendingProject <> nil then
   begin
@@ -5359,6 +5368,59 @@ begin
     if RouteNyxMenuInspectorChoice(FSession, ANode, FShellView.RootFor(ANode.ID),
       AEvent.Trigger, FState.MenuEditorReference) then
     begin
+      RequestRefresh;
+      Exit;
+    end;
+
+    if RouteNyxStudioProjectNavigation(FState.ProjectNavigation, ANode, AEvent.Trigger) then
+    begin
+      FState.Panel := nspProject;
+      FState.CanvasExpanded := False;
+
+      if AEvent.Trigger = ntClick then
+      begin
+        RequestRefresh;
+      end;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-project-create') then
+    begin
+
+      if (CurrentBridge = nil) or SourceBusy then
+      begin
+        raise ENyxModel.Create('Connect the service and finish the current operation before creating another project');
+      end;
+      CurrentBridge.CreateWorkspace(FState.ProjectNavigation.Name);
+      FState.Status := 'Creating project / your current work stays open';
+      RequestRefresh;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-project-browse') then
+    begin
+      FState.FilesVisible := True;
+      FState.ProjectNavigation.Panel := sppClosed;
+      FState.Panel := nspProject;
+      FState.CanvasExpanded := False;
+      RequestRefresh;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-project-save-current') then
+    begin
+      FState.FilesVisible := True;
+      FState.Panel := nspProject;
+      FState.CanvasExpanded := False;
+
+      if FState.ProjectName = '' then
+      begin
+        FState.Status := 'Choose a saved project name, or export a portable backup';
+      end
+      else
+      begin
+        SaveProject;
+      end;
       RequestRefresh;
       Exit;
     end;
