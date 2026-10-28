@@ -33,6 +33,15 @@ different-pair recovery choice/backup/native checks, then return to viewport
 acceptance. Stop further viewport fixture variants. Typing and
 navigation latency stay under [measured performance](NS-3_extension-performance_01.md).
 
+Recovery now also delivers explicit backup confirmation, retained protection on
+reconnect, ordinary menu access, keyboard focus and native/browser backup return.
+The existing browser protocol gate passes155; actual short-window native return
+and semantic observation retain exact pending pairs. Checked LAN delivery preserves
+all three projects and output configuration. Production browser file-delivery and
+broader input/quality criteria remain with the recovery owner. Return to the ranked
+work below and the existing measured-performance prerequisite; stop equivalent
+recovery/protocol/viewport fixtures.
+
 The user requested a return to high-value, user-facing backlog work. This order
 supersedes historical next-task notes below. Root remains in single-agent mode.
 Use the existing task identities and acceptance criteria; this reprioritization

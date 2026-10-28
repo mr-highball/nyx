@@ -2,6 +2,18 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Additional ordinary-editor consumer,2026-10-28: recovery now qualifies exact
+backup return and semantic Undo/Redo on the real desktop browser. After Redo,
+one public observer sample was still11173ms old while presentation had not
+settled; a later sample matched the full retained pair. The file-host consumer
+uses production rendering/source admission and an explicit controlled file seam.
+This is readiness evidence, not a controlled CPU, event-loop or transport timing
+measurement. Keep the original JSON Workshop/scaling deadline below. Measure its
+complete critical path and the corresponding ordinary editor refresh before
+attributing savings; do not substitute a smaller recovery/field fixture or raise
+timeouts. Supporting exact pairs and observations remain in the
+project-recovery-review-01 packet and [WORK](../WORK.md).
+
 Current concrete consumer: ordinary browser Studio's canvas scaling Apply on
 the saved JSON Workshop reaches its existing30000ms source-worker deadline.
 The accepted pair/draft remain intact. The matching independent full-import

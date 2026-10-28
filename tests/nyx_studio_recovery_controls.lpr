@@ -26,9 +26,9 @@ program nyx_studio_recovery_controls;
 uses
   {$ifdef PAS2JS}JS, Web, nyx.files, nyx.studio.browser,
     nyx.studio.sourcecompilation.shared.browser, nyx.studio.exchange,
-  {$else}Interfaces, Classes, Forms, Controls, Types, nyx.bytes, nyx.studio.lcl,
+  {$else}Interfaces, Classes, Forms, Controls, StdCtrls, Types, nyx.bytes, nyx.studio.lcl,
     nyx.studio.projectstore, nyx.studio.workspaces, nyx.studio.session,
-    nyx.test.capture.lcl,
+    nyx.test.capture.lcl, nyx.menu, nyx.menu.lcl, nyx.types, nyx.studio.menu,
   {$endif}
   SysUtils, nyx.text, nyx.data, nyx.studio.projects, nyx.studio.agentview;
 
@@ -401,6 +401,43 @@ begin
   end;
 end;
 
+{ Short presentation intentionally hides the panel bar. Follow the real menu
+  family rather than invoking a hidden desktop control or a controller method.
+  Managed menu leases keep their borrowed renderer lookups local to each step. }
+procedure ProjectMenuAction(AStudio: TNyxNativeStudio; AAction: TNyxStudioMenuAction);
+var
+  LParent: INyxLCLMenu;
+  LChild: INyxMenu;
+  LNative: INyxLCLMenu;
+  LControl: TControl;
+  LID: TNyxText;
+begin
+  case AAction of
+    smaAgents: LID := 'studio-menu-agents';
+    smaOpen: LID := 'studio-menu-open';
+  else
+    raise Exception.Create('This journey qualifies only recovery and Open project menu actions');
+  end;
+  Click(AStudio, NyxStudioActionMenuID);
+  LParent := AStudio.ActionMenu;
+  Check((LParent <> nil) and LParent.IsOpen, 'The ordinary Actions popup is open');
+  LControl := LParent.Presentation.Renderer.ControlFor('studio-menu-project');
+  Check((LControl is TWinControl) and TWinControl(LControl).Showing,
+    'Project is a showing menu action');
+  TControlAccess(LControl).Click;
+  AwaitStudio(AStudio);
+  LChild := LParent.Submenu(NyxPart('project'));
+  Check((LChild <> nil) and LChild.IsOpen and Supports(LChild, INyxLCLMenu, LNative),
+    'Project opens its independent native submenu');
+  LControl := LNative.Presentation.Renderer.ControlFor(LID);
+  Check((LControl is TWinControl) and TWinControl(LControl).Showing,
+    'The selected project command is a showing submenu action');
+  TWinControl(LControl).SetFocus;
+  Check(TWinControl(LControl).Focused, 'The project menu action accepts native focus');
+  TControlAccess(LControl).Click;
+  AwaitStudio(AStudio);
+end;
+
 function ReadText(const APath: TNyxText): TNyxText;
 var
   LFile: TFileStream;
@@ -425,22 +462,36 @@ var
   LRoot: TNyxText;
   LExpected: TNyxText;
   LWidth: Integer;
+  LHeight: Integer;
   LWindow: TForm;
   LStudio: TNyxNativeStudio;
   LStore: TNyxProjectStore;
   LBefore: TNyxText;
   LBackup: TNyxText;
+  LBackupName: TNyxText;
+  LName: TEdit;
   LRevision: TNyxText;
   LHistory: TNyxStudioRecoveryFrame;
   LAfter: TNyxStudioRecoveryFrame;
 begin
 
-  if ParamCount <> 4 then
+  if (ParamCount <> 4) and (ParamCount <> 5) then
   begin
-    raise Exception.Create('Usage: evidence-root service-url client-width expected-peer-packet');
+    raise Exception.Create('Usage: evidence-root service-url client-width expected-peer-packet [client-height]');
   end;
   LRoot := ExpandFileName(ParamStr(1));
   LWidth := StrToInt(ParamStr(3));
+  LHeight := 844;
+
+  if ParamCount = 5 then
+  begin
+    LHeight := StrToInt(ParamStr(5));
+  end;
+
+  if (LWidth < 240) or (LWidth > 4096) or (LHeight < 240) or (LHeight > 4096) then
+  begin
+    raise Exception.Create('Recovery qualification client dimensions must be 240..4096 pixels');
+  end;
   LExpected := ReadText(ParamStr(4));
   ForceDirectories(LRoot);
   LWindow := TForm.CreateNew(nil);
@@ -449,7 +500,7 @@ begin
   try
     LWindow.Caption := 'Nyx ordinary recovery qualification';
     LWindow.ClientWidth := LWidth;
-    LWindow.ClientHeight := 844;
+    LWindow.ClientHeight := LHeight;
     LWindow.Show;
     LStudio := TNyxNativeStudio.Create(LWindow, IncludeTrailingPathDelimiter(LRoot) + 'project');
     LStudio.Session.SetTitle('A first local plan');
@@ -465,7 +516,12 @@ begin
       (EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore),
       'The real service retains the independently different local pair');
 
-    if LWidth < 640 then
+    if (LHeight < 501) and (LWidth < 1201) then
+    begin
+      ProjectMenuAction(LStudio, smaAgents);
+      CheckDestination(LStudio, NyxStudioRecoveryBackupID);
+    end
+    else if LWidth < 640 then
     begin
       Click(LStudio, 'action-panel-design');
 
@@ -483,7 +539,8 @@ begin
       'Saving the native backup does not itself select the shared project');
     CheckDestination(LStudio, NyxStudioRecoveryConfirmID);
     LStore := TNyxProjectStore.Create(IncludeTrailingPathDelimiter(LRoot) + 'project');
-    LBackup := LStore.ReadProject(LStudio.Agents.RecoveryReview.BackupName, LRevision);
+    LBackupName := LStudio.Agents.RecoveryReview.BackupName;
+    LBackup := LStore.ReadProject(LBackupName, LRevision);
     Check((LRevision <> '') and (LBackup = LBefore),
       'An independent disk reader observes the exact complete local backup');
     SaveNyxNativeCapture(LWindow, IncludeTrailingPathDelimiter(LRoot) +
@@ -509,6 +566,24 @@ begin
     Check(not LStudio.Agents.Conflict and
       (EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LExpected),
       'Only the explicit confirmation admits the exact shared project');
+    ProjectMenuAction(LStudio, smaOpen);
+    Check(LStudio.ShellView.InputFor('project-file-name') is TEdit,
+      'Ordinary Open project exposes the saved-project name');
+    LName := TEdit(LStudio.ShellView.InputFor('project-file-name'));
+    LName.Text := String(LBackupName);
+    LName.OnChange(LName);
+    AwaitStudio(LStudio);
+    Click(LStudio, 'action-project-open');
+
+    if LStudio.ShellView.RootFor('project-conflict-warning') <> nil then
+    begin
+      Click(LStudio, 'action-project-use-remote');
+    end;
+    Check((EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore) and
+      LStudio.Session.SourceDraftPending,
+      'Ordinary native Open restores the exact saved backup and its unfinished Unicode draft');
+    SaveNyxNativeCapture(LWindow, IncludeTrailingPathDelimiter(LRoot) +
+      'restored-backup-printed.png', ncmPrint);
   finally
     LStore.Free;
     LStudio.Free;

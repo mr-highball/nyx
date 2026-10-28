@@ -9,7 +9,79 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Explicit recovery backup review — 2026-10-28
+## Current work — Recovery backup return and LAN delivery — 2026-10-28
+
+Previous goal turn: PROGRESS.234844a is pushed/remote-verified. Root remains SOLO.
+Continue the existing [recovery owner](TODO/NS-4_project-recovery_01.md); the
+current turn completes ordinary backup return and the previously unexecuted
+browser155 gate rather than adding another protocol/viewport fixture.
+
+Actual browser desktop input now qualifies failed backup delivery with unchanged
+local pair and no confirmation, explicit keyboard confirmation of reviewed peer
+revision9, and ordinary Open/import of the retained backup. Complete pair equality
+holds in the browser and an independent MCP export at revision10. MCP Undo/Redo
+traverses the existing accepted history; the observing editor returns to the exact
+retained pair at revision12. Undo is not a separate restore of the former peer's
+working draft. The155-check browser protocol gate passes. All file-delivery
+outcomes in this consumer remain controlled immutable file-host captures, not
+proof of a production browser disk save.
+
+The same-origin browser also retains a new5941-code-unit unfinished Unicode draft
+at390x480, reopens against the independently unchanged peer, reaches recovery
+through its notice and shows a fully visible, focused confirmation. Tab reveals
+the complete Cancel action; Enter cancellation and keyboard keep-local preserve
+the exact pair and focus Reconnect. Short native presentation intentionally hides
+the normal panel bar: the maintained journey now follows the actual Actions >
+Project > Agents and sync popup family instead of clicking a hidden tab. The
+existing native consumer gains an optional client height and ordinary saved-backup
+Open, including its warned replacement path. The serial390x480 run passes97
+checks with zero unfreed blocks; independent MCP export of its restored primary
+project at revision2 exactly matches two retained disk backups.
+
+Preserve native-short-01's hidden-tab test-assumption failure and the first
+short-return focus failure while browser input was active. The same final native
+binary passes with browser input stopped; do not claim a product focus repair or
+attribute that failure more strongly than the evidence. Native wide64/compact68,
+short86, and final short-return97 are distinct workloads, not additive coverage.
+The existing project-recovery-review-01 packet retains all logs, exact pairs,
+semantic history replies and desktop/short screenshots. All readers are joined;
+all private files/TEMP/TMP remain on E:. The Pythian firewall script reported by
+the user changes only Pythian's two review rules; no Nyx firewall mutation occurs.
+
+The larger ordinary editor took noticeable time to settle during semantic history
+observation. Its public observer was still stale by11173ms at one sample, then
+settled to the exact pair. This is not a controlled latency/CPU attribution. Keep
+the existing [performance owner](TODO/NS-3_extension-performance_01.md) and its
+original scaling/source-worker workload; do not raise deadlines or replace that
+workload with this smaller consumer. The recovery task remains open for actual
+production browser file-delivery and broader input/quality acceptance.
+
+The234844a product client is now delivered through the fixed approved LAN
+executable/web paths. Exact old owner14716 was stopped/joined; the stopped runtime
+backup verifies691 files by relative path, length and SHA-256. Only nyx_studio.js
+changed. Its served bytes match the checked artifact; backend executable, five
+other web dependencies, private toolchain and persisted studio-outputs.nyx are
+unchanged. Fresh authenticated MCP exports retain all three exact project pairs
+and revisions1/4/7. The LAN address is unchanged and an actual browser loads the
+delivered editor; its screenshot is retained. No new firewall rule/path is used.
+Private lan-owner.json records new process62740; its foreground service handle
+remains intentionally live. Isolated QA owner51648 is stopped/joined, and all
+owned browser test/review tabs are closed. Keep the E: snapshots and test failures.
+
+Two delivery-orchestration assumptions were corrected before accepting results:
+compare parsed project identity/revision/SHA fields instead of unordered JSON
+property order, and verify the actual persisted output filename. The first check
+refused before stopping the service; the second verification was rerun against
+the existing new listener without restarting it. No project/configuration change
+was found. Concurrent operator AGENTS/WORK edits remain separately unstaged.
+
+Next return to the ranked user-facing backlog and the existing measured-performance
+prerequisite, preserving its original JSON Workshop/scaling workload. Recovery's
+production-browser file-delivery effects and broader input/quality criteria stay
+open; this scoped delivery adds no full-task or milestone completion credit. Do
+not reopen equivalent recovery/protocol/viewport fixture work.
+
+## Previous checkpoint — Explicit recovery backup review — 2026-10-28
 
 PROGRESS; root remains SOLO. The user asked why progress appeared stalled. The
 goal is active, with no missing user input. Excessive regression setup/reruns
