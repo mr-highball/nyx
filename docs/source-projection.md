@@ -220,6 +220,24 @@ omits the strategy and retains existing literal authoring without compilers.
 attached command context; it does not modify a draft, document or history.
 Native Studio carries the explicit strategy into its independent project contexts.
 
+### Immutable canonical frames in local history
+
+An in-memory `TNyxSourceCheckpoint` retains the derived canonical prefix,
+builder and suffix beside their exact accepted design. Restoring that immutable
+value avoids generating the prior builder again during the next visual edit.
+Admission can also reuse the complete canonical frame when its freshly encoded
+document exactly matches the workspace baseline. These values contain text only;
+they retain no document, reader, renderer or execution authority.
+
+Every Render still freshly encodes the public document, and authored changes
+still reconstruct and validate the complete proposed meaning. A different
+design, Reset or executed-source adoption retires the cached frame. Wire
+Snapshot/Restore retains its established fields and rebuilds derived text
+independently. History storage accounting includes all retained frame text under
+the existing budget. The shared source-admission/history regression checks
+Unicode, crafted source, rejection, recovery and actual generation counts on
+both targets; complete Studio latency has its separate qualification.
+
 ### Literal browser worker failures
 
 Ordinary browser commands distinguish worker script/startup errors from the

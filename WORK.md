@@ -9,7 +9,42 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current checkpoint — Browser Studio scaling and delivery — 2026-10-27
+## Current work — Complete canvas Apply preparation measurement — 2026-10-27
+
+Browser completion: the exact Workshop now passes ordinary Inspector Apply under
+the unchanged30000ms worker ceiling, then actual toolbar Undo/Redo and named
+Save/Open. The saved project is byte-identical to the previously compiled Uniform
+Workshop. Private canvas-apply-preparation-01 retains exact visible source and
+paired-file comparisons. Typed checkpoints retain a complete immutable canonical
+frame; exact design reuse removes duplicate generation during candidate admission.
+Source/history checks pass364 natively and in the browser; the clean native heap
+has matching7957481 allocations/frees and zero unfreed blocks. The initial stale
+incremental-PPU compiler crash and successful clean rebuild remain evidence.
+Complete diagnostic preparation now counts2 canonical generations versus3 before;
+timings are noisy and do not establish a whole-editor speedup. Wire recovery
+retains fresh generation and history byte accounting includes all derived text.
+
+User steering changes the next concrete delivery to basic project actions:
+New/Open/Save/Switch must be discoverable directly in Project on desktop/phone.
+Use existing Studio-slice/full-authoring and project-workspace owners; expose
+missing operator creation through the acknowledged private editor lifecycle,
+preserve the project being left, and exercise actual creation/navigation/save.
+This supersedes further preparation experiments. Compact/draft/stale checks and
+matched LAN delivery remain required alongside the new user-facing journey.
+
+Previous goal turn: PROGRESS; b4cc447 is pushed and remote-verified. Batch37
+continues the same saved Workshop's source preparation deadline under the
+existing measured-performance/canvas owners. Obtain the complete critical-path
+profile with an external Pascal diagnostic using the same exact request,
+schemas, preparation and serialization; separate diagnostic measurement from
+production queue acceptance. Repair the largest verified cost, preserve strict
+admission/Unicode/limits and return to actual browser Studio Apply/history/
+Save/Open. Do not create more equivalent field fixtures or raise deadlines.
+Root remains SOLO; all prior owned jobs are joined, the LAN owner is retained,
+new artifacts/TEMP/TMP stay external and unrelated1280/390 are preserved. No
+user input or additional permission is missing.
+
+## Previous checkpoint — Browser Studio scaling and delivery — 2026-10-27
 
 Previous goal turn: PROGRESS; c442209 is pushed and remote-verified. Batch36
 returns canvas-workspace02 to ordinary browser Studio. Build the matched current

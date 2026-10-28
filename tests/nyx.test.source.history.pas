@@ -51,6 +51,15 @@ uses
   nyx.studio.projects,
   nyx.test.source.managed;
 
+{$ifdef NYX_SOURCE_PROFILE}
+{ Deterministic nonnil clock enables actual source-work counters. Assertions
+  check avoided regeneration; no wall-clock threshold substitutes for meaning. }
+function SourceAdmissionClock: Double;
+begin
+  Result := 0;
+end;
+{$endif}
+
 function RunNyxSourceHistoryTests: Integer;
 var
   LDocument: TNyxDocument;
@@ -332,6 +341,15 @@ begin
       '''Original '' + { Retain / 🌙 / 漢字 } ''caption''');
     LWorkspace.Accept(LDocument, LSource);
     LWire := LWorkspace.Snapshot;
+    {$ifdef NYX_SOURCE_PROFILE}ResetNyxSourceProfile(@SourceAdmissionClock);{$endif}
+    LWorkspace.Accept(LDocument, LSource);
+    Check(LWorkspace.Snapshot = LWire,
+      'readmitting the exact pair retains its crafted source and complete frame');
+    {$ifdef NYX_SOURCE_PROFILE}
+    Check(ReadNyxSourceProfile[spCanonicalGeneration].Calls = 0,
+      'readmission reuses the complete canonical frame for its freshly compared design');
+    ResetNyxSourceProfile(nil);
+    {$endif}
     LDesign := TNyxCodec.Encode(LDocument);
     LDraft := EditNyxManagedFixture(LSource, '''Original ''', '''Changed ''');
     LCandidate := LWorkspace.PrepareCandidate(LDocument, LDraft, LPrepared);
@@ -407,14 +425,31 @@ begin
     LWire := LWorkspace.Snapshot;
     LRestored.Restore(LCheckpoint);
     Check((LRestored.Render(LDocument) = LChanged) and (LRestored.Snapshot = LWire),
-      'typed recovery preserves exact wire and source without derived history text');
+      'typed recovery preserves exact wire/source and its independent canonical baseline');
     LDocument.Find('message').SetProp('hint', 'After typed restore');
+    {$ifdef NYX_SOURCE_PROFILE}ResetNyxSourceProfile(@SourceAdmissionClock);{$endif}
     LChanged := LRestored.Render(LDocument);
+    {$ifdef NYX_SOURCE_PROFILE}
+    Check((ReadNyxSourceProfile[spOldGeneration].Calls = 0) and
+      (ReadNyxSourceProfile[spCanonicalGeneration].Calls = 1),
+      'typed recovery generates the changed frame once without rebuilding its captured baseline');
+    {$endif}
     Check((Pos('After typed restore', LChanged) > 0) and
       (Pos('Retain / 🌙 / 漢字', LChanged) > 0),
-      'first edit after typed restore reconstructs the exact prior design baseline');
+      'first edit after typed restore reconciles against the exact prior design baseline');
     LRestored.Restore(LWire);
+    Check((LRestored.Capture.Design = LCheckpoint.Design) and
+      (LRestored.Capture.Source = LCheckpoint.Source) and
+      (LCheckpoint.StorageBytes > LRestored.Capture.StorageBytes),
+      'history accounting includes retained canonical text absent from identical wire recovery');
+    {$ifdef NYX_SOURCE_PROFILE}ResetNyxSourceProfile(@SourceAdmissionClock);{$endif}
     LChanged := LRestored.Render(LDocument);
+    {$ifdef NYX_SOURCE_PROFILE}
+    Check((ReadNyxSourceProfile[spOldGeneration].Calls = 1) and
+      (ReadNyxSourceProfile[spCanonicalGeneration].Calls = 2),
+      'wire recovery independently generates the changed frame and its cold baseline');
+    ResetNyxSourceProfile(nil);
+    {$endif}
     Check((Pos('After typed restore', LChanged) > 0) and
       (Pos('LAuthoredCaption', LChanged) > 0),
       'wire recovery independently reconstructs the prior baseline for direct edits');

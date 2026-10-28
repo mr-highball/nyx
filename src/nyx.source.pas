@@ -393,7 +393,7 @@ type
     spFrameMerge, spVerify, spLex, spSymbolRead, spCheckpoint, spCommit,
     spSave, spRestoreDocument, spSnapshot, spRestoreWorkspace, spRender,
     spRenderEncode, spCandidate, spCandidateValidate, spCandidateEncode,
-    spFactDeclarations, spFactIdentities, spFactPublication);
+    spFactDeclarations, spFactIdentities, spFactPublication, spCanonicalGeneration);
   TNyxSourceProfileClock = function: Double;
   TNyxSourceProfileSample = record
     Milliseconds: Double;
@@ -437,7 +437,9 @@ type
     survive workspace disposal independently and retain no document or reader.
     Design is the exact canonical document paired with this frame. StorageBytes
     counts retained text buffers (UTF-8 bytes natively, UTF-16 bytes in pas2js),
-    without serializing strings into another escaped JSON representation. JSON
+    including the private derived canonical frame, without serializing strings
+    into another escaped JSON representation. That frame belongs to this exact
+    Design only; it carries no parsed tree or new admission authority. JSON
     Snapshot/Restore remain the explicit recovery/interchange boundary. }
   TNyxSourceCheckpoint = record
   private
@@ -445,6 +447,9 @@ type
     FBody: TNyxText;
     FSuffix: TNyxText;
     FDesign: TNyxText;
+    FGeneratedPrefix: TNyxText;
+    FGeneratedBody: TNyxText;
+    FGeneratedSuffix: TNyxText;
     FCustomFrame: Boolean;
     FOrigin: TNyxSourceOrigin;
     FFiles: TNyxPascalProjectFiles;
@@ -493,10 +498,13 @@ type
     FCustomFrame: Boolean;
     FOrigin: TNyxSourceOrigin;
     FFiles: TNyxPascalProjectFiles;
-    { Derived canonical builder for FDesign only. It owns text, never a model or
-      reader. Recovery/history deliberately omit this disposable workspace cache;
-      Restore clears it, and every Render still freshly encodes the public tree. }
+    { Derived canonical frame for FDesign only. It owns text, never a model or
+      reader. Typed checkpoints retain this immutable value with its baseline;
+      wire recovery omits it. Every Render freshly encodes the public tree, and
+      authored reconciliation still reconstructs the complete proposed meaning. }
+    FGeneratedPrefix: TNyxText;
     FGeneratedBody: TNyxText;
+    FGeneratedSuffix: TNyxText;
     procedure StageAccepted(ADocument: TNyxDocument; const APrefix, ABody,
       ASuffix, ADesign: TNyxText);
   public
@@ -6548,7 +6556,9 @@ begin
   FDesign := '';
   FCustomFrame := False;
   FOrigin := nsoDeclarative;
+  FGeneratedPrefix := '';
   FGeneratedBody := '';
+  FGeneratedSuffix := '';
 end;
 
 procedure SplitCallbackSourceFrame(const ASource: TNyxText;
@@ -6691,6 +6701,21 @@ begin
   ASuffix := LSuffix;
 end;
 
+{ Generate one complete canonical frame. Profiling counts actual work across
+  normal rendering and admission, without changing source/schema validation. }
+procedure GenerateCanonicalSourceFrame(ADocument: TNyxDocument;
+  out APrefix, ABody, ASuffix: TNyxText);
+var
+  LTokens: TTokens;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LStarted: Double;
+  {$endif}
+begin
+  {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
+  Split(TNyxCodegen.Generate(ADocument), APrefix, ABody, ASuffix, LTokens);
+  {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCanonicalGeneration, LStarted);{$endif}
+end;
+
 function TNyxSourceWorkspace.Render(ADocument: TNyxDocument): TNyxText;
 begin
   Result := Render(ADocument, []);
@@ -6700,13 +6725,13 @@ function TNyxSourceWorkspace.Render(ADocument: TNyxDocument;
   const ARenames: array of TNyxSourceStateRename): TNyxText;
 var
   LDesign: TNyxText;
-  LGenerated: TNyxText;
+  LGeneratedPrefix: TNyxText;
   LGeneratedBody: TNyxText;
+  LGeneratedSuffix: TNyxText;
   LBefore: TNyxText;
   LPrefix: TNyxText;
   LBody: TNyxText;
   LSuffix: TNyxText;
-  LTokens: TTokens;
   LPrevious: TNyxDocument;
   LCandidate: TNyxDocument;
   LVerifiedDesign: TNyxText;
@@ -6743,9 +6768,10 @@ begin
 
   if FDesign <> LDesign then
   begin
-    LGenerated := TNyxCodegen.Generate(ADocument);
-    Split(LGenerated, LPrefix, LBody, LSuffix, LTokens);
+    GenerateCanonicalSourceFrame(ADocument, LPrefix, LBody, LSuffix);
+    LGeneratedPrefix := LPrefix;
     LGeneratedBody := LBody;
+    LGeneratedSuffix := LSuffix;
     { Read the generator's short interface frame, not its potentially large
       builder. Its canonical import decision includes saved policies in pages,
       reusable parts and menu contracts. Preserve handwritten frames below,
@@ -6928,13 +6954,13 @@ begin
 
         if LBefore = '' then
         begin
-          { Restored history/recovery carries only the accepted pair. Rebuild
-            this derived value once, using its exact accepted canonical design;
+          { Wire recovery and cold checkpoints may carry only the accepted pair.
+            Rebuild this value once from its exact accepted canonical design;
             never borrow the possibly changed current public document. }
           {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
           LPrevious := TNyxCodec.Decode(FDesign);
-          Split(TNyxCodegen.Generate(LPrevious), LVerifiedPrefix, LBefore,
-            LVerifiedSuffix, LTokens);
+          GenerateCanonicalSourceFrame(LPrevious, LVerifiedPrefix, LBefore,
+            LVerifiedSuffix);
           {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spOldGeneration, LStarted);{$endif}
         end;
         LBody := ReconcileNyxBuilderFrames(LBefore, FBody, LBody, ARenames, LAuthored);
@@ -6966,7 +6992,9 @@ begin
     FBody := LBody;
     FSuffix := LSuffix;
     FDesign := LDesign;
+    FGeneratedPrefix := LGeneratedPrefix;
     FGeneratedBody := LGeneratedBody;
+    FGeneratedSuffix := LGeneratedSuffix;
   end;
   Result := JoinSourceFrame([FPrefix, FBody, FSuffix]);
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRender, LRenderStarted);{$endif}
@@ -7037,19 +7065,32 @@ var
   LGeneratedPrefix: TNyxText;
   LGeneratedBody: TNyxText;
   LGeneratedSuffix: TNyxText;
-  LTokens: TTokens;
 begin
-  { Stage complete frames before publication. The session calls this only after
-    candidate admission; an invalid source cannot partially replace a frame. }
-  Split(TNyxCodegen.Generate(ADocument), LGeneratedPrefix, LGeneratedBody,
-    LGeneratedSuffix, LTokens);
+  { Stage complete frames before publication. The caller has freshly encoded
+    ADocument and admitted its source. Reuse only the complete canonical frame
+    for that exact design; this is derived text, never an admission substitute.
+    A different design/cold workspace still generates before changing a field. }
+
+  if (FDesign = ADesign) and (FGeneratedBody <> '') then
+  begin
+    LGeneratedPrefix := FGeneratedPrefix;
+    LGeneratedBody := FGeneratedBody;
+    LGeneratedSuffix := FGeneratedSuffix;
+  end
+  else
+  begin
+    GenerateCanonicalSourceFrame(ADocument, LGeneratedPrefix, LGeneratedBody,
+      LGeneratedSuffix);
+  end;
   FPrefix := APrefix;
   FBody := ABody;
   FSuffix := ASuffix;
   FDesign := ADesign;
   FCustomFrame := (APrefix <> LGeneratedPrefix) or (ASuffix <> LGeneratedSuffix);
   FOrigin := nsoDeclarative;
+  FGeneratedPrefix := LGeneratedPrefix;
   FGeneratedBody := LGeneratedBody;
+  FGeneratedSuffix := LGeneratedSuffix;
   FFiles := Default(TNyxPascalProjectFiles);
 end;
 
@@ -7084,12 +7125,16 @@ begin
   FCustomFrame := True;
   FOrigin := nsoExecuted;
   FFiles := AFiles;
+  FGeneratedPrefix := '';
   FGeneratedBody := '';
+  FGeneratedSuffix := '';
 end;
 
 function TNyxSourceCheckpoint.GetStorageBytes: TNyxTextBytes;
 begin
-  Result := TNyxTextBytes(Length(FPrefix)) + Length(FBody) + Length(FSuffix) + Length(FDesign);
+  Result := TNyxTextBytes(Length(FPrefix)) + Length(FBody) + Length(FSuffix) +
+    Length(FDesign) + Length(FGeneratedPrefix) + Length(FGeneratedBody) +
+    Length(FGeneratedSuffix);
   {$ifdef PAS2JS}
   Result := Result * 2;
   {$endif}
@@ -7107,6 +7152,9 @@ begin
   Result.FBody := FBody;
   Result.FSuffix := FSuffix;
   Result.FDesign := FDesign;
+  Result.FGeneratedPrefix := FGeneratedPrefix;
+  Result.FGeneratedBody := FGeneratedBody;
+  Result.FGeneratedSuffix := FGeneratedSuffix;
   Result.FCustomFrame := FCustomFrame;
   Result.FOrigin := FOrigin;
   Result.FFiles := FFiles;
@@ -7132,7 +7180,9 @@ begin
   FCustomFrame := ACheckpoint.FCustomFrame;
   FOrigin := ACheckpoint.FOrigin;
   FFiles := ACheckpoint.FFiles;
-  FGeneratedBody := '';
+  FGeneratedPrefix := ACheckpoint.FGeneratedPrefix;
+  FGeneratedBody := ACheckpoint.FGeneratedBody;
+  FGeneratedSuffix := ACheckpoint.FGeneratedSuffix;
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
 
@@ -7238,7 +7288,9 @@ begin
   FCustomFrame := LCustom;
   FOrigin := LOrigin;
   FFiles := LFiles;
+  FGeneratedPrefix := '';
   FGeneratedBody := '';
+  FGeneratedSuffix := '';
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
 
