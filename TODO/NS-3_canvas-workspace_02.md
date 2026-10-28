@@ -57,6 +57,8 @@ the shared library/adapters rather than special-casing the example or Studio.
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
 - [Reliable browser Tree disclosure](DONE/NS-3_tree-disclosure_01.md), discovered in
   the same compact Studio hierarchy; retain the original authoring journey.
+- [Coherent zoomed scroll chrome](NS-3_canvas-scrollbars_01.md), a concrete native
+  metric gap in the same full Workshop; retain the original live-control scope.
 - No missing external input prevents implementation. Existing canvas ownership,
   source/history, navigation and target renderer contracts are editable sources.
 
@@ -191,3 +193,27 @@ quality remain open. The installed LAN payload and example defaults are unchange
 Retain these gates and the authored overlap constraint on this owner rather
 than starting more standalone table/source variants;
 this task remains unaccepted with no duplicate completion credit.
+
+## Full native traced return — 2026-10-28
+
+After the shared JSON admission correction, fresh checked/O2/debug/heap-traced
+native builds pass with zero warnings. The same original full Workshop's ordinary
+Studio Inspector/history/stale/draft/Save/Open consumer passes54/58 at1280/390.
+Both produce the byte-identical65907-byte Uniform project/Pascal packet and its
+29400-byte constructor already accepted through the browser. The exact independently
+compiled application now passes the whole175-check journey at each width, within
+the unchanged60-second phases and120-second whole-run bound. All four complete
+heap reports have matching allocation/free counts/bytes and zero unfreed blocks.
+The prior stage22 timeout and truncated trailer remain retained failure evidence.
+Its controlled file/HTTP hosts preserve the original regression semantics; this
+does not establish physical native dialogs or real network effects.
+
+Whole traced application times are82.8/69.2s; complete Studio journeys225.7/134.7s.
+These single debug/heap observations qualify the original bounded regression,
+not production latency or a causal speedup percentage. Native formatted captures
+are diagnostic redraws. Fixed native scrollbar chrome still dominates small zooms;
+its granular prerequisite above owns actual geometry/input and a reusable repair.
+Drawing metrics, nested canvas, complete changed-layout admission, physical/
+assistive/display and remaining original interaction/performance criteria stay
+open. Stop equivalent Workshop/source variants; return to that concrete scroll
+metric gap. No full task or duplicate completion credit is accepted here.

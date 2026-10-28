@@ -9,7 +9,74 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Reliable Tree disclosure and compact Studio return — 2026-10-28
+## Current work — Same Workshop through native Studio and runtime — 2026-10-28
+
+Previous goal turn: PROGRESS.e05beae is pushed/remote-verified. Root remains SOLO.
+Follow canvas-workspace02's remaining full native traced journey after the actual
+desktop/compact browser authoring return. Reassessment confirms that the earlier
+native Studio54/58 saved Uniform pair is byte-identical to the current browser
+accepted packet; do not replace it with a smaller scene or assign duplicate
+authoring credit. Rebuild those ordinary controls against the changed shared JSON
+admission, then run that exact generated application's whole checked heap-traced
+journey. Its earlier full trace failed the original stage22 interaction deadline.
+The existing60-second phases and120-second whole runtime bound stay unchanged.
+No new host, source/scalar fixture, deadline increase or live project edit is part
+of this qualification. Existing native physical/assistive/display and full canvas
+acceptance remain separate from LCL input calls and diagnostic redraws.
+
+The fresh canvas-uniform-native-return-01 packet retains the exact original
+Reflow65905-byte and accepted Uniform65907-byte project/Pascal packets and its
+29400-byte compiled constructor. All new runners, compiler/test outputs and
+owned process TEMP/TMP stay external on E:. The maintained RunOwned implementation
+is reused privately for exact process ownership, unchanged deadlines, completed
+log hashes and complete heap trailers. Fresh checked/O2/debug/heap-traced native
+Studio and own-application builds succeed with zero warnings. Actual UI journeys
+run serially; compiler/runtime source readers retain a stable snapshot until joined.
+Both ordinary native Studio journeys now pass54/58 at1280/390. Actual select,
+button/menu and project-store operations retain exact paired Undo/Redo, stale
+refusal, unfinished supplementary-Unicode Pascal and warned Save/Open. Both save
+the exact expected Uniform packet and independently compiled constructor; their
+whole traced times are225.7/134.7s. Complete heap reports retain matching
+99881236/72137429 allocated/freed blocks and17525189901/11078674395 cumulative
+bytes, with zero unfreed blocks. These cumulative totals are not peak residency.
+
+The exact independently compiled application's whole traced journey now passes
+175 at both widths, including both independent application stores, real memo
+edits, formatted supplementary Unicode/exact integers, interpreted program edits,
+mixed operation frames, file/network outcomes and retirement. Controlled file/
+HTTP hosts retain the original regression semantics; this is not physical native
+dialog or real network-effect qualification. The60-second phases and120-second
+whole-run limit are unchanged. Native full traces complete in82.8/69.2s, with
+26073065/25643410 allocated/freed blocks and1285685609/1247915083 cumulative bytes;
+both complete trailers report zero unfreed blocks. The old stage22 timeout and
+truncated trailer remain intact. All four owned UI jobs and compiler readers
+are terminal/joined; recorded source identities remain unchanged. These single
+checked/heap observations qualify this original regression, not production
+latency or a causal speedup percentage. No new full-canvas acceptance is claimed.
+
+Native Studio and both formatted application captures are diagnostic redraws,
+not actual display or physical-device evidence. Review retains the exact result
+and the original honest Limited mixed Fit for authored overlapping rows. It also
+shows fixed scrollbar arrows/tracks consuming a disproportionate fraction of
+small uniformly scaled inputs. Source inspection confirms standard TMemo scroll
+styles and geometry/font/constraint/grid projection without a general scroll-chrome
+metric port. The concrete next prerequisite is
+[coherent scroll chrome](TODO/NS-3_canvas-scrollbars_01.md), within the original
+canvas owner, counted once. Its actual geometry/input baseline and reusable
+typed adapter repair must preserve editing/scroll anchors and older policies;
+the diagnostic image alone does not prove physical painting. The clipped native
+Import project or paired files caption is recorded with the existing caption-flow
+owner, not another caller-specific button patch.
+
+Stop equivalent Workshop/source/scalar qualification variants. Continue that
+concrete scroll-metric gap, retaining native drawing, nested canvas, complete
+changed-layout admission and all original display/physical/assistive/performance
+criteria. Installed LAN58356/QA58248 remain live with unchanged executable/source
+and project/configuration roots; no delivery or service restart is needed for this
+evidence-only checkpoint. Preserve external AGENTS/operator WORK edits and
+unrelated1280/390. No user input or approval is missing.
+
+## Previous checkpoint — Reliable Tree disclosure and compact Studio return — 2026-10-28
 
 Previous goal turn: PROGRESS.6d13c6f is pushed/remote-verified. Root remains SOLO.
 The same full saved Workshop's compact authoring journey is now executed; this

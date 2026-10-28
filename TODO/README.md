@@ -13,6 +13,13 @@ all three projects and output configuration. The separate full Tree search
 consumer failure remains with04; full canvas/input/quality and measured latency
 stay open. Return to those original outcomes, not more scalar/source fixtures.
 
+The same native Studio saved pair now passes its ordinary54/58 authoring checks
+and the exact compiled application's full175/175 checked heap-traced journey,
+including complete clean heaps under the original deadlines. Continue the concrete
+[zoomed scroll-chrome prerequisite](NS-3_canvas-scrollbars_01.md), observed in the
+native Workshop's diagnostic captures, rather than another equivalent full run.
+Full canvas/input/display/assistive and production performance remain open.
+
 User steering on2026-10-27 prioritizes discoverable New/Open/Save/Switch and the
 cited missing Inspector glyphs under the existing Studio slice. Its first LAN
 delivery retains exact projects/configuration and real browser lifecycle evidence.

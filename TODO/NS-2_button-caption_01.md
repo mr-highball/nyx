@@ -16,6 +16,9 @@ No separate completion credit; original button, renderer and Studio criteria
 remain. Starting evidence: [current work](../WORK.md), native button paint and
 preferred-size calculation, and the private studio-project-lifecycle-02 switcher
 capture. The separate viewport-context task owns incorrect column allocation.
+The2026-10-28 canvas-uniform-native-return-01 Studio diagnostic redraw also clips
+the ordinary Import project or paired files caption. Retain this representative
+Project action with the switcher cases; it is not a separate button workaround.
 
 **Acceptance Criteria:**
 
