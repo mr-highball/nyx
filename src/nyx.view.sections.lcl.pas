@@ -26,7 +26,8 @@ unit nyx.view.sections.lcl;
 interface
 
 uses
-  Controls, nyx.model, nyx.state, nyx.theme, nyx.behavior, nyx.view.sections, nyx.render.lcl;
+  Controls, nyx.model, nyx.state, nyx.theme, nyx.behavior, nyx.view.sections,
+  nyx.render.lcl, nyx.viewport.context;
 
 type
   { Borrowed configurator runs for each fresh candidate, before Render.
@@ -54,11 +55,13 @@ type
   Observer is managed; host/configurator receivers remain explicitly borrowed.
   A nonnil theme is borrowed and must outlive the section and pending handles;
   ordinary renderer admission snapshots it into each prepared view.
-  Replacing a section creates a fresh view; unmentioned sections retain drafts. }
+  Replacing a section creates a fresh view; unmentioned sections retain drafts.
+  AViewport optionally supplies enclosing presentation space without changing
+  local allocation/container boxes. Nil keeps the allocated-host default. }
 function NewNyxLCLViewSection(const AReference: TNyxViewSectionRef; AHost: TWinControl;
   AConfigure: TNyxLCLSectionConfigure = nil;
   const AObserver: INyxViewSectionObserver = nil;
-  ATheme: TNyxTheme = nil): INyxLCLViewSection;
+  ATheme: TNyxTheme = nil; const AViewport: INyxViewportContext = nil): INyxLCLViewSection;
 
 implementation
 
@@ -247,10 +250,10 @@ end;
 
 function NewNyxLCLViewSection(const AReference: TNyxViewSectionRef; AHost: TWinControl;
   AConfigure: TNyxLCLSectionConfigure; const AObserver: INyxViewSectionObserver;
-  ATheme: TNyxTheme):
+  ATheme: TNyxTheme; const AViewport: INyxViewportContext):
   INyxLCLViewSection;
 begin
-  Result := TSection.Create(AReference, AHost, AConfigure, AObserver, ATheme);
+  Result := TSection.Create(AReference, AHost, AConfigure, AObserver, ATheme, AViewport);
 end;
 
 end.

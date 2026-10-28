@@ -26,7 +26,8 @@ unit nyx.view.sections.browser;
 interface
 
 uses
-  Web, nyx.model, nyx.state, nyx.theme, nyx.behavior, nyx.view.sections, nyx.render.browser;
+  Web, nyx.model, nyx.state, nyx.theme, nyx.behavior, nyx.view.sections,
+  nyx.render.browser, nyx.viewport.context;
 
 type
   { Configure factories only before each candidate Render. The borrowed receiver
@@ -49,11 +50,13 @@ type
   handles: staging/rollback use inert hidden sibling elements. Observer is managed,
   host/configurator receivers explicitly borrowed. Candidate Render copies source;
   a nonnil theme is borrowed until every section/change reference is released.
-  Ordinary renderer admission snapshots it into each prepared view. }
+  Ordinary renderer admission snapshots it into each prepared view. AViewport
+  optionally shares enclosing presentation dimensions without changing local
+  CSS allocation/container boxes; nil keeps the allocated-host default. }
 function NewNyxBrowserViewSection(const AReference: TNyxViewSectionRef;
   AHost: TJSHTMLElement; AConfigure: TNyxBrowserSectionConfigure = nil;
   const AObserver: INyxViewSectionObserver = nil;
-  ATheme: TNyxTheme = nil): INyxBrowserViewSection;
+  ATheme: TNyxTheme = nil; const AViewport: INyxViewportContext = nil): INyxBrowserViewSection;
 
 implementation
 
@@ -182,9 +185,10 @@ end;
 
 function NewNyxBrowserViewSection(const AReference: TNyxViewSectionRef;
   AHost: TJSHTMLElement; AConfigure: TNyxBrowserSectionConfigure;
-  const AObserver: INyxViewSectionObserver; ATheme: TNyxTheme): INyxBrowserViewSection;
+  const AObserver: INyxViewSectionObserver; ATheme: TNyxTheme;
+  const AViewport: INyxViewportContext): INyxBrowserViewSection;
 begin
-  Result := TSection.Create(AReference, AHost, AConfigure, AObserver, ATheme);
+  Result := TSection.Create(AReference, AHost, AConfigure, AObserver, ATheme, AViewport);
 end;
 
 end.

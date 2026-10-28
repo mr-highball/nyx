@@ -28,6 +28,7 @@ uses
     nyx.test.capture.lcl,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.contract,
   nyx.theme, nyx.behavior, nyx.events, nyx.scheduler, nyx.content.mount,
+  nyx.projection.refresh,
   nyx.studio.session,
   nyx.studio.view, nyx.studio.sections, nyx.studio.section.views,
   nyx.studio.inspector.groups, nyx.studio.resize,
@@ -35,7 +36,7 @@ uses
   nyx.resources.editor,
   nyx.collections, nyx.collections.view, nyx.collections.mount,
   nyx.collections.view.types, nyx.collections.arrangement,
-  nyx.collections.query.policy, nyx.studio.collections,
+  nyx.collections.query.policy, nyx.studio.collections, nyx.studio.collectionintent,
   nyx.menu.editor,
   nyx.studio.resource.browser
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser{$endif};
@@ -781,6 +782,11 @@ end;
 procedure CollectionFormCases(ATheme: TNyxTheme;
   AHost: {$ifdef PAS2JS}TJSHTMLElement{$else}TWinControl{$endif});
   {$ifdef PAS2JS}async;{$endif}
+const
+  { Later table workbench features added two independent form owners. Require
+    their exact scopes alongside query/layout instead of the obsolete count2. }
+  CFormIDs: array[0..3] of TNyxText = (NyxStudioQueryEditorID,
+    NyxStudioLayoutEditorID, NyxStudioInspectionEditorID, NyxStudioDraftRecoveryEditorID);
 var
   LSession: TNyxStudioSession;
   LViews: TNyxStudioSectionViews;
@@ -796,6 +802,8 @@ var
   LBaseline: TNyxText;
   LMinimumID: TNyxText;
   LRefused: Boolean;
+  LForms: TNyxProjectionFormContexts;
+  LFormIndex: Integer;
   {$if defined(NYX_SECTION_REFRESH_BENCHMARK) and not defined(PAS2JS)}
   LRepeat: Integer;
   LStarted: QWord;
@@ -847,8 +855,20 @@ begin
     LTable := nil;
     LSession.Select('collection-form-table');
     LDocument := ComposeCollectionFixture;
-    Check(Length(NyxStudioCollectionFormContexts(LDocument.Pages[0])) = 2,
-      'stock collection owner supplies disjoint query and layout baseline scopes');
+    LForms := NyxStudioCollectionFormContexts(LDocument.Pages[0]);
+    Check(Length(LForms) = Length(CFormIDs) + 2,
+      'stock collection owner supplies all current independent baseline scopes');
+    for LFormIndex := Low(CFormIDs) to High(CFormIDs) do
+    begin
+      Check((LForms[LFormIndex].RuntimeID = CFormIDs[LFormIndex]) and
+        (LForms[LFormIndex].DesignID = CFormIDs[LFormIndex]),
+        'stock form keeps its exact independent baseline owner / ' + CFormIDs[LFormIndex]);
+    end;
+    Check((LForms[4].RuntimeID = NyxStudioColumnOrderID(0, scaColumnEarlier)) and
+      (LForms[4].DesignID = LForms[4].RuntimeID) and
+      (LForms[5].RuntimeID = NyxStudioColumnOrderID(0, scaColumnLater)) and
+      (LForms[5].DesignID = LForms[5].RuntimeID),
+      'column-order commands own independent exact scopes without borrowing sizing inputs');
     LViews.Render(LDocument, LDocument.Pages[0], AHost);
     {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
     LRoot := LViews.SectionRoot(nssInspector);
@@ -1061,6 +1081,11 @@ begin
     LBase := Shell(LSession);
     LViews.Render(LBase, LBase.Pages[0], LHost);
     {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    { The independent sidebar is narrow even in the wide editor. A document's
+      viewport presentation belongs to the composed view, while named container
+      conditions deliberately keep their locally measured content allocation. }
+    Check(LViews.Root.Find('studio-project-actions').Prop('columns') = '1',
+      'wide Studio sections retain the outer viewport presentation');
     LInput := LViews.InputFor('recovery-budget');
     LAction := LViews.ControlFor('recovery-action');
     LTitle := LViews.InputFor('project-title');

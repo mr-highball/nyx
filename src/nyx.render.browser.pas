@@ -31,6 +31,7 @@ interface
 uses
   nyx.types,
   nyx.text,
+  nyx.viewport.context, nyx.viewport.binding,
   nyx.publication,
   nyx.view.publication,
   nyx.coordinators,
@@ -329,6 +330,10 @@ type
     FViewportObserver: TJSHTMLResizeObserver;
     FViewportWidth: Double;
     FViewportHeight: Double;
+    { An enclosing presentation viewport never becomes this host's CSS allocation.
+      Export is explicit, so ordinary rule-free views need no extra observer. }
+    FViewportBinding: INyxViewportBinding;
+    FViewportExported: Boolean;
     { A hidden candidate consumes the captured final host frame. Its optional
       connected probe measures publishers without replacing that frame during
       Sync. Clear owns removal of this temporary host, never the caller's host. }
@@ -399,6 +404,12 @@ type
       candidate early. Its receiver rejects notifications until ownership moves. }
     procedure ObserveViewport(AReceiver: TNyxBrowserRenderer = nil);
     function MeasureContainers: INyxContainerSnapshot;
+    function ReadViewportAllocation(out AWidth, AHeight: Double): Boolean;
+    function ViewportReady: Boolean;
+    function GetViewportContext: INyxViewportContext;
+    function GetPresentationViewport: INyxViewportContext;
+    procedure SetPresentationViewport(const AValue: INyxViewportContext);
+    function GetPresentationViewportFailure: TNyxText;
     { Read actual untransformed CSS content boxes synchronously for a connected
       hidden candidate. Missing/disconnected boxes remain missing. }
     function MeasureAllocatedContainers: INyxContainerSnapshot;
@@ -748,6 +759,12 @@ type
       reads expose the last accepted choice until that job publishes. Compatible
       explicit named parts carry input state; changed contracts are new fields. }
     property PresentationSelection: TNyxPresentationSelection read FPresentationSelection write SetPresentationSelection;
+    { Optional enclosing presentation space; nil retains local logical host
+      dimensions. Runtime Context survives ordinary replacement and retires on
+      explicit Unmount/destruction; it never grants access to the host DOM. }
+    property PresentationViewport: INyxViewportContext read GetPresentationViewport write SetPresentationViewport;
+    property ViewportContext: INyxViewportContext read GetViewportContext;
+    property PresentationViewportFailure: TNyxText read GetPresentationViewportFailure;
     { Portable managed capability. Borrowed receiver links retire on Unmount;
       caller-retained interfaces stay safe and never retain the renderer. }
     property Presentations: INyxPresentationView read GetPresentationView;
@@ -1507,6 +1524,8 @@ begin
   FContentGuard := NewNyxContentGuard(@QueueContent);
   Supports(FContentGuard, INyxContentLifetime, FContentLifetime);
   FResizePreviewHandler := @ResizePreviewViewport;
+  FViewportBinding := NewNyxViewportBinding(FEvents.Scheduler, npfBrowser,
+    @ReadViewportAllocation, @ViewportReady, @Sync);
 end;
 
 destructor TNyxBrowserRenderer.Destroy;
@@ -1535,6 +1554,12 @@ begin
     Exit;
   end;
   { No producer may regain authority while service-close callbacks execute. }
+
+  if FViewportBinding <> nil then
+  begin
+    FViewportBinding.Retire;
+    FViewportBinding := nil;
+  end;
 
   if FGenerationObject <> nil then
   begin
@@ -2945,11 +2970,24 @@ var
   LScheduler: INyxScheduler;
   LExecution: INyxExecution;
   LStatus: TNyxExecutionStatus;
+  LFrame: TNyxViewFrame;
 begin
   LGeneration := TBrowserViewGeneration(FGenerationObject);
   LGenerationLease := FGeneration;
 
   if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit;
+  end;
+  FViewportBinding.Observe;
+
+  if not LGeneration.Current then
+  begin
+    Exit;
+  end;
+  FViewportBinding.Wake;
+
+  if not LGeneration.Current then
   begin
     Exit;
   end;
@@ -2965,10 +3003,18 @@ begin
     Exit;
   end;
 
-  if FContentFrameKnown and (FHost <> nil) and
-    (FContentFrame.Width = FHost.clientWidth) and
-    (FContentFrame.Height = FHost.clientHeight) and
-    FContentFrame.Selection.Same(FContentRequestedSelection) and
+  if FHost = nil then
+  begin
+    Exit;
+  end;
+  LFrame := FViewportBinding.Frame(FHost.clientWidth, FHost.clientHeight);
+
+  if FContentRequestedSelection.Reference.Defined then
+  begin
+    LFrame := LFrame.Selecting(FContentRequestedSelection.Reference);
+  end;
+
+  if FContentFrameKnown and FContentFrame.Same(LFrame) and
     (FContentMeasurementKey = NyxContentMeasurements(FRoot, MeasureContainers)) then
   begin
     { A settled mount needs no redundant queued courier. A changed physical
@@ -3049,7 +3095,7 @@ begin
       Exit;
     end;
   end;
-  LFrame := TNyxViewFrame.At(FHost.clientWidth, FHost.clientHeight, npfBrowser);
+  LFrame := FViewportBinding.Frame(FHost.clientWidth, FHost.clientHeight);
 
   if FContentRequestedSelection.Reference.Defined then
   begin
@@ -3058,9 +3104,8 @@ begin
   LMeasurements := MeasureContainers;
   LKey := NyxContentMeasurements(FRoot, LMeasurements);
 
-  if FContentFrameKnown and (FContentFrame.Width = LFrame.Width) and
-    (FContentFrame.Height = LFrame.Height) and
-    FContentFrame.Selection.Same(LFrame.Selection) and (FContentMeasurementKey = LKey) then
+  if FContentFrameKnown and FContentFrame.Same(LFrame) and
+    (FContentMeasurementKey = LKey) then
   begin
     Exit;
   end;
@@ -3188,7 +3233,7 @@ begin
   FPublishingContent := True;
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
-      TNyxViewFrame.At(AHost.clientWidth, AHost.clientHeight, npfBrowser),
+      FViewportBinding.Frame(AHost.clientWidth, AHost.clientHeight),
       nil, False, nil, AResourceMode);
   finally
     { Notifications may dispose this renderer after adoption. The existing
@@ -3241,7 +3286,7 @@ begin
   FPublishingContent := True;
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
-      TNyxViewFrame.At(AHost.clientWidth, AHost.clientHeight, npfBrowser), nil, False, nil,
+      FViewportBinding.Frame(AHost.clientWidth, AHost.clientHeight), nil, False, nil,
       AResourceMode, True, AContext, AResolver, APublicationSource);
   finally
 
@@ -3803,6 +3848,8 @@ begin
     repeat
       CheckAttempt;
       LCandidate := TNyxBrowserRenderer.Create(FTheme);
+      LCandidate.PresentationViewport := PresentationViewport;
+      LCandidate.FViewportExported := FViewportExported;
       LCollectionAdmissions := nil;
       LCollectionInputGate := NewNyxCollectionInputGate(FInheritedCollectionInputGate);
       LCandidate.FCollectionInputGate := LCollectionInputGate;
@@ -3873,9 +3920,11 @@ begin
       ApplyNyxPlatform(LCandidate.FRoot, npfBrowser);
       LCandidate.FViewportWidth := AHost.clientWidth;
       LCandidate.FViewportHeight := AHost.clientHeight;
-      LCandidate.FRoot.ApplyViewport(LCandidate.FViewportWidth, LCandidate.FViewportHeight,
+      LCandidate.FRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight,
         npfBrowser, LFrame.Selection, LMeasurements);
-      LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
+      { Keep resolved viewport overlays for structural settlement while stored
+        properties remain the independent authored refresh baseline. }
+      LCandidate.FProjectionBaseline := LCandidate.FRoot.CloneRuntimeProjection;
       RestoreNyxContentValues(LCandidate.FRoot, LStates);
       LCandidate.FCollectionBindings := LCollections;
 
@@ -4031,7 +4080,7 @@ begin
           FResourceContext.Locale, FResourceContext.Fallback);
       end;
       ApplyNyxPlatform(LMeasuredRoot, npfBrowser);
-      LMeasuredRoot.ApplyViewport(LFrame.Width, LFrame.Height,
+      LMeasuredRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight,
         npfBrowser, LFrame.Selection, LAllocated);
 
       if LSettlement.Accept(LCandidate.FProjectionBaseline, LMeasuredRoot) then
@@ -4184,6 +4233,8 @@ begin
       begin
         raise ENyxModel.Create('Browser collection input generation retired during preview');
       end;
+      FViewportBinding.CheckFrame(LFrame);
+      CheckAttempt;
     except
       { Disconnect the new observer before restoring exact accepted DOM objects.
         Only candidate nodes are removed from a different borrowed host. }
@@ -5022,7 +5073,7 @@ begin
     begin
       Exit;
     end;
-    LFrame := TNyxViewFrame.At(FHost.clientWidth, FHost.clientHeight, npfBrowser);
+    LFrame := FViewportBinding.Frame(FHost.clientWidth, FHost.clientHeight);
     LNextSelection := FPresentationSelection.Reconciled(ADocument.Presentations.Snapshot);
 
     if LNextSelection.Reference.Defined then
@@ -5328,7 +5379,62 @@ end;
 procedure TNyxBrowserRenderer.Unmount;
 begin
   FRenderAttempt := nil;
+  FViewportBinding.Suspend;
+  FViewportExported := False;
   Clear;
+end;
+
+function TNyxBrowserRenderer.ReadViewportAllocation(out AWidth, AHeight: Double): Boolean;
+begin
+  Result := (FRoot <> nil) and (FHost <> nil);
+  AWidth := 0;
+  AHeight := 0;
+
+  if Result then
+  begin
+    AWidth := FViewportWidth;
+    AHeight := FViewportHeight;
+
+    if not FDetachedCandidate then
+    begin
+      AWidth := FHost.clientWidth;
+      AHeight := FHost.clientHeight;
+    end;
+  end;
+end;
+
+function TNyxBrowserRenderer.ViewportReady: Boolean;
+begin
+  Result := (FRoot <> nil) and not FDetachedCandidate and not FUpdating and
+    not FPublishingContent and not FContentGuard.Busy;
+end;
+
+function TNyxBrowserRenderer.GetViewportContext: INyxViewportContext;
+begin
+  FViewportExported := True;
+  Result := FViewportBinding.Context;
+  ObserveViewport;
+end;
+
+function TNyxBrowserRenderer.GetPresentationViewport: INyxViewportContext;
+begin
+  Result := FViewportBinding.Source;
+end;
+
+procedure TNyxBrowserRenderer.SetPresentationViewport(const AValue: INyxViewportContext);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if FPublishingContent or FUpdating then
+  begin
+    raise ENyxModel.Create('Enclosing viewport configuration requires an idle browser view');
+  end;
+  FViewportBinding.Source := AValue;
+end;
+
+function TNyxBrowserRenderer.GetPresentationViewportFailure: TNyxText;
+begin
+  Result := FViewportBinding.Failure;
 end;
 
 procedure TNyxBrowserRenderer.SetPresentationSelection(const AValue: TNyxPresentationSelection);
@@ -5623,7 +5729,7 @@ begin
   end;
 
   if (FRoot <> nil) and (FHost <> nil) and
-    (FRoot.HasViewportRules or (FContentBlueprint <> nil)) then
+    (FRoot.HasViewportRules or (FContentBlueprint <> nil) or FViewportExported) then
   begin
     FViewportObserver := TJSHTMLResizeObserver.new(@AReceiver.ViewportChanged);
     FViewportObserver.observe(FHost);
@@ -10186,6 +10292,7 @@ var
   LDrawingPlan: INyxDrawingPlan;
   LDrawingProvider: INyxDrawingProvider;
   LDrawingTheme: TNyxTheme;
+  LViewportFrame: TNyxViewFrame;
   LIndex: Integer;
   LMetricIndex: Integer;
   LBinding: TNyxBrowserBinding;
@@ -10313,10 +10420,12 @@ begin
           FViewportWidth := FHost.clientWidth;
           FViewportHeight := FHost.clientHeight;
         end;
-      FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser,
+        LViewportFrame := FViewportBinding.Frame(FViewportWidth, FViewportHeight);
+        FViewportBinding.Observe;
+        CheckCurrent;
+        FRoot.ApplyViewport(LViewportFrame.ViewportWidth, LViewportFrame.ViewportHeight, npfBrowser,
           FPresentationSelection, MeasureContainers);
-      CheckCurrent;
-      CheckCurrent;
+        CheckCurrent;
       end;
       for LIndex := 0 to Length(FBindings) - 1 do
       begin

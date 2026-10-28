@@ -466,7 +466,7 @@ begin
     Sections[Ord(LSection)] := NewNyxLCLViewSection(
     {$endif}
       TNyxViewSectionRef.Named(NyxStudioSectionRootID(LSection)), Hosts[LSection],
-      AOwner.FConfigure, ObserverLease, AOwner.FTheme);
+      AOwner.FConfigure, ObserverLease, AOwner.FTheme, Core.ViewportContext);
     SetLength(LChanges, Length(LChanges) + 1);
     LChanges[High(LChanges)] := Sections[Ord(LSection)].Prepare(Documents[LSection],
       Documents[LSection].Pages[0]);

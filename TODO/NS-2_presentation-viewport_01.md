@@ -35,3 +35,20 @@ The private studio-project-lifecycle-02 packet retains the desktop switcher imag
 **Blockers**
 
 - [Staged view sections](DONE/NS-2_section-publication_01.md).
+
+**Current evidence — 2026-10-28**
+
+Typed runtime viewport sources now span both adapters and Studio section hosts;
+local container measurements remain independent. The maintained
+`viewport-context` target executes15 source-ownership and22 actual native host
+checks and stages browser consumers. Actual browser execution passes15/21.
+The native Studio section recovery passes111 and its desktop capture shows the
+authored one-column Project actions with fitting captions. Content authoring/replay
+passes66 and the existing native live-content consumer passes63; all native
+heaps are clean. See [current work](../WORK.md) for failures and the private packet,
+and [the public host contract](../docs/view-sections.md#enclosing-presentation-space).
+
+The complete browser Studio capture gate remains unqualified after acknowledgment
+and browser command timeouts. Full project-pair navigation, zoom/scroll, compact
+visual quality and observing delivery still need this batch's evidence. This task
+stays open; isolated passes do not establish its remaining acceptance criteria.

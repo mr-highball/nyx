@@ -34,7 +34,8 @@ type
     Its canonical generation lease makes Current safe after Clear/destruction.
     Private old nodes/blueprint and copied physical input survive until commit;
     abandonment restores them, while Install only assigns prepared bookkeeping.
-    The context publication owns this port without a reverse ownership cycle. }
+    The context publication owns this port without a reverse ownership cycle.
+    Captured presentation geometry/source revision fence outer-only resizes too. }
   TFormContextTarget = class(TInterfacedObject, INyxPreparedPublication,
     INyxPublicationReadiness)
   private
@@ -50,6 +51,9 @@ type
     FRoot: TNyxNode;
     FBaseline: TNyxNode;
     FSchema: Integer;
+    FFrame: TNyxViewFrame;
+    FViewport: INyxViewportContext;
+    FViewportRevision: Integer;
     FForms: TNyxProjectionFormContexts;
     FInputs: TNyxContentFaceStates;
     FBound: Boolean;
@@ -69,7 +73,8 @@ type
   public
     constructor Create(AOwner: TFormContextRenderer;
       const AForms: TNyxProjectionFormContexts;
-      const AInputs: TNyxContentFaceStates; ABound: Boolean);
+      const AInputs: TNyxContentFaceStates; ABound: Boolean;
+      const AFrame: TNyxViewFrame);
     destructor Destroy; override;
     procedure AdoptPrevious(var AValues, ABaseline: TNyxNode;
       var ABlueprint: TNyxContentBlueprint);
@@ -83,7 +88,7 @@ type
 
 constructor TFormContextTarget.Create(AOwner: TFormContextRenderer;
   const AForms: TNyxProjectionFormContexts; const AInputs: TNyxContentFaceStates;
-  ABound: Boolean);
+  ABound: Boolean; const AFrame: TNyxViewFrame);
 var
   LIndex: Integer;
   LRevision: Integer;
@@ -99,6 +104,13 @@ begin
   FRoot := AOwner.FRoot;
   FBaseline := AOwner.FProjectionBaseline;
   FSchema := NyxSchemaRevision;
+  FFrame := AFrame;
+  FViewport := AOwner.FViewportBinding.Source;
+
+  if FViewport <> nil then
+  begin
+    FViewportRevision := FViewport.Snapshot.Revision;
+  end;
   FBound := ABound;
   FSelectionBefore := AOwner.FPresentationSelection;
   FRequestedBefore := AOwner.FContentRequestedSelection;
@@ -170,6 +182,10 @@ begin
 end;
 
 procedure TFormContextTarget.CheckReady;
+var
+  LWidth: Double;
+  LHeight: Double;
+  LFrame: TNyxViewFrame;
 begin
 
   if FRetired or FInstalled or not Current then
@@ -183,6 +199,25 @@ begin
     (FOwner.FProjectionSchemaRevision <> FSchema) then
   begin
     raise ENyxModel.Create('Retained form context changed before publication');
+  end;
+
+  if (FOwner.FViewportBinding.Source <> FViewport) or
+    ((FViewport <> nil) and (not FViewport.Active or
+      (FViewport.Snapshot.Revision <> FViewportRevision))) or
+    not FOwner.ReadViewportAllocation(LWidth, LHeight) then
+  begin
+    raise ENyxModel.Create('Retained form presentation context changed before publication');
+  end;
+  LFrame := FOwner.FViewportBinding.Frame(LWidth, LHeight);
+
+  if FFrame.Selection.Reference.Defined then
+  begin
+    LFrame := LFrame.Selecting(FFrame.Selection.Reference);
+  end;
+
+  if not LFrame.Same(FFrame) then
+  begin
+    raise ENyxModel.Create('Retained form geometry changed before publication');
   end;
 end;
 
@@ -454,10 +489,10 @@ begin
         Exit;
       end;
       {$ifdef PAS2JS}
-      LFrame := TNyxViewFrame.At(FHost.clientWidth, FHost.clientHeight, npfBrowser);
+      LFrame := FViewportBinding.Frame(FHost.clientWidth, FHost.clientHeight);
       {$else}
-      LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
-        Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+      LFrame := FViewportBinding.Frame(ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth)),
+        ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight)));
       {$endif}
       LSelection := FPresentationSelection.Reconciled(ADocument.Presentations.Snapshot);
 
@@ -503,7 +538,7 @@ begin
         Exit;
       end;
       LPrevious := FRoot.Clone;
-      LTarget := TFormContextTarget.Create(Self, LForms, LInputs, LBound);
+      LTarget := TFormContextTarget.Create(Self, LForms, LInputs, LBound, LFrame);
       LTargetLease := LTarget;
       LPublication := TryPrepareNyxProjectionContextPublication(FEvents, LTargetLease);
       RequireCurrent;

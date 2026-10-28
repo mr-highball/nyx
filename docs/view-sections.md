@@ -161,6 +161,80 @@ destructor must not be used as a fallible retirement callback.
 
 ## Qualification and remaining integration
 
+### Enclosing presentation space
+
+An independent renderer normally evaluates viewport rules against its own logical
+host allocation. This remains the default for standalone applications and views.
+A section embedded in a desktop sidebar can instead share the application's
+presentation viewport without pretending its sidebar is as wide as the window:
+
+```pascal
+{ Both target renderers expose the same runtime contract. The outer view has
+  already rendered into its application host; all calls use its UI scheduler. }
+FDetailsRenderer.PresentationViewport := FApplicationRenderer.ViewportContext;
+FDetailsRenderer.Render(FDocument, FDocument.Pages[0], FDetailsHost);
+```
+
+The section factories accept that same optional `INyxViewportContext` after the
+theme argument. For example, a native host adapter can create its section with
+`NewNyxLCLViewSection(TNyxViewSectionRef.Named('details'), FHost, nil, nil, FTheme, FViewport)`.
+The browser factory
+has the corresponding final argument. Studio supplies its Core renderer's context
+to independently mounted editor sections.
+
+`PresentationViewport` is host configuration. Set it before rendering or while
+the view is idle; `nil` restores the allocated-host default. Direct and named
+viewport conditions, including structural recipes, consume the shared dimensions.
+Explicit named **container** conditions continue to use the nearest eligible
+measured local ancestor. Physical bounds, scrolling and the layout allocation
+remain local. Manual presentation selection remains independent for each view.
+The lower-level `TNyxViewFrame.At(...).WithinViewport(...)` expresses both spaces
+when realizing a tree without an adapter.
+
+`ViewportContext` exports the renderer's resolved presentation space. Consumers
+can export it again for nested scopes even when every host has a different local
+width. Observations use logical pixels, preserve fractional dimensions and
+distinguish an unknown initial value from a measured zero. A rule-free browser
+parent still observes resizes when it exports this context. Updates coalesce
+through the UI scheduler, rather than replacing a child during a parent callback.
+
+Each consumer owns an independent subscription. Dropping its subscription cancels
+that borrowed callback; retaining a reader or token does not retain a renderer,
+document or target control. The writer's retirement revokes all receivers. The
+last snapshot stays readable, but an inactive source cannot supply a new frame.
+Ordinary structural replacement keeps the logical renderer's exported port;
+explicit `Unmount` or destruction retires it. Remounting exports a fresh port.
+A section replacement owns a different renderer and therefore requires explicit
+rebinding of readers that should follow its successor. Retire dependent views
+before destroying their enclosing host.
+
+Prepared sections and retained form publications fence the enclosing source's
+revision as well as their local geometry. An outer-only resize can therefore
+refuse an obsolete proposal even when the child slot did not resize. Section
+publication returns `False` for a stale proposal; retained-form publication
+reports its readiness failure and restores its previous input/context on retirement.
+An unsuccessful deferred adapter refresh exposes `PresentationViewportFailure`;
+structural recipe admission additionally reports `LastContentError`.
+
+The context belongs to `nyx.viewport.context`; its copied observation is
+`TNyxViewportContextSnapshot`, distinct from a control's scroll viewport snapshot.
+Custom hosts can own a writer through `NewNyxViewportContext(Scheduler)`, publish
+validated dimensions and pass its read-only `Context` to renderers. All operations
+belong to that scheduler's UI thread. Runtime host wiring is not persisted into
+designs and introduces no raw-string authoring option or generated-code change.
+
+Run `tools/build.ps1 -Target viewport-context` to execute the checked native
+ownership and real-host journeys and stage their browser counterparts. Supply a
+**new** `-ViewportContextEvidenceDirectory`, or configure the private
+`EVIDENCE_ROOT`; `TEMP_ROOT` also redirects compiler subprocess scratch files.
+Serve the staged `viewport-context.html` and `viewport-context-contracts.html`
+through a local preview host and inspect their `data-test-result` markers.
+This command starts no listener. The actual-host journey covers enclosing/local
+widths, nested resize, named containers, exact Unicode selection and numeric
+draft transfer, stale section/form refusal, replacement, retirement and remount.
+It does not by itself establish full Studio project-pair navigation, zoom/scroll,
+phone hardware or assistive-technology acceptance.
+
 Run `tools/build.ps1 -Target view-sections` to compile and execute the checked
 Win32 consumer and stage pas2js/HTML/matched RTL artifacts. This command starts no
 HTTP listener. Serve the exact staged closure through an admitted existing host

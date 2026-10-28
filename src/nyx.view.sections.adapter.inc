@@ -51,6 +51,10 @@ type
     FExpectedParent: TSectionParent;
     FExpectedWidth: Integer;
     FExpectedHeight: Integer;
+    { Independent enclosing-space fence: local slot size may remain unchanged
+      while an outer viewport crosses a presentation boundary during preparation. }
+    FExpectedViewport: INyxViewportContext;
+    FExpectedViewportRevision: Integer;
     FCandidate: TSectionRenderer;
     FPrevious: TSectionRenderer;
     FStageHost: TSectionHost;
@@ -93,12 +97,13 @@ type
     FConfigure: TSectionConfigure;
     FBorrowedTheme: TNyxTheme;
     FObserver: INyxViewSectionObserver;
+    FViewport: INyxViewportContext;
     FBusy: Boolean;
     procedure Changed(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create(const AReference: TNyxViewSectionRef; AHost: TSectionHost;
       AConfigure: TSectionConfigure; const AObserver: INyxViewSectionObserver;
-      ATheme: TNyxTheme);
+      ATheme: TNyxTheme; const AViewport: INyxViewportContext);
     destructor Destroy; override;
     function GetReference: TNyxViewSectionRef;
     function GetRevision: Integer;
@@ -180,7 +185,8 @@ end;
 
 constructor TSection.Create(const AReference: TNyxViewSectionRef;
   AHost: TSectionHost; AConfigure: TSectionConfigure;
-  const AObserver: INyxViewSectionObserver; ATheme: TNyxTheme);
+  const AObserver: INyxViewSectionObserver; ATheme: TNyxTheme;
+  const AViewport: INyxViewportContext);
 begin
   inherited Create;
 
@@ -193,6 +199,7 @@ begin
   FConfigure := AConfigure;
   FBorrowedTheme := ATheme;
   FObserver := AObserver;
+  FViewport := AViewport;
 end;
 
 destructor TSection.Destroy;
@@ -385,6 +392,12 @@ begin
   FExpectedParent := SectionParent(AOwner.FHost);
   FExpectedWidth := SectionWidth(AOwner.FHost);
   FExpectedHeight := SectionHeight(AOwner.FHost);
+  FExpectedViewport := AOwner.FViewport;
+
+  if FExpectedViewport <> nil then
+  begin
+    FExpectedViewportRevision := FExpectedViewport.Snapshot.Revision;
+  end;
   FBorrowedState := AState;
   {$ifdef PAS2JS}
   FStageHost := NewSectionParking(AOwner.FHost);
@@ -398,6 +411,7 @@ begin
   begin
     AOwner.FConfigure(FCandidate);
   end;
+  FCandidate.PresentationViewport := AOwner.FViewport;
   FCandidate.OnEvent := {$ifdef PAS2JS}@{$endif}AOwner.Changed;
   { Ordinary Render performs document/schema/recipe/default admission and
     independent realization. No hand-written substitute widget toolkit. }
@@ -509,6 +523,8 @@ begin
     (SectionParent(FOwner.FHost) = FExpectedParent) and
     (SectionWidth(FOwner.FHost) = FExpectedWidth) and
     (SectionHeight(FOwner.FHost) = FExpectedHeight) and
+    ((FExpectedViewport = nil) or (FExpectedViewport.Active and
+      (FExpectedViewport.Snapshot.Revision = FExpectedViewportRevision))) and
     {$ifdef PAS2JS}
     SectionPlacementMatches(FOwner.FHost, FOwner.FRenderer);
     {$else}

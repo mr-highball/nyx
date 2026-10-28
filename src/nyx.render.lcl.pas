@@ -30,6 +30,7 @@ interface
 uses
   nyx.types,
   nyx.text,
+  nyx.viewport.context, nyx.viewport.binding,
   nyx.publication,
   nyx.view.publication,
   nyx.coordinators,
@@ -399,6 +400,9 @@ type
     { Runtime-only bounded text work; copied to each independently staged view. }
     FTableTextLimits: TNyxTableTextWorkLimits;
     FPresentationSelection: TNyxPresentationSelection;
+    { Runtime enclosing viewport and independent output; neither changes local
+      layout allocation nor owns a parent renderer, document or native host. }
+    FViewportBinding: INyxViewportBinding;
     FPresentationView: INyxPresentationViewOwner;
     { Independently owned recipes outlive the source document. Queued work
       retains a revocable port, never the renderer or its native controls. }
@@ -640,6 +644,12 @@ type
       content scrollbars/layout must not create a feedback loop in its size. }
     function UpdateViewport: Boolean;
     function MeasureContainers: INyxContainerSnapshot;
+    function ReadViewportAllocation(out AWidth, AHeight: Double): Boolean;
+    function ViewportReady: Boolean;
+    function GetViewportContext: INyxViewportContext;
+    function GetPresentationViewport: INyxViewportContext;
+    procedure SetPresentationViewport(const AValue: INyxViewportContext);
+    function GetPresentationViewportFailure: TNyxText;
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
@@ -959,6 +969,12 @@ type
       reads expose the last accepted choice until that job publishes. Compatible
       explicit named parts carry input state; changed contracts are new fields. }
     property PresentationSelection: TNyxPresentationSelection read FPresentationSelection write SetPresentationSelection;
+    { Optional enclosing presentation space; nil keeps this view's logical host.
+      Set before Render or on an idle mounted view. Exported Context is stable
+      through ordinary replacement, retired by Unmount/destruction. }
+    property PresentationViewport: INyxViewportContext read GetPresentationViewport write SetPresentationViewport;
+    property ViewportContext: INyxViewportContext read GetViewportContext;
+    property PresentationViewportFailure: TNyxText read GetPresentationViewportFailure;
     { Portable managed capability. Borrowed receiver links retire on Unmount;
       caller-retained interfaces stay safe and never retain the renderer. }
     property Presentations: INyxPresentationView read GetPresentationView;
@@ -1687,6 +1703,8 @@ begin
   FContentGuard := NewNyxContentGuard(QueueContent);
   Supports(FContentGuard, INyxContentLifetime, FContentLifetime);
   FPhysicalFrame := NewNyxNativeGestureFrame;
+  FViewportBinding := NewNyxViewportBinding(FEvents.Scheduler, npfNativeLCL,
+    ReadViewportAllocation, ViewportReady, Sync);
 end;
 
 destructor TNyxLCLRenderer.Destroy;
@@ -1704,6 +1722,12 @@ begin
     Exit;
   end;
   FDestroying := True;
+
+  if FViewportBinding <> nil then
+  begin
+    FViewportBinding.Retire;
+    FViewportBinding := nil;
+  end;
   LEvents := FEvents;
   LThemeOwner := FThemeOwner;
   FThemeOwner := nil;
@@ -5768,6 +5792,7 @@ function TNyxLCLRenderer.UpdateViewport: Boolean;
 var
   LGeneration: INyxLCLBindingGeneration;
   LMeasurements: INyxContainerSnapshot;
+  LFrame: TNyxViewFrame;
 begin
   LGeneration := FGeneration;
   RequireNativeGeneration(LGeneration);
@@ -5788,8 +5813,12 @@ begin
     LMeasurements := MeasureContainers;
     RequireNativeGeneration(LGeneration);
   end;
-  Result := FRoot.ApplyViewport(ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth)),
-    ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight)), npfNativeLCL,
+  LFrame := FViewportBinding.Frame(ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth)),
+    ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight)));
+  RequireNativeGeneration(LGeneration);
+  FViewportBinding.Observe;
+  RequireNativeGeneration(LGeneration);
+  Result := FRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight, npfNativeLCL,
     FPresentationSelection, LMeasurements);
     RequireNativeGeneration(LGeneration);
 end;
@@ -6286,6 +6315,7 @@ var
   LExecution: INyxExecution;
   LWork: INyxContentWork;
   LStatus: TNyxExecutionStatus;
+  LFrame: TNyxViewFrame;
 begin
   LGeneration := FGeneration;
 
@@ -6293,6 +6323,10 @@ begin
   begin
     Exit;
   end;
+  FViewportBinding.Observe;
+  RequireNativeGeneration(LGeneration);
+  FViewportBinding.Wake;
+  RequireNativeGeneration(LGeneration);
   WakeResources;
 
   if not LGeneration.Current then
@@ -6305,10 +6339,21 @@ begin
     Exit;
   end;
 
-  if FContentFrameKnown and (FPanel <> nil) and (FPanel.Parent <> nil) and
-    (FContentFrame.Width = Max(0, FPanel.Parent.ClientWidth)) and
-    (FContentFrame.Height = Max(0, FPanel.Parent.ClientHeight)) and
-    FContentFrame.Selection.Same(FContentRequestedSelection) and
+  if (FPanel = nil) or (FPanel.Parent = nil) then
+  begin
+    Exit;
+  end;
+
+  LFrame := FViewportBinding.Frame(ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth)),
+    ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight)));
+  RequireNativeGeneration(LGeneration);
+
+  if FContentRequestedSelection.Reference.Defined then
+  begin
+    LFrame := LFrame.Selecting(FContentRequestedSelection.Reference);
+  end;
+
+  if FContentFrameKnown and FContentFrame.Same(LFrame) and
     (FContentMeasurementKey = NyxContentMeasurements(FRoot, MeasureContainers)) then
   begin
     Exit;
@@ -6372,6 +6417,17 @@ begin
     Exit;
   end;
   LEnteredFrame := FPhysicalFrame;
+
+  { Test the caller's physical stack before taking our own retirement lease.
+    Enter below protects old controls while the replacement unwinds; counting
+    that same protection as an external callback would refuse every queued
+    structural resize, even on an otherwise idle native view. }
+
+  if LEnteredFrame.Dispatching then
+  begin
+    FLastContentError := 'Structural publication requires an idle native physical frame';
+    Exit;
+  end;
   LEnteredFrame.Enter;
   try
     try
@@ -6398,7 +6454,6 @@ begin
 
       if FUpdating or FLayouting or FProjecting or
         ((FEditingObserver <> nil) and FEditingObserver.Dispatching) or
-        ((FPhysicalFrame <> nil) and FPhysicalFrame.Dispatching) or
         ((FLiveBindings <> nil) and not FDesignMode and not FLiveBindings.RefreshReady) or
         ((FState <> nil) and FState.Busy) then
       begin
@@ -6421,8 +6476,8 @@ begin
         RequireNativeGeneration(LGeneration);
       end;
       RequireNativeGeneration(LGeneration);
-      LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
-        Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+      LFrame := FViewportBinding.Frame(ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth)),
+        ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight)));
         RequireNativeGeneration(LGeneration);
 
       if FContentRequestedSelection.Reference.Defined then
@@ -6437,9 +6492,8 @@ begin
       LKey := NyxContentMeasurements(FRoot, LMeasurements);
       RequireNativeGeneration(LGeneration);
 
-      if FContentFrameKnown and (FContentFrame.Width = LFrame.Width) and
-        (FContentFrame.Height = LFrame.Height) and
-        FContentFrame.Selection.Same(LFrame.Selection) and (FContentMeasurementKey = LKey) then
+      if FContentFrameKnown and FContentFrame.Same(LFrame) and
+        (FContentMeasurementKey = LKey) then
       begin
         RequireNativeGeneration(LGeneration);
         Exit;
@@ -6467,18 +6521,22 @@ begin
               RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FPanel.Parent,
                 FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates,
                 nrmConfigured, False, nil, nil, FViewPublicationSource);
-                RequireNativeGeneration(LGeneration);
 
-              if not LLifetime.Active or not NativeGenerationCurrent(LGeneration) then
+              if not LLifetime.Active then
               begin
-                RequireNativeGeneration(LGeneration);
                 Exit;
               end;
+              { Successful structural admission deliberately retires the old
+                physical generation. The stable logical content guard proves
+                this receiver still exists; adopt its accepted generation for
+                subsequent frame bookkeeping. The entered OLD frame remains a
+                separate local lease until its final Leave below. }
+              LGeneration := FGeneration;
               RequireNativeGeneration(LGeneration);
               LKey := FContentMeasurementKey;
             finally
 
-              if LLifetime.Active and NativeGenerationCurrent(LGeneration) then
+              if LLifetime.Active then
               begin
                 FPublishingContent := False;
                 WakeResources;
@@ -6600,8 +6658,8 @@ begin
   FPublishingContent := True;
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
-      TNyxViewFrame.At(ContentLayoutWidth(Max(0, AHost.ClientWidth)),
-        ContentLayoutHeight(Max(0, AHost.ClientHeight)), npfNativeLCL),
+      FViewportBinding.Frame(ContentLayoutWidth(Max(0, AHost.ClientWidth)),
+        ContentLayoutHeight(Max(0, AHost.ClientHeight))),
       nil, False, nil, AResourceMode);
   finally
     { Notifications may dispose this renderer after adoption. The existing
@@ -6654,8 +6712,8 @@ begin
   FPublishingContent := True;
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
-      TNyxViewFrame.At(ContentLayoutWidth(Max(0, AHost.ClientWidth)),
-        ContentLayoutHeight(Max(0, AHost.ClientHeight)), npfNativeLCL), nil, False, nil,
+      FViewportBinding.Frame(ContentLayoutWidth(Max(0, AHost.ClientWidth)),
+        ContentLayoutHeight(Max(0, AHost.ClientHeight))), nil, False, nil,
       AResourceMode, True, AContext, AResolver, APublicationSource);
   finally
 
@@ -7311,6 +7369,8 @@ begin
     repeat
       LCandidate := TNyxLCLRenderer.Create(FTheme);
       RequireAttempt;
+      LCandidate.PresentationViewport := PresentationViewport;
+      RequireAttempt;
       LCollectionAdmissions := nil;
       RequireAttempt;
       LCollectionObservations := nil;
@@ -7418,11 +7478,13 @@ begin
       RequireAttempt;
       ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
       RequireAttempt;
-      LCandidate.FRoot.ApplyViewport(LCandidate.ContentLayoutWidth(Max(0, AHost.ClientWidth)),
-        LCandidate.ContentLayoutHeight(Max(0, AHost.ClientHeight)),
+      LCandidate.FRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight,
         npfNativeLCL, LFrame.Selection, LMeasurements);
         RequireAttempt;
-      LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
+      { Settlement compares resolved presentation as well as stored authored
+        values. Ordinary Clone intentionally omits active viewport overlays;
+        dropping them here makes every compact scalar rule look like a cycle. }
+      LCandidate.FProjectionBaseline := LCandidate.FRoot.CloneRuntimeProjection;
       RequireAttempt;
       RestoreNyxContentValues(LCandidate.FRoot, LStates);
       RequireAttempt;
@@ -7626,7 +7688,7 @@ begin
       RequireAttempt;
       ApplyNyxPlatform(LMeasuredRoot, npfNativeLCL);
       RequireAttempt;
-      LMeasuredRoot.ApplyViewport(LFrame.Width, LFrame.Height,
+      LMeasuredRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight,
         npfNativeLCL, LFrame.Selection, LAllocated);
         RequireAttempt;
 
@@ -7889,6 +7951,8 @@ begin
         RequireAttempt;
         raise ENyxModel.Create('Native collection input generation retired during preview');
       end;
+      RequireAttempt;
+      FViewportBinding.CheckFrame(LFrame);
       RequireAttempt;
     except
       RequireAttempt;
@@ -8605,8 +8669,8 @@ begin
     end;
     RequireNativeGeneration(LGeneration);
     {$ifdef NYX_STUDIO_PROFILE}RefreshPhase('theme');{$endif}
-    LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
-      Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+    LFrame := FViewportBinding.Frame(ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth)),
+      ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight)));
       RequireNativeGeneration(LGeneration);
     LNextSelection := FPresentationSelection.Reconciled(ADocument.Presentations.Snapshot);
     RequireNativeGeneration(LGeneration);
@@ -8960,7 +9024,53 @@ end;
 procedure TNyxLCLRenderer.Unmount;
 begin
   FRenderAttempt := nil;
+  FViewportBinding.Suspend;
   Clear;
+end;
+
+function TNyxLCLRenderer.ReadViewportAllocation(out AWidth, AHeight: Double): Boolean;
+begin
+  Result := (FRoot <> nil) and (FPanel <> nil) and (FPanel.Parent <> nil);
+  AWidth := 0;
+  AHeight := 0;
+
+  if Result then
+  begin
+    AWidth := ContentLayoutWidth(Max(0, FPanel.Parent.ClientWidth));
+    AHeight := ContentLayoutHeight(Max(0, FPanel.Parent.ClientHeight));
+  end;
+end;
+
+function TNyxLCLRenderer.ViewportReady: Boolean;
+begin
+  Result := (FRoot <> nil) and not FDestroying and not FUpdating and
+    not FLayouting and not FPublishingContent and not FContentGuard.Busy;
+end;
+
+function TNyxLCLRenderer.GetViewportContext: INyxViewportContext;
+begin
+  Result := FViewportBinding.Context;
+end;
+
+function TNyxLCLRenderer.GetPresentationViewport: INyxViewportContext;
+begin
+  Result := FViewportBinding.Source;
+end;
+
+procedure TNyxLCLRenderer.SetPresentationViewport(const AValue: INyxViewportContext);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if FPublishingContent or FUpdating or FLayouting then
+  begin
+    raise ENyxModel.Create('Enclosing viewport configuration requires an idle native view');
+  end;
+  FViewportBinding.Source := AValue;
+end;
+
+function TNyxLCLRenderer.GetPresentationViewportFailure: TNyxText;
+begin
+  Result := FViewportBinding.Failure;
 end;
 
 procedure TNyxLCLRenderer.SetPresentationSelection(const AValue: TNyxPresentationSelection);
@@ -9567,6 +9677,16 @@ begin
 
       if ATrigger in [ntAfterEnter, ntAfterExit] then
       begin
+        { A provisional structural view restores focus while the accepted
+          owner's update fence is held. Its native hook already exists, but
+          its new runtime IDs do not belong to this owner's published tree.
+          The candidate's own logical binding maintains its focus baseline;
+          never resolve that borrowed ID against the predecessor here. }
+
+        if FUpdating and (FRoot.Find(AOriginID) = nil) then
+        begin
+          Exit;
+        end;
         { Update the transition baseline even without subscribers. Do not project
           native focus as a pointer signal or invoke the creator's logical slot. }
         LBinding := IdentityBinding(AOriginID, niRuntime);

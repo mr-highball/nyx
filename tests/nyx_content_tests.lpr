@@ -251,6 +251,71 @@ begin
   end;
 end;
 
+{ Local allocation and enclosing presentation space are independent at initial
+  realization. Named container recipes still consume their measured ancestor,
+  while direct and named viewport recipes share the enclosing dimensions. }
+procedure EnclosingViewportJourney;
+var
+  LDocument: TNyxDocument;
+  LView: TNyxNode;
+  LLocal: INyxComponent;
+  LFrame: TNyxViewFrame;
+  LPlatform: TNyxPlatform;
+  LMeasurements: TNyxContainerMeasurements;
+  LBefore: TNyxText;
+begin
+  LDocument := BuildDocument;
+  LView := nil;
+  try
+    LDocument.Presentations.Define(NyxPresentation('outer compact'),
+      TNyxViewportCondition.Any.WidthBelow(640));
+    LDocument.Find('workspace').Content.WhenPresentation(NyxPresentation('outer compact'))
+      .Use(NyxComponent('compact-form'));
+    LDocument.Presentations.Define(NyxPresentation('local compact'),
+      TNyxPresentationCondition.Within(NyxContainer('local space'),
+        TNyxViewportCondition.Any.WidthBelow(300)));
+    LDocument.Pages[0].Configure.QueryContainer(NyxContainer('local space')).Done;
+    LLocal := NewNyxComponent('local-workspace');
+    LLocal.Content.Use(NyxComponent('wide-form'))
+      .WhenPresentation(NyxPresentation('local compact')).Use(NyxComponent('compact-form'));
+    LDocument.Pages[0].Add(LLocal);
+    SetLength(LMeasurements, 1);
+    LMeasurements[0].RuntimeID := 'home';
+    LMeasurements[0].Width := 180;
+    LMeasurements[0].Height := 500;
+    LBefore := TNyxCodec.Encode(LDocument);
+    for LPlatform := npfBrowser to npfNativeLCL do
+    begin
+      LFrame := TNyxViewFrame.At(200, 500, LPlatform).WithinViewport(1280, 900);
+      Check((LFrame.Width = 200) and (LFrame.Height = 500) and
+        (LFrame.ViewportWidth = 1280) and (LFrame.ViewportHeight = 900),
+        'Enclosing viewport leaves local layout allocation unchanged');
+      Check(not LFrame.Same(TNyxViewFrame.At(200, 500, LPlatform)) and
+        LFrame.Same(TNyxViewFrame.At(200, 500, LPlatform).WithinViewport(1280, 900)),
+        'Frame identity includes both spaces and retains exact copied values');
+      LView := RealizeNyxView(LDocument, LDocument.Pages[0], LFrame,
+        NewNyxContainerSnapshot(LMeasurements));
+      Check(LView.Find(NyxQualifiedID('workspace', 'wide-name')) <> nil,
+        'A narrow section retains wide direct/named viewport recipes');
+      Check(LView.Find(NyxQualifiedID('local-workspace', 'compact-notes')) <> nil,
+        'Explicit local container recipes retain their narrow measured ancestor');
+      FreeAndNil(LView);
+      LView := RealizeNyxView(LDocument, LDocument.Pages[0],
+        TNyxViewFrame.At(900, 500, LPlatform).WithinViewport(390, 844),
+        NewNyxContainerSnapshot(LMeasurements));
+      Check(LView.Find(NyxQualifiedID('workspace', 'compact-notes')) <> nil,
+        'A wide section can consume an explicitly compact enclosing viewport');
+      FreeAndNil(LView);
+    end;
+    Check(TNyxCodec.Encode(LDocument) = LBefore,
+      'Runtime viewport context never becomes an authored persistence change');
+  finally
+    LLocal := nil;
+    LView.Free;
+    LDocument.Free;
+  end;
+end;
+
 procedure WireAndSourceJourney;
 var
   LDocument: TNyxDocument;
@@ -592,6 +657,7 @@ begin
     FluentJourney;
     RuntimeOwnerJourney;
     CompositionJourney;
+    EnclosingViewportJourney;
     WireAndSourceJourney;
     InactiveAdmissionJourney;
     SemanticJourney;

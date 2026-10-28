@@ -43,7 +43,9 @@ uses
 
 type
   { Copied initial composition frame in logical pixels. At validates finite,
-    nonnegative geometry and a concrete target. Selecting keeps geometry while
+    nonnegative geometry and a concrete target. WithinViewport optionally uses
+    an enclosing presentation space without changing local layout allocation.
+    Selecting keeps both spaces while
     choosing an exact manual presentation. No document or target is retained.
     Default realization deliberately uses only the ordinary recipe, so build
     dependency discovery never accidentally chooses a zero-width alternative. }
@@ -52,13 +54,19 @@ type
     FSpecified: Boolean;
     FWidth: Double;
     FHeight: Double;
+    FViewportWidth: Double;
+    FViewportHeight: Double;
     FPlatform: TNyxPlatform;
     FSelection: TNyxPresentationSelection;
   public
     class function At(AWidth, AHeight: Double; APlatform: TNyxPlatform): TNyxViewFrame; static;
+    function WithinViewport(AWidth, AHeight: Double): TNyxViewFrame;
+    function Same(const AOther: TNyxViewFrame): Boolean;
     function Selecting(const AReference: TNyxPresentationRef): TNyxViewFrame;
     property Width: Double read FWidth;
     property Height: Double read FHeight;
+    property ViewportWidth: Double read FViewportWidth;
+    property ViewportHeight: Double read FViewportHeight;
     property Platform: TNyxPlatform read FPlatform;
     property Selection: TNyxPresentationSelection read FSelection;
   end;
@@ -136,7 +144,30 @@ begin
   Result.FSpecified := True;
   Result.FWidth := AWidth;
   Result.FHeight := AHeight;
+  Result.FViewportWidth := AWidth;
+  Result.FViewportHeight := AHeight;
   Result.FPlatform := APlatform;
+end;
+
+function TNyxViewFrame.WithinViewport(AWidth, AHeight: Double): TNyxViewFrame;
+begin
+
+  if not FSpecified then
+  begin
+    raise ENyxContent.Create('An enclosing viewport requires a composition frame');
+  end;
+  TNyxViewportCondition.Any.Matches(AWidth, AHeight);
+  Result := Self;
+  Result.FViewportWidth := AWidth;
+  Result.FViewportHeight := AHeight;
+end;
+
+function TNyxViewFrame.Same(const AOther: TNyxViewFrame): Boolean;
+begin
+  Result := (FSpecified = AOther.FSpecified) and (Width = AOther.Width) and
+    (Height = AOther.Height) and (ViewportWidth = AOther.ViewportWidth) and
+    (ViewportHeight = AOther.ViewportHeight) and (Platform = AOther.Platform) and
+    Selection.Same(AOther.Selection);
 end;
 
 function TNyxViewFrame.Selecting(const AReference: TNyxPresentationRef): TNyxViewFrame;
@@ -562,7 +593,7 @@ var
 
     if not LCondition.Container.Defined then
     begin
-      Exit(LCondition.Viewport.Matches(AFrame.Width, AFrame.Height));
+      Exit(LCondition.Viewport.Matches(AFrame.ViewportWidth, AFrame.ViewportHeight));
     end;
     Result := False;
 
@@ -620,7 +651,7 @@ var
 
           if LMatches and (LRule.Scope = ncsViewport) then
           begin
-            LMatches := LRule.Viewport.Matches(AFrame.Width, AFrame.Height);
+            LMatches := LRule.Viewport.Matches(AFrame.ViewportWidth, AFrame.ViewportHeight);
           end
           else if LMatches then
           begin

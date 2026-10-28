@@ -9,7 +9,74 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Native project lifecycle with unfinished Pascal — 2026-10-27
+## Current work — Viewport meaning across composed hosts — 2026-10-28
+
+Previous goal turn: PROGRESS.9065650 is pushed and remote-verified; the matched
+LAN owner retains the exact three projects/configuration. Root remains SOLO.
+This batch follows [section viewport meaning](TODO/NS-2_presentation-viewport_01.md),
+serving the renderer and Studio shell's existing usability criteria. First extend
+the maintained actual Studio section regression to require the wide editor's
+authored one-column Project actions even though that section is narrow. Then
+implement a typed reusable viewport context across the ordinary renderer/section
+adapters, preserving local geometry and explicit named container queries.
+
+Qualification must distinguish real wide/compact hosts, initial/retained/structural
+composition, resize and retirement; preserve input, Unicode caret, scroll and
+publication fences. Return through actual Studio and generated consumption where
+the contract changes require it. Stop and repair actual failures; do not substitute
+Studio-only width properties or assign acceptance from a model/compile pass.
+All new runners, artifacts and process TEMP/TMP stay on E:. Production remains
+available, unrelated1280/390 stay untouched, and full criteria/credit stay open.
+
+The typed context now separates local allocation from enclosing presentation
+space on both adapters, initial/retained/form/structural paths and Studio sections.
+Explicit named containers remain local; runtime host wiring adds no serialized
+property or generated authoring change. Independent managed observations coalesce
+UI updates and retire without retaining the renderer, tree or host. Section and
+retained-form publication also fence the enclosing source revision.
+
+Actual regression work repaired four native structural-path defects: an update
+counted its own retirement frame as a busy callback; authored clones dropped
+resolved scalar overlays during settlement; provisional focus IDs were resolved
+against the predecessor; and successful replacement left its logical staging flag
+set after retiring the old physical generation. Ordinary live-content checks
+still require callback-safe deferral. Column-order command baselines also needed
+their own exact form scopes, preserving unrelated Inspector drafts after policy
+updates. The obsolete two-form fixture now requires all four forms and both
+value-free order command scopes, without weakening retention assertions.
+
+The private presentation-viewport-01 packet retains the failing runs, compiler
+cache failure, clean rebuild, native debugger evidence and all successful reruns.
+The maintained viewport-context target cold-builds and passes15 source-ownership
+and22 real-host native checks with clean heaps; matching browser sources stage.
+Actual browser execution passes15 ownership and21 real-host checks, including
+stale retained-form refusal, nested resize, exact supplementary selection and
+numeric drafts, replacement and remount. The complete actual native Studio
+section recovery passes111 with25977478 matching allocations/frees and zero
+unfreed blocks; its capture shows one-column desktop Project actions fitting
+their allocation. Content authoring/replay passes66 and the original actual
+native live-content journey passes63, both with clean heaps.
+Final ordinary native and browser Studio entry points also compile; these are
+compile checks only. Owned sources produce no compiler warnings in this batch;
+the browser RTL still reports its existing seven external case-statement warnings.
+
+The complete browser Studio recovery remains UNQUALIFIED. Its unchanged live
+capture acknowledgment timed out; subsequent attempts observed the real Continue
+button but browser commands repeatedly exceeded their dispatch/runtime deadlines.
+Whether whole-editor responsiveness contributes to those timeouts remains open.
+The blank post-teardown capture is failed evidence, never visual acceptance.
+Do not waive that gate or infer full Studio/browser parity from the smaller pass.
+The three owned browser tabs are closed and the identity-matched loopback preview
+host is stopped/joined. Production LAN owner33508 remains the verified9065650
+payload; neither projects, enrollment, compiler configuration nor runtime changed.
+
+This is PROGRESS, with no DONE movement or new completion credit. Next finish the
+existing full browser recovery capture and actual Studio project-pair/zoom/scroll
+checks for this contract, then deliver through the existing preserved LAN process.
+Keep caption flow, compact project recovery and remaining all-button coverage in
+their existing tasks. Do not replace those outcomes with another fixture variant.
+
+## Previous checkpoint — Native project lifecycle with unfinished Pascal — 2026-10-27
 
 This batch is delivered as PROGRESS; the goal and original acceptance remain open.
 Root stays SOLO. The next useful return is the recorded native viewport/caption

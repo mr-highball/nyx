@@ -126,6 +126,10 @@ procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
   while unrelated property and peer-form drafts remain independent. The root
   is borrowed only during lookup; returned contexts retain copied IDs/keys. }
 function NyxStudioCollectionFormContexts(AShellRoot: TNyxNode): TNyxProjectionFormContexts;
+var
+  LColumn: Integer;
+  LEarlier: TNyxText;
+  LLater: TNyxText;
 { Copied control identities for physical hosts and public authoring consumers.
   They do not authorize a command or identify a column independently of its
   admitted form's owner/schema/full-binding baseline. }
@@ -378,6 +382,23 @@ begin
   Add(NyxStudioLayoutEditorID);
   Add(NyxStudioInspectionEditorID);
   Add(NyxStudioDraftRecoveryEditorID);
+  { Order commands also carry the complete accepted specification. Give each
+    value-free button its own exact metadata scope: a query-policy admission
+    must advance stale command authority without resetting independent column
+    sizing drafts. Ordinary generation emits contiguous bounded columns; an
+    absent pair ends this scan, and every other property stays strictly checked. }
+  for LColumn := 0 to NyxMaximumColumnLayoutFields - 1 do
+  begin
+    LEarlier := NyxStudioColumnOrderID(LColumn, scaColumnEarlier);
+    LLater := NyxStudioColumnOrderID(LColumn, scaColumnLater);
+
+    if (AShellRoot.Find(LEarlier) = nil) and (AShellRoot.Find(LLater) = nil) then
+    begin
+      Break;
+    end;
+    Add(LEarlier);
+    Add(LLater);
+  end;
 end;
 
 function NyxStudioQueryPolicyFormID(AColumn: Integer): TNyxText;
