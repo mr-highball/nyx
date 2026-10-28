@@ -7856,6 +7856,15 @@ var
   LOptions: TFocusOptions;
   LCell: TJSHTMLElement;
   LColumn: Integer;
+  LOwner: TBrowserMount;
+  LItem: TNyxItemRef;
+  LView: INyxCollectionView;
+  LHierarchy: INyxTreeHierarchy;
+  LSource: INyxCollectionSnapshot;
+  LInput: INyxCollectionInputLifetime;
+  LEpoch: Integer;
+  LExpanded: Boolean;
+  LDisclosure: Boolean;
 begin
 
   { A managed down already owns focus and range default. Only its exact ensuing
@@ -7912,6 +7921,8 @@ begin
     touch this row after publication; Disconnect may have destroyed it. }
   LMount := FOwner as INyxCollectionMount;
   LInputAdmission := FOwner as INyxCollectionInputAdmission;
+  LOwner := FOwner;
+  LItem := FRef;
   LHost := FOwner.FHost;
   LFocus := FElement;
 
@@ -7939,7 +7950,31 @@ begin
   begin
     LFocus := TJSHTMLElement(LEditor);
   end;
-  FOwner.Gesture(FRef, AEvent.shiftKey, AEvent.ctrlKey or AEvent.metaKey);
+  { Own only this row's non-editor summary activation. Browser details defaults
+    run after click listeners, so a refresh can otherwise overwrite the proposed
+    open state before the queued toggle arrives. Capture the original admission
+    and immutable source before selection or application callbacks can retire
+    this row. The mount lease keeps LOwner alive; no row is read afterward. }
+  LDisclosure := False;
+
+  if (LEditor = nil) and (LOwner.FView.Projection = cpTree) and
+    (Length(FCells) > 0) and
+    (TJSHTMLElement(AEvent.target).closest('summary') = FCells[0]) then
+  begin
+    LView := LOwner.FView;
+    LHierarchy := NyxTreeHierarchy(LView);
+    LDisclosure := LHierarchy.HasChildren(LItem);
+
+    if LDisclosure then
+    begin
+      LOwner.PrepareInputTracking;
+      LSource := LView.Snapshot;
+      LInput := LInputAdmission.GetInputLifetime;
+      LEpoch := LInput.Epoch;
+      LExpanded := LHierarchy.IsExpanded(LItem);
+    end;
+  end;
+  LOwner.Gesture(LItem, AEvent.shiftKey, AEvent.ctrlKey or AEvent.metaKey);
 
   if LInputAdmission.InputReady then
   begin
@@ -7961,6 +7996,22 @@ begin
   if LInputAdmission.InputReady and Assigned(LHost.onclick) then
   begin
     LHost.onclick(AEvent);
+  end;
+  { Preserve cancellation by the original host. Even withdrawn authority must
+    suppress its captured native default: a late toggle must not resurrect an
+    input revoked by enable cycling, source replacement or terminal retirement.
+    SetExpanded can publish and destroy the row; only managed captures follow. }
+
+  if LDisclosure and not AEvent.defaultPrevented then
+  begin
+    AEvent.preventDefault;
+
+    if LInputAdmission.InputReady and
+      (LInput.Epoch = LEpoch) and
+      (LView.Snapshot = LSource) and LHierarchy.HasChildren(LItem) then
+    begin
+      LHierarchy.SetExpanded(LItem, not LExpanded);
+    end;
   end;
   Result := True;
 end;

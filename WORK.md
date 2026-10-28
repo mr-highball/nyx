@@ -9,7 +9,92 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Admitted container reads and ordinary Studio return — 2026-10-28
+## Current work — Reliable Tree disclosure and compact Studio return — 2026-10-28
+
+Previous goal turn: PROGRESS.6d13c6f is pushed/remote-verified. Root remains SOLO.
+The same full saved Workshop's compact authoring journey is now executed; this
+checkpoint returns a concrete browser Tree defect to the reusable library and
+delivers matched Studio/backend payloads to the existing LAN service. All new
+private runners, compiler/test outputs and process TEMP/TMP remain on E:.
+External AGENTS/operator WORK edits and unrelated1280/390 remain untouched.
+
+Ordinary summary clicks stayed collapsed while ArrowRight worked. A browser
+details default runs after click listeners, so row refresh could restore the
+old model state before the queued toggle. The adapter now captures its own
+non-editor summary intent before publication, forwards the original host click,
+preserves cancellation and admits disclosure through the original ready input
+epoch and immutable source. It suppresses that captured native default even
+after retirement, source replacement or disable/enable cycling. Managed mount,
+view and hierarchy captures outlive callbacks; no retired row is read afterward.
+Read-only navigation and real editor caret ownership remain independent.
+
+The focused browser regression fails at its first click/refresh assertion before
+the repair and passes52 checks across1280/390 host allocations afterward. Native83
+shared hierarchy and actual LCL disclosure/retirement checks pass with a complete
+clean heap. Browser Studio, preview and the focused fixture rebuild with zero
+owned warnings; the seven pas2js RTL warnings remain upstream. The maintained
+tree-inspection build also stages the separate disclosure consumer and HTML.
+The unrelated unchanged full Tree search consumer still fails its original Find
+counts7/7/7/0/2 instead of7/5/1/4/1. Its assertions and failure evidence are
+preserved with control-usefulness04; no query integration acceptance is claimed.
+
+Actual compact Studio summary clicks now expand the hierarchy and reach the
+canvas Inspector. A viewport-reset observation is insufficient to prove desktop
+allocation: the older tab remained390x844. Use explicit DOM-measured viewport
+dimensions: the repeated same saved Workshop journey at verified1280x900 now
+expands the root and selected canvas through ordinary summary clicks, reaches
+its Inspector and retains ArrowLeft/ArrowRight. Its exact full Uniform pair and
+history availability remain intact at31; only selection changes the revision.
+The verified-desktop screenshot is separate from the earlier mislabeled narrow
+capture. No screenshot label or successful host allocation alone substitutes for
+that ordinary journey. Temporary viewport overrides are cleared on retained tabs.
+Compact Undo24 followed by canvas-part selection25 restores the byte-identical
+original65905-byte Reflow packet. Ordinary Uniform Apply26 acknowledges normally
+and returns the exact65907-byte accepted project/Pascal pair. Undo27 and Redo28
+restore the exact two full pairs. Actual Save writes the matching project and
+adjacent31401-byte design/29400-byte Pascal. Undo29 then Open30 restores the saved
+Uniform pair, again independently exported through authenticated MCP. One export
+correctly refuses when Undo advances its expected revision mid-read; the rerun
+after acknowledgement passes. Input/CDP timeouts are re-observed without blind
+duplicate mutations. Full shell refresh after read-only agent notifications is
+still measured-performance work; no deadline or workload is reduced.
+
+Compact Fit is visually inspected on the same reopened full design. This does
+not close physical/assistive, complete native traced authoring, all clipping and
+interaction, near-real-time quality or the original canvas requirements. The
+small Tree disclosure task alone is accepted under its existing component owner;
+the full canvas/performance tasks remain open. Stop further scalar/source or
+equivalent standalone fixtures; return to those original user-facing outcomes.
+
+Before LAN replacement, bounded semantic inspection/export preserves all three
+exact live projects at revisions1/4/7 and all82 persistent runtime files, plus
+the prior seven-file payload. Empty workspace is correctly refused; the primary
+request omits that optional context. Initial recursive backup encounters the
+exclusive live lock; explicit persistent-file copies exclude it and pass source
+stability and SHA verification. Exact recorded owner62740 is stopped/joined,
+then all seven installed payload files are checked against the staged manifest.
+New owner58356 retains the same approved executable, web and runtime/enrollment
+locations. HTTP8088 binds the LAN; authenticated MCP8089 remains loopback-only.
+All five served browser assets match installed hashes; post-restart exports
+retain the exact three pairs/revisions and identical output configuration.
+No firewall mutation or project restoration shortcut occurs. Foreground service
+handle1176 remains live. Browser navigation initially times out; re-observing the
+same tab confirms the loaded LAN editor instead of restarting a healthy server.
+The tree-disclosure-01 packet retains source/artifact identities, failures,
+native/browser results, exact exports, saved files, backups and screenshots.
+The refreshed LAN editor is visually observed after its navigation timeout. The
+retained QA handoff is tab232 at the exact saved Workshop; older duplicate compact
+tab224 and completed regression tab231 are retired after their evidence is kept.
+
+Next criterion: return the same accepted full Workshop through ordinary native
+Studio selection, scaling Inspector, paired history and Save/Open, then inspect
+its own native application with live uniformly zoomed controls. Reuse the existing
+input harness and retain actual widgetset/physical limits. Browser compact
+authoring no longer blocks this return. Full shell/agent-notification latency
+remains with the existing measured-performance owner; stop interchangeable
+source, scalar and protocol fixtures. No user input or new approval is needed.
+
+## Previous checkpoint — Admitted container reads and ordinary Studio return — 2026-10-28
 
 Previous goal turn: PROGRESS.0b100f5 is pushed/remote-verified; root remains SOLO.
 Continue [measured performance](TODO/NS-3_extension-performance_01.md) and return

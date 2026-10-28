@@ -899,6 +899,10 @@ try {
     Invoke-NyxTreeCheck $nyxTreeExe @('390') 'generated-390' $true
     $nyxTreeBrowserFlags = @('-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fisrc', '-Fuexamples/service-monitor')
     Invoke-NyxTreeCheck $nyxTreePas2js ($nyxTreeBrowserFlags + @("-FE$nyxTreeBrowser", $nyxTreeProgram)) 'browser-compiler'
+    # Isolate real disclosure/default ordering from the broader search journey.
+    # Both regressions remain staged; this does not replace query assertions.
+    Invoke-NyxTreeCheck $nyxTreePas2js ($nyxTreeBrowserFlags + @("-FE$nyxTreeBrowser",
+      'tests/nyx_tree_disclosure_controls.lpr')) 'disclosure-browser-compiler'
     Invoke-NyxTreeCheck $nyxTreePas2js ($nyxTreeBrowserFlags + @('-dNYX_PROCESS_GENERATED',
       "-Fu$nyxTreeGenerated", "-FE$nyxTreeGeneratedBrowser", $nyxTreeProgram)) 'generated-browser-compiler'
     Invoke-NyxTreeCheck $nyxTreeFpc ($nyxTreeFlags + @("-FU$nyxTreeNative", "-FE$nyxTreeNative",
@@ -915,6 +919,7 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-inspection.html') -Destination $nyxTreeDirectory
     }
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-reveal.html') -Destination $nyxTreeBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-disclosure.html') -Destination $nyxTreeBrowser
     Copy-Item -LiteralPath $nyxTreeRuntime -Destination (Join-Path $nyxTreeExample 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'examples/service-monitor/process-tree.html') -Destination $nyxTreeExample
     Write-Host 'Tree inspection native/generated checks passed; browser artifacts staged, execution remains explicit.'

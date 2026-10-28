@@ -3,6 +3,14 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Browser Tree branch activation](NS-3_tree-disclosure_01.md) was accepted
+on2026-10-28. The original click/refresh regression fails before the repair and
+passes52 checks across wide/compact allocations afterward. Native83 hierarchy/LCL
+checks have a clean heap; actual Studio hierarchy and the same full compact
+Workshop Apply/history/Save/Open journey retain exact pairs. The separate Tree
+Find consumer failure, physical/assistive and original canvas/performance gates
+remain open, with no duplicate completion credit.
+
 [Native MCP project import](NS-4_agent-workflows_03.md) was accepted on2026-10-27.
 One initialized connection retains bounded literal matching upload/review/Apply.
 Nineteen actual lifecycle checks,22 configuration checks, exact grouped

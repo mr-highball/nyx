@@ -55,6 +55,8 @@ the shared library/adapters rather than special-casing the example or Studio.
 **Blockers**
 
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
+- [Reliable browser Tree disclosure](DONE/NS-3_tree-disclosure_01.md), discovered in
+  the same compact Studio hierarchy; retain the original authoring journey.
 - No missing external input prevents implementation. Existing canvas ownership,
   source/history, navigation and target renderer contracts are editable sources.
 
@@ -167,6 +169,19 @@ observed download receipt and is not a physical save proof. Original compact
 ordinary Studio, full traced native, visual/assistive and remaining interaction
 criteria stay open. Next use this same public saved Workshop for compact editor
 qualification, then matched delivery; stop standalone container/source variants.
+
+The same full compact Studio journey now also passes at390x844. Its ordinary
+hierarchy exposed a browser disclosure/default race; the accepted library fix
+retains original input epoch/source and refuses cancelled or stale defaults.
+Actual pointer summary activation and keyboard navigation work at both widths.
+Compact Undo restores the exact original Reflow pair, Uniform Apply26 returns
+the complete accepted pair, Undo27/Redo28 retain both, and real paired Save plus
+Undo29/Open30 restore the identical saved Uniform packet/Pascal. A racing export
+correctly refuses an intervening revision; an acknowledged rerun passes. Input
+observation timeouts and full refresh after semantic reads remain measured
+performance work. Fit is visually inspected on the same reopened compact design;
+physical/assistive, complete native traced authoring, all clipping/interaction and
+original canvas criteria stay open. No smaller fixture substitutes for this run.
 
 Other internal native scroll/drawing metrics, nested canvases, full drag/capture/
 keyboard/IME/assistive journeys and complete pre-publication admission for changed

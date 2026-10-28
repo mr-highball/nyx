@@ -5,6 +5,12 @@
 
 **Parked checkpoint and reassessment — 2026-10-25:**
 
+The2026-10-28 browser rerun of the unchanged full Tree inspection consumer
+fails at its original Find assertion: source/result/match/context/disclosed
+counts remain7/7/7/0/2 instead of7/5/1/4/1. Preserve that assertion and the
+tree-disclosure-01 failure packet. The separately scoped pointer disclosure
+repair does not accept this query/controller integration or close this owner.
+
 The thirteenth original L1 checkpoint supplies saved recovery defaults through
 typed fluent authoring, descriptor version14, source generation/reading, ordinary
 Studio controls and revision-aware semantic edits. Absent policy retains older

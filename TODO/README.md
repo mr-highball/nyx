@@ -5,6 +5,14 @@
 
 ## Current priority — useful everyday workflows — 2026-10-26
 
+The same Workshop's compact Studio qualification repairs and accepts the concrete
+[Tree disclosure prerequisite](DONE/NS-3_tree-disclosure_01.md). Ordinary hierarchy
+clicks and keyboard expansion work at both widths; the full compact Inspector
+Apply/history/Save/Open journey preserves exact pairs. Matched LAN delivery keeps
+all three projects and output configuration. The separate full Tree search
+consumer failure remains with04; full canvas/input/quality and measured latency
+stay open. Return to those original outcomes, not more scalar/source fixtures.
+
 User steering on2026-10-27 prioritizes discoverable New/Open/Save/Switch and the
 cited missing Inspector glyphs under the existing Studio slice. Its first LAN
 delivery retains exact projects/configuration and real browser lifecycle evidence.
