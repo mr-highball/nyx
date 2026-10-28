@@ -1533,11 +1533,14 @@ end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
 begin
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-start');{$endif}
   Inc(FRefreshDepth);
   try
     try
       RefreshDisplay(ARetainCanvas, APreserveDraft);
+      {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-display-end');{$endif}
       CompletionChanged;
+      {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-completion-end');{$endif}
     except
       on LException: Exception do
       begin
@@ -1899,7 +1902,9 @@ begin
   CaptureMenuDraft;
   LResourceCompatible := FResourceBrowser.Compatible(FSession);
   LResourcePrepared := FResourceBrowser.Prepare(FSession);
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-compose-start');{$endif}
   LShellCandidate := CreateShell;
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-compose-end');{$endif}
   { Shell admission can detach the old source host. Revoke before its first
     outward DOM change, including refusal paths which need later recovery. }
   FSourceInputAvailable := False;
@@ -1923,6 +1928,7 @@ begin
   end;
   FResourceBrowser.Mount(FShellRenderer, LResourcePrepared,
     FViewState.ResourceBrowser, FViewState.ResourceSelection);
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-shell-end');{$endif}
   { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
     selection only when this shell actually owns the public tree binding. }
 
@@ -2026,6 +2032,7 @@ begin
     FCanvasRenderer.PresentationSelection := FPresentationSelection.Reconciled(
       FCanvasRenderer.Root.PresentationSnapshot);
   end;
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-canvas-end');{$endif}
   LPendingDesign := FSourceCommands.PendingDesign;
 
   if not FPreview and
@@ -2108,6 +2115,7 @@ begin
     end;
     FSourceModal.Hide;
   end;
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-source-end');{$endif}
   LPrevious := TJSHTMLElement(document.querySelector('[data-node=studio-canvas-wrap]'));
 
   if LPrevious <> nil then
@@ -2342,7 +2350,9 @@ begin
     FStatus := 'Automatic recovery unavailable. Download a project backup to keep your work.';
   end;
   RestoreCodePresentation;
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-record-start');{$endif}
   FAgents.RecordLocal;
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-record-end');{$endif}
   FReplaceCanvas := False;
   FCanvasRestores := nil;
 

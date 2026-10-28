@@ -18,6 +18,19 @@ run with this worker margin establishes no robust latency pass. Acknowledgement,
 history/Save/Open and performance acceptance remain open. Current
 evidence and qualification setup are recorded in [WORK](../WORK.md).
 
+Scalar/index continuation,2026-10-28: closed typed factories and immutable
+immediate-scalar extraction now reuse prior admission, with full fallback for
+changed formatter policy, containers and erased browser ordinal domains.
+Native166/browser173 value checks and native140 design/source plus queue10 pass
+with clean native heaps. The same full Uniform Apply produces the exact retained
+pair at revision16, but local delivery remains26444.9ms despite reducing complete
+ParseJSON calls from289826 to89612. Those remaining reads still process73.3M
+storage units; their inclusive admission/format/index time remains17.2s. Worker
+29819.5ms and observing transport timeout leave the original journey open. After
+two critical-path checkpoints without criterion closure, stop equivalent scalar
+or fixture variants. Address the measured large-container/pending-refresh cost
+before another run of this same original journey; do not increase its limits.
+
 Additional ordinary-editor consumer,2026-10-28: recovery now qualifies exact
 backup return and semantic Undo/Redo on the real desktop browser. After Redo,
 one public observer sample was still11173ms old while presentation had not

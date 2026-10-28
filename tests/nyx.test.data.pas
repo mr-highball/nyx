@@ -24,6 +24,7 @@ unit nyx.test.data;
 
 {$mode delphi}{$H+}
 {$codepage utf8}
+{$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
 interface
 
@@ -40,6 +41,9 @@ implementation
 uses
   SysUtils,
   fpjson,
+  {$ifdef PAS2JS}
+  JS,
+  {$endif}
   nyx.text,
   nyx.types,
   nyx.data,
@@ -186,6 +190,164 @@ begin
     Check(LRejected, 'typed text refuses malformed platform Unicode storage', ACount);
   finally
     TJSONString.StrictEscaping := LPreviousStrict;
+  end;
+end;
+
+{$ifdef PAS2JS}
+type
+  { Browser-only test bridge for erased ordinal arguments. The test owns this
+    JavaScript object; its declared Integer slot may actually hold any Number. }
+  TUntrustedOrdinal = class external name 'Object'(TJSObject)
+    value: Integer;
+  end;
+{$endif}
+
+{ Independent JSON-reader oracles preserve canonical spelling and exact scalar
+  meaning. Invalid default references and erased browser domains retain refusal
+  or fallback, including values beyond an ordinal's declared native range. }
+procedure TypedScalarValues(var ACount: Integer);
+const
+  CIntegers: array[0..4] of Integer = (Low(Integer), -1, 0, 1, High(Integer));
+var
+  LValue: TNyxDataValue;
+  LRead: TNyxDataValue;
+  LBoolean: Boolean;
+  LIndex: Integer;
+  LRejected: Boolean;
+  {$ifdef PAS2JS}
+  LHost: TUntrustedOrdinal;
+  {$endif}
+begin
+  LValue := NyxNull;
+  Check((LValue.Kind = ndNull) and (LValue.ToJSON = 'null'),
+    'typed null retains its exact canonical literal', ACount);
+  for LBoolean := False to True do
+  begin
+    LValue := NyxData(LBoolean);
+    LRead := TNyxDataValue.ParseJSON(LowerCase(BoolToStr(LBoolean, True)));
+    Check((LValue.AsBoolean = LBoolean) and (LValue.ToJSON = LRead.ToJSON),
+      'typed Boolean agrees with the strict reader', ACount);
+  end;
+  for LIndex := Low(CIntegers) to High(CIntegers) do
+  begin
+    LValue := NyxData(CIntegers[LIndex]);
+    LRead := TNyxDataValue.ParseJSON(IntToStr(CIntegers[LIndex]));
+    Check((LValue.AsInteger = CIntegers[LIndex]) and (LValue.ToJSON = LRead.ToJSON),
+      'typed ordinal preserves signed boundaries and canonical spelling', ACount);
+  end;
+  LValue := NyxData(NyxDecimal('9007199254740993'));
+  Check(LValue.AsDecimal.Text = '9007199254740993',
+    'admitted decimal references preserve values beyond Double precision', ACount);
+  LRejected := False;
+  try
+    NyxData(Default(TNyxDecimal));
+  except
+    on ENyxJSON do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'default decimal references retain strict admission refusal', ACount);
+  {$ifdef PAS2JS}
+  LHost := TUntrustedOrdinal(TJSObject.new);
+  TJSObject(LHost)['value'] := 1.25;
+  LValue := NyxData(LHost.value);
+  Check(LValue.AsDecimal.Text = '1.25',
+    'erased fractional ordinals retain the former numeric parser behavior', ACount);
+  TJSObject(LHost)['value'] := 2147483648.0;
+  LValue := NyxData(LHost.value);
+  Check(LValue.AsDecimal.Text = '2147483648',
+    'erased upper out-of-range ordinals retain their complete numeric spelling', ACount);
+  TJSObject(LHost)['value'] := -2147483649.0;
+  LValue := NyxData(LHost.value);
+  Check(LValue.AsDecimal.Text = '-2147483649',
+    'erased lower out-of-range ordinals retain their complete numeric spelling', ACount);
+  for LIndex := 0 to 3 do
+  begin
+    case LIndex of
+      0: TJSObject(LHost)['value'] := TJSNumber.NaN;
+      1: TJSObject(LHost)['value'] := TJSNumber.POSITIVE_INFINITY;
+      2: TJSObject(LHost)['value'] := TJSNumber.NEGATIVE_INFINITY;
+      3: TJSObject(LHost)['value'] := 'not-a-number';
+    end;
+    LRejected := False;
+    try
+      NyxData(LHost.value);
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'invalid erased numeric arguments retain strict refusal', ACount);
+  end;
+  {$endif}
+end;
+
+{ Extract scalars against independent strict-reader oracles, including after
+  parent retirement and a formatter change. The largest child deliberately
+  retains the former formatted read refusal rather than failing extraction. }
+procedure IndexedScalarValues(var ACount: Integer);
+const
+  CLiterals: array[0..6] of TNyxText = ('"a/b"', '"\ud83c\udf19\u0000"',
+    'null', 'true', 'false', '-0.000E+00', '9007199254740993');
+var
+  LOriginalStrict: Boolean;
+  LStrict: Boolean;
+  LIndex: Integer;
+  LParent: TNyxDataValue;
+  LSaved: TNyxDataValue;
+  LChild: TNyxDataValue;
+  LRead: TNyxDataValue;
+  LRejected: Boolean;
+begin
+  LOriginalStrict := TJSONString.StrictEscaping;
+  try
+    TJSONString.StrictEscaping := False;
+    LParent := TNyxDataValue.ParseJSON('["a/b","\ud83c\udf19\u0000",' +
+      'null,true,false,-0.000E+00,9007199254740993]');
+    LSaved := LParent.Copy;
+    LParent := NyxNull;
+    for LStrict := False to True do
+    begin
+      TJSONString.StrictEscaping := LStrict;
+      for LIndex := Low(CLiterals) to High(CLiterals) do
+      begin
+        LRead := TNyxDataValue.ParseJSON(CLiterals[LIndex]);
+        LChild := LSaved.Item(LIndex);
+        Check((LChild.Kind = LRead.Kind) and (LChild.ToJSON = LRead.ToJSON),
+          'indexed scalar matches independent admission under current formatter policy', ACount);
+
+        if LChild.Kind = ndText then
+        begin
+          Check(LChild.AsText = LRead.AsText,
+            'indexed text retains exact decoded supplementary/NUL/solidus meaning', ACount);
+        end;
+      end;
+      LChild := LSaved.Copy;
+      LChild := LChild.Item(1);
+      Check(LChild.AsText = NyxScalarText($1f319) + NyxScalarText(0),
+        'scalar extraction may replace its own parent receiver without losing text', ACount);
+    end;
+    TJSONString.StrictEscaping := False;
+    LParent := TNyxDataValue.ParseJSON('["' + TNyxText(StringOfChar('/', 1024)) +
+      TNyxText(StringOfChar('a', NyxMaximumJSONBytes - 1028)) + '"]');
+    TJSONString.StrictEscaping := True;
+    LChild := LParent.Item(0);
+    Check((LChild.Kind = ndText) and (Length(LChild.ToJSON) > NyxMaximumJSONBytes),
+      'changed formatter can still expand an admitted child beyond its read budget', ACount);
+    LRejected := False;
+    try
+      LChild.AsText;
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'expanded child keeps its established read-time refusal', ACount);
+  finally
+    TJSONString.StrictEscaping := LOriginalStrict;
   end;
 end;
 
@@ -486,6 +648,8 @@ var
 begin
   Result := 0;
   TypedTextValues(Result);
+  TypedScalarValues(Result);
+  IndexedScalarValues(Result);
   IndexedReads;
   CopiedSnapshots;
   LReference := Default(TNyxExtensionRef);

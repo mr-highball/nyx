@@ -336,6 +336,12 @@ type
     property OnChanged: TNyxSourceCommandChanged read FChanged write FChanged;
   end;
 
+{$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}
+{ Opt-in inert timing observation shared by the browser host and queue. Sequence
+  zero denotes a host phase; no source text or model authority is exposed. }
+procedure SourceJobProfile(const APhase: TNyxText; ASequence: Integer = 0);
+{$endif}
+
 implementation
 
 uses
@@ -527,10 +533,30 @@ end;
 procedure SourceJobProfile(const APhase: TNyxText; ASequence: Integer);
 var
   LText: TNyxText;
+  LTrace: TNyxText;
+  LData: TNyxDataProfileSample;
 begin
+  LData := ReadNyxDataProfile;
   LText := IntToStr(ASequence) + '/' + FloatToStr(window.performance.now) +
-    '/' + FloatToStr(window.performance.timeOrigin);
+    '/' + FloatToStr(window.performance.timeOrigin) + '/' + IntToStr(LData.Calls) +
+    '/' + FloatToStr(LData.InputUnits) + '/' + FloatToStr(LData.Milliseconds);
   document.body.setAttribute('data-nyx-source-job-' + APhase, LText);
+
+  if APhase = 'edit-request' then
+  begin
+    document.body.setAttribute('data-nyx-source-host-trace', '');
+  end;
+  LTrace := '';
+
+  if document.body.hasAttribute('data-nyx-source-host-trace') then
+  begin
+    LTrace := document.body.getAttribute('data-nyx-source-host-trace');
+  end;
+
+  if Length(LTrace) < 16384 then
+  begin
+    document.body.setAttribute('data-nyx-source-host-trace', LTrace + APhase + '/' + LText + #10);
+  end;
   WriteLn('nyx-source-job phase=', APhase, ' value=', LText);
 end;
 {$endif}
@@ -2039,6 +2065,10 @@ begin
 
   if not FDiscardActive then
   begin
+    {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}
+    ResetNyxDataProfile;
+    SourceJobProfile('admit-start', ASequence);
+    {$endif}
     {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
     LAdmissionStarted := GetTickCount64;
     {$endif}
@@ -2135,6 +2165,7 @@ begin
     end;
     { Notifications remain outside admission. Presentation cannot turn a
       published pair into a failed command or trigger a second publication. }
+    {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}SourceJobProfile('admit-end', ASequence);{$endif}
     {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
     WriteLn('source-command,admit,', ASequence, ',', GetTickCount64 - LAdmissionStarted);
     {$endif}
@@ -2231,7 +2262,9 @@ begin
       {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
       LNotificationStarted := GetTickCount64;
       {$endif}
+      {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}SourceJobProfile('notify-start', ASequence);{$endif}
       Notify(LState, LMessage, LDesign, LAction, LProject, False, LAdopted);
+      {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}SourceJobProfile('notify-end', ASequence);{$endif}
       {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
       WriteLn('source-command,notify,', ASequence, ',', GetTickCount64 - LNotificationStarted);
       {$endif}

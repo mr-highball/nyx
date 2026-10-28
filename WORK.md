@@ -11,8 +11,8 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Source preparation critical path — 2026-10-28
 
-Previous goal turn: PROGRESS.272fce3 is pushed/remote-verified; the checked client
-is delivered with exact project/configuration preservation. Root remains SOLO.
+Previous goal turn: PROGRESS.8696bea is pushed/remote-verified; LAN remains on
+the checked272fce3 client with exact project/configuration preservation. Root remains SOLO.
 Return to [measured performance](TODO/NS-3_extension-performance_01.md), preserving
 the original saved JSON Workshop/scaling Apply workload and30000ms worker limit.
 Trace startup, schema/request decode, isolated session, actual edit, reconstruction,
@@ -84,6 +84,71 @@ without measurements. LAN remains on its previous checked delivery. All compiler
 and completed test readers are joined; the isolated listener is retained for the
 same pending browser journey. The user's named firewall script belongs to another
 project; no Nyx permission or missing user input blocks this work.
+
+The next ordered browser trace attributes the successful local delivery: admission
+742.4ms, notification/refresh24994.6ms, and25738.3ms through delivery end. Across
+admission/presentation,289826 calls to the complete data ParseJSON operation read
+74703264 storage units and consume17409.4ms. This timer includes admission,
+formatting and index construction; it does not isolate the strict decoder alone.
+Composition takes4292.5ms, shell8845.6ms, canvas10408.5ms and RecordLocal993.7ms.
+The bounded ordered trace retains this pass even after a later failed sync
+refresh overwrites individual phase attributes. Diagnostic state remains behind
+NYX_SOURCE_PROFILE, outside the worker-result protocol and absent in production.
+
+Closed null/Boolean/Integer/admitted-decimal factories now avoid redundant JSON
+trees. Erased JavaScript Integer arguments outside the trusted domain retain
+their former full-reader behavior, including exact fractions/out-of-range values
+and nonfinite/wrong-type refusal. Double admission stays unchanged. Immutable
+container indexes also retain immediate decoded text scalars. Scalar extraction
+reuses the admitted span only under the same formatter policy; changed policy
+and nested containers retain full re-admission. Copies share private immutable
+arrays; an extracted child retains no parent/index or descendant JSON tree.
+Independent reader oracles qualify formatter changes, supplementary/NUL text,
+exact decimal spelling and a changed formatter's existing read-time budget refusal.
+
+The first scalar worker trace times out at the unchanged30000ms limit. That
+diagnostic worker includes newly added per-parse timers, unlike the earlier
+worker. Replacing only this isolated worker with its built unflagged equivalent
+lets the same original Apply complete: worker28670.8ms, decode3709.2ms and local
+delivery25369.1ms. The exact accepted Uniform project/Pascal pair is exported at
+revision14; explicit semantic Undo restores the original pair at15. No timing
+improvement follows from this diagnostic mismatch or the reduced call count.
+
+The final indexed-scalar client and production worker repeat the original full
+Uniform Apply from revision15. Worker29819.5ms, decode3916.9ms and local delivery
+26444.9ms remain slow;89612 ParseJSON calls still read73312670 units and consume
+17195.8ms during admission/presentation. Removing approximately200000 small reads
+does not materially reduce the large-container work. MCP export at revision16 is
+byte-identical to the retained Uniform project/Pascal pair. The observing editor
+still reports its unchanged15000ms transport timeout. This is neither a robust
+latency pass nor acknowledgement/history/Save/Open acceptance. The single-run
+native140 consumer uses6559290 allocations/400463813 cumulative bytes versus
+6985094/415604182 before indexed extraction; those allocation counts do not prove
+peak memory or user-visible speed. Existing deadline/admission rules stay exact.
+
+Final native166/browser173 strict JSON/value checks, native140 design/source and
+native10 actual queue/presentation checks pass with complete clean native heaps.
+Final review also makes scalar extraction assemble its candidate before touching
+return storage; replacing a parent with its own supplementary/NUL child is tested
+under both formatter policies. The retained timing run precedes this defensive
+publication refinement; no additional timing result is claimed for final bytes.
+Browser Studio compiles profiled and unflagged, and its final worker is unflagged.
+Native LCL Studio and the backend server also rebuild successfully. These final
+product builds have zero owned warnings; browser logs retain seven upstream RTL
+warnings each. All completed compiler/test readers are joined.
+The source-critical-path-01 packet retains exact artifacts, ordered traces,
+independent exports, screenshots and both the diagnostic timeout and passing
+production-worker run. All compiler/test TEMP/TMP and private output remain on E:.
+Ordinary editor startup remains slow and is not qualified as responsive.
+
+This is the second critical-path implementation checkpoint without closure of
+the original workflow criterion. Stop scalar/fixture variants. The next bounded
+deliverable must address measured large-container admission/formatting/indexing
+cost, or the independently observed expensive pending refresh, then use this
+same ordinary Apply/history/Save/Open journey once. No further equivalent timing
+report or smaller control fixture substitutes for that outcome. LAN is unchanged;
+current isolated runtime/tab ownership and final product identities are retained
+with the packet. External operator guidance/progress edits remain separately unstaged.
 
 ## Previous checkpoint — Recovery backup return and LAN delivery — 2026-10-28
 

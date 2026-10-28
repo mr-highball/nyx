@@ -32,6 +32,17 @@ uses
   nyx.text;
 
 type
+  {$ifdef NYX_SOURCE_PROFILE}
+  { Isolated diagnostic counters only. InputUnits counts native UTF-8 bytes or
+    browser UTF-16 storage units, not a portable wire-byte claim. Measurements
+    include failed reads and are cumulative on one diagnostic execution thread. }
+  TNyxDataProfileSample = record
+    Calls: Integer;
+    InputUnits: Double;
+    Milliseconds: Double;
+  end;
+  {$endif}
+
   { Structured extension data has a closed value vocabulary, independent of
     target controls. Number retains its admitted decimal spelling; converting
     it to Double is an explicit read, never the persistence representation. }
@@ -56,17 +67,22 @@ type
     factories below. Object member order and array order remain significant.
     Immediate members are indexed once beside canonical text; reads never parse
     unrelated siblings. No mutable JSON tree or descendant payload is retained.
-    Text reads reuse the exact admitted scalar. Child extraction admits its own
-    snapshot, so a small child does not retain a large parent or its index. }
+    Text reads reuse the exact admitted scalar. Immediate text members retain
+    only their decoded scalar, not nested payloads or JSON trees. Scalar child
+    extraction reuses admission when its formatter policy is unchanged; nested
+    containers and changed policies retain ordinary re-admission. A child owns
+    its snapshot and never retains a parent or its index. }
   TNyxDataValue = record
   private
     FKind: TNyxDataKind;
     FJSON: TNyxText;
     FText: TNyxText;
     FReadBudget: Boolean;
+    FStrictEscaping: Boolean;
     FMemberNames: array of TNyxText;
     FMemberStarts: array of Integer;
     FMemberLengths: array of Integer;
+    FMemberTexts: array of TNyxText;
     function GetDefined: Boolean;
     procedure RequireKind(AKind: TNyxDataKind);
     procedure RequireReadBudget;
@@ -179,12 +195,44 @@ function NyxExtension(const AName: TNyxText): TNyxExtensionRef;
 { Exact standard field mapping shared by model admission and codec boundaries. }
 function NyxReservedField(AScope: TNyxExtensionScope; const AName: TNyxText): Boolean;
 
+{$ifdef NYX_SOURCE_PROFILE}
+{ Diagnostic consumers reset/read copied counters; no data or caller is retained. }
+procedure ResetNyxDataProfile;
+function ReadNyxDataProfile: TNyxDataProfileSample;
+{$endif}
+
 implementation
 
 uses
   fpjson,
   nyx.json,
-  nyx.state;
+  nyx.state
+  {$ifdef PAS2JS}, JS{$endif}
+  {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}, WebOrWorker{$endif};
+
+{$ifdef NYX_SOURCE_PROFILE}
+var
+  GDataProfile: TNyxDataProfileSample;
+
+function DataProfileClock: Double;
+begin
+  {$ifdef PAS2JS}
+  Result := performance.now;
+  {$else}
+  Result := GetTickCount64;
+  {$endif}
+end;
+
+procedure ResetNyxDataProfile;
+begin
+  GDataProfile := Default(TNyxDataProfileSample);
+end;
+
+function ReadNyxDataProfile: TNyxDataProfileSample;
+begin
+  Result := GDataProfile;
+end;
+{$endif}
 
 const
   CExtensionReferenceMarker = 'nyx.extension';
@@ -203,6 +251,9 @@ var
   LType: TJSONType;
   LPosition: Integer;
   LMember: Integer;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LProfileStarted: Double;
+  {$endif}
   {$ifdef PAS2JS}
   LIndex: Integer;
   LScalar: Integer;
@@ -310,17 +361,23 @@ var
     end;
   end;
 begin
+  {$ifdef NYX_SOURCE_PROFILE}
+  LProfileStarted := DataProfileClock;
+  try
+  {$endif}
   LData := DecodeNyxJSON(ASource);
   try
     { Evaluate the virtual class function before indexing. Older pas2js can
       otherwise emit its function object as the array subscript. }
     LType := LData.JSONType;
     Result.FKind := CKinds[LType];
+    Result.FStrictEscaping := TJSONString.StrictEscaping;
     Result.FJSON := LData.AsJSON;
     Result.FText := '';
     Result.FMemberNames := nil;
     Result.FMemberStarts := nil;
     Result.FMemberLengths := nil;
+    Result.FMemberTexts := nil;
     { Formatting can expand an admitted raw string/container beyond the reader's
       byte budget. Preserve the former read-time refusal instead of making a
       cached read bypass it. Native TNyxText units are already UTF-8 bytes. }
@@ -373,6 +430,7 @@ begin
     begin
       SetLength(Result.FMemberStarts, LData.Count);
       SetLength(Result.FMemberLengths, LData.Count);
+      SetLength(Result.FMemberTexts, LData.Count);
 
       if Result.FKind = ndObject then
       begin
@@ -406,6 +464,11 @@ begin
         Result.FMemberStarts[LMember] := LPosition;
         SkipValue;
         Result.FMemberLengths[LMember] := LPosition - Result.FMemberStarts[LMember];
+
+        if LData.Items[LMember].JSONType = jtString then
+        begin
+          Result.FMemberTexts[LMember] := LData.Items[LMember].AsString;
+        end;
       end;
 
       if Result.FKind = ndObject then
@@ -426,6 +489,13 @@ begin
   finally
     LData.Free;
   end;
+  {$ifdef NYX_SOURCE_PROFILE}
+  finally
+    Inc(GDataProfile.Calls);
+    GDataProfile.InputUnits := GDataProfile.InputUnits + Length(ASource);
+    GDataProfile.Milliseconds := GDataProfile.Milliseconds + DataProfileClock - LProfileStarted;
+  end;
+  {$endif}
 end;
 
 procedure TNyxDataValue.Validate;
@@ -457,6 +527,9 @@ begin
 end;
 
 function TNyxDataValue.Member(AIndex: Integer): TNyxDataValue;
+var
+  LJSON: TNyxText;
+  LValue: TNyxDataValue;
 begin
   RequireReadBudget;
 
@@ -464,7 +537,51 @@ begin
   begin
     raise ENyxJSON.Create('Data member index out of range');
   end;
-  Result := ParseJSON(System.Copy(FJSON, FMemberStarts[AIndex], FMemberLengths[AIndex]));
+  LJSON := System.Copy(FJSON, FMemberStarts[AIndex], FMemberLengths[AIndex]);
+  { The complete parent already admitted syntax, finite exact numbers, Unicode
+    and budgets. A scalar span cannot exceed that parent's formatted budget.
+    Reuse only this scalar's owned text; retaining a parent/index or eagerly
+    caching descendant snapshots would multiply memory for deep documents.
+
+    The formatter preference is mutable. Its change must still re-admit and
+    reformat the selected span, including the established case where formatting
+    expands a child beyond its read budget. Containers keep full admission. }
+
+  if (FStrictEscaping = TJSONString.StrictEscaping) and
+    not (LJSON[1] in ['{', '[']) then
+  begin
+    { Build before publishing: a compiler may reuse receiver storage when the
+      caller replaces a container with its own child. All parent reads finish
+      while that parent's private arrays are still alive. }
+    LValue := Default(TNyxDataValue);
+    LValue.FJSON := LJSON;
+    LValue.FReadBudget := True;
+    LValue.FStrictEscaping := FStrictEscaping;
+    case LJSON[1] of
+      '"':
+        begin
+          LValue.FKind := ndText;
+          LValue.FText := FMemberTexts[AIndex];
+        end;
+      'n':
+        begin
+          LValue.FKind := ndNull;
+        end;
+      't', 'f':
+        begin
+          LValue.FKind := ndBoolean;
+        end;
+      else
+        begin
+          LValue.FKind := ndNumber;
+        end;
+    end;
+    Result := LValue;
+  end
+  else
+  begin
+    Result := ParseJSON(LJSON);
+  end;
 end;
 
 function TNyxDataValue.Copy: TNyxDataValue;
@@ -472,7 +589,7 @@ var
   LValue: TNyxDataValue;
 begin
   Validate;
-  { ParseJSON is the only index writer and resets all three arrays before
+  { ParseJSON is the only index writer and resets all private arrays before
     allocation/fill. Their elements are private immutable text/integer values,
     so a snapshot needs retained storage, not three fresh arrays on every read.
     There is still no shared mutable tree, parent snapshot or owner reference.
@@ -482,9 +599,11 @@ begin
   LValue.FJSON := FJSON;
   LValue.FText := FText;
   LValue.FReadBudget := FReadBudget;
+  LValue.FStrictEscaping := FStrictEscaping;
   LValue.FMemberNames := FMemberNames;
   LValue.FMemberStarts := FMemberStarts;
   LValue.FMemberLengths := FMemberLengths;
+  LValue.FMemberTexts := FMemberTexts;
   Result := LValue;
 end;
 
@@ -597,7 +716,12 @@ end;
 
 function NyxNull: TNyxDataValue;
 begin
-  Result := TNyxDataValue.ParseJSON('null');
+  { Closed Pascal scalar domains need no JSON grammar/tree to establish their
+    meaning. These short canonical literals are within every read budget. }
+  Result := Default(TNyxDataValue);
+  Result.FKind := ndNull;
+  Result.FJSON := 'null';
+  Result.FReadBudget := True;
 end;
 
 function NyxData(const AValue: TNyxText): TNyxDataValue;
@@ -622,20 +746,44 @@ end;
 
 function NyxData(AValue: Boolean): TNyxDataValue;
 begin
+  Result := Default(TNyxDataValue);
+  Result.FKind := ndBoolean;
+  Result.FReadBudget := True;
 
   if AValue then
   begin
-    Result := TNyxDataValue.ParseJSON('true');
+    Result.FJSON := 'true';
   end
   else
   begin
-    Result := TNyxDataValue.ParseJSON('false');
+    Result.FJSON := 'false';
   end;
 end;
 
 function NyxData(AValue: Integer): TNyxDataValue;
+var
+  LJSON: TNyxText;
+  {$ifdef PAS2JS}
+  LNumber: Double;
+  {$endif}
 begin
-  Result := TNyxDataValue.ParseJSON(IntToStr(AValue));
+  LJSON := IntToStr(AValue);
+  {$ifdef PAS2JS}
+  { JavaScript bridges can violate an erased Integer parameter. Preserve the
+    former full-parser behavior for fractions, nonfinite and out-of-range
+    values rather than granting those values a trusted ordinal shortcut. }
+  LNumber := AValue;
+
+  if not isNumber(AValue) or (LNumber < -2147483648.0) or (LNumber > 2147483647.0) or
+    (LNumber <> LNumber) or (Trunc(LNumber) <> LNumber) then
+  begin
+    Exit(TNyxDataValue.ParseJSON(LJSON));
+  end;
+  {$endif}
+  Result := Default(TNyxDataValue);
+  Result.FKind := ndNumber;
+  Result.FJSON := LJSON;
+  Result.FReadBudget := True;
 end;
 
 function NyxData(AValue: Double): TNyxDataValue;
@@ -645,8 +793,17 @@ end;
 
 function NyxData(const AValue: TNyxDecimal): TNyxDataValue;
 begin
-  Result := TNyxDataValue.ParseJSON(AValue.Text);
-  Result.RequireKind(ndNumber);
+  { Only NyxDecimal can populate this private spelling, after strict numeric
+    admission. A default reference still takes the ordinary refusal path. }
+
+  if AValue.Text = '' then
+  begin
+    Exit(TNyxDataValue.ParseJSON(AValue.Text));
+  end;
+  Result := Default(TNyxDataValue);
+  Result.FKind := ndNumber;
+  Result.FJSON := AValue.Text;
+  Result.FReadBudget := True;
 end;
 
 function NyxDecimal(const AText: TNyxText): TNyxDecimal;
