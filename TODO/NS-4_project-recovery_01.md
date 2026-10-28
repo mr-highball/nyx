@@ -33,3 +33,20 @@ browser captures. Do not remove local protection to make the notice disappear.
 **Blockers**
 
 - None.
+
+**Current evidence — 2026-10-28**
+
+The presentation-viewport-02 browser journey reproduces a mismatch after an
+ordinary Switch project round trip in the same origin and workspace. Its exact
+5836-character unfinished Unicode source survives, but source selection moves
+from54 to5836. Desktop recovery choices are present; compact displays a reachable
+Shared project differs notice and Show workspace details action. This does not
+accept the recovery choice, backup, history or native/browser parity criteria.
+
+Source review identifies two coupled paths to qualify: the protected initial
+claim compares project plus selection/view, while loading a project defaults its
+selection; presentation restoration refuses during conflict. Do not weaken pair
+or concurrent-edit protection. Next reproduce the same accepted/pending pair with
+only presentation selection different, repair that distinction if confirmed, and
+return through actual project navigation with exact source range and authoritative
+history. Keep the original independently different-pair refusal/recovery journey.

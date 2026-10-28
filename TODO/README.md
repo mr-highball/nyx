@@ -21,6 +21,14 @@ and observed [compact recovery access](NS-4_project-recovery_01.md) have granula
 owners. Full all-button, physical/assistive, performance and original authoring
 criteria stay open. WORK.md retains qualification details and the return path.
 
+Viewport continuation now closes the full browser section-recovery gate and adds
+actual zoom/scroll plus native project-lifecycle evidence. The matched LAN update
+retains all three exact project pairs/configuration. Ordinary browser project
+return preserves unfinished source but loses its caret and reports a mismatch;
+the next action is its existing [recovery owner](NS-4_project-recovery_01.md), then
+return to viewport acceptance. Stop further viewport fixture variants. Typing and
+navigation latency stay under [measured performance](NS-3_extension-performance_01.md).
+
 The user requested a return to high-value, user-facing backlog work. This order
 supersedes historical next-task notes below. Root remains in single-agent mode.
 Use the existing task identities and acceptance criteria; this reprioritization

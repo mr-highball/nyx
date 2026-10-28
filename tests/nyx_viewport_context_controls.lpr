@@ -25,7 +25,7 @@ program nyx_viewport_context_controls;
 
 uses
   {$ifndef PAS2JS}Interfaces, Classes, Forms, Controls, ExtCtrls, StdCtrls,
-    nyx.editing.lcl,{$else}JS, Web, nyx.editing.browser,{$endif}
+    nyx.editing.lcl, nyx.viewport.surface.lcl,{$else}JS, Web, nyx.editing.browser,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec,
   nyx.behavior, nyx.content, nyx.presentations, nyx.editing, nyx.contract,
   nyx.scheduler, nyx.viewport.context, nyx.view.sections, nyx.responsive, nyx.containers,
@@ -130,6 +130,49 @@ begin
   {$else}AHost.ClientWidth := AWidth;{$endif}
 end;
 
+{ Exercise each real embedding adapter: DOM layout remains in world pixels
+  under its outer transform; native rendering projects the same world extent
+  into the unchanged physical slot. Neither changes the enclosing viewport. }
+procedure HalfScale(const ASection: ISection; AHost: THost; AEnabled: Boolean);
+begin
+
+  if AEnabled then
+  begin
+    {$ifdef PAS2JS}
+    AHost.style.setProperty('width', '480px');
+    AHost.style.setProperty('height', '800px');
+    AHost.style.setProperty('transform-origin', '0 0');
+    AHost.style.setProperty('transform', 'scale(0.5)');
+    {$else}
+    ASection.Renderer.SetContentScale(480, 800, 0.5);
+    {$endif}
+  end
+  else
+  begin
+    {$ifdef PAS2JS}
+    AHost.style.setProperty('width', '240px');
+    AHost.style.setProperty('height', '400px');
+    AHost.style.removeProperty('transform');
+    AHost.style.removeProperty('transform-origin');
+    {$else}
+    ASection.Renderer.SetContentScale(240, 400, 1);
+    {$endif}
+  end;
+end;
+
+{ An embedded canvas owns its outer camera/clipping, so use an actual nested
+  scrolling control for user content. These are ordinary target widget inputs;
+  the shared ViewportFor observation independently verifies their result. }
+procedure ScrollReadingPane(const ASection: ISection; APosition: Integer);
+begin
+  {$ifdef PAS2JS}
+  ASection.Renderer.ElementFor('reading-pane').scrollTop := APosition;
+  {$else}
+  TNyxLogicalScrollBox(ASection.Renderer.ControlFor('reading-pane'))
+    .VertScrollBar.Position := APosition;
+  {$endif}
+end;
+
 function Field(ARenderer: TRenderer; const AID: TNyxText): TFace;
 begin
   Result := TFace(ARenderer.InputFor(AID, niRuntime));
@@ -175,6 +218,7 @@ var
   LBody: INyxColumn;
   LInput: INyxInput;
   LInstance: INyxComponent;
+  LScroll: INyxScroll;
   LPrefix: TNyxText;
   LCompact: Boolean;
 begin
@@ -220,6 +264,14 @@ begin
     LInstance.Content.Use(NyxComponent('local-wide'))
       .WhenPresentation(NyxPresentation('local narrow')).Use(NyxComponent('local-compact')).Done;
     LPage.Add(LInstance);
+    { The outer embedded view is camera-clipped. Its independent content
+      scroller still needs real overflowing descendants at either scale. }
+    LScroll := NewNyxScroll('reading-pane');
+    LScroll.Configure.Layout(nlColumn).Height(150).Done;
+    { A Spacer normally consumes remaining space with weight 1. This fixture
+      needs fixed overflowing content, so explicitly opt out of that weight. }
+    LScroll.Add(NewNyxSpacer('scroll-tail').Configure.Flex(0).Height(1800).Done);
+    LPage.Add(LScroll);
   except
     Result.Free;
     raise;
@@ -251,6 +303,7 @@ var
   LWire: TNyxText;
   LRevision: Integer;
   LRefused: Boolean;
+  LScrollPosition: Double;
   {$ifndef PAS2JS}
   LWindow: TForm;
   LHandle: PtrUInt;
@@ -347,6 +400,47 @@ begin
     {$ifndef PAS2JS}
     Check(PtrUInt(LNotes.Handle) = LHandle, 'same-recipe resize retains the actual native input window');
     {$endif}
+    ScrollReadingPane(LChild, 150);
+    {$ifdef PAS2JS}await(Settle);{$else}Settle;{$endif}
+    Check(LChild.Renderer.ViewportFor('reading-pane').Y.Position > 0,
+      'unscaled content starts with a real scrollable nested pane / extent=' +
+      TNyxText(FloatToStr(LChild.Renderer.ViewportFor('reading-pane').Y.Extent)));
+    ScrollReadingPane(LChild, 0);
+    HalfScale(LChild, LChildHost, True);
+    {$ifdef PAS2JS}await(Settle);{$else}Settle;{$endif}
+    Check((LChild.Renderer.ViewportContext.Snapshot.Width = 1100) and
+      (LChild.Root.Find(NyxQualifiedID('editor', 'wide-notes')) <> nil) and
+      (LChild.Root.Find(NyxQualifiedID('local', 'wide-local-label')) <> nil),
+      'half-scale embedding keeps enclosing presentation wide while local queries use world allocation');
+    Check((TextOf(Field(LChild.Renderer, NyxQualifiedID('editor', 'wide-notes'))) = LText) and
+      (TextOf(Field(LChild.Renderer, NyxQualifiedID('editor', 'wide-estimate'))) = '12.75') and
+      Focused(Field(LChild.Renderer, NyxQualifiedID('editor', 'wide-notes'))) and
+      LChild.Renderer.TextSelectionFor(NyxQualifiedID('editor', 'wide-notes')).SameRange(LSelection),
+      'zoom preserves exact text, numeric draft, focus and supplementary selection');
+    ScrollReadingPane(LChild, 150);
+    {$ifdef PAS2JS}await(Settle);{$else}Settle;{$endif}
+    LScrollPosition := LChild.Renderer.ViewportFor('reading-pane').Y.Position;
+    Check(LScrollPosition > 0, 'zoomed content has an actual nonzero nested scroll position / extent=' +
+      TNyxText(FloatToStr(LChild.Renderer.ViewportFor('reading-pane').Y.Extent)) + ' / page=' +
+      TNyxText(FloatToStr(LChild.Renderer.ViewportFor('reading-pane').Y.PageSize)));
+    Width(LOuterHost, 1080);
+    {$ifdef PAS2JS}await(Settle);{$else}Settle;{$endif}
+    Check((LChild.Renderer.ViewportFor('reading-pane').Y.Position = LScrollPosition) and
+      (LChild.Renderer.ViewportContext.Snapshot.Width = 1080),
+      'outer-only presentation resize preserves the zoomed child scroll allocation');
+    ScrollReadingPane(LChild, 0);
+    HalfScale(LChild, LChildHost, False);
+    Width(LOuterHost, 1100);
+    {$ifdef PAS2JS}await(Settle);{$else}Settle;{$endif}
+    Check((LChild.Root.Find(NyxQualifiedID('local', 'compact-local-label')) <> nil) and
+      (TextOf(Field(LChild.Renderer, NyxQualifiedID('editor', 'wide-estimate'))) = '12.75') and
+      LChild.Renderer.TextSelectionFor(NyxQualifiedID('editor', 'wide-notes')).SameRange(LSelection),
+      'return from zoom restores local rules without discarding the existing input range or draft');
+    { Local recipe changes may replace this section's physical tree. Borrow
+      fresh accepted faces before the following independent publication tests. }
+    LRoot := LChild.Root;
+    LNotes := Field(LChild.Renderer, NyxQualifiedID('editor', 'wide-notes'));
+    LEstimate := Field(LChild.Renderer, NyxQualifiedID('editor', 'wide-estimate'));
     LNext := LDocument.Clone;
     LNext.Pages[0].Configure.Extension('viewport-form-context', 'two').Done;
     SetLength(LForms, 1);

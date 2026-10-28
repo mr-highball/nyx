@@ -117,6 +117,13 @@ begin
     raise ENyxModel.Create('Studio section recovery: ' + AReason);
   end;
   Inc(GChecks);
+  {$ifdef PAS2JS}
+  { Expose copied fixture progress even while the full tree is between long
+    synchronous phases. These attributes grant no editor/model authority and
+    never acknowledge the independent visual checkpoint. }
+  document.body.setAttribute('data-section-progress', IntToStr(GChecks));
+  document.body.setAttribute('data-section-last-check', AReason);
+  {$endif}
   WriteLn('PASS ', GChecks, ' / ', AReason);
 end;
 
@@ -271,11 +278,30 @@ begin
 end;
 
 {$ifdef PAS2JS}
+var
+  GMaximumPauseLag: Double;
+
 procedure Pause(AResolve, AReject: TJSPromiseResolver);
+var
+  LQueuedAt: Double;
 begin
+  LQueuedAt := window.performance.now;
   window.setTimeout(
     procedure
+    var
+      LLag: Double;
     begin
+      { Measure actual event-loop delivery separately from the harness's 15ms
+        settling delay. A missed capture is not proof of product responsiveness;
+        retain observable scheduler lag before resolving the waiting fixture. }
+      LLag := window.performance.now - LQueuedAt - 15;
+
+      if LLag > GMaximumPauseLag then
+      begin
+        GMaximumPauseLag := LLag;
+        document.body.setAttribute('data-section-max-pause-lag-ms',
+          IntToStr(Round(GMaximumPauseLag)));
+      end;
       AResolve(True);
     end, 15);
 end;

@@ -11,8 +11,8 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Viewport meaning across composed hosts — 2026-10-28
 
-Previous goal turn: PROGRESS.9065650 is pushed and remote-verified; the matched
-LAN owner retains the exact three projects/configuration. Root remains SOLO.
+Previous goal turn: PROGRESS.a4ff93a is pushed and remote-verified; the prior
+9065650 LAN owner retained the exact three projects/configuration. Root remains SOLO.
 This batch follows [section viewport meaning](TODO/NS-2_presentation-viewport_01.md),
 serving the renderer and Studio shell's existing usability criteria. First extend
 the maintained actual Studio section regression to require the wide editor's
@@ -60,21 +60,65 @@ Final ordinary native and browser Studio entry points also compile; these are
 compile checks only. Owned sources produce no compiler warnings in this batch;
 the browser RTL still reports its existing seven external case-statement warnings.
 
-The complete browser Studio recovery remains UNQUALIFIED. Its unchanged live
-capture acknowledgment timed out; subsequent attempts observed the real Continue
-button but browser commands repeatedly exceeded their dispatch/runtime deadlines.
-Whether whole-editor responsiveness contributes to those timeouts remains open.
-The blank post-teardown capture is failed evidence, never visual acceptance.
-Do not waive that gate or infer full Studio/browser parity from the smaller pass.
-The three owned browser tabs are closed and the identity-matched loopback preview
-host is stopped/joined. Production LAN owner33508 remains the verified9065650
-payload; neither projects, enrollment, compiler configuration nor runtime changed.
+The continuation closes the complete browser section recovery gate:101 checks,
+including its real live capture and Continue action, pass without waiving the
+acknowledgment or raising its deadline. Read-only progress/lag attributes distinguish
+fixture progress from independent visual acknowledgment. Native screenshot/input
+worked when DOM command dispatch timed out; the original failures remain evidence.
+Observed maximum event-loop delivery lag is2876ms, not performance acceptance.
 
-This is PROGRESS, with no DONE movement or new completion credit. Next finish the
-existing full browser recovery capture and actual Studio project-pair/zoom/scroll
-checks for this contract, then deliver through the existing preserved LAN process.
-Keep caption flow, compact project recovery and remaining all-button coverage in
-their existing tasks. Do not replace those outcomes with another fixture variant.
+The presentation-viewport-02 packet extends the same real-host regression through
+half-scale embedding, actual nested scrolling and enclosing resize. Final native28
+and browser27 pass; the native heap has429216 matching allocations/frees and zero
+unfreed blocks. Earlier fixture failures identified camera clipping, a flexible
+spacer instead of fixed overflowing content, and the inherited scrollbar rather
+than the adapter's logical scroll port. Corrected setup requires actual nonzero
+scrolling; no new product exception or smaller assertion replaces it.
+
+Current-service native project lifecycle passes78 desktop and90 compact checks,
+with complete clean heaps. Compact runs New/Save/Open/Switch afresh; desktop reuses
+the exact earlier project identities after runner-origin/revision setup refusals.
+The packet keeps both failures. Native origin validation requires no trailing
+slash, and reused projects require their actual advanced revisions. Neither was
+a product regression or reason to reset projects.
+
+An isolated project composed through authenticated semantic tools now reaches
+the ordinary browser editor. Desktop Project captions fit one column; an actual
+390x844 child viewport shows two readable glyph-bearing columns. Compact source
+Expand/Close works. The unfinished5836-character Pascal buffer, including its
+supplementary character, survives an ordinary project round trip exactly.
+However, the caret moves from54 to5836 and return displays a local/shared mismatch.
+The browser navigation command takes about52s; character-by-character source input
+also stalls, while one paste completes. These are unresolved failures under
+[project recovery](TODO/NS-4_project-recovery_01.md) and
+[measured performance](TODO/NS-3_extension-performance_01.md), not full navigation,
+history, typing or viewport-task acceptance. Source review finds initial claim
+protection compares selection/view alongside the project, and presentation restore
+is skipped during conflict. This is a diagnosis to qualify, not a changed admission
+rule. Do not clear recovery storage or weaken pair protection to obtain a pass.
+
+The matched a4ff93a product is now delivered on the authorized LAN listener.
+HTTP200, exact served editor SHA256 and authenticated bounded MCP exports verify
+all three prior project pairs byte-for-byte at revisions1/4/7. Output configuration
+is exact. The stopped runtime's691 files/77084583 bytes have a separately verified
+preservation copy; private enrollment/launcher configuration is retained externally.
+The six-file web closure includes freshly compiled worker and rendered-preview
+entry points, matched RTL and both HTML hosts; no qualification fixtures ship.
+The deployed semantic preview also renders the primary home page at a measured
+390x844, reporting ready=true at revision1; this read changes no project/history.
+The ignored launcher selects this delivery. Its owner is recorded in the private
+presentation-viewport-02 packet; old LAN and both temporary hosts are identity-matched,
+stopped and joined. All owned browser tabs and compiler/native jobs are closed or
+terminal. The new LAN process alone remains live. All new artifacts/TEMP stay on E:;
+unrelated1280/390 remain untouched. Phone access after this replacement has not been
+independently confirmed.
+
+This is the second viewport batch without full criterion closure: PROGRESS, with
+no DONE movement or new completion credit. Reassessment ends further viewport
+fixture variants. Next repair the observed real browser project return under its
+existing recovery owner, preserving the exact pending pair and source range, then
+return to viewport acceptance. Full responsiveness and remaining all-button coverage
+retain their existing owners; do not substitute another report or fresh origin.
 
 ## Previous checkpoint — Native project lifecycle with unfinished Pascal — 2026-10-27
 

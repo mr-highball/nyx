@@ -14,6 +14,15 @@ source/field fixtures. Return to the existing
 [canvas scaling owner](NS-3_canvas-workspace_02.md) for actual browser Inspector,
 paired history/Save/Open and delivery. This adds no task or completion credit.
 
+The presentation-viewport-02 actual browser project return also records a52s
+navigation command and interrupted character-by-character source entry. One paste
+completes and exact source survives; this does not establish comfortable typing.
+The full section fixture passes101 while measuring2876ms maximum event-loop lag.
+These are observations from different workloads, not an attributed timing model.
+Keep initial admission/compilation, synchronous source input, observing transport
+and browser-command overhead distinct. Do not raise deadlines or bypass project
+protection. Return the same pending project through ordinary editing/navigation.
+
 The shared button-style form repair now preserves actual Inspector controls and
 event-router identity through Apply/Undo/Redo, while retiring old callbacks.
 Its strict owner/unknown-metadata boundaries, native57/61 and pure95 checks,

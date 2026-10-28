@@ -48,7 +48,18 @@ passes66 and the existing native live-content consumer passes63; all native
 heaps are clean. See [current work](../WORK.md) for failures and the private packet,
 and [the public host contract](../docs/view-sections.md#enclosing-presentation-space).
 
-The complete browser Studio capture gate remains unqualified after acknowledgment
-and browser command timeouts. Full project-pair navigation, zoom/scroll, compact
-visual quality and observing delivery still need this batch's evidence. This task
-stays open; isolated passes do not establish its remaining acceptance criteria.
+The complete browser Studio recovery now passes101, including the unchanged real
+capture/acknowledgment. Extended real-host native28/browser27 exercise half-scale
+embedding, actual nested scrolling and enclosing resize with preserved drafts,
+focus and supplementary selection. Current-service native project journeys pass
+78 desktop/90 compact with clean heaps. Ordinary browser desktop and actual390x844
+Project panels have fitting glyph-bearing captions; compact source Expand/Close
+works. The matched LAN payload preserves all three original pairs and configuration.
+
+Browser project return retains the exact unfinished Unicode source but loses its
+caret and reports a local/shared mismatch. Initial claim compares selection/view
+as well as the pair; conflict prevents presentation restoration. Qualify and repair
+this under [project recovery](NS-4_project-recovery_01.md), then return here. The
+observed52s return and2876ms fixture event-loop lag remain performance failures.
+This second batch reassesses the next action: stop viewport variants and repair
+the actual editor return. This task stays open without DONE or completion credit.
