@@ -1717,7 +1717,12 @@ begin
           .Hint(AState.RuntimeRecovery.Detail).Done;
       end;
 
-      if AState.Agents.Conflict and AState.AgentsVisible then
+      if AState.Agents.Paused and AState.AgentsVisible then
+      begin
+        LSummary.Children[0].Configure.Text('Sync paused')
+          .Hint('Your local project and Pascal are retained.').Done;
+      end
+      else if AState.Agents.Conflict and AState.AgentsVisible then
       begin
         LSummary.Children[0].Configure.Text('Shared project differs')
           .Hint('Your local project is retained. Review the choices before changing sync.').Done;

@@ -9,7 +9,66 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Recovery choice admission — 2026-10-28
+## Current work — Explicit recovery backup review — 2026-10-28
+
+PROGRESS; root remains SOLO. The user asked why progress appeared stalled. The
+goal is active, with no missing user input. Excessive regression setup/reruns
+delayed the ordinary workflow. Continue the existing
+[project recovery](TODO/NS-4_project-recovery_01.md) criteria; stop equivalent
+protocol/viewport variants and use the actual editor's retained-pair journey.
+
+Both hosts now separate backup delivery from explicit confirmation/cancellation.
+An immutable copied review pins the exact local backup, peer revision, connection
+generation and project context before invoking the host. Browser download request
+is explicitly distinguished from completed native storage. Confirmation rechecks
+the original review, and copied choices become single-use. Paused sync has its own
+visible outcome. Recovery/menu navigation opens an existing conflict instead of
+accidentally toggling its view off. Explicit transitions reveal/focus the next
+action through the owned section scroll scopes; background observations remain
+focus-neutral and borrowed application hosts are not scrolled.
+
+The real native journey initially failed because reconnect dropped local-pair
+protection. The shared bridge now retains that protection. Final native desktop
+and compact journeys pass64/68 checks, including independently reading the exact
+stored backup, cancellation/history preservation, pause/reconnect, explicit peer
+admission and focused-action clipping checks through every parent client area.
+Both runs report zero unfreed blocks. Printed-window captures are not physical
+pointer or display-capture evidence. The shared protocol passes155 native checks
+with balanced memory; its browser consumer compiles. Both real editor targets and
+the controlled recovery consumer compile. No155-check browser runtime pass is
+claimed by this checkpoint.
+
+Actual browser input at390x844 extends the existing unfinished Unicode draft to
+5890 UTF-16 code units, closes/reopens the same origin/workspace without clearing storage,
+and reproduces a genuinely different retained-local/shared pair. The exact local
+pair survives. Notice and Actions > Project > Agents and sync both reach recovery
+with backup focus. Controlled requested delivery captures the exact backup without
+adopting the peer; confirmation is visible/focused. Tab/Enter cancellation returns
+focus to backup, and pause/keyboard reconnect retain the exact pair and mismatch.
+At1280x800 controlled cancelled delivery retains the exact pair and offers no
+confirmation. Browser host outcomes here are an explicit file-exchange seam, not
+proof of browser disk-save completion. A private bootstrap initially ran before
+body creation; copying the maintained viewport HTML repaired setup. Input-action
+acknowledgement timeouts were followed by observation, not repeated actions.
+
+Evidence is retained in project-recovery-review-01:155 protocol log, editor/control
+build logs, original native reconnect failure, final wide/compact native logs and
+printed captures, exact browser before/retained pairs, compact review screenshot
+and bounded journey receipt. All private files/artifacts/TEMP/TMP stay on E:.
+The approved listener executable was reused with isolated loopback runtime/web and
+enrollment; its exact owned QA process is now stopped/joined. Final semantic read
+retains Viewport workshop revision9 and Undo availability. Production LAN remains
+on5b4c4ed and HTTP200 is rechecked. Concurrent operator AGENTS/WORK edits
+remain separate. No full recovery acceptance or milestone credit is assigned.
+
+Next finish the same browser journey: failed backup delivery, explicit peer
+admission with semantic comparison, and return to the retained backup. Preserve
+the original short-layout, real host effects and physical/assistive criteria.
+Then return to viewport acceptance and the ranked user-facing backlog. Do not
+start another equivalent protocol/viewport experiment or replace the LAN payload
+until the candidate's remaining delivery checks are satisfied.
+
+## Previous checkpoint — Recovery choice admission — 2026-10-28
 
 Previous goal turn: PROGRESS.5b4c4ed is pushed/remote-verified and delivered with
 exact project/configuration preservation. Root remains SOLO. Continue the genuine

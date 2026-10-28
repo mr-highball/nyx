@@ -482,6 +482,7 @@ var
   LHistory: TNyxStudioRecoveryFrame;
   LAfter: TNyxStudioRecoveryFrame;
   LBackup: TNyxProjectPair;
+  LReview: TNyxStudioRecoveryChoice;
   LRefused: Boolean;
 begin
   for LCase := Low(TRecoveryResolutionCase) to High(TRecoveryResolutionCase) do
@@ -513,7 +514,29 @@ begin
       LExchange.Deliver;
       Check(LBridge.State.Conflict, 'Independent local/shared pairs require an operator choice');
       LPeer := EncodeNyxProject(SharedPair(LServer));
-      LBackup := LSession.ProjectSnapshot;
+      LReview := LBridge.ReviewRecovery;
+      LBackup := LReview.Backup;
+      Check((EncodeNyxProject(LBackup) = EncodeNyxProject(LSession.ProjectSnapshot)) and
+        (LReview.SharedRevision = LServer.Revision) and not LExchange.RequestPending,
+        'Preparing a backup review captures exact values without choosing either project');
+
+      if LCase = rrcExact then
+      begin
+        LBridge.Connect;
+        LExchange.Deliver;
+        LRefused := False;
+        try
+          LBridge.AcceptRemote(LReview);
+        except
+          on ENyxProjectConflict do
+          begin
+            LRefused := True;
+          end;
+        end;
+        Check(LRefused and not LExchange.RequestPending and LBridge.State.Conflict,
+          'Reconnect expires a pre-backup review even with identical peer bytes/revision');
+        LReview := LBridge.ReviewRecovery;
+      end;
 
       if LCase = rrcStaleBackup then
       begin
@@ -521,7 +544,7 @@ begin
         LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
         LRefused := False;
         try
-          LBridge.AcceptRemote(LBackup);
+          LBridge.AcceptRemote(LReview);
         except
           on ENyxProjectConflict do
           begin
@@ -532,8 +555,9 @@ begin
           (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
           'A stale backup cannot authorize a recovery request or replace later typing');
         LBackup := LSession.ProjectSnapshot;
+        LReview := LBridge.ReviewRecovery;
       end;
-      LBridge.AcceptRemote(LBackup);
+      LBridge.AcceptRemote(LReview);
       Check(LExchange.RequestPending and not LBridge.SourceSynchronized and
         not LBridge.CanSwitchWorkspace,
         'Pending recovery grants neither acknowledged source nor a project jump');
@@ -581,7 +605,7 @@ begin
       if LCase = rrcPause then
       begin
         LBridge.Pause;
-        Check(not LExchange.RequestPending and not LBridge.Enabled,
+        Check(not LExchange.RequestPending and not LBridge.Enabled and LBridge.State.Paused,
           'Keep local cancels the exact pending recovery request');
         LRefused := False;
         try
@@ -636,12 +660,12 @@ begin
 
         if LCase = rrcPause then
         begin
-          LBridge.Connect(True);
+          LBridge.Connect;
           LExchange.Deliver;
-          Check(LBridge.State.Conflict,
+          Check(LBridge.State.Conflict and not LBridge.State.Paused,
             'Reconnect cannot reuse an abandoned recovery acceptance flag');
         end;
-        LBridge.AcceptRemote;
+        LBridge.AcceptRemote(LBridge.ReviewRecovery);
         LExchange.Deliver;
         Check(not LBridge.State.Conflict and LBridge.SourceSynchronized and
           (EncodeNyxProject(LSession.ProjectSnapshot) = LPeer),

@@ -96,3 +96,35 @@ The LAN build is unchanged. Continue the notice/menu, real backup delivery/retur
 failure/cancellation and native/browser focus journeys. In particular a browser
 download request alone does not prove eventual disk completion. Stop equivalent
 protocol variants and retain the original criteria above.
+
+**Explicit backup review checkpoint — 2026-10-28**
+
+Backup delivery now precedes a separate confirmation/cancel view. A copied review
+captures the local pair, peer revision, project and connection before invoking the
+file host; confirmation cannot silently re-review another peer. Browser requested
+download and acknowledged native storage remain different typed outcomes. A real
+native failure exposed reconnect dropping local protection; the shared bridge now
+retains it. Recovery menu access opens an existing conflict rather than toggling
+the view off. Explicit recovery actions reveal/focus their next mounted control
+through owned section scopes without granting background paints keyboard focus.
+
+Actual native wide/compact journeys pass64/68 checks, including exact independent
+backup reads, cancelled choice/history, paused reconnect, explicit peer admission
+and full focused-action containment through each parent client area. Both have
+zero unfreed blocks. The shared protocol passes155 native checks and compiles for
+the browser; both real editor targets compile. Browser155 runtime is not claimed.
+
+At actual390x844, ordinary browser typing/close/reopen in the same origin/workspace
+retains the exact pending Unicode draft (5890 UTF-16 code units) and reproduces a genuinely
+different pair. Both notice and ordinary menu reach backup focus. Controlled file
+delivery requests retain/capture the exact local pair, show focused confirmation,
+and support Tab/Enter cancellation. Pause/reconnect retain the pair and conflict.
+At1280x800 controlled backup cancellation retains the exact pair without offering
+confirmation. File-host seams do not prove eventual browser disk-save completion.
+Evidence and the original native failure remain in project-recovery-review-01.
+
+No original acceptance is waived. Next finish this same browser journey through
+failed backup, explicit peer admission/semantic comparison and return to the
+retained backup. Original short-layout, real host effects, physical/assistive and
+full native/browser criteria remain open. LAN remains unchanged. Stop equivalent
+protocol/viewport variants; this checkpoint does not move the task to DONE.

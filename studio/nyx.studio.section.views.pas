@@ -31,7 +31,7 @@ uses
   nyx.collections.mount, nyx.view.sections,
   nyx.studio.sections, nyx.studio.drag, nyx.studio.session, nyx.content.mount
   {$ifdef PAS2JS}, Web, nyx.render.browser, nyx.view.sections.browser
-  {$else}, Controls, ExtCtrls, nyx.render.lcl, nyx.view.sections.lcl{$endif};
+  {$else}, Controls, ExtCtrls, Forms, nyx.render.lcl, nyx.view.sections.lcl{$endif};
 
 type
   {$ifdef PAS2JS}
@@ -145,6 +145,12 @@ type
       AIdentity: TNyxIdentityKind = niAutomatic): TNyxStudioSectionControl;
     function FocusFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TNyxStudioSectionFocus;
+    { Explicit navigation reveals through this aggregate's owned scroll scopes
+      before requesting focus. Borrowed application hosts are never scrolled.
+      The owner must outlive synchronous callbacks; composition stays guarded
+      until they return. True reports a focus request, not OS activation proof. }
+    function FocusControl(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): Boolean;
     function CollectionView(const AID: TNyxText): INyxCollectionView;
     { Mount an independently owned runtime collection through the ordinary
       section adapter. The actual renderer owns/disconnects the returned mount;
@@ -1442,6 +1448,78 @@ function TNyxStudioSectionViews.FocusFor(const AID: TNyxText;
   AIdentity: TNyxIdentityKind): TNyxStudioSectionFocus;
 begin
   Result := ViewFor(AID).FocusFor(AID, AIdentity);
+end;
+
+function TNyxStudioSectionViews.FocusControl(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): Boolean;
+var
+  LFrame: TSectionFrame;
+  LLifetime: TFrameLifetime;
+  LLease: IInterface;
+  LFocus: TNyxStudioSectionFocus;
+  {$ifndef PAS2JS}
+  LParent: TWinControl;
+  {$endif}
+begin
+  Result := False;
+
+  if (FFrame = nil) or (RootFor(AID) = nil) then
+  begin
+    Exit;
+  end;
+  LFrame := TSectionFrame(FFrame);
+  LLifetime := LFrame.Lifetime;
+  LLease := LFrame.LifetimeLease;
+  { Explicit reveal may emit scroll/focus callbacks. Keep composition guarded
+    across those callbacks and retain only the independent frame-liveness lease. }
+  Inc(FInEvent);
+  try
+    ViewFor(AID).Reveal(AID, AIdentity);
+
+    if (LLease = nil) or not LLifetime.Current then
+    begin
+      Exit;
+    end;
+    LFocus := FocusFor(AID, AIdentity);
+
+    if LFocus = nil then
+    begin
+      Exit;
+    end;
+    {$ifndef PAS2JS}
+
+    if not LFocus.CanFocus or not LFrame.Host.IsParentOf(LFocus) then
+    begin
+      Exit;
+    end;
+    { Independent section renderers stop at their own panel. Complete reveal
+      through this aggregate's enclosing scroll controls, stopping before the
+      borrowed application host. No renderer is granted another view's scope. }
+    LParent := LFocus.Parent;
+    while (LParent <> nil) and (LParent <> LFrame.Host) do
+    begin
+
+      if LParent is TScrollingWinControl then
+      begin
+        TScrollingWinControl(LParent).ScrollInView(LFocus);
+
+        if not LLifetime.Current then
+        begin
+          Exit;
+        end;
+      end;
+      LParent := LParent.Parent;
+    end;
+    {$endif}
+    {$ifdef PAS2JS}
+    NyxFocusWithoutScroll(FocusFor(AID, AIdentity));
+    {$else}
+    ViewFor(AID).FocusWithoutScroll(AID, AIdentity);
+    {$endif}
+    Result := LLifetime.Current;
+  finally
+    Dec(FInEvent);
+  end;
 end;
 
 function TNyxStudioSectionViews.CollectionView(const AID: TNyxText): INyxCollectionView;

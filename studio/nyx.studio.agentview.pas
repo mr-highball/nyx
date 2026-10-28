@@ -31,6 +31,24 @@ uses
   nyx.studio.workspaces, nyx.studio.editorbuild, nyx.studio.builddiagnostics;
 
 type
+  { A requested download cannot attest a completed disk write. Native storage
+    can acknowledge its durable backup; both hosts still present an explicit
+    final choice. None means no backup/review is available for confirmation. }
+  TNyxStudioBackupDelivery = (sbdNone, sbdDownloadRequested, sbdStored);
+
+  { An explicit operator transition requests one next keyboard destination.
+    Ordinary observing paints request None and remain scroll/focus neutral. }
+  TNyxStudioRecoveryFocus = (srfNone, srfBackup, srfConfirm, srfReconnect);
+
+  { Copied recovery presentation only. The owning controller keeps the private
+    immutable choice separately; captions and delivery state grant no source or
+    replacement authority. Hiding this view does not discard the review. }
+  TNyxStudioRecoveryReview = record
+    Delivery: TNyxStudioBackupDelivery;
+    BackupName: TNyxText;
+    SharedRevision: Integer;
+  end;
+
   { Immutable-by-copy private editor presentation. No editor/MCP credential,
     borrowed widget or document reference is retained. A private BuildReply may
     carry a transient producer grant; never export this record as design data. }
@@ -38,6 +56,9 @@ type
     Connected: Boolean;
     Busy: Boolean;
     Conflict: Boolean;
+    { Explicit operator pause is distinct from connecting or transport failure. }
+    Paused: Boolean;
+    RecoveryReview: TNyxStudioRecoveryReview;
     Permission: TNyxAgentPermission;
     Revision: Integer;
     Endpoint: TNyxText;
@@ -91,6 +112,15 @@ type
     CompilerLaunch: TNyxCompilerLaunch;
   end;
 
+const
+  NyxStudioRecoveryConfirmID = 'action-agent-confirm';
+  NyxStudioRecoveryCancelID = 'action-agent-cancel-review';
+  NyxStudioRecoveryBackupID = 'action-agent-accept';
+  NyxStudioRecoveryReconnectID = 'action-agent-connect';
+
+{ Closed focus intent maps to stable editor identities, never a row ordinal. }
+function NyxStudioRecoveryFocusID(AFocus: TNyxStudioRecoveryFocus): TNyxText;
+
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
 { Typed editor-only URL metadata. Target controllers decide how to show this
   independent view; it never routes a document mutation or a control property. }
@@ -105,6 +135,17 @@ function NyxStudioWorkspaceCloseKey: TNyxExtensionRef;
 function BuildNyxStudioAgents(const AState: TNyxStudioAgentView): TNyxNode;
 
 implementation
+
+function NyxStudioRecoveryFocusID(AFocus: TNyxStudioRecoveryFocus): TNyxText;
+begin
+  case AFocus of
+    srfBackup: Result := NyxStudioRecoveryBackupID;
+    srfConfirm: Result := NyxStudioRecoveryConfirmID;
+    srfReconnect: Result := NyxStudioRecoveryReconnectID;
+  else
+    Result := '';
+  end;
+end;
 
 function NyxStudioReviewPreviewKey: TNyxExtensionRef;
 begin
@@ -184,27 +225,63 @@ begin
       .WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
     Result.Add(LabelNode('studio-agents-status', AState.Status));
 
-    if AState.Conflict then
+    if AState.Paused then
     begin
-      { Resolve choices precede optional configuration/help. An observing phone
-        can reach them without scrolling past transport and permission details.
-        The controller still downloads a backup before accepting the shared pair. }
-      Result.Find('studio-agents-status').Configure
-        .WhenViewport(TNyxViewportWidth.Below(640))
-        .Text('This device has a different saved project.').Done;
-      Result.Add(LabelNode('studio-agent-conflict',
-        'Your local changes are retained. Another view or agent changed the shared revision. ' +
-        'Save a project backup before choosing the shared design.').Configure
-        .WhenViewport(TNyxViewportWidth.Below(640))
-        .Text('Choose the shared project after saving a backup, or keep this device separate.').Done);
-      Result.Add(TNyxNode.Create(nkButton, 'action-agent-pause')
-        .Configure.Text('Keep local and pause sync').Done);
+      Result.Add(LabelNode('studio-agent-paused',
+        'Working locally. Your project and unfinished Pascal are retained. ' +
+        'Reconnect when you are ready to review the shared project.'));
+      Result.Add(TNyxNode.Create(nkButton, 'action-agent-connect')
+        .Configure.Text('Reconnect to shared project').Done);
+    end
+    else if AState.Conflict then
+    begin
+      { Keep the current decision ahead of technical backup names and optional
+        agent configuration. Review is a separate step, not an extra paragraph
+        appended below the original choice. Actual failure details remain in
+        the initial status instead of being replaced by a compact generic label. }
+
+      if AState.RecoveryReview.Delivery = sbdNone then
+      begin
+        Result.Add(LabelNode('studio-agent-conflict',
+          'Save a backup before using the shared project, or work locally.'));
+        Result.Add(TNyxNode.Create(nkButton, 'action-agent-pause')
+          .Configure.Text('Keep local and pause sync').Done);
+      end;
+
+      if AState.RecoveryReview.Delivery <> sbdNone then
+      begin
+        Result.Find('studio-agents-status').Configure.Text('Confirm recovery')
+          .Hint(AState.Status).Done;
+        Result.Add(LabelNode('studio-agent-reviewed-revision',
+          'Reviewed shared revision ' + IntToStr(AState.RecoveryReview.SharedRevision)));
+
+        if AState.RecoveryReview.Delivery = sbdDownloadRequested then
+        begin
+          Result.Add(LabelNode('studio-agent-backup-outcome',
+            'Backup requested. After saving the download, confirm below. ' +
+            'Cancel if it was not saved.'));
+          Result.Add(TNyxNode.Create(nkButton, NyxStudioRecoveryConfirmID)
+            .Configure.Text('Backup saved — use shared').Done);
+        end
+        else
+        begin
+          Result.Add(LabelNode('studio-agent-backup-outcome',
+            'Local backup saved. Your project and unfinished Pascal are retained in the project store.'));
+          Result.Add(TNyxNode.Create(nkButton, NyxStudioRecoveryConfirmID)
+            .Configure.Text('Use shared project').Done);
+        end;
+        Result.Add(TNyxNode.Create(nkButton, NyxStudioRecoveryCancelID)
+          .Configure.Text('Cancel recovery').Done);
+        Result.Add(LabelNode('studio-agent-backup-name', AState.RecoveryReview.BackupName));
+      end;
       LButton := TNyxNode.Create(nkButton, 'action-agent-accept')
-        .Configure.Text('Download local backup and use shared design').Done;
-      LButton.Configure.ForPlatform(npfNativeLCL)
-        .Text('Save local backup and use shared design').Done;
-      LButton.Configure.WhenViewport(TNyxViewportWidth.Below(640))
-        .Text('Back up and use shared').Done;
+        .Configure.Text('Download local backup').Done;
+      LButton.Configure.ForPlatform(npfNativeLCL).Text('Save local backup').Done;
+
+      if AState.RecoveryReview.Delivery <> sbdNone then
+      begin
+        LButton.Configure.Text('Save another backup').Done;
+      end;
       Result.Add(LButton);
     end;
     { Revision already appears in connected status. Redundant transport/help
@@ -246,7 +323,7 @@ begin
       LButtons.Add(LButton);
     end;
 
-    if not AState.Connected then
+    if not AState.Connected and not AState.Paused then
     begin
       Result.Add(TNyxNode.Create(nkButton, 'action-agent-connect').Configure.Text('Connect agents').Done);
     end;

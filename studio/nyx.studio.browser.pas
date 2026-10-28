@@ -347,6 +347,9 @@ type
     FRemoteName: TNyxText;
     FRemoteRevision: TNyxText;
     FAgents: TNyxStudioAgentBridge;
+    FRecoveryChoice: TNyxStudioRecoveryChoice;
+    FRecoveryReview: TNyxStudioRecoveryReview;
+    FRecoveryFocus: TNyxStudioRecoveryFocus;
     FAgentsVisible: Boolean;
     FWorkspace: TNyxWorkspaceRef;
     FPendingPresentation: TNyxDataValue;
@@ -356,6 +359,9 @@ type
     procedure SavePresentation;
     procedure CaptureCodePresentation(AMarkPending: Boolean = False);
     procedure RestoreCodePresentation;
+    { Consume explicit recovery navigation only after its new controls mount.
+      Observing paints never create a focus request or retain a widget pointer. }
+    procedure CompleteRecoveryFocus;
     { Capture only visible target panes; hidden controls may report zero extent.
       Copied positions survive compact switching and project/frame transitions. }
     procedure CaptureResourcePaneScroll;
@@ -1180,6 +1186,7 @@ begin
   FAgents.ObserveResource(LState.ResourceSelection.Reference, LState.ResourceSelection.Locale,
     LState.ResourcesVisible);
   LState.Agents := FAgents.State;
+  LState.Agents.RecoveryReview := FRecoveryReview;
   FViewState := LState;
   Result := BuildNyxStudioView(FSession, LState, FCompilerReport);
   FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
@@ -2305,6 +2312,7 @@ begin
 
   if (FSourceLine > 0) and (FShell.Find('studio-source-mount') <> nil) then
   begin
+    FRecoveryFocus := srfNone;
 
     if FSourceColumn < 1 then
     begin
@@ -2343,6 +2351,20 @@ begin
     FViewState.DisplayRecovery := TNyxViewRecovery.Ready;
     FStatus := 'Display refreshed / accepted files retained';
     SyncDisplayRecovery;
+  end;
+  CompleteRecoveryFocus;
+end;
+
+procedure TNyxStudio.CompleteRecoveryFocus;
+var
+  LID: TNyxText;
+begin
+  LID := NyxStudioRecoveryFocusID(FRecoveryFocus);
+  FRecoveryFocus := srfNone;
+
+  if LID <> '' then
+  begin
+    FShellRenderer.FocusControl(LID, niRuntime);
   end;
 end;
 
@@ -4029,6 +4051,27 @@ begin
     FCanvasToolsVisible := FViewState.CanvasToolsVisible;
     FDetailsExpanded := FViewState.DetailsExpanded;
     FPanel := FViewState.Panel;
+
+    if (ANode.ID = 'action-details-toggle') and FDetailsExpanded and FAgentsVisible then
+    begin
+
+      if FAgents.State.Paused then
+      begin
+        FRecoveryFocus := srfReconnect;
+      end
+      else if FAgents.State.Conflict then
+      begin
+
+        if FRecoveryReview.Delivery <> sbdNone then
+        begin
+          FRecoveryFocus := srfConfirm;
+        end
+        else
+        begin
+          FRecoveryFocus := srfBackup;
+        end;
+      end;
+    end;
     Refresh(True, True);
     Exit;
   end;
@@ -4372,7 +4415,28 @@ begin
             end;
           'action-agents':
             begin
-              FAgentsVisible := not FAgentsVisible;
+
+              if FAgents.State.Conflict or FAgents.State.Paused then
+              begin
+                FAgentsVisible := True;
+
+                if FAgents.State.Paused then
+                begin
+                  FRecoveryFocus := srfReconnect;
+                end
+                else if FRecoveryReview.Delivery <> sbdNone then
+                begin
+                  FRecoveryFocus := srfConfirm;
+                end
+                else
+                begin
+                  FRecoveryFocus := srfBackup;
+                end;
+              end
+              else
+              begin
+                FAgentsVisible := not FAgentsVisible;
+              end;
               FDetailsExpanded := FAgentsVisible;
               FCanvasExpanded := False;
               FPanel := nspDesign;
@@ -4386,16 +4450,51 @@ begin
               FPanel := nspDesign;
               LRetainCanvas := True;
             end;
-          'action-agent-connect': ConnectAgents;
+          'action-agent-connect':
+            begin
+              FRecoveryFocus := srfNone;
+              FRecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FRecoveryReview := Default(TNyxStudioRecoveryReview);
+              ConnectAgents;
+            end;
           'action-agent-disabled': FAgents.Configure(apDisabled);
           'action-agent-readOnly': FAgents.Configure(apReadOnly);
           'action-agent-edit': FAgents.Configure(apEdit);
-          'action-agent-pause': FAgents.Pause;
+          'action-agent-pause':
+            begin
+              FRecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FRecoveryReview := Default(TNyxStudioRecoveryReview);
+              FAgents.Pause;
+              FRecoveryFocus := srfReconnect;
+            end;
           'action-agent-accept':
             begin
-              LRecoveryBackup := FSession.ProjectSnapshot;
+              FRecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FRecoveryReview := Default(TNyxStudioRecoveryReview);
+              FRecoveryChoice := FAgents.ReviewRecovery;
+              LRecoveryBackup := FRecoveryChoice.Backup;
               Download('local-project-before-agent-sync.nyxproject', EncodeNyxProject(LRecoveryBackup));
-              FAgents.AcceptRemote(LRecoveryBackup);
+              { Export acknowledges a request, never eventual disk completion.
+                Keep both projects untouched until the operator confirms saving. }
+              FRecoveryReview.Delivery := sbdDownloadRequested;
+              FRecoveryReview.BackupName := 'local-project-before-agent-sync.nyxproject';
+              FRecoveryReview.SharedRevision := FRecoveryChoice.SharedRevision;
+              FDetailsExpanded := True;
+              FRecoveryFocus := srfConfirm;
+            end;
+          NyxStudioRecoveryConfirmID:
+            begin
+              FRecoveryFocus := srfNone;
+              FAgents.AcceptRemote(FRecoveryChoice);
+              FRecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FRecoveryReview := Default(TNyxStudioRecoveryReview);
+            end;
+          NyxStudioRecoveryCancelID:
+            begin
+              FRecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FRecoveryReview := Default(TNyxStudioRecoveryReview);
+              FStatus := 'Recovery cancelled; your local project and Pascal are retained';
+              FRecoveryFocus := srfBackup;
             end;
           NyxStudioDiagnosticGoID:
             begin

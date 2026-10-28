@@ -62,6 +62,24 @@ type
     LocalProject: TNyxText;
   end;
 
+  { Immutable-by-copy operator review spanning a host backup dialog or download.
+    Session/load context, connection generation and workspace prevent retargeting;
+    the peer pair/revision cannot follow reconnects. Backup includes all drafts.
+    No document tree, bridge, renderer or transport is retained. }
+  TNyxStudioRecoveryChoice = record
+  private
+    FContext: TNyxStudioCommandContext;
+    FWorkspace: TNyxWorkspaceRef;
+    FEpoch: Integer;
+    FIssuer: TNyxText;
+    FPeer: TNyxStudioRecoveryAdmission;
+    FBackup: TNyxProjectPair;
+    function GetSharedRevision: Integer;
+  public
+    property Backup: TNyxProjectPair read FBackup;
+    property SharedRevision: Integer read GetSharedRevision;
+  end;
+
   { Shared controller for the private editor exchange. Borrows its ordinary
     Studio session; server owns authoritative paired history. Local publications
     queue in order, each becoming one server history command. A revision race
@@ -100,6 +118,7 @@ type
     FApplying: Boolean;
     FEnabled: Boolean;
     FAcceptRemote: Boolean;
+    FRecoveryEpoch: Integer;
     FObservedRecovery: TNyxStudioRecoveryAdmission;
     FPendingRecovery: TNyxStudioRecoveryAdmission;
     FActivitySerial: Integer;
@@ -249,6 +268,10 @@ type
       establish that a host backup was delivered. Neither entry retries consent. }
     procedure AcceptRemote; overload;
     procedure AcceptRemote(const ALocalBackup: TNyxProjectPair); overload;
+    { Capture before invoking a backup host. Confirmation rechecks this exact
+      review, including its peer revision, rather than reviewing again afterward. }
+    function ReviewRecovery: TNyxStudioRecoveryChoice;
+    procedure AcceptRemote(const AChoice: TNyxStudioRecoveryChoice); overload;
     function State: TNyxStudioAgentView;
     { Navigation must wait for every local pair/draft publication. Observations
       may be in flight because their immutable target never changes. }
@@ -1146,7 +1169,16 @@ begin
   begin
     Exit;
   end;
+  { Reconnect retires reviews from the preceding operator connection, even
+    when the same files/revision are observed again. It grants no new consent. }
+
+  if FRecoveryEpoch = High(Integer) then
+  begin
+    raise ENyxProjectConflict.Create('Recovery connection generation is exhausted');
+  end;
+  Inc(FRecoveryEpoch);
   FEnabled := True;
+  FView.Paused := False;
   FAcceptRemote := False;
   FObservedRecovery := Default(TNyxStudioRecoveryAdmission);
   FPendingRecovery := Default(TNyxStudioRecoveryAdmission);
@@ -1156,7 +1188,10 @@ begin
   FView.Status := 'Connecting agent session';
   FKnownFrame := Frame;
   FDraftCapturePending := False;
-  FProtectLocal := AProtectLocal or
+  { Once this editor has protected a retained pair, reconnect cannot erase that
+    decision merely because the pair equals its constructor snapshot. Only an
+    explicit recovery choice may adopt a genuinely different shared project. }
+  FProtectLocal := AProtectLocal or FProtectLocal or
     (EncodeNyxProject(FSession.ProjectSnapshot) <> FInitialProject);
   LFrame := TNyxDataValue.ParseJSON(FKnownFrame);
   Send(NyxObject([NyxField('op', NyxData('claim')),
@@ -1403,6 +1438,7 @@ begin
   FEnabled := False;
   FView.Connected := False;
   FView.Status := 'Agent sync paused; your local work is retained';
+  FView.Paused := True;
 
   FExchange.CancelTick;
   FTimer := False;
@@ -1422,6 +1458,43 @@ begin
   AcceptRemote(FSession.ProjectSnapshot);
 end;
 
+function TNyxStudioRecoveryChoice.GetSharedRevision: Integer;
+begin
+  Result := FPeer.Revision;
+end;
+
+function TNyxStudioAgentBridge.ReviewRecovery: TNyxStudioRecoveryChoice;
+begin
+
+  if not FEnabled or not FView.Connected or not FView.Conflict or FRequest or
+    (FObservedRecovery.Project = '') then
+  begin
+    raise ENyxProjectConflict.Create('Review the current shared-project conflict before choosing recovery');
+  end;
+  Result := Default(TNyxStudioRecoveryChoice);
+  Result.FContext := FSession.CommandContext;
+  Result.FWorkspace := FWorkspace;
+  Result.FEpoch := FRecoveryEpoch;
+  Result.FIssuer := FSourceObservationIssuer;
+  Result.FPeer := FObservedRecovery;
+  Result.FBackup := FSession.ProjectSnapshot;
+end;
+
+procedure TNyxStudioAgentBridge.AcceptRemote(const AChoice: TNyxStudioRecoveryChoice);
+begin
+
+  if not FSession.MatchesCommandContext(AChoice.FContext) or
+    (AChoice.FWorkspace.ID <> FWorkspace.ID) or
+    (AChoice.FEpoch <> FRecoveryEpoch) or
+    (AChoice.FIssuer <> FSourceObservationIssuer) or
+    (AChoice.FPeer.Project <> FObservedRecovery.Project) or
+    (AChoice.FPeer.Revision <> FObservedRecovery.Revision) then
+  begin
+    raise ENyxProjectConflict.Create('The reviewed project changed; review and save a fresh backup before recovery');
+  end;
+  AcceptRemote(AChoice.FBackup);
+end;
+
 procedure TNyxStudioAgentBridge.AcceptRemote(const ALocalBackup: TNyxProjectPair);
 var
   LLocal: TNyxText;
@@ -1438,6 +1511,14 @@ begin
   begin
     raise ENyxProjectConflict.Create('Local work changed after its backup; save a fresh backup before recovery');
   end;
+
+  if FRecoveryEpoch = High(Integer) then
+  begin
+    raise ENyxProjectConflict.Create('Recovery choice generation is exhausted');
+  end;
+  { All outstanding copies of this review become single-use. A failed attempt
+    can be reviewed again explicitly; its old token cannot be replayed. }
+  Inc(FRecoveryEpoch);
   { Preserve queued publications and pending typing until exact admission. A
     failed/cancelled observation must leave their local owners intact. }
   FPendingRecovery := FObservedRecovery;

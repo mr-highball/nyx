@@ -26,7 +26,7 @@ implementation
 
 uses SysUtils, Math, nyx.text, nyx.types, nyx.resources, nyx.controls,
   nyx.layout.policy, nyx.button.presentation, nyx.button.view, nyx.studio.glyphs,
-  nyx.studio.inspector, nyx.disclosure;
+  nyx.studio.inspector, nyx.disclosure, nyx.studio.agentview;
 
 function NewNyxStudioChromeTheme: TNyxTheme;
 begin
@@ -320,6 +320,11 @@ begin
   Glyph('action-save', nsgSave, nbcGlyphOnly);
   Glyph('action-outputs', nsgOutputs);
   Glyph('action-agents', nsgAgents);
+  Glyph('action-agent-pause', nsgUndo);
+  Glyph('action-agent-accept', nsgSave);
+  Glyph('action-agent-connect', nsgRefresh);
+  Glyph(NyxStudioRecoveryConfirmID, nsgApply);
+  Glyph(NyxStudioRecoveryCancelID, nsgClose);
   Glyph('action-actions', nsgActions);
   Glyph('action-build-view', nsgBuildView);
   Glyph('action-build-app', nsgBuildApp);

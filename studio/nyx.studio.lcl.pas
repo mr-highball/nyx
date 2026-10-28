@@ -77,6 +77,7 @@ type
   { Private native context owns one portable mirror and its immutable service
     bridge. Owner is borrowed. Views remain owned by Studio; this context retains
     typed editor state and scalar/scroll positions, never borrowed widget handles.
+    Recovery reviews belong to their project rather than whichever tab is visible.
     Inactive bridges may observe their own project without painting another one. }
   TNyxNativeStudioProject = class
   public
@@ -85,6 +86,9 @@ type
     Session: TNyxStudioSession;
     SourceCommands: TNyxSourceCommands;
     Bridge: TNyxStudioAgentBridge;
+    RecoveryChoice: TNyxStudioRecoveryChoice;
+    RecoveryReview: TNyxStudioRecoveryReview;
+    RecoveryFocus: TNyxStudioRecoveryFocus;
     State: TNyxStudioViewState;
     Preview: Boolean;
     SavedPair: TNyxText;
@@ -396,6 +400,9 @@ type
     procedure RestoreProjectControls;
     function CurrentBridge: TNyxStudioAgentBridge;
     function GetAgentState: TNyxStudioAgentView;
+    { One explicit destination is consumed after painting its project's controls.
+      Background bridge observations cannot create or replay keyboard navigation. }
+    procedure CompleteRecoveryFocus;
     function ComposeShell: TNyxDocument;
     function GetPresentationPending: Boolean;
   protected
@@ -728,6 +735,8 @@ type
     ncAgentConnect,
     ncAgentPause,
     ncAgentAccept,
+    ncAgentConfirm,
+    ncAgentCancelReview,
     ncAgentDisabled,
     ncAgentReadOnly,
     ncAgentEdit,
@@ -797,6 +806,8 @@ const
     'action-agent-connect',
     'action-agent-pause',
     'action-agent-accept',
+    NyxStudioRecoveryConfirmID,
+    NyxStudioRecoveryCancelID,
     'action-agent-disabled',
     'action-agent-readOnly',
     'action-agent-edit',
@@ -1240,6 +1251,7 @@ begin
   if CurrentBridge <> nil then
   begin
     Result := CurrentBridge.State;
+    Result.RecoveryReview := FCurrentProject.RecoveryReview;
   end
   else
   begin
@@ -3492,6 +3504,7 @@ begin
 
       if FSourceLine > 0 then
       begin
+        FCurrentProject.RecoveryFocus := srfNone;
         { An explicit callback/diagnostic destination supersedes the optional
           return-to-project caret that has not yet found a mounted source pane. }
         FRestoreProjectCode := False;
@@ -3658,12 +3671,31 @@ begin
       SyncDisplayRecovery;
     end;
     Inc(FPaintCount);
+    CompleteRecoveryFocus;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-finish');{$endif}
   finally
     LShell.Free;
     FPainting := False;
   end;
   CompletionChanged;
+end;
+
+procedure TNyxNativeStudio.CompleteRecoveryFocus;
+var
+  LID: TNyxText;
+begin
+
+  if FCurrentProject = nil then
+  begin
+    Exit;
+  end;
+  LID := NyxStudioRecoveryFocusID(FCurrentProject.RecoveryFocus);
+  FCurrentProject.RecoveryFocus := srfNone;
+
+  if LID <> '' then
+  begin
+    FShellView.FocusControl(LID, niRuntime);
+  end;
 end;
 
 function TNyxNativeStudio.PendingEventFrameReady: Boolean;
@@ -5479,6 +5511,28 @@ begin
 
     if (AEvent.Trigger = ntClick) and RouteNyxStudioWorkspace(FState, ANode.ID) then
     begin
+
+      if (ANode.ID = 'action-details-toggle') and FState.DetailsExpanded and
+        FState.AgentsVisible and (FCurrentProject <> nil) then
+      begin
+
+        if FState.Agents.Paused then
+        begin
+          FCurrentProject.RecoveryFocus := srfReconnect;
+        end
+        else if FState.Agents.Conflict then
+        begin
+
+          if FCurrentProject.RecoveryReview.Delivery <> sbdNone then
+          begin
+            FCurrentProject.RecoveryFocus := srfConfirm;
+          end
+          else
+          begin
+            FCurrentProject.RecoveryFocus := srfBackup;
+          end;
+        end;
+      end;
       RequestRefresh;
       Exit;
     end;
@@ -5891,7 +5945,28 @@ begin
             end;
           ncAgents:
             begin
-              FState.AgentsVisible := not FState.AgentsVisible;
+
+              if FState.Agents.Conflict or FState.Agents.Paused then
+              begin
+                FState.AgentsVisible := True;
+
+                if FState.Agents.Paused then
+                begin
+                  FCurrentProject.RecoveryFocus := srfReconnect;
+                end
+                else if FCurrentProject.RecoveryReview.Delivery <> sbdNone then
+                begin
+                  FCurrentProject.RecoveryFocus := srfConfirm;
+                end
+                else
+                begin
+                  FCurrentProject.RecoveryFocus := srfBackup;
+                end;
+              end
+              else
+              begin
+                FState.AgentsVisible := not FState.AgentsVisible;
+              end;
               FState.DetailsExpanded := FState.AgentsVisible;
               FState.CanvasExpanded := False;
               FState.Panel := nspDesign;
@@ -5910,15 +5985,24 @@ begin
               begin
                 raise ENyxModel.Create('Choose an explicit local service connection when launching native Studio');
               end;
+              FCurrentProject.RecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FCurrentProject.RecoveryReview := Default(TNyxStudioRecoveryReview);
+              FCurrentProject.RecoveryFocus := srfNone;
               CurrentBridge.Connect;
             end;
           ncAgentPause:
             begin
+              FCurrentProject.RecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FCurrentProject.RecoveryReview := Default(TNyxStudioRecoveryReview);
               CurrentBridge.Pause;
+              FCurrentProject.RecoveryFocus := srfReconnect;
             end;
           ncAgentAccept:
             begin
-              LRecoveryBackup := FSession.ProjectSnapshot;
+              FCurrentProject.RecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FCurrentProject.RecoveryReview := Default(TNyxStudioRecoveryReview);
+              FCurrentProject.RecoveryChoice := CurrentBridge.ReviewRecovery;
+              LRecoveryBackup := FCurrentProject.RecoveryChoice.Backup;
               CreateGUID(LBackup);
 
               if not FStore.SaveCapturedProject('backup-' + Copy(GUIDToString(LBackup), 2, 36),
@@ -5927,7 +6011,25 @@ begin
               begin
                 raise ENyxModel.Create('Cannot save the exact local backup; current work is retained');
               end;
-              CurrentBridge.AcceptRemote(LRecoveryBackup);
+              FCurrentProject.RecoveryReview.Delivery := sbdStored;
+              FCurrentProject.RecoveryReview.BackupName := 'backup-' + Copy(GUIDToString(LBackup), 2, 36);
+              FCurrentProject.RecoveryReview.SharedRevision := FCurrentProject.RecoveryChoice.SharedRevision;
+              FState.DetailsExpanded := True;
+              FCurrentProject.RecoveryFocus := srfConfirm;
+            end;
+          ncAgentConfirm:
+            begin
+              FCurrentProject.RecoveryFocus := srfNone;
+              CurrentBridge.AcceptRemote(FCurrentProject.RecoveryChoice);
+              FCurrentProject.RecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FCurrentProject.RecoveryReview := Default(TNyxStudioRecoveryReview);
+            end;
+          ncAgentCancelReview:
+            begin
+              FCurrentProject.RecoveryChoice := Default(TNyxStudioRecoveryChoice);
+              FCurrentProject.RecoveryReview := Default(TNyxStudioRecoveryReview);
+              FState.Status := 'Recovery cancelled; your local project and Pascal are retained';
+              FCurrentProject.RecoveryFocus := srfBackup;
             end;
           ncAgentDisabled, ncAgentReadOnly, ncAgentEdit:
             begin
