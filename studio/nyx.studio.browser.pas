@@ -3328,6 +3328,7 @@ var
   LSource: TNyxText;
   LRetainCanvas: Boolean;
   LAcceptedDesign: TNyxText;
+  LRecoveryBackup: TNyxProjectPair;
   LInspectorEffect: TNyxInspectorEffect;
   LRemoval: TNyxCallbackRemoval;
   LSourceLine: Integer;
@@ -4392,8 +4393,9 @@ begin
           'action-agent-pause': FAgents.Pause;
           'action-agent-accept':
             begin
-              Download('local-project-before-agent-sync.nyxproject', EncodeNyxProject(FSession.ProjectSnapshot));
-              FAgents.AcceptRemote;
+              LRecoveryBackup := FSession.ProjectSnapshot;
+              Download('local-project-before-agent-sync.nyxproject', EncodeNyxProject(LRecoveryBackup));
+              FAgents.AcceptRemote(LRecoveryBackup);
             end;
           NyxStudioDiagnosticGoID:
             begin

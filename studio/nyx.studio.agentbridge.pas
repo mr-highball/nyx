@@ -52,6 +52,16 @@ type
     Sequence: Integer;
   end;
 
+  { Copied, private recovery admission. Project bytes include every accepted
+    file and unfinished draft/base. A pending choice additionally pins the local
+    backup; no renderer, session owner or mutable document is retained. Revision
+    belongs to the validated peer observation, not a UI caption or list index. }
+  TNyxStudioRecoveryAdmission = record
+    Project: TNyxText;
+    Revision: Integer;
+    LocalProject: TNyxText;
+  end;
+
   { Shared controller for the private editor exchange. Borrows its ordinary
     Studio session; server owns authoritative paired history. Local publications
     queue in order, each becoming one server history command. A revision race
@@ -90,6 +100,8 @@ type
     FApplying: Boolean;
     FEnabled: Boolean;
     FAcceptRemote: Boolean;
+    FObservedRecovery: TNyxStudioRecoveryAdmission;
+    FPendingRecovery: TNyxStudioRecoveryAdmission;
     FActivitySerial: Integer;
     FInitialProject: TNyxText;
     FProtectLocal: Boolean;
@@ -231,7 +243,12 @@ type
     function CanInspectBuild: Boolean;
     function RouteBuildInspection(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
     procedure Pause;
-    procedure AcceptRemote;
+    { A host supplies the exact pair whose backup it successfully delivered.
+      New local edits or a changed peer pair/revision refuse adoption. The
+      parameterless compatibility entry captures at call time; it cannot itself
+      establish that a host backup was delivered. Neither entry retries consent. }
+    procedure AcceptRemote; overload;
+    procedure AcceptRemote(const ALocalBackup: TNyxProjectPair); overload;
     function State: TNyxStudioAgentView;
     { Navigation must wait for every local pair/draft publication. Observations
       may be in flight because their immutable target never changes. }
@@ -956,7 +973,7 @@ end;
 
 function TNyxStudioAgentBridge.SourceSynchronized: Boolean;
 begin
-  Result := FView.Connected and not FView.Conflict and
+  Result := FView.Connected and not FView.Conflict and not FAcceptRemote and
     (FObservationFailures = 0) and
     not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
@@ -1059,7 +1076,11 @@ function TNyxStudioAgentBridge.State: TNyxStudioAgentView;
 begin
   Result := FView;
 
-  if FDraftCapturePending and FEnabled and not FView.Conflict then
+  if FAcceptRemote then
+  begin
+    Result.Status := 'Checking the reviewed shared project; local work is retained';
+  end
+  else if FDraftCapturePending and FEnabled and not FView.Conflict then
   begin
     Result.Status := 'Local Pascal draft waiting to synchronize';
   end
@@ -1071,7 +1092,7 @@ end;
 
 function TNyxStudioAgentBridge.CanSwitchWorkspace: Boolean;
 begin
-  Result := FEnabled and FView.Connected and not FView.Conflict and
+  Result := FEnabled and FView.Connected and not FView.Conflict and not FAcceptRemote and
     not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
@@ -1126,6 +1147,9 @@ begin
     Exit;
   end;
   FEnabled := True;
+  FAcceptRemote := False;
+  FObservedRecovery := Default(TNyxStudioRecoveryAdmission);
+  FPendingRecovery := Default(TNyxStudioRecoveryAdmission);
   FObservationFailures := 0;
   FView.Conflict := False;
   FView.Connected := False;
@@ -1374,6 +1398,8 @@ end;
 procedure TNyxStudioAgentBridge.Pause;
 begin
   AbandonSharedSource(npoUnconfirmed, 'Shared synchronization was paused');
+  FAcceptRemote := False;
+  FPendingRecovery := Default(TNyxStudioRecoveryAdmission);
   FEnabled := False;
   FView.Connected := False;
   FView.Status := 'Agent sync paused; your local work is retained';
@@ -1393,22 +1419,29 @@ end;
 
 procedure TNyxStudioAgentBridge.AcceptRemote;
 begin
-  FSharedReserved := False;
-  FSharedPreparing := False;
-  FSharedPreparation := Default(TNyxStudioDesignRequest);
-  FSharedAcknowledging := False;
-  FSharedDirty := False;
-  FSharedSource := '';
-  FSharedAccepted := Default(TNyxProjectPair);
-  FQueue := nil;
-  FQueueSizes := nil;
-  FQueueRoutes := nil;
-  Inc(FInspectionSequence);
-  FView.BuildInspection := Default(TNyxBuildDiagnosticInspection);
-  FInspectionPoll := False;
-  FInspectionReplyText := '';
-  FQueueUnits := 0;
-  FDraftCapturePending := False;
+  AcceptRemote(FSession.ProjectSnapshot);
+end;
+
+procedure TNyxStudioAgentBridge.AcceptRemote(const ALocalBackup: TNyxProjectPair);
+var
+  LLocal: TNyxText;
+begin
+
+  if not FEnabled or not FView.Connected or not FView.Conflict or FRequest or
+    (FObservedRecovery.Project = '') then
+  begin
+    raise ENyxProjectConflict.Create('Review the current shared-project conflict before choosing recovery');
+  end;
+  LLocal := EncodeNyxProject(ALocalBackup);
+
+  if LLocal <> EncodeNyxProject(FSession.ProjectSnapshot) then
+  begin
+    raise ENyxProjectConflict.Create('Local work changed after its backup; save a fresh backup before recovery');
+  end;
+  { Preserve queued publications and pending typing until exact admission. A
+    failed/cancelled observation must leave their local owners intact. }
+  FPendingRecovery := FObservedRecovery;
+  FPendingRecovery.LocalProject := LLocal;
   FAcceptRemote := True;
   FView.Conflict := False;
   Send(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
@@ -1627,13 +1660,13 @@ begin
   FView.Busy := False;
   LChanged := False;
   LRefresh := False;
-  LSharedAcknowledgement := FSharedAcknowledging;
+  LSharedAcknowledgement := FSharedAcknowledging and not FAcceptRemote;
   { A lost read is not evidence of a competing revision. Retain the exact
     accepted frame and retry at most twice through the existing poll timer.
     Writes, pending typing, shared compiler acknowledgements and HTTP refusals
     retain their explicit conflict behavior: they are never replayed here. }
 
-  if (AStatus = 0) and (FSent.Field('op').AsText = 'observe') and
+  if (AStatus = 0) and not FAcceptRemote and (FSent.Field('op').AsText = 'observe') and
     (Length(FQueue) = 0) and not FDraftCapturePending and
     not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
     (Frame = FSentFrame) and (FObservationFailures < CMaximumObservationRetries) then
@@ -1744,6 +1777,24 @@ begin
         begin
           LCheckpoint := ReceiveNyxSourceObservation(LState.Field('sourceObservation'),
             FSourceObservationIssuer, FWorkspace, LSummary.Field('revision').AsInteger, LPair);
+        end;
+        { A validated complete observation may be reviewed even when its pair is
+          refused locally. Keep the pending choice separate: a newer reply must
+          not silently retarget the consent that requested it. }
+        FObservedRecovery.Project := LState.Field('project').AsText;
+        FObservedRecovery.Revision := LSummary.Field('revision').AsInteger;
+        FView.Revision := FObservedRecovery.Revision;
+      end;
+
+      if FAcceptRemote then
+      begin
+
+        if not NyxAgentHas(LState, 'project') or
+          (FObservedRecovery.Project <> FPendingRecovery.Project) or
+          (FObservedRecovery.Revision <> FPendingRecovery.Revision) or
+          (EncodeNyxProject(FSession.ProjectSnapshot) <> FPendingRecovery.LocalProject) then
+        begin
+          raise ENyxProjectConflict.Create('Recovery choice changed while waiting; local work and history are retained. Review and back up again');
         end;
       end;
 
@@ -1990,6 +2041,28 @@ begin
             begin
               FSession.Select(LSummary.Field('selection').AsText);
             end;
+
+            if FAcceptRemote then
+            begin
+              { Only admitted recovery retires the superseded publications. No
+                failed request may erase a newer draft marker or queued intent. }
+              FSharedReserved := False;
+              FSharedPreparing := False;
+              FSharedPreparation := Default(TNyxStudioDesignRequest);
+              FSharedAcknowledging := False;
+              FSharedDirty := False;
+              FSharedSource := '';
+              FSharedAccepted := Default(TNyxProjectPair);
+              FQueue := nil;
+              FQueueSizes := nil;
+              FQueueRoutes := nil;
+              FQueueUnits := 0;
+              FDraftCapturePending := False;
+              Inc(FInspectionSequence);
+              FView.BuildInspection := Default(TNyxBuildDiagnosticInspection);
+              FInspectionPoll := False;
+              FInspectionReplyText := '';
+            end;
             FKnownFrame := Frame;
 
             if Assigned(FOnProjectCaptured) then
@@ -2000,6 +2073,7 @@ begin
         end;
       end;
       FAcceptRemote := False;
+      FPendingRecovery := Default(TNyxStudioRecoveryAdmission);
       FView.Revision := LSummary.Field('revision').AsInteger;
       FView.Status := 'Agents ' + NyxAgentPermissionName(FView.Permission) +
         CRevisionLabel + IntToStr(FView.Revision);
@@ -2033,6 +2107,8 @@ begin
     except
       on LException: Exception do
       begin
+        FAcceptRemote := False;
+        FPendingRecovery := Default(TNyxStudioRecoveryAdmission);
         FView.Conflict := True;
         FView.Status := LException.Message;
         LRefresh := True;

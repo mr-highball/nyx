@@ -4702,6 +4702,7 @@ var
   LChanged: Boolean;
   LBefore: TNyxText;
   LBackup: TGUID;
+  LRecoveryBackup: TNyxProjectPair;
   LBackupRevision: TNyxText;
   LBackupRemote: TNyxText;
   LHierarchyChanged: Boolean;
@@ -5917,15 +5918,16 @@ begin
             end;
           ncAgentAccept:
             begin
+              LRecoveryBackup := FSession.ProjectSnapshot;
               CreateGUID(LBackup);
 
               if not FStore.SaveCapturedProject('backup-' + Copy(GUIDToString(LBackup), 2, 36),
-                '', FSession.ProjectSnapshot, FSession.AcceptedSourceCheckpoint,
+                '', LRecoveryBackup, FSession.AcceptedSourceCheckpoint,
                 LBackupRevision, LBackupRemote) then
               begin
                 raise ENyxModel.Create('Cannot save the exact local backup; current work is retained');
               end;
-              CurrentBridge.AcceptRemote;
+              CurrentBridge.AcceptRemote(LRecoveryBackup);
             end;
           ncAgentDisabled, ncAgentReadOnly, ncAgentEdit:
             begin

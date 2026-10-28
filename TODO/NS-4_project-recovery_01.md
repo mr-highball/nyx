@@ -75,3 +75,24 @@ genuine-mismatch recovery choice/backup/native criteria is waived or accepted by
 this checkpoint. The reviewed candidate is delivered with identical semantic
 exports for all three LAN projects and unchanged output profiles; stopped runtime
 backup verifies691 files. Continue the original genuinely different-pair journey.
+
+**Recovery-choice admission — 2026-10-28**
+
+The real deferred protocol reproduces a destructive late response after the
+operator chooses recovery and then types. Admission now pins the exact backed-up
+local pair and the validated shared pair/revision. Queued local work survives
+refusal; pause/failed transport retire consent, and interrupted recovery is never
+replayed as an ordinary observation. Both Studio hosts pass their copied backup
+pair to the typed overload. A stale backup cannot even initiate the request.
+
+Pending recovery grants neither source nor project-navigation authority and shows
+its checking status. Final native/browser regression passes146 checks, including
+newer content/draft,
+changed peer, identical peer bytes with newer revision, pause, failed transport
+and unchanged explicit recovery. Local Undo/Redo after refusal restores the exact
+pending Unicode pair. Native memory is balanced; both editor targets compile.
+This is protocol/consumer evidence, not ordinary UI or full recovery acceptance.
+The LAN build is unchanged. Continue the notice/menu, real backup delivery/return,
+failure/cancellation and native/browser focus journeys. In particular a browser
+download request alone does not prove eventual disk completion. Stop equivalent
+protocol variants and retain the original criteria above.

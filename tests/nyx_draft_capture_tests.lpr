@@ -31,6 +31,12 @@ uses
   nyx.test.editor.exchange, nyx.test.hierarchy;
 
 type
+  { An operator's recovery choice cannot authorize later typing, content edits
+    or a different shared revision. Pause and transport failure retire the
+    attempt; only an unchanged, explicitly reviewed pair may be adopted. }
+  TRecoveryResolutionCase = (rrcDraft, rrcContent, rrcSharedRevision, rrcSamePairRevision,
+    rrcPause, rrcTransport, rrcStaleBackup, rrcExact);
+
   { Initial recovery may restore a different navigation position without
     changing either accepted files or the pending draft. Separate those cases
     from a genuinely different buffer and edits made during connection. }
@@ -463,6 +469,195 @@ end;
 { Reuse the actual session protocol and controlled transport. No fabricated
   response can grant admission: the peer owns its pair, navigation and history,
   while the recovering editor independently loads the exact portable packet. }
+procedure RecoveryResolutionJourney;
+var
+  LCase: TRecoveryResolutionCase;
+  LSession: TNyxStudioSession;
+  LServer: TNyxAgentSession;
+  LBridge: TNyxStudioAgentBridge;
+  LExchange: TNyxTestEditorExchange;
+  LObserver: TCaptureObserver;
+  LBefore: TNyxText;
+  LPeer: TNyxText;
+  LHistory: TNyxStudioRecoveryFrame;
+  LAfter: TNyxStudioRecoveryFrame;
+  LBackup: TNyxProjectPair;
+  LRefused: Boolean;
+begin
+  for LCase := Low(TRecoveryResolutionCase) to High(TRecoveryResolutionCase) do
+  begin
+    LSession := TNyxStudioSession.Create;
+    LServer := TNyxAgentSession.Create;
+    LObserver := TCaptureObserver.Create;
+    LBridge := nil;
+    try
+      LServer.Exchange(NyxObject([
+        NyxField('op', NyxData('claim')),
+        NyxField('project', NyxData(EncodeNyxProject(LSession.ProjectSnapshot))),
+        NyxField('selection', NyxData('eyebrow')),
+        NyxField('view', NyxData('home'))]));
+      LServer.Call('nyx_transaction', 'Recovery qualification', NyxObject([
+        NyxField('expectedRevision', NyxData(LServer.Revision)),
+        NyxField('operationId', NyxData('reviewed-shared-title')),
+        NyxField('operations', NyxArray([
+          NyxObject([NyxField('op', NyxData('title')),
+            NyxField('value', NyxData('The reviewed shared project'))])]))]));
+      LSession.SetTitle('The first local idea');
+      LSession.SetTitle('The retained local idea');
+      LSession.SetSourceDraft(LSession.Source + #10 + TNyxText('// Unfinished 🌙'));
+      LExchange := TNyxTestEditorExchange.Create(LServer);
+      LBridge := TNyxStudioAgentBridge.Create(LSession, nil,
+        NyxPrimaryWorkspace, LExchange);
+      LBridge.OnProjectCaptured := LObserver.Captured;
+      LBridge.Connect(True);
+      LExchange.Deliver;
+      Check(LBridge.State.Conflict, 'Independent local/shared pairs require an operator choice');
+      LPeer := EncodeNyxProject(SharedPair(LServer));
+      LBackup := LSession.ProjectSnapshot;
+
+      if LCase = rrcStaleBackup then
+      begin
+        LSession.SetSourceDraft(LSession.DraftSource + #10 + '// Typed while the host saved its backup');
+        LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+        LRefused := False;
+        try
+          LBridge.AcceptRemote(LBackup);
+        except
+          on ENyxProjectConflict do
+          begin
+            LRefused := True;
+          end;
+        end;
+        Check(LRefused and not LExchange.RequestPending and
+          (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+          'A stale backup cannot authorize a recovery request or replace later typing');
+        LBackup := LSession.ProjectSnapshot;
+      end;
+      LBridge.AcceptRemote(LBackup);
+      Check(LExchange.RequestPending and not LBridge.SourceSynchronized and
+        not LBridge.CanSwitchWorkspace,
+        'Pending recovery grants neither acknowledged source nor a project jump');
+
+      if LCase in [rrcSharedRevision, rrcSamePairRevision] then
+      begin
+        LServer.Call('nyx_transaction', 'Recovery qualification', NyxObject([
+          NyxField('expectedRevision', NyxData(LServer.Revision)),
+          NyxField('operationId', NyxData('newer-shared-title')),
+          NyxField('operations', NyxArray([
+            NyxObject([NyxField('op', NyxData('title')),
+              NyxField('value', NyxData('A newer unreviewed shared project'))])]))]));
+
+        if LCase = rrcSamePairRevision then
+        begin
+          LServer.Exchange(NyxObject([
+            NyxField('op', NyxData('history')),
+            NyxField('expectedRevision', NyxData(LServer.Revision)),
+            NyxField('direction', NyxData('undo'))]));
+          Check(EncodeNyxProject(SharedPair(LServer)) = LPeer,
+            'Revision-only refusal exercises identical shared bytes with newer history');
+        end;
+      end;
+
+      if not (LCase in [rrcPause, rrcTransport]) then
+      begin
+        LExchange.PrepareReply;
+      end;
+
+      if LCase = rrcDraft then
+      begin
+        LSession.SetSourceDraft(LSession.DraftSource + #10 + '// Typed after choosing recovery');
+        LBridge.RecordDraft;
+      end;
+
+      if LCase = rrcContent then
+      begin
+        LSession.SetTitle('A local edit after choosing recovery');
+        LBridge.RecordLocal;
+      end;
+      LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+      LHistory := LSession.RecoveryFrame;
+      LPeer := EncodeNyxProject(SharedPair(LServer));
+
+      if LCase = rrcPause then
+      begin
+        LBridge.Pause;
+        Check(not LExchange.RequestPending and not LBridge.Enabled,
+          'Keep local cancels the exact pending recovery request');
+        LRefused := False;
+        try
+          LBridge.AcceptRemote(LSession.ProjectSnapshot);
+        except
+          on ENyxProjectConflict do
+          begin
+            LRefused := True;
+          end;
+        end;
+        Check(LRefused and not LExchange.RequestPending,
+          'A paused observer cannot send or reuse a recovery choice');
+      end
+      else if LCase = rrcTransport then
+      begin
+        LExchange.DeliverFailure(0);
+        Check(LBridge.State.Conflict and not LExchange.TickPending,
+          'An interrupted operator recovery is not silently replayed as an ordinary read');
+      end
+      else
+      begin
+        LExchange.Deliver;
+      end;
+
+      if LCase in [rrcExact, rrcStaleBackup] then
+      begin
+        Check(not LBridge.State.Conflict and LBridge.SourceSynchronized and
+          (EncodeNyxProject(LSession.ProjectSnapshot) = LPeer),
+          'An unchanged operator choice adopts exactly the reviewed shared pair');
+      end
+      else
+      begin
+        Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore,
+          'Recovery refusal or pause retains every local accepted file, draft and draft baseline');
+        LAfter := LSession.RecoveryFrame;
+        Check((Length(LAfter.Undo) = Length(LHistory.Undo)) and
+          (Length(LAfter.Redo) = Length(LHistory.Redo)) and
+          (LAfter.Selection = LHistory.Selection) and (LAfter.View = LHistory.View),
+          'Recovery refusal retains local history and navigation');
+        Check(EncodeNyxProject(SharedPair(LServer)) = LPeer,
+          'Recovery observations never change the independent shared pair');
+        Check(not LBridge.SourceSynchronized and not LBridge.CanSwitchWorkspace,
+          'A refused or paused choice grants no source or project-navigation authority');
+        { Execute the retained local history as well as checking its shape.
+          Redo must restore the complete pending pair, not just its title. }
+        LSession.Undo;
+        Check(EncodeNyxProject(LSession.ProjectSnapshot) <> LBefore,
+          'Refused recovery leaves the previous local Undo entry executable');
+        LSession.Redo;
+        Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore,
+          'Local Redo restores every retained file and unfinished draft after refusal');
+
+        if LCase = rrcPause then
+        begin
+          LBridge.Connect(True);
+          LExchange.Deliver;
+          Check(LBridge.State.Conflict,
+            'Reconnect cannot reuse an abandoned recovery acceptance flag');
+        end;
+        LBridge.AcceptRemote;
+        LExchange.Deliver;
+        Check(not LBridge.State.Conflict and LBridge.SourceSynchronized and
+          (EncodeNyxProject(LSession.ProjectSnapshot) = LPeer),
+          'A fresh explicit choice can recover after the earlier attempt is refused');
+      end;
+    finally
+      LBridge.Free;
+      LObserver.Free;
+      LServer.Free;
+      LSession.Free;
+    end;
+  end;
+end;
+
+{ Navigation-only recovery admission and genuine competing-pair refusal use the
+  same real session protocol; no fixture response fabricates source authority. }
 procedure RecoveryClaimJourney;
 var
   LCase: TRecoveryClaimCase;
@@ -572,6 +767,7 @@ end;
 
 begin
   try
+    RecoveryResolutionJourney;
     RecoveryClaimJourney;
     ObservationFailureJourney;
     CaptureJourney;

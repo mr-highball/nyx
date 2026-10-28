@@ -9,7 +9,42 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Exact browser project return — 2026-10-28
+## Current work — Recovery choice admission — 2026-10-28
+
+Previous goal turn: PROGRESS.5b4c4ed is pushed/remote-verified and delivered with
+exact project/configuration preservation. Root remains SOLO. Continue the genuine
+different-pair journey in [project recovery](TODO/NS-4_project-recovery_01.md).
+Source review finds explicit AcceptRemote bypasses the in-flight edit guard and
+does not pin the reviewed peer revision; its flag also survives failure/pause.
+The maintained real bridge/deferred transport now reproduces the destructive
+overwrite before the repair. The bridge pins the exact backed-up local pair and
+the validated shared pair/revision, retaining queued work until admission.
+New typing/content, newer peer bytes or revision, stale backup, pause and failed
+transport cannot reuse that choice. A pending choice grants neither synchronized
+source nor project navigation and has its own visible checking status. Explicit
+recovery is never replayed as an ordinary interrupted read. Both Studio hosts
+pass their exact copied backup pair to the typed overload; the compatibility
+entry documents its host responsibility.
+
+Final qualification passes146 protocol checks on native and browser, including
+identical peer bytes after a newer revision and executable local Undo/Redo that
+restores the complete unfinished Unicode pair. Native reports12,516,227 matching
+allocations/frees and zero unfreed blocks. Both real editor targets compile;
+these compilations do not qualify their ordinary recovery UI. The existing
+project-recovery-choice-01 packet retains the before-failure, final results and
+editor build logs. The one loopback fixture host is stopped/joined after its
+checks. All artifacts/private runners/TEMP/TMP stay on E:.
+
+Keep the qualified5b4c4ed LAN delivery and approved executable path unchanged.
+Concurrent operator edits to AGENTS and the firewall follow-up below are retained
+separately. Next exercise the genuine different-pair notice/menu and both recovery
+choices through ordinary browser/native UI. Browser ExportFiles success presently
+acknowledges a download request, not eventual disk completion; its cancellation/
+failure UX and exact backup return still need qualification. Preserve all original
+backup, visibility, focus and target acceptance criteria. Stop further equivalent
+protocol/viewport variants; no full recovery/task acceptance is assigned here.
+
+## Previous checkpoint — Exact browser project return — 2026-10-28
 
 Previous goal turn: PROGRESS (qualified LAN service restarted; verification
 results and remaining work reconciled). Root remains SOLO.747c775 remains the
