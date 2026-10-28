@@ -1203,7 +1203,11 @@ var
   LPolicyAddOwner: TNyxText;
   LPolicyAddEvent: TNyxCallbackEvent;
   LPolicyAddPolicy: TNyxExecutionPolicy;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LStarted: Double;
+  {$endif}
 begin
+  {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
     The cost is deliberately kept off the UI rather than trusting a mutable
@@ -1276,7 +1280,15 @@ begin
   end;
   LSession := nil;
   try
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spDesignPlanner, LStarted);
+    LStarted := SourceProfileStart;
+    {$endif}
     LSession := TNyxStudioSession.Create(LPair);
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spDesignSession, LStarted);
+    LStarted := SourceProfileStart;
+    {$endif}
 
     if (FRequest.FEdit.Action in [sdaResource, sdaTransaction, sdaEvent, sdaCallbacks, sdaHandlers]) and
       FRequest.FPair.Pending then
@@ -1318,6 +1330,10 @@ begin
         raise ENyxState.Create('Captured state identity changed its scalar family');
       end;
     end;
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spDesignSetup, LStarted);
+    LStarted := SourceProfileStart;
+    {$endif}
     case FRequest.FEdit.Action of
       sdaProperty: LSession.SetProperty(FRequest.FEdit.Name, FRequest.FEdit.Value);
       sdaAddKind: LSession.AddKind(FRequest.FEdit.Name);
@@ -1504,12 +1520,20 @@ begin
           LSession.ApplyCollectionIntent(FRequest.FEdit.Collection);
         end;
     end;
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spDesignEdit, LStarted);
+    LStarted := SourceProfileStart;
+    {$endif}
     FSource := LSession.Source;
     FDesign := LSession.FSourceWorkspace.Capture.Design;
     FSnapshot := LSession.FSourceWorkspace.Snapshot;
     FSelection := LSession.SelectedID;
     FView := LSession.ActiveViewID;
     FNextID := LSession.FNextID;
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spDesignCapture, LStarted);
+    LStarted := SourceProfileStart;
+    {$endif}
 
     if FRequest.RequiresExecution then
     begin
@@ -1581,6 +1605,7 @@ begin
       FRequiresCompilation := True;
       { Only actual execution supplies paired owners for this proposal. }
       FSnapshot := '';
+      {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spDesignCustomize, LStarted);{$endif}
       Exit;
     end;
     FDocument := LSession.FDocument;
@@ -1588,8 +1613,10 @@ begin
     FWorkspace := LSession.FSourceWorkspace;
     LSession.FSourceWorkspace := nil;
   finally
+    {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
     LSession.Free;
     LBefore.Free;
+    {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spDesignRetire, LStarted);{$endif}
   end;
 end;
 
@@ -1696,6 +1723,9 @@ function PrepareNyxStudioDesign(const ARequest: TNyxStudioDesignRequest;
 var
   LOwner: TPreparedDesign;
   LAction: INyxSchemaAction;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LStarted: Double;
+  {$endif}
 begin
 
   if (ASchemas = nil) or (ASchemas.Revision <> ARequest.SchemaRevision) then
@@ -1707,7 +1737,9 @@ begin
   LOwner.FRequest := ARequest;
   LAction := LOwner;
   try
+    {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
     ASchemas.Execute(LAction);
+    {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spDesignSchemaExecution, LStarted);{$endif}
   except
     on LException: Exception do
     begin

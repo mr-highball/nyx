@@ -2,6 +2,22 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Critical-path continuation,2026-10-28: opt-in timing now separates worker decode,
+session construction, editing and result capture without changing its strict
+result protocol. A reverse scaling diagnostic on the full saved Workshop reaches
+the same30000ms deadline after approximately10s of construction and8s of editing;
+capture is incomplete. This does not replace the original Uniform Apply below.
+Typed text construction now avoids a redundant JSON parse with exact Unicode,
+wire spelling and byte-limit parity qualified by134 executed checks per target.
+Native queue/presentation10 also passes with a clean heap. Native single-run
+full-Workshop timings2796/2703ms establish no significant saving. The exact
+original project is restored/export-verified. Its actual profiled Uniform Apply
+returns from the worker in29522.5ms, then needs3463.7ms to decode and25508.3ms for
+local delivery/admission/refresh; the observing commit still times out. A single
+run with this worker margin establishes no robust latency pass. Acknowledgement,
+history/Save/Open and performance acceptance remain open. Current
+evidence and qualification setup are recorded in [WORK](../WORK.md).
+
 Additional ordinary-editor consumer,2026-10-28: recovery now qualifies exact
 backup return and semantic Undo/Redo on the real desktop browser. After Redo,
 one public observer sample was still11173ms old while presentation had not

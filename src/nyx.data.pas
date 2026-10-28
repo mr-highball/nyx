@@ -601,8 +601,23 @@ begin
 end;
 
 function NyxData(const AValue: TNyxText): TNyxDataValue;
+var
+  LStrict: Boolean;
 begin
-  Result := TNyxDataValue.ParseJSON(QuoteJSON(AValue));
+  { Typed text has no container grammar, duplicate names or numeric spelling to
+    resolve. Admit its complete Unicode and quoted UTF-8 budget directly, then
+    retain the same formatter spelling. Avoid decoding/formatting a second copy
+    of large source/resource strings merely to recover this exact input scalar.
+    Snapshot the formatter preference once so admission and storage agree even
+    if another owner changes that external preference. Arbitrary JSON continues
+    through ParseJSON and its full admission boundary. }
+  LStrict := TJSONString.StrictEscaping;
+  NyxJSONStringByteLength(AValue, LStrict);
+  Result := Default(TNyxDataValue);
+  Result.FKind := ndText;
+  Result.FJSON := EncodeNyxJSONString(AValue, LStrict);
+  Result.FText := AValue;
+  Result.FReadBudget := True;
 end;
 
 function NyxData(AValue: Boolean): TNyxDataValue;

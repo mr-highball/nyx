@@ -393,12 +393,19 @@ type
     spFrameMerge, spVerify, spLex, spSymbolRead, spCheckpoint, spCommit,
     spSave, spRestoreDocument, spSnapshot, spRestoreWorkspace, spRender,
     spRenderEncode, spCandidate, spCandidateValidate, spCandidateEncode,
-    spFactDeclarations, spFactIdentities, spFactPublication, spCanonicalGeneration);
+    spFactDeclarations, spFactIdentities, spFactPublication, spCanonicalGeneration,
+    spWorkerPacket, spWorkerSchemas, spWorkerRequest, spWorkerPreparation,
+    spWorkerReply, spDesignPlanner, spDesignSession, spDesignSetup,
+    spDesignEdit, spDesignCapture, spDesignCustomize, spDesignRetire,
+    spDesignSchemaExecution);
+  { Borrowed monotonic clock supplied by one isolated diagnostic owner. }
   TNyxSourceProfileClock = function: Double;
+  { Cumulative inclusive elapsed time and completed calls for one stage. }
   TNyxSourceProfileSample = record
     Milliseconds: Double;
     Calls: Integer;
   end;
+  { Fixed copied counters contain no source, application or callback ownership. }
   TNyxSourceProfileSamples = array[TNyxSourceProfileStage] of TNyxSourceProfileSample;
   {$endif}
 

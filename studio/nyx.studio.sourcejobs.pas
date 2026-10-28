@@ -37,7 +37,7 @@ uses
   nyx.studio.inspector, nyx.canvas.editor, nyx.studio.collectionintent, nyx.studio.collections,
   nyx.tabs.pages.editor, nyx.programs.declarations, nyx.canvas.adoption,
   nyx.diagram.adoption, nyx.diagram.declarations
-  {$ifdef PAS2JS}, JS, Web{$endif};
+  {$ifdef PAS2JS}, JS, Web{$ifdef NYX_SOURCE_PROFILE}, WebOrWorker{$endif}{$endif};
 
 type
   { Authoritative ordinary-command outcome. Preparation is provisional; Applied
@@ -158,6 +158,14 @@ type
     FTimeout: NativeInt;
     FReceiveHandler: TJSEventHandler;
     FErrorHandler: TJSEventHandler;
+    {$ifdef NYX_SOURCE_PROFILE}
+    { Optional timing channel owns no document authority. Its unique same-origin
+      name isolates one worker; retirement disconnects this borrowed DOM sink. }
+    FProfileChannel: TJSBroadcastChannel;
+    FProfileHandler: TJSEventHandler;
+    FProfileLines: Integer;
+    function ReceiveProfile(AEvent: TJSEvent): Boolean;
+    {$endif}
     function Receive(AEvent: TJSEvent): Boolean;
     function WorkerError(AEvent: TJSEvent): Boolean;
     procedure WorkerTimeout;
@@ -513,6 +521,20 @@ begin
   FQueue := nil;
 end;
 
+{$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}
+{ Diagnostic-only UI clock. Sequence correlates the bounded console record with
+  its one worker; no project text or extra protocol message is emitted. }
+procedure SourceJobProfile(const APhase: TNyxText; ASequence: Integer);
+var
+  LText: TNyxText;
+begin
+  LText := IntToStr(ASequence) + '/' + FloatToStr(window.performance.now) +
+    '/' + FloatToStr(window.performance.timeOrigin);
+  document.body.setAttribute('data-nyx-source-job-' + APhase, LText);
+  WriteLn('nyx-source-job phase=', APhase, ' value=', LText);
+end;
+{$endif}
+
 procedure TSourcePort.Detach;
 begin
   Owner := nil;
@@ -624,7 +646,9 @@ begin
       WriteLn('source-command,prepare,', Sequence, ',', PreparationMilliseconds);
     end;
     {$endif}
+    {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}SourceJobProfile('deliver-start', Sequence);{$endif}
     Port.Deliver(Sequence, Source, Design, Failure);
+    {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}SourceJobProfile('deliver-end', Sequence);{$endif}
   end;
 end;
 
@@ -1040,6 +1064,7 @@ end;
 
 procedure TNyxSourceCommands.Edit(const AEdit: TNyxStudioDesignEdit);
 begin
+  {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}SourceJobProfile('edit-request', 0);{$endif}
   QueueEdit(AEdit, nil);
 end;
 
@@ -1710,6 +1735,10 @@ var
   LPreparationHost: INyxSharedDesignPreparationHost;
   {$ifdef PAS2JS}
   LProposal: INyxPreparedDesign;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LProfileID: TGUID;
+  LProfileName: TNyxText;
+  {$endif}
   {$endif}
   {$ifndef PAS2JS}
   LWork: TSourcePreparation;
@@ -1728,6 +1757,7 @@ begin
     Exit;
   end;
   FActive := FQueue[0];
+  {$if defined(PAS2JS) and defined(NYX_SOURCE_PROFILE)}SourceJobProfile('prepare-start', FActive.Sequence);{$endif}
   for LIndex := 1 to High(FQueue) do
   begin
     FQueue[LIndex - 1] := FQueue[LIndex];
@@ -1869,7 +1899,19 @@ begin
       Exit;
     end;
     {$ifdef PAS2JS}
+    {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('launch', FActive.Sequence);{$endif}
+    {$ifdef NYX_SOURCE_PROFILE}
+    CreateGUID(LProfileID);
+    LProfileName := Copy(GUIDToString(LProfileID), 2, 36);
+    FProfileLines := 0;
+    document.body.setAttribute('data-nyx-source-profile', '');
+    FProfileChannel := TJSBroadcastChannel.new(LProfileName);
+    FProfileHandler := @ReceiveProfile;
+    FProfileChannel.addEventListener('message', FProfileHandler);
+    FWorker := TJSWorker.new(FWorkerURL + '?nyx-profile=' + LProfileName);
+    {$else}
     FWorker := TJSWorker.new(FWorkerURL);
+    {$endif}
     FWorker.addEventListener('message', FReceiveHandler);
     FWorker.addEventListener('error', FErrorHandler);
     FTimeout := window.setTimeout(@WorkerTimeout, 30000);
@@ -1886,6 +1928,7 @@ begin
         NyxField('request', FActive.Design.ToData),
         NyxField('schemas', FActive.Schemas.Value.ToData)]).ToJSON);
     end;
+    {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('sent', FActive.Sequence);{$endif}
     {$else}
     LCount := 0;
     for LIndex := 0 to High(FExecutions) do
@@ -2900,6 +2943,16 @@ end;
 {$ifdef PAS2JS}
 procedure TNyxSourceCommands.RetireWorker;
 begin
+  {$ifdef NYX_SOURCE_PROFILE}
+
+  if FProfileChannel <> nil then
+  begin
+    FProfileChannel.removeEventListener('message', FProfileHandler);
+    FProfileChannel.close;
+    FProfileChannel := nil;
+    FProfileHandler := nil;
+  end;
+  {$endif}
 
   if FTimeout >= 0 then
   begin
@@ -2916,12 +2969,38 @@ begin
   end;
 end;
 
+{$ifdef NYX_SOURCE_PROFILE}
+{ Diagnostic text is bounded and displayed only as inert attribute text. This
+  out-of-band observer never enters the strict worker-result decoder or model. }
+function TNyxSourceCommands.ReceiveProfile(AEvent: TJSEvent): Boolean;
+var
+  LText: TNyxText;
+begin
+  Result := True;
+
+  if (FProfileLines >= 256) or not isString(TJSMessageEvent(AEvent).data) then
+  begin
+    Exit;
+  end;
+  LText := String(TJSMessageEvent(AEvent).data);
+
+  if Length(LText) > 256 then
+  begin
+    Exit;
+  end;
+  Inc(FProfileLines);
+  document.body.setAttribute('data-nyx-source-profile',
+    document.body.getAttribute('data-nyx-source-profile') + LText + #10);
+end;
+{$endif}
+
 function TNyxSourceCommands.Receive(AEvent: TJSEvent): Boolean;
 var
   LDelivery: TSourceDelivery;
   LWork: INyxWork;
   LData: TNyxDataValue;
 begin
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('receive', FActive.Sequence);{$endif}
   Result := True;
   LDelivery := TSourceDelivery.Create;
   LWork := LDelivery;
@@ -2950,6 +3029,7 @@ begin
     end;
   end;
   RetireWorker;
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('decoded', FActive.Sequence);{$endif}
   FScheduler.PostUI(LWork);
 end;
 
@@ -2976,6 +3056,7 @@ end;
 
 procedure TNyxSourceCommands.WorkerTimeout;
 begin
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('timeout', FActive.Sequence);{$endif}
   RetireWorker;
   Finish(FActive.Sequence, nil, nil,
     'Editor processor timed out / current files and draft retained');

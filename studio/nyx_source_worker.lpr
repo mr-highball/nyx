@@ -27,7 +27,59 @@ program nyx_source_worker;
 
 uses
   SysUtils, JS, WebWorker, WebOrWorker,
+  {$ifdef NYX_SOURCE_PROFILE}nyx.source,{$endif}
   nyx.text, nyx.data, nyx.schema, nyx.source.preparation, nyx.studio.session;
+
+{$ifdef NYX_SOURCE_PROFILE}
+var
+  GProfileSeen: TNyxSourceProfileSamples;
+  GProfileLines: Integer;
+  GProfileChannel: TJSBroadcastChannel;
+  GProfileName: JSValue;
+
+{ A diagnostic-only BroadcastChannel is separate from result postMessage. Its
+  name comes from this worker's URL, never project/source content or authority. }
+procedure ProfileLine(const AText: TNyxText);
+begin
+  WriteLn(AText);
+
+  if GProfileChannel <> nil then
+  begin
+    GProfileChannel.postMessage(AText);
+  end;
+end;
+
+{ Isolated diagnostic worker only. Completed inclusive counters are written to
+  the console, never to the strict result channel. A bounded log contains no
+  source/schema bytes. Worker performance.now is monotonic within this owner. }
+procedure ReportProfile;
+var
+  LSamples: TNyxSourceProfileSamples;
+  LStage: TNyxSourceProfileStage;
+begin
+  LSamples := ReadNyxSourceProfile;
+  for LStage := Low(TNyxSourceProfileStage) to High(TNyxSourceProfileStage) do
+  begin
+
+    if (LSamples[LStage].Calls <> GProfileSeen[LStage].Calls) and
+      ((LSamples[LStage].Milliseconds >= 50) or (LStage >= spWorkerPacket)) and
+      (GProfileLines < 256) then
+    begin
+      ProfileLine('stage=' + IntToStr(Ord(LStage)) + ' calls=' +
+        IntToStr(LSamples[LStage].Calls) + ' milliseconds=' +
+        FloatToStr(LSamples[LStage].Milliseconds) + ' at=' + FloatToStr(performance.now));
+      Inc(GProfileLines);
+    end;
+  end;
+  GProfileSeen := LSamples;
+end;
+
+function ProfileClock: Double;
+begin
+  Result := performance.now;
+  ReportProfile;
+end;
+{$endif}
 
 function Receive(AEvent: TJSEvent): Boolean;
 var
@@ -35,8 +87,20 @@ var
   LReply: INyxPreparedSource;
   LDesign: INyxPreparedDesign;
   LSchemas: INyxSchemaSnapshot;
+  LDesignRequest: TNyxStudioDesignRequest;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LStarted: Double;
+  LReplyText: TNyxText;
+  {$endif}
 begin
   Result := False;
+  {$ifdef NYX_SOURCE_PROFILE}
+  ResetNyxSourceProfile(@ProfileClock);
+  GProfileSeen := ReadNyxSourceProfile;
+  GProfileLines := 0;
+  LStarted := SourceProfileStart;
+  ProfileLine('received at=' + FloatToStr(performance.now));
+  {$endif}
   try
 
     if not isString(TJSMessageEvent(AEvent).data) then
@@ -49,7 +113,12 @@ begin
     begin
       raise EArgumentException.Create('Source worker requires its versioned source/schema packet');
     end;
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceProfileFinish(spWorkerPacket, LStarted);
+    LStarted := SourceProfileStart;
+    {$endif}
     LSchemas := ReadNyxSchemaSnapshot(LRequest.Field('schemas'));
+    {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spWorkerSchemas, LStarted);{$endif}
     case LRequest.Field('version').AsInteger of
       1:
         begin
@@ -58,9 +127,23 @@ begin
         end;
       2:
         begin
-          LDesign := PrepareNyxStudioDesign(
-            ReadNyxStudioDesignRequest(LRequest.Field('request')), LSchemas);
+          {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
+          LDesignRequest := ReadNyxStudioDesignRequest(LRequest.Field('request'));
+          {$ifdef NYX_SOURCE_PROFILE}
+          SourceProfileFinish(spWorkerRequest, LStarted);
+          LStarted := SourceProfileStart;
+          {$endif}
+          LDesign := PrepareNyxStudioDesign(LDesignRequest, LSchemas);
+          {$ifdef NYX_SOURCE_PROFILE}
+          SourceProfileFinish(spWorkerPreparation, LStarted);
+          LStarted := SourceProfileStart;
+          LReplyText := LDesign.ToData.ToJSON;
+          SourceProfileFinish(spWorkerReply, LStarted);
+          ReportProfile;
+          WebWorker.Self_.postMessage(LReplyText);
+          {$else}
           WebWorker.Self_.postMessage(LDesign.ToData.ToJSON);
+          {$endif}
         end;
     else
       begin
@@ -83,5 +166,15 @@ begin
   { Built with the matched RTL embedded and -Tmodule for its generated rtl.run
     entry. This ordinary Pascal program creates no DOM/Studio/server and accepts
     no filesystem/URL/compiler instruction. Each request reconstructs fresh owners. }
+  {$ifdef NYX_SOURCE_PROFILE}
+  GProfileName := TJSURLSearchParams.new(String(WebWorker.location.search)).get('nyx-profile');
+
+  if isString(GProfileName) and (String(GProfileName) <> '') then
+  begin
+    GProfileChannel := TJSBroadcastChannel.new(String(GProfileName));
+  end;
+  ProfileLine('boot at=' + FloatToStr(performance.now) +
+    ' origin=' + FloatToStr(performance.timeOrigin));
+  {$endif}
   WebWorker.Self_.addEventListener('message', @Receive);
 end.

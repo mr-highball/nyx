@@ -9,7 +9,83 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Recovery backup return and LAN delivery — 2026-10-28
+## Current work — Source preparation critical path — 2026-10-28
+
+Previous goal turn: PROGRESS.272fce3 is pushed/remote-verified; the checked client
+is delivered with exact project/configuration preservation. Root remains SOLO.
+Return to [measured performance](TODO/NS-3_extension-performance_01.md), preserving
+the original saved JSON Workshop/scaling Apply workload and30000ms worker limit.
+Trace startup, schema/request decode, isolated session, actual edit, reconstruction,
+snapshot and retirement separately through the existing opt-in source profiler.
+Keep diagnostics off the strict worker-result protocol. Use the fixed approved
+listener path with explicit isolated runtime/enrollment/web; keep LAN unchanged.
+The deliverable is a concrete cost repair and the same ordinary Apply/history/
+Save/Open journey, not another smaller field or source fixture. New work, builds,
+private runners and process TEMP/TMP remain on E:. Preserve external operator
+AGENTS/WORK edits and unrelated1280/390. No missing user input or approval gate
+prevents this authorized investigation and implementation.
+
+The isolated runtime/ordinary editor uses the unchanged approved backend with
+explicit qualification roots. Initial Uniform Apply commits the scene but its
+editor acknowledgement times out; the independent backend export proves the
+accepted change. A semantic Undo takes13374ms against the unchanged15000ms
+transport limit. This does not identify rollback cloning as the cause: the full
+saved Workshop's isolated native session clone takes78ms. Keep acknowledgement,
+UI readiness and worker execution distinct. No transport/deadline change is made.
+
+Opt-in profiling now covers packet/schema/request decode, planner/session/setup,
+edit/capture/customization/retirement and encoding. The diagnostic worker uses a
+unique same-origin BroadcastChannel, separate from strict result postMessage;
+bounded inert DOM attributes retain timings when browser console inspection
+returns no logs. Production builds contain neither channel nor attributes. The
+observed reverse scaling operation on the full accepted Uniform Workshop reaches
+the unchanged30000ms deadline: decode356ms, session10068.5ms, edit8048.4ms, then
+capture remains incomplete. Inclusive counters overlap. This reverse-operation
+trace locates work; it is not acceptance or a substitute for the original Uniform
+Apply. Its trace/screenshot and the original exact project are retained in the
+source-critical-path-01 evidence packet.
+
+One reusable cost correction admits typed text through the existing strict
+Unicode/quoted-byte measurement, retaining the same formatter output and exact
+scalar without parsing a temporary JSON tree. Arbitrary JSON still uses full
+admission. Both targets execute all134 strict JSON/structured-value checks,
+including new formatter-preference, controls/NUL, supplementary text, immutable
+copy, exact4MiB and malformed-storage checks. Native also passes10 real queue/
+presentation checks; both native runs have complete clean heaps. Profiled and
+unflagged browser Studio/worker builds pass. The original full Workshop native
+probe changes2796ms to2703ms in single runs; this small difference establishes no
+significant workflow saving. No browser speedup or original criterion is claimed.
+
+Ordinary Undo reaches authoritative revision7 and an independent full project
+export is byte-identical to the original baseline. Stale client recovery retained
+the former Uniform pair after an acknowledgement failure. Its exact wrapper is
+archived and checked against the retained Uniform export before a private Pascal
+setup page removes only this one owned qualification-origin recovery key. This
+changes no production data, source admission or editor protection. Ordinary Studio
+reopens that same original workspace with the newly built client and visibly
+adopts revision7. The actual original Uniform Apply now returns from its worker
+in29522.5ms from launch, followed by3463.7ms result decoding and25508.3ms local
+delivery/admission/refresh:61817ms from Edit entry to delivered. The worker's
+inclusive preparation counter is17406.6ms; its decoded schemas/request remain
+under400ms. Startup/message scheduling and the remaining UI delivery work still
+need attribution. The observing commit again ends in the unchanged transport
+timeout. This single profiled run, with less than0.5s worker margin, is neither a
+robust latency pass nor completion of the original workflow. The final formatter
+snapshot/worker-origin diagnostic refinement compiles separately; no additional
+performance claim is assigned to those final bytes. Observing acknowledgement,
+paired history/Save/Open and the matched authoring journey remain the next checks.
+Independent MCP export at revision8 is exactly equal to the retained accepted
+Uniform pair; the unchanged backend and updated worker preserve the same wire
+meaning. Final native/browser134 and native queue10 pass again after the formatter
+policy snapshot refinement, with clean native heaps. Final product builds have
+zero owned warnings; the existing upstream RTL warnings remain in their logs.
+Do not repeat smaller fixtures, raise waits or attribute timing to a component
+without measurements. LAN remains on its previous checked delivery. All compiler
+and completed test readers are joined; the isolated listener is retained for the
+same pending browser journey. The user's named firewall script belongs to another
+project; no Nyx permission or missing user input blocks this work.
+
+## Previous checkpoint — Recovery backup return and LAN delivery — 2026-10-28
 
 Previous goal turn: PROGRESS.234844a is pushed/remote-verified. Root remains SOLO.
 Continue the existing [recovery owner](TODO/NS-4_project-recovery_01.md); the

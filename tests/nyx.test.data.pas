@@ -108,6 +108,87 @@ begin
     NyxExtension('app.presentation'), NyxData('custom title'));
 end;
 
+{ Compare typed construction with the independent strict JSON reader, including
+  formatter preferences, control escapes, supplementary text and both admission
+  limits. Copies must own immutable values after the caller changes its text. }
+procedure TypedTextValues(var ACount: Integer);
+var
+  LText: TNyxText;
+  LValue: TNyxDataValue;
+  LCopy: TNyxDataValue;
+  LRead: TNyxDataValue;
+  LPreviousStrict: Boolean;
+  LStrict: Boolean;
+  LIndex: Integer;
+  LRejected: Boolean;
+begin
+  LPreviousStrict := TJSONString.StrictEscaping;
+  try
+    for LStrict := False to True do
+    begin
+      TJSONString.StrictEscaping := LStrict;
+      LText := TNyxText('"/\ / Cafe / ') + NyxScalarText($1f319);
+      for LIndex := 0 to 31 do
+      begin
+        LText := LText + NyxScalarText(LIndex);
+      end;
+      LValue := NyxData(LText);
+      LRead := TNyxDataValue.ParseJSON(EncodeNyxJSONString(LText, LStrict));
+      Check((LValue.Kind = ndText) and (LValue.AsText = LText) and
+        (LValue.ToJSON = LRead.ToJSON),
+        'typed text retains exact strict-reader meaning and wire spelling', ACount);
+      LCopy := LValue.Copy;
+      LText := 'changed caller';
+      LValue := NyxData(LText);
+      Check((LCopy.AsText = LRead.AsText) and (LCopy.ToJSON = LRead.ToJSON),
+        'typed text copy remains independent from caller reassignment', ACount);
+    end;
+    LText := TNyxText(StringOfChar('x', NyxMaximumJSONBytes - 2));
+    LValue := NyxData(LText);
+    Check((Length(LValue.ToJSON) = NyxMaximumJSONBytes) and
+      (LValue.AsText = LText), 'typed text admits the exact quoted byte limit', ACount);
+    LRejected := False;
+    try
+      NyxData(LText + 'x');
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'typed text refuses one byte beyond the quoted limit', ACount);
+    LText := TNyxText(StringOfChar('/', NyxMaximumJSONBytes div 2));
+    LRejected := False;
+    try
+      NyxData(LText);
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'typed text counts strict escaping before admission', ACount);
+    SetLength(LText, 1);
+    {$ifdef PAS2JS}
+    LText[1] := Char($d800);
+    {$else}
+    LText[1] := Char($ff);
+    {$endif}
+    LRejected := False;
+    try
+      NyxData(LText);
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'typed text refuses malformed platform Unicode storage', ACount);
+  finally
+    TJSONString.StrictEscaping := LPreviousStrict;
+  end;
+end;
+
 function RunNyxDataTests: Integer;
 var
   LValue: TNyxDataValue;
@@ -404,6 +485,7 @@ var
   end;
 begin
   Result := 0;
+  TypedTextValues(Result);
   IndexedReads;
   CopiedSnapshots;
   LReference := Default(TNyxExtensionRef);
