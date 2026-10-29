@@ -450,8 +450,19 @@ This scroll repair is a partial Win32 checkpoint. Focused native memo/grid input
 portable native/browser geometry and the existing live-control regression execute;
 other scrollable families, actual display/assistive geometry and full target
 qualification remain with [scrollbars01](../TODO/NS-3_canvas-scrollbars_01.md).
-Native PrintTo currently retains the stock nonclient print path; those diagnostic
-images do not establish the custom live chrome's appearance.
+Win32 `WM_PRINT` now uses that same nonclient painter for diagnostic previews.
+It preserves the caller's DC origin/clip, translates the measured client origin,
+and retains requested client/child/owned drawing. Client-only and nonclient-only
+requests remain separate. Hidden controls can render when explicitly requested
+without a visibility check; they still refuse stale physical scroll input.
+Inactive bars have no active-looking full-track thumb and cannot capture a drag.
+Arrow glyphs follow the corresponding up/down/left/right action and stay within
+their physical cells and the HWND's footprint, including tiny allocations.
+Client-paint retirement revokes late chrome drawing while the original physical
+frame keeps the native control alive until the callback returns. No DC survives
+the synchronous call. Pixel/input checks cover memo, grid, scroll area with
+embedded children and Tree at three scales. These are diagnostic redraws;
+foreground display, hardware input and assistive geometry remain separate gates.
 Other widgetsets retain their existing chrome. No new node authoring policy or
 persisted enum is introduced. Run `tools/build.ps1 -Target scroll-chrome` with a
 configured external evidence/temp root, or supply a new

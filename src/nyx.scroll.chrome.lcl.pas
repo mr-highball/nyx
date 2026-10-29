@@ -254,7 +254,8 @@ end;
 
 function TScrollChrome.Ready: Boolean;
 begin
-  Result := Current and FLifetime.InputReady and IsWindowEnabled(FWindow);
+  Result := Current and FLifetime.InputReady and IsWindowEnabled(FWindow) and
+    IsWindowVisible(FWindow);
 end;
 
 function TScrollChrome.StrokeReady: Boolean;
@@ -492,9 +493,17 @@ const
 var
   LMessage: TLMScroll;
   LControl: TWinControl;
+  LRange: TNyxScrollRange;
 begin
 
   if not Ready then
+  begin
+    CancelStroke;
+    Exit;
+  end;
+  LRange := Range(AAxis);
+
+  if LRange.LastPosition <= LRange.Minimum then
   begin
     CancelStroke;
     Exit;
@@ -801,6 +810,10 @@ var
   LStep: Integer;
   LArrow: Integer;
   LTarget: HWND;
+  LScrollable: Boolean;
+  LEnabled: Boolean;
+  LDirection: Integer;
+  LBase: Integer;
 begin
 
   if not Current or not FHaveInsets then
@@ -819,20 +832,34 @@ begin
   begin
     Exit;
   end;
-  LCanvas := TCanvas.Create;
+  LCanvas := nil;
   LSave := SaveDC(LDC);
   try
+
+    if LSave = 0 then
+    begin
+      raise ENyxScrollChrome.Create('Unable to preserve the scroll paint context');
+    end;
+    { Both DC ownership and restoration already have a finally before canvas
+      allocation. Failure must not leak an owned window DC or change a borrowed
+      caller's state. No drawing starts without a restorable context. }
+    LCanvas := TCanvas.Create;
     GetWindowRect(LTarget, LWindow);
     GetClientRect(LTarget, LClient);
     LOrigin.X := 0;
     LOrigin.Y := 0;
     Windows.ClientToScreen(LTarget, LOrigin);
     OffsetRect(LClient, LOrigin.X - LWindow.Left, LOrigin.Y - LWindow.Top);
+    { A borrowed print DC need not have a window clip. Small allocations must
+      never let a bar or glyph paint outside this HWND's own footprint. }
+    IntersectClipRect(LDC, 0, 0, LWindow.Right - LWindow.Left,
+      LWindow.Bottom - LWindow.Top);
     ExcludeClipRect(LDC, LClient.Left, LClient.Top, LClient.Right, LClient.Bottom);
     LCanvas.Handle := LDC;
     LCanvas.Brush.Color := FBorder;
     LCanvas.FillRect(Types.Rect(0, 0,
       LWindow.Right - LWindow.Left, LWindow.Bottom - LWindow.Top));
+    LEnabled := IsWindowEnabled(LTarget);
     for LAxis := Low(TNyxScrollAxis) to High(TNyxScrollAxis) do
     begin
 
@@ -842,6 +869,7 @@ begin
       end;
       LCanvas.Brush.Color := FBackground;
       LCanvas.FillRect(LRect);
+      LScrollable := LGeometry.Source.LastPosition > LGeometry.Source.Minimum;
       LThumb := LRect;
 
       if LAxis = nsaVertical then
@@ -858,9 +886,31 @@ begin
         LCross := (LRect.Top + LRect.Bottom) div 2;
         LSize := Max(1, (LRect.Bottom - LRect.Top) div 4);
       end;
-      LCanvas.Brush.Color := FThumb;
-      LCanvas.FillRect(LThumb);
+      { An always-visible native bar can have no travel. Its fully paged range
+        must not become an active-looking thumb filling the entire track. }
+
+      if LScrollable then
+      begin
+        LCanvas.Brush.Color := FThumb;
+
+        if not LEnabled then
+        begin
+          LCanvas.Brush.Color := FBorder;
+        end;
+        LCanvas.FillRect(LThumb);
+      end;
       LCanvas.Pen.Color := FForeground;
+
+      if not LScrollable or not LEnabled then
+      begin
+        LCanvas.Pen.Color := FBorder;
+      end;
+
+      if LGeometry.Arrow = 0 then
+      begin
+        Continue;
+      end;
+      LSize := Min(LSize, Max(0, (LGeometry.Arrow - 1) div 2));
       for LArrow := 0 to 1 do
       begin
         LCenter := LGeometry.Arrow div 2;
@@ -878,28 +928,41 @@ begin
         begin
           Inc(LCenter, LRect.Left);
         end;
+        { The leading action decreases position (up/left), and the trailing
+          action increases it (down/right). Center each filled triangle in its
+          actual arrow cell; include its tip despite LineTo's exclusive end. }
+        LDirection := LArrow * 2 - 1;
+        LBase := LCenter - LDirection * (LSize div 2);
         for LStep := -LSize to LSize do
         begin
 
           if LAxis = nsaVertical then
           begin
-            LCanvas.MoveTo(LCross + LStep, LCenter);
+            LCanvas.MoveTo(LCross + LStep, LBase);
             LCanvas.LineTo(LCross + LStep,
-              LCenter + (1 - LArrow * 2) * (LSize - Abs(LStep)) + 1);
+              LBase + LDirection * (LSize - Abs(LStep) + 1));
           end
           else
           begin
-            LCanvas.MoveTo(LCenter, LCross + LStep);
-            LCanvas.LineTo(LCenter + (1 - LArrow * 2) * (LSize - Abs(LStep)) + 1,
+            LCanvas.MoveTo(LBase, LCross + LStep);
+            LCanvas.LineTo(LBase + LDirection * (LSize - Abs(LStep) + 1),
               LCross + LStep);
           end;
         end;
       end;
     end;
   finally
-    LCanvas.Handle := 0;
-    LCanvas.Free;
-    RestoreDC(LDC, LSave);
+
+    if LCanvas <> nil then
+    begin
+      LCanvas.Handle := 0;
+      LCanvas.Free;
+    end;
+
+    if LSave <> 0 then
+    begin
+      RestoreDC(LDC, LSave);
+    end;
 
     if ADC = 0 then
     begin
@@ -913,9 +976,16 @@ var
   LAlong: Integer;
   LRect: Windows.TRect;
   LGeometry: TNyxScrollChromeGeometry;
+  LRange: TNyxScrollRange;
 begin
 
   if not Ready or not Pick(AX, AY, FAxis, FPart, LAlong) then
+  begin
+    Exit;
+  end;
+  LRange := Range(FAxis);
+
+  if LRange.LastPosition <= LRange.Minimum then
   begin
     Exit;
   end;
@@ -1051,6 +1121,8 @@ var
   LAxis: TNyxScrollAxis;
   LPart: TNyxScrollChromePart;
   LAlong: Integer;
+  LPrintDC: HDC;
+  LSavedDC: Integer;
 begin
 
   if AMessage = WM_NCDESTROY then
@@ -1112,6 +1184,50 @@ begin
   begin
     Paint;
     Exit(0);
+  end;
+
+  if AMessage = WM_PRINT then
+  begin
+
+    if (AWParam = 0) or (((ALParam and PRF_CHECKVISIBLE) <> 0) and
+      not IsWindowVisible(AWindow)) then
+    begin
+      Exit(0);
+    end;
+    { Borrow the caller's window-origin DC for this synchronous message only.
+      Stock nonclient printing uses system scroll metrics and can overpaint the
+      expanded client. Preserve ordinary client/child/owned drawing, then draw
+      our nonclient face through the same painter as the live window. Native
+      control printing may also alter the supplied clip/origin: restore it before
+      painting chrome, including on retirement or an exception in client code. }
+    LPrintDC := HDC(AWParam);
+    LSavedDC := SaveDC(LPrintDC);
+
+    if LSavedDC = 0 then
+    begin
+      raise ENyxScrollChrome.Create('Unable to preserve the native print context');
+    end;
+    try
+      GetWindowRect(AWindow, LOuter);
+      LPoint.X := 0;
+      LPoint.Y := 0;
+      Windows.ClientToScreen(AWindow, LPoint);
+      { Without PRF_NONCLIENT the native control receives a client-origin DC.
+        Keep the public WM_PRINT window origin by applying its measured inset,
+        rather than assuming the stock border/scroll metric or a fixed offset. }
+      OffsetViewportOrgEx(LPrintDC, LPoint.X - LOuter.Left,
+        LPoint.Y - LOuter.Top, nil);
+      Result := DefSubclassProc(AWindow, AMessage, AWParam,
+        ALParam and not LPARAM(PRF_NONCLIENT));
+    finally
+      RestoreDC(LPrintDC, LSavedDC);
+    end;
+
+    if Current and ((ALParam and PRF_NONCLIENT) <> 0) then
+    begin
+      Paint(LPrintDC);
+    end;
+    Exit;
   end;
 
   if (AMessage = WM_NCMOUSEMOVE) and (AWParam in [HTVSCROLL, HTHSCROLL]) then
@@ -1188,7 +1304,8 @@ begin
     (AMessage = EM_REPLACESEL) or (AMessage = WM_PASTE) or
     (AMessage = WM_CUT) or (AMessage = WM_CLEAR) or (AMessage = WM_UNDO) or
     (AMessage = WM_KEYDOWN) or (AMessage = WM_MOUSEWHEEL) or
-    ((AMessage = WM_ENABLE) and (AWParam = 0)) then
+    ((AMessage = WM_ENABLE) and (AWParam = 0)) or
+    ((AMessage = WM_SHOWWINDOW) and (AWParam = 0)) then
   begin
     CancelStroke;
 

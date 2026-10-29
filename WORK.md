@@ -9,7 +9,81 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Native scroll chrome follows canvas zoom — 2026-10-28
+## Current work — Native scroll chrome in captured previews — 2026-10-28
+
+Previous goal turn: PROGRESS.246df2d is pushed and remote-verified. Root remains
+SOLO. Continue the original canvas-scrollbars01 criteria from the actual native
+preview mismatch: live allocation/input now projects, while PaintTo still draws
+stock nonclient scrollbars. Implement the reusable native print path, preserving
+caller DC state, requested client/nonclient/visibility semantics, exact ownership
+and retirement. Qualify native rendered pixels and the same saved Workshop;
+diagnostic printing does not establish foreground display or assistive parity.
+The existing86 focused and full saved native journey results remain distinct
+baseline evidence. All new private artifacts and process TEMP/TMP stay on E:.
+No user input, service replacement or new approval is required.
+
+The original new native baseline fails because stock WM_PRINT changes the
+borrowed DC clip. The adapter now saves/restores caller state, forwards ordinary
+client/child/owned work without stock nonclient drawing, measures the actual
+window/client origin and uses the live Nyx painter for requested nonclient work.
+The first repair exposed an unpainted client strip; native client-origin
+translation repairs it without changing the pixel criterion. The fixture's
+initial client probe also hit source glyphs; an explicit empty line area now
+isolates its intended background check. Initial bitmap type collision and
+misplaced-local compiler failures remain in the private evidence packet.
+
+Native298 now exercises memo, grid, scroll area with embedded children and Tree
+at absolute1/0.5/1.5 factors: semantic thumb pixels, client-only/nonclient-only/
+combined/visibility flags, translated and restrictive caller clips, actual arrow
+scrolling, disabled refusal and retirement from a real grid painter. The exact
+physical frame delays original-grid destruction until the callback unwinds;
+there is no stale nonclient draw afterward. Complete heaps report zero leaks.
+The owned-foreground display guard yields zero captures; diagnostic images are
+not relabelled as display. The maintained target now retains this consumer.
+Continue the same saved/generated Workshop and inspect its actual new captures,
+then return to the remaining original family/input/caller/assistive criteria.
+New private runners, logs, native artifacts and images use the external
+canvas-scroll-chrome-print-01 packet with process TEMP/TMP on E:.
+
+The maintained batch passes native1418 geometry, native86 input, native358 print
+and both67 live-canvas checks. Resource review then moves canvas allocation
+inside the owned-DC cleanup scope and refuses a paint without a restorable DC.
+Hidden controls now refuse stale input and cancel capture while still allowing
+explicit unchecked printing. This is a visibility/input distinction, not a new
+document policy. Authenticated bounded MCP discovery sees24 tools; nyx_session
+confirms the same isolated saved Workshop at31 with json-workshop selected.
+Its live document is not changed to run these native tests.
+
+The exact saved application's first175/175 full traces preserve clean heaps.
+Their diagnostic images expose dark full-track thumbs on inactive memos; the
+adapter now omits those thumbs, mutes unavailable arrows and refuses their
+capture. A genuine glyph-direction baseline then fails its semantic pixel
+assertion: the old triangles point against their otherwise correct actions.
+Centered directional rasterization repairs both axes, caps each glyph to its
+arrow cell and clips borrowed painting to the actual HWND. Native453 passes all
+four families, both axes, absolute1/0.5/1.5 factors, restrictive/nested printing,
+hidden/disabled/inactive input, exact grid-paint retirement and a recreated1px
+borderless memo with an intentionally larger caller clip. Its complete heap is
+clean. The final native86 and both67 checks also pass. The same original full
+Workshop passes175 at both1280/390, with complete clean heaps in85.8/72.2 seconds
+under its unchanged120-second whole-run and60-second phase limits. All owned
+compiler/runtime readers are terminal and joined; the pinned compiler inputs
+remain unchanged. Exact saved project/constructor hashes match the retained
+Uniform pair at both widths. Full Studio history/Save/Open evidence stays with
+246df2d; this print repair does not assign duplicate authoring credit.
+
+Wide/compact and mixed-result diagnostic images are retained. Compact visual
+inspection confirms that the result remains within the fitted Notebook, the
+source/result bars no longer display a dark inert thumb and the arrow directions
+agree with their actions. These remain PrintTo redraws, with zero owned
+foreground display captures. No actual-display, physical-device or assistive
+acceptance is claimed. Stop equivalent print-only variants; continue ordinary
+keyboard/wheel/focus/query-refresh and projection behavior for the zoomed families,
+then the original caller-policy and target/quality criteria. The scroll-chrome
+task and broad canvas goal stay open. Existing LAN/QA services, project pairs and
+output configuration are unchanged; all new private artifacts remain on E:.
+
+## Previous checkpoint — Native scroll chrome follows canvas zoom — 2026-10-28
 
 Root remains SOLO. The b3e2edc native Workshop checkpoint is pushed and verified.
 The next concrete prerequisite is canvas-scrollbars01. A reusable

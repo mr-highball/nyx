@@ -69,5 +69,23 @@ WORK.md retains exact snapshots, failed attempts, limitations and target evidenc
 
 The task remains open. Other scrollable families, browser/native input breadth,
 actual display/assistive geometry, caller choices and remaining original criteria
-still need qualification. In particular, the native PrintTo diagnostic follows
-the stock nonclient print path and cannot stand in for live-chrome rendering.
+still need qualification. At this checkpoint the native PrintTo diagnostic
+followed the stock nonclient path; the continuation below addresses that gap.
+
+## Native print continuation — 2026-10-28
+
+The shared Win32 attachment now prints its live nonclient face instead of stock
+scrollbars. It preserves borrowed DC state, measured origins, restrictive clips,
+visibility flags and nested children. The original baseline changes the caller
+clip; the first repair reveals a missing client-origin translation. Both failures
+are retained. Visual review also exposes reversed arrow glyphs and active-looking
+thumbs on fully paged ranges; semantic pixel/input checks qualify both repairs.
+
+Native453 covers the four supported families, both axes, three scales, hidden/
+disabled refusal, explicit hidden previews, a recreated one-pixel memo and actual
+client-paint retirement. Its complete heap is clean. Existing native86 input and
+both67 live-canvas checks remain separate. The same exact saved/generated
+Workshop retains its full175 journey at both widths; WORK.md owns the final
+source snapshots and rendered inspection. The maintained target retains this
+new consumer. Zero owned foreground captures are available, so no diagnostic
+image is relabelled as actual display. All original remaining criteria stay open.

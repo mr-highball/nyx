@@ -773,6 +773,10 @@ try {
       'tests/nyx_scroll_chrome_controls.lpr')) 'controls-compiler'
     Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_scroll_chrome_controls.exe') @() 'controls-native' $true
     Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @(
+      'tests/nyx_scroll_chrome_print_controls.lpr')) 'print-compiler'
+    Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_scroll_chrome_print_controls.exe') @(
+      (Join-Path $nyxScrollRoot 'print-images')) 'print-native' $true
+    Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @(
       'tests/nyx_canvas_uniform_controls.lpr')) 'uniform-compiler'
     foreach ($nyxScrollWidth in @(1280, 390)) {
       Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_canvas_uniform_controls.exe') @(
