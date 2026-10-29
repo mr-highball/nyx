@@ -869,6 +869,201 @@ begin
   end;
 end;
 
+{ Named moves derive a new baseline after every ordered policy/move. The caller
+  sends stable field families only; exact pairs/history and reusable isolation
+  remain the ordinary agent/session responsibilities. }
+procedure NamedSemanticColumnOrdering;
+var
+  LAgent: TNyxAgentSession;
+  LDocument: TNyxDocument;
+  LColumns: TNyxDataValue;
+  LActual: TNyxDataValue;
+  LWire: TNyxDataValue;
+  LRequest: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LKey: TNyxCollectionRef;
+  LField: TNyxStudioCollectionFieldRef;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LRevision: Integer;
+  LAttempts: Integer;
+  LPending: TNyxProjectPair;
+  LPendingBefore: TNyxText;
+  LRefused: Boolean;
+  LIndex: Integer;
+
+  function Pair: TNyxText;
+  begin
+    Result := EncodeNyxProject(LAgent.PreviewPair(LAgent.Revision, 'home'));
+  end;
+
+  function MoveWire(const AOwner, AKey, AField, AKind, AProjection: TNyxText;
+    const ADirection: TNyxDataValue): TNyxDataValue;
+  begin
+    Result := NyxObject([NyxField('op', NyxData('move-column')),
+      NyxField('owner', NyxData(AOwner)), NyxField('key', NyxData(AKey)),
+      NyxField('projection', NyxData(AProjection)), NyxField('field', NyxData(AField)),
+      NyxField('kind', NyxData(AKind)), NyxField('direction', ADirection)]);
+  end;
+
+  procedure Apply(const AOperation: TNyxText; const AChanges: TNyxDataValue);
+  begin
+    LRequest := NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData(AOperation)), NyxField('changes', AChanges)]);
+    LAgent.Call('nyx_collections', 'Named column move', LRequest);
+  end;
+
+  procedure History(const ADirection: TNyxText);
+  begin
+    Inc(LAttempts);
+    LAgent.Call('nyx_history', 'Named column move', NyxObject([
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('named-move-history-' + TNyxText(IntToStr(LAttempts)))),
+      NyxField('direction', NyxData(ADirection))]));
+  end;
+
+  procedure Refuse(const AChanges: TNyxDataValue; const AReason: TNyxText);
+  var
+    LOriginal: TNyxText;
+    LOriginalRevision: Integer;
+    LRejected: Boolean;
+  begin
+    Inc(LAttempts);
+    LOriginal := Pair;
+    LOriginalRevision := LAgent.Revision;
+    LRejected := False;
+    try
+      Apply('named-move-refusal-' + TNyxText(IntToStr(LAttempts)), AChanges);
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (Pair = LOriginal) and (LAgent.Revision = LOriginalRevision), AReason);
+  end;
+
+begin
+  LAgent := TNyxAgentSession.Create(Seed);
+  LDocument := nil;
+  LAttempts := 0;
+  try
+    LBefore := Pair;
+    LKey := NyxCollection('inspected-records');
+    LField := TNyxStudioCollectionFieldRef.Text(NyxTextField('Caption'));
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LAgent.Revision, 'home').Design);
+    { Density legitimately upgrades an older descriptor's nullable column shape.
+      Compare movement with that requested policy already applied, rather than
+      mistaking the policy's version upgrade for lost column metadata. }
+    LColumns := LDocument.Find('records-table').CollectionView
+      .TablePresentation(NyxTablePresentation.Density(ntrdCompact)).ToData.Field('columns');
+    FreeAndNil(LDocument);
+    LWire := NyxCollectionPatch([
+      NyxSetCollectionTablePresentation(NyxBindingOwner('records-table'), LKey, cpTable,
+        NyxTablePresentation.Density(ntrdCompact)),
+      NyxMoveCollectionColumn(NyxBindingOwner('records-table'), LKey, LField, nccmLater)]).ToData;
+    Check((LWire.Item(1).Count = 7) and not NyxAgentHas(LWire.Item(1), 'baseline') and
+      (LWire.Item(1).Field('direction').AsText = 'later'),
+      'compact named move carries only exact owner/key/projection/field/family/direction');
+    Check(ReadNyxCollectionPatch(LWire).ToData.ToJSON = LWire.ToJSON,
+      'typed named move round-trips its compact descriptor');
+    Apply('named-move-group', LWire);
+    LRevision := LAgent.Revision;
+    LAfter := Pair;
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LRevision, 'home').Design);
+    LActual := LDocument.Find('records-table').CollectionView.ToData.Field('columns');
+    Check((LActual.Item(0).ToJSON = LColumns.Item(1).ToJSON) and
+      (LActual.Item(1).ToJSON = LColumns.Item(0).ToJSON) and
+      (LDocument.Find('records-table').CollectionView.TablePresentationPolicy.RowDensity = ntrdCompact),
+      'ordered baseline derives after preceding density while every column member stays exact');
+    Check((Pos('{ Handwritten companion', LAgent.PreviewPair(LRevision, 'home').Source) > 0) and
+      (LDocument.Collections.Snapshot(LKey).ItemAt(0).GetValue(NyxTextField('Caption')) =
+        TNyxText('Original 🌙') + #0 + ' text'),
+      'named movement retains handwritten Pascal and exact supplementary/NUL row values');
+    FreeAndNil(LDocument);
+    LAgent.Call('nyx_collections', 'Named column move', LRequest);
+    Check((LAgent.Revision = LRevision) and (Pair = LAfter), 'exact retry cannot move a named column twice');
+    History('undo');
+    Check(Pair = LBefore, 'one paired Undo restores the complete policy/move/source group');
+    History('redo');
+    Check(Pair = LAfter, 'one paired Redo restores the exact named-move group');
+    History('undo');
+    Refuse(NyxArray([MoveWire('records-table', LKey.Name, 'Caption', 'integer', 'table', NyxData('later'))]),
+      'wrong field family cannot retarget the accepted column');
+    Refuse(NyxArray([MoveWire('records-table', LKey.Name, 'caption', 'text', 'table', NyxData('later'))]),
+      'field names remain exact and case-sensitive');
+    Refuse(NyxArray([MoveWire('records-table', 'other', 'Caption', 'text', 'table', NyxData('later'))]),
+      'changed collection identity refuses without source/history changes');
+    Refuse(NyxArray([MoveWire('records-list', LKey.Name, 'Caption', 'text', 'table', NyxData('later'))]),
+      'a table command cannot retarget a list owner');
+    Refuse(NyxArray([MoveWire('records-table', LKey.Name, 'Caption', 'text', 'list', NyxData('later'))]),
+      'non-table wire projections are rejected');
+    Refuse(NyxArray([MoveWire('records-table', LKey.Name, 'Caption', 'text', 'table', NyxData('left'))]),
+      'unknown movement directions are not guessed');
+    Refuse(NyxArray([MoveWire('records-table', LKey.Name, 'Caption', 'text', 'table', NyxData(True))]),
+      'direction must be a strict closed string at the protocol boundary');
+    Refuse(NyxCollectionPatch([
+      NyxSetCollectionTablePresentation(NyxBindingOwner('records-table'), LKey, cpTable,
+        NyxTablePresentation.Density(ntrdCompact)),
+      NyxMoveCollectionColumn(NyxBindingOwner('records-table'), LKey, LField, nccmEarlier)]).ToData,
+      'an impossible edge move rolls back all preceding grouped policies');
+    Refuse(NyxCollectionPatch([NyxMoveCollectionColumn(NyxBindingOwner('records-table'), LKey,
+      TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('Count')), nccmLater)]).ToData,
+      'moving the last authored column later refuses rather than producing a silent no-op');
+    LWire := NyxCollectionPatch([NyxMoveCollectionColumn(NyxBindingOwner('first-records'),
+      LKey, LField, nccmLater)]).ToData;
+    Apply('named-move-reusable', LWire);
+    LReply := LAgent.Call('nyx_collections', 'Named column move', NyxObject([
+      NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('first-records'))]));
+    Check(not LReply.Field('inherited').AsBoolean and (LReply.Field('local').Kind = ndObject),
+      'an inherited named-part move creates an independent local binding');
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LAgent.Revision, 'home').Design);
+    Check((LDocument.Find('definition-table').CollectionView.ColumnAt(0).FieldName = 'Caption') and
+      (LDocument.Find('records-table').CollectionView.ColumnAt(0).FieldName = 'Caption'),
+      'named-part movement does not rewrite its definition or unrelated bound table');
+    FreeAndNil(LDocument);
+    History('undo');
+    Check(Pair = LBefore, 'Undo removes the local reusable binding and restores exact inheritance');
+    Apply('named-move-earlier', NyxCollectionPatch([NyxMoveCollectionColumn(
+      NyxBindingOwner('records-table'), LKey,
+      TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('Count')), nccmEarlier)]).ToData);
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LAgent.Revision, 'home').Design);
+    Check(LDocument.Find('records-table').CollectionView.ColumnAt(0).FieldName = 'Count',
+      'the earlier direction uses the same typed integer field identity');
+    FreeAndNil(LDocument);
+    for LIndex := 0 to 1 do
+    begin
+      LPending := Seed;
+      LPending.Pending := True;
+      LPending.DraftBase := LPending.Source;
+      LPending.Draft := LPending.Source;
+
+      if LIndex = 0 then
+      begin
+        LPending.Draft := TNyxText(LPending.Draft) + #10 +
+          TNyxText('{ unfinished named move 🌙 }');
+      end;
+      LPendingBefore := EncodeNyxProject(LPending);
+      LRefused := False;
+      try
+        NyxCollectionPatch([NyxMoveCollectionColumn(NyxBindingOwner('records-table'),
+          LKey, LField, nccmLater)]).Candidate(LPending);
+      except
+        on Exception do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (EncodeNyxProject(LPending) = LPendingBefore),
+        'pending Pascal refuses without changing its exact draft/base, including equal draft bytes');
+    end;
+  finally
+    LDocument.Free;
+    LAgent.Free;
+  end;
+end;
+
 procedure SemanticAlignment;
 var
   LAgent: TNyxAgentSession;
@@ -968,6 +1163,7 @@ begin
     AlignmentAuthoring;
     ColumnOrdering;
     SemanticColumnOrdering;
+    NamedSemanticColumnOrdering;
     SemanticAlignment;
     SemanticAuthoring;
     {$ifdef PAS2JS}

@@ -40,13 +40,17 @@ const
   NyxMaximumCollectionChanges = 32;
 
 type
+  { One adjacent authored move, independent of rendered pin groups, hidden
+    columns and runtime preferences. Field identity determines the source. }
+  TNyxCollectionColumnMove = (nccmEarlier, nccmLater);
+
   { Append-only command families preserve existing private-wire ordinals while
     routing copied authored values through one isolated paired candidate. }
   TNyxCollectionChangeKind = (ccDefine, ccField, ccRemoveField, ccAppend,
     ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery, ccTypeAhead,
     ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat,
     ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment, ccInspection,
-    ccDraftRecovery);
+    ccDraftRecovery, ccColumnMove);
 
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
@@ -62,6 +66,7 @@ type
     FField: TNyxStudioCollectionFieldRef;
     FItem: TNyxCollectionItem;
     FIndex: Integer;
+    FColumnMove: TNyxCollectionColumnMove;
     FOwner: TNyxStudioBindingOwner;
     FIntent: TNyxStudioCollectionIntent;
     FSpec: TNyxCollectionViewSpec;
@@ -234,6 +239,13 @@ function NyxSetCollectionColumnLayout(const AOwner: TNyxStudioBindingOwner;
 function NyxUseDefaultCollectionColumnLayout(const AOwner: TNyxStudioBindingOwner;
   const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
   const AField: TNyxStudioCollectionFieldRef): TNyxCollectionChange;
+{ Move one exact typed field across its immediate authored neighbour. The
+  ordered candidate derives its current schema/binding baseline internally,
+  preserving all policies and reusable independence. Edge moves refuse; no
+  runtime arrangement or physical column position enters the saved change. }
+function NyxMoveCollectionColumn(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; const AField: TNyxStudioCollectionFieldRef;
+  ADirection: TNyxCollectionColumnMove): TNyxCollectionChange;
 function NyxCollectionPatch(const AChanges: array of TNyxCollectionChange):
   INyxCollectionPatch;
 
@@ -728,6 +740,21 @@ begin
   Result.FColumnFormat := APolicy.Copy;
 end;
 
+function NyxMoveCollectionColumn(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; const AField: TNyxStudioCollectionFieldRef;
+  ADirection: TNyxCollectionColumnMove): TNyxCollectionChange;
+begin
+
+  if (Ord(ADirection) < Ord(Low(TNyxCollectionColumnMove))) or
+    (Ord(ADirection) > Ord(High(TNyxCollectionColumnMove))) then
+  begin
+    raise ENyxCollection.Create('Column move requires a known direction');
+  end;
+  Result := NyxUseDefaultCollectionColumnLayout(AOwner, AKey, cpTable, AField);
+  Result.FKind := ccColumnMove;
+  Result.FColumnMove := ADirection;
+end;
+
 function NyxUseDefaultCollectionTableWorkbench(const AOwner: TNyxStudioBindingOwner;
   const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
   TNyxCollectionChange;
@@ -1019,7 +1046,8 @@ begin
             end;
           end;
         ccQuery, ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout,
-        ccColumnFormat, ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment:
+        ccColumnFormat, ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment,
+        ccColumnMove:
           begin
             SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
             LProjected := LSession.SelectedProjection;
@@ -1135,6 +1163,19 @@ begin
                       LIntent.ColumnAlignment := LChange.FColumnAlignment.Copy;
                     end;
                   end;
+                ccColumnMove:
+                  begin
+                    LIntent.Field := LChange.FField;
+
+                    if LChange.FColumnMove = nccmEarlier then
+                    begin
+                      LIntent.Action := scaColumnEarlier;
+                    end
+                    else
+                    begin
+                      LIntent.Action := scaColumnLater;
+                    end;
+                  end;
               else
                 begin
                   raise ENyxCollection.Create('Unexpected baseline-qualified policy change');
@@ -1148,7 +1189,8 @@ begin
                 when accepted and draft bytes happen to be equal. }
 
               if LChange.FKind in [ccTableLayout, ccColumnLayout, ccColumnFormat,
-                ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment] then
+                ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment,
+                ccColumnMove] then
               begin
                 LIntent.LayoutBaseline := NyxQueryEditorBaseline(
                   LSession.Document.Collections.Snapshot(LChange.FKey).Schema,
@@ -2154,6 +2196,22 @@ begin
             NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
             NyxField('query', LChange.FQuery.ToData)]);
         end;
+      ccColumnMove:
+        begin
+          LOp := 'earlier';
+
+          if LChange.FColumnMove = nccmLater then
+          begin
+            LOp := 'later';
+          end;
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('move-column')),
+            NyxField('owner', NyxData(LChange.FOwner.ID)),
+            NyxField('key', NyxData(LChange.FKey.Name)),
+            NyxField('projection', NyxData('table')),
+            NyxField('field', NyxData(LChange.FField.Name)),
+            NyxField('kind', NyxData(NyxStateKindName(LChange.FField.Kind))),
+            NyxField('direction', NyxData(LOp))]);
+        end;
       ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat,
       ccTableWorkbench, ccTablePresentation, ccColumnText, ccColumnAlignment:
         begin
@@ -2289,6 +2347,7 @@ var
   LIndex: Integer;
   LRowIndex: Integer;
   LOp: TNyxText;
+  LDirection: TNyxCollectionColumnMove;
 begin
   AData.Validate;
 
@@ -2315,6 +2374,34 @@ begin
       LChanges[LIndex] := NyxBindCollection(NyxBindingOwner(LData.Field('owner').AsText),
         ReadProjection(LData.Field('projection')),
         TNyxCollectionViewSpec.FromData(LData.Field('spec')));
+      Continue;
+    end;
+
+    if LOp = 'move-column' then
+    begin
+      Fields(LData, '|op|owner|key|projection|field|kind|direction|', 7);
+
+      if ReadProjection(LData.Field('projection')) <> cpTable then
+      begin
+        raise ENyxCollection.Create('Column moves require the table projection');
+      end;
+
+      if LData.Field('direction').AsText = 'earlier' then
+      begin
+        LDirection := nccmEarlier;
+      end
+      else if LData.Field('direction').AsText = 'later' then
+      begin
+        LDirection := nccmLater;
+      end
+      else
+      begin
+        raise ENyxCollection.Create('Column move direction must be earlier or later');
+      end;
+      LChanges[LIndex] := NyxMoveCollectionColumn(
+        NyxBindingOwner(LData.Field('owner').AsText),
+        NyxCollection(LData.Field('key').AsText),
+        ReadField(LData.Field('field').AsText, ReadKind(LData.Field('kind'))), LDirection);
       Continue;
     end;
 

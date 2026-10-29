@@ -3,7 +3,25 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
-**Current checkpoint and return path — 2026-10-26:**
+**Current checkpoint and return path — 2026-10-29:**
+
+Criterion6's compact named column-move gap is addressed. `move-column` uses an
+exact typed field and earlier/later direction; the ordered candidate derives its
+own baseline and reuses ordinary Studio admission. Shared native/browser checks
+pass120, full native MCP discovery245 and retained authenticated HTTP74, with
+clean native heaps. Exact retry receipts remain connection-owned. The observing
+desktop/compact Studio updates column order, and ordinary compact Undo restores
+the original pair. All nine QA pairs stay exact; only the addressed workspace's
+revision/history advance. Matched fixed-slot LAN delivery preserves its three
+pairs, revisions and output settings. WORK.md retains failures and evidence.
+
+This closes that bounded tooling gap, not a complete original criterion or the
+table task. Continue W1/W2's remaining ordinary keyboard/context-action journey
+in this same workbench: navigation, edit/commit/cancel, inspection and copy with
+active filters, hidden/pinned fields and retained drafts. Preserve physical/AT,
+visual and complete target acceptance. Stop named-move/source/profile variants.
+
+**Earlier checkpoint and reassessment — 2026-10-26:**
 
 The native public service-monitor workflow now covers ordinary Studio, Save/Open
 and its own exact generated application through W1 arrangement and W2 inspection,

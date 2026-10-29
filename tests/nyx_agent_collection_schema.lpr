@@ -611,11 +611,12 @@ const
     'table-presentation', 'default-table-presentation', 'column-text', 'default-column-text',
     'column-alignment', 'default-column-alignment', 'inspection', 'default-inspection',
     'draft-recovery', 'default-draft-recovery', 'column-earlier', 'column-later');
-  CNamed: array[0..18] of TNyxText = (
+  CNamed: array[0..19] of TNyxText = (
     'define', 'field', 'remove-field', 'append/update-row', 'move-row',
     'bind', 'query', 'typeahead', 'table-query', 'column-query', 'table-layout', 'column-layout',
-    'column-format', 'table-workbench', 'table-presentation', 'column-text', 'column-alignment', 'inspection', 'draft-recovery');
-  CRequired: array[0..18] of TNyxText = (
+    'column-format', 'table-workbench', 'table-presentation', 'column-text', 'column-alignment', 'inspection', 'draft-recovery',
+    'move-column');
+  CRequired: array[0..19] of TNyxText = (
     '|op|key|fields|rows|', '|op|key|definition|', '|op|key|field|kind|',
     '|op|key|item|values|', '|op|key|item|index|', '|op|owner|projection|spec|',
     '|op|owner|key|projection|query|', '|op|owner|key|projection|policy|',
@@ -624,13 +625,13 @@ const
     '|op|owner|key|projection|field|kind|policy|', '|op|owner|key|projection|policy|',
     '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
     '|op|owner|key|projection|field|kind|policy|', '|op|owner|key|projection|policy|',
-    '|op|owner|key|projection|policy|');
+    '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|direction|');
   CFamilies: array[0..3] of TNyxText = ('text', 'boolean', 'integer', 'number');
   CScalars: array[0..3] of TNyxText = ('string', 'boolean', 'integer', 'number');
 var
   LCounts: array[0..50] of Integer;
   LFamilies: array[0..50, 0..3] of Boolean;
-  LNamed: array[0..18] of Boolean;
+  LNamed: array[0..19] of Boolean;
   LBranch, LProperties, LOperation, LChoices: TNyxDataValue;
   LIndex, LAt, LFamily, LAction, LShape: Integer;
   LName, LKind, LExpected: TNyxText;
@@ -777,6 +778,16 @@ begin
         Exit;
       end;
       LNamed[LShape] := True;
+
+      if (LName = 'move-column') and
+        ((LProperties.Field('projection').Field('const').AsText <> 'table') or
+        (LProperties.Field('direction').Field('enum').ToJSON <>
+          TNyxDataValue.ParseJSON('["earlier","later"]').ToJSON) or
+        (LProperties.Field('kind').Field('enum').ToJSON <>
+          TNyxDataValue.ParseJSON('["text","boolean","integer","number"]').ToJSON)) then
+      begin
+        Exit;
+      end;
     end;
   end;
   for LAt := Low(CActions) to High(CActions) do
@@ -1002,9 +1013,9 @@ begin
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 76, 'nineteen named commands and all fifty-one typed ordinary actions');
+    Check(LChanges.Count = 77, 'twenty named commands and all fifty-one typed ordinary actions');
     { BEGIN EXPANDED_ACTION_CHECK }
-    Check(ExactChangeBranches(LChanges), 'nineteen named shapes and every typed action/family occur exactly once');
+    Check(ExactChangeBranches(LChanges), 'twenty named shapes and every typed action/family occur exactly once');
     { END EXPANDED_ACTION_CHECK }
     LDefinition := LChanges.Item(1).Field('properties').Field('definition').Field('oneOf');
     Check((LDefinition.Count = 4) and

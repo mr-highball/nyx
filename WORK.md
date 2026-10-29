@@ -9,7 +9,74 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Table runtime hosts accepted; return to workbench — 2026-10-29
+## Current work — Named semantic column moves — 2026-10-29
+
+Previous goal turn: PROGRESS. e6cbdccc is pushed and remote-verified. Root stays
+SOLO. Return to workbench03 criterion6's concrete named-move gap. Existing ordinary
+column-earlier/later intents require an expanded schema/binding baseline; current
+MCP discovery confirms no compact equivalent. The bounded deliverable is one
+typed move-column operation, deriving its baseline inside each ordered candidate
+and reusing ordinary field/family/edge/pending-source admission. Preserve atomic
+paired history, all metadata, reusable independence and old interface ordinals.
+Qualify discovery/parser/source/history on both compilers, then the same saved
+Service monitor through authenticated MCP and ordinary observing Studio. Publish
+through the existing fixed serving slots only. Stop at a concrete prerequisite
+failure and repair it; do not replace the original workbench finish line with
+another policy/source fixture. All new private files and owned process TEMP/TMP
+use the external named-column-move-01 packet and configured E: roots.
+
+Delivered checkpoint: one append-only typed direction/command, strict seven-member
+wire shape and discoverable table-only MCP branch. Each ordered candidate derives
+its current baseline, including preceding policy changes, and reuses ordinary
+field/family/edge/reusable/pending-source admission. Existing ordinary intent
+contracts and ordinals remain supported. Shared native/browser authoring checks
+pass120; actual native MCP discovery245 verifies all77 branches. Retained-connection
+HTTP74 checks exact retry receipts, independent connection authority and complete
+paired Undo/Redo through the existing saved Service monitor. Three native test
+runs have complete clean heaps; final owned native builds have zero warnings.
+
+Initial builds expose an exhaustive enum else and an implicit Unicode test
+concatenation; both are repaired. Initial test expectations compare JSON spacing
+and pre-density column shapes incorrectly. Canonical enum comparison and the
+independent post-density baseline correct those assertions without weakening
+metadata preservation. The native-only server discovery fixture's attempted
+browser compilation refuses SyncObjs; shared browser behavior is instead actually
+executed in its portable consumer. A shell argument-quoting failure is retained.
+All compiler/runtime readers are terminal. No dependency source or warning
+suppression changes are involved.
+
+Authenticated live discovery changes from76 to77 branches; the former server
+refuses the new command at revision3. The updated server admits Notes later as
+one revision4 publication, preserving all five columns' exact policy metadata.
+An attempted retry through a fresh CLI connection correctly refuses the stale
+revision: receipts belong to a private authenticated connection, not a shared
+display name. The maintained HTTP consumer qualifies the actual same-connection
+retry and restores its starting pair through ordinary history at revision8.
+Desktop1280 and compact390 observers show the live changed order. Ordinary compact
+Studio Undo restores the original pair at revision9; no direct store replacement
+or runtime model injection is used. All nine final QA pairs match the baseline;
+the other eight revisions remain unchanged.
+
+Both fixed serving slots now contain the matched backend and six web assets.
+Verified owned processes are stopped and their actual exec readers joined before
+backup/staging; staging is joined before launch. Old owner receipts rounded native
+creation ticks by two ticks, so path/hash/command/listener identity also verifies
+the same process; new receipts store exact ticks as strings. QA replacement keeps
+all nine identities/revisions/pairs before test mutations. LAN replacement keeps
+all three exact identities/revisions/pairs and the original effective output
+fingerprint. A shell comparison initially treats unordered hash-map serialization
+as identity; explicit workspace/title/revision/hash comparison verifies the same
+unchanged values. Private logs, snapshots, images and failures remain in the
+external named-column-move-01 packet; TEMP/TMP stays on E:.
+
+This addresses the existing criterion6 named-move gap with no full workbench
+criterion/task completion credit. Continue the same W1/W2 ordinary keyboard and
+context-action journey, with active filters, hidden/pinned fields, edit/commit/
+cancel, inspection/copy and draft retention. Physical/assistive, complete visual/
+target and performance acceptance retain their original owners. Stop equivalent
+move/source/profile variants. No user decision or renewed approval is missing.
+
+## Previous checkpoint — Table runtime hosts accepted; return to workbench — 2026-10-29
 
 Previous goal turn: PROGRESS. 21fa6371 is pushed and remote-verified. Root stays
 SOLO. [Generated table runtime hosts](TODO/DONE/NS-4_table-output-hosts_01.md)

@@ -664,6 +664,12 @@ begin
     '"op","owner","key","projection","policy"',
     ',"if":{"properties":{"projection":{"const":"tree"}}},' +
     '"then":{"properties":{"policy":{"properties":{"follow":{"const":"keep-position"}}}}}');
+  Branch('"op":{"const":"move-column"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"field":{"type":"string","minLength":1},' +
+    '"kind":{"enum":["text","boolean","integer","number"]},' +
+    '"direction":{"enum":["earlier","later"]}',
+    '"op","owner","key","projection","field","kind","direction"');
   Result := TNyxDataValue.ParseJSON('{"type":"object","$defs":' +
     QueryAgentDefinitions.ToJSON + ',"oneOf":[' +
     '{"properties":{"mode":{"const":"list"},"offset":{"type":"integer","minimum":0},' +

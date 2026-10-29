@@ -2667,12 +2667,30 @@ Ordinary `bind` derives columns from the current schema. Ordinary `add-column`
 adds the field's default presentation; change its title/mode in subsequent
 intents or use a full fluent `bind`. Clear deliberately masks inheritance;
 inherit removes a local override. Exact existing named-part owners are supported.
-Column moves use the typed ordinary form intent, preserve every column policy
-and swap immediate authored neighbours. Stale baselines, wrong families and
-edge moves refuse. They change the default sequence, not a running application's
-user preferences. Like other form intents, they require the exact baseline;
-a compact named move operation deriving that baseline server-side remains a
-separate authoring-tooling gap.
+For a compact column move, use the named command inside `changes`:
+
+```json
+{
+  "op": "move-column",
+  "owner": "service-table",
+  "key": "services",
+  "projection": "table",
+  "field": "command",
+  "kind": "text",
+  "direction": "earlier"
+}
+```
+
+Use the enclosing apply request's `expectedRevision` and `operationId` as usual.
+The typed Pascal equivalent is `NyxMoveCollectionColumn`, with `nccmEarlier` or
+`nccmLater`. The command derives its complete baseline inside each ordered
+candidate, including preceding changes in the same group. Agents need only the
+exact owner, collection key and typed field identity. It swaps immediate authored
+neighbours, preserving column policies and hidden/pinned choices. Missing fields,
+wrong families, non-table projections and edge moves refuse the whole group.
+It changes the authored default sequence; runtime user preferences stay independent.
+The existing ordinary `column-earlier`/`column-later` form intents retain their
+exact-baseline contract and remain supported.
 The query-only named command derives its baseline from the exact-revision
 candidate; agents do not need to retrieve or resend private form metadata.
 
@@ -2695,6 +2713,12 @@ foreign or retired contexts refuse without falling back to the primary project.
 journey, actual discovery builder and unchanged compiled native controls, then
 stages shared/browser controls with matched RTL. It starts no listener and
 performs no deployment or configuration refresh. WORK.md owns observed results.
+`tests/nyx_agent_column_move_http.lpr` separately exercises a retained authenticated
+connection against an explicitly supplied disposable Service monitor workspace.
+Its arguments are the private Codex configuration file, workspace identity and
+expected revision. It checks exact retries, independent connection authority and
+paired Undo/Redo, restoring the starting pair through ordinary history. It starts
+no server and does not restore or overwrite the durable store directly.
 `tools/build.ps1 -Target collection-query-workflow` runs the focused query
 boundary and builds the explicit authenticated grid/query companion tools.
 It stages the shared browser program without launching it. Current isolated

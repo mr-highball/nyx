@@ -88,7 +88,10 @@ concrete prerequisite: [table output hosts](DONE/NS-4_table-output-hosts_01.md),
 now accepted. Real generated native/browser Copy and disk TSV pass through local
 output choices, including actual browser picker saves at wide/compact widths.
 Return to the same workbench's remaining W1/W2 workflows and bounded named
-semantic move. Full workbench criteria and broader input/quality remain open;
+semantic move. That compact move now passes shared native/browser, discovery and
+retained authenticated-connection checks, with observing Studio order/history
+and preserved fixed-slot LAN delivery. Continue the remaining ordinary keyboard/
+context-action W1/W2 journey in the same workbench. Full criteria and broader input/quality remain open;
 stop further host/profile variants.
 
 | Order | User outcome | Existing owners and next useful delivery |
