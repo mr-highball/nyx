@@ -9,7 +9,79 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Keyboard, wheel and editor preservation under zoom — 2026-10-28
+## Current work — Mixed scrollable controls under zoom — 2026-10-28
+
+Previous goal turn: PROGRESS.67d19a2 is pushed and remote-verified. Root remains
+SOLO. Continue the original canvas-scrollbars01 criteria through the existing
+live uniform-control consumer: an ordinary bounded scroll area, a read-only code
+face and a nested memo, retaining actual viewport, text/caret and focus through
+zoom and native/browser input. Keep the original assertions. Fix concrete gaps in
+the reusable adapter; do not add more equivalent table-policy variants. All new
+private runners/artifacts and process TEMP/TMP use the configured E: roots.
+Existing local regression authorization persists; no service replacement or user
+input is needed. Stop this slice at a coherent qualified checkpoint, retaining
+the original caller-policy and full physical/assistive/target criteria.
+
+The existing mixed consumer now includes an ordinary bounded scroll area with
+English entries, a wide read-only Pascal source face and a nested memo. Its first
+new native anchor assertion fails at half zoom:96 physical pixels stay96 instead
+of48. The shared absolute projector now retains exact world offsets beside the
+last rounded native observation, restores logical offsets for layout, settles
+complete child ranges and projects both axes once. Genuine wheel movement adopts
+a new anchor; unchanged rounded observations preserve fractions. Real range clamps
+adopt reachable offsets. Virtual logical ports retain their separate coordinate
+ownership and withdraw old automatic-port receipts when their mode changes.
+All setters recheck the original generation and weak control identity.
+
+The native mixed journey passes107 before the final deferred-error assertion,
+including real wheel cancellation/default, selected text/focus in the other memo,
+both actual content origins, read-only keyboard scrolling/refused insertion and
+nested editor focus reveal. Initial failures distinguish fixture setup: readonly
+code is a ControlFor display face; native multiline display uses CRLF while its
+authored packet retains LF; overflow needs its explicit minimum width. A deferred
+OnResize attempt does not establish synchronous retirement. The actual native
+constraint query does retire the original view during projection, with clean
+complete heap. Initial UTF-8 literal concatenation warnings, a pas2js shell-argument
+error and the temporary sibling-class cast warning are retained and corrected.
+
+Browser execution passes56 at1280x900 and390x844. Actual desktop wheel scrolling
+retains memo focus; an ordinary edit reaches its bound peer and its action updates
+the result. Compact read-only PageDown/wheel reaches offset131/553, and nested
+focus/editing reveals the same editor wholly inside its scroll area before its
+action succeeds. An immediate read during UA smooth scrolling is not labelled a
+failed default; settled DOM and images retain the result. Desktop/compact browser
+captures are saved externally. Native prints remain diagnostic; physical-device
+and assistive acceptance are not assigned. A reusable read-only loopback preview
+host slot is recorded only in ignored machine configuration. It serves these
+already-built fixtures, with no compiler/editor API. Existing LAN/Studio QA
+listeners, runtime data, project pairs and configuration are not replaced.
+
+Final maintained evidence passes108 native mixed checks at both1280/390, plus
+the unchanged1418 geometry,86 native input,453 print and132/154/147/255 table
+journeys at both widths. All13 complete heap reports are clean. The final staged
+browser program is byte-identical to the one actually exercised at both browser
+sizes. Nyx-owned compiler output has no warnings; seven case-completeness warnings
+come from the installed pas2js Classes RTL and remain visible, with no dependency
+source changes or warning suppression. The original saved/generated Workshop is
+also rebuilt against this adapter and passes175 at each width with clean complete
+heaps, preserving the original120-second whole-run and60-second phase limits.
+Its original/Uniform/constructor hashes match the retained exact pair. This is
+runtime compatibility evidence; earlier Studio history/Save/Open credit is not
+duplicated. All compiler/runtime readers are terminal and joined, and the source
+Pascal/tool pins remain unchanged; later host-only LF/EOF formatting does not
+change its DOM. Authenticated MCP still observes Workshop31 with no pending
+draft. The owned preview is stopped/joined, its port released, the temporary tab
+closed and browser viewport reset. The existing Studio review tab is retained.
+
+Diagnostic native inspection confirms the bounded code/memo content and both
+projected bars remain within their scroll area after focus reveal. It is still
+a PrintTo redraw, distinct from the actual browser captures and unqualified
+native foreground/physical/assistive behavior. No new public policy or persisted
+descriptor is introduced. Continue the original caller interaction geometry and
+remaining mixed-family/target quality criteria; do not add equivalent anchor-only
+fixture variants. Canvas-scrollbars01 and the broad Nyx goal remain open.
+
+## Previous checkpoint — Keyboard, wheel and editor preservation under zoom — 2026-10-28
 
 Previous goal turn: PROGRESS.4642ee9 is pushed and remote-verified. Root remains
 SOLO. Continue canvas-scrollbars01's original input/viewport criteria through the

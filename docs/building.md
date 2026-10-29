@@ -27,6 +27,12 @@ scroll movement, selected identities, borrowed-control restoration and unfinishe
 Unicode edits through repeated zoom. These are synthetic native/LCL inputs;
 diagnostic prints do not establish physical-device or assistive acceptance.
 
+The same target also executes the existing mixed memo/code/scroll-area canvas
+consumer and stages `canvas-uniform-controls.html` with its browser program.
+Native checks include both projected scroll anchors, actual wheel defaults,
+read-only keyboard input, nested focus reveal and size-query retirement. Staging
+the browser fixture starts no listener; execute it separately for browser proof.
+
 `project-files` runs checked portable file/project admission and builds native
 Studio, the ordinary file-control consumer, the Pascal semantic seed/HTTP observer
 tools, browser Studio/source worker and matching project fixtures. It starts no

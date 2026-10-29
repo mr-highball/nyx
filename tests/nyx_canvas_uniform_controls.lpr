@@ -31,7 +31,8 @@ uses SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.state,
   nyx.button.presentation, nyx.button.configuration
   {$ifdef PAS2JS}, JS, Web, nyx.canvas.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, Types, nyx.canvas.lcl,
-    nyx.widgets.lcl, nyx.test.capture.lcl{$endif};
+    LCLIntf, LCLType, LMessages, nyx.viewport.surface.lcl, nyx.widgets.lcl,
+    nyx.test.capture.lcl{$endif};
 
 type
   { The router retains this callback, which uses only harness-owned state.
@@ -44,6 +45,14 @@ type
   { The router owns this receiver. It copies only inert pointer facts into the
     harness; no view/control/renderer is retained through a callback cycle. }
   TPointerCallback = class(TNyxEventCallback)
+  public
+    procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
+  end;
+
+  { Wheel requests own copied event facts only. This receiver observes the
+    ordinary before/default path and may consume a synchronous UI response;
+    it retains no control, renderer, scene or document. }
+  TWheelCallback = class(TNyxEventCallback)
   public
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
@@ -70,23 +79,34 @@ type
   {$endif}
 
   {$ifndef PAS2JS}
-  { Access the actual memo's installed LCL mouse producer without claiming
-    physical hardware input. The cast never creates, owns or reparents a control. }
+  { Access actual LCL mouse/constraint producers without claiming physical
+    hardware input. Casts never create, own or reparent a borrowed control. }
   TControlAccess = class(Controls.TControl);
 
   { Keep asynchronous LCL failures observable to the test process rather than
     opening an interactive exception dialog. The application borrows this
-    receiver until its hook is explicitly cleared before receiver retirement. }
+    receiver until its hook is explicitly cleared before receiver retirement.
+    The same test-owned receiver supplies the final synchronous retirement hook. }
   TNativeFailures = class
   public
     MessageText: TNyxText;
+    Retirements: Integer;
     procedure Failed(ASender: TObject; AException: Exception);
+    { A final synchronous native size query retires the view from a callout.
+      The test-owned receiver outlives that borrowed control and its callbacks. }
+    procedure RetireOnConstraints(ASender: TObject;
+      var AMinimumWidth: TConstraintSize;
+      var AMinimumHeight: TConstraintSize;
+      var AMaximumWidth: TConstraintSize;
+      var AMaximumHeight: TConstraintSize);
   end;
   {$endif}
 
 const
   CNote: TNyxText = 'Notes 🌙 stay yours across every zoom.';
   CEditedNote: TNyxText = 'Notes 🌙 stay yours across every zoom. Edited 🌿';
+  CSourcePrefix: TNyxText = '  WriteLn(''A useful Pascal note 🌙 ';
+  CSourceSuffix: TNyxText = ''');';
   { Reuse the existing owned button-presentation PNG fixture. Its decoded image
     is an ordinary embedded project resource, not a painted control snapshot. }
   CGlyphPNG: TNyxText =
@@ -107,6 +127,11 @@ var
   GScene: INyxCanvasScene;
   GSubscription: INyxEventSubscription;
   GPointerSubscription: INyxEventSubscription;
+  GWheelSubscription: INyxEventSubscription;
+  GWheelCount: Integer;
+  GWheelConsume: Boolean;
+  GScrollAnchor: Double;
+  GCodeSource: TNyxText;
   GPointerCount: Integer;
   GPointer: TNyxPointerSnapshot;
   GItem: TNyxCanvasItemRef;
@@ -121,10 +146,12 @@ var
   GHost: TJSHTMLElement;
   GView: INyxBrowserCanvasWorkspaceView;
   GInput: TJSHTMLTextAreaElement;
+  GScroll: TJSHTMLElement;
   {$else}
   GHost: TForm;
   GView: INyxLCLCanvasWorkspaceView;
   GInput: TMemo;
+  GScroll: TNyxLogicalScrollBox;
   GBaseFont: Integer;
   GNativeFailures: TNativeFailures;
   {$endif}
@@ -143,6 +170,20 @@ end;
 procedure TNativeFailures.Failed(ASender: TObject; AException: Exception);
 begin
   MessageText := AException.Message;
+end;
+
+procedure TNativeFailures.RetireOnConstraints(ASender: TObject;
+  var AMinimumWidth: TConstraintSize;
+  var AMinimumHeight: TConstraintSize;
+  var AMaximumWidth: TConstraintSize;
+  var AMaximumHeight: TConstraintSize);
+begin
+
+  if Retirements = 0 then
+  begin
+    Inc(Retirements);
+    GView.Disconnect;
+  end;
 end;
 {$endif}
 
@@ -164,6 +205,17 @@ begin
   {$endif}
 end;
 
+procedure TWheelCallback.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Inc(GWheelCount);
+
+  if GWheelConsume then
+  begin
+    NyxEventResponse(AExecution).Consume;
+  end;
+end;
+
 procedure Build;
 var
   LCard: INyxCard;
@@ -173,6 +225,10 @@ var
   LResult: INyxLabel;
   LLayer: TNyxCanvasLayerRef;
   LButton: INyxButton;
+  LScroll: INyxScroll;
+  LCode: INyxCode;
+  LIndex: Integer;
+  LSource: TNyxText;
 begin
   GDocument := TNyxDocument.Create;
   GDocument.AddPage(NewNyxPage('home'));
@@ -194,6 +250,27 @@ begin
   LMemo.Configure.Height(170).Done;
   LMemo.Binds.Value(NyxTextState('note'));
   LCard.Add(LMemo);
+  LScroll := NewNyxScroll('scrolling-notes');
+  LScroll.Configure.Height(160).Padding(8).Gap(8).Done;
+  for LIndex := 0 to 11 do
+  begin
+    LScroll.Add(NewNyxLabel('entry-' + TNyxText(IntToStr(LIndex)))
+      .WithText('Earlier note ' + TNyxText(IntToStr(LIndex)))
+      .Configure.Height(32).Done);
+  end;
+  LSource := '';
+  for LIndex := 1 to 60 do
+  begin
+    LSource := LSource + CSourcePrefix + TNyxText(IntToStr(LIndex)) + CSourceSuffix + #10;
+  end;
+  LCode := NewNyxCode('source-preview').WithText(LSource);
+  GCodeSource := LSource;
+  LCode.Configure.Width(650).MinimumWidth(650).Height(150).Done;
+  LScroll.Add(LCode);
+  LMemo := NewNyxMemo('nested-note').WithText('Nested notes 🌙 stay yours.');
+  LMemo.Configure.Height(90).Done;
+  LScroll.Add(LMemo);
+  LCard.Add(LScroll);
   LMemo := NewNyxMemo('prepared-note');
   LMemo.Text := 'Prepared text';
   LMemo.Configure.Height(170).Done;
@@ -216,10 +293,10 @@ begin
   GScene.AddLayer(LLayer);
   GItem := NyxCanvasItem('Notebook');
   GScene.AddControl(GItem,
-    NyxCanvasPlacement(LLayer, NyxCanvasBounds(0, 0, 450, 960)), LCard);
+    NyxCanvasPlacement(LLayer, NyxCanvasBounds(0, 0, 450, 1200)), LCard);
   GWorkspace := NewNyxCanvasWorkspace('workspace', GScene)
     .WithScaling(nccsUniform)
-    .WithCamera(NyxCanvasCamera(1280, 900, NyxCanvasPoint(225, 480)));
+    .WithCamera(NyxCanvasCamera(1280, 900, NyxCanvasPoint(225, 600)));
 
   if GLegacy then
   begin
@@ -232,6 +309,7 @@ begin
   document.body.appendChild(GHost);
   GView := MountNyxBrowserCanvasWorkspace(GWorkspace, GDocument, GHost, GState);
   GInput := TJSHTMLTextAreaElement(GView.InputFor(GItem, NyxControl('note')));
+  GScroll := GView.RendererFor(GItem).ElementFor('scrolling-notes');
   {$else}
   Application.Initialize;
   GNativeFailures := TNativeFailures.Create;
@@ -242,12 +320,83 @@ begin
   GView := MountNyxLCLCanvasWorkspace(GWorkspace, GDocument, GHost, GState);
   Application.ProcessMessages;
   GInput := TMemo(GView.InputFor(GItem, NyxControl('note')));
+  GScroll := TNyxLogicalScrollBox(GView.RendererFor(GItem).ControlFor('scrolling-notes'));
   {$endif}
   GSubscription := GView.EventsFor(GItem).On(NyxControlEvents('try-action'), ntClick)
     .Subscribe(TActionCallback.Create);
   GPointerSubscription := GView.EventsFor(GItem).OnPointerDown(NyxControlEvents('note'))
     .Subscribe(TPointerCallback.Create);
+  GWheelSubscription := GView.EventsFor(GItem).OnBeforeWheel(NyxControlEvents('scrolling-notes'))
+    .Subscribe(TWheelCallback.Create);
 end;
+
+{$ifndef PAS2JS}
+{ Received native-LCL wheel input keeps exact owned routing even when a canvas
+  child is off screen. Win32 hover redirection and physical devices are separate
+  checks; this message still enters the installed adapter/default WindowProc. }
+procedure CheckScrollWheel(AZoom: Double);
+var
+  LMessage: TLMMouseEvent;
+  LBefore: Integer;
+  LCount: Integer;
+begin
+  LBefore := GScroll.VertScrollBar.Position;
+  LCount := GWheelCount;
+  LMessage := Default(TLMMouseEvent);
+  LMessage.Msg := LM_MOUSEWHEEL;
+  LMessage.X := GScroll.ClientWidth div 2;
+  LMessage.Y := GScroll.ClientHeight div 2;
+  LMessage.WheelDelta := -120;
+  GWheelConsume := True;
+  GScroll.WindowProc(PLMessage(@LMessage)^);
+  Check((GWheelCount = LCount + 1) and (GScroll.VertScrollBar.Position = LBefore),
+    'a consumed scroll-area wheel reaches one callback without changing its viewport');
+  GWheelConsume := False;
+  LMessage.Result := 0;
+  GScroll.WindowProc(PLMessage(@LMessage)^);
+  Check((GWheelCount = LCount + 2) and (GScroll.VertScrollBar.Position > LBefore),
+    'the ordinary scroll-area wheel default moves its actual native viewport once');
+  Check(GInput.Focused and (TNyxText(GInput.Text) = CNote) and
+    (GInput.SelStart = 2) and (GInput.SelLength = 3),
+    'scroll browsing preserves the other focused memo, Unicode text and caret');
+  GScrollAnchor := GScroll.VertScrollBar.Position / AZoom;
+end;
+
+{ A real focus entry reveals the retained nested memo. Read-only source keeps
+  native keyboard scrolling and refuses typed text without replacing its HWND. }
+procedure CheckNestedInput;
+var
+  LCode: TMemo;
+  LNested: TMemo;
+  LOrigin: TPoint;
+  LPoint: TPoint;
+  LPhysicalText: TNyxText;
+begin
+  { Read-only code is a focusable display face, not an editable InputFor port. }
+  LCode := TMemo(GView.RendererFor(GItem).ControlFor('source-preview'));
+  LPhysicalText := TNyxText(LCode.Text);
+  { Native multiline display uses CRLF; the authored Pascal packet keeps LF.
+    Compare only that documented display conversion, preserving every scalar. }
+  Check(LCode.ReadOnly and
+    (TNyxText(StringReplace(LPhysicalText, #13#10, #10, [rfReplaceAll])) = GCodeSource),
+    'the read-only native display retains every source scalar with native line endings');
+  LCode.SetFocus;
+  LCode.SelStart := 0;
+  SendMessage(LCode.Handle, LM_KEYDOWN, VK_NEXT, 0);
+  SendMessage(LCode.Handle, LM_KEYUP, VK_NEXT, 0);
+  Check(LCode.SelStart > 0, 'ordinary PageDown navigates the focused native read-only source');
+  SendMessage(LCode.Handle, LM_CHAR, Ord('x'), 0);
+  Check(TNyxText(LCode.Text) = LPhysicalText, 'read-only source refuses typed insertion');
+  LNested := TMemo(GView.InputFor(GItem, NyxControl('nested-note')));
+  LNested.SetFocus;
+  Application.ProcessMessages;
+  LOrigin := GScroll.ClientToScreen(Point(0, 0));
+  LPoint := LNested.ClientToScreen(Point(0, 0));
+  Check(LNested.Focused and (LPoint.Y >= LOrigin.Y) and
+    (LPoint.Y + LNested.Height <= LOrigin.Y + GScroll.ClientHeight + 1),
+    'actual nested-memo focus reveals its retained editor within the zoomed scroll client');
+end;
+{$endif}
 
 { Exercise actual adapter producers at the current zoom, then independently
   compare logical face positions and their inverse against the supplied screen
@@ -343,6 +492,8 @@ var
   LFormerBounds: TRect;
   LMirror: TMemo;
   LButton: TNyxLCLButton;
+  LEntryPoint: TPoint;
+  LScrollPoint: TPoint;
   {$endif}
 begin
 
@@ -363,6 +514,14 @@ begin
     GBaseHeight := GInput.Height;
     GBaseFont := GInput.Font.Height;
     {$endif}
+    {$ifdef PAS2JS}
+    GScroll.scrollTop := 96;
+    GScroll.scrollLeft := 64;
+    {$else}
+    GScroll.VertScrollBar.Position := 96;
+    GScroll.HorzScrollBar.Position := 64;
+    {$endif}
+    GScrollAnchor := 96;
 
     if GLegacy then
     begin
@@ -374,7 +533,7 @@ begin
   else if GStage <= Length(CZooms) then
   begin
     LZoom := CZooms[GStage - 1];
-    GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(225, 480), LZoom));
+    GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(225, 600), LZoom));
     Check(GView.InputFor(GItem, NyxControl('note')) = GInput, 'zoom retains the same editor');
     {$ifdef PAS2JS}
     Check((GInput.value = CNote) and (document.activeElement = GInput),
@@ -394,7 +553,32 @@ begin
     Check(Abs(GInput.Font.Height - Round(GBaseFont * LZoom)) <= 1,
       'native editor font projects from the absolute logical baseline');
     {$endif}
+    {$ifdef PAS2JS}
+    Check((GView.RendererFor(GItem).ElementFor('scrolling-notes') = GScroll) and
+      (Abs(GScroll.scrollTop - GScrollAnchor) <= 1),
+      'zoom retains the actual browser scroll area and its logical anchor');
+    Check(Abs(GScroll.scrollLeft - 64) <= 1,
+      'browser horizontal scrolling retains its logical offset through CSS zoom');
+    {$else}
+    Check((GView.RendererFor(GItem).ControlFor('scrolling-notes') = GScroll) and
+      (Abs(GScroll.VertScrollBar.Position - Round(GScrollAnchor * LZoom)) <= 1),
+      'zoom retains the actual native scroll area and its projected logical anchor / actual ' +
+      TNyxText(IntToStr(GScroll.VertScrollBar.Position)) + ' expected ' +
+      TNyxText(IntToStr(Round(GScrollAnchor * LZoom))));
+    Check(Abs(GScroll.HorzScrollBar.Position - Round(64 * LZoom)) <= 1,
+      'native horizontal scrolling retains its projected logical anchor');
+    LEntryPoint := GView.RendererFor(GItem).ControlFor('entry-0').ClientToScreen(Point(0, 0));
+    LScrollPoint := GScroll.ClientToScreen(Point(0, 0));
+    Check(Abs(LEntryPoint.Y - LScrollPoint.Y - Round((8 - GScrollAnchor) * LZoom)) <= 2,
+      'the retained scroll anchor keeps the same content at the projected client origin / actual ' +
+      TNyxText(IntToStr(LEntryPoint.Y - LScrollPoint.Y)));
+    Check(Abs(LEntryPoint.X - LScrollPoint.X - Round((8 - 64) * LZoom)) <= 2,
+      'the horizontal anchor preserves the same content at the projected client origin');
+    {$endif}
     CheckPointer(LZoom);
+    {$ifndef PAS2JS}
+    CheckScrollWheel(LZoom);
+    {$endif}
   end
   else
   begin
@@ -484,6 +668,7 @@ begin
     Check((GActionCount = 1) and
       (TNyxText(TLabel(GView.RendererFor(GItem).ControlFor('result')).Caption) =
         'Action received 1'), 'the retained fitted native action updates its bound result');
+    CheckNestedInput;
     {$endif}
     GDone := True;
   end;
@@ -551,6 +736,15 @@ begin
     begin
       raise Exception.Create(GNativeFailures.MessageText);
     end;
+    { Last: the actual bounds setter must not continue through the retired
+      renderer after this control's resize callback disconnects its view. }
+    TControlAccess(Controls.TControl(GScroll)).OnConstrainedResize :=
+      GNativeFailures.RetireOnConstraints;
+    GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(225, 600), 0.75));
+    Check((GNativeFailures.Retirements = 1) and not GView.Connected,
+      'native size-query retirement stops the original projection without stale widget access');
+    Application.ProcessMessages;
+    Check(GNativeFailures.MessageText = '', 'native retirement leaves no deferred LCL error');
     WriteLn('PASS ', GChecks, ' live uniform canvas checks');
   except
     on LException: Exception do
@@ -566,6 +760,7 @@ begin
   end;
   GSubscription := nil;
   GPointerSubscription := nil;
+  GWheelSubscription := nil;
   GView := nil;
   GWorkspace := nil;
   GScene := nil;

@@ -799,8 +799,11 @@ try {
     }
     Invoke-NyxScrollCheck $nyxScrollPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', "-FE$nyxScrollBrowser", 'tests/nyx_scroll_chrome_tests.lpr') 'geometry-browser-compiler'
+    Invoke-NyxScrollCheck $nyxScrollPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', "-FE$nyxScrollBrowser", 'tests/nyx_canvas_uniform_controls.lpr') 'uniform-browser-compiler'
     Copy-Item -LiteralPath $nyxScrollRuntime -Destination (Join-Path $nyxScrollBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/scroll-chrome.html') -Destination $nyxScrollBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/canvas-uniform-controls.html') -Destination $nyxScrollBrowser
     Write-Host 'Scroll geometry/native input checks passed; browser execution and full Workshop qualification remain explicit.'
     return
   }

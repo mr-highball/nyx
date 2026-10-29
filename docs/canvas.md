@@ -469,6 +469,24 @@ configured external evidence/temp root, or supply a new
 `-ScrollChromeEvidenceDirectory`; it executes native checks and stages the browser
 geometry fixture without starting a listener. Browser execution remains separate.
 
+Ordinary native scroll areas retain a world-space anchor through uniform zoom.
+The projector records the last rounded native offsets separately, so repeated
+fractional zoom cannot compound rounding. A real wheel/focus scroll adopts its
+new position; a genuine range reduction adopts its reachable clamp. Both child
+geometry and automatic ranges settle before restoring the projected offsets.
+The same actual child HWNDs move through LCL's scroll implementation. Virtual
+logical ports keep their own coordinate ownership, and the canvas camera host is
+excluded. The mixed consumer checks both axes against actual on-screen child
+origins, cancellable wheel defaults, read-only source keyboard navigation and
+nested memo focus/editing. Native size-query retirement also revokes the original
+projection before its next widget access.
+
+`scroll-chrome` now stages `canvas-uniform-controls.html` beside the matched
+browser fixture. Its executed desktop/compact checks retain CSS scroll anchors;
+ordinary browser wheel, source PageDown, nested editing and bound peer/action
+updates have separate interaction evidence. These checks do not establish
+physical-device, assistive or complete canvas parity.
+
 Pinned panes copy only the middle grid's current measured row window, clearing
 their preceding sparse overrides before installing the new window. Text-window,
 pane and header-button updates share one logical section. Scroll anchors restore

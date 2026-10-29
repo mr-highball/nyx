@@ -45,6 +45,21 @@ type
     procedure DeferredSyncEntered;
   end;
 
+  { Exact world offset plus its last rounded native observation. Reusing the
+    world value while that observation is unchanged prevents repeated fractional
+    zoom from accumulating rounding. A real native scroll replaces the anchor. }
+  TNativeScrollPosition = record
+    Captured: Boolean;
+    X: Double;
+    Y: Double;
+    AppliedX: Integer;
+    AppliedY: Integer;
+  end;
+
+  { Access LCL's existing automatic-range settlement on a borrowed scroll host.
+    No alternative scrollbar, native window or control ownership is introduced. }
+  TNativeScrollAccess = class(TScrollingWinControl);
+
   { One absolute logical baseline. Control is borrowed and revoked by component
     notification before destruction. No text, caret, event handler or model is
     copied or restored by scaling. Native integer geometry rounds once per frame.
@@ -62,6 +77,7 @@ type
     Seen: Boolean;
     Grid: TNativeGridMetrics;
     Chrome: INyxLCLScrollChrome;
+    Scroll: TNativeScrollPosition;
   end;
 
   { Exact weak renderer generation for scroll allocation/input. The managed
@@ -151,6 +167,7 @@ type
     FNotice: TNativeScaleNotice;
     FDead: Integer;
     FProjected: Boolean;
+    FAppliedScale: Double;
     FChangingFaces: Boolean;
     FLogicalOpen: Boolean;
     FClosingLogical: Boolean;
@@ -168,6 +185,10 @@ type
     procedure NotifyGrids(const AGeneration: INyxLCLBindingGeneration);
     procedure RememberGridViewports(const AGeneration: INyxLCLBindingGeneration);
     procedure RestoreGridViewports(const AGeneration: INyxLCLBindingGeneration);
+    procedure RememberScrollViewports(AHost: TWinControl; AScale: Double;
+      const AGeneration: INyxLCLBindingGeneration);
+    procedure RestoreScrollViewports(AHost: TWinControl; AScale: Double;
+      const AGeneration: INyxLCLBindingGeneration);
     procedure RestoreFaces(AHost: TWinControl; ARoot: TControl;
       const AGeneration: INyxLCLBindingGeneration);
     procedure ProjectFaces(AHost: TWinControl; ARoot: TControl; AScale: Double;
@@ -558,6 +579,7 @@ end;
 constructor TNativeContentScale.Create;
 begin
   inherited Create;
+  FAppliedScale := 1;
   FIndex := TNativeScaleIndex.Create;
   FNotice := TNativeScaleNotice.Create(nil);
   FNotice.FScale := Self;
@@ -761,11 +783,13 @@ begin
 
   if FProjected then
   begin
+    RememberScrollViewports(AHost, FAppliedScale, AGeneration);
     RememberGridViewports(AGeneration);
     RestoreTree(AHost, False, AGeneration);
     RestoreTree(ARoot, True, AGeneration);
     RequireNativeGeneration(AGeneration);
     RestoreGridViewports(AGeneration);
+    RestoreScrollViewports(AHost, 1, AGeneration);
     FProjected := False;
     NotifyGrids(AGeneration);
   end;
@@ -925,6 +949,7 @@ begin
     host itself keeps physical dimensions; only its font and live children
     project from world metrics. Its private scrollbar faces are not content. }
   RememberGridViewports(AGeneration);
+  RememberScrollViewports(AHost, 1, AGeneration);
   for LIndex := 0 to High(FRows) do
   begin
     LRow := FRows[LIndex];
@@ -1015,8 +1040,150 @@ begin
     end;
   end;
   RestoreGridViewports(AGeneration);
+  RestoreScrollViewports(AHost, AScale, AGeneration);
+  FAppliedScale := AScale;
   FProjected := True;
   NotifyGrids(AGeneration);
+end;
+
+{ Virtual scroll ports already own logical offsets. Ordinary LCL automatic
+  scrollbars instead operate in the current native client frame. The canvas's
+  own host is excluded because its camera owns navigation and clipping. }
+function NativeAutomaticScroll(AControl: TControl; AHost: TWinControl):
+  TScrollingWinControl;
+begin
+  Result := nil;
+
+  if (AControl = nil) or (AControl = AHost) or
+    not (AControl is TScrollingWinControl) then
+  begin
+    Exit;
+  end;
+
+  if (AControl is TNyxLogicalScrollBox) and TNyxLogicalScrollBox(AControl).Logical then
+  begin
+    Exit;
+  end;
+  Result := TScrollingWinControl(AControl);
+end;
+
+procedure TNativeContentScale.RememberScrollViewports(AHost: TWinControl;
+  AScale: Double; const AGeneration: INyxLCLBindingGeneration);
+var
+  LIndex: Integer;
+  LControl: TScrollingWinControl;
+  LPosition: TNativeScrollPosition;
+  LX: Integer;
+  LY: Integer;
+begin
+  for LIndex := 0 to High(FRows) do
+  begin
+    RequireNativeGeneration(AGeneration);
+    LControl := NativeAutomaticScroll(FRows[LIndex].Control, AHost);
+
+    if (LControl = nil) or not FRows[LIndex].Seen then
+    begin
+      { A logical-port mode owns a different coordinate contract. Re-entering
+        automatic native scrolling must capture a fresh anchor, even when its
+        first rounded position happens to equal an older native observation. }
+      FRows[LIndex].Scroll.Captured := False;
+      Continue;
+    end;
+    LX := LControl.HorzScrollBar.Position;
+    LY := LControl.VertScrollBar.Position;
+    LPosition := FRows[LIndex].Scroll;
+
+    if not LPosition.Captured or (LX <> LPosition.AppliedX) then
+    begin
+      LPosition.X := LX / AScale;
+    end;
+
+    if not LPosition.Captured or (LY <> LPosition.AppliedY) then
+    begin
+      LPosition.Y := LY / AScale;
+    end;
+    LPosition.Captured := True;
+    LPosition.AppliedX := LX;
+    LPosition.AppliedY := LY;
+    FRows[LIndex].Scroll := LPosition;
+  end;
+end;
+
+function NativeScrollPixel(AValue: Double; AScale: Double): Integer;
+var
+  LValue: Double;
+begin
+  LValue := AValue * AScale;
+
+  if IsNan(LValue) or IsInfinite(LValue) or (LValue < 0) or
+    (LValue > High(Integer) - 1.0) then
+  begin
+    raise ENyxModel.Create('Native uniform scroll offset exceeds integer projection');
+  end;
+  Result := Round(LValue);
+end;
+
+procedure TNativeContentScale.RestoreScrollViewports(AHost: TWinControl;
+  AScale: Double; const AGeneration: INyxLCLBindingGeneration);
+var
+  LIndex: Integer;
+  LControl: TScrollingWinControl;
+  LPosition: TNativeScrollPosition;
+  LX: Integer;
+  LY: Integer;
+begin
+  for LIndex := 0 to High(FRows) do
+  begin
+    RequireNativeGeneration(AGeneration);
+    LControl := NativeAutomaticScroll(FRows[LIndex].Control, AHost);
+    LPosition := FRows[LIndex].Scroll;
+
+    if (LControl = nil) or not FRows[LIndex].Seen or not LPosition.Captured then
+    begin
+      Continue;
+    end;
+    LX := NativeScrollPixel(LPosition.X, AScale);
+    LY := NativeScrollPixel(LPosition.Y, AScale);
+    { All descendant geometry has reached the same frame before range/page
+      settlement and anchor restoration. LCL's ordinary scrolling then moves
+      its actual child HWNDs once; logical control coordinates stay unchanged. }
+    TNativeScrollAccess(LControl).UpdateScrollbars;
+    RequireNativeGeneration(AGeneration);
+
+    if FRows[LIndex].Control <> LControl then
+    begin
+      Continue;
+    end;
+    LControl.HorzScrollBar.Position := LX;
+    RequireNativeGeneration(AGeneration);
+
+    if FRows[LIndex].Control <> LControl then
+    begin
+      Continue;
+    end;
+    LControl.VertScrollBar.Position := LY;
+    RequireNativeGeneration(AGeneration);
+
+    if FRows[LIndex].Control <> LControl then
+    begin
+      Continue;
+    end;
+    LPosition.AppliedX := LControl.HorzScrollBar.Position;
+    LPosition.AppliedY := LControl.VertScrollBar.Position;
+    { A genuine range reduction adopts its reachable position. Merely rounding
+      a representable anchor keeps the exact world value for the next zoom. }
+
+    if LPosition.AppliedX <> LX then
+    begin
+      LPosition.X := LPosition.AppliedX / AScale;
+    end;
+
+    if LPosition.AppliedY <> LY then
+    begin
+      LPosition.Y := LPosition.AppliedY / AScale;
+    end;
+    FRows[LIndex].Scroll := LPosition;
+  end;
 end;
 
 procedure TNativeContentScale.RememberGridViewports(

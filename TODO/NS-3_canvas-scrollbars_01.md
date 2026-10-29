@@ -108,3 +108,25 @@ retains the failure, fixture corrections and exact scope. Native/LCL synthetic
 input and diagnostic printing do not establish physical/assistive acceptance.
 The saved Workshop evidence above remains separate; all remaining criteria stay
 open, including the other families and honest caller interaction choices.
+
+## Mixed scroll-area continuation — 2026-10-28
+
+The existing live uniform-control consumer now contains a bounded scroll area,
+wide read-only Pascal source and nested memo. Its half-zoom baseline retains96
+physical pixels instead of48. The shared projector now preserves exact world
+anchors and last rounded observations, restoring both axes after complete range
+settlement. Actual native wheel movement adopts a new anchor; logical ports and
+the camera host keep their distinct coordinate ownership.
+
+The maintained mixed journey passes108 at each1280/390 width, including actual
+child origins, wheel cancellation/default, retained focus/caret, readonly source
+PageDown/insertion refusal, nested focus reveal and synchronous native size-query
+retirement without deferred errors. Its complete heaps are clean; the earlier
+geometry/input/print/table regressions also pass. The executed browser program
+matches the final staged JavaScript exactly, passing56 at1280x900 and390x844 plus actual
+wheel, keyboard, nested editing, bound peer and action interaction. The temporary
+read-only preview host is stopped and joined. Diagnostic native prints remain
+separate from actual browser display, physical hardware and assistive evidence.
+WORK.md retains failures, source identities, limitations and original Workshop
+compatibility checks. Caller interaction choices and all remaining criteria stay
+open; this does not assign complete scroll/chrome or canvas parity.
