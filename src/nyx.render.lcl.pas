@@ -1045,7 +1045,8 @@ uses
   nyx.collections.query.workbench,
   nyx.collections.arrangement.lcl,
   nyx.collections.cell.lcl,
-  nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl, nyx.coordinators.internal;
+  nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl,
+  nyx.scroll.chrome.lcl, nyx.coordinators.internal;
 
 type
 

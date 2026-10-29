@@ -419,6 +419,15 @@ begin
     begin
       Check(LGeometry.TryControlBounds(JSONWorkshopItem, JSONWorkshopControl(LControl), LBounds),
         'Fit exposes each actual Notebook editor, result and principal action');
+      {$ifndef PAS2JS}
+      { Retain the actual measured failure, rather than inferring geometry from
+        the saved camera or enlarging the original Fit assertion's tolerance. }
+      WriteLn('Notebook fit app=', AApp, ', control=', Ord(LControl),
+        ', bounds=', LBounds.Left:0:2, '/', LBounds.Top:0:2, '/',
+        LBounds.Width:0:2, '/', LBounds.Height:0:2,
+        ', viewport=', GViews[AApp].Camera.ViewportWidth:0:2, '/',
+        GViews[AApp].Camera.ViewportHeight:0:2);
+      {$endif}
       Check((LBounds.Left >= -1) and (LBounds.Top >= -1) and
         (LBounds.Left + LBounds.Width <= GViews[AApp].Camera.ViewportWidth + 1) and
         (LBounds.Top + LBounds.Height <= GViews[AApp].Camera.ViewportHeight + 1),

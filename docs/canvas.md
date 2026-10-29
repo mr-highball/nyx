@@ -421,6 +421,43 @@ fonts. Native header resizing converts screen width through both monitor DPI
 and canvas zoom, and refuses a drag whose projection epoch changed before its
 release. Ordinary runtime queries retain the same grid, selected item and draft.
 
+The Win32 uniform projection now has a shared scroll-chrome attachment in
+`nyx.scroll.chrome.lcl`. It retains the actual editor/control HWND and chains a
+Comctl32 subclass for nonclient allocation, drawing and hit testing. Semantic
+theme colors and absolute logical metrics are copied; projection does not rescale
+the previous thumb or replace an editor with an image. `nyx.scroll.chrome` supplies
+portable inclusive ranges and geometry, with explicit minimum pixels and a
+consistent upward tie rule for nonnegative metrics/travel on both compilers.
+The helper admits the complete signed32-bit range with widened page arithmetic.
+
+The native attachment uses full-width LCL positions for custom controls, including
+the final release position for grids that disable continuous thumb tracking.
+Memo vertical scrolling retains full line positions. Standard Windows edit
+horizontal ranges are pixels while their wide relative-scroll API uses character
+steps: ordinary thumb positions use exact native pixels, and positions above65535
+use the nearest native character step without truncation; endpoints stay exact.
+This precision limit is specific to that edit host. Read-only content remains
+navigable; disabled/suspended input refuses. Captured collection epochs prevent an
+old pointer stroke from resuming after an input authority changes.
+
+Memo viewport restoration also carries a per-attachment receipt and source epoch
+through deferred native bounds realization. Queued messages retain no control,
+renderer or object pointer. Source replacement and retirement revoke the old
+restore; repeated projection before delivery keeps the original accepted anchor.
+The original physical retirement frame spans each synchronous native call only.
+
+This scroll repair is a partial Win32 checkpoint. Focused native memo/grid input,
+portable native/browser geometry and the existing live-control regression execute;
+other scrollable families, actual display/assistive geometry and full target
+qualification remain with [scrollbars01](../TODO/NS-3_canvas-scrollbars_01.md).
+Native PrintTo currently retains the stock nonclient print path; those diagnostic
+images do not establish the custom live chrome's appearance.
+Other widgetsets retain their existing chrome. No new node authoring policy or
+persisted enum is introduced. Run `tools/build.ps1 -Target scroll-chrome` with a
+configured external evidence/temp root, or supply a new
+`-ScrollChromeEvidenceDirectory`; it executes native checks and stages the browser
+geometry fixture without starting a listener. Browser execution remains separate.
+
 Pinned panes copy only the middle grid's current measured row window, clearing
 their preceding sparse overrides before installing the new window. Text-window,
 pane and header-button updates share one logical section. Scroll anchors restore

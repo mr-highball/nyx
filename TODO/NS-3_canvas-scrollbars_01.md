@@ -47,3 +47,27 @@ and the two older canvas policies retain their existing intent.
 **Blockers**
 
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
+
+## Partial Win32 checkpoint — 2026-10-28
+
+Portable typed ranges/geometry and the reusable native attachment now project
+nonclient allocation and hit regions while retaining the real HWND. Focused
+native86 checks cover memo focus/selection/anchors, read-only/disabled input,
+source replacement, full-width vertical and horizontal positions, deferred grid
+thumb commit, input-epoch cancellation, tiny clients and retirement. Portable
+geometry executes1418 native/1420 browser checks; the extra two browser checks
+refuse foreign numeric inputs. Existing native live-control67 checks pass at
+both widths. Complete native heaps are clean. The maintained `scroll-chrome`
+build target retains these checks and stages the browser geometry fixture.
+
+The same exact saved/generated Workshop passes its original full native175/175
+runtime and ordinary Studio54/58 history/Save/Open journeys. The first compact
+failure retained an older410px HWND width inside a341px viewport; realizing LCL
+bounds before frame recalculation repairs it without changing its assertion or
+deadlines. Final widgetset/queued-input guards have separate focused evidence.
+WORK.md retains exact snapshots, failed attempts, limitations and target evidence.
+
+The task remains open. Other scrollable families, browser/native input breadth,
+actual display/assistive geometry, caller choices and remaining original criteria
+still need qualification. In particular, the native PrintTo diagnostic follows
+the stock nonclient print path and cannot stand in for live-chrome rendering.

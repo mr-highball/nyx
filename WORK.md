@@ -9,7 +9,80 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Same Workshop through native Studio and runtime — 2026-10-28
+## Current work — Native scroll chrome follows canvas zoom — 2026-10-28
+
+Root remains SOLO. The b3e2edc native Workshop checkpoint is pushed and verified.
+The next concrete prerequisite is canvas-scrollbars01. A reusable
+portable range/geometry contract and Win32 subclass attachment now project actual
+nonclient allocation rather than painting a scaled screenshot. The same native
+memo's scroll allocation changes from17 to8 pixels at half scale, retaining its
+HWND, focus and selection. The focused native86 checks include read-only versus
+disabled actions, thumb movement beyond65535, source replacement, retirement and
+repeated absolute zoom with retained viewport. Real deferred-tracking grids now
+receive their full-width final thumb commit; copied collection input epochs
+withdraw old pointer strokes. Selection replacement and keyboard/wheel input
+cancel the original memo drag. Small windows retain bounded client rectangles.
+Complete heaps report zero leaks.
+The existing live uniform-control regression passes67 at both1280/390, also with
+complete clean heaps. Native input is synthetic window/LCL input; no physical
+device or assistive/display acceptance is implied.
+
+The portable geometry executes1418 native and1420 browser checks. Explicit upward
+metric/travel ties now agree on both targets; the browser adds two foreign-number
+refusals. Browser compilation is warning-free. Earlier failures remain in the external
+canvas-scroll-chrome-01 packet: the baseline fixed17px chrome, an interface
+temporary lifetime leak, unsupported browser Int64 arithmetic, and an anchor70
+to68 jump during deferred native bounds realization. Explicit interface ownership,
+exact widened browser ordinals and receipt/epoch-based deferred viewport restore
+address those observed failures. Horizontal memo tests additionally expose pixel
+deltas being used as character counts: dragging to3530 first overshoots, then
+returns to0 on release. The repaired ordinary native pixel route reaches3530
+exactly. A genuine larger native font/range reaches81082 for requested81086,
+within the independently measured native character-step precision, without a
+16-bit wrap; full endpoints remain exact. A second long ASCII source by itself
+did not create a wide native range and earns no wide-route qualification.
+
+The maintained scroll-chrome target executes native geometry, focused input and
+both unchanged67-check live canvas runs, checking complete clean heaps and staging
+the browser fixture without a listener. The same exact saved/generated Workshop
+passes175 at1280, but the original390 run fails stage0: its preview code block
+retains a logical410px width inside a341px viewport. Its unchanged assertion and
+complete clean failing heap are retained. Native frame-only resize notifications
+can import an older HWND size while LCL still has projected bounds pending. The
+adapter now realizes those bounds through the original widgetset before frame
+recalculation; focused83 and both67 checks still pass. Full original runtime and
+Studio reruns retain the unchanged120-second whole runtime and900-second Studio
+bounds. Both full original runtime
+journeys now pass175, with complete clean heaps, in69.2/76.2 seconds at390/1280.
+Ordinary native Studio passes58/54 at390/1280, including exact paired history,
+stale refusal, unfinished Pascal and Save/Open, with complete clean heaps in
+128.6/204.4 seconds. These are single traced observations, not production latency
+or an isolated causal performance comparison. Saved project/constructor hashes
+remain identical to the retained accepted Uniform pair.
+
+All four full consumers and their compiler readers are joined. Final review then
+adds the explicit Win32 widgetset predicate and carries the collection input
+epoch through deferred viewport recovery as well as pointer strokes. The latter
+has a real controlled native viewport move while physical input is suspended,
+with no text mutation to revoke the older anchor. Final focused86 and both67
+regressions execute against these guards with complete clean heaps. Their source
+snapshot and the preceding full-journey snapshot remain distinct; those guards
+do not add full-task acceptance or substitute for the remaining families.
+
+Remaining work includes other scrollable families, native hover/display and
+assistive geometry, caller policies and wider target qualification. The retained
+native PrintTo diagnostic still shows the stock nonclient print path; it is not
+visual proof of the new live chrome and needs its own adapter handling. The broad
+scroll-chrome task is open;
+memo geometry alone does not establish parity or acceptance. No new public node
+policy, deadline increase, dependency edit or LAN replacement has occurred.
+All new private artifacts and process TEMP/TMP remain on E:; unrelated operator
+AGENTS/WORK changes and1280/390 are preserved.
+
+The existing Nyx LAN and loopback MCP listeners remain unchanged; direct LAN HTTP
+returns200. No service replacement or firewall action is part of this checkpoint.
+
+## Previous checkpoint — Same Workshop through native Studio and runtime — 2026-10-28
 
 Previous goal turn: PROGRESS.e05beae is pushed/remote-verified. Root remains SOLO.
 Follow canvas-workspace02's remaining full native traced journey after the actual

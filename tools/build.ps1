@@ -22,8 +22,11 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('json-workshop', 'data-toolbar', 'inspection-authoring', 'tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'viewport-context', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('scroll-chrome', 'json-workshop', 'data-toolbar', 'inspection-authoring', 'tree-inspection', 'query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'button-editor', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'viewport-context', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
+  # NEW external packet for portable scroll geometry and actual Win32 input.
+  # Empty uses configured EVIDENCE_ROOT; the browser fixture is staged only.
+  [string]$ScrollChromeEvidenceDirectory,
   # Complete public JSON Workshop example, both input widths and the constructor
   # emitted by that journey. Browser consumers are staged without a listener.
   [string]$JSONWorkshopEvidenceDirectory,
@@ -720,6 +723,68 @@ try {
     $nyxScratchRoot = $nyxConfig.SCRATCH_ROOT
   }
   $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+  if ($Target -eq 'scroll-chrome') {
+    if ($env:OS -ne 'Windows_NT' -or $Widgetset -ne 'win32') {
+      throw 'Native scroll-chrome input qualification currently requires Win32 LCL'
+    }
+    if (-not $ScrollChromeEvidenceDirectory) {
+      if (-not $nyxConfig.ContainsKey('EVIDENCE_ROOT')) {
+        throw 'Supply a NEW ScrollChromeEvidenceDirectory or configure EVIDENCE_ROOT'
+      }
+      $ScrollChromeEvidenceDirectory = Join-Path $nyxConfig.EVIDENCE_ROOT (
+        'scroll-chrome-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ'))
+    }
+    $nyxScrollRoot = [IO.Path]::GetFullPath($ScrollChromeEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxScrollRoot) {
+      throw 'ScrollChromeEvidenceDirectory must be NEW; preserve previous evidence'
+    }
+    $nyxScrollNative = Join-Path $nyxScrollRoot 'native'
+    $nyxScrollBrowser = Join-Path $nyxScrollRoot 'browser'
+    New-Item -ItemType Directory -Path $nyxScrollNative, $nyxScrollBrowser | Out-Null
+    $nyxScrollFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxScrollLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxScrollPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxScrollRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxScrollPlatform = "$((& $nyxScrollFpc '-iTP').Trim())-$((& $nyxScrollFpc '-iTO').Trim())"
+    $nyxScrollFlags = @('-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fisrc', "-FU$nyxScrollNative", "-FE$nyxScrollNative",
+      "-Fu$nyxScrollLazarus/lcl/units/$nyxScrollPlatform",
+      "-Fu$nyxScrollLazarus/lcl/units/$nyxScrollPlatform/$Widgetset",
+      "-Fu$nyxScrollLazarus/components/lazutils/lib/$nyxScrollPlatform",
+      "-Fu$nyxScrollLazarus/packager/units/$nyxScrollPlatform")
+    function Invoke-NyxScrollCheck([string]$Executable, [string[]]$Arguments,
+        [string]$Tag, [bool]$Heap = $false) {
+      $output = $nyxScrollRoot
+      $nyxScrollBudget = if ($Heap) { 120 } else { 600 }
+      $nyxScrollResult = RunOwned $Executable $Arguments $Tag $nyxScrollBudget $Heap
+      $nyxScrollResult | ConvertTo-Json -Depth 12 |
+        Set-Content -LiteralPath (Join-Path $nyxScrollRoot ($Tag + '-private.json')) -Encoding UTF8
+      if ($nyxScrollResult.exit -ne 0 -or $nyxScrollResult.timedOut -or
+          ($Heap -and -not $nyxScrollResult.heapComplete)) {
+        Get-Content -LiteralPath $nyxScrollResult.stdout -Tail 12
+        throw ('Scroll-chrome check failed: ' + $Tag)
+      }
+      if ($Heap) { Get-Content -LiteralPath $nyxScrollResult.stdout -Tail 3 }
+    }
+    Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @('-B',
+      'tests/nyx_scroll_chrome_tests.lpr')) 'geometry-compiler'
+    Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_scroll_chrome_tests.exe') @() 'geometry-native' $true
+    Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @(
+      'tests/nyx_scroll_chrome_controls.lpr')) 'controls-compiler'
+    Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_scroll_chrome_controls.exe') @() 'controls-native' $true
+    Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @(
+      'tests/nyx_canvas_uniform_controls.lpr')) 'uniform-compiler'
+    foreach ($nyxScrollWidth in @(1280, 390)) {
+      Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_canvas_uniform_controls.exe') @(
+        [string]$nyxScrollWidth) ('uniform-' + $nyxScrollWidth) $true
+    }
+    Invoke-NyxScrollCheck $nyxScrollPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', "-FE$nyxScrollBrowser", 'tests/nyx_scroll_chrome_tests.lpr') 'geometry-browser-compiler'
+    Copy-Item -LiteralPath $nyxScrollRuntime -Destination (Join-Path $nyxScrollBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/scroll-chrome.html') -Destination $nyxScrollBrowser
+    Write-Host 'Scroll geometry/native input checks passed; browser execution and full Workshop qualification remain explicit.'
+    return
+  }
   if ($Target -eq 'inspection-authoring') {
     $nyxInspectionRoot = [IO.Path]::GetFullPath($InspectionAuthoringEvidenceDirectory)
     if (Test-Path -LiteralPath $nyxInspectionRoot) { throw 'Inspection authoring evidence directory must be NEW' }

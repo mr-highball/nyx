@@ -47,7 +47,8 @@ type
 
   { One absolute logical baseline. Control is borrowed and revoked by component
     notification before destruction. No text, caret, event handler or model is
-    copied or restored by scaling. Native integer geometry rounds once per frame. }
+    copied or restored by scaling. Native integer geometry rounds once per frame.
+    Chrome owns a revocable HWND lease until control notification or retirement. }
   TNativeScaleRow = record
     Control: TControl;
     Bounds: TRect;
@@ -60,6 +61,22 @@ type
     MaximumHeight: Integer;
     Seen: Boolean;
     Grid: TNativeGridMetrics;
+    Chrome: INyxLCLScrollChrome;
+  end;
+
+  { Exact weak renderer generation for scroll allocation/input. The managed
+    native frame delays physical retirement, without retaining the renderer.
+    Logical projection remains allowed while physical input is suspended. }
+  TNativeScrollLifetime = class(TInterfacedObject, INyxLCLScrollChromeLifetime)
+  private
+    FGeneration: INyxLCLBindingGeneration;
+    FInput: INyxCollectionInputLifetime;
+  public
+    constructor Create(AControl: TControl; const AGeneration: INyxLCLBindingGeneration);
+    function Current: Boolean;
+    function InputReady: Boolean;
+    function InputEpoch: Integer;
+    function Frame: INyxNativeGestureFrame;
   end;
 
   { Non-owning address lookup avoids repeated whole-tree scans per native face.
@@ -183,6 +200,72 @@ begin
     raise ENyxModel.Create('Native uniform coordinate exceeds integer projection');
   end;
   Result := Round(LValue);
+end;
+
+constructor TNativeScrollLifetime.Create(AControl: TControl;
+  const AGeneration: INyxLCLBindingGeneration);
+var
+  LOwner: TNyxLCLRenderer;
+  LControl: TControl;
+  LIndex: Integer;
+begin
+  inherited Create;
+  FGeneration := AGeneration;
+  LOwner := AGeneration.Receiver;
+  LControl := AControl;
+  { Bind once to the nearest enclosing collection's readonly input authority.
+    No control, binding or mount is retained by this lifetime port. }
+  while LControl <> nil do
+  begin
+    for LIndex := 0 to High(LOwner.FBindings) do
+    begin
+
+      if ((LOwner.FBindings[LIndex].FControl = LControl) or
+        (LOwner.FBindings[LIndex].FInput = LControl)) and
+        (LOwner.FBindings[LIndex].FCollectionInputLifetime <> nil) then
+      begin
+        FInput := LOwner.FBindings[LIndex].FCollectionInputLifetime;
+        Exit;
+      end;
+    end;
+    LControl := LControl.Parent;
+  end;
+end;
+
+function TNativeScrollLifetime.Current: Boolean;
+begin
+  Result := NativeGenerationCurrent(FGeneration) and
+    ((FInput = nil) or FInput.Current);
+end;
+
+function TNativeScrollLifetime.InputReady: Boolean;
+var
+  LOwner: TNyxLCLRenderer;
+begin
+  Result := Current;
+
+  if Result then
+  begin
+    LOwner := FGeneration.Receiver;
+    Result := not LOwner.FUpdating and not LOwner.FPublishingContent and
+      ((LOwner.FLiveBindings = nil) or LOwner.FLiveBindings.RefreshReady) and
+      ((FInput = nil) or FInput.Ready);
+  end;
+end;
+
+function TNativeScrollLifetime.InputEpoch: Integer;
+begin
+  Result := 0;
+
+  if FInput <> nil then
+  begin
+    Result := FInput.Epoch;
+  end;
+end;
+
+function TNativeScrollLifetime.Frame: INyxNativeGestureFrame;
+begin
+  Result := FGeneration.PhysicalFrame;
 end;
 
 function NativeScaleFont(AValue: Integer; AScale: Double): Integer;
@@ -488,6 +571,12 @@ begin
   FNotice.Free;
   for LIndex := 0 to High(FRows) do
   begin
+
+    if FRows[LIndex].Chrome <> nil then
+    begin
+      FRows[LIndex].Chrome.Retire;
+      FRows[LIndex].Chrome := nil;
+    end;
     FRows[LIndex].Grid.Free;
   end;
   FIndex.Free;
@@ -523,6 +612,12 @@ begin
 
   if FIndex.TryGetValue(AControl, LIndex) then
   begin
+
+    if FRows[LIndex].Chrome <> nil then
+    begin
+      FRows[LIndex].Chrome.Retire;
+      FRows[LIndex].Chrome := nil;
+    end;
     FRows[LIndex].Grid.Free;
     FRows[LIndex].Grid := nil;
     FRows[LIndex].Control := nil;
@@ -609,6 +704,12 @@ begin
   if LRow.Grid <> nil then
   begin
     LRow.Grid.Apply(1, AGeneration);
+    RequireNativeGeneration(AGeneration);
+  end;
+
+  if LRow.Chrome <> nil then
+  begin
+    LRow.Chrome.Project(1, AGeneration.Receiver.FTheme);
     RequireNativeGeneration(AGeneration);
   end;
 
@@ -810,6 +911,7 @@ var
   LRow: TNativeScaleRow;
   LControl: TControl;
   LBounds: TRect;
+  LScrollLifetime: INyxLCLScrollChromeLifetime;
 begin
   RequireNativeGeneration(AGeneration);
   for LIndex := 0 to High(FRows) do
@@ -882,6 +984,35 @@ begin
       LRow.Grid.Apply(AScale, AGeneration);
       RequireNativeGeneration(AGeneration);
     end;
+
+    if (LControl <> AHost) and (LControl is TWinControl) and
+      NyxLCLSupportsScrollChrome(TWinControl(LControl)) then
+    begin
+
+      if (LRow.Chrome = nil) or not LRow.Chrome.Attached then
+      begin
+
+        if LRow.Chrome <> nil then
+        begin
+          LRow.Chrome.Retire;
+          RequireNativeGeneration(AGeneration);
+        end;
+        { Hold an owned interface before the const bridge argument. An
+          unsupported native control retains nothing; a raw construction passed
+          directly to that borrowed parameter would leave its zero-ref object. }
+        LScrollLifetime := TNativeScrollLifetime.Create(LControl, AGeneration);
+        LRow.Chrome := AttachNyxLCLScrollChrome(TWinControl(LControl), LScrollLifetime);
+        LScrollLifetime := nil;
+        FRows[LIndex].Chrome := LRow.Chrome;
+        RequireNativeGeneration(AGeneration);
+      end;
+
+      if LRow.Chrome <> nil then
+      begin
+        LRow.Chrome.Project(AScale, AGeneration.Receiver.FTheme);
+        RequireNativeGeneration(AGeneration);
+      end;
+    end;
   end;
   RestoreGridViewports(AGeneration);
   FProjected := True;
@@ -901,6 +1032,12 @@ begin
     begin
       FRows[LIndex].Grid.RememberViewport(AGeneration);
     end;
+
+    if FRows[LIndex].Chrome <> nil then
+    begin
+      FRows[LIndex].Chrome.RememberViewport;
+      RequireNativeGeneration(AGeneration);
+    end;
   end;
 end;
 
@@ -917,6 +1054,12 @@ begin
       (FRows[LIndex].Grid <> nil) then
     begin
       FRows[LIndex].Grid.RestoreViewport(AGeneration);
+    end;
+
+    if FRows[LIndex].Chrome <> nil then
+    begin
+      FRows[LIndex].Chrome.RestoreViewport;
+      RequireNativeGeneration(AGeneration);
     end;
   end;
 end;
