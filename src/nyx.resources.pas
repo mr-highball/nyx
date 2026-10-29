@@ -344,6 +344,8 @@ function NyxResourceKindName(AKind: TNyxResourceKind): TNyxText;
 
 implementation
 
+uses fpjson;
+
 type
   { Immutable normalized file definition, owning packed payload or hosted
     declaration and optional embedded fallback. Image readiness inspects this
@@ -399,14 +401,27 @@ type
   end;
   { Mutable catalog membership around privately admitted immutable entries.
     Import prepares a detached candidate and exchanges its entry array only
-    after every allocation and aggregate limit check has succeeded. }
+    after every allocation and aggregate limit check has succeeded. The wire
+    memo retains only an immutable value, never a caller/document. Each committed
+    membership change invalidates it; formatter changes take ordinary admission.
+    Native read-only memo/clone access is serialized. Membership mutation still
+    requires caller serialization with readers, as the entry array always has. }
   TResources = class(TInterfacedObject, INyxResources, INyxResourceCatalogImport)
   private
     FEntries: array of TResourceEntry;
+    FWireData: TNyxDataValue;
+    FWireStrictEscaping: Boolean;
+    FWireCompressed: Boolean;
+    FWireQuotedMembers: Boolean;
+    {$ifndef PAS2JS}
+    FWireLock: TRTLCriticalSection;
+    {$endif}
+    procedure InvalidateWire;
     function IndexOf(const AReference: TNyxResourceRef;
       const ALocale: TNyxLocaleRef): Integer;
     procedure CheckIndex(AIndex: Integer);
   public
+    constructor Create;
     destructor Destroy; override;
     function Define(const AReference: TNyxResourceRef;
       const ADefinition: INyxResourceDefinition): INyxResources; overload;
@@ -1265,6 +1280,7 @@ begin
   FEntries[LTarget].Definition := LDefinition;
   FEntries[LTarget].Data := LEntryData;
   FEntries[LTarget].WireBytes := LEntryBytes;
+  InvalidateWire;
   Result := Self;
 end;
 
@@ -1286,6 +1302,7 @@ begin
     FEntries[LIndex] := FEntries[LIndex + 1];
   end;
   SetLength(FEntries, Length(FEntries) - 1);
+  InvalidateWire;
   Result := Self;
 end;
 
@@ -1474,7 +1491,26 @@ begin
   LRetiringEntries := FEntries;
   FEntries := LCandidate.FEntries;
   LCandidate.FEntries := LRetiringEntries;
+  InvalidateWire;
   Result := LReceiver;
+end;
+
+constructor TResources.Create;
+begin
+  inherited Create;
+  {$ifndef PAS2JS}
+  InitCriticalSection(FWireLock);
+  {$endif}
+end;
+
+procedure TResources.InvalidateWire;
+begin
+  {$ifndef PAS2JS}EnterCriticalSection(FWireLock);{$endif}
+  try
+    FWireData := Default(TNyxDataValue);
+  finally
+    {$ifndef PAS2JS}LeaveCriticalSection(FWireLock);{$endif}
+  end;
 end;
 
 destructor TResources.Destroy;
@@ -1485,6 +1521,9 @@ begin
   begin
     FEntries[LIndex].Free;
   end;
+  {$ifndef PAS2JS}
+  DoneCriticalSection(FWireLock);
+  {$endif}
   inherited Destroy;
 end;
 
@@ -1505,6 +1544,17 @@ begin
     LCopy.FEntries[LIndex].Data := FEntries[LIndex].Data.Copy;
     LCopy.FEntries[LIndex].WireBytes := FEntries[LIndex].WireBytes;
   end;
+  { A clone owns independent membership and a separate lock. Its initial wire
+    value may share private immutable storage, just like each admitted entry. }
+  {$ifndef PAS2JS}EnterCriticalSection(FWireLock);{$endif}
+  try
+    LCopy.FWireData := FWireData;
+    LCopy.FWireStrictEscaping := FWireStrictEscaping;
+    LCopy.FWireCompressed := FWireCompressed;
+    LCopy.FWireQuotedMembers := FWireQuotedMembers;
+  finally
+    {$ifndef PAS2JS}LeaveCriticalSection(FWireLock);{$endif}
+  end;
 end;
 
 function TResources.ToData: TNyxDataValue;
@@ -1512,13 +1562,33 @@ var
   LEntries: array of TNyxDataValue;
   LIndex: Integer;
 begin
-  SetLength(LEntries, Length(FEntries));
-  for LIndex := 0 to High(FEntries) do
-  begin
-    LEntries[LIndex] := FEntries[LIndex].Data.Copy;
+  { Only the closed catalog can reuse this memo. Foreign sources still enter
+    through the strict importer. Build the complete aggregate before replacing
+    a memo; refusal leaves old-policy data intact and changes no membership. }
+  {$ifndef PAS2JS}EnterCriticalSection(FWireLock);{$endif}
+  try
+
+    if FWireData.Defined and
+      (FWireStrictEscaping = TJSONString.StrictEscaping) and
+      (FWireCompressed = TJSONData.CompressedJSON) and
+      (FWireQuotedMembers = not TJSONObject.UnquotedMemberNames) then
+    begin
+      Exit(FWireData.Copy);
+    end;
+    SetLength(LEntries, Length(FEntries));
+    for LIndex := 0 to High(FEntries) do
+    begin
+      LEntries[LIndex] := FEntries[LIndex].Data.Copy;
+    end;
+    Result := NyxObject([NyxField('version', NyxData(1)),
+      NyxField('entries', NyxArray(LEntries))]);
+    FWireData := Result;
+    FWireStrictEscaping := TJSONString.StrictEscaping;
+    FWireCompressed := TJSONData.CompressedJSON;
+    FWireQuotedMembers := not TJSONObject.UnquotedMemberNames;
+  finally
+    {$ifndef PAS2JS}LeaveCriticalSection(FWireLock);{$endif}
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)),
-    NyxField('entries', NyxArray(LEntries))]);
 end;
 
 function NyxResourcesFromData(const AData: TNyxDataValue): INyxResources;

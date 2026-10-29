@@ -23,11 +23,25 @@ program nyx_resource_catalog_tests;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses SysUtils, nyx.text, nyx.resources, nyx.resource.sources, nyx.resources.catalog, nyx.collections,
+uses SysUtils, Classes, fpjson, nyx.data, nyx.text, nyx.resources,
+  nyx.resource.sources, nyx.resources.catalog, nyx.collections,
   nyx.collections.view, nyx.publication
   {$ifdef PAS2JS}, Web{$endif};
 
 type
+  {$ifndef PAS2JS}
+  { Concurrent readers retain one stable catalog through their joined lifetime.
+    No worker mutates membership or process formatter settings. The main thread
+    inspects failure text only after WaitFor; exceptions never cross threads. }
+  TWireReader = class(TThread)
+  public
+    Resources: INyxResources;
+    Expected: TNyxText;
+    Failure: TNyxText;
+    procedure Execute; override;
+  end;
+  {$endif}
+
   { Borrowed subscriber qualifies candidate rejection and committed notification
     separately. It reads the public provider while publication is notifying;
     all row identities must already resolve to the newly admitted ledger. }
@@ -54,6 +68,139 @@ begin
     raise ENyxResource.Create('Resource catalog: ' + AReason);
   end;
   Inc(GChecks);
+end;
+
+{$ifndef PAS2JS}
+procedure TWireReader.Execute;
+var
+  LIndex: Integer;
+begin
+  try
+    for LIndex := 1 to 20 do
+    begin
+
+      if Resources.ToData.ToJSON <> Expected then
+      begin
+        raise Exception.Create('Concurrent catalog wire differs');
+      end;
+    end;
+  except
+    on LException: Exception do
+    begin
+      Failure := LException.Message;
+    end;
+  end;
+end;
+{$endif}
+
+{ Exercise retained exports through all membership changes and process formatter
+  choices. An independent full parse is the wire oracle; no internal memo state
+  is inspected. Earlier exported values and clones remain independent. }
+procedure WireSnapshots;
+var
+  LResources: INyxResources;
+  LClone: INyxResources;
+  LBefore: TNyxDataValue;
+  LExpected: TNyxText;
+  LCompressed: Boolean;
+  LStrict: Boolean;
+  LUnquoted: Boolean;
+  LCase: Integer;
+  LRefused: Boolean;
+  {$ifndef PAS2JS}
+  LReaders: array[0..1] of TWireReader;
+  LIndex: Integer;
+  {$endif}
+begin
+  LCompressed := TJSONData.CompressedJSON;
+  LStrict := TJSONString.StrictEscaping;
+  LUnquoted := TJSONObject.UnquotedMemberNames;
+  try
+    TJSONObject.UnquotedMemberNames := False;
+    LResources := NewNyxResources.Define(NyxResourceRef('wire-text'),
+      NyxTextResource(TNyxText('Original / 🌙') + #0));
+    LBefore := LResources.ToData;
+    Check(LResources.ToData.ToJSON = LBefore.ToJSON, 'repeated catalog export remains exact');
+    LClone := LResources.Clone;
+    LResources.Define(NyxResourceRef('wire-text'), NyxTextResource('Replacement'));
+    Check((LResources.ToData.ToJSON <> LBefore.ToJSON) and
+      (LClone.ToData.ToJSON = LBefore.ToJSON),
+      'replacement refreshes only the receiver and retains earlier exported snapshots');
+    LResources.Remove(NyxResourceRef('wire-text'), NyxDefaultLocale);
+    Check(LResources.ToData.Field('entries').Count = 0, 'remove refreshes the aggregate export');
+    NyxResourceCatalogImport(LResources).Import(LClone);
+    Check(LResources.ToData.ToJSON = LBefore.ToJSON, 'import refreshes an already exported empty receiver');
+    LRefused := False;
+    try
+      LResources.Define(NyxResourceRef('invalid'), nil);
+    except
+      on ENyxResource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LResources.ToData.ToJSON = LBefore.ToJSON),
+      'refused membership leaves the earlier admitted export exact');
+    for LCase := 0 to 3 do
+    begin
+      TJSONData.CompressedJSON := (LCase and 1) <> 0;
+      TJSONString.StrictEscaping := (LCase and 2) <> 0;
+      LExpected := TNyxDataValue.ParseJSON(LBefore.ToJSON).ToJSON;
+      Check(LResources.ToData.ToJSON = LExpected,
+        'changed compression and escaping follow independent full-value formatting');
+      Check(LResources.Clone.ToData.ToJSON = LExpected,
+        'clones retain the current formatter behavior independently');
+    end;
+    TJSONObject.UnquotedMemberNames := True;
+    LRefused := False;
+    try
+      LResources.ToData;
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'unquoted output cannot bypass aggregate strict JSON admission through a prior export');
+    TJSONObject.UnquotedMemberNames := False;
+    TJSONData.CompressedJSON := LCompressed;
+    TJSONString.StrictEscaping := LStrict;
+    Check((LResources.ToData.ToJSON = LBefore.ToJSON) and
+      (LClone.ToData.ToJSON = LBefore.ToJSON),
+      'restored formatter and failed reformat retain original snapshots');
+    {$ifndef PAS2JS}
+    LExpected := LBefore.ToJSON;
+    LResources.Define(NyxResourceRef('wire-text'),
+      NyxTextResource(TNyxText('Original / 🌙') + #0));
+    for LIndex := Low(LReaders) to High(LReaders) do
+    begin
+      LReaders[LIndex] := nil;
+    end;
+    try
+      for LIndex := Low(LReaders) to High(LReaders) do
+      begin
+        LReaders[LIndex] := TWireReader.Create(True);
+        LReaders[LIndex].Resources := LResources;
+        LReaders[LIndex].Expected := LExpected;
+        LReaders[LIndex].Start;
+      end;
+      for LIndex := Low(LReaders) to High(LReaders) do
+      begin
+        LReaders[LIndex].WaitFor;
+        Check(LReaders[LIndex].Failure = '', 'joined native readers share the exact immutable catalog export');
+      end;
+    finally
+      for LIndex := Low(LReaders) to High(LReaders) do
+      begin
+        LReaders[LIndex].Free;
+      end;
+    end;
+    {$endif}
+  finally
+    TJSONData.CompressedJSON := LCompressed;
+    TJSONString.StrictEscaping := LStrict;
+    TJSONObject.UnquotedMemberNames := LUnquoted;
+  end;
 end;
 
 procedure TObserver.Validate(const ACandidate: INyxCollectionSnapshot;
@@ -270,6 +417,7 @@ end;
 
 begin
   try
+    WireSnapshots;
     Run;
     WriteLn('PASS ', GChecks, ' portable resource catalog checks');
     {$ifdef PAS2JS}

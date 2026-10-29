@@ -307,7 +307,7 @@ end;
 {$endif}
 
 { Frozen pre-optimization context algorithm. Keep this independent full-value
-  path as the compatibility oracle: production now projects the codec's first
+  path as the compatibility oracle: production transfers members from the first
   admitted DOM, while this still decodes/canonicalizes/indexes the full export. }
 function LegacyProjectionContext(ADocument: TNyxDocument): TNyxText;
 var
@@ -418,6 +418,10 @@ begin
     LDocument.Resources.Define(NyxResourceRef('context-copy'),
       NyxTextResource('An embedded English resource'));
     CheckContext(LDocument, 'resources and emitted empty typed presentations preserve context');
+    LDocument.Resources.Define(NyxResourceRef('context-large-copy'),
+      NyxTextResource(TNyxText(StringOfChar('x', 512 * 1024)) + TNyxText(' / 🌙')));
+    CheckContext(LDocument,
+      'large shared resources retain exact admitted values without document mutation');
     LValue := TNyxDataValue.ParseJSON(NyxProjectionContext(LDocument));
     Check(LValue.Field(NyxPresentationsWireField).Kind = ndObject,
       'an emitted empty presentation field remains significant when no typed definition exists');

@@ -73,6 +73,8 @@ var
   GStage: TWorkspaceStage;
   GHeight: Double;
   GDialog: TJSHTMLElement;
+  GStableCanvas: TJSHTMLElement;
+  GStableDetails: TJSHTMLElement;
   GStarted: Double;
   GCaptureRequested: Boolean;
   GBeforeRefusal: TNyxSourceCommandState;
@@ -236,6 +238,11 @@ begin
   document.body.setAttribute('data-source-editor', 'failed');
   document.body.setAttribute('data-source-editor-error', AMessage);
   ShowVerdict('FAIL source workspace stage ' + IntToStr(Ord(GStage)) + ': ' + AMessage);
+  {$ifdef NYX_SOURCE_PROFILE}
+  ShowVerdict('FAIL source workspace stage ' + IntToStr(Ord(GStage)) + ': ' + AMessage +
+    #10 + 'Document visibility: ' + String(TJSObject(document)['visibilityState']) +
+    #10 + document.body.getAttribute('data-nyx-source-host-trace'));
+  {$endif}
 end;
 
 procedure FinishExpanded;
@@ -341,6 +348,9 @@ begin
       Exit;
     end;
 
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceJobProfile('workspace-stage-' + IntToStr(Ord(GStage)) + '-start');
+    {$endif}
     case GStage of
       wsOpenCode:
         begin
@@ -461,10 +471,15 @@ begin
         end;
       wsOpenMessages:
         begin
+          GStableCanvas := Find('studio-canvas');
+          GStableDetails := Find('studio-details-split');
           Find('action-messages-tab').click;
         end;
       wsObserveMessages:
         begin
+          Check((Find('studio-canvas') = GStableCanvas) and
+            (Find('studio-details-split') = GStableDetails),
+            'source-only tabs retain the actual design face and details splitter');
           Check(Find('studio-source-messages').getBoundingClientRect.height > 0,
             'compiler messages have a separate visible tab');
           Check(GInput.getBoundingClientRect.height = 0,
@@ -473,6 +488,9 @@ begin
         end;
       wsObserveSource:
         begin
+          Check((Find('studio-canvas') = GStableCanvas) and
+            (Find('studio-details-split') = GStableDetails),
+            'returning Source keeps surrounding mounted editor controls');
           RetainedInput;
           Check(GInput.getBoundingClientRect.height > 60,
             'Source tab restores usable editor space');
@@ -561,6 +579,9 @@ begin
           Exit;
         end;
     end;
+    {$ifdef NYX_SOURCE_PROFILE}
+    SourceJobProfile('workspace-stage-' + IntToStr(Ord(GStage)) + '-end');
+    {$endif}
     GStage := Succ(GStage);
     window.setTimeout(@Journey, 200);
   except

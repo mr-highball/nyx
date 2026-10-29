@@ -1652,6 +1652,15 @@ workflow gap; this fixture's trusted operator buttons exercise the controller.
 
 ## Wire, limits and qualification
 
+Owned resource catalogs retain an immutable serialized snapshot after a successful
+`ToData`. Repeated exports and clones can share that private value. Define, Remove
+and committed Import invalidate the receiver's snapshot; earlier exports and
+other clones remain independent. Compression, escaping and quoted-member policy
+changes use the ordinary complete aggregate admission again, including its
+failures. Native read-only snapshot construction/copying is synchronized;
+membership mutation still requires caller serialization with its readers.
+This is in-memory wire reuse and initiates no hosted-resource I/O.
+
 Document wire version 8 carries a nonempty resource catalog and typed scalar
 selectors. Image bindings or their clear masks select version 10, even with an
 empty catalog. They carry a distinct `imageResource` selector alongside `src`;

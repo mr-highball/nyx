@@ -12,6 +12,15 @@ Canvas and Pascal source already have separate view owners. The borrowed lookup
 forest is rebuilt after each successful admission; resolve it again after refresh.
 Real model roots and controls follow their owning section's lifetime instead.
 
+Browser Source/Messages/Files tabs and source expansion/return now refresh only
+the independent source workspace when its retained document context still
+matches. They use the same ordinary renderer/mount path as a full refresh and
+retain the canvas, Inspector, details splitter and unfinished inputs. Queued
+whole-workspace work dominates this smaller scope. A changed document, source
+navigation or display recovery takes the complete admission path. The source
+input frame is revoked before movement and republished afterward; caret/focus
+restoration remains attached to that exact input frame.
+
 The surrounding Chrome owns empty Nyx panel ports at the original section
 positions. Each independent document owns its actual scroll root and descendants. The
 dedicated physical host belongs to the section owner and outlives its renderer;

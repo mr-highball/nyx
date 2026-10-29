@@ -1381,6 +1381,15 @@ begin
   end;
 end;
 
+{ An embedded typed source already passed portable base64/container admission,
+  including its caller-selected checksum policy. Do not decode a shared atlas
+  again for every button and synchronization pass. Location sources still need
+  this adapter's URL-scheme policy; raw strings keep SafeURL's full admission. }
+function SafeImageSource(const ASource: TNyxImageSource): Boolean;
+begin
+  Result := (ASource.Kind = nisEmbedded) or SafeURL(ASource.ToWire, True);
+end;
+
 function TNyxBrowserCoordinatorRefresh.QueryDetailsFor(ATree: TNyxNode;
   const ATarget: TNyxControlRef; const AView: INyxCollectionView;
   const AEvents: TNyxEventTarget; const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
@@ -4664,7 +4673,7 @@ begin
     FButtonPresentation := NyxButtonPresentationOf(FNode);
     LSource := NyxButtonGlyphSource(FNode, FButtonPresentation);
 
-    if not SafeURL(LSource.ToWire, True) then
+    if not SafeImageSource(LSource) then
     begin
       raise ENyxModel.Create('Unsupported button glyph URL');
     end;
@@ -5076,6 +5085,7 @@ begin
     end;
   end;
   ValidateNyxDocumentProperties(ADocument);
+
 
   if NyxProjectionContext(ADocument) <> FProjectionContext then
   begin

@@ -2,6 +2,21 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Ordinary-workspace continuation,2026-10-29: the same full browser source-workspace
+consumer now executes91 checks at1280x720 and390x900 under its unchanged30000ms
+journey limit. Source tabs and expansion/return use the independent source mount
+when exact context/readiness permits; a pending full refresh dominates and changed
+documents/recovery retain full admission. The journey preserves the actual canvas,
+details splitter, Unicode draft, caret/focus and deep-caret visibility through
+modal return, Resources refusal and host resizing. Typed embedded glyphs reuse
+portable image admission; raw strings retain full validation. Projection context
+transfers values from its complete admitted export, and owned resource catalogs
+reuse formatter-aware immutable wire values with mutation invalidation and native
+reader synchronization. Compatibility, final delivery and failures are retained
+in WORK.md and the external source-outputs-refresh-01 packet. This clears the
+additional ordinary-workspace gate below, not the original full-Workshop Uniform
+Apply, published latency/scale budgets or this task's original acceptance criteria.
+
 Additional ordinary-workspace gate,2026-10-29: the maintained full browser
 `nyx_source_workspace_browser` consumer exceeds its original30000ms journey
 limit before stage2's Outputs observation. Both the earlier adapter and the

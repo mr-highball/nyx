@@ -468,10 +468,10 @@ function ProjectionContextFromAdmitted(ADocument: TNyxDocument;
   AAdmitted: TJSONData; const AFormatted: TNyxText): TNyxText;
 var
   LObject: TJSONObject;
-  LFields: array of TNyxDataField;
+  LProjected: TJSONObject;
   LIndex: Integer;
-  LCount: Integer;
   LKey: TNyxText;
+  LKeys: array of TNyxText;
 begin
   { Both inputs belong to this complete export: AFormatted is the owned codec's
     AsJSON packet just admitted by DecodeNyxJSON. It already has the same exact
@@ -479,33 +479,44 @@ begin
     decimal lexemes. Reuse that immutable text for the unchanged read budget;
     formatting the full admitted tree again copies every discarded page/control.
     No caller-provided DOM, unformatted input or persistent admission cache is
-    accepted here. Retained members still receive their ordinary closed values. }
+    accepted here. The complete owned DOM already admits every retained member,
+    including exact numeric lexemes and nested resources. Transfer those members
+    into one temporary object instead of reparsing each member and their combined
+    packet. A subset cannot exceed the complete packet's admitted depth, nodes,
+    Unicode or formatted read budget. Both objects remain private to this call. }
   RequireProjectionContextReadBudget(AFormatted);
   LObject := TJSONObject(AAdmitted);
-  SetLength(LFields, LObject.Count);
-  LCount := 0;
+  { Snapshot names before extraction: the browser RTL caches indexed names and
+    does not invalidate that cache on Extract. Exact named extraction works on
+    both hosts and never reads a mutated positional enumeration. }
+  SetLength(LKeys, LObject.Count);
   for LIndex := 0 to LObject.Count - 1 do
   begin
-    LKey := LObject.Names[LIndex];
-
-    if (LKey = 'title') or (LKey = 'pages') or (LKey = 'components') or
-      (LKey = 'version') or
-      ((LKey = NyxPresentationsWireField) and (ADocument.Presentations.Count > 0)) or
-      ((LKey = 'collections') and (ADocument.Collections.Count = 0) and
-      not ADocument.Extensions.Has(NyxExtension('collections'))) then
-    begin
-      Continue;
-    end;
-    { Preserve the former context predicate and insertion order exactly. Empty
-      typed presentations emitted by another version branch and older opaque
-      presentations/collections are retained under the same rules as before.
-      Parse admitted formatter text rather than converting numbers or strings. }
-    LFields[LCount] := NyxField(LKey,
-      TNyxDataValue.ParseJSON(LObject.Items[LIndex].AsJSON));
-    Inc(LCount);
+    LKeys[LIndex] := LObject.Names[LIndex];
   end;
-  SetLength(LFields, LCount);
-  Result := NyxObject(LFields).ToJSON;
+  LProjected := TJSONObject.Create;
+  try
+    for LIndex := 0 to High(LKeys) do
+    begin
+      LKey := LKeys[LIndex];
+
+      if (LKey = 'title') or (LKey = 'pages') or (LKey = 'components') or
+        (LKey = 'version') or
+        ((LKey = NyxPresentationsWireField) and (ADocument.Presentations.Count > 0)) or
+        ((LKey = 'collections') and (ADocument.Collections.Count = 0) and
+        not ADocument.Extensions.Has(NyxExtension('collections'))) then
+      begin
+        Continue;
+      end;
+      { Named extraction preserves case-sensitive names and insertion order.
+        Extract transfers ownership; the source decoder's finalizer frees only
+        excluded fields. The projected object releases every retained child. }
+      LProjected.Add(LKey, LObject.Extract(LKey));
+    end;
+    Result := LProjected.AsJSON;
+  finally
+    LProjected.Free;
+  end;
 end;
 
 function EncodeDocument(ADocument: TNyxDocument;

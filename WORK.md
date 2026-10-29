@@ -9,7 +9,85 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Studio browser editing return — 2026-10-29
+## Current work — Ordinary Source and Outputs refresh cost — 2026-10-29
+
+Previous goal turn: PROGRESS.b568857f is pushed and remote-verified. Root stays
+SOLO. Follow the existing performance owner's criterion2 and retained-update
+criterion3 through the same full source-workspace browser consumer. One opt-in
+profile run will distinguish synchronous Source/draft/Outputs work from time
+between callbacks, including document visibility; then repair the measured
+owning path and rerun the unchanged full consumer at desktop/compact widths.
+Keep its30000ms deadline, all original assertions and the full saved-Workshop
+Uniform Apply requirement. Do not substitute another scalar/caret fixture or
+start equivalent diagnostics without a concrete decision. Preserve QA/LAN
+projects and profiles; new profiling artifacts and owned TEMP/TMP stay on E:.
+
+Delivered: the full original browser source-workspace journey now passes91
+checks at1280x720 and390x900 with its30000ms journey guard unchanged. All original
+actions/assertions remain, including pending Resources refusal, message/source
+tabs, modal return, deep-caret visibility and passive host resizing. Two added
+assertions retain the actual canvas and details splitter across source tabs.
+The final maintained test artifact is byte-identical to the executed artifact.
+
+Pure Source/Messages/Files and Expand/Close presentation now uses the independent
+source workspace's ordinary mount path. Exact document context, readiness and
+recovery checks fence the smaller scope; coalesced whole-workspace requests
+dominate it. The source input frame retires before movement and republishes
+afterward, retaining draft/caret/focus. Changed documents and admitted source
+navigation still take full admission. The shared mount code is extracted once,
+so full and small refreshes retain one implementation and lifetime contract.
+
+Library work removes repeated portable image decoding from already admitted
+typed glyphs; raw URLs/data strings retain their complete admission. Projection
+context transfers exact values from its complete admitted export instead of
+reparsing retained members and their combined packet. Resource ToData retains
+an immutable wire value, invalidates after every membership commit, checks all
+formatter settings and synchronizes native read-only memo/clone access. Foreign
+catalogs keep strict import. Membership mutations retain caller serialization.
+No new public wire, host permission or application framework is introduced.
+
+The initial visible profile places6–10s in shell refreshes, with repeated large
+JSON reads. Typed-glyph reuse reduces the observed immediate Source/draft
+callbacks from about1.3s to87/122ms in single diagnostic runs; these are not
+whole-editor latency benchmarks. Subsequent complete runs advance from stage2
+to stage17 but still exceed the guard. Catalog reuse alone does not clear it.
+Independent source presentation then passes the complete journey at both widths.
+Keep the failed traces: a diagnostic null-attribute startup issue is repaired;
+the installed browser RTL's stale indexed-name cache requires a snapshot before
+named extraction. The import fixture's obsolete one-atlas counts are corrected
+to the current four-image family, preserving exact wire/isolation assertions.
+Its optional comparison now admits the same full family on both paths.
+
+Final compatibility: maintained native ownership450/450 and actual source86
+pass with three clean heaps; native projection188, resource memo/catalog57,
+atomic import43 and foundation70 also pass with clean heaps. Browser projection124,
+catalog55 and import43 pass, beside both full workspace91 runs. The browser
+foundation page is staged only: its existing Pascal capture acknowledgements
+gate phase0, and no group executes through this browser tooling. Do not count
+that page as a browser pass. Full native Studio and five browser/module consumers
+compile; the maintained target has zero owned warnings and42 visible installed
+Classes warning occurrences. Exact source hashes remain stable through readers.
+
+QA/LAN receive six matched assets each through prepared backups and atomic file
+overwrites. All twelve served hashes and no-store headers match the final build.
+The two original serving processes/binaries and loopback/LAN listeners stay exact.
+Authenticated MCP confirms the original output fingerprint and four disabled
+runtime service permissions. All nine QA and three LAN project pairs/revisions
+match their initial exports. An invalid raw JSON-order comparison is superseded
+by explicit workspace/title/revision/hash comparison. Compiler/test readers are
+joined, owned tabs close and viewport overrides reset; only the two intentional
+servers remain. New process TEMP/TMP, artifacts and private runners stay on E:.
+Evidence is retained in source-outputs-refresh-01.
+
+Reassessment: this clears the additional ordinary-workspace gate under the
+existing performance owner. It does not close an original performance criterion,
+prove published latency/memory budgets or replace the full saved-Workshop Uniform
+Apply requirement. Stop source-tab/caret/profile variants. Return to that original
+Workshop journey and its canvas owner for exact paired history/Save/Open and
+observing delivery; preserve all existing deadlines and acceptance scope. No new
+task identity or overall completion credit is introduced.
+
+## Previous checkpoint — Studio browser editing return — 2026-10-29
 
 Previous goal turn: PROGRESS.eb7f091f is pushed and remote-verified. Root stays
 SOLO. Return to the ranked Studio outcome under Studio-slice criteria1/2/3,

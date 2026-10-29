@@ -1654,7 +1654,10 @@ begin
   begin
     LStage.Configure.MinimumHeight(240).Done;
   end;
-  LDetails.Configure.MinimumHeight(96).Done;
+  { One title/control row remains reachable while the scrollable details body
+    shares a short desktop with both editors and two touch-sized dividers. A
+    larger detail minimum would compress the canvas below its own useful floor. }
+  LDetails.Configure.MinimumHeight(64).Done;
   LCenter.Add(LStage);
 
   if AState.RuntimeRecovery.Phase <> nopHidden then

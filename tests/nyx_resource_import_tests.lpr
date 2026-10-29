@@ -460,8 +460,13 @@ begin
   LFirst := NyxStudioGlyphResources;
   LSecond := NyxStudioGlyphResources;
   LWire := LFirst.ToData.ToJSON;
-  Check((LFirst.Count = 1) and (LSecond.ToData.ToJSON = LWire),
+  Check((LFirst.Count = 4) and (LSecond.ToData.ToJSON = LWire),
     'independent Studio glyph snapshots preserve the original asset wire');
+  Check(LFirst.Contains(NyxStudioGlyphResource, NyxDefaultLocale) and
+    LFirst.Contains(NyxResourceRef('nyx.studio.edit-glyph-atlas'), NyxDefaultLocale) and
+    LFirst.Contains(NyxResourceRef('nyx.studio.move-down-glyph'), NyxDefaultLocale) and
+    LFirst.Contains(NyxResourceRef('nyx.studio.delete-glyph'), NyxDefaultLocale),
+    'Studio publishes both atlases and the two isolated editing glyphs');
   LTarget := NewNyxResources;
   LTarget.Define(NyxResourceRef('application-help'), NyxTextResource('Project-owned'));
   LImporter := NyxResourceCatalogImport(LTarget);
@@ -469,13 +474,14 @@ begin
   begin
     LImporter.Import(LFirst);
   end;
-  Check((LTarget.Count = 2) and
+  Check((LTarget.Count = 5) and
     (LTarget.Definition(NyxResourceRef('application-help'), NyxDefaultLocale).Text =
       'Project-owned'), 'repeated asset import preserves unrelated resource membership');
   Check(LTarget.Definition(NyxStudioGlyphResource, NyxDefaultLocale).Image.ToWire =
     NyxStudioGlyphAtlas.ToWire, 'imported atlas retains exact original image bytes');
   LFirst.Remove(NyxStudioGlyphResource, NyxDefaultLocale);
-  Check((LSecond.Count = 1) and (NyxStudioGlyphResources.Count = 1) and
+  Check((LFirst.Count = 3) and (LSecond.Count = 4) and
+    (NyxStudioGlyphResources.Count = 4) and
     LTarget.Contains(NyxStudioGlyphResource, NyxDefaultLocale),
     'mutating a caller snapshot cannot change another shell or startup glyph catalog');
 end;
@@ -586,10 +592,9 @@ begin
   LStarted := GetTickCount64;
   for LIndex := 1 to CIterations do
   begin
-    LTarget := NewNyxResources;
-    LTarget.Define(NyxStudioGlyphResource,
-      NyxImageResource(NyxStudioGlyphAtlas).Describe('Studio glyphs',
-        'A locally embedded family of decorative command glyphs.'));
+    { The current family contains four images. Re-admit that complete wire,
+      rather than comparing one former atlas with an imported four-asset pack. }
+    LTarget := NyxResourcesFromData(LSource.ToData);
   end;
   LDefineMilliseconds := GetTickCount64 - LStarted;
   LOriginalWire := LTarget.ToData.ToJSON;
@@ -602,7 +607,7 @@ begin
   end;
   LImportMilliseconds := GetTickCount64 - LStarted;
   Check(LTarget.ToData.ToJSON = LOriginalWire,
-    'measured import and former fresh atlas admission produce identical catalog wire');
+    'measured import and full fresh admission produce identical catalog wire');
   WriteLn('GLYPH_ADMISSION iterations=', CIterations,
     ' define_ms=', LDefineMilliseconds, ' import_ms=', LImportMilliseconds);
 end;

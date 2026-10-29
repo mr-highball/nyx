@@ -163,11 +163,13 @@ type
     FChromeTheme: TNyxTheme;
     FResourceBrowser: TNyxStudioResourceBrowser;
     { Coalesce input-time refreshes after borrowed views return to idle. False
-      dominates retention/reset choices; disposal cancels the borrowed timer. }
+      dominates retention/reset choices and a whole-workspace request dominates
+      source-only presentation; disposal cancels the borrowed timer. }
     FSectionRefreshTimer: NativeInt;
     FSectionRefreshPending: Boolean;
     FSectionRetainCanvas: Boolean;
     FSectionPreserveDraft: Boolean;
+    FSectionSourceOnly: Boolean;
     { Own only shell children. Public popovers/modals are independent body
       portals; a full chrome fallback must not detach their live elements. }
     FShellHost: TJSHTMLElement;
@@ -393,8 +395,15 @@ type
     { Retain focused new-default drafts across panel/viewport transitions and
       keyboard/programmatic Add actions, independently of project history. }
     procedure CaptureNewStateDraft;
-    procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False);
-    procedure RefreshDisplay(ARetainCanvas: Boolean; APreserveDraft: Boolean);
+    procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False;
+      ASourceOnly: Boolean = False);
+    procedure RefreshDisplay(ARetainCanvas: Boolean; APreserveDraft: Boolean;
+      ASourceOnly: Boolean);
+    { Independent source presentation shares the ordinary mount/publication path.
+      A changed document, pending whole refresh or recovery always takes the
+      complete workspace path; no model admission is elided by this scope. }
+    procedure RefreshSourceWorkspace;
+    function TryRefreshSourceDisplay: Boolean;
     procedure DisplayFailed(const AMessage: TNyxText);
     procedure SyncDisplayRecovery;
     { Recovery is host-wide and independent of local project/source admission.
@@ -1290,7 +1299,7 @@ end;
 procedure TNyxStudio.SourceModalDismiss;
 begin
   FSourceExpanded := False;
-  Refresh(True, True);
+  Refresh(True, True, True);
   NyxFocusWithoutScroll(FCodeRenderer.InputFor('studio-code'));
 end;
 
@@ -1515,13 +1524,16 @@ procedure TNyxStudio.FlushSectionRefresh;
 var
   LRetainCanvas: Boolean;
   LPreserveDraft: Boolean;
+  LSourceOnly: Boolean;
 begin
   FSectionRefreshTimer := -1;
   LRetainCanvas := FSectionRetainCanvas;
   LPreserveDraft := FSectionPreserveDraft;
+  LSourceOnly := FSectionSourceOnly;
   FSectionRefreshPending := False;
+  FSectionSourceOnly := False;
   try
-    Refresh(LRetainCanvas, LPreserveDraft);
+    Refresh(LRetainCanvas, LPreserveDraft, LSourceOnly);
   except
     on Exception do
     begin
@@ -1531,13 +1543,14 @@ begin
   end;
 end;
 
-procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
+procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean;
+  ASourceOnly: Boolean);
 begin
   {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-start');{$endif}
   Inc(FRefreshDepth);
   try
     try
-      RefreshDisplay(ARetainCanvas, APreserveDraft);
+      RefreshDisplay(ARetainCanvas, APreserveDraft, ASourceOnly);
       {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-display-end');{$endif}
       CompletionChanged;
       {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-completion-end');{$endif}
@@ -1653,7 +1666,117 @@ begin
   end;
 end;
 
-procedure TNyxStudio.RefreshDisplay(ARetainCanvas, APreserveDraft: Boolean);
+procedure TNyxStudio.RefreshSourceWorkspace;
+var
+  LCodeHost: TJSHTMLElement;
+  LSourceHost: TJSHTMLElement;
+  LSourceDocument: TNyxDocument;
+  LSourceContext: TNyxStudioCommandContext;
+  LSourceFile: TNyxPascalSourceRef;
+  LSourceText: TNyxText;
+begin
+
+  if FShell.Find('studio-source-mount') <> nil then
+  begin
+    LSourceHost := FShellRenderer.ElementFor('studio-source-mount');
+
+    if FSourceExpanded then
+    begin
+      FSourceModal.Show(NyxModal('Pascal source').Sizing(nhfAvailableHeight));
+      LSourceHost := FSourceModal.Element;
+    end;
+    LSourceDocument := TNyxDocument.Create;
+    try
+      LSourceDocument.AddPage(BuildNyxStudioSourcePane(FSession, FViewState, FCompilerReport));
+
+      if not FSourcePaneRenderer.TryRefresh(LSourceDocument, LSourceDocument.Pages[0], False) then
+      begin
+        FSourcePaneRenderer.Render(LSourceDocument, LSourceDocument.Pages[0], LSourceHost);
+      end
+      else
+      begin
+        FSourcePaneRenderer.MoveHost(LSourceHost);
+      end;
+      FSourcePaneDocument.Free;
+      FSourcePaneDocument := LSourceDocument;
+      LSourceDocument := nil;
+    finally
+      LSourceDocument.Free;
+    end;
+
+    if not FSourceExpanded then
+    begin
+      FSourceModal.Hide;
+    end;
+    LCodeHost := FSourcePaneRenderer.ElementFor('studio-code-host');
+    LSourceContext := FSession.CommandContext;
+    LSourceFile := FSession.ActiveSourceFile;
+    LSourceText := FSession.ActiveSourceText;
+
+    if FCodeRenderer.Root = nil then
+    begin
+      FreeAndNil(FCodeDocument);
+      FCodeDocument := NewNyxStudioCodeDocument(LSourceText);
+      FCodeRenderer.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
+    end
+    else
+    begin
+      { Move the existing public view, including its listeners and text range.
+        Sync changes value only when source admission/history changed the draft. }
+      FCodeRenderer.Root.Configure.Value(LSourceText).Done;
+      FCodeRenderer.Sync;
+      FCodeRenderer.MoveHost(LCodeHost);
+    end;
+    PublishSourceInputFrame(LSourceContext, LSourceFile, LSourceText,
+      FCodeRenderer.Root, LCodeHost);
+    FSourceInput.Bind;
+    FCodeRenderer.BindTextHistory('studio-code', FSourceInput.Commands);
+  end
+  else
+  begin
+    { Keep both public views alive in a detached modal host while optional Pascal
+      is hidden. Returning to it retains the same editor, listeners and range. }
+    if FSourcePaneRenderer.Root <> nil then
+    begin
+      FSourcePaneRenderer.MoveHost(FSourceModal.Element);
+    end;
+    FSourceModal.Hide;
+  end;
+  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-source-end');{$endif}
+end;
+
+function TNyxStudio.TryRefreshSourceDisplay: Boolean;
+begin
+  Result := False;
+
+  if (FShell = nil) or (FShellRenderer.Root = nil) or
+    (FSourcePaneRenderer.Root = nil) or (FCodeRenderer.Root = nil) or
+    not FCodeVisible or FCanvasExpanded or FReplaceCanvas or
+    FViewState.DisplayRecovery.BlocksInput or (FSourceLine > 0) or
+    (FSectionRefreshPending and not FSectionSourceOnly) or
+    not FSession.MatchesCommandContext(FShellCommandContext) or
+    (FShell.Find('studio-source-mount') = nil) then
+  begin
+    Exit;
+  end;
+  { These commands change only the independent source host. Keep the accepted
+    canvas, Inspector, details, split allocation and their unfinished inputs.
+    The caller has already fenced all entered view publications. Revoke the
+    source input frame before the shared ordinary mount path can move its DOM. }
+  CaptureCodePresentation(True);
+  FViewState.SourceTab := FSourceTab;
+  FViewState.SourceExpanded := FSourceExpanded;
+  FViewState.SourceStatus := FSourceCommands.Message;
+  FViewState.SourceWorking := SourceBusy;
+  FSourceInputAvailable := False;
+  RefreshSourceWorkspace;
+  RestoreCodePresentation;
+  FAgents.RecordLocal;
+  Result := True;
+end;
+
+procedure TNyxStudio.RefreshDisplay(ARetainCanvas, APreserveDraft: Boolean;
+  ASourceOnly: Boolean);
 var
   LCanvas: TJSHTMLElement;
   LStyle: TJSHTMLElement;
@@ -1678,12 +1801,6 @@ var
   LFieldSelection: TNyxTextSelection;
   LCodeScroll: NativeInt;
   LSplit: TNyxNode;
-  LCodeHost: TJSHTMLElement;
-  LSourceHost: TJSHTMLElement;
-  LSourceDocument: TNyxDocument;
-  LSourceContext: TNyxStudioCommandContext;
-  LSourceFile: TNyxPascalSourceRef;
-  LSourceText: TNyxText;
   LCanvasFocusID: TNyxText;
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
@@ -1703,14 +1820,21 @@ begin
     begin
       FSectionRetainCanvas := FSectionRetainCanvas and ARetainCanvas;
       FSectionPreserveDraft := FSectionPreserveDraft and APreserveDraft;
+      FSectionSourceOnly := FSectionSourceOnly and ASourceOnly;
     end
     else
     begin
       FSectionRefreshPending := True;
       FSectionRetainCanvas := ARetainCanvas;
       FSectionPreserveDraft := APreserveDraft;
+      FSectionSourceOnly := ASourceOnly;
       FSectionRefreshTimer := window.setTimeout(@FlushSectionRefresh, 0);
     end;
+    Exit;
+  end;
+
+  if ASourceOnly and TryRefreshSourceDisplay then
+  begin
     Exit;
   end;
   { Capture the old accepted source face before chrome can park or replace it. }
@@ -2049,73 +2173,7 @@ begin
     LActive := FCanvasRenderer.InputFor(LCanvasFocusID);
   end;
 
-  if FShell.Find('studio-source-mount') <> nil then
-  begin
-    LSourceHost := FShellRenderer.ElementFor('studio-source-mount');
-
-    if FSourceExpanded then
-    begin
-      FSourceModal.Show(NyxModal('Pascal source').Sizing(nhfAvailableHeight));
-      LSourceHost := FSourceModal.Element;
-    end;
-    LSourceDocument := TNyxDocument.Create;
-    try
-      LSourceDocument.AddPage(BuildNyxStudioSourcePane(FSession, FViewState, FCompilerReport));
-
-      if not FSourcePaneRenderer.TryRefresh(LSourceDocument, LSourceDocument.Pages[0], False) then
-      begin
-        FSourcePaneRenderer.Render(LSourceDocument, LSourceDocument.Pages[0], LSourceHost);
-      end
-      else
-      begin
-        FSourcePaneRenderer.MoveHost(LSourceHost);
-      end;
-      FSourcePaneDocument.Free;
-      FSourcePaneDocument := LSourceDocument;
-      LSourceDocument := nil;
-    finally
-      LSourceDocument.Free;
-    end;
-
-    if not FSourceExpanded then
-    begin
-      FSourceModal.Hide;
-    end;
-    LCodeHost := FSourcePaneRenderer.ElementFor('studio-code-host');
-    LSourceContext := FSession.CommandContext;
-    LSourceFile := FSession.ActiveSourceFile;
-    LSourceText := FSession.ActiveSourceText;
-
-    if FCodeRenderer.Root = nil then
-    begin
-      FreeAndNil(FCodeDocument);
-      FCodeDocument := NewNyxStudioCodeDocument(LSourceText);
-      FCodeRenderer.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
-    end
-    else
-    begin
-      { Move the existing public view, including its listeners and text range.
-        Sync changes value only when source admission/history changed the draft. }
-      FCodeRenderer.Root.Configure.Value(LSourceText).Done;
-      FCodeRenderer.Sync;
-      FCodeRenderer.MoveHost(LCodeHost);
-    end;
-    PublishSourceInputFrame(LSourceContext, LSourceFile, LSourceText,
-      FCodeRenderer.Root, LCodeHost);
-    FSourceInput.Bind;
-    FCodeRenderer.BindTextHistory('studio-code', FSourceInput.Commands);
-  end
-  else
-  begin
-    { Keep both public views alive in a detached modal host while optional Pascal
-      is hidden. Returning to it retains the same editor, listeners and range. }
-    if FSourcePaneRenderer.Root <> nil then
-    begin
-      FSourcePaneRenderer.MoveHost(FSourceModal.Element);
-    end;
-    FSourceModal.Hide;
-  end;
-  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('refresh-source-end');{$endif}
+  RefreshSourceWorkspace;
   LPrevious := TJSHTMLElement(document.querySelector('[data-node=studio-canvas-wrap]'));
 
   if LPrevious <> nil then
@@ -4745,7 +4803,9 @@ begin
     begin
       FSourceTab := nstSource;
     end;
-    Refresh(LRetainCanvas, LRetainCanvas);
+    Refresh(LRetainCanvas, LRetainCanvas,
+      (ANode.ID = 'action-source-tab') or (ANode.ID = 'action-messages-tab') or
+      (ANode.ID = NyxStudioSourceFilesTabID) or (ANode.ID = 'action-expand-source'));
 
     if ANode.ID = 'action-expand-source' then
     begin
