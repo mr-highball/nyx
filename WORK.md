@@ -9,7 +9,76 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Studio scrollbar authoring and observing delivery — 2026-10-29
+## Current work — Useful table workflows in the browser — 2026-10-29
+
+Previous goal turn: PROGRESS.0587ab84 is pushed and remote-verified. Root remains
+SOLO. Return to control-usefulness03's existing W1/W2 and browser acceptance
+criteria using the public service monitor and its own previously saved native
+Studio pair. Import that exact pair into a dedicated QA workspace through the
+semantic MCP client, inspect bounded selected-control context, and build its own
+application. Exercise ordinary column arrangement/filter/edit/inspection and
+transfer availability at wide/compact sizes, repairing concrete library or
+authoring gaps. Preserve the original native evidence and all assertions.
+
+The browser capability and existing QA listener are available. Historical tool
+refusals remain evidence; they are not a new permission boundary on the user's
+authorized current browser checks. Keep LAN running and preserve its projects
+during qualification; deliver qualified changes separately. Use E: for all private
+files and process TEMP/TMP. Stop at an
+integrated public workflow checkpoint with explicit remaining original criteria,
+or a concrete prerequisite failure. Do not substitute more policy/profile,
+resolver or scrollbar fixtures for the table user experience.
+
+QA's eight ordinary project slots were already occupied. The idle Component
+playground pair is exported exactly before importing the existing native-saved
+Service monitor through the Pascal MCP client's literal matching workflow. The
+reviewed source/design remain unchanged; a bounded semantic select targets the
+Table and its own browser application compiles. This changes only that test
+workspace; the original pair remains in the external packet for restoration.
+
+The first selected-Table compiled launch fails with "Browser component is not
+mounted: service-table". RenderCompiled retained its previous DesignMode even
+after retiring authored bindings, allowing designer grips against a runtime
+iframe. The new public-mode regression reproduces that exact stale purpose.
+The renderer now withdraws it when publishing compiled content. Returning to an
+authored design restores its usual purpose. The existing build/cancel regression
+also retains a real non-root input selection through compiler completion and
+passes37 at actual1280x720 and390x844. Only the browser adapter changes; no new
+native interaction credit follows. The current QA editor is atomically replaced
+and served hashes verified; the backend and its fixed executable remain running.
+
+The repaired ordinary Service monitor preview mounts with the Table still
+selected. Its real desktop controls reveal hidden Command line, move it earlier,
+filter Status to Gateway/Reports only, enter an unfinished Service edit, inspect
+the complete raw command and resume that exact dormant edit before Escape.
+Accepted design revision3/selection and pending-draft state stay unchanged.
+Copy/export effects and complete browser W1/W2 acceptance are not assigned.
+
+Pointer inspection exposes the next concrete prerequisite. Studio clips the
+iframe from parent y156 while its origin is y112; the menu's first action spans
+child y21..64, placing its click centre above the clipping layer. The pointer
+attempt retains the menu, while Enter opens the correct full-value inspector.
+The browser popover currently places against only its own window/VisualViewport.
+Follow [popover-viewport01](TODO/NS-2_popover-viewport_01.md) next: repair shared
+visible-viewport geometry and observation lifetimes, then return to this exact
+saved service workflow at both widths. Preserve contextual/focus/draft behavior;
+do not select another control or maximize away the failed pointer case. The
+private service-browser-workflow-01 packet retains builds, baseline/final mode
+results, MCP context, original pair and visible failures. No user input or new
+approval is missing. Browser observation timeouts are not a stopped service.
+
+The qualified mode repair is also delivered as an atomic editor-asset replacement
+on LAN. Its existing server, fixed executable, three exact project pairs/revisions
+and output settings remain unchanged, with served editor bytes verified. No
+geometry repair is included or claimed yet. Accepted MCP rows still contain all
+four original services while the independent runtime table shows two filtered
+rows; its cancelled editor is gone. Final browser observations/images are saved,
+the temporary regression tab is closed, both review tabs retained and viewport
+override reset. Actual compiler readers are terminal. Continue the new popover
+viewport prerequisite, then return to the same workbench instead of more preview
+mode fixtures. All original task03/W1/W2 and broad goal criteria remain open.
+
+## Previous checkpoint — Studio scrollbar authoring and observing delivery — 2026-10-29
 
 Previous goal turn: PROGRESS.ebbecfb6 is pushed and remote-verified. Root remains
 SOLO. Return canvas-scrollbars01's typed choice to the same saved Workshop through

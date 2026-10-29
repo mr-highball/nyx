@@ -126,10 +126,13 @@ begin
   LDocument.AddPage(NewNyxPage('preview-return'));
   LRenderer := TNyxBrowserRenderer.Create;
   try
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost, True);
     LRenderer.RenderCompiled('builds/job-retirement/index.html', LHost);
     LFrames := document.querySelectorAll('.nyx-compiled-preview');
     LFrame := TJSHTMLElement(LFrames[LFrames.length - 1]);
     Check(document.body.contains(LFrame), 'compiled renderer connects its owned iframe');
+    Check((LRenderer.Root = nil) and not LRenderer.DesignMode,
+      'compiled content withdraws authored designer interaction mode');
     LRenderer.Unmount;
     Check(not document.body.contains(LFrame), 'Unmount removes the compiled iframe and its layer');
     Check((LHost.firstChild = nil) and not LRenderer.IsCompiled('builds/job-retirement/index.html'),
@@ -140,6 +143,7 @@ begin
     LFrame := TJSHTMLElement(LFrames[LFrames.length - 1]);
     LRenderer.Render(LDocument, LDocument.Pages[0], LHost, True);
     Check(not document.body.contains(LFrame), 'authored replacement retires the previous browsing context');
+    Check(LRenderer.DesignMode, 'returning to an authored design restores designer interaction mode');
     LRenderer.MoveHost(LNext);
     Check((LHost.firstChild = nil) and (LNext.firstChild <> nil),
       'returned authored view moves normally without stale compiled placement');
@@ -530,6 +534,22 @@ begin
 
           if (Find('action-builds') <> nil) and GStudio.SharedSourceSynchronized then
           begin
+            { Keep a real non-root selection through build completion. Root-only
+              fixtures cannot expose designer grips attached to a compiled view. }
+            GSession.Call('nyx_select', 'Build review', NyxObject([
+              NyxField('expectedRevision', NyxData(GSession.Revision)),
+              NyxField('operationId', NyxData('build-controls-select-input')),
+              NyxField('id', NyxData('project-name'))]));
+            GPhase := 12;
+          end;
+        end;
+      12:
+        begin
+
+          if (Find('project-name') <> nil) and
+            Find('project-name').classList.contains('nyx-selected') and
+            GStudio.SharedSourceSynchronized then
+          begin
             Click(smaOutputs);
             GPhase := 9;
           end;
@@ -566,6 +586,8 @@ begin
 
           if (LFrame <> nil) and (GStatuses > 0) then
           begin
+            Check(Pos('Display needs attention', LStatus) <> 1,
+              'compiled preview with a selected input does not attach designer grips');
             GPreview := LFrame.src;
             Check(Pos('job-01234567', GPreview) > 0, 'accepted browser artifact reaches the ordinary preview');
             GReport := GSession.Exchange(NyxObject([NyxField('op', NyxData('observe'))]))

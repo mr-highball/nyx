@@ -6004,6 +6004,9 @@ begin
   LGeneration.BaseThemeOwner := FBaseThemeOwner;
   FGenerationObject := LGeneration;
   FGeneration := LGeneration;
+  { A compiled document has no authored control bindings. Withdraw the former
+    design purpose so editor consumers cannot attach grips to its old selection. }
+  FDesignMode := False;
   FHost := AHost;
   FHost.textContent := '';
   FCompiledMount := TNyxBrowserPersistentMount.Create(LFrame, FHost, 620);

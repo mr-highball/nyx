@@ -73,6 +73,13 @@ supersedes historical next-task notes below. Root remains in single-agent mode.
 Use the existing task identities and acceptance criteria; this reprioritization
 adds no tasks, credit, dependency waivers or approval gates.
 
+The table browser return now reaches actual column/filter/edit/inspection controls
+through its own MCP-imported saved application. Its selected-control preview
+handoff is repaired. The next concrete prerequisite is
+[embedded popover visibility](NS-2_popover-viewport_01.md): Studio clips the first
+context-menu action outside the pointer-reachable iframe area. Repair that shared
+geometry and return to the same workbench, without replacing its original criteria.
+
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |

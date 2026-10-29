@@ -20,6 +20,23 @@ No table criterion, task or completion credit closes. The specific compact named
 semantic move follow-up below stays owned here; recovery and resolver expansion
 remain parked. Do not retry or bypass the refused browser surface.
 
+**Browser return — 2026-10-29:**
+
+The exact native-saved pair now imports through MCP into an isolated QA project
+and builds its own browser application. A selected-control preview failure is
+reproduced and repaired in the shared renderer: compiled content withdraws the
+former designer purpose. The maintained build/cancel regression now passes37
+at1280x720 and390x844, retaining a real selected input through build completion.
+
+Actual desktop browser controls reveal and reorder Command line, filter Status
+to the two Running records, inspect complete raw command text and resume an exact
+unfinished Service edit before cancelling it. The first menu action cannot be
+clicked when its compiled iframe is partially clipped by Studio; Enter works.
+The geometry and remaining pointer journey now belong to the concrete
+[embedded popover prerequisite](NS-2_popover-viewport_01.md). No original
+criterion is accepted from these partial checks. WORK.md retains exact evidence
+and the return path; do not bypass this failure with a different viewport.
+
 **Description:**
 
 **Full-value inspection, Copy and scoped export — 2026-10-26:**
@@ -681,6 +698,8 @@ needs qualification against the portable contract.
 
 **Blockers**
 
+- [Embedded popover viewport](NS-2_popover-viewport_01.md) repairs the observed
+  pointer obstruction in the same ordinary compiled browser journey.
 - [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the reviewed
   gaps and target-specific interaction contract.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supply stable typed
