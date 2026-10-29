@@ -412,6 +412,9 @@ begin
 end;
 
 constructor TCommandFence.Create(AWork: TQueryWork);
+var
+  LGenerationReady: INyxCancellationReadiness;
+  LFormReady: INyxCancellationReadiness;
 begin
   inherited Create;
   FPort := AWork.Port;
@@ -424,13 +427,19 @@ begin
 
   if FGeneration <> nil then
   begin
-    Supports(FGeneration, INyxCancellationReadiness, FGenerationReady);
+    Supports(FGeneration, INyxCancellationReadiness, LGenerationReady);
+    FGenerationReady := LGenerationReady;
   end;
 
   if FFormGeneration <> nil then
   begin
-    Supports(FFormGeneration, INyxCancellationReadiness, FFormReady);
+    Supports(FFormGeneration, INyxCancellationReadiness, LFormReady);
+    FFormReady := LFormReady;
   end;
+  { A pas2js QI out argument is a temporary owning lease. Assign each retained
+    field normally from a local, giving the fence its own independent reference.
+    Passing a field directly can release the main/form generation when the fence
+    retires, even while its router still owns and later cancels that generation. }
 end;
 
 procedure TCommandFence.Flags;

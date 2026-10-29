@@ -2841,6 +2841,29 @@ var
   end;
   {$endif}
 
+  {$ifdef PAS2JS}
+  { Inspect the real table scrollport, not its full intrinsic caption width.
+    A manager command that widens a column must not move its own invoker away. }
+  procedure LauncherReachable;
+  var
+    LLauncher: TJSHTMLElement;
+    LClip: TJSHTMLElement;
+    LButtonBounds: TJSDOMRect;
+    LTableBounds: TJSDOMRect;
+  begin
+    LLauncher := TJSHTMLElement(LTable.querySelector('[data-nyx-columns-button]'));
+    Check(LLauncher <> nil, 'actual table retains its column manager launcher');
+    LClip := ScrollSurface(LTable);
+    Check(LClip <> nil, 'launcher uses the actual horizontal scroll owner');
+    LButtonBounds := LLauncher.getBoundingClientRect;
+    LTableBounds := LClip.getBoundingClientRect;
+    Check((LButtonBounds.width > 0) and
+      (LButtonBounds.left >= LTableBounds.left + LClip.clientLeft - 1) and
+      (LButtonBounds.right <= LTableBounds.left + LClip.clientLeft + LClip.clientWidth + 1),
+      'column manager launcher remains inside the visible table scrollport');
+  end;
+  {$endif}
+
   procedure PaintedWidth(const AField: TNyxColumnIdentity; AWidth: Integer);
   {$ifdef PAS2JS}
   var
@@ -2856,6 +2879,7 @@ var
     LHeader := HeaderFor(AField);
     Check(Abs(LHeader.getBoundingClientRect.width - AWidth) <= 2,
       'Set width changes the actual browser column in logical CSS pixels');
+    LauncherReachable;
     {$else}
     LNative := NativeFieldGrid(AField, LColumn);
     Check(LNative <> nil, 'typed field retains a real native paint surface');
@@ -2987,6 +3011,7 @@ var
     LButton := TJSHTMLElement(LTable.querySelector('[data-nyx-columns-button]'));
     Check((LButton <> nil) and not LButton.hasAttribute('disabled'),
       'browser column launcher remains available independently of visible fields');
+    LauncherReachable;
     LOptions := TJSObject.new;
     LOptions['bubbles'] := True;
     LOptions['cancelable'] := True;
@@ -3469,6 +3494,7 @@ begin
     LScrollOwner.scrollLeft := 0;
     LScrollOwner.dispatchEvent(TJSEvent.new('scroll'));
     await(ArrangementFrame);
+    LauncherReachable;
     for LIndex := 0 to 2 do
     begin
       LScrollHeaders[LIndex] := HeaderFor(LObservation.Spec.ColumnAt(LIndex).Identity);
@@ -3486,6 +3512,7 @@ begin
       (LScrollHeaders[2].getBoundingClientRect.left < LHeaderBounds[2].left - 8) and
       (LScrollCells[2].getBoundingClientRect.left < LCellBounds[2].left - 8),
       'real browser scroll moves both the middle header and its current-page cell');
+    LauncherReachable;
     for LIndex := 0 to 1 do
     begin
       Check((Abs(LScrollHeaders[LIndex].getBoundingClientRect.left - LHeaderBounds[LIndex].left) <= 1) and

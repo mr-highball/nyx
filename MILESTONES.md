@@ -9,7 +9,10 @@ table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a
 useful connected Tool Canvas. Native table and Studio journeys now have bounded
 checkpoints; their browser/input and full original acceptance stay open. The
 next active outcome is the same table workbench's browser transfer effects and
-arrangement usability, after its embedded-popover prerequisite below. Native
+generated [table output hosts](TODO/NS-4_table-output-hosts_01.md). Its arrangement
+launcher and query-command readiness leases now pass the full browser/native
+journeys and real wide/compact compiled-preview input, with preserved delivery.
+Original full workbench and broader quality criteria remain open. Native
 DataToolbar and JSON Workshop checkpoints retain their later return paths. The
 discovered
 [HTTP output-host prerequisite](TODO/NS-4_http-output-hosts_01.md) must wire

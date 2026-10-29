@@ -9,9 +9,72 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Browser table workbench after popover acceptance — 2026-10-29
+## Current work — Generated table runtime hosts — 2026-10-29
 
-Previous goal turn: PROGRESS.4689ecb8 is pushed and remote-verified. Root remains
+Previous goal turn: PROGRESS.d6c6839e is pushed and remote-verified. Root stays
+SOLO. The browser arrangement and discovered query-command lifetime repairs below
+are qualified and delivered. Continue the concrete table-output-hosts01
+prerequisite, then return to the same saved Service monitor's actual Copy/export
+outcomes. Keep explicit machine-local output choices, old profile meanings,
+portable project/source/history and alternative runtime hosts intact. No user
+input or renewed permission is missing. Full workbench and broad goal stay open.
+
+The Columns caption spans intrinsic content and previously moved its invoker
+outside a table's horizontal scrollport. A sticky logical end inset keeps that
+existing button reachable while columns grow or scroll, including an empty
+visible-column map. No new listener, viewport exception or weaker anchor policy
+is introduced. The maintained full table query/arrangement consumer now checks
+launcher bounds against the real scroll owner, including actual horizontal
+movement. The verified archived adapter fails that assertion at compact width.
+
+The same full browser regression first exposed premature retirement of a router's
+cancellation generation. TCommandFence passed retained readiness fields directly
+to Supports; pas2js's temporary QI lease then withdrew their ownership. Locals
+and ordinary field assignments now retain independent main/form references. No
+nil guard hides a freed generation. Existing queued-command, replacement,
+retirement and final-publication assertions remain intact. The first comparison
+builds accidentally resolved the current adapter despite a private search path;
+those passes are invalid as old-layout evidence. An explicit Pascal unit source
+binding, verified emitted code and archived include lookup establish the real
+baseline. All failure/setup logs remain in the external packet.
+
+The final full browser journeys pass1464 at1280x720 and1462 at390x844. Executed
+Win32 controls pass1498/1496 at wide/compact allocations with two complete clean
+heaps. Native execution uses the repaired portable constructor; later added
+scroll-owner assertions are PAS2JS-only and do not change native assertions.
+Synthetic harness input, ordinary browser pointer input and physical/assistive
+qualification remain distinct. All actual compiler readers are terminal.
+
+MCP builds/launches the exact same saved Service monitor. At both widths ordinary
+pointer Show reveals Command line without closing the manager; Move earlier
+produces Service, Notes, Command line, Process ID, Status. The existing launcher
+stays within its table's actual scrollport. Accepted revision3, Table selection,
+original project/source fingerprints and four default records are preserved.
+No root selection, maximized viewport or test-only service injection substitutes
+for this generated application.
+
+Its actual Copy action reports that the application supplied no clipboard
+service. Current-page RAW TSV export reports that the host cannot save it. Both
+are explicit failed transfers, not clipboard or disk successes. The handwritten
+example supplies these adapters, while generated entry points omit table service
+setup. Existing FileSaving config selects a Logic save host independently.
+[Table output hosts](TODO/NS-4_table-output-hosts_01.md) now owns the typed local
+clipboard choice, reuse of selected save authority, profile/UI/generator checks
+and real native/browser effects. Do not grant services merely from imported data.
+
+QA/LAN editor and preview-bootstrap assets are atomically replaced with served
+hash verification. Both original fixed-slot serving processes and executable
+bytes remain; all three exact LAN project pairs/revisions and output/toolchain
+settings are preserved. The source-worker bytes are unchanged. The external
+table-browser-workflow-02 packet retains source/build variants, native heaps,
+full browser outcomes, actual runtime images/refusals and publication receipts.
+Private files and owned process TEMP/TMP stay on E:. Temporary regression tabs
+and the compact observer are closed, viewport overrides reset, original review
+tabs retained. No full original table criterion or broad goal credit is closed.
+
+## Previous checkpoint — Browser table workbench after popover acceptance — 2026-10-29
+
+Previous goal turn: PROGRESS.d6c6839e is pushed and remote-verified. Root remains
 SOLO. The embedded-popover pointer prerequisite is now accepted and delivered.
 Return to the same MCP-imported Service monitor under control-usefulness03:
 qualify actual browser clipboard/save effects and repair the observed column
@@ -20,6 +83,14 @@ defaults; do not replace the original workbench criteria with more geometry,
 preview-mode or resolver fixtures. All private files and owned process TEMP/TMP
 stay on E:. QA/MCP and LAN slots remain fixed. No missing user input or new
 approval is present. The full workbench and broad goal remain open.
+
+The next ordinary-browser repair keeps the existing caption launcher inside its
+table's own horizontal scrollport as columns widen. Extend the maintained query/
+column-manager consumer with actual bounds assertions, retain its baseline
+failure, and return to the same MCP-built Service monitor. Then invoke real Copy
+and export to identify missing runtime host wiring, before changing that wiring.
+Use the current fixed QA/LAN services and the existing saved workspace. The
+external table-browser-workflow-02 packet owns this turn's private artifacts.
 
 The embedded prerequisite is now accepted under its original five criteria.
 The new maintained Pascal consumer fails vertically against the unchanged

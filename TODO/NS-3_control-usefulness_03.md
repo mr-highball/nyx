@@ -53,6 +53,30 @@ closing its contextual manager. Reopening works. Keep the manager's invoking
 action reachable during width changes; this belongs to W1's existing usability
 criterion. Do not relax the accepted hidden-anchor retirement contract to hide it.
 
+**Browser arrangement and host return — 2026-10-29:**
+
+The caption launcher now stays inside its existing horizontal table scrollport.
+The maintained full query/arrangement consumer also exposes a query command-fence
+interface ownership defect during view replacement. Independent retained readiness
+leases repair that lifecycle; the original retirement assertions remain intact.
+Final browser1464/1462 and native1498/1496 checks pass at desktop/compact widths,
+with complete clean native heaps. The archived launcher fails the new real
+scroll-owner bounds assertion; early comparison source-resolution failures are
+retained separately rather than counted as product regressions.
+
+The same saved Service monitor's desktop/compact managers now stay open after
+revealing Command line, and Move earlier produces the intended visible order. Its Copy
+action reports a missing clipboard host. Generated host configuration and actual
+transfer effects belong to [table output hosts](NS-4_table-output-hosts_01.md).
+These are runtime/authoring prerequisites; no original full workbench criterion
+is accepted from the current checkpoint.
+
+Qualified editor/preview-bootstrap assets are served on QA/LAN without changing
+either serving process, the three exact LAN projects or output configuration.
+The source-worker bytes remain unchanged. Copy reports its missing clipboard
+service, and current-page RAW TSV export reports an unavailable save host; neither
+is recorded as a successful transfer. Continue the output-host prerequisite.
+
 **Description:**
 
 **Full-value inspection, Copy and scoped export — 2026-10-26:**
@@ -714,6 +738,8 @@ needs qualification against the portable contract.
 
 **Blockers**
 
+- [Table output hosts](NS-4_table-output-hosts_01.md) supply the missing generated
+  clipboard/export services through existing explicit runtime output choices.
 - [Embedded popover viewport](DONE/NS-2_popover-viewport_01.md) repairs the observed
   pointer obstruction in the same ordinary compiled browser journey.
 - [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the reviewed

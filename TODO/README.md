@@ -82,6 +82,13 @@ and checked QA/LAN delivery. Return to that workbench's transfer effects and
 arrangement usability, retaining its original criteria rather than more geometry
 or preview-mode fixture variants.
 
+The same full browser/native query journeys now qualify the caption launcher and
+its discovered command-fence lease repair. Ordinary Copy identifies the next
+concrete prerequisite: [table output hosts](NS-4_table-output-hosts_01.md). Wire
+the existing adapters through local output choices and generated entry points,
+then return to exact transfer effects in this same saved Service monitor. Full
+workbench criteria and broader input/quality remain open.
+
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |

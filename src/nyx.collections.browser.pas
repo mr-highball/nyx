@@ -5307,6 +5307,12 @@ begin
       FColumnLauncher.style.setProperty('padding', '6px 12px');
       FColumnLauncher.style.setProperty('border-radius', '6px');
       FColumnLauncher.style.setProperty('cursor', 'pointer');
+      { The caption spans the complete intrinsic table. Keep its end-aligned
+        action inside the table's horizontal scrollport as columns widen or
+        scroll; otherwise a manager command can move its own anchor out of view.
+        The caption/launcher also survives an empty visible-column map. }
+      FColumnLauncher.style.setProperty('position', 'sticky');
+      FColumnLauncher.style.setProperty('inset-inline-end', '6px');
       FColumnLauncher.addEventListener('pointerdown', @ColumnLauncherPointer);
       LCaption.appendChild(FColumnLauncher);
       FHost.appendChild(LCaption);
