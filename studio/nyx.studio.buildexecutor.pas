@@ -1017,6 +1017,8 @@ var
   LScopeConstruction: TNyxText;
   LFileUnits: TNyxText;
   LFileSetup: TNyxText;
+  LFileDeclarations: TNyxText;
+  LClipboardSource: TNyxText;
   LViewSetup: TNyxText;
   LViewIndent: TNyxText;
   LID: TGUID;
@@ -1289,12 +1291,40 @@ begin
       LRuntime := FOutputs.Field('runtime');
       LFileUnits := '';
       LFileSetup := '';
+      LFileDeclarations := '';
+      LClipboardSource := 'nil';
 
       if FOutputs.FileSaving then
       begin
-        LFileUnits := ', nyx.files.save.browser, nyx.files.save.activation.browser';
-        LFileSetup := '  LApplication.ConfigureFileSaving(' + #10 +
-          '    NewNyxBrowserActivatedFileSaveHost(NewNyxBrowserFileSaveHost));' + #10;
+        LFileUnits := ', nyx.files.save, nyx.files.save.browser, nyx.files.save.activation.browser';
+        LFileDeclarations := '  LFileSaveHost: INyxFileSaveHost;' + #10;
+        LFileSetup := '  LFileSaveHost := NewNyxBrowserActivatedFileSaveHost(' + #10 +
+          '    NewNyxBrowserFileSaveHost);' + #10 +
+          '  LApplication.ConfigureFileSaving(LFileSaveHost);' + #10;
+      end;
+
+      if FOutputs.ClipboardWriting then
+      begin
+        LFileUnits := LFileUnits + ', nyx.clipboard.browser';
+        LClipboardSource := 'NewNyxBrowserClipboardWriteHost';
+      end;
+
+      if FOutputs.ClipboardWriting or FOutputs.FileSaving then
+      begin
+        LFileUnits := LFileUnits + ', nyx.collections.workbench.runtime';
+
+        if FOutputs.FileSaving then
+        begin
+          LFileUnits := LFileUnits + ', nyx.collections.export';
+          LFileSetup := LFileSetup + '  LApplication.ConfigureTableWorkbench(' + #10 +
+            '    NewNyxTableWorkbenchServices(' + LClipboardSource + ', LFileSaveHost,' + #10 +
+            '      TNyxCollectionExportOptions.Defaults));' + #10;
+        end
+        else
+        begin
+          LFileSetup := LFileSetup + '  LApplication.ConfigureTableWorkbench(' + #10 +
+            '    NewNyxTableWorkbenchServices(' + LClipboardSource + '));' + #10;
+        end;
       end;
 
       if FOutputs.FileOpening then
@@ -1319,6 +1349,7 @@ begin
         LFileUnits + ', ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
         LScopeDeclarations +
+        LFileDeclarations +
         '  LApplication: TNyxBrowserApplication;' + #10 +
         '  LReporter: TNyxStudioRuntimeReporter;' + #10 +
         'begin' + #10 +
@@ -1366,12 +1397,40 @@ begin
       LWidgetset := FOutputs.Field('widgetset');
       LFileUnits := '';
       LFileSetup := '';
+      LFileDeclarations := '';
+      LClipboardSource := 'nil';
 
       if FOutputs.FileSaving then
       begin
-        LFileUnits := ', nyx.files.save.lcl, nyx.files.save.activation.lcl';
-        LFileSetup := '    LApplication.ConfigureFileSaving(' + #10 +
-          '      NewNyxLCLActivatedFileSaveHost(nil, NewNyxLCLFileSaveHost));' + #10;
+        LFileUnits := ', nyx.files.save, nyx.files.save.lcl, nyx.files.save.activation.lcl';
+        LFileDeclarations := '  LFileSaveHost: INyxFileSaveHost;' + #10;
+        LFileSetup := '    LFileSaveHost := NewNyxLCLActivatedFileSaveHost(nil,' + #10 +
+          '      NewNyxLCLFileSaveHost);' + #10 +
+          '    LApplication.ConfigureFileSaving(LFileSaveHost);' + #10;
+      end;
+
+      if FOutputs.ClipboardWriting then
+      begin
+        LFileUnits := LFileUnits + ', nyx.clipboard.lcl';
+        LClipboardSource := 'NewNyxLCLClipboardWriteHost';
+      end;
+
+      if FOutputs.ClipboardWriting or FOutputs.FileSaving then
+      begin
+        LFileUnits := LFileUnits + ', nyx.collections.workbench.runtime';
+
+        if FOutputs.FileSaving then
+        begin
+          LFileUnits := LFileUnits + ', nyx.collections.export';
+          LFileSetup := LFileSetup + '    LApplication.ConfigureTableWorkbench(' + #10 +
+            '      NewNyxTableWorkbenchServices(' + LClipboardSource + ', LFileSaveHost,' + #10 +
+            '        TNyxCollectionExportOptions.Defaults));' + #10;
+        end
+        else
+        begin
+          LFileSetup := LFileSetup + '    LApplication.ConfigureTableWorkbench(' + #10 +
+            '      NewNyxTableWorkbenchServices(' + LClipboardSource + '));' + #10;
+        end;
       end;
 
       if FOutputs.FileOpening then
@@ -1401,6 +1460,7 @@ begin
         LFileUnits + ', ' + LUnitName + ';' + #10 +
         'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
         LScopeDeclarations +
+        LFileDeclarations +
         '  LApplication: TNyxLCLApplication;' + #10 +
         '  LReporter: TNyxStudioRuntimeReporter;' + #10 +
         'begin' + #10 + '  Application.Initialize;' + #10 +

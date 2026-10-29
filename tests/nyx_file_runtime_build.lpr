@@ -44,6 +44,8 @@ var
   LPass: Integer;
   LOpening: Boolean;
   LHTTP: Boolean;
+  LTables: Boolean;
+  LLastPass: Integer;
   LPair: TNyxProjectPair;
   LPolicy: TNyxText;
   LLauncher: TNyxText;
@@ -93,9 +95,9 @@ begin
 
     if not (ParamCount in [3, 4, 5]) or
       ((ParamCount = 4) and (ParamStr(4) <> '--opening')) or
-      ((ParamCount = 5) and (ParamStr(4) <> '--http')) then
+      ((ParamCount = 5) and (ParamStr(4) <> '--http') and (ParamStr(4) <> '--tables')) then
     begin
-      raise Exception.Create('Supply repository, fresh root, toolchain and optional --opening or --http <project>');
+      raise Exception.Create('Supply repository, fresh root, toolchain and optional --opening, --http <project> or --tables <project>');
     end;
     LRoot := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
 
@@ -114,8 +116,9 @@ begin
     LOutputs.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
     LOpening := (ParamCount = 4) and (ParamStr(4) = '--opening');
     LHTTP := (ParamCount = 5) and (ParamStr(4) = '--http');
+    LTables := (ParamCount = 5) and (ParamStr(4) = '--tables');
 
-    if LHTTP then
+    if LHTTP or LTables then
     begin
       LPair := DecodeNyxProject(ReadText(ParamStr(5)));
       LDoc := TNyxCodec.Decode(LPair.Design);
@@ -123,7 +126,7 @@ begin
 
       if LPair.Pending or not LPair.Files.IsEmpty then
       begin
-        raise Exception.Create('HTTP qualification requires the exact accepted standalone Workshop pair');
+        raise Exception.Create('Runtime qualification requires the exact accepted standalone project pair');
       end;
     end
     else if LOpening then
@@ -137,19 +140,32 @@ begin
     end;
     LBefore := TNyxCodec.Encode(LDoc);
 
-    if not LHTTP then
+    if not LHTTP and not LTables then
     begin
       LSource := TNyxCodegen.Generate(LDoc);
     end;
     Save(LRoot + 'nyx.generated.view.pas', LSource);
-    for LPass := 0 to 2 do
+    LLastPass := 2;
+
+    if LTables then
     begin
-      if not LOpening and not LHTTP and (LPass > 0) then
+      LLastPass := 3;
+    end;
+    for LPass := 0 to LLastPass do
+    begin
+      if not LOpening and not LHTTP and not LTables and (LPass > 0) then
       begin
         Break;
       end;
 
       LPolicy := '';
+
+      if LTables then
+      begin
+        LOutputs.AllowClipboardWriting((LPass and 1) <> 0)
+          .AllowFileSaving((LPass and 2) <> 0);
+        LPolicy := '-tables-' + TNyxText(IntToStr(LPass));
+      end;
 
       if LHTTP then
       begin
@@ -201,7 +217,7 @@ begin
           LJob := LReply.Get('build', '');
           Save(LRoot + String(LTarget + LPolicy) + '-job.txt', LJob);
 
-          if LOpening or LHTTP then
+          if LOpening or LHTTP or LTables then
           begin
 
             if LTarget = 'browser' then
@@ -220,6 +236,14 @@ begin
             begin
               raise Exception.Create('Generated launcher changed independent runtime permissions');
             end;
+
+            if LTables and
+              (((Pos('ConfigureTableWorkbench(', LLauncher) > 0) <>
+                (LOutputs.ClipboardWriting or LOutputs.FileSaving)) or
+              ((Pos('ClipboardWriteHost', LLauncher) > 0) <> LOutputs.ClipboardWriting)) then
+            begin
+              raise Exception.Create('Generated table services changed independent host choices');
+            end;
           end;
         finally
           LReply.Free;
@@ -232,7 +256,11 @@ begin
       end;
     end;
 
-    if LHTTP then
+    if LTables then
+    begin
+      WriteLn('PASS eight real Service monitor compiler jobs; disabled/copy/save/both; exact accepted source/design');
+    end
+    else if LHTTP then
     begin
       WriteLn('PASS six real Workshop compiler jobs; disabled/HTTP-only/HTTP+files; exact MCP source/design');
     end

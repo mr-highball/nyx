@@ -1084,12 +1084,15 @@ end;
 function TNyxBuildJobs.Outputs: TNyxDataValue;
 var
   LExecutor: TNyxBuildExecutor;
+  LProfile: TNyxOutputConfiguration;
   LItems: array[TNyxBuildTarget] of TNyxDataValue;
   LTarget: TNyxBuildTarget;
   LIssue: TNyxText;
 begin
-  LExecutor := TNyxBuildExecutor.Create(FDirectories, FProfile);
+  LProfile := TNyxOutputConfiguration.Decode(FProfile);
+  LExecutor := nil;
   try
+    LExecutor := TNyxBuildExecutor.Create(FDirectories, FProfile);
     for LTarget := Low(TNyxBuildTarget) to High(TNyxBuildTarget) do
     begin
       LIssue := LExecutor.Readiness(NyxBuildTargetName(LTarget));
@@ -1099,9 +1102,17 @@ begin
         NyxField('issue', NyxData(LIssue))]);
     end;
     Result := NyxObject([NyxField('outputID', NyxData(NyxBuildFingerprint(FProfile))),
-      NyxField('outputs', NyxArray([LItems[btBrowser], LItems[btNativeLCL]]))]);
+      NyxField('outputs', NyxArray([LItems[btBrowser], LItems[btNativeLCL]])),
+      { These bounded service choices explain runtime availability to agents
+        without exposing the private compiler paths or enabling any service. }
+      NyxField('runtimeServices', NyxObject([
+        NyxField('clipboardWriting', NyxData(LProfile.ClipboardWriting)),
+        NyxField('fileSaving', NyxData(LProfile.FileSaving)),
+        NyxField('fileOpening', NyxData(LProfile.FileOpening)),
+        NyxField('http', NyxData(LProfile.HTTP))]))]);
   finally
     LExecutor.Free;
+    LProfile.Free;
   end;
 end;
 

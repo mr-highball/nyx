@@ -4252,6 +4252,13 @@ begin
       FProjectName := ANode.Prop('value');
       LRetainCanvas := True;
     end
+    else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-clipboard-writing') then
+    begin
+      FOutputs.AllowClipboardWriting(AEvent.Value.AsBoolean);
+      FOutputEdits.Mark(nosClipboardWriting);
+      FStatus := 'Clipboard runtime setting edited / applied when building';
+      LRetainCanvas := True;
+    end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-http') then
     begin
       FOutputs.AllowHTTP(AEvent.Value.AsBoolean);

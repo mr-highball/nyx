@@ -11,13 +11,81 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Generated table runtime hosts — 2026-10-29
 
-Previous goal turn: PROGRESS.d6c6839e is pushed and remote-verified. Root stays
+Previous goal turn: PROGRESS.de3735b6 is pushed and remote-verified. Root stays
 SOLO. The browser arrangement and discovered query-command lifetime repairs below
 are qualified and delivered. Continue the concrete table-output-hosts01
 prerequisite, then return to the same saved Service monitor's actual Copy/export
 outcomes. Keep explicit machine-local output choices, old profile meanings,
 portable project/source/history and alternative runtime hosts intact. No user
 input or renewed permission is missing. Full workbench and broad goal stay open.
+
+Implement table-output-hosts01 through the existing profile/configuration flow:
+append an independent typed clipboard choice, preserve exact version1..4 encodings
+when absent, reconcile each setting without overwriting newer edits and expose
+it through the ordinary shared Outputs UI. Generated native/browser applications
+must configure their table services before mounting and share the selected save
+host with existing file Logic. Retain adapter activation and exact-text/byte
+semantics. All new private artifacts and process TEMP/TMP use the external
+table-output-hosts-01 packet and configured E: scratch paths. Qualify current
+profile/UI/generator behavior and the same real Service monitor; compiler success
+alone is not transfer success. Backend publication keeps fixed serving paths.
+
+Current table-output-hosts01 implementation: the new ClipboardWriting Boolean,
+AllowClipboardWriting fluent method and nosClipboardWriting setting are wired
+through strict version5 profile admission, independent reconciliation and both
+ordinary Outputs controllers. Absent/revoked clipboard selection preserves the
+old version1..4 encodings. Application hosts expose ConfigureTableWorkbench;
+generated native/browser launchers share the selected activated save host with
+file Logic and configure explicit table clipboard/export services before mount.
+MCP Outputs now reports four bounded runtimeServices Booleans without paths or a
+configuration-write operation. Its stale-output fingerprint refusal is executed.
+
+Qualification so far: native/browser reconciliation270/270; strict profile69/69;
+ordinary native Outputs16 at1280 and16 at390, preserving exact project/draft pairs
+and clean heaps. All eight exact Service monitor builds pass disabled/copy/save/
+both across both targets; their driver has a complete clean heap. The initial
+native UI build's wrong status-field reference is repaired and its failure log
+retained. The read-only Windows clipboard qualifier also has a clean heap.
+
+The updated QA backend and six matching web files occupy the same fixed QA slot.
+All nine exact pairs, workspace identities and revisions survive replacement and
+the final runtime checks. Private ownership, image hashes and serving paths are
+in the external table-output-hosts-01 packet. One staging job was joined after
+startup had already been dispatched; final staging success, matching image
+hashes and actual listener ownership were verified. Join staging before dependent
+startup. Persisted-state startup took tens of seconds without a precise baseline;
+measured performance remains separate. All compiler readers are terminal.
+
+Ordinary browser Outputs Apply/Reload persist copy-only and copy/save profiles;
+bounded MCP reads reflect each independent service and its changed fingerprint.
+The same revision3 Service monitor compiles and launches each configuration with
+its original source/design fingerprints. Desktop Copy verifies all85 UTF-16 units
+on the real Windows clipboard. Compact Copy uses a different42-unit report command
+and verifies a fresh exact write. Browser Use's virtual clipboard is a separate
+empty buffer; its failed paste/read is retained and earns no transfer credit.
+The qualifier never injects the expected value. Temporary cell edits are cancelled.
+
+Enabled current-page export reaches the real browser Save As picker, confirmed
+by the user's screenshot showing collection.tsv and the TSV file type. Closing
+the inspector retires the pending request; no selected file, write or exact export
+bytes are confirmed. This platform dialog is outside the available browser DOM
+controls. Do not call it a product failure or successful disk write. Ordinary
+Outputs restores all original effective flags and the exact original fingerprint;
+its explicit save leaves a local profile where startup previously used defaults.
+
+The matched backend and six web files now occupy the existing fixed LAN slot.
+The old owned serving job is joined before staging/startup. All three exact LAN
+project pairs, identities and revisions survive; all82 durable project/settings
+files stay byte exact. Six served asset hashes and authenticated MCP readiness
+pass. The first backup attempt also checked a nonexistent extra projects scope;
+the actual .local tree was preserved and verified before any payload replacement.
+Private owner receipts identify both current serving processes.
+
+Remaining: confirmed export effects and exact page/filtered TSV bytes, native
+generated-runtime input and remaining ordinary browser Outputs width/newer-edit
+checks. The task is not accepted. Retain the original
+review tabs and preserve source, projects and pending drafts. All new private
+files, process TEMP/TMP and artifacts remain on the external scratch volume.
 
 The Columns caption spans intrinsic content and previously moved its invoker
 outside a table's horizontal scrollport. A sticky logical end inset keeps that

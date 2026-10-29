@@ -58,6 +58,10 @@ begin
       begin
         AProfile.AllowHTTP(Odd(AValue));
       end;
+    nosClipboardWriting:
+      begin
+        AProfile.AllowClipboardWriting(Odd(AValue));
+      end;
     else
       begin
         AProfile.SetField(NyxOutputFields[Ord(ASetting)], CPrefix + TNyxText(IntToStr(AValue)));
@@ -79,6 +83,10 @@ begin
     nosHTTP:
       begin
         Result := BoolToStr(AProfile.HTTP, True);
+      end;
+    nosClipboardWriting:
+      begin
+        Result := BoolToStr(AProfile.ClipboardWriting, True);
       end;
     else
       begin

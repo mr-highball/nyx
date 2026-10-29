@@ -1212,11 +1212,18 @@ begin
       LPanel.Add(LField);
     end;
   end;
+  LPanel.Add(NewNyxCheckbox('output-clipboard-writing').Configure
+    .Text('Allow clipboard copying in built applications')
+    .Value((AState.Outputs <> nil) and AState.Outputs.ClipboardWriting).Done.Node);
+  LPanel.Add(Caption('output-clipboard-writing-help',
+    'Connects table Copy actions to the platform clipboard. Exact text and browser availability checks apply.'));
+
   LPanel.Add(NewNyxCheckbox('output-file-saving').Configure
     .Text('Allow file saving in built applications')
     .Value((AState.Outputs <> nil) and AState.Outputs.FileSaving).Done.Node);
   LPanel.Add(Caption('output-file-saving-help',
-    'Uses interactive save dialogs or browser downloads. This machine setting stays outside your design.'));
+    'Uses interactive save dialogs or browser downloads for file commands and table exports. ' +
+    'This machine setting stays outside your design.'));
 
   LPanel.Add(NewNyxCheckbox('output-file-opening').Configure
     .Text('Allow file opening in built applications')

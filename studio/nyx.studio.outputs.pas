@@ -39,13 +39,15 @@ type
     filesystem/toolchain readiness is checked by the server for a chosen build.
     Profiles are data, not compiler argument lists or shell command strings.
     Independent runtime service opt-ins select launcher adapters; they encode no
-    file handle, borrowed host, current user gesture or filesystem path grant. }
+    file handle, borrowed host, current user gesture or filesystem path grant.
+    Clipboard writes are independent of file and network service choices. }
   TNyxOutputConfiguration = class
   private
     FFields: TNyxStrings;
     FFileSaving: Boolean;
     FFileOpening: Boolean;
     FHTTP: Boolean;
+    FClipboardWriting: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -73,6 +75,12 @@ type
       This does not change the independently configured resource loader. }
     function AllowHTTP(AValue: Boolean = True): TNyxOutputConfiguration;
     property HTTP: Boolean read FHTTP;
+    { Independent local choice for platform clipboard writes in generated table
+      commands. Defaults False, preserving earlier profile behavior. This never
+      reads the clipboard or weakens the selected host's representation, browser
+      activation or availability checks. Configure without selecting an output. }
+    function AllowClipboardWriting(AValue: Boolean = True): TNyxOutputConfiguration;
+    property ClipboardWriting: Boolean read FClipboardWriting;
     { Deterministic, versioned local JSON; emits every known field, including
       empty ones, so an explicit clear overrides an inherited startup hint. }
     function Encode: TNyxText;
@@ -83,9 +91,10 @@ type
 
   { Closed editor settings, separate from transport field names. The first six
     choices correspond to NyxOutputFields; runtime permissions are independent
-    Booleans and never acquire file/network capability from a path or target. }
+    Booleans and never acquire clipboard/file/network capability from a path
+    or target. New settings append so existing setting ordinals stay stable. }
   TNyxOutputSetting = (nosPas2JS, nosRuntime, nosFPC, nosLazarus, nosPlatform,
-    nosWidgetset, nosFileSaving, nosFileOpening, nosHTTP);
+    nosWidgetset, nosFileSaving, nosFileOpening, nosHTTP, nosClipboardWriting);
 
   { Observe fills clean fields; Reload deliberately adopts saved fields that
     were untouched during this request. Save acknowledges its exact submitted
@@ -245,6 +254,10 @@ begin
           begin
             ACurrent.AllowHTTP(ALoaded.HTTP);
           end;
+        nosClipboardWriting:
+          begin
+            ACurrent.AllowClipboardWriting(ALoaded.ClipboardWriting);
+          end;
         else
           begin
             ACurrent.SetField(NyxOutputFields[Ord(LSetting)],
@@ -367,6 +380,12 @@ begin
   Result := Self;
 end;
 
+function TNyxOutputConfiguration.AllowClipboardWriting(AValue: Boolean): TNyxOutputConfiguration;
+begin
+  FClipboardWriting := AValue;
+  Result := Self;
+end;
+
 function TNyxOutputConfiguration.Encode: TNyxText;
 var
   LRoot: TJSONObject;
@@ -376,7 +395,15 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if FHTTP then
+    if FClipboardWriting then
+    begin
+      LRoot.Add('version', 5);
+      LRoot.Add('fileSaving', FFileSaving);
+      LRoot.Add('fileOpening', FFileOpening);
+      LRoot.Add('http', FHTTP);
+      LRoot.Add('clipboardWriting', True);
+    end
+    else if FHTTP then
     begin
       LRoot.Add('version', 4);
       LRoot.Add('fileSaving', FFileSaving);
@@ -493,7 +520,7 @@ begin
 
     if (LValue = nil) or (LValue.JSONType <> jtNumber) or
       ((LValue.AsFloat <> 1) and (LValue.AsFloat <> 2) and
-        (LValue.AsFloat <> 3) and (LValue.AsFloat <> 4)) then
+        (LValue.AsFloat <> 3) and (LValue.AsFloat <> 4) and (LValue.AsFloat <> 5)) then
     begin
       raise ENyxModel.Create('Unsupported output configuration version');
     end;
@@ -504,7 +531,8 @@ begin
       ((LVersion = 1) and (LRoot.Count <> 2)) or
       ((LVersion = 2) and (LRoot.Count <> 3)) or
       ((LVersion = 3) and (LRoot.Count <> 4)) or
-      ((LVersion = 4) and (LRoot.Count <> 5)) then
+      ((LVersion = 4) and (LRoot.Count <> 5)) or
+      ((LVersion = 5) and (LRoot.Count <> 6)) then
     begin
       raise ENyxModel.Create('Output configuration requires version and fields');
     end;
@@ -512,7 +540,7 @@ begin
     Result := TNyxOutputConfiguration.Create;
     try
 
-      if LVersion in [2, 3, 4] then
+      if LVersion in [2, 3, 4, 5] then
       begin
         LValue := LRoot.Find('fileSaving');
 
@@ -523,7 +551,7 @@ begin
         Result.AllowFileSaving(LValue.AsBoolean);
       end;
 
-      if LVersion in [3, 4] then
+      if LVersion in [3, 4, 5] then
       begin
         LValue := LRoot.Find('fileOpening');
 
@@ -534,7 +562,7 @@ begin
         Result.AllowFileOpening(LValue.AsBoolean);
       end;
 
-      if LVersion = 4 then
+      if LVersion in [4, 5] then
       begin
         LValue := LRoot.Find('http');
 
@@ -543,6 +571,17 @@ begin
           raise ENyxModel.Create('HTTP runtime authority must be a Boolean');
         end;
         Result.AllowHTTP(LValue.AsBoolean);
+      end;
+
+      if LVersion = 5 then
+      begin
+        LValue := LRoot.Find('clipboardWriting');
+
+        if (LValue = nil) or (LValue.JSONType <> jtBoolean) then
+        begin
+          raise ENyxModel.Create('Clipboard-write runtime authority must be a Boolean');
+        end;
+        Result.AllowClipboardWriting(LValue.AsBoolean);
       end;
       for LIndex := 0 to LFields.Count - 1 do
       begin

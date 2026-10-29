@@ -75,7 +75,7 @@ end;
 
 procedure CheckProfile;
 const
-  CInvalid: array[0..13] of TNyxText = (
+  CInvalid: array[0..19] of TNyxText = (
     '{"version":2,"fields":{},"fileSaving":"true"}',
     '{"version":2,"fields":{}}',
     '{"version":1,"fields":{},"fileSaving":true}',
@@ -89,7 +89,13 @@ const
     '{"version":4,"fields":{},"fileSaving":false,"fileOpening":false}',
     '{"version":4,"fields":{},"fileSaving":false,"http":true,"other":false}',
     '{"version":4,"fields":{},"fileSaving":"false","fileOpening":false,"http":true}',
-    '{"version":3,"fields":{},"fileSaving":false,"fileOpening":false,"http":true}');
+    '{"version":3,"fields":{},"fileSaving":false,"fileOpening":false,"http":true}',
+    '{"version":5,"fields":{},"fileSaving":false,"fileOpening":false,"http":false}',
+    '{"version":5,"fields":{},"fileSaving":false,"fileOpening":false,"http":false,"clipboardWriting":"true"}',
+    '{"version":5,"fields":{},"fileSaving":"false","fileOpening":false,"http":false,"clipboardWriting":true}',
+    '{"version":5,"fields":{},"fileSaving":false,"fileOpening":false,"http":null,"clipboardWriting":true}',
+    '{"version":4,"fields":{},"fileSaving":false,"fileOpening":false,"http":true,"clipboardWriting":true}',
+    '{"version":5,"fields":{},"fileSaving":false,"fileOpening":false,"http":false,"unknown":true}');
 var
   LOptions: TNyxOutputConfiguration;
   LDecoded: TNyxOutputConfiguration;
@@ -97,6 +103,8 @@ var
   LSaveOnly: TNyxText;
   LRefused: Boolean;
   LIndex: Integer;
+  LMask: Integer;
+  LEncoded: TNyxText;
 begin
   { The identical private profile boundary executes in native Pascal and pas2js;
     no compiler path is resolved and no host authority or file I/O is created. }
@@ -107,6 +115,7 @@ begin
     Check(not LOptions.FileSaving, 'legacy runtime profiles grant no file host');
     Check(not LOptions.FileOpening, 'legacy profiles grant no independent read host');
     Check(not LOptions.HTTP, 'legacy profiles grant no HTTP transport');
+    Check(not LOptions.ClipboardWriting, 'legacy profiles retain unavailable clipboard writes');
     LOptions.AllowFileSaving;
     LSaveOnly := LOptions.Encode;
     LDecoded := TNyxOutputConfiguration.Decode(LOptions.Encode);
@@ -162,6 +171,32 @@ begin
     end;
     LOptions.AllowHTTP(False);
     Check(LOptions.Encode = LSaveOnly, 'revoking HTTP restores exact version-3 bytes');
+    { Every independent runtime choice must survive both parsers. Versions1..4
+      remain the exact encoding when clipboard writing is absent or revoked. }
+    for LMask := 0 to 15 do
+    begin
+      LOptions.AllowFileSaving((LMask and 1) <> 0)
+        .AllowFileOpening((LMask and 2) <> 0)
+        .AllowHTTP((LMask and 4) <> 0)
+        .AllowClipboardWriting((LMask and 8) <> 0);
+      LEncoded := LOptions.Encode;
+      LDecoded := TNyxOutputConfiguration.Decode(LEncoded);
+      try
+        Check((LDecoded.FileSaving = ((LMask and 1) <> 0)) and
+          (LDecoded.FileOpening = ((LMask and 2) <> 0)) and
+          (LDecoded.HTTP = ((LMask and 4) <> 0)) and
+          (LDecoded.ClipboardWriting = ((LMask and 8) <> 0)),
+          'all independent runtime host combinations retain their exact choices');
+        Check((LDecoded.Encode = LEncoded) and
+          (LDecoded.Field('fpc') = LOptions.Field('fpc')),
+          'combined profiles preserve canonical bytes and supplementary paths');
+      finally
+        LDecoded.Free;
+      end;
+    end;
+    LOptions.AllowFileSaving(False).AllowFileOpening(False).AllowHTTP(False)
+      .AllowClipboardWriting(False);
+    Check(LOptions.Encode = LLegacy, 'revoking clipboard and other choices restores exact version-1 bytes');
     for LIndex := 0 to High(CInvalid) do
     begin
       LRefused := False;
@@ -387,6 +422,8 @@ begin
           'runtime opening authority also starts disabled without choosing a target');
         Check(OutputNode('output-http').Prop('value') = 'false',
           'HTTP starts disabled without requiring a selected target');
+        Check(OutputNode('output-clipboard-writing').Prop('value') = 'false',
+          'clipboard configuration is available independently of an output');
         Toggle;
       end;
     2:
@@ -395,6 +432,7 @@ begin
           'actual target checkbox edits the typed runtime configuration');
         Toggle('output-file-opening');
         Toggle('output-http');
+        Toggle('output-clipboard-writing');
         ActivateOutputs;
       end;
     3:
@@ -409,6 +447,8 @@ begin
           'independent opening policy survives ordinary Outputs reconstruction');
         Check(OutputNode('output-http').Prop('value') = 'true',
           'ordinary checkbox editing retains HTTP through Outputs reconstruction');
+        Check(OutputNode('output-clipboard-writing').Prop('value') = 'true',
+          'ordinary clipboard choice survives Outputs reconstruction');
         Toggle;
       end;
     5:
@@ -419,6 +459,7 @@ begin
           'revoking saving leaves the read-only policy enabled');
         Toggle('output-file-opening');
         Toggle('output-http');
+        Toggle('output-clipboard-writing');
       end;
     6:
       begin
@@ -426,6 +467,8 @@ begin
           'actual read checkbox can independently revoke future opening authority');
         Check(OutputNode('output-http').Prop('value') = 'false',
           'the HTTP checkbox independently revokes future generated transport');
+        Check(OutputNode('output-clipboard-writing').Prop('value') = 'false',
+          'clipboard copying can be revoked independently through ordinary controls');
         Check(EncodeNyxProject(GStudio.ProjectSnapshot) = GBefore,
           'configuration retains the exact accepted source/design/draft pair');
         Check(OutputNode('output-none') <> nil,
@@ -478,6 +521,14 @@ begin
   CheckProfile;
   {$ifdef PAS2JS}
   document.body.setAttribute('data-file-runtime-profile-checks', IntToStr(GChecks));
+  { Match native --profile for isolated parser/configuration qualification. The
+    normal page still executes every ordinary Studio control assertion below. }
+
+  if window.location.search = '?profile' then
+  begin
+    document.body.setAttribute('data-file-runtime-studio', 'profile-passed');
+    Exit;
+  end;
   {$else}
   WriteLn('PASS ', GChecks, ' native runtime profile checks');
 

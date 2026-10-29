@@ -112,6 +112,51 @@ owned-stage removal and compatibility with the original direct byte path.
 Browser consumers compile; executed browser picker/download streaming, physical
 input and accessibility remain separate qualification requirements.
 
+## Runtime table services
+
+Studio's Outputs section independently selects clipboard copying, file saving,
+file opening and HTTP for newly built applications. No target or installed
+compiler is required to edit these choices. File saving supplies the same
+activation-aware host to file Logic and table exports; clipboard copying does
+not enable any file or network operation. These machine-local choices stay
+outside the portable project and its undo history.
+
+Generated browser/LCL entry points configure table services before mounting.
+Handwritten applications can use the same fluent method, including alternative
+hosts, copy limits and export options:
+
+```pascal
+LSaveHost := NewNyxBrowserActivatedFileSaveHost(NewNyxBrowserFileSaveHost);
+LApplication
+  .ConfigureFileSaving(LSaveHost)
+  .ConfigureTableWorkbench(NewNyxTableWorkbenchServices(
+    NewNyxBrowserClipboardWriteHost, LSaveHost,
+    TNyxCollectionExportOptions.Defaults));
+```
+
+The native application offers the same `ConfigureTableWorkbench` method with
+the existing LCL host factories. The renderer retains services and their hosts;
+they must not retain the application, document or controls. Configure before
+mounting; nil restores unavailable table services. Direct callers retain the
+existing choice of clipboard representations and byte-save policies. Platform
+availability, activation, exact-text guarantees and cancellation still apply.
+
+Clipboard selection uses local profile version5. With that choice absent or
+revoked, the existing version1..4 encoding and independent service meanings are
+preserved. Observe/Reload/Save reconcile the new setting independently, retaining
+newer local edits. MCP's bounded `nyx_build` Outputs result includes
+`runtimeServices` with the four Boolean choices, without compiler paths or any
+configuration mutation. The output fingerprint includes these choices; callers
+refresh readiness before building after a change.
+
+The maintained `nyx_file_runtime_build` qualifier accepts
+`<repository> <fresh-evidence-root> <toolchain.json> --tables <accepted.nyxproject>`
+to compile the exact saved source/design for both targets with copying, saving,
+both and neither. Compilation does not establish clipboard or disk effects.
+`nyx_clipboard_system_verify` can compare a completed known Copy against Windows'
+plain UTF-16 clipboard channel using an expected UTF-8 file. It never writes the
+clipboard or prints unrelated contents, and does not qualify private NUL formats.
+
 ## Studio project files
 
 Open the Project file section at any time; no output selection or compiler is

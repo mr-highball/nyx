@@ -21,6 +21,17 @@ of installed compilers and preserve callers' ability to inject alternative hosts
 This is an NS-4 prerequisite of the original workbench03 outcomes, with no separate
 completion credit or waiver of its broader interaction/quality requirements.
 
+The current implementation adds the independent typed choice and ordinary
+Outputs controls, preserves older profile bytes, and generates both targets'
+table services through the selected hosts. Reconciliation/profile checks and
+eight exact saved-application compiler jobs pass. Actual generated browser Copy
+at desktop/compact widths matches the real system clipboard; a different sample
+proves a fresh compact write. Enabled page export reaches the real Save As picker,
+confirmed by the user's screenshot, but no file write or TSV bytes are yet
+confirmed. Native generated-runtime input, confirmed export scopes and remaining
+ordinary Outputs checks stay open. [WORK.md](../WORK.md) owns the evidence and
+delivery state; this checkpoint does not accept the task.
+
 **Acceptance Criteria:**
 
 - A typed fluent local output choice and ordinary Outputs control select

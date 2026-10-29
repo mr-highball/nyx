@@ -53,7 +53,8 @@ uses
   nyx.resource.sources,
   nyx.resources.loader,
   nyx.render.lcl,
-  nyx.menu.button;
+  nyx.menu.button,
+  nyx.collections.workbench.runtime;
 
 type
   { CreateNew avoids a resource-file dependency for a code-first main window.
@@ -141,6 +142,10 @@ type
       borrowed dialog owner must outlive it. Host checks and byte budgets remain
       authoritative. Pending routes retire before this host and its controls. }
     function ConfigureFileOpening(const AHost: INyxFileOpenHost): TNyxLCLApplication;
+    { Explicit table clipboard/export services, retained by the view before Mount.
+      Nil restores unavailable defaults; alternative hosts and limits remain
+      caller choices. Services must not retain this application or its controls. }
+    function ConfigureTableWorkbench(const AServices: INyxTableWorkbenchServices): TNyxLCLApplication;
     property FlowRoutes: INyxFlowRouteBinding read FFlowRoutes;
     { Private application catalog/load diagnostics survive navigation. Configure
       before mounting; supplying a resolver replaces the target HTTP/cache path.
@@ -370,6 +375,18 @@ begin
     raise ENyxModel.Create('Configure file-save authority before mounting the application');
   end;
   FFileSaveHost := AHost;
+  Result := Self;
+end;
+
+function TNyxLCLApplication.ConfigureTableWorkbench(
+  const AServices: INyxTableWorkbenchServices): TNyxLCLApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure table services before mounting the application');
+  end;
+  FRenderer.TableWorkbenchServices := AServices;
   Result := Self;
 end;
 

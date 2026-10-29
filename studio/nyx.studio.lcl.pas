@@ -5557,6 +5557,12 @@ begin
       FState.CodeVisible := True;
       FState.Panel := nspDesign;
     end
+    else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-clipboard-writing') then
+    begin
+      FOutputs.AllowClipboardWriting(AEvent.Value.AsBoolean);
+      FOutputEdits.Mark(nosClipboardWriting);
+      FState.Status := 'Clipboard runtime setting edited / applied when building';
+    end
     else if (AEvent.Trigger = ntChange) and (ANode.ID = 'output-http') then
     begin
       FOutputs.AllowHTTP(AEvent.Value.AsBoolean);

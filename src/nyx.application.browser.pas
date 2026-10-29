@@ -50,7 +50,8 @@ uses
   nyx.resource.sources,
   nyx.resources.loader,
   nyx.render.browser,
-  nyx.menu.button;
+  nyx.menu.button,
+  nyx.collections.workbench.runtime;
 
 type
   { Application host for generated/handwritten documents and explicitly focused
@@ -130,6 +131,10 @@ type
       route can report ActivationRequired; configuration fabricates no gesture.
       Pending routes retire before this retained host and its controls. }
     function ConfigureFileOpening(const AHost: INyxFileOpenHost): TNyxBrowserApplication;
+    { Explicit table clipboard/export services, retained by the view before Run.
+      Nil restores unavailable defaults; callers can supply alternate hosts and
+      limits. Services must not retain this application, its document or view. }
+    function ConfigureTableWorkbench(const AServices: INyxTableWorkbenchServices): TNyxBrowserApplication;
     property FlowRoutes: INyxFlowRouteBinding read FFlowRoutes;
     { Private application catalog/load diagnostics survive navigation. Configure
       before mounting; supplying a resolver replaces the target HTTP/cache path.
@@ -348,6 +353,18 @@ begin
     raise ENyxModel.Create('Configure file-save authority before mounting the application');
   end;
   FFileSaveHost := AHost;
+  Result := Self;
+end;
+
+function TNyxBrowserApplication.ConfigureTableWorkbench(
+  const AServices: INyxTableWorkbenchServices): TNyxBrowserApplication;
+begin
+
+  if FDocument <> nil then
+  begin
+    raise ENyxModel.Create('Configure table services before mounting the application');
+  end;
+  FRenderer.TableWorkbenchServices := AServices;
   Result := Self;
 end;
 
