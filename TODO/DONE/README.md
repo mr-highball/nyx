@@ -3,6 +3,15 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Generated table output hosts](NS-4_table-output-hosts_01.md) was accepted
+on 2026-10-29. Independent typed local choices, exact old profile meanings,
+ordinary Outputs and eight real saved-application builds feed generated services.
+Native 63 per width has clean heaps and actual clipboard/Save-dialog effects;
+browser pointer input plus user-operated Save As writes exact 452/175-byte TSV
+files, with filtered output matching native. Projects/settings stay exact.
+Full table-workbench and broader physical/assistive quality remain open, with no
+duplicate completion credit.
+
 [Embedded browser popover visibility](NS-2_popover-viewport_01.md) was accepted
 on2026-10-29. The clipping regression fails before the repair and passes at
 desktop/phone widths afterward, including nested and nonuniformly scaled frames.

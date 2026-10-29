@@ -84,10 +84,12 @@ or preview-mode fixture variants.
 
 The same full browser/native query journeys now qualify the caption launcher and
 its discovered command-fence lease repair. Ordinary Copy identifies the next
-concrete prerequisite: [table output hosts](NS-4_table-output-hosts_01.md). Wire
-the existing adapters through local output choices and generated entry points,
-then return to exact transfer effects in this same saved Service monitor. Full
-workbench criteria and broader input/quality remain open.
+concrete prerequisite: [table output hosts](DONE/NS-4_table-output-hosts_01.md),
+now accepted. Real generated native/browser Copy and disk TSV pass through local
+output choices, including actual browser picker saves at wide/compact widths.
+Return to the same workbench's remaining W1/W2 workflows and bounded named
+semantic move. Full workbench criteria and broader input/quality remain open;
+stop further host/profile variants.
 
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |

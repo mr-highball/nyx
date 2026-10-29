@@ -1,7 +1,7 @@
 # NS-4_table-output-hosts_01 — Runtime hosts for Studio-built table actions
 
-[Milestones](../MILESTONES.md) · [Tasks](README.md) · [Current work](../WORK.md) ·
-[Table workbench](NS-3_control-usefulness_03.md)
+[Milestones](../../MILESTONES.md) · [Tasks](../README.md) · [Current work](../../WORK.md) ·
+[Table workbench](../NS-3_control-usefulness_03.md)
 
 **Description:**
 
@@ -21,16 +21,48 @@ of installed compilers and preserve callers' ability to inject alternative hosts
 This is an NS-4 prerequisite of the original workbench03 outcomes, with no separate
 completion credit or waiver of its broader interaction/quality requirements.
 
-The current implementation adds the independent typed choice and ordinary
-Outputs controls, preserves older profile bytes, and generates both targets'
-table services through the selected hosts. Reconciliation/profile checks and
-eight exact saved-application compiler jobs pass. Actual generated browser Copy
-at desktop/compact widths matches the real system clipboard; a different sample
-proves a fresh compact write. Enabled page export reaches the real Save As picker,
-confirmed by the user's screenshot, but no file write or TSV bytes are yet
-confirmed. Native generated-runtime input, confirmed export scopes and remaining
-ordinary Outputs checks stay open. [WORK.md](../WORK.md) owns the evidence and
-delivery state; this checkpoint does not accept the task.
+**Acceptance — 2026-10-29:**
+
+All five criteria are qualified for this generated-host integration. Production
+implementation 21fa6371 is delivered. Typed clipboard selection is independent
+of saving/opening/HTTP; versions 1..4 retain their exact absent/revoked meanings.
+Native/browser reconciliation passes 270 per target and strict profiles 69 per
+target. Ordinary native Outputs passes 16 at each width; actual browser desktop/
+compact Apply/Reload/revoke preserves independent choices and restores the exact
+original effective profile. Eight saved-application compiler jobs exercise both
+targets with neither/copy/save/both. Stale output fingerprints refuse submission.
+
+Generated applications configure services before mounting, share one selected
+activated save host with file Logic and retain typed export defaults. The
+[native instrumenter](../../tests/nyx_service_output_instrument.lpr) proves its
+two insertions reversible. Its [driver](../../tests/nyx.test.service.outputs.lcl.pas)
+borrows that generated application and never replaces service factories, hosts,
+mounting or teardown. Real controls and process-owned Save dialogs pass 63 checks
+at each native width with two complete clean heaps. Fresh system clipboard
+writes match both 85/42-unit accepted commands. Current-page export writes one
+Gateway row (112 bytes); filtered export writes two Running rows (175 bytes). Both
+match independent fixed TSV expectations; real cancellation creates no file.
+Runtime query/paging are explicit public calls and do not rewrite the design.
+
+The same MCP-built browser application copies exact raw commands at desktop/
+compact widths through the real Windows clipboard. Ordinary desktop page export
+writes all four rows (452 bytes). Compact Status filtering and all-filtered export
+write exactly the two Running rows (175 bytes), also byte-identical to native.
+The user operates the real browser Save As dialogs; ordinary pointer input,
+terminal Written messages and binary disk comparisons qualify the result. No
+virtual-clipboard injection, forced download fallback or manual service injection
+substitutes for these effects. Browser downloads and other platforms are not
+claimed from those picker writes.
+
+All nine QA project pairs/identities/revisions and the original effective output
+profile remain exact. Prior matched QA/LAN delivery preserves fixed slots and all
+three LAN pairs plus 82 durable settings/project files. External packets
+table-output-hosts-01/02 retain builds, failed setup/retired-presenter driver runs,
+clean final runs, source identities, actual files and representative images.
+Native widget input is synthetic; browser picker choice is user-operated. Full
+physical/assistive, broad workbench and other-widgetset quality remain with the
+parent task. This acceptance adds no separate completion credit. Return to that
+workbench rather than expanding host/profile fixtures.
 
 **Acceptance Criteria:**
 

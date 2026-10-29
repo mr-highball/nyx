@@ -157,6 +157,18 @@ both and neither. Compilation does not establish clipboard or disk effects.
 plain UTF-16 clipboard channel using an expected UTF-8 file. It never writes the
 clipboard or prints unrelated contents, and does not qualify private NUL formats.
 
+For the saved Service monitor, `nyx_service_output_instrument` accepts the
+generated native entry and a fresh qualification-copy path. It adds one driver
+unit/call and proves reversing them restores the exact original entry. Compile
+that copy with the same accepted view unit and `tests/` on the unit path, then
+run it with `<1280|390> <fresh-evidence-directory>`. The maintained driver borrows
+the already mounted application, retaining its generated service factories and
+teardown. Actual Windows clipboard reads and process-owned Save dialogs verify
+exact effects, distinct runtime page/filtered scopes and cancellation. The driver
+never substitutes hosts; its synthetic native input and instrumented event-loop
+entry are stated explicitly. Browser Save As selection is separately exercised
+by a person; confirmed picker writes are distinct from download requests.
+
 ## Studio project files
 
 Open the Project file section at any time; no output selection or compiler is

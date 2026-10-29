@@ -8,8 +8,11 @@ from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-wo
 table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a
 useful connected Tool Canvas. Native table and Studio journeys now have bounded
 checkpoints; their browser/input and full original acceptance stay open. The
-next active outcome is the same table workbench's browser transfer effects and
-generated [table output hosts](TODO/NS-4_table-output-hosts_01.md). Its arrangement
+generated [table output hosts](TODO/DONE/NS-4_table-output-hosts_01.md) are now
+accepted: exact real clipboard writes and scoped disk TSV pass through both
+generated targets, including user-operated browser picker saves at both widths.
+The next active outcome returns to the same table's remaining W1/W2 workflows and
+bounded named semantic move. Its arrangement
 launcher and query-command readiness leases now pass the full browser/native
 journeys and real wide/compact compiled-preview input, with preserved delivery.
 Original full workbench and broader quality criteria remain open. Native

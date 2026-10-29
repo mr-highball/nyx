@@ -9,7 +9,58 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Generated table runtime hosts — 2026-10-29
+## Current work — Table runtime hosts accepted; return to workbench — 2026-10-29
+
+Previous goal turn: PROGRESS. 21fa6371 is pushed and remote-verified. Root stays
+SOLO. [Generated table runtime hosts](TODO/DONE/NS-4_table-output-hosts_01.md)
+now accepts all five scoped criteria. Typed local configuration, shared host
+generation and prior exact profile/reconciliation/build evidence combine with
+this turn's actual native/browser transfer effects. The full workbench03 and
+broader goal remain open; this prerequisite adds no separate completion credit
+and does not erase the parent's earlier no-closure/reassessment history.
+
+The maintained Pascal instrumenter adds one unit/call before the event loop and
+proves reversing them restores the exact generated entry. Its driver borrows the
+already mounted application, never substitutes hosts and uses ordinary native
+controls plus only its own process's actual Windows Save dialogs. The original
+accepted source/design files stay byte exact. Native 63 checks at 1280 and 63 at 390
+verify fresh 85/42-unit system clipboard writes, 112-byte one-row page export,
+175-byte two-row filtered export and real Save cancellation without a file.
+Independent fixed TSV expectations match disk bytes, and two complete heaps are
+clean. Runtime query/paging use explicit public APIs without editing the design.
+
+Initial qualifier builds expose and repair a typed-constant expression, missing
+unit imports and a native set-range expression. Two first execution failures use
+the original presenter after an arrangement command replaces it. The driver now
+checks the realized button and closes the current manager presenter. This is a
+test-driver repair; no production host/adapter changes occur. All failure logs
+are retained. Compiler/runtime readers are terminal.
+
+Actual compact browser Actions/Project/Outputs edits, Apply, Reload and revoke
+preserve independent choices and restore the exact original effective profile.
+The same MCP-built browser application then writes 452 bytes for all four current
+page records at desktop width. Ordinary compact Status=Running filtering and
+all-filtered export write 175 exact bytes for Gateway/Reports. The user operates
+both real Save As dialogs; ordinary Written messages and binary file comparison
+confirm actual disk writes. Filtered browser/native files are identical. These
+are confirmed picker writes, not download requests or simulated host results.
+
+The final original output fingerprint is restored. All nine QA pairs, identities
+and revisions match the previous checkpoint; LAN's delivered product and all
+three pairs/settings stay unchanged this turn. Temporary compact observers close,
+their viewport overrides reset and both original review tabs remain. The external
+table-output-hosts-02 packet retains exact files, images, source identities,
+compiler logs and final clean runs. All private files/process TEMP/TMP stay on E:.
+
+Return directly to [workbench03](TODO/NS-3_control-usefulness_03.md), its original
+W1/W2 outcomes and criterion6's bounded named semantic move. Next deliverable:
+inspect the current semantic operation surface against the same saved table,
+provide a stable-field named move if still absent, and qualify ordinary source/
+history/revision behavior. Stop host/profile and equivalent source variants.
+Full original table, physical/assistive, broader target and performance criteria
+retain their existing owners; no new user input or permission is needed.
+
+## Previous checkpoint — Generated table runtime hosts — 2026-10-29
 
 Previous goal turn: PROGRESS.de3735b6 is pushed and remote-verified. Root stays
 SOLO. The browser arrangement and discovered query-command lifetime repairs below
@@ -126,7 +177,7 @@ service. Current-page RAW TSV export reports that the host cannot save it. Both
 are explicit failed transfers, not clipboard or disk successes. The handwritten
 example supplies these adapters, while generated entry points omit table service
 setup. Existing FileSaving config selects a Logic save host independently.
-[Table output hosts](TODO/NS-4_table-output-hosts_01.md) now owns the typed local
+[Table output hosts](TODO/DONE/NS-4_table-output-hosts_01.md) now owns the typed local
 clipboard choice, reuse of selected save authority, profile/UI/generator checks
 and real native/browser effects. Do not grant services merely from imported data.
 

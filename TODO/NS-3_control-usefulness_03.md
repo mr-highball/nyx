@@ -67,7 +67,7 @@ retained separately rather than counted as product regressions.
 The same saved Service monitor's desktop/compact managers now stay open after
 revealing Command line, and Move earlier produces the intended visible order. Its Copy
 action reports a missing clipboard host. Generated host configuration and actual
-transfer effects belong to [table output hosts](NS-4_table-output-hosts_01.md).
+transfer effects belong to [table output hosts](DONE/NS-4_table-output-hosts_01.md).
 These are runtime/authoring prerequisites; no original full workbench criterion
 is accepted from the current checkpoint.
 
@@ -76,6 +76,19 @@ either serving process, the three exact LAN projects or output configuration.
 The source-worker bytes remain unchanged. Copy reports its missing clipboard
 service, and current-page RAW TSV export reports an unavailable save host; neither
 is recorded as a successful transfer. Continue the output-host prerequisite.
+
+**Generated runtime transfer acceptance — 2026-10-29:**
+
+That scoped output-host prerequisite is now accepted. The same saved Service
+monitor has exact real clipboard writes and confirmed scoped disk TSV through
+its generated browser/native host setup at desktop/compact allocations. Native
+controls pass63 per width with clean heaps; browser picker choices are performed
+by the user and their files match independent byte expectations. Page/filtered
+membership differs explicitly, hidden Command stays excluded and accepted data,
+source pairs, history and effective local configuration remain intact. This
+closes the missing runtime-host prerequisite, without accepting any of the full
+original workbench criteria. Return to the remaining user-facing W1/W2 workflows,
+including criterion6's bounded named semantic move; stop host/profile variants.
 
 **Description:**
 
@@ -738,7 +751,7 @@ needs qualification against the portable contract.
 
 **Blockers**
 
-- [Table output hosts](NS-4_table-output-hosts_01.md) supply the missing generated
+- [Table output hosts](DONE/NS-4_table-output-hosts_01.md) supply the missing generated
   clipboard/export services through existing explicit runtime output choices.
 - [Embedded popover viewport](DONE/NS-2_popover-viewport_01.md) repairs the observed
   pointer obstruction in the same ordinary compiled browser journey.
