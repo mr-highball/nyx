@@ -27,13 +27,14 @@ uses
   Interfaces, Classes, SysUtils, Math, Forms, Controls, Grids, StdCtrls, LCLIntf, LCLType,
   LMessages, Types,
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec,
-  nyx.state, nyx.collections, nyx.collections.view, nyx.collections.view.types,
+  nyx.state, nyx.behavior, nyx.events, nyx.scheduler,
+  nyx.collections, nyx.collections.view, nyx.collections.view.types, nyx.collections.mount,
   nyx.collections.columns, nyx.collections.query, nyx.collections.selection,
   nyx.collections.presentation,
   nyx.collections.text.layout,
   nyx.collections.arrangement,
   nyx.content.projection.lcl,
-  nyx.collections.lcl.grid, nyx.canvas.geometry, nyx.canvas.scene,
+  nyx.collections.lcl, nyx.collections.lcl.grid, nyx.canvas.geometry, nyx.canvas.scene,
   nyx.canvas.workspace, nyx.canvas.lcl, nyx.test.capture.lcl;
 
 type
@@ -47,6 +48,17 @@ type
   public
     Failure: TNyxText;
     procedure Failed(ASender: TObject; AException: Exception);
+  end;
+
+  { The router owns a managed callback, while the finite test pins a second
+    interface for observing its counters. It retains no control/view/document;
+    only a synchronous sequential event response may cancel a native default. }
+  TNavigationCancellation = class(TNyxEventCallback)
+  public
+    Enabled: Boolean;
+    Calls: Integer;
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
   end;
 
 const
@@ -104,6 +116,17 @@ begin
   Failure := AException.Message;
 end;
 
+procedure TNavigationCancellation.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Inc(Calls);
+
+  if Enabled then
+  begin
+    NyxEventResponse(AExecution).Consume;
+  end;
+end;
+
 procedure Pump;
 begin
   Application.ProcessMessages;
@@ -111,6 +134,158 @@ begin
   if GFailures.Failure <> '' then
   begin
     raise Exception.Create(GFailures.Failure);
+  end;
+end;
+
+{ Enter the actual received LCL wheel message on the bound grid's installed
+  WindowProc. Its message coordinates are client-local. A canvas child can be
+  outside the desktop at full zoom; Win32's hover redirection would then send
+  a synthetic OS wheel to an unrelated window. This deterministic native-LCL
+  check never reads/moves the desktop cursor or claims physical hit testing. }
+procedure WheelGrid(AGrid: TNyxCollectionStringGrid; ADelta: Integer);
+var
+  LMessage: TLMMouseEvent;
+begin
+  LMessage := Default(TLMMouseEvent);
+  LMessage.Msg := LM_MOUSEWHEEL;
+  LMessage.X := AGrid.ClientWidth div 2;
+  LMessage.Y := AGrid.ClientHeight div 2;
+  LMessage.WheelDelta := ADelta;
+  AGrid.WindowProc(PLMessage(@LMessage)^);
+  Pump;
+end;
+
+{ Ordinary PageDown and wheel input must share the same public callback/default
+  path as an unzoomed table. Runtime selection may follow keyboard navigation;
+  browsing with the wheel does not edit rows or silently replace that selection. }
+procedure CheckNavigation(AWheelGrid: TNyxCollectionStringGrid = nil);
+var
+  LKey: TNavigationCancellation;
+  LWheel: TNavigationCancellation;
+  LKeyLease: INyxEventCallback;
+  LWheelLease: INyxEventCallback;
+  LKeySubscription: INyxEventSubscription;
+  LWheelSubscription: INyxEventSubscription;
+  LSelection: INyxCollectionSelection;
+  LBeforeRow: Integer;
+  LBeforeTop: Integer;
+  LPageCount: Integer;
+  LRevision: Integer;
+begin
+
+  if AWheelGrid = nil then
+  begin
+    AWheelGrid := GGrid;
+  end;
+  GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(360, 300), 0.5));
+  GGrid.Col := 0;
+  GGrid.Row := 6;
+  GGrid.TopRow := 4;
+  GGrid.SetFocus;
+  Pump;
+  LKey := TNavigationCancellation.Create;
+  LKeyLease := LKey;
+  LWheel := TNavigationCancellation.Create;
+  LWheelLease := LWheel;
+  try
+    LKeySubscription := GView.EventsFor(GItem)
+      .OnBeforeKeyDown(NyxControlEvents('service-table')).Subscribe(LKeyLease);
+    LWheelSubscription := GView.EventsFor(GItem)
+      .OnBeforeWheel(NyxControlEvents('service-table')).Subscribe(LWheelLease);
+    LRevision := GData.Store.Snapshot.Revision;
+    LBeforeRow := GGrid.Row;
+    LBeforeTop := GGrid.TopRow;
+    LKey.Enabled := True;
+    SendMessage(GGrid.Handle, LM_KEYDOWN, VK_NEXT, 0);
+    SendMessage(GGrid.Handle, LM_KEYUP, VK_NEXT, 0);
+    Pump;
+    Check((LKey.Calls = 1) and (GGrid.Row = LBeforeRow) and (GGrid.TopRow = LBeforeTop),
+      'a consumed PageDown reaches one callback and leaves the actual viewport/row unchanged');
+    LKey.Enabled := False;
+    SendMessage(GGrid.Handle, LM_KEYDOWN, VK_NEXT, 0);
+    SendMessage(GGrid.Handle, LM_KEYUP, VK_NEXT, 0);
+    Pump;
+    Check((LKey.Calls = 2) and (GGrid.Row > LBeforeRow),
+      'ordinary native PageDown navigates the zoomed table after callback admission / callbacks ' +
+      TNyxText(IntToStr(LKey.Calls)) + ' row ' + TNyxText(IntToStr(LBeforeRow)) + ' to ' +
+      TNyxText(IntToStr(GGrid.Row)) + ' top ' + TNyxText(IntToStr(LBeforeTop)) + ' to ' +
+      TNyxText(IntToStr(GGrid.TopRow)));
+    { Wrapped rows may advance within the current visible window first. Send
+      further ordinary PageDown presses until its actual viewport moves, with
+      the finite fixture row count as the bound; no scrollbar setter substitutes
+      for the keyboard default being qualified here. }
+    LPageCount := 1;
+    while (GGrid.TopRow = LBeforeTop) and (LPageCount < GGrid.RowCount) do
+    begin
+      SendMessage(GGrid.Handle, LM_KEYDOWN, VK_NEXT, 0);
+      SendMessage(GGrid.Handle, LM_KEYUP, VK_NEXT, 0);
+      Pump;
+      Inc(LPageCount);
+    end;
+    Check((LKey.Calls = LPageCount + 1) and (GGrid.TopRow > LBeforeTop),
+      'ordinary PageDown input reveals later rows with exactly one callback per press');
+    Check(GData.Selection.Contains(GData.Snapshot.ItemAt(GGrid.Row - 1).Ref),
+      'keyboard navigation publishes the actual row identity through the bound view');
+    LSelection := GData.Selection;
+    LBeforeTop := GGrid.TopRow;
+    LWheel.Enabled := True;
+    WheelGrid(AWheelGrid, 120);
+    Check((LWheel.Calls = 1) and (GGrid.TopRow = LBeforeTop),
+      'a consumed native wheel reaches one callback and suppresses scrolling');
+    LWheel.Enabled := False;
+    WheelGrid(AWheelGrid, 120);
+    Check((LWheel.Calls = 2) and (GGrid.TopRow < LBeforeTop),
+      'ordinary wheel input scrolls the actual bound table at half zoom');
+    Check(LSelection.SameState(GData.Selection), 'wheel browsing retains the selected item identity');
+    Check(GData.Store.Snapshot.Revision = LRevision, 'navigation never edits accepted collection rows');
+  finally
+
+    if LKeySubscription <> nil then
+    begin
+      LKeySubscription.Cancel;
+    end;
+
+    if LWheelSubscription <> nil then
+    begin
+      LWheelSubscription.Cancel;
+    end;
+    LKeySubscription := nil;
+    LWheelSubscription := nil;
+    LKeyLease := nil;
+    LWheelLease := nil;
+  end;
+end;
+
+{ A direct caller lends its real TStringGrid to the same mount implementation.
+  Binding changes only the live wheel default; disconnect restores the creator's
+  original policy without requiring the caller to replace its control. }
+procedure CheckBorrowedWheelPolicy;
+var
+  LGrid: TStringGrid;
+  LMount: INyxCollectionMount;
+begin
+  LGrid := TStringGrid.Create(nil);
+  try
+    LGrid.Visible := False;
+    LGrid.Parent := GHost;
+    LGrid.MouseWheelOption := mwCursor;
+    { The wrapped/arranged fixture requires specialized layout capabilities.
+      A separate plain view of the same store keeps this check about
+      borrowed-control ownership rather than unsupported presentation fallback. }
+    LMount := MountNyxLCLCollection(LGrid,
+      NewNyxCollectionView(GData.Store, NyxCollectionView(Services)
+        .Column(NyxTextField('name'), 'Service'), cpTable));
+    Check(LGrid.MouseWheelOption = mwGrid, 'a bound native table defaults to viewport wheel scrolling');
+    LMount.Disconnect;
+    Check(LGrid.MouseWheelOption = mwCursor, 'disconnect restores the borrowed grid creator wheel policy');
+  finally
+
+    if LMount <> nil then
+    begin
+      LMount.Disconnect;
+    end;
+    LMount := nil;
+    LGrid.Free;
   end;
 end;
 
@@ -263,6 +438,7 @@ begin
   GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(360, 300), 1));
   GGrid.Col := 0;
   GGrid.Row := 6;
+  GGrid.TopRow := 4;
   GGrid.SetFocus;
   SendMessage(GGrid.Handle, LM_KEYDOWN, VK_F2, 0);
   Pump;
@@ -285,6 +461,15 @@ begin
       'zoom preserves the unfinished native caret and selection');
     Check(GData.Store.Snapshot.Revision = LRevision,
       'geometry never commits an unfinished cell edit');
+    WheelGrid(GGrid, 120);
+    Check(GGrid.EditorMode and (GGrid.Editor = LEditor) and LEditor.Focused,
+      'wheel browsing retains the exact focused unfinished editor at this zoom');
+    Check((TNyxText(LEditor.Text) = TNyxText('Unfinished service / 🌙')) and
+      (LEditor.SelStart = 2) and (LEditor.SelLength = 5),
+      'wheel browsing preserves the unfinished Unicode draft, caret and selection');
+    Check(GData.Store.Snapshot.Revision = LRevision,
+      'wheel browsing cannot commit an unfinished cell value');
+    WheelGrid(GGrid, -120);
   end;
   SendMessage(LEditor.Handle, LM_KEYDOWN, VK_ESCAPE, 0);
   Pump;
@@ -485,6 +670,8 @@ var
   LFit: TNyxCollectionFitButton;
   LFitWidth: Integer;
   LFitHeight: Integer;
+  LBeforeTop: Integer;
+  LSelection: INyxCollectionSelection;
 
   procedure CheckRows;
   var
@@ -546,6 +733,21 @@ begin
     GGrid.TopRow := 7 + LIndex;
     Pump;
     CheckRows;
+    LBeforeTop := GGrid.TopRow;
+    LSelection := GData.Selection;
+    WheelGrid(LStart, 120);
+    Check(GGrid.TopRow < LBeforeTop,
+      'wheel input over the pinned name pane scrolls the middle / top ' +
+      TNyxText(IntToStr(LBeforeTop)) + ' to ' + TNyxText(IntToStr(GGrid.TopRow)) +
+      ' pane ' + TNyxText(IntToStr(LStart.TopRow)) + ' ready ' +
+      TNyxText(BoolToStr(LStart.ColumnEditorInputSurface.Ready, True)) + '/' +
+      TNyxText(BoolToStr(LStart.ColumnEditorInputSurface.PositionReady, True)));
+    CheckRows;
+    LBeforeTop := GGrid.TopRow;
+    WheelGrid(LEnd, -120);
+    Check((GGrid.TopRow > LBeforeTop) and LSelection.SameState(GData.Selection),
+      'wheel input over either pinned pane scrolls once without selecting another item');
+    CheckRows;
     GGrid.LeftCol := GGrid.FixedCols;
     Pump;
     LStartPoint := LStart.ClientToScreen(Point(0, 0));
@@ -602,14 +804,17 @@ end;
 procedure Run;
 var
   LIndex: Integer;
+  LColumn: Integer;
   LZoom: Double;
 begin
   Build;
   Check((GData <> nil) and (GData.Snapshot.Count = 40), 'the real collection remains bound');
+  CheckBorrowedWheelPolicy;
 
   if GPinned then
   begin
     CheckPinnedRows;
+    CheckNavigation(FieldGrid(NyxColumnIdentity(NyxTextField('name')), LColumn));
     Check(TNyxCodec.Encode(GDocument) = GBefore, 'pinned runtime work leaves the authored document exact');
     GView.Execute(nccFit);
     Pump;
@@ -654,6 +859,7 @@ begin
   GData.ConfigureQuery(NyxCollectionQuery);
   Pump;
   CheckMetrics(0.5);
+  CheckNavigation;
   CheckEditorZoom;
 
   if GArranged then

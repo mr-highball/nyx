@@ -28,6 +28,13 @@ Declare `LTasksTable: INyxTable` and import `nyx.controls`, `nyx.collections` an
 removes the local descriptor, restoring a reusable definition's binding. These
 choices are distinct in clones, part overrides, source and paired history.
 
+Bound native tables use LCL's viewport wheel mode: browsing scrolls rows while
+retaining the active cell, selection and unfinished editor text. Wheel input over
+either pinned edge reaches the same outer table. The ordinary cancellable Nyx
+wheel callback chain still runs before the native default. Disconnect restores
+the original wheel setting on a borrowed grid; unbound grids keep their creator's
+policy. Keyboard commands remain responsible for moving the active selection.
+
 Saved JSON-backed definitions use `LDocument.ResourceCollections.Define` with
 a typed `TNyxResourceRows` recipe. Authored snapshots then contain empty schema
 seeds; both hosts/renderers resolve independent application/instance stores at

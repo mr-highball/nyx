@@ -89,3 +89,22 @@ Workshop retains its full175 journey at both widths; WORK.md owns the final
 source snapshots and rendered inspection. The maintained target retains this
 new consumer. Zero owned foreground captures are available, so no diagnostic
 image is relabelled as actual display. All original remaining criteria stay open.
+
+## Native table input continuation — 2026-10-28
+
+The existing canvas data-control journey now exercises actual HWND PageDown,
+client-local received LCL wheel input, cancellable callbacks, selected identities
+and unfinished Unicode edits through repeated zoom. The original wheel failure
+exposes LCL's cursor-moving default. A live bound table now scrolls the viewport
+instead; its borrowed native setting is restored at disconnect, and pinned panes
+follow the same outer table. Unbound grids keep creator policy. No new saved
+descriptor or public policy is introduced.
+
+The maintained target passes132 plain,154 wrapped,147 arranged and255 pinned
+checks at both1280/390. Complete heaps are clean; original geometry1418, native
+input86, print453 and both live-control67 regressions also pass. The browser
+geometry fixture compiles without new browser interaction evidence. WORK.md
+retains the failure, fixture corrections and exact scope. Native/LCL synthetic
+input and diagnostic printing do not establish physical/assistive acceptance.
+The saved Workshop evidence above remains separate; all remaining criteria stay
+open, including the other families and honest caller interaction choices.

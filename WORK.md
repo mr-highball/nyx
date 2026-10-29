@@ -9,7 +9,58 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Native scroll chrome in captured previews — 2026-10-28
+## Current work — Keyboard, wheel and editor preservation under zoom — 2026-10-28
+
+Previous goal turn: PROGRESS.4642ee9 is pushed and remote-verified. Root remains
+SOLO. Continue canvas-scrollbars01's original input/viewport criteria through the
+existing live data-control journey. Start with the actual bound table's keyboard
+and wheel producers, its unfinished F2 editor, query refresh and repeated zoom;
+preserve original assertions and all previous print evidence. Reuse shared
+viewport/input/adapter contracts and return concrete failures to the library.
+Do not replace ordinary input behavior with semantic document operations or add
+equivalent print-only fixtures. Browser/native and physical/assistive claims stay
+separate. All new private artifacts and process TEMP/TMP use the configured E:
+roots. No new service, user input or approval is needed.
+
+The unchanged native data-control baseline passes107 at390 with a complete clean
+heap. New real keyboard/wheel checks expose LCL's cursor-moving wheel default:
+the first new run fails84 after wheel browsing does not move the viewport.
+The bound-table adapter now selects viewport wheel mode and restores the borrowed
+creator's setting on detach, including constructor-failure cleanup. Edge panes
+inherit their outer table's setting. Existing raw grids retain their own defaults.
+The regular and arranged journeys pass129/144; the expanded wrapped journey
+passes154 with complete clean heaps. Wrapped PageDown legitimately moves within
+the visible window before scrolling; the finite keyboard check now continues
+ordinary presses until actual viewport movement, retaining per-press callbacks.
+
+The first pinned wheel attempt reaches an off-screen native canvas child. Win32
+hover redirection can route that synthetic OS message to another window, so the
+deterministic wheel helper now enters the real received client-local LCL message
+through the owned grid's installed WindowProc. Native keyboard still enters the
+actual HWND. The expanded pinned consumer passes247 with clean heap before the
+final cancellation extension. Neither path claims physical hit testing. Initial
+missing-unit/record-cast compiler errors and all failed attempts are retained in
+the external canvas-scroll-input-01 packet. The maintained scroll-chrome target
+now runs this same existing consumer in all four modes at both widths.
+
+The final maintained batch passes native132 plain,154 wrapped,147 arranged and
+255 pinned at both1280/390. Pinned input includes exactly one outer callback per
+wheel, suppression when consumed and selected-item preservation when scrolling
+either edge. The earlier native1418 geometry,86 input,453 print and both67 live
+canvas checks also pass; all13 complete native heaps are clean and original
+120-second runtime limits remain unchanged. The browser geometry fixture compiles
+without new executed browser interaction credit. Actual compiler/runtime readers
+are joined and their pinned sources are unchanged; a later comment-only review
+removes an inaccurate description of the shared mutable store. No product logic
+changes after this batch. Semantic nyx_session still observes the same JSON
+Workshop at31 with json-workshop selected and no pending draft. LAN HTTP answers
+200 through its existing address. No service, project pair or configuration was
+changed. The user-identified firewall script belongs to a separate project;
+it is not treated as a Nyx firewall result or modified here. Continue the original
+mixed-family input/viewport and caller/physical/assistive criteria without further
+equivalent table-policy variants; canvas-scrollbars01 remains open.
+
+## Previous checkpoint — Native scroll chrome in captured previews — 2026-10-28
 
 Previous goal turn: PROGRESS.246df2d is pushed and remote-verified. Root remains
 SOLO. Continue the original canvas-scrollbars01 criteria from the actual native

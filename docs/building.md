@@ -20,6 +20,13 @@ diagnostic does not change assertions or qualify performance. Keep redirected
 logs, compiler outputs and process `TEMP`/`TMP` in the configured external scratch
 directories; compiler output flags alone do not redirect host temporary files.
 
+`scroll-chrome -ScrollChromeEvidenceDirectory <NEW-path>` includes the existing
+live canvas table journey at desktop and compact widths, in plain, wrapped,
+arranged and pinned modes. It checks native keyboard/wheel cancellation, actual
+scroll movement, selected identities, borrowed-control restoration and unfinished
+Unicode edits through repeated zoom. These are synthetic native/LCL inputs;
+diagnostic prints do not establish physical-device or assistive acceptance.
+
 `project-files` runs checked portable file/project admission and builds native
 Studio, the ordinary file-control consumer, the Pascal semantic seed/HTTP observer
 tools, browser Studio/source worker and matching project fixtures. It starts no

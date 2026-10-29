@@ -782,6 +782,21 @@ try {
       Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_canvas_uniform_controls.exe') @(
         [string]$nyxScrollWidth) ('uniform-' + $nyxScrollWidth) $true
     }
+    # Retain the existing live bound-table consumer: actual keyboard/wheel
+    # dispatch, cancellation, draft/caret preservation and both pinned edges.
+    # Each finite journey keeps its ordinary120-second/complete-heap gate.
+    Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @(
+      'tests/nyx_canvas_data_controls.lpr')) 'data-compiler'
+    foreach ($nyxScrollMode in @('plain', 'wrapped', 'arranged', 'pinned')) {
+      foreach ($nyxScrollWidth in @(1280, 390)) {
+        $nyxScrollTag = 'data-' + $nyxScrollMode + '-' + $nyxScrollWidth
+        $nyxScrollArguments = @([string]$nyxScrollWidth,
+          (Join-Path $nyxScrollRoot ($nyxScrollTag + '.png')))
+        if ($nyxScrollMode -ne 'plain') { $nyxScrollArguments += $nyxScrollMode }
+        Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_canvas_data_controls.exe') `
+          $nyxScrollArguments $nyxScrollTag $true
+      }
+    }
     Invoke-NyxScrollCheck $nyxScrollPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', "-FE$nyxScrollBrowser", 'tests/nyx_scroll_chrome_tests.lpr') 'geometry-browser-compiler'
     Copy-Item -LiteralPath $nyxScrollRuntime -Destination (Join-Path $nyxScrollBrowser 'rtl.js')

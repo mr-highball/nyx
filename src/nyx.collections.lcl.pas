@@ -736,6 +736,9 @@ type
     FDisclosureValues: array of Boolean;
     FDisclosureSerial: Integer;
     FPreviousOptions: TGridOptions;
+    { Borrowed grids recover their original native wheel policy at disconnect.
+      A live bound table scrolls its viewport without moving the active cell. }
+    FPreviousMouseWheelOption: TMouseWheelOption;
     FPreviousReadOnly: Boolean;
     FPreviousKey: TKeyEvent;
     FPreviousUTF8: TUTF8KeyPressEvent;
@@ -2903,6 +2906,7 @@ begin
   Grid.Parent := AOwner.FGrid;
   Grid.BorderStyle := bsNone;
   Grid.ScrollBars := ssNone;
+  Grid.MouseWheelOption := AOwner.FGrid.MouseWheelOption;
   Grid.TabStop := False;
   Grid.FixedCols := 0;
   Grid.ColCount := 1;
@@ -6307,6 +6311,7 @@ begin
           raise ENyxCollection.Create('Table binding requires a native string grid');
         end;
         FGrid := TStringGrid(AControl);
+        FPreviousMouseWheelOption := FGrid.MouseWheelOption;
 
         if AView.Spec.HasColumnFormat and not (FGrid is TNyxCollectionStringGrid) then
         begin
@@ -6324,6 +6329,12 @@ begin
         FPreviousCell := FGrid.OnSelectCell;
         FPreviousValidate := FGrid.OnValidateEntry;
         FPreviousOptions := FGrid.Options;
+        { LCL defaults to moving the active cell on wheel input. Bound tables
+          follow browser table semantics instead: wheel browsing scrolls the
+          viewport and leaves selection/unfinished edits to explicit commands.
+          Keep LCL's ordinary event/default path so callbacks can still consume
+          the request. This setting is restored when the borrowed grid detaches. }
+        FGrid.MouseWheelOption := mwGrid;
         FGrid.OnSelectCell := GridSelected;
         FGrid.OnValidateEntry := GridEdited;
         FPreviousKey := FGrid.OnKeyDown;
@@ -8494,6 +8505,7 @@ begin
         FGrid.OnPrepareCanvas := FPreviousPrepare;
         FGrid.OnResize := FPreviousGridResize;
         FGrid.Options := FPreviousOptions;
+        FGrid.MouseWheelOption := FPreviousMouseWheelOption;
         FGrid.Hint := FPreviousGridHint;
         FGrid.ShowHint := FPreviousGridShowHint;
 
