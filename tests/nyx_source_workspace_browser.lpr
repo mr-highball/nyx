@@ -34,14 +34,15 @@ uses
 type
   { Presentation changes publish after the originating callback retires. Each
     stage observes the real host on a later turn instead of forcing a renderer
-    refresh or treating a queued command as an already mounted control. }
+    refresh or treating a queued command as an already mounted control. The
+    deep-caret return also checks actual scrolling after modal height shrinks. }
   TWorkspaceStage = (wsOpenCode, wsEditSource, wsObserveOutputs,
     wsObserveToolsOpen, wsObserveToolsClosed, wsProjectForResources,
     wsOpenResources, wsShowResourceEditor, wsFillResource, wsPreviewResource, wsApplyResource,
     wsObserveResourceRefusal, wsLeaveResources, wsReturnToDesign,
     wsObserveResourcesClosed, wsOpenMessages, wsObserveMessages,
     wsObserveSource, wsObserveModal, wsObserveModalMessages,
-    wsObserveModalSource, wsObserveClosed, wsCancelModal,
+    wsObserveModalSource, wsObserveDeepClosed, wsObserveClosed, wsCancelModal,
     wsObserveCancelled);
 
   { The installed Web declaration exposes only Event(type). Keep the standard
@@ -212,10 +213,29 @@ begin
   end;
 end;
 
+{ Keep the same machine-readable result and expose its bounded verdict to an
+  ordinary browser observer. No source buffer or application project is dumped. }
+procedure ShowVerdict(const AMessage: TNyxText);
+var
+  LResult: TJSHTMLElement;
+begin
+  LResult := TJSHTMLElement(document.getElementById('source-workspace-verdict'));
+
+  if LResult = nil then
+  begin
+    LResult := TJSHTMLElement(document.createElement('pre'));
+    LResult.id := 'source-workspace-verdict';
+    LResult.setAttribute('role', 'status');
+    document.body.appendChild(LResult);
+  end;
+  LResult.textContent := AMessage;
+end;
+
 procedure Failed(const AMessage: TNyxText);
 begin
   document.body.setAttribute('data-source-editor', 'failed');
   document.body.setAttribute('data-source-editor-error', AMessage);
+  ShowVerdict('FAIL source workspace stage ' + IntToStr(Ord(GStage)) + ': ' + AMessage);
 end;
 
 procedure FinishExpanded;
@@ -227,6 +247,7 @@ begin
       'final expanded capture observes the retained editor in its actual modal');
     document.body.setAttribute('data-source-editor', 'passed');
     document.body.setAttribute('data-source-editor-checks', IntToStr(GChecks));
+    ShowVerdict('PASS ' + IntToStr(GChecks) + ' source workspace checks');
   except
     on LException: Exception do
     begin
@@ -482,7 +503,26 @@ begin
           Check(document.querySelector('dialog[open]') = GDialog,
             'Source tab restores the same modal top-layer host');
           RetainedInput;
+          GInput.focus;
+          GInput.selectionStart := Length(GInput.value);
+          GInput.selectionEnd := Length(GInput.value);
+          GInput.scrollTop := GInput.scrollHeight;
+          Check(GInput.scrollTop > 100, 'the expanded editor has a genuinely deep visible caret');
           Find('action-expand-source').click;
+        end;
+      wsObserveDeepClosed:
+        begin
+          Check(document.querySelector('dialog[open]') = nil,
+            'deep-caret Close returns to the split editor');
+          Check((Find('studio-code') = GInput) and (GInput.value = GDraft) and
+            (GInput.selectionStart = Length(GDraft)) and
+            (GInput.selectionEnd = Length(GDraft)) and (document.activeElement = GInput),
+            'shrinking the expanded editor retains the exact focused draft and deep caret');
+          Check(GInput.scrollHeight - GInput.clientHeight - GInput.scrollTop <= 1,
+            'shrinking the expanded editor keeps its active end caret visibly inside the smaller viewport');
+          GInput.selectionStart := 13;
+          GInput.selectionEnd := 61;
+          GInput.scrollTop := 0;
         end;
       wsObserveClosed:
         begin

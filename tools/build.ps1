@@ -10617,6 +10617,10 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     # per-project presentation migration. This builds ordinary Studio binaries
     # without starting a listener or refreshing private MCP configuration.
     $nyxSourceEditorRoot = Join-Path $nyxRoot 'build/source-editor'
+
+    if ($nyxScratchRoot) {
+      $nyxSourceEditorRoot = Join-Path ([IO.Path]::GetFullPath($nyxScratchRoot)) 'source-editor'
+    }
     $nyxSourceEditorNative = Join-Path $nyxSourceEditorRoot 'native'
     $nyxSourceEditorLcl = Join-Path $nyxSourceEditorRoot 'lcl'
     $nyxSourceEditorBrowser = Join-Path $nyxSourceEditorRoot 'browser'
@@ -10652,12 +10656,17 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxSourceEditorProgram in @('tests/nyx_workspace_tests.lpr',
-        'tests/nyx_source_workspace_browser.lpr', 'studio/nyx_studio.lpr')) {
+        'tests/nyx_source_workspace_browser.lpr', 'studio/nyx_studio.lpr',
+        'studio/nyx_studio_preview.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
         '-Jirtl.js', "-FE$nyxSourceEditorBrowser", $nyxSourceEditorProgram)
     }
+    # The source pane starts this module worker beside its host. Stage the
+    # actual transitive runtime, not a host that relies on another build folder.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Jirtl.js', "-FE$nyxSourceEditorBrowser", 'studio/nyx_source_worker.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxSourceEditorBrowser 'rtl.js')
-    foreach ($nyxSourceEditorHost in @('index.html', 'workspaces.html', 'source-editor.html')) {
+    foreach ($nyxSourceEditorHost in @('index.html', 'agent-preview.html', 'workspaces.html', 'source-editor.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSourceEditorHost") -Destination $nyxSourceEditorBrowser
     }
     Write-Host 'Source editor consumers staged; browser execution requires an admitted HTTP host.'

@@ -104,6 +104,18 @@ remain open. Reassessment returns to the next ranked Studio browser editing
 journey with ordinary Save/Open, draft/history and preview. Stop further table
 hint/geometry/host/profile variants.
 
+That Studio return now qualifies ordinary browser Properties, exact paired
+Undo/Redo, Events/TODO source navigation and its own MCP-built application.
+The discovered expanded-editor caret clipping is repaired and checked in the
+actual desktop/compact Studio with an exact30KB draft. Maintained native checks
+pass450/450/86 with clean heaps, and corrected staging includes the full worker/
+preview runtime on external scratch. All QA/LAN pairs and local output choices
+are preserved. The full browser workspace still hits its existing30-second limit
+before observing Outputs, including on the correctly routed root host. Continue
+that concrete [ordinary-refresh performance gate](NS-3_extension-performance_01.md)
+using the same consumer and current timing hooks. Full named Save/Open, original
+criteria, physical/AT and broad quality remain open; stop caret/toolbar variants.
+
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |

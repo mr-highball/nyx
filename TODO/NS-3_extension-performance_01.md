@@ -2,6 +2,21 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Additional ordinary-workspace gate,2026-10-29: the maintained full browser
+`nyx_source_workspace_browser` consumer exceeds its original30000ms journey
+limit before stage2's Outputs observation. Both the earlier adapter and the
+caret-repair build fail that limit; the later visible verdict identifies stage2.
+Supplying the missing worker/preview assets and correct service-root routing
+still leaves a stage2 failure. No deadline is increased and no cause is inferred.
+Actual desktop/compact Studio interaction separately qualifies the concrete
+caret-visibility repair and its own MCP-built application, not this full timing
+gate. The next useful decision is Source opening in stage0 and ordinary draft/
+Outputs refresh in stage1, before stage2's time check, using existing timing
+hooks and this same consumer. Preserve the
+original full saved-Workshop Uniform Apply below; this additional consumer
+does not replace it, change its limits or earn performance acceptance. Private
+studio-editing-journey-01 evidence and WORK.md retain outcomes and setup failures.
+
 Admitted-container continuation,2026-10-28: immutable child reads now copy and
 index the selected canonical span without rebuilding its descendant JSON tree.
 Changed escaping/compression/unquoted-member policies retain full admission.

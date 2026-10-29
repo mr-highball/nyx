@@ -1163,19 +1163,31 @@ compilers, including exact migration from version 2. The actual Win32 controller
 exercises Source/Compiler messages switching, Expand/Close/Escape, retained memo
 identity/draft/selection and native window resizing. Its desktop and narrow
 captures, native Studio and browser Studio/module worker/portable counterparts
-are staged under `build/source-editor/`; `-BrowserOutput` selects isolated browser
-staging. The command also compiles the maintained Pascal browser source-workspace
+use the configured scratch root, otherwise `build/source-editor/`;
+`-BrowserOutput` selects isolated browser staging. The preview program/HTML and
+module worker are staged beside the editor with the matched RTL. The command
+also compiles the maintained Pascal browser source-workspace
 journey and stages `source-editor.html`. Serve the staged directory over HTTP
 with its matched runtime, then open that host; `?host=1` runs the same journey
 inside an exact 390-pixel viewport. Success publishes `data-source-editor="passed"`
-and 30 checks. It uses real DOM controls and synthesized cancellation, preserves
+and its count in `data-source-editor-checks`. It uses real DOM controls and
+synthesized cancellation, preserves
 the same textarea/draft/range and opts out of recovery and agent connection.
 Desktop/narrow captures qualify Expand, tab refresh and Close/focus return;
 they do not establish physical phone keyboard or assistive-technology behavior.
 This build command launches no listener, changes no MCP enrollment and edits
-no active observing project. The separate staged current service now executes
-the journey; replacing the observing LAN release remains rejected by automatic
-approval review. See
+no active observing project. Browser code editors also keep the active caret
+vertically visible when their allocated height shrinks. Their owned bounds
+observer preserves text, selection, focus and ancestor scrolling, and retires
+with the exact input binding. Wrapped extension controls retain their own
+measurement behavior.
+
+The current full browser fixture retains its 30-second real-clock limit and
+reports a failure before its Outputs observation reaches the new deep-caret
+return check. Actual desktop/compact Studio modal returns qualify that repair
+separately; they do not establish the full fixture's timing pass. Current
+qualification, fixed-slot delivery and the remaining performance gate are in
+[WORK.md](../WORK.md). See the earlier
 [evidence](../WORK.md#source-workspace-and-expanded-editor--2026-10-05).
 
 ## Native form viewport projection

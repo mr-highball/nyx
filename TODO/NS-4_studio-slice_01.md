@@ -1,5 +1,37 @@
 # NS-4_studio-slice_01 — Studio end-to-end designer
 
+**Browser editing return — 2026-10-29:**
+
+Bounded MCP composes one button in an owned existing QA copy; ordinary browser
+Properties edits its Unicode caption, and Undo/Redo restores the exact paired
+project. Events creates a named OnClick implementation with a TODO and navigates
+the actual source caret to its procedure. Expand/Close preserves the same30KB
+draft/range/focus, but a genuinely deep caret becomes invisible after the modal
+shrinks. The built-in browser code editor now observes its own height and reveals
+that active caret vertically. Actual font-line measurement avoids accumulated
+fractional line-height error; callbacks retain the exact view generation and
+Disconnect revokes the observer before final release. Text/range and unrelated
+scroll containers remain unchanged.
+
+The same observing Studio confirms exact draft/caret/focus after549-to113 pixel
+desktop and666-to113 compact returns, with zero end-of-buffer viewport gap at
+1280/390. Its accepted callback pair builds as a real application through MCP,
+mounts in the ordinary compact compiled preview and returns through page
+navigation. Clicking a TODO body proves no implemented application action. An
+explicit Restore drops only the unfinished note and exactly recovers the
+accepted callback pair. Five ordinary semantic Undo operations restore the
+original QA copy; unrelated pairs remain exact. WORK.md owns final delivery.
+
+The maintained full source-workspace browser fixture adds the deep-caret check,
+but its baseline and repaired runs hit the existing30000ms journey deadline
+before the Outputs observation; the repaired visible verdict identifies stage2.
+That is a retained performance failure, not a full fixture pass or proof of
+its cause. The existing [performance owner](NS-3_extension-performance_01.md)
+owns the next bounded timing decision. Full named Save/Open, broader editing,
+native/physical/AT and original criteria remain open. No criterion/task/credit
+closes. This is the first Studio return after three table batches; the earlier
+no-closure history remains intact. Stop further caret/toolbar fixture variants.
+
 **User priority — project lifecycle and action clarity — 2026-10-27:**
 
 New/Open/Save/Switch must be immediately discoverable in Project on desktop and

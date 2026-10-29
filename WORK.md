@@ -9,7 +9,93 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Native compact table pin budget and input — 2026-10-29
+## Current work — Studio browser editing return — 2026-10-29
+
+Previous goal turn: PROGRESS.eb7f091f is pushed and remote-verified. Root stays
+SOLO. Return to the ranked Studio outcome under Studio-slice criteria1/2/3,
+preserving the prerequisite chain and full authoring scope. Use bounded MCP to
+inspect and compose an owned existing QA copy, then ordinary browser controls
+for Properties, exact Undo/Redo, Events/TODO source navigation, pending Pascal,
+Expand/Close and preview/build return at desktop/compact widths. Retain existing
+native consumer evidence and continue ordinary named Save/Open where reached.
+Preserve original project pairs through ordinary history; no unrelated active
+project, output configuration or LAN service change is planned. At the first
+concrete defect, retain evidence and repair its owning library/adapter/controller.
+The deliverable is this integrated editing journey and any necessary repair,
+not another standalone toolbar/layout fixture. Stop or switch at a real failing
+prerequisite, not an observation timeout. New files and owned TEMP/TMP stay on E:.
+
+Delivered browser repair: closing the expanded code editor retains the exact
+draft/caret but leaves that caret outside the newly short viewport. Its binding
+now owns a height observer, retains the exact view generation during delivery,
+and reveals the focused active caret vertically after a genuine shrink. A
+temporary single-line measurement accounts for fractional line-box rounding;
+the source and selection are never rewritten and ancestor scrolls stay alone.
+Unfocused/composing and wrapped extension inputs keep their existing behavior.
+Disconnect revokes the observer before final binding release.
+
+Actual observing workflow: bounded MCP adds one button to an existing owned QA
+copy. Ordinary Properties updates its English/Unicode caption; Undo/Redo restores
+the exact exported pair. Events creates TStudioJourneyButtonClick with its TODO
+and places the actual caret at procedure line717. Modal opening preserves the
+range. A retained Unicode note produces a30625-unit draft; desktop549-to113 and
+compact666-to113 returns preserve exact text, caret30625, selection, focus and a
+zero bottom gap. The original failing desktop had460 pixels of hidden end
+content. Representative before/after images and geometry are retained.
+
+Explicit Restore recovers the exact accepted callback pair. Its own complete
+application builds through authenticated MCP at revision13, mounts in the compact
+compiled preview, receives the ordinary button input and returns through page
+navigation. Clicking an empty TODO proves no implemented business behavior.
+Five ordinary semantic Undo operations restore the original pair at19; the
+original canvas selection is then restored at20. All nine
+QA pairs match the initial snapshot; the other eight revisions are unchanged.
+The original three LAN pairs/revisions and effective output fingerprint remain
+exact. No clipboard/file/HTTP runtime permission is added.
+
+The maintained source-editor target now stages its module worker, preview script
+and actual agent-preview HTML, and redirects all of its native/LCL output through
+the configured scratch root. The first staging attempt names a nonexistent
+preview.html and fails after successful compilers; the corrected full invocation
+exits0. Both checked native presentation/ownership configurations pass450 and the
+actual native workspace passes86, with three complete clean heaps. Full native
+Studio and five browser/module consumers compile. There are zero owned warnings;
+42 installed Classes warning occurrences remain visible without SDK edits or
+suppression. Final maintained editor/preview bytes equal the actual-UI-qualified
+bytes, and all six release assets match the served QA/LAN payloads.
+
+The full browser workspace fixture adds a deep-caret return assertion and an
+accessible verdict. Baseline/repaired runs hit its unchanged30000ms journey limit
+before stage2's Outputs observation. Missing private host assets and API routing
+are corrected; the intended root host still fails at stage2 without the earlier
+Artifact-not-found display. That is not a full fixture pass or a causal latency
+diagnosis. The new assertion is not reached in that timed suite; actual Studio
+checks above qualify the repair separately. A discarded asset-inventory receipt
+used the wrong HTML name and nonterminating shell errors; it is explicitly kept
+as invalid. The corrected strict verification hashes all twelve served assets.
+An accidental foreign-workspace LAN read refuses; the stable-primary read confirms
+the original output configuration. These failures remain in the external packet.
+
+QA/LAN editor and preview are updated through backed-up per-file overwrite
+renames. Unchanged HTML/RTL/worker bytes match the final maintained build as well;
+no serving binary/listener is replaced. Original process identities, executable
+hashes and LAN/loopback binding remain exact. Temporary observers close, viewport
+overrides reset and original review tabs remain. All compiler/runtime readers
+are terminal. Private evidence is in studio-editing-journey-01; no new temporary
+or build output is placed on C: or D:.
+
+Reassessment: this first Studio return follows the three table batches without
+closing a complete original criterion; earlier no-closure history remains. The
+caret repair and integrated browser editing/build return advance the original
+scope, not full Studio, physical/AT or performance acceptance. Ordinary named
+Save/Open remains unqualified in this packet. Stop caret/toolbar variants. Follow
+the existing performance owner's concrete ordinary-refresh gate next: measure
+opening Source (stage0) and draft/Outputs work (stage1) before stage2's time check,
+using existing timing hooks and this same consumer without raising its deadline.
+Keep the original full-Workshop Uniform Apply requirements as well. No new task
+identity, approval boundary or overall completion credit is introduced.
+
+## Previous checkpoint — Native compact table pin budget and input — 2026-10-29
 
 Previous goal turn: PROGRESS.53821be1 is pushed and remote-verified. Root stays
 SOLO. Continue workbench03's existing native pin-budget/field-reachability gate

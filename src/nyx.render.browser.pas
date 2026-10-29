@@ -127,7 +127,8 @@ type
 
   { A binding borrows a realized node and DOM handles. Its exact generation
     retains the binding/tree through entered callbacks; disconnect revokes all
-    input before final memory release. Target events cross one portable boundary. }
+    input and code-editor bounds observations before final memory release.
+    Target events cross one portable boundary. }
   TNyxBrowserBinding = class
   private
     { Weak canonical generation. An entered method takes a managed local lease
@@ -181,6 +182,16 @@ type
     procedure SyncImage;
     procedure ImageSignal;
     FComposing: Boolean;
+    { One observer follows this exact built-in code textarea, including retained
+      reparenting. Positive logical height and one measured font line are copied
+      facts only; no observer or callback survives Disconnect. }
+    FCodeBoundsObserver: TJSHTMLResizeObserver;
+    FCodeClientHeight: NativeInt;
+    FCodeTypography: TNyxText;
+    FCodeLineHeight: Double;
+    procedure CodeBoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
+      AObserver: TJSHTMLResizeObserver);
+    procedure RevealCodeCaret;
     { Optional input-owned timeline port. The binding retains no owner pointer;
       its managed receiver revokes borrowed application state before retirement. }
     FHistory: INyxTextHistoryCommands;
@@ -2767,6 +2778,13 @@ begin
   end;
   SetLength(FBindings, Length(FBindings) + 1);
   FBindings[Length(FBindings) - 1] := LBinding;
+
+  if not LBinding.FCustom and (ANode.ProjectionKind = 'code-editor') then
+  begin
+    LBinding.FCodeClientHeight := LInput.clientHeight;
+    LBinding.FCodeBoundsObserver := TJSHTMLResizeObserver.new(@LBinding.CodeBoundsChanged);
+    LBinding.FCodeBoundsObserver.observe(LInput);
+  end;
 
   if not LBinding.FCustom and (ANode.ProjectionKind = 'tabs') then
   begin
@@ -8956,6 +8974,129 @@ begin
   Result := FRenderer;
 end;
 
+procedure TNyxBrowserBinding.CodeBoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
+  AObserver: TJSHTMLResizeObserver);
+var
+  LLease: IInterface;
+  LHeight: NativeInt;
+  LShrunk: Boolean;
+begin
+
+  if FDisconnected or (AObserver <> FCodeBoundsObserver) or (FInput = nil) then
+  begin
+    Exit;
+  end;
+  LLease := RetainView;
+  LHeight := FInput.clientHeight;
+
+  if LHeight <= 0 then
+  begin
+    { Hidden source tabs keep their last useful allocation. A later smaller
+      visible allocation still needs the ordinary caret-reveal decision. }
+    Exit;
+  end;
+  LShrunk := (FCodeClientHeight > 0) and (LHeight < FCodeClientHeight);
+  FCodeClientHeight := LHeight;
+
+  if LShrunk and not FComposing and (document.activeElement = FInput) then
+  begin
+    RevealCodeCaret;
+  end;
+end;
+
+procedure TNyxBrowserBinding.RevealCodeCaret;
+var
+  LEditor: TJSHTMLTextAreaElement;
+  LStyle: TJSCSSStyleDeclaration;
+  LMeasure: TJSHTMLElement;
+  LTypography: TNyxText;
+  LText: TNyxText;
+  LCaret: NativeInt;
+  LIndex: NativeInt;
+  LLine: NativeInt;
+  LTop: Double;
+  LBottom: Double;
+  LPaddingTop: Double;
+  LPaddingBottom: Double;
+begin
+  LEditor := TJSHTMLTextAreaElement(FInput);
+  LStyle := window.getComputedStyle(LEditor);
+
+  if LStyle.getPropertyValue('white-space') <> 'pre' then
+  begin
+    { The built-in source face is unwrapped. Extension-provided wrapped text
+      retains its host's geometry rather than guessing visual line breaks. }
+    Exit;
+  end;
+  LTypography := LStyle.getPropertyValue('font') + '|' + LStyle.getPropertyValue('line-height');
+
+  if (LTypography <> FCodeTypography) or not (FCodeLineHeight > 0) then
+  begin
+    { Computed fractional line-height can differ from actual line-box rounding
+      by several pixels over a long file. Measure one line in a temporary owned
+      element; never clone source text, focus it, or write an ancestor's scroll. }
+    LMeasure := TJSHTMLElement(document.createElement('div'));
+    LMeasure.style.cssText := 'position:fixed;left:0;top:0;visibility:hidden;' +
+      'pointer-events:none;margin:0;padding:0;border:0;white-space:pre;';
+    LMeasure.style.setProperty('font', LStyle.getPropertyValue('font'));
+    LMeasure.style.setProperty('line-height', LStyle.getPropertyValue('line-height'));
+    LMeasure.textContent := 'M';
+    document.body.appendChild(LMeasure);
+    try
+      FCodeLineHeight := LMeasure.getBoundingClientRect.height;
+      FCodeTypography := LTypography;
+    finally
+      LMeasure.remove;
+    end;
+  end;
+
+  if not (FCodeLineHeight > 0) then
+  begin
+    Exit;
+  end;
+  LText := LEditor.value;
+  LCaret := LEditor.selectionEnd;
+
+  if LEditor.selectionDirection = 'backward' then
+  begin
+    LCaret := LEditor.selectionStart;
+  end;
+  LLine := 0;
+  { DOM textarea values normalize newlines to LF. Its UTF-16 selection offset
+    and this indexed scan share storage units, including supplementary text. }
+  for LIndex := 1 to Min(LCaret, Length(LText)) do
+  begin
+
+    if LText[LIndex] = #10 then
+    begin
+      Inc(LLine);
+    end;
+  end;
+  LPaddingTop := parseFloat(LStyle.getPropertyValue('padding-top'));
+  LPaddingBottom := parseFloat(LStyle.getPropertyValue('padding-bottom'));
+
+  if not (LPaddingTop >= 0) then
+  begin
+    LPaddingTop := 0;
+  end;
+
+  if not (LPaddingBottom >= 0) then
+  begin
+    LPaddingBottom := 0;
+  end;
+  LTop := LPaddingTop + LLine * FCodeLineHeight;
+  LBottom := LTop + FCodeLineHeight;
+
+  if LTop < LEditor.scrollTop + LPaddingTop then
+  begin
+    LEditor.scrollTop := Max(0, Floor(LTop - LPaddingTop));
+  end
+  else if LBottom > LEditor.scrollTop + LEditor.clientHeight - LPaddingBottom then
+  begin
+    LEditor.scrollTop := Max(0, Ceil(LBottom - LEditor.clientHeight + LPaddingBottom));
+  end;
+end;
+
 destructor TNyxBrowserBinding.Destroy;
 begin
   Disconnect;
@@ -8979,6 +9120,12 @@ begin
     Exit;
   end;
   FDisconnected := True;
+
+  if FCodeBoundsObserver <> nil then
+  begin
+    FCodeBoundsObserver.disconnect;
+    FCodeBoundsObserver := nil;
+  end;
 
   if FElement <> nil then
   begin
