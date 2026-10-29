@@ -1,4 +1,24 @@
-{ Nyx. Copyright (c) 2020 mr-highball. MIT license; see LICENSE. }
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
 program nyx_service_monitor_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
@@ -8,7 +28,7 @@ uses Interfaces, Classes, SysUtils, Forms, Controls, Grids, Windows,
   nyx.collections.presentation,
   nyx.collections.range, nyx.collections.range.actions,
   nyx.collections.range.commands, nyx.collections.selection,
-  nyx.collections, nyx.collections.mount, nyx.application.lcl,
+  nyx.collections, nyx.collections.arrangement, nyx.collections.mount, nyx.application.lcl,
   nyx.service.monitor
   {$ifdef NYX_SERVICE_GENERATED}, nyx.generated.view{$endif};
 
@@ -136,6 +156,9 @@ var
   LGateway: TNyxItemRef;
   LBefore: TNyxText;
   LEdited: TNyxText;
+  LNameColumn: Integer;
+  LStatusColumn: Integer;
+  LProcessColumn: Integer;
 begin
   {$ifdef NYX_SERVICE_GENERATED}
   LDocument := BuildNyxDocument;
@@ -169,6 +192,13 @@ begin
     LMount := LApplication.View.CollectionMount(ServiceTableID);
     Check((LMount <> nil) and LMount.Connected,
       'the public sample mounts its actual native collection adapter');
+    { The designer may reorder its saved columns. Exact typed field identity,
+      rather than the starter example's original position, owns every edit. }
+    LNameColumn := LMount.View.Spec.ColumnIndex(NyxColumnIdentity(NyxTextField('name')));
+    LStatusColumn := LMount.View.Spec.ColumnIndex(NyxColumnIdentity(NyxTextField('status')));
+    LProcessColumn := LMount.View.Spec.ColumnIndex(NyxColumnIdentity(NyxIntegerField('pid')));
+    Check((LNameColumn >= 0) and (LStatusColumn >= 0) and (LProcessColumn >= 0),
+      'the saved application retains exact editable and readonly field families');
     Check(LApplication.View.ControlFor(ServiceTableID).IsVisible,
       'the table is visible at the requested native width');
     Check(VisibleTablePanes(LApplication.View.ControlFor(ServiceTableID)) = 3,
@@ -188,17 +218,17 @@ begin
     Check(LMount.View.Snapshot.Count = 4, 'all four sample records are reachable');
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     LEdited := 'Gateway / 🌙';
-    Check(LMount.EditCell(LGateway, 0, LEdited),
+    Check(LMount.EditCell(LGateway, LNameColumn, LEdited),
       'the logical-start pinned service field accepts a mounted edit');
     Check(LApplication.Collections.Collection(NyxCollection(ServiceCollectionName))
       .Snapshot.Item(LGateway).GetValue(NyxTextField('name')) = LEdited,
       'the exact Unicode edit reaches its original row and field');
-    Check(LMount.EditCell(LGateway, 4, 'Paused'),
+    Check(LMount.EditCell(LGateway, LStatusColumn, 'Paused'),
       'the logical-end pinned status field accepts a mounted edit');
     Check(LApplication.Collections.Collection(NyxCollection(ServiceCollectionName))
       .Snapshot.Item(LGateway).GetValue(NyxTextField('status')) = 'Paused',
       'the end-pinned edit reaches its original status field');
-    Check(not LMount.EditCell(LGateway, 1, '9999'),
+    Check(not LMount.EditCell(LGateway, LProcessColumn, '9999'),
       'read-only process identifiers refuse edits');
     Check(LApplication.Collections.Collection(NyxCollection(ServiceCollectionName))
       .Snapshot.Item(LGateway).GetValue(NyxIntegerField('pid')) = 2401,
@@ -322,6 +352,22 @@ begin
       'the public table exposes its existing typed range owner');
     LRanges.ConfigureCellRange(True);
     LTable := TStringGrid(LApplication.View.ControlFor(ServiceTableID));
+    { Preserve allocation evidence when a saved width/pin choice no longer fits
+      the compact stress viewport. The original acceptance assertion remains;
+      a clipping/admission failure must not be reported as a keyboard pass. }
+    WriteLn('stress allocation width=', AWidth, ' rows=', LMount.View.Snapshot.Count,
+      ' panes=', VisibleTablePanes(LTable), ' gridClient=', LTable.ClientWidth);
+    for LChild := 0 to LTable.ControlCount - 1 do
+    begin
+
+      if LTable.Controls[LChild] is TStringGrid then
+      begin
+        LCandidate := TStringGrid(LTable.Controls[LChild]);
+        WriteLn('stress pane visible=', LCandidate.IsVisible,
+          ' left=', LCandidate.Left, ' width=', LCandidate.Width,
+          ' client=', LCandidate.ClientWidth);
+      end;
+    end;
     Check((LMount.View.Snapshot.Count = 64) and (VisibleTablePanes(LTable) = 3),
       'the long public workbench retains its full page and both visible pins');
     for LField := Low(CFields) to High(CFields) do

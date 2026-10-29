@@ -2569,10 +2569,15 @@ selection members. Cursor columns are runtime presentation, never saved defaults
 
 Enter or F2 addresses the current cell's editor. A noneditable column does not
 redirect to a different column. Active text editors retain ordinary caret keys.
-Browser Tab/Shift+Tab visit eligible editors in that row; Tab at a boundary leaves
-through ordinary host traversal. Escape restores an uncommitted browser draft
-before blur and returns to that exact cell. F2 also restores cell navigation,
-using normal blur/validation. Read-only browser text remains inspectable; a
+Browser Tab/Shift+Tab validate and commit before visiting eligible editors in
+that row; Tab at a boundary leaves through ordinary host traversal. Enter or F2
+finishes a browser edit through the same typed edit path and restores navigation
+to that cell. Rejected typed input retains its exact draft, selection and focus,
+with `aria-invalid` and native validation text, so it can be corrected. Escape
+discards that draft and its validation state without changing accepted data.
+Presentation refreshes cannot substitute for an intentional commit; callbacks
+that retire/replace the original input cannot redirect the remaining key action.
+Read-only browser text remains inspectable; a
 read-only checkbox uses disabled HTML behavior. LCL retains its standard editor
 validation/discard and widget Tab behavior; read-only grids refuse editor entry.
 

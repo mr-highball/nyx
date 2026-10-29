@@ -91,7 +91,12 @@ Return to the same workbench's remaining W1/W2 workflows and bounded named
 semantic move. That compact move now passes shared native/browser, discovery and
 retained authenticated-connection checks, with observing Studio order/history
 and preserved fixed-slot LAN delivery. Continue the remaining ordinary keyboard/
-context-action W1/W2 journey in the same workbench. Full criteria and broader input/quality remain open;
+context-action W1/W2 journey in the same workbench. Its browser managed-Tab commit
+repair now passes the full query/arrangement regression and real saved-application
+keyboard inspection/copy at both widths. The saved native desktop consumer passes;
+its compact stress pin-budget assertion and Windows cursor-dependent manager
+checks remain explicit gates. Continue that native field-reachability/budget
+decision next. Full criteria and broader input/quality remain open;
 stop further host/profile variants.
 
 | Order | User outcome | Existing owners and next useful delivery |

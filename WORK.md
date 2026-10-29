@@ -9,7 +9,87 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Named semantic column moves — 2026-10-29
+## Current work — Service monitor keyboard and context actions — 2026-10-29
+
+Previous goal turn: PROGRESS.03921a15 is pushed and remote-verified. Root stays
+SOLO. Return to workbench03 criteria4/7's ordinary W1/W2 user journey. Inspect
+the same accepted Service monitor through bounded MCP, build its own current
+application, then use real browser keyboard/context controls at1280/390. Exercise
+navigation, editable/readonly fields, commit/cancel, active filters and arranged
+columns, inspection and copy while preserving drafts/stable identities. Reuse
+the existing native consumer and exact generated application for target checks.
+At the first concrete defect, retain its evidence and repair the owning shared
+library/adapter; do not substitute source/policy fixtures or claim full physical/
+assistive coverage. Qualify the corrected path and preserve project/output
+settings. All new private files and owned TEMP/TMP use the configured E: roots
+and external table-keyboard-workflow-01 packet. No new user approval is missing.
+
+Implemented/qualified browser repair: real F2 input and Tab into another arranged
+editor leave the collection at revision0. Source review identifies Refresh hiding
+the old editor inside the intentional presentation shield, which correctly ignores
+layout blur/change noise. An owned synchronous commit helper now validates before
+hiding, retaining the original typed view, input lifetime/epoch and exact DOM
+identity across callbacks. Rejected input restores exact text/selection only over
+the same accepted source, marks invalid state and keeps focus. Enter/F2 commit and
+restore navigation; Escape clears the draft/validation state without publication.
+Retired/replaced/disabled input cannot focus an old row after the callback.
+
+The maintained full query/arrangement consumer adds commit, invalid integer,
+notification-count, independent-peer and callback-retirement checks. The archived
+adapter fails the first new assertion. The repaired browser consumer passes1484
+at1280 and1482 at390. Initial fixture compilation mistakes use a nonexistent
+snapshot ToData and the wrong subscription retirement method; both are corrected
+using immutable snapshot identity and Disconnect. Their logs remain retained.
+Final Studio editor, preview and module worker compile with matched RTL. No SDK
+source or warning suppression changes occur.
+
+The same revision9 Service monitor builds through authenticated MCP for browser
+and LCL; a second browser job includes the repaired adapter in its actual bundle.
+Its source/design fingerprints stay exact. Actual native browser keys reproduce
+the old revision0 failure and then commit the repaired desktop/compact edit once
+at runtime revision1. Tab skips readonly Process ID; Shift+Tab, Escape, Home and
+Shift+F10 reach ordinary accepted-value inspection and Copy. Two distinct24-unit
+values match the actual Windows clipboard, with clean read-only qualifier heaps.
+Enter restores the original runtime name at revision2; a subsequent Escape leaves
+accepted data unchanged. These are browser-host keys, not physical-phone or AT
+qualification. The temporary clipboard-only profile is revoked through ordinary
+Outputs Apply and MCP verifies the original fingerprint/services are restored.
+
+Native evidence stays separate. The full manager consumer compiles without owned
+warnings, but its1280 run cannot read the Windows cursor position; it has a clean
+heap and earns no complete interaction pass. The exact saved constructor's
+native consumer initially assumes Process ID is column1, now Notes in this saved
+design. Typed field lookup repairs that qualifier without changing the library.
+Its desktop run passes114 with a clean heap. Compact's later64-row stress check
+still fails its three-pane assertion; allocation evidence reports337 client
+pixels,64 rows and one pane. No assertion is weakened and no full compact-native
+pass is claimed. All native failures cleanly release their heaps; all current
+compiler and runtime readers are terminal.
+
+Delivery verification: rebuilt editor/preview/module-worker and matched RTL/HTML
+occupy the existing QA/LAN web slots. Per-file same-volume overwrite renames avoid
+serving partial script bytes; backups remain in the external packet. The initial
+File.Replace call refuses an empty optional backup path before changing its first
+asset; overwrite renames after explicit backup complete publication. All twelve
+HTTP-served asset hashes match. The browser-only adapter repair needs no native
+backend/listener replacement; the existing LAN process identity/hash is unchanged.
+All nine QA project pairs/revisions match the previous checkpoint, including the
+Service monitor's exact source/draft/history availability at revision9. All three
+LAN pairs/revisions and effective output settings remain exact. Fresh Studio
+renders the original project; temporary compact observers close and their viewport
+overrides reset. Original Service monitor/Workshop tabs remain for review. Private
+source identities, failure logs, copied-value verification and images stay on E:.
+
+Reassessment: this second bounded batch after output-host acceptance still does
+not close a full original workbench criterion. Browser managed-commit behavior
+is delivered; native fallback expectations and remaining native/physical/AT/
+complete visual quality remain open. Next inspect the existing compact native
+pin budget against saved widths, gridlines/scrollbar allocation and actual field
+reachability, retaining the original failing assertion until that decision has
+evidence. Stop additional browser commit/source/profile variants. No overall
+completion credit or new approval boundary is introduced.
+
+## Previous checkpoint — Named semantic column moves — 2026-10-29
 
 Previous goal turn: PROGRESS. e6cbdccc is pushed and remote-verified. Root stays
 SOLO. Return to workbench03 criterion6's concrete named-move gap. Existing ordinary

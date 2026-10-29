@@ -283,6 +283,117 @@ begin
   end;
 end;
 
+function TBrowserMount.CommitCellEditor(AInput: TJSHTMLInputElement;
+  const AItem: TNyxItemRef; AColumn: Integer): Boolean;
+var
+  LView: INyxCollectionView;
+  LLifetime: INyxCollectionInputLifetime;
+  LSource: INyxCollectionSnapshot;
+  LColumn: TNyxCollectionColumn;
+  LSelection: TNyxTextSelection;
+  LText: TNyxText;
+  LEpoch: Integer;
+  LAccepted: Boolean;
+
+  { All physical references must still belong to this exact mounted input,
+    including after callbacks disable/re-enable or replace its enclosing view. }
+  function OriginalEditor: Boolean;
+  var
+    LRow: Integer;
+  begin
+    Result := False;
+
+    if not LLifetime.Ready or (LLifetime.Epoch <> LEpoch) or
+      not GetInputReady or (FView <> LView) or FReadOnly or FEditsSuspended or
+      FUpdating or FOpeningColumnManager or (FCellPresentationDepth > 0) or
+      (LView.Spec.ColumnIndex(LColumn.Identity) <> AColumn) or
+      not ColumnVisible(AColumn) then
+    begin
+      Exit;
+    end;
+    LRow := LView.Snapshot.IndexOf(AItem);
+
+    if not LLifetime.Ready or (LLifetime.Epoch <> LEpoch) or
+      (FView <> LView) or (LRow < 0) or (LRow > High(FRows)) or
+      (FRows[LRow] = nil) or (AColumn > High(FRows[LRow].FInputs)) then
+    begin
+      Exit;
+    end;
+    Result := (FRows[LRow].FInputs[AColumn] = AInput) and
+      FHost.contains(AInput) and not AInput.disabled and not AInput.readOnly;
+  end;
+
+begin
+  Result := False;
+
+  if not GetInputReady or (AInput = nil) or (AColumn < 0) or
+    (AColumn >= FView.Spec.Count) then
+  begin
+    Exit;
+  end;
+  LView := FView;
+  LLifetime := GetInputLifetime;
+  LEpoch := LLifetime.Epoch;
+  LColumn := LView.Spec.ColumnAt(AColumn);
+
+  if not OriginalEditor or (LColumn.Mode <> cmEditable) then
+  begin
+    Exit;
+  end;
+  LSource := LView.Store.Snapshot;
+  LText := AInput.value;
+  LSelection := CaptureNyxBrowserSelection(AInput);
+
+  if AInput._type = 'checkbox' then
+  begin
+    LText := 'false';
+
+    if AInput.checked then
+    begin
+      LText := 'true';
+    end;
+  end;
+  { Hiding a retained editor can synchronously dispatch change while Refresh's
+    presentation shield is active. That shield correctly ignores layout noise;
+    an intentional keyboard exit must instead use the ordinary typed edit path
+    before hiding. Its callbacks may retire every row borrowed above. }
+  LAccepted := EditCell(AItem, AColumn, LText);
+
+  if not OriginalEditor then
+  begin
+    Exit;
+  end;
+
+  if not LAccepted then
+  begin
+
+    if (LView.Store.Snapshot <> LSource) or not OriginalEditor then
+    begin
+      Exit;
+    end;
+    { The ordinary edit path normalizes rejected display values. Keep this
+      still-focused keyboard draft correctable, without restoring over a newer
+      accepted source or a replacement control. Selection uses scalar bounds. }
+    AInput.value := LText;
+
+    if AInput._type = 'checkbox' then
+    begin
+      AInput.checked := LText = 'true';
+    end;
+
+    if LSelection.Defined then
+    begin
+      SelectNyxBrowserText(AInput, LSelection);
+    end;
+    AInput.setAttribute('aria-invalid', 'true');
+    AInput.setCustomValidity(GetError);
+    Exit;
+  end;
+  AInput.removeAttribute('aria-invalid');
+  AInput.setCustomValidity('');
+  Result := True;
+end;
+
 function TBrowserMount.Key(AEvent: TJSKeyboardEvent): Boolean;
 var
   LKeepAlive: INyxCollectionMount;
@@ -299,6 +410,8 @@ var
   LNextColumn: Integer;
   LNextDisplay, LColumnCount: Integer;
   LInput: TJSHTMLInputElement;
+  LEditor: TJSHTMLInputElement;
+  LPreviousDisplay: Integer;
   LItem: TNyxItemRef;
   LRowElement: TJSHTMLElement;
   LCopy: INyxBrowserColumnCommand;
@@ -360,7 +473,8 @@ begin
       within that row. Native LCL retains its standard cell-editor behavior. }
     ResetTypeAhead;
 
-    if (AEvent.key = 'Escape') or (AEvent.key = 'F2') or (AEvent.key = 'Tab') then
+    if (AEvent.key = 'Escape') or (AEvent.key = 'F2') or
+      (AEvent.key = 'Enter') or (AEvent.key = 'Tab') then
     begin
       LRowElement := TJSHTMLElement(LElement.closest('[data-nyx-item]'));
 
@@ -379,13 +493,14 @@ begin
         Exit;
       end;
       LInput := FRows[LRow].FInputs[LColumn];
+      LEditor := LInput;
 
       if FView.Projection = cpTable then
       begin
         FFocusedColumn := LColumn;
       end;
 
-      if (AEvent.key = 'Escape') or (AEvent.key = 'F2') then
+      if (AEvent.key = 'Escape') or (AEvent.key = 'F2') or (AEvent.key = 'Enter') then
       begin
         AEvent.preventDefault;
 
@@ -400,6 +515,17 @@ begin
           begin
             LInput.value := FView.CellText(LItem, LColumn);
           end;
+          LInput.removeAttribute('aria-invalid');
+          LInput.setCustomValidity('');
+        end
+        else
+        begin
+
+          if not CommitCellEditor(LEditor, LItem, LColumn) then
+          begin
+            Exit;
+          end;
+          LRow := FView.Snapshot.IndexOf(LItem);
         end;
 
         if FView.Projection in [cpTable, cpTree] then
@@ -429,6 +555,7 @@ begin
         LNextDisplay := ColumnDisplayIndex(LColumn);
         LColumnCount := DisplayColumnCount;
       end;
+      LPreviousDisplay := LNextDisplay;
 
       if AEvent.shiftKey then
       begin
@@ -448,9 +575,27 @@ begin
         end;
         LInput := FRows[LRow].FInputs[LNextColumn];
 
-        if (LInput <> nil) and not LInput.disabled then
+        if (LInput <> nil) and not LInput.disabled and not LInput.readOnly then
         begin
           AEvent.preventDefault;
+
+          if not CommitCellEditor(LEditor, LItem, LColumn) then
+          begin
+            Exit;
+          end;
+          LRow := FView.Snapshot.IndexOf(LItem);
+
+          if (LRow < 0) or (LRow > High(FRows)) or (FRows[LRow] = nil) or
+            (LNextColumn > High(FRows[LRow].FInputs)) or
+            (FRows[LRow].FInputs[LNextColumn] <> LInput) or
+            LInput.disabled or LInput.readOnly or
+            ((FView.Projection = cpTable) and
+              (not ColumnVisible(LNextColumn) or
+                (ColumnDisplayIndex(LColumn) <> LPreviousDisplay) or
+                (ColumnDisplayIndex(LNextColumn) <> LNextDisplay))) then
+          begin
+            Exit;
+          end;
 
           if FView.Projection = cpTable then
           begin

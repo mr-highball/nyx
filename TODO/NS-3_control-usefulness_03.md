@@ -21,6 +21,41 @@ in this same workbench: navigation, edit/commit/cancel, inspection and copy with
 active filters, hidden/pinned fields and retained drafts. Preserve physical/AT,
 visual and complete target acceptance. Stop named-move/source/profile variants.
 
+**Keyboard/context return — 2026-10-29:**
+
+Trusted keys in the same saved browser application reproduce a managed-Tab bug:
+presentation hides the old editor while its legitimate blur/change is shielded,
+leaving a dormant draft instead of accepted data. The browser adapter now admits
+an intentional Tab/Enter/F2 commit before hiding, through the existing typed edit
+pipeline. Invalid input keeps exact text/selection/focus; Escape discards without
+publishing. Exact input/lifetime checks stop focus after callback retirement.
+The unchanged adapter fails the new regression. The repaired full query/arrangement
+consumer passes1484/1482 at1280/390, including invalid numeric input, single data
+notifications, independent stores and retirement during commit.
+
+Its own fresh MCP-built saved Service monitor then passes actual desktop/compact
+keyboard commit, readonly-column traversal, inspection and Copy. Two different
+24-unit copied values exactly match the Windows clipboard. Enter restores the
+runtime sample; Escape leaves its accepted revision unchanged. Authored source,
+data defaults and paired history remain independent. WORK.md owns delivery and
+preservation evidence.
+
+Native qualification remains partial. The saved constructor passes114 desktop
+checks with a clean heap after the consumer is repaired to resolve typed fields
+instead of assuming the starter column positions. Its compact64-row stress
+assertion still fails:337 client pixels produce one effective pane where that
+assertion requires three. The assertion is retained. The broader native manager
+run separately cannot read the Windows cursor position; no pointer-input pass is
+claimed. Final owned native compilations have zero warnings; failures are retained.
+
+This is the second bounded workbench batch after output-host acceptance without
+a complete original criterion closure. Reassessment preserves all original
+criteria and chooses the concrete compact native pin-budget/field-reachability
+gap next, followed by the remaining native/physical quality gates. Determine
+whether the stress expectation agrees with admitted saved widths and native
+scrollbar/gridline allocation before changing an assertion or adapter. Stop
+equivalent browser commit/source/profile variants; no full task credit closes.
+
 **Earlier checkpoint and reassessment — 2026-10-26:**
 
 The native public service-monitor workflow now covers ordinary Studio, Save/Open

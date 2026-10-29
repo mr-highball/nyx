@@ -781,6 +781,12 @@ type
     procedure RevealListOption(AOption: TJSHTMLElement);
     function GridKey(AEvent: TJSKeyboardEvent; const AOrder: TNyxItemRefs;
       ARow: Integer): Boolean;
+    { Validate an intentional keyboard exit before presentation hides its input.
+      The retained view/lifetime fence and original DOM identity survive edit
+      notifications; rejected values keep exact text/selection only while their
+      accepted source remains unchanged. No DOM borrow escapes this call. }
+    function CommitCellEditor(AInput: TJSHTMLInputElement;
+      const AItem: TNyxItemRef; AColumn: Integer): Boolean;
     function Key(AEvent: TJSKeyboardEvent): Boolean;
     function CellContext(AEvent: TJSMouseEvent): Boolean;
     function VisibleOrder: TNyxItemRefs;

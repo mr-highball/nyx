@@ -1270,6 +1270,9 @@ type
     FCommitViewNotifications: Integer;
     FCommitStoreChanges: INyxCollectionChanges;
     FCommitViewChanges: INyxCollectionChanges;
+    { One browser keyboard case retires its own renderer from the accepted
+      store notification. The observer is detached before this owner is freed. }
+    FCommitRetire: Boolean;
     FReenter, FReentryRefused, FLastChangesNil: Boolean;
     FClickToken: INyxEventSubscription;
     FReleaseToken: INyxEventSubscription;
@@ -1304,6 +1307,7 @@ type
     procedure QueryLifetimeCases; {$ifdef PAS2JS}async;{$endif}
     procedure ColumnManagerCases; {$ifdef PAS2JS}async;{$endif}
     procedure ColumnActivationCases; {$ifdef PAS2JS}async;{$endif}
+    {$ifdef PAS2JS}procedure KeyboardCommitCases; async;{$endif}
     {$ifdef PAS2JS}procedure OpenForReview;{$endif}
   end;
 
@@ -1565,6 +1569,11 @@ begin
     'pinned scalar observer receives the original store and accepted data changes');
   Inc(FCommitStoreNotifications);
   FCommitStoreChanges := AChanges;
+
+  if FCommitRetire then
+  begin
+    FApp.View.Unmount;
+  end;
 end;
 
 procedure TArrangementReview.CommitViewChanged(const AView: INyxCollectionView;
@@ -4561,6 +4570,112 @@ begin
 end;
 {$endif}
 
+{$ifdef PAS2JS}
+{ Managed keyboard exits must validate before presentation hides the original
+  editor. This uses the same arranged, filtered, independent-store fixture as
+  the full journey. Direct DOM values qualify adapter defaults; actual trusted
+  keys in the saved Service monitor separately establish host behavior. }
+procedure TArrangementReview.KeyboardCommitCases; async;
+var
+  LTable: TJSHTMLElement;
+  LCell: TJSHTMLElement;
+  LEditor: TJSHTMLInputElement;
+  LItem: TNyxItemRef;
+  LRevision: Integer;
+  LBeforePeer: INyxCollectionSnapshot;
+  LToken: INyxCollectionSubscription;
+
+  procedure Key(const AKey: String);
+  var
+    LOptions: TJSObject;
+  begin
+    LOptions := TJSObject.new;
+    LOptions['key'] := AKey;
+    LOptions['bubbles'] := True;
+    LOptions['cancelable'] := True;
+    Web.document.activeElement.dispatchEvent(TReviewKey.new('keydown', LOptions));
+  end;
+
+  procedure Edit(AColumn: Integer);
+  begin
+    LCell := TJSHTMLElement(LTable.querySelector('tr[data-nyx-item="' + LItem.ID +
+      '"] td[data-nyx-column="' + IntToStr(AColumn) + '"]'));
+    Check(LCell <> nil, 'keyboard editor resolves the same stable filtered record and field');
+    LCell.focus;
+    Key('F2');
+    LEditor := TJSHTMLInputElement(Web.document.activeElement);
+    Check((LEditor <> nil) and (LowerCase(LEditor.tagName) = 'input') and
+      (LEditor.getAttribute('data-nyx-column') = IntToStr(AColumn)),
+      'the actual arranged cell owns its active editor');
+  end;
+
+begin
+  LTable := FApp.View.ElementFor(CArrangementFirst);
+  LItem := FViews[0].Snapshot.ItemAt(0).Ref;
+  LBeforePeer := FViews[1].Store.Snapshot;
+  LToken := FViews[0].Store.Subscribe(CommitStoreChanged);
+  try
+    LRevision := FViews[0].Store.Snapshot.Revision;
+    Edit(0);
+    LEditor.value := TNyxText('Keyboard 🌙');
+    Key('Tab');
+    await(ArrangementFrame);
+    Check((FViews[0].Store.Snapshot.Item(LItem).GetValue(PersonName) = TNyxText('Keyboard 🌙')) and
+      (FViews[0].Store.Snapshot.Revision = LRevision + 1) and
+      (FCommitStoreNotifications = 1), 'Tab commits once before hiding the edited arranged field');
+    LEditor := TJSHTMLInputElement(Web.document.activeElement);
+    Check((LowerCase(LEditor.tagName) = 'input') and
+      (LEditor.getAttribute('data-nyx-column') = '1'), 'Tab enters the next eligible editor');
+    LEditor.value := 'not a number';
+    LEditor.setSelectionRange(2, 7);
+    Key('Tab');
+    await(ArrangementFrame);
+    Check((Web.document.activeElement = LEditor) and (LEditor.value = 'not a number') and
+      (LEditor.selectionStart = 2) and (LEditor.selectionEnd = 7) and
+      (LEditor.getAttribute('aria-invalid') = 'true') and
+      (FViews[0].Store.Snapshot.Revision = LRevision + 1),
+      'rejected typed input keeps exact text, selection and editor focus instead of traversing');
+    LEditor.value := '42';
+    Key('Enter');
+    await(ArrangementFrame);
+    Check((FViews[0].Store.Snapshot.Item(LItem).GetValue(Score) = 42) and
+      (FViews[0].Store.Snapshot.Revision = LRevision + 2) and
+      (FCommitStoreNotifications = 2) and
+      (Web.document.activeElement.getAttribute('data-nyx-column') = '1') and
+      (LowerCase(Web.document.activeElement.tagName) = 'td') and
+      not LEditor.hasAttribute('aria-invalid'),
+      'Enter commits corrected typed input once and restores cell navigation');
+    Edit(1);
+    LEditor.value := '43';
+    Key('F2');
+    await(ArrangementFrame);
+    Check((FViews[0].Store.Snapshot.Item(LItem).GetValue(Score) = 43) and
+      (FCommitStoreNotifications = 3) and
+      (LowerCase(Web.document.activeElement.tagName) = 'td'),
+      'F2 finishes the accepted edit before restoring navigation');
+    Edit(1);
+    LEditor.value := '44';
+    Key('Escape');
+    await(ArrangementFrame);
+    Check((FViews[0].Store.Snapshot.Item(LItem).GetValue(Score) = 43) and
+      (FCommitStoreNotifications = 3), 'Escape still discards without an extra scalar publication');
+    Check((FViews[1].Store.Snapshot = LBeforePeer) and
+      (TNyxCodec.Encode(FDocument) = FAuthored), 'keyboard commits preserve peer stores and authored defaults');
+    Edit(0);
+    LEditor.value := 'Retire on commit';
+    FCommitRetire := True;
+    Key('Tab');
+    await(ArrangementFrame);
+    Check((FApp.View.Root = nil) and (FCommitStoreNotifications = 4),
+      'accepted edit retirement never focuses or reads a retired row after its callback');
+  finally
+    FCommitRetire := False;
+    LToken.Disconnect;
+    LToken := nil;
+  end;
+end;
+{$endif}
+
 procedure ManagedColumnCases; {$ifdef PAS2JS}async;{$endif}
 var
   LReview: TArrangementReview;
@@ -4572,6 +4687,14 @@ begin
   finally
     LReview.Free;
   end;
+  {$ifdef PAS2JS}
+  LReview := TArrangementReview.Create;
+  try
+    await(LReview.KeyboardCommitCases);
+  finally
+    LReview.Free;
+  end;
+  {$endif}
 end;
 { END COLUMN ARRANGEMENT CASES }
 
