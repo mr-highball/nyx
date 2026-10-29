@@ -472,6 +472,13 @@ begin
   OpenChild(GGrandchild, GChild, 'One more thought');
   {$ifdef PAS2JS}
   document.body.setAttribute('data-capture-checkpoint', 'nested-popovers');
+  { Opt-in noninteractive execution releases only the screenshot checkpoint;
+    the original nested input, focus and retirement assertions remain intact. }
+
+  if window.location.search = '?run' then
+  begin
+    document.body.setAttribute('data-capture-observed', 'nested-popovers');
+  end;
   GResumeTimer := window.setInterval(@ResumeAfterCapture, 25);
   {$else}
 

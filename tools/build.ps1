@@ -5217,10 +5217,13 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxPopoverSource",
       "-FE$nyxPopoverBrowser", 'tests/nyx_popover_nested_controls.lpr')
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', "-FE$nyxPopoverBrowser", 'tests/nyx_popover_embedded_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', "-FE$nyxPopoverBrowser", 'studio/nyx_studio.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPopoverBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/popover.html') -Destination $nyxPopoverBrowser
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/popover-nested.html') -Destination $nyxPopoverBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/popover-embedded.html') -Destination $nyxPopoverBrowser
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/index.html') -Destination $nyxPopoverBrowser
     Write-Host 'Popover consumer staged; execute on an existing admitted HTTP host.'
     exit 0

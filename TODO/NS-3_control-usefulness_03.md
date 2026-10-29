@@ -33,9 +33,25 @@ to the two Running records, inspect complete raw command text and resume an exac
 unfinished Service edit before cancelling it. The first menu action cannot be
 clicked when its compiled iframe is partially clipped by Studio; Enter works.
 The geometry and remaining pointer journey now belong to the concrete
-[embedded popover prerequisite](NS-2_popover-viewport_01.md). No original
+[embedded popover prerequisite](DONE/NS-2_popover-viewport_01.md). No original
 criterion is accepted from these partial checks. WORK.md retains exact evidence
 and the return path; do not bypass this failure with a different viewport.
+
+**Embedded browser return — 2026-10-29:**
+
+That concrete prerequisite is now accepted. The same saved application's first
+cell-menu action works through ordinary pointer input at1280x720 and390x844.
+Complete raw inspection preserves the exact suspended Service edit. MCP confirms
+the original four defaults and accepted pair/selection/revision/history remain
+unchanged. QA/LAN publication preserves all three exact LAN projects/settings.
+These checks do not close the original full workbench criteria or establish real
+clipboard/file effects. Return to those effects and ordinary arrangement use.
+
+The browser journey also observes a remaining arrangement issue: showing a hidden
+wide column can move the caption's Columns invoker outside the visible frame,
+closing its contextual manager. Reopening works. Keep the manager's invoking
+action reachable during width changes; this belongs to W1's existing usability
+criterion. Do not relax the accepted hidden-anchor retirement contract to hide it.
 
 **Description:**
 
@@ -698,7 +714,7 @@ needs qualification against the portable contract.
 
 **Blockers**
 
-- [Embedded popover viewport](NS-2_popover-viewport_01.md) repairs the observed
+- [Embedded popover viewport](DONE/NS-2_popover-viewport_01.md) repairs the observed
   pointer obstruction in the same ordinary compiled browser journey.
 - [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the reviewed
   gaps and target-specific interaction contract.

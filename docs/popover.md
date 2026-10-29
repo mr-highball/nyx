@@ -90,6 +90,27 @@ placement flips to the opposite side when it offers more room and clamps to the
 viewport margin. Alignment follows the physical anchor axis; logical RTL
 alignment and broader DPI qualification remain open.
 
+Browser placement uses the visible part of an embedded application, including
+same-origin frame ancestors, their visual viewports and independent horizontal/
+vertical overflow clips. Frame borders, padding, scrolling and positive
+axis-aligned scale are converted into the application's own client coordinates.
+The existing layout tick samples these borrowed observations without retaining
+parent windows or installing additional parent listeners. Oversized content
+scrolls within the reachable popup allocation. Hidden, detached or wholly clipped
+anchors dismiss with `nprAnchorUnavailable`; this includes the anchor's own scroll
+container, while the popup can still escape that container through the top layer.
+
+Cross-origin parent geometry is unavailable at the browser's `frameElement`
+boundary. Rotation, perspective and nonrectangular clipping are outside this
+rectangle contract. These limits do not imply screen-coordinate placement or a
+guarantee of visibility through an inaccessible ancestor.
+
+The maintained `popover-embedded.html` consumer exercises clipped, scrolled,
+scaled, resized and nested frames plus anchor retirement. The ordinary and nested
+popover regression pages accept `?run` to release their optional screenshot
+checkpoint automatically while retaining every assertion. Their default URLs
+still pause for a representative capture.
+
 Focus is optional; omission keeps invoker focus. An unavailable named focus part
 refuses before the host opens. An explicit part must have an enabled, visible
 physical focus face. Escape respects consumed child keys and returns invoker

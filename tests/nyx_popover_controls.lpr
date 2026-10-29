@@ -291,6 +291,13 @@ begin
   Result := True;
   {$IFDEF PAS2JS}
   document.body.setAttribute('data-capture-checkpoint', 'quick-notes');
+  { Automated local regressions retain every assertion but need no external DOM
+    mutation to release the optional screenshot checkpoint. Default stays paused. }
+
+  if window.location.search = '?run' then
+  begin
+    document.body.setAttribute('data-capture-observed', 'quick-notes');
+  end;
   GResumeTimer := window.setInterval(@AwaitCapture, 50);
   Result := False;
   {$ENDIF}

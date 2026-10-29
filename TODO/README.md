@@ -75,10 +75,12 @@ adds no tasks, credit, dependency waivers or approval gates.
 
 The table browser return now reaches actual column/filter/edit/inspection controls
 through its own MCP-imported saved application. Its selected-control preview
-handoff is repaired. The next concrete prerequisite is
-[embedded popover visibility](NS-2_popover-viewport_01.md): Studio clips the first
-context-menu action outside the pointer-reachable iframe area. Repair that shared
-geometry and return to the same workbench, without replacing its original criteria.
+handoff is repaired, and [embedded popover visibility](DONE/NS-2_popover-viewport_01.md)
+is accepted. The same Service monitor's first pointer action, full raw inspection
+and exact suspended edit now work at both widths, with preserved defaults/pairs
+and checked QA/LAN delivery. Return to that workbench's transfer effects and
+arrangement usability, retaining its original criteria rather than more geometry
+or preview-mode fixture variants.
 
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |

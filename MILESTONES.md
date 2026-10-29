@@ -3,18 +3,27 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current execution priority (2026-10-26): deliver observable everyday workflows
+Current execution priority (2026-10-29): deliver observable everyday workflows
 from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-workflows--2026-10-26):
 table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a
 useful connected Tool Canvas. Native table and Studio journeys now have bounded
 checkpoints; their browser/input and full original acceptance stay open. The
-next active outcome is the connected Tool Canvas: native DataToolbar and JSON
-Workshop checkpoints now return through semantic authoring. The discovered
+next active outcome is the same table workbench's browser transfer effects and
+arrangement usability, after its embedded-popover prerequisite below. Native
+DataToolbar and JSON Workshop checkpoints retain their later return paths. The
+discovered
 [HTTP output-host prerequisite](TODO/NS-4_http-output-hosts_01.md) must wire
 ordinary generated applications before claiming network execution. Saved live-inspection recovery defaults
 are a checkpoint; its remaining scale/parity work is parked with an explicit
 return path. The resolver remains deferred. Existing scope, prerequisites,
 original acceptance criteria and pending completion assessments are unchanged.
+
+[Embedded popover visibility](TODO/DONE/NS-2_popover-viewport_01.md) is accepted
+on2026-10-29. The original clipping failure is reproduced and repaired; desktop/
+compact nested geometry, existing browser/native interaction and the same saved
+Service monitor's pointer inspection/exact draft resumption pass. QA/LAN browser
+delivery preserves existing projects/settings. This is a scoped NS-2 prerequisite,
+with no duplicate credit or closure of the parent workbench/parity outcomes.
 
 Scoped [table filtering and sorting](TODO/DONE/NS-3_control-usefulness_02.md)
 is accepted on2026-10-22 for its seven unchanged criteria: typed policies,

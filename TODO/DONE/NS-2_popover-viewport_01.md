@@ -1,7 +1,7 @@
 # NS-2_popover-viewport_01 — Keep embedded browser popovers reachable
 
-[North stars](../MILESTONES.md) · [Task catalog](README.md) ·
-[Table workbench](NS-3_control-usefulness_03.md) · [Task flow](../TASKFLOW.MD)
+[North stars](../../MILESTONES.md) · [Task catalog](../README.md) ·
+[Table workbench](../NS-3_control-usefulness_03.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
@@ -41,6 +41,39 @@ geometry, failed pointer attempt, successful keyboard path and saved producer.
   wide/compact sizes. Pointer activation reaches the first cell-menu action,
   complete raw inspection works and the exact suspended edit resumes. Preserve
   the accepted project/Pascal/default records; retain representative images.
+
+**Acceptance — 2026-10-29:**
+
+All five criteria are qualified. The maintained
+[embedded browser consumer](../../tests/nyx_popover_embedded_controls.lpr)
+reproduces the original vertical clipping failure before the adapter repair.
+The final consumer passes at1280x720 and390x844, including frame borders/padding,
+negative offsets, independent overflow axes, uniform/nonuniform positive scale,
+scroll/resize, nested ancestor clips and hidden/wholly clipped anchor retirement.
+Released presenters do not revive after parent movement. Its63/64 checks include
+bounded readiness polling; they are not separate feature credit.
+
+The unchanged ordinary browser assertions pass42 at both widths, and nested
+focus/input/retirement assertions pass25 at both widths. The native consumer
+passes40 actual Win32/control checks, including portable placement, with a
+complete zero-unfreed heap. The optional `?run` mode only releases the existing
+screenshot checkpoint; no assertion is omitted. The adapter reuses its existing
+layout timer and installs no additional parent observation hooks. The documented
+contract states cross-origin and unsupported-transform limits explicitly.
+
+The same exact saved Service monitor builds through MCP with its Table selected.
+Ordinary compiled-preview pointer input reaches the first cell-menu action at
+both widths, opens the complete raw gateway command and resumes the exact
+unfinished Service edit. Its authored pair/default records, selection, revision
+and history availability remain unchanged. Qualified browser assets are served
+by both existing QA/LAN processes; all three LAN project pairs and output settings
+remain exact. The external popover-viewport-01 packet retains baseline/final
+results, compiler logs, runtime observations, images and delivery receipts.
+
+This accepts only the embedded-popover prerequisite. Original table-workbench,
+physical-device/assistive, broader platform and production-quality outcomes stay
+with their existing owners. Return directly to that workbench; no further
+geometry fixture expansion is needed without another concrete failure.
 
 **Blockers**
 

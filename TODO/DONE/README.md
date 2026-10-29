@@ -3,6 +3,14 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Embedded browser popover visibility](NS-2_popover-viewport_01.md) was accepted
+on2026-10-29. The clipping regression fails before the repair and passes at
+desktop/phone widths afterward, including nested and nonuniformly scaled frames.
+Existing browser42/nested25 checks per width and native40 with a clean heap pass.
+The same saved Service monitor's pointer inspection and exact suspended edit
+work at both widths. QA/LAN browser delivery preserves all three LAN projects
+and output settings. Full table-workbench and broader quality remain open.
+
 [Browser Tree branch activation](NS-3_tree-disclosure_01.md) was accepted
 on2026-10-28. The original click/refresh regression fails before the repair and
 passes52 checks across wide/compact allocations afterward. Native83 hierarchy/LCL

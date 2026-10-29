@@ -9,7 +9,64 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Useful table workflows in the browser — 2026-10-29
+## Current work — Browser table workbench after popover acceptance — 2026-10-29
+
+Previous goal turn: PROGRESS.4689ecb8 is pushed and remote-verified. Root remains
+SOLO. The embedded-popover pointer prerequisite is now accepted and delivered.
+Return to the same MCP-imported Service monitor under control-usefulness03:
+qualify actual browser clipboard/save effects and repair the observed column
+manager invocation during width changes. Preserve its exact accepted pair and
+defaults; do not replace the original workbench criteria with more geometry,
+preview-mode or resolver fixtures. All private files and owned process TEMP/TMP
+stay on E:. QA/MCP and LAN slots remain fixed. No missing user input or new
+approval is present. The full workbench and broad goal remain open.
+
+The embedded prerequisite is now accepted under its original five criteria.
+The new maintained Pascal consumer fails vertically against the unchanged
+adapter, then passes the final63/64 checks at1280x720/390x844. Totals include
+bounded readiness polling. Cases cover negative frame offsets, border/padding,
+independent overflow axes, uniform/nonuniform positive scale, ancestor scroll/
+resize, nested clipping and hidden/wholly clipped anchor retirement. Released
+presenters do not revive. The adapter uses borrowed synchronous geometry and its
+existing100ms layout tick; no additional parent listener or scheduler is added.
+Cross-origin and arbitrary-transform limits are documented explicitly.
+
+Existing ordinary browser assertions pass42 per width; nested focus/input/
+retirement checks pass25 per width. Their explicit ?run option releases only the
+screenshot checkpoint. Native40 actual Win32/control checks, including portable
+placement, retain a complete clean heap. All three browser release programs
+compile; the source-worker bytes are unchanged. Installed SDK warnings remain
+visible; no dependency source or compiler configuration is modified.
+
+MCP builds/launches the same saved Service monitor with its Table still selected.
+The desktop first action now starts at child y65 instead of21, moving its parent
+click centre from154.5 to198.5 within the unchanged clipped iframe. Ordinary
+pointer activation opens the complete raw gateway command at both widths, and
+'An unfinished service name' resumes exactly. Both runtime tables retain the two
+Running rows independently of the four unchanged accepted defaults. The accepted
+pair's original fingerprints, revision3, selection, draft/history availability
+remain exact. Compact interaction uses another observer of the same project and
+same application build; no root selection or maximized view hides the failure.
+
+QA/LAN editor and preview-bootstrap assets are atomically replaced and their
+served hashes verified. Both original serving processes/executables remain;
+all three LAN project pairs/revisions and output/toolchain settings are exact.
+The first private post-publication comparison refused serialized JSON property
+order; comparison of the exact named fields/file hashes passes. No data mismatch
+occurred. The external popover-viewport-01 packet retains baseline/final results,
+compiler logs, runtime observations/images and publication/preservation receipts.
+All actual compiler readers are terminal; temporary browser fixtures and compact
+observer are closed, overrides reset, original review tabs retained.
+
+Return to control-usefulness03's same Service monitor: real browser transfer
+availability/effects and stable column-manager invocation during width changes.
+Showing the hidden wide Command column can move the caption's invoker out of
+view and dismiss its manager; reopening works. Record/fix that W1 usability gap,
+not another viewport fixture or weaker hidden-anchor policy. Full original table,
+physical/assistive, broader native/browser and production-quality acceptance
+stay open. No missing user input or new approval is present. Root stays SOLO.
+
+## Previous checkpoint — Useful table workflows in the browser — 2026-10-29
 
 Previous goal turn: PROGRESS.0587ab84 is pushed and remote-verified. Root remains
 SOLO. Return to control-usefulness03's existing W1/W2 and browser acceptance
@@ -59,7 +116,7 @@ iframe from parent y156 while its origin is y112; the menu's first action spans
 child y21..64, placing its click centre above the clipping layer. The pointer
 attempt retains the menu, while Enter opens the correct full-value inspector.
 The browser popover currently places against only its own window/VisualViewport.
-Follow [popover-viewport01](TODO/NS-2_popover-viewport_01.md) next: repair shared
+Follow [popover-viewport01](TODO/DONE/NS-2_popover-viewport_01.md) next: repair shared
 visible-viewport geometry and observation lifetimes, then return to this exact
 saved service workflow at both widths. Preserve contextual/focus/draft behavior;
 do not select another control or maximize away the failed pointer case. The

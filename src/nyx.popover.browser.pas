@@ -28,7 +28,7 @@ unit nyx.popover.browser;
 interface
 
 uses
-  JS, Web, nyx.text, nyx.types, nyx.root.types, nyx.model, nyx.theme,
+  Web, nyx.text, nyx.types, nyx.root.types, nyx.model, nyx.theme,
   nyx.behavior, nyx.events, nyx.popover, nyx.render.browser;
 
 type
@@ -59,7 +59,7 @@ function NewNyxBrowserPopover(AAnchor: TJSHTMLElement;
 implementation
 
 uses
-  SysUtils, Math, nyx.interaction;
+  SysUtils, Math, nyx.interaction, nyx.popover.viewport.browser;
 
 type
   { Standard HTML top-layer operations absent in the older installed Web binding.
@@ -68,22 +68,16 @@ type
     procedure showPopover;
     procedure hidePopover;
   end;
+  { Borrowed browser Document with the standard capture-aware removal overload.
+    The installed Web binding omits that overload; no document is owned here. }
   TPopoverDocument = class external name 'Document'(TJSDocument)
     { Older Web declares only the two-argument removal form. Capture must match
       registration exactly, otherwise a retired presenter leaves an input hook. }
     procedure removeEventListener(const AName: String;
       const AListener: TJSEventHandler; ACapture: Boolean); reintroduce;
   end;
-  TVisualViewport = class external name 'VisualViewport'(TJSObject)
-    offsetLeft: Double;
-    offsetTop: Double;
-    width: Double;
-    height: Double;
-  end;
-  TPopoverWindow = class external name 'Window'(TJSWindow)
-    visualViewport: TVisualViewport;
-  end;
-
+  { Owns one contextual host/renderer and its existing layout timer. Physical
+    anchor and invoker are borrowed; closing revokes timer and input callbacks. }
   TBrowserPopover = class(TNyxPopoverPresenter, INyxPopover, INyxBrowserPopover,
     INyxBrowserPopoverAnchor)
   private
@@ -174,15 +168,12 @@ begin
 end;
 
 function TBrowserPopover.AnchorAvailable: Boolean;
-var
-  LRect: TJSDOMRect;
 begin
   Result := (FAnchor <> nil) and Web.document.body.contains(FAnchor);
 
   if Result then
   begin
-    LRect := FAnchor.getBoundingClientRect;
-    Result := (LRect.width > 0) and (LRect.height > 0) and
+    Result := NyxBrowserPopoverAnchorVisible(FAnchor) and
       not FAnchor.hasAttribute('disabled') and (FAnchor.closest('[inert]') = nil);
   end;
 end;
@@ -192,21 +183,10 @@ var
   LAnchor: TJSDOMRect;
   LViewport: TNyxPopoverRect;
   LPlaced: TNyxPopoverRect;
-  LVisual: TVisualViewport;
   LOptions: TNyxPopoverOptions;
 begin
   LAnchor := FAnchor.getBoundingClientRect;
-  LVisual := TPopoverWindow(window).visualViewport;
-
-  if LVisual <> nil then
-  begin
-    LViewport := NyxPopoverRect(Floor(LVisual.offsetLeft), Floor(LVisual.offsetTop),
-      Floor(LVisual.width), Floor(LVisual.height));
-  end
-  else
-  begin
-    LViewport := NyxPopoverRect(0, 0, window.innerWidth, window.innerHeight);
-  end;
+  LViewport := NyxBrowserPopoverViewport;
   LOptions := FOptions;
 
   if FVisible and (FOptions.SizeMode = npzContent) then
