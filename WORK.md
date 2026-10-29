@@ -9,7 +9,77 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Typed scroll presentation and usable zoomed chrome — 2026-10-29
+## Current work — Studio scrollbar authoring and observing delivery — 2026-10-29
+
+Previous goal turn: PROGRESS.ebbecfb6 is pushed and remote-verified. Root remains
+SOLO. Return canvas-scrollbars01's typed choice to the same saved Workshop through
+ordinary Studio Inspector input, paired history/source, observing semantic edits
+and actual built preview. Qualify desktop and compact behavior, repairing concrete
+library/controller failures. Preserve existing project pairs and configuration.
+Stage a matched current server/app/source-worker/preview payload into the fixed
+QA slot, after stopping/joining its verified owner; keep LAN running during QA.
+Use bounded semantic tools with expected revisions for design operations; actual
+browser/native controls still qualify the ordinary input journey. Then deliver
+the qualified matching payload through the existing fixed LAN executable path.
+All new private files/process TEMP/TMP use E:. Existing authorization covers this
+development and local service replacement; no missing user input or new approval
+is present. Full remaining scroll/widgetset/physical/assistive acceptance stays
+open. Stop equivalent policy/scalar fixtures and advance the real editor journey.
+
+The actual Workshop Inspector now commits keep-size and minimum choices at wide
+and compact sizes. Ordinary desktop and compact Undo/Redo restore the complete
+exported design/Pascal pair byte-for-byte. A two-control semantic group updates
+the observing Inspector and visible crafted Pascal; stale revision admission
+refuses, and one paired Undo/Redo restores the exact before/after exports. The
+ordinary project importer reopens that exact pair. Browser and LCL application
+builds succeed from it. The mounted browser application edits and formats JSON
+at both widths with the real scrollbar policy on its textarea. Compilation,
+browser interaction and earlier native interaction evidence remain distinct.
+
+Ordinary named Save/Open then exposes a real preview-return defect: the accepted
+pair remains exact, but a stale compiled placement causes display recovery.
+RenderCompiled retired the authored generation without giving its own iframe a
+successor generation, so later Clear/Unmount could skip its owned layer. The
+shared browser renderer now gives compiled mounts the same retirement authority,
+and checks the retained receiver/attempt after cleanup callouts before publishing
+a successor. The existing ordinary browser build/cancel consumer adds six public
+renderer lifecycle assertions; it now passes34 at desktop and actual390 width.
+The original failed display image and baseline orphaned iframe are retained.
+The full editor return below is separate from those focused lifecycle checks.
+
+The repaired current server/editor/worker/preview is staged in the fixed QA slot
+only after the previous verified owner and copy jobs are stopped/joined. All nine
+QA project pairs/revisions and the configured output identity survive. Two stray
+unit declarations after end markers are also removed. Final app/worker/preview
+builds pass; the installed Classes RTL warnings remain visible. LAN still runs
+its previous payload, with all three exact pairs and output settings captured.
+The external scroll-studio-01 packet owns these exports, hashes, source/build
+receipts, failed attempts and images. Browser observation timeouts are rechecked
+against the same handles and authoritative MCP state; none justifies a service
+restart by itself. No missing permission or user input is present.
+
+The repaired original named-project Open now returns from an actually mounted
+compiled preview at both1280 and390 widths. The old frame retires, the authored
+canvas returns without a recovery notice, and exact full-pair exports remain
+identical. Reopening the identical pair preserves revision45; final semantic
+selection of its reusable memo advances only presentation to47, retaining that
+same pair. The browser build has seven warnings, all from installed Classes;
+no dependency is modified or warning hidden. Final compiled return and Inspector
+images are retained. The temporary regression tab is closed, the existing review
+tab retained and viewport override reset.
+
+Matched fixed-slot LAN delivery now verifies the server and all six served web
+files. Its original three project pairs, revisions, output file and private
+toolchain configuration are exact. HTTP listens on the existing LAN binding,
+while authenticated MCP remains loopback; direct LAN HTTP returns200. The old
+verified process/copy jobs are joined, durable backups retained, and the new QA
+and LAN owners recorded privately. Compiler readers are terminal. This closes
+this ordinary Inspector/semantic/history/Save/Open/preview delivery return path,
+not full scroll/widgetset/native-foreground/physical/assistive acceptance.
+Continue the ranked table/data-control/browser workflows in TODO/README.md;
+do not substitute further equivalent scrollbar or retirement-only fixtures.
+
+## Previous checkpoint — Typed scroll presentation and usable zoomed chrome — 2026-10-29
 
 Previous goal turn: PROGRESS.f315c236 is pushed and remote-verified. Root remains
 SOLO. Continue canvas-scrollbars01's caller-choice criterion with an opt-in typed

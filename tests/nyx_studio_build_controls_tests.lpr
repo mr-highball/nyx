@@ -25,7 +25,8 @@ program nyx_studio_build_controls_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.agents,
+  SysUtils, JS, Web, nyx.text, nyx.data, nyx.model, nyx.controls,
+  nyx.render.browser, nyx.studio.agents,
   nyx.studio.browser, nyx.studio.exchange, nyx.studio.editorbuild,
   nyx.studio.builds, nyx.studio.menu;
 
@@ -54,6 +55,8 @@ type
     procedure CancelTick; override;
   end;
 
+  { The ordinary Studio overrides only the compiler transport, retaining its
+    real editor, preview renderer and browser command producers. }
   TBuildStudio = class(TNyxStudio)
   protected
     function CreateEditorExchange: TNyxStudioEditorExchange; override;
@@ -90,6 +93,8 @@ begin
 
   if not AValue then
   begin
+    document.body.setAttribute('data-nyx-build-controls', 'failed');
+    document.body.setAttribute('data-nyx-build-error', AReason);
     raise Exception.Create(AReason);
   end;
   Inc(GChecks);
@@ -98,6 +103,59 @@ end;
 function Find(const AID: TNyxText): TJSHTMLElement;
 begin
   Result := TJSHTMLElement(document.querySelector('[data-node="' + AID + '"]'));
+end;
+
+{ Exercise the same public renderer retirement used when Open returns from a
+  compiled preview to an authored view. The iframe need not finish loading:
+  its owned browsing context and clipping layer must retire synchronously.
+  Hosts and document remain caller-owned and are released after the renderer. }
+procedure CheckCompiledRetirement;
+var
+  LRenderer: TNyxBrowserRenderer;
+  LDocument: TNyxDocument;
+  LHost: TJSHTMLElement;
+  LNext: TJSHTMLElement;
+  LFrame: TJSHTMLElement;
+  LFrames: TJSNodeList;
+begin
+  LHost := TJSHTMLElement(document.createElement('div'));
+  LNext := TJSHTMLElement(document.createElement('div'));
+  document.body.appendChild(LHost);
+  document.body.appendChild(LNext);
+  LDocument := TNyxDocument.Create;
+  LDocument.AddPage(NewNyxPage('preview-return'));
+  LRenderer := TNyxBrowserRenderer.Create;
+  try
+    LRenderer.RenderCompiled('builds/job-retirement/index.html', LHost);
+    LFrames := document.querySelectorAll('.nyx-compiled-preview');
+    LFrame := TJSHTMLElement(LFrames[LFrames.length - 1]);
+    Check(document.body.contains(LFrame), 'compiled renderer connects its owned iframe');
+    LRenderer.Unmount;
+    Check(not document.body.contains(LFrame), 'Unmount removes the compiled iframe and its layer');
+    Check((LHost.firstChild = nil) and not LRenderer.IsCompiled('builds/job-retirement/index.html'),
+      'Unmount clears the compiled placement and identity');
+
+    LRenderer.RenderCompiled('builds/job-retirement/index.html', LHost);
+    LFrames := document.querySelectorAll('.nyx-compiled-preview');
+    LFrame := TJSHTMLElement(LFrames[LFrames.length - 1]);
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost, True);
+    Check(not document.body.contains(LFrame), 'authored replacement retires the previous browsing context');
+    LRenderer.MoveHost(LNext);
+    Check((LHost.firstChild = nil) and (LNext.firstChild <> nil),
+      'returned authored view moves normally without stale compiled placement');
+    LRenderer.Unmount;
+
+    LRenderer.RenderCompiled('builds/job-retirement/index.html', LHost);
+    LFrames := document.querySelectorAll('.nyx-compiled-preview');
+    LFrame := TJSHTMLElement(LFrames[LFrames.length - 1]);
+    FreeAndNil(LRenderer);
+    Check(not document.body.contains(LFrame), 'renderer destruction retires its last compiled context');
+  finally
+    LRenderer.Free;
+    LDocument.Free;
+    LHost.remove;
+    LNext.remove;
+  end;
 end;
 
 procedure Click(const AID: TNyxText); overload;
@@ -649,6 +707,7 @@ begin
   begin
     Check(window.innerWidth >= 900, 'ordinary browser uses an actual desktop viewport');
   end;
+  CheckCompiledRetirement;
   GSession := TNyxAgentSession.Create;
   GStudio := TBuildStudio.Create;
   GStudio.Run(False);

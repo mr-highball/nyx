@@ -154,3 +154,25 @@ The shared form/controller tests do not substitute for those UI/service checks.
 Full widgetset/browser support, foreground native/physical/assistive behavior and
 the remaining original acceptance criteria stay open. Do not add equivalent
 scalar/anchor fixtures instead of those outcomes.
+
+## Ordinary Studio continuation — 2026-10-29
+
+The same saved Workshop now exercises actual wide/compact Inspector edits,
+crafted source, byte-exact paired Undo/Redo and an observing two-control semantic
+transaction with stale-revision refusal. Its exact export reopens through the
+ordinary importer, and both application targets compile. The mounted browser
+application edits and formats JSON with the actual scrollbar policy at both
+widths. WORK.md retains the separate native/browser evidence and original limits.
+
+Named Save/Open while a compiled preview is mounted exposes stale browsing-context
+retirement in the shared browser renderer. The accepted pair remains exact; its
+display return needs repair. Compiled mounts now receive normal generation
+ownership, and the existing browser build/cancel regression passes34 including
+six public lifecycle assertions at desktop and390 widths. The original ordinary
+named-project Open now returns from an actually mounted preview at both widths,
+retiring the old frame and restoring the authored canvas without recovery while
+retaining the exact pair. Matched fixed-slot LAN delivery preserves its original
+three pairs/revisions and output settings, with all six served assets verified.
+Full original task acceptance remains open, including native foreground,
+physical/assistive and full widgetset/browser support. Return to the ranked
+table/data-control/browser workflows; stop equivalent chrome-only fixtures.

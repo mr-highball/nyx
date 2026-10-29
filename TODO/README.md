@@ -23,9 +23,13 @@ Full canvas/input/display/assistive and production performance remain open.
 The scroll-chrome caller choice now has typed scoped values, actual native and
 measured browser allocation, crafted source and ordinary Studio fields. Shared
 form/controller history checks and wide/compact mixed-control input pass; WORK.md
-retains exact counts and limitations. Continue the same Workshop's ordinary
-Studio Inspector and observing semantic transaction journey, then matched fixed-slot
-delivery. Full task acceptance stays open; stop equivalent scalar/policy fixtures.
+retains exact counts and limitations. The same Workshop now passes ordinary
+wide/compact Inspector/history and observing semantic transactions, with exact
+Save/Open pairs and actual compiled browser interaction. Its preview-return
+retirement repair passes the real named-project journey; matched fixed-slot LAN
+delivery preserves all three projects/settings and verifies served assets.
+Full task acceptance stays open. Return to the ranked table/data-control/browser
+workflows; stop equivalent scalar/policy/retirement-only fixtures.
 
 User steering on2026-10-27 prioritizes discoverable New/Open/Save/Switch and the
 cited missing Inspector glyphs under the existing Studio slice. Its first LAN

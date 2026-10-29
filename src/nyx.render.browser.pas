@@ -5964,6 +5964,9 @@ procedure TNyxBrowserRenderer.RenderCompiled(const AArtifact: TNyxText;
   AHost: TJSHTMLElement);
 var
   LFrame: TJSHTMLElement;
+  LLifetime: INyxContentLifetime;
+  LAttempt: IInterface;
+  LGeneration: TBrowserViewGeneration;
 begin
 
   if (AHost = nil) or (Pos('builds/job-', AArtifact) <> 1) or
@@ -5972,6 +5975,9 @@ begin
   begin
     raise ENyxModel.Create('Compiled preview needs a local build artifact and host');
   end;
+  LLifetime := FContentLifetime;
+  LAttempt := TInterfacedObject.Create;
+  FRenderAttempt := LAttempt;
   LFrame := Element('iframe', 'nyx-compiled-preview');
   LFrame.setAttribute('src', AArtifact);
   LFrame.setAttribute('title', 'Compiled Nyx view');
@@ -5979,6 +5985,25 @@ begin
   LFrame.style.setProperty('height', '620px');
   LFrame.style.setProperty('border', '0');
   Clear;
+
+  if (LLifetime = nil) or not LLifetime.Active then
+  begin
+    raise ENyxBrowserViewRetired.Create('The browser renderer retired while replacing its preview');
+  end;
+
+  if FRenderAttempt <> LAttempt then
+  begin
+    raise ENyxBrowserViewRetired.Create('The browser preview replacement was superseded');
+  end;
+  { Compiled content has no Pascal root, but owns a real browsing context and
+    placement observers. Give it the same retirement authority as authored
+    views. Clear/Unmount/destruction can then detach its mount before callouts;
+    a later authored view never inherits this old iframe or placement host. }
+  LGeneration := TBrowserViewGeneration.Create;
+  LGeneration.ThemeOwner := FThemeOwner;
+  LGeneration.BaseThemeOwner := FBaseThemeOwner;
+  FGenerationObject := LGeneration;
+  FGeneration := LGeneration;
   FHost := AHost;
   FHost.textContent := '';
   FCompiledMount := TNyxBrowserPersistentMount.Create(LFrame, FHost, 620);
