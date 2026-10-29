@@ -463,8 +463,9 @@ frame keeps the native control alive until the callback returns. No DC survives
 the synchronous call. Pixel/input checks cover memo, grid, scroll area with
 embedded children and Tree at three scales. These are diagnostic redraws;
 foreground display, hardware input and assistive geometry remain separate gates.
-Other widgetsets retain their existing chrome. No new node authoring policy or
-persisted enum is introduced. Run `tools/build.ps1 -Target scroll-chrome` with a
+Other widgetsets retain their existing chrome when no explicit policy is set.
+The original repair introduced no persisted choice; the opt-in contract below
+adds caller control. Run `tools/build.ps1 -Target scroll-chrome` with a
 configured external evidence/temp root, or supply a new
 `-ScrollChromeEvidenceDirectory`; it executes native checks and stages the browser
 geometry fixture without starting a listener. Browser execution remains separate.
@@ -486,6 +487,59 @@ browser fixture. Its executed desktop/compact checks retain CSS scroll anchors;
 ordinary browser wheel, source PageDown, nested editing and bound peer/action
 updates have separate interaction evidence. These checks do not establish
 physical-device, assistive or complete canvas parity.
+
+### Choosing scrollbar sizing
+
+`nyx.scroll.presentation` supplies an immutable `TNyxScrollPresentation` value.
+`nyx.scroll.configuration` supplies an additive managed facet without changing
+existing control/configuration interface layouts:
+
+```pascal
+NyxScrollConfigure(LNotesMemo.Configure).Presentation(
+  NyxScrollPresentation.MinimumThickness(24));
+
+NyxScrollConfigure(LSourceCode.Configure.ForPlatform(npfBrowser)).Presentation(
+  NyxScrollPresentation.Sizing(nssKeepSize));
+
+NyxScrollConfigure(LNotesMemo.Configure).UseDefault;
+```
+
+`nssFollowZoom` follows the content factor; `nssKeepSize` keeps normal chrome
+size; `nssMinimumThickness` follows zoom while retaining the chosen cross-axis
+floor. `MinimumThickness(1..256)` selects that last mode. Switching modes retains
+the authored floor. These are final host coordinates: CSS pixels after browser
+content transforms, and native window pixels at the host's DPI. They do not
+promise hardware-pixel equivalence across displays. Small available controls
+can constrain thumb/arrow length; the thickness floor is not a universal minimum
+hit rectangle. Text, content layout and scroll offsets have independent owners.
+
+Platform, viewport and named-presentation scopes use the ordinary configuration
+selectors. Empty/absent metadata retains platform defaults outside uniform canvas
+projection. `UseDefault` withdraws the explicit choice in the selected scope.
+Model values, saved descriptors, generated specialized Pascal and the literal
+source editor preserve the exact choice. Studio's scrollable-control Inspector
+offers a selector and integer minimum; each committed field change uses the
+ordinary paired design/source transaction and one Undo step. Semantic clients
+can use the existing bounded property/transaction operations at their explicit
+persistence boundary, with expected revisions, rather than a separate scroll tool.
+
+The native adapter currently supports the existing Win32 memo/code, scroll-host,
+grid and Tree bridge. It retains the real editor/window and native input. An
+explicit unsupported face/widgetset refuses; it does not claim native fallback
+as parity. Private table panes inherit their outer table's copied policy;
+independent public descendants retain their own intent.
+
+Browser styling also retains the original DOM scrolling face. First explicit
+use measures two different gutter allocations in a temporary hidden probe;
+selector-support claims alone are insufficient. The receipt lasts for that
+window; browser/platform setting changes require a fresh window. A browser that
+cannot supply the measured pixel allocation reports unavailable. Unconfigured
+creator faces keep their styles. The adapter compensates for the ancestor's
+content transform and uses semantic theme track/thumb colors. This capability
+is deliberately conditional: standard `scrollbar-width` has no pixel-length
+option ([Chrome documentation](https://developer.chrome.com/docs/css-ui/scrollbar-styling)).
+Source/model/history tests, actual browser interaction and native diagnostic
+redraw evidence remain distinct from full Studio, hardware and assistive parity.
 
 Pinned panes copy only the middle grid's current measured row window, clearing
 their preceding sparse overrides before installing the new window. Text-window,

@@ -38,6 +38,7 @@ uses
   nyx.application.context, nyx.flow, nyx.tool.canvas, nyx.canvas.adoption,
   nyx.images,
   nyx.button.presentation, nyx.button.view,
+  nyx.scroll.presentation, nyx.scroll.browser,
   nyx.images.browser,
   nyx.image.lifecycle,
   nyx.image.events,
@@ -311,6 +312,11 @@ type
     { Renderer-local CSS identity is not document identity. An embedded preview
       must not change another renderer's palette, font or corner-radius tokens. }
     FThemeScope: TNyxText;
+    { Ancestor canvas transform. It changes only explicit scrollbar projection;
+      CSS/layout, text and ordinary DOM scroll offsets retain their own units. }
+    FContentChromeScale: Double;
+    procedure ValidateScrollPresentations(AScale: Double);
+    procedure ProjectScrollPresentations(AScale: Double);
     FRoot: TNyxNode;
     FResourceContext: INyxResourceContext;
     FResourceUpdates: INyxResourceUpdateQueue;
@@ -718,6 +724,9 @@ type
     { Synchronize runtime properties while retaining DOM identity and focus.
       Compound actions use this path rather than rebuilding the entire view. }
     procedure Sync;
+    { A canvas supplies its absolute content factor before changing transform.
+      Admission covers every explicit face before publishing any changed style. }
+    procedure SetContentChromeScale(AScale: Double);
     property OnEvent: TNyxBrowserEvent read FOnEvent write FOnEvent;
     { Configure before mounting. Design drops use a synchronous value-only
       receiver, never the application's event registrations. Clear a borrowed
@@ -1500,6 +1509,7 @@ begin
   FTableTextLimits := TNyxTableTextWorkLimits.Defaults;
   Inc(GThemeScope);
   FThemeScope := 'nyx-theme-' + IntToStr(GThemeScope);
+  FContentChromeScale := 1;
   FTheme := ATheme;
   FBorrowedTheme := ATheme;
   FOwnTheme := ATheme = nil;
@@ -3848,6 +3858,7 @@ begin
     repeat
       CheckAttempt;
       LCandidate := TNyxBrowserRenderer.Create(FTheme);
+      LCandidate.FContentChromeScale := FContentChromeScale;
       LCandidate.PresentationViewport := PresentationViewport;
       LCandidate.FViewportExported := FViewportExported;
       LCollectionAdmissions := nil;
@@ -4011,7 +4022,8 @@ begin
       LCandidate.FDesignerInput := FDesignerInput;
       LCandidate.FOnDesignerGesture := FOnDesignerGesture;
       LStyle := Element('style', '');
-      LStyle.textContent := LCandidate.FTheme.CSS('.nyx-root[data-nyx-theme="' + LCandidate.FThemeScope + '"]');
+      LStyle.textContent := LCandidate.FTheme.CSS('.nyx-root[data-nyx-theme="' + LCandidate.FThemeScope + '"]') +
+        NyxBrowserScrollChromeCSS;
       LCandidate.FHost.appendChild(LStyle);
       LCandidate.FHost.appendChild(LCandidate.Build(LCandidate.FRoot));
       for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
@@ -10283,6 +10295,75 @@ begin
   RestoreDisclosureFocus(ElementFor(LHeader.ID), LOrigin, LActive, LEvents, LRevision);
 end;
 
+procedure TNyxBrowserRenderer.ValidateScrollPresentations(AScale: Double);
+var
+  LIndex: Integer;
+  LValue: TNyxScrollPresentation;
+begin
+
+  if IsNan(AScale) or IsInfinite(AScale) or (AScale <= 0) then
+  begin
+    raise ENyxScrollPresentation.Create('Browser chrome requires finite positive content scale');
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FNode.Prop(NyxAttributeName(atScrollPresentation)) = '' then
+    begin
+      Continue;
+    end;
+
+    if FBindings[LIndex].FCustom or not NyxSupportsViewport(FBindings[LIndex].FNode) then
+    begin
+      raise ENyxScrollPresentation.Create('Scroll presentation is unavailable for this browser face');
+    end;
+    LValue := FBindings[LIndex].FNode.ScrollPresentation;
+    NyxBrowserScrollChromeExtent(LValue, AScale);
+    RequireNyxBrowserScrollChrome;
+  end;
+end;
+
+procedure TNyxBrowserRenderer.ProjectScrollPresentations(AScale: Double);
+var
+  LIndex: Integer;
+  LFace: TJSHTMLElement;
+  LBinding: TNyxBrowserBinding;
+begin
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if LBinding.FCustom then
+    begin
+      { An unconfigured creator owns its attributes/styles. Explicit creator
+        policies already refuse during admission, before this projection pass. }
+      Continue;
+    end;
+    LFace := LBinding.FElement;
+
+    if LBinding.FInput <> nil then
+    begin
+      LFace := LBinding.FInput;
+    end;
+
+    if (LBinding.FNode.Prop(NyxAttributeName(atScrollPresentation)) = '') and
+      not LFace.classList.contains('nyx-scroll-chrome') then
+    begin
+      Continue;
+    end;
+    ProjectNyxBrowserScrollChrome(LFace,
+      LBinding.FNode.Prop(NyxAttributeName(atScrollPresentation)) <> '',
+      LBinding.FNode.ScrollPresentation, AScale, FTheme);
+  end;
+end;
+
+procedure TNyxBrowserRenderer.SetContentChromeScale(AScale: Double);
+begin
+  ValidateScrollPresentations(AScale);
+  ProjectScrollPresentations(AScale);
+  FContentChromeScale := AScale;
+end;
+
 procedure TNyxBrowserRenderer.Sync;
 const
   CMetricKeys: array[0..5] of TNyxText = ('width', 'height', 'gap', 'padding', 'left', 'top');
@@ -10427,6 +10508,8 @@ begin
           FPresentationSelection, MeasureContainers);
         CheckCurrent;
       end;
+      ValidateScrollPresentations(FContentChromeScale);
+      ProjectScrollPresentations(FContentChromeScale);
       for LIndex := 0 to Length(FBindings) - 1 do
       begin
         CheckCurrent;

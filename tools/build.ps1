@@ -769,6 +769,10 @@ try {
     Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @('-B',
       'tests/nyx_scroll_chrome_tests.lpr')) 'geometry-compiler'
     Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_scroll_chrome_tests.exe') @() 'geometry-native' $true
+    Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @('-Fustudio', '-Fistudio',
+      'tests/nyx_scroll_presentation_tests.lpr')) 'presentation-compiler'
+    Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_scroll_presentation_tests.exe') @() `
+      'presentation-native' $true
     Invoke-NyxScrollCheck $nyxScrollFpc ($nyxScrollFlags + @(
       'tests/nyx_scroll_chrome_controls.lpr')) 'controls-compiler'
     Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_scroll_chrome_controls.exe') @() 'controls-native' $true
@@ -781,6 +785,12 @@ try {
     foreach ($nyxScrollWidth in @(1280, 390)) {
       Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_canvas_uniform_controls.exe') @(
         [string]$nyxScrollWidth) ('uniform-' + $nyxScrollWidth) $true
+      foreach ($nyxScrollPolicy in @('keep', 'floor')) {
+        $nyxScrollPolicyTag = 'uniform-' + $nyxScrollWidth + '-' + $nyxScrollPolicy
+        Invoke-NyxScrollCheck (Join-Path $nyxScrollNative 'nyx_canvas_uniform_controls.exe') @(
+          [string]$nyxScrollWidth, (Join-Path $nyxScrollRoot ($nyxScrollPolicyTag + '.png')),
+          '--print', $nyxScrollPolicy) $nyxScrollPolicyTag $true
+      }
     }
     # Retain the existing live bound-table consumer: actual keyboard/wheel
     # dispatch, cancellation, draft/caret preservation and both pinned edges.
@@ -801,9 +811,13 @@ try {
       '-Fusrc', "-FE$nyxScrollBrowser", 'tests/nyx_scroll_chrome_tests.lpr') 'geometry-browser-compiler'
     Invoke-NyxScrollCheck $nyxScrollPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', "-FE$nyxScrollBrowser", 'tests/nyx_canvas_uniform_controls.lpr') 'uniform-browser-compiler'
+    Invoke-NyxScrollCheck $nyxScrollPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', '-Fustudio', '-Fistudio', "-FE$nyxScrollBrowser",
+      'tests/nyx_scroll_presentation_tests.lpr') 'presentation-browser-compiler'
     Copy-Item -LiteralPath $nyxScrollRuntime -Destination (Join-Path $nyxScrollBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/scroll-chrome.html') -Destination $nyxScrollBrowser
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/canvas-uniform-controls.html') -Destination $nyxScrollBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/scroll-presentation.html') -Destination $nyxScrollBrowser
     Write-Host 'Scroll geometry/native input checks passed; browser execution and full Workshop qualification remain explicit.'
     return
   }

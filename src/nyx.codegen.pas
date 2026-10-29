@@ -36,6 +36,7 @@ uses
   nyx.colors,
   nyx.images,
   nyx.button.presentation,
+  nyx.scroll.presentation,
   nyx.resources,
   nyx.canvas.declarations,
   nyx.diagram, nyx.diagram.declarations, nyx.diagram.content,
@@ -1497,6 +1498,28 @@ begin
   end;
 end;
 
+function PascalScrollPresentation(const AText: TNyxText): TNyxText;
+const
+  CChoices: array[TNyxScrollSizing] of TNyxText =
+    ('nssFollowZoom', 'nssKeepSize', 'nssMinimumThickness');
+var
+  LValue: TNyxScrollPresentation;
+begin
+  LValue := TNyxScrollPresentation.FromData(TNyxDataValue.ParseJSON(AText));
+  Result := 'NyxScrollPresentation';
+
+  if (LValue.SizingMode = nssMinimumThickness) or
+    (LValue.PhysicalMinimum <> NyxScrollPresentation.PhysicalMinimum) then
+  begin
+    Result := Result + '.MinimumThickness(' + TNyxText(IntToStr(LValue.PhysicalMinimum)) + ')';
+  end;
+
+  if LValue.SizingMode <> nssMinimumThickness then
+  begin
+    Result := Result + '.Sizing(' + CChoices[LValue.SizingMode] + ')';
+  end;
+end;
+
 function PascalButtonPresentation(const AText: TNyxText): TNyxText;
 const
   CContent: array[TNyxButtonContent] of TNyxText = ('nbcCaption', 'nbcGlyphCaption', 'nbcGlyphOnly');
@@ -2159,7 +2182,7 @@ const
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
     'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate',
-    'atButtonPresentation');
+    'atButtonPresentation', 'atScrollPresentation');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -2212,7 +2235,7 @@ begin
 
   if (LAttribute in [atSplitOrientation, atSplitPosition, atSplitMinimum,
     atSplitMaximum, atSplitResizable, atQueryContainer, atContainerContainment,
-    atButtonPresentation]) and (AValue = '') then
+    atButtonPresentation, atScrollPresentation]) and (AValue = '') then
   begin
     Exit('Clear(' + CAttributeSymbols[LAttribute] + ')');
   end;
@@ -2857,6 +2880,7 @@ var
   LHasDataToolbarIntent: Boolean;
   LHasDataToolbarQuery: Boolean;
   LHasSelectionOptions: Boolean;
+  LHasScrollPresentation: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
     AIndent: Integer);
@@ -3807,6 +3831,7 @@ var
   procedure Collect(ANode: TNyxNode);
   var
     LChildIndex: Integer;
+    LPropertyIndex: Integer;
     LKindStem: TNyxText;
     LIDStem: TNyxText;
     LBase: TNyxText;
@@ -3818,6 +3843,15 @@ var
     LSerial: Integer;
     LSerialText: TNyxText;
   begin
+    for LPropertyIndex := 0 to ANode.Props.Count - 1 do
+    begin
+
+      if NyxMatchesAttributeKey(ANode.Props.Names[LPropertyIndex], atScrollPresentation) then
+      begin
+        LHasScrollPresentation := True;
+        Break;
+      end;
+    end;
     { Import the saved search contract even in applications without menus.
       Reuse this existing preorder: definitions and overrides participate, and
       unconfigured applications retain their original generated import list. }
@@ -4127,6 +4161,14 @@ var
           ANode.Prop(LWireKey);
       end;
 
+      if (LKey = NyxAttributeName(atScrollPresentation)) and
+        (ANode.Prop(LWireKey) <> '') then
+      begin
+        LTypedPresentation := TNyxScrollPresentation.FromData(
+          TNyxDataValue.ParseJSON(ANode.Prop(LWireKey))).ToData.ToJSON =
+          ANode.Prop(LWireKey);
+      end;
+
       if LTypedPresentation then
       begin
         CloseConfiguration;
@@ -4147,8 +4189,17 @@ var
         begin
           LKindArgument := LKindArgument + '.WhenViewport(' + LViewport.Pascal + ')';
         end;
-        LLines.Add('    NyxButtonConfigure(' + LKindArgument + ').Presentation(' + #10 +
-          '      ' + PascalButtonPresentation(ANode.Prop(LWireKey)) + ');');
+
+        if LKey = NyxAttributeName(atScrollPresentation) then
+        begin
+          LLines.Add('    NyxScrollConfigure(' + LKindArgument + ').Presentation(' + #10 +
+            '      ' + PascalScrollPresentation(ANode.Prop(LWireKey)) + ');');
+        end
+        else
+        begin
+          LLines.Add('    NyxButtonConfigure(' + LKindArgument + ').Presentation(' + #10 +
+            '      ' + PascalButtonPresentation(ANode.Prop(LWireKey)) + ');');
+        end;
         Continue;
       end;
       OpenConfiguration;
@@ -4249,6 +4300,7 @@ begin
     LHasDataToolbarIntent := False;
     LHasDataToolbarQuery := False;
     LHasSelectionOptions := False;
+    LHasScrollPresentation := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
     SetLength(LStateVariables, ADocument.State.Count);
@@ -4326,6 +4378,12 @@ begin
     LLines.Add('  nyx.images,');
     LLines.Add('  nyx.button.presentation,');
     LLines.Add('  nyx.button.configuration,');
+
+    if LHasScrollPresentation then
+    begin
+      LLines.Add('  nyx.scroll.presentation,');
+      LLines.Add('  nyx.scroll.configuration,');
+    end;
     LLines.Add('  nyx.image.lifecycle,');
 
     if (ADocument.Resources.Count > 0) or (ADocument.Flows.Count > 0) or

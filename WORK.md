@@ -9,7 +9,87 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Mixed scrollable controls under zoom — 2026-10-28
+## Current work — Typed scroll presentation and usable zoomed chrome — 2026-10-29
+
+Previous goal turn: PROGRESS.f315c236 is pushed and remote-verified. Root remains
+SOLO. Continue canvas-scrollbars01's caller-choice criterion with an opt-in typed
+presentation value and managed configuration scope: follow content zoom, keep
+native size, or retain a physical thickness floor. Preserve absent/default wire
+and existing designs. Carry the value through model/schema, crafted source and
+literal admission, native/browser adapters and ordinary Studio/semantic authoring.
+Browser support must be measured honestly; standardized scrollbar-width does not
+accept a pixel length, and selector support alone can be a false positive. Keep
+the native editor/DOM scrolling face and its existing input/viewport ownership.
+All new private artifacts/process TEMP/TMP use E:. No service replacement or new
+approval is required. Original full target/physical/assistive acceptance remains
+open; a contract-only or ignored browser preference does not close this slice.
+
+The opt-in immutable value, managed configuration facet and scoped metadata now
+reach model validation, crafted specialized source, literal admission, exact
+reconciliation and both adapters. Old absent descriptors keep their import/wire
+defaults. Noncanonical valid JSON retains its exact persistence spelling. The
+strict shared integer reader and explicit1..256 bounds refuse oversized input;
+the exact-wire model cache cannot hide a later malformed property. Ordinary
+Studio composes public Nyx select/spin fields. Each committed edit captures one
+shared design transaction with exact local/effective and whole-design baselines;
+numeric edits select minimum sizing without a separate multi-field draft.
+
+Win32 projection copies policies through indexed live-face rows, with no retained
+node/renderer references. Private grid panes inherit the outer table; public
+descendants retain their own policy. Ordinary views can opt in outside a canvas,
+and withdrawal restores native allocation. Browser projection measures two actual
+gutter allocations before explicit use, rather than trusting selector support.
+Unsupported targets refuse. CSS compensation is admitted before style mutation;
+unconfigured creators retain their attributes/styles. Text, layout, actual native
+or DOM scrolling faces and their input ownership remain independent.
+
+The maintained batch passes native1418 geometry,46 model/source/Studio-controller
+checks,96 real native scroll checks,453 diagnostic print checks,108 mixed default
+checks and114 for each keep-size/minimum choice at1280/390. Existing table journeys
+retain132/154/147/255 at each width. All18 complete native heap reports are clean
+under the original runtime limits. After final source/target review, the focused
+46 checks and all six mixed runs pass again with complete clean heaps; the shared
+button-parser regression passes95. Native/browser Studio applications also
+compile. Compilation and controller evidence do not qualify full Studio input.
+
+Failure evidence remains in the external scroll-presentation-01 packet. The first
+Inspector composition supplied a text value to the integer spin domain; its
+typed integer setter repairs that refusal. A temporary Windows import shadowed
+the portable Point helper; the final fixture uses LCL's own system-metric API
+without that import. Review removes an unnecessary Int64 local that produced a
+pas2js compatibility warning, retaining the existing strict signed32-bit reader.
+Final focused browser compilations have zero Nyx-owned warnings. The installed
+Classes RTL's seven case-completeness warnings remain visible per compilation;
+no dependency source is edited and no warning is suppressed.
+
+The authenticated existing MCP session still observes the same Workshop31,
+json-workshop selection and no pending draft. This is connection/preservation
+evidence, not a live semantic write against the new server binary. The latest
+script clarification names Pythian's review firewall script; it is not a Nyx
+firewall result or a blocker. Existing LAN/Studio QA services, project pairs and
+output configuration are preserved. No new permission is needed. Continue the
+same Workshop's ordinary Studio Inspector and observing semantic transaction
+journey, then qualified matched delivery through the fixed service slots.
+Do not substitute more equivalent policy/scalar/anchor fixtures. The task and
+broader canvas/physical/assistive/widgetset acceptance remain open.
+
+Final browser execution passes62 for each explicit choice at1280x900 and390x844,
+and the unchanged default passes56 at each width. Direct compact input retains
+memo focus while wheel scrolling reaches518, readonly PageDown reaches131,
+nested editing succeeds and the action updates its bound result. The final
+authoring program passes48, including two browser-only compensation checks.
+Staged scripts match the executed payloads; images/results are retained externally.
+The final native interface review keeps the original chrome vtable unchanged
+through an additive managed presentation capability. Its six mixed runs plus96
+input/ordinary-policy and453 print checks pass again, all eight heaps complete
+and clean. Full final Studio applications compile for both targets. Only LF
+and trailing-blank normalization follows behavioral qualification; no logic
+changes afterward. All compiler/runtime readers are joined. The owned read-only
+preview is stopped/joined, its port released, temporary tab closed and viewport
+reset; the existing Studio review tab is retained. LAN still answers200. The
+remaining return path above has no missing user input or permission.
+
+## Previous checkpoint — Mixed scrollable controls under zoom — 2026-10-28
 
 Previous goal turn: PROGRESS.67d19a2 is pushed and remote-verified. Root remains
 SOLO. Continue the original canvas-scrollbars01 criteria through the existing

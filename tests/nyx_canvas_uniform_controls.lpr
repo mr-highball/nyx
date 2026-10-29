@@ -28,7 +28,8 @@ uses SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.state,
   nyx.events, nyx.behavior, nyx.scheduler, nyx.canvas.geometry, nyx.canvas.types,
   nyx.canvas.scene, nyx.canvas.workspace, nyx.canvas.observers,
   nyx.designer.resize, nyx.designer.placement, nyx.images,
-  nyx.button.presentation, nyx.button.configuration
+  nyx.button.presentation, nyx.button.configuration,
+  nyx.scroll.presentation, nyx.scroll.configuration
   {$ifdef PAS2JS}, JS, Web, nyx.canvas.browser
   {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, Types, nyx.canvas.lcl,
     LCLIntf, LCLType, LMessages, nyx.viewport.surface.lcl, nyx.widgets.lcl,
@@ -142,6 +143,9 @@ var
   GLegacy: Boolean;
   GBaseWidth: Double;
   GBaseHeight: Double;
+  GBaseChrome: Double;
+  GScrollPolicy: TNyxScrollPresentation;
+  GHasScrollPolicy: Boolean;
   {$ifdef PAS2JS}
   GHost: TJSHTMLElement;
   GView: INyxBrowserCanvasWorkspaceView;
@@ -229,7 +233,48 @@ var
   LCode: INyxCode;
   LIndex: Integer;
   LSource: TNyxText;
+  LScrollChoice: TNyxText;
+
+  procedure ScrollFace(const AControl: INyxControl);
+  begin
+
+    if LScrollChoice = 'keep' then
+    begin
+      NyxScrollConfigure(AControl.Configure).Presentation(
+        NyxScrollPresentation.Sizing(nssKeepSize));
+    end
+    else if LScrollChoice = 'floor' then
+    begin
+      NyxScrollConfigure(AControl.Configure).Presentation(
+        NyxScrollPresentation.MinimumThickness(24));
+    end;
+  end;
 begin
+  {$ifdef PAS2JS}
+  LScrollChoice := '';
+
+  if Pos('chrome=keep', window.location.search) > 0 then
+  begin
+    LScrollChoice := 'keep';
+  end
+  else if Pos('chrome=floor', window.location.search) > 0 then
+  begin
+    LScrollChoice := 'floor';
+  end;
+  {$else}
+  LScrollChoice := ParamStr(4);
+  {$endif}
+  GHasScrollPolicy := (LScrollChoice = 'keep') or (LScrollChoice = 'floor');
+  GScrollPolicy := NyxScrollPresentation;
+
+  if LScrollChoice = 'keep' then
+  begin
+    GScrollPolicy := GScrollPolicy.Sizing(nssKeepSize);
+  end
+  else if LScrollChoice = 'floor' then
+  begin
+    GScrollPolicy := GScrollPolicy.MinimumThickness(24);
+  end;
   GDocument := TNyxDocument.Create;
   GDocument.AddPage(NewNyxPage('home'));
   GDocument.State.SetValue(NyxTextState('note'), CNote);
@@ -248,10 +293,12 @@ begin
   LMemo := NewNyxMemo('note');
   LMemo.Text := 'Your note';
   LMemo.Configure.Height(170).Done;
+  ScrollFace(LMemo);
   LMemo.Binds.Value(NyxTextState('note'));
   LCard.Add(LMemo);
   LScroll := NewNyxScroll('scrolling-notes');
   LScroll.Configure.Height(160).Padding(8).Gap(8).Done;
+  ScrollFace(LScroll);
   for LIndex := 0 to 11 do
   begin
     LScroll.Add(NewNyxLabel('entry-' + TNyxText(IntToStr(LIndex)))
@@ -266,9 +313,11 @@ begin
   LCode := NewNyxCode('source-preview').WithText(LSource);
   GCodeSource := LSource;
   LCode.Configure.Width(650).MinimumWidth(650).Height(150).Done;
+  ScrollFace(LCode);
   LScroll.Add(LCode);
   LMemo := NewNyxMemo('nested-note').WithText('Nested notes 🌙 stay yours.');
   LMemo.Configure.Height(90).Done;
+  ScrollFace(LMemo);
   LScroll.Add(LMemo);
   LCard.Add(LScroll);
   LMemo := NewNyxMemo('prepared-note');
@@ -522,6 +571,16 @@ begin
     GScroll.HorzScrollBar.Position := 64;
     {$endif}
     GScrollAnchor := 96;
+    {$ifdef PAS2JS}
+    GBaseChrome := GScroll.offsetWidth - GScroll.clientWidth;
+    {$else}
+    GBaseChrome := GScroll.Width - GScroll.ClientWidth;
+    {$endif}
+
+    if GHasScrollPolicy then
+    begin
+      Check(GBaseChrome >= 16, 'explicit scrollbar policy owns a measured physical allocation');
+    end;
 
     if GLegacy then
     begin
@@ -534,6 +593,20 @@ begin
   begin
     LZoom := CZooms[GStage - 1];
     GView.SetCamera(GView.Camera.AtCenter(NyxCanvasPoint(225, 600), LZoom));
+
+    if GHasScrollPolicy then
+    begin
+      {$ifdef PAS2JS}
+      Check(Abs((GScroll.offsetWidth - GScroll.clientWidth) * LZoom -
+        17 * GScrollPolicy.EffectiveScale(LZoom, 17)) <= 2,
+        'actual browser gutter honors the physical sizing policy under ancestor zoom');
+      {$else}
+      Check(Abs((GScroll.Width - GScroll.ClientWidth) - GBaseChrome *
+        GScrollPolicy.EffectiveScale(LZoom, LCLIntf.GetSystemMetrics(SM_CXVSCROLL)) /
+        GScrollPolicy.EffectiveScale(1, LCLIntf.GetSystemMetrics(SM_CXVSCROLL))) <= 3,
+        'actual native client allocation honors the independent chrome policy');
+      {$endif}
+    end;
     Check(GView.InputFor(GItem, NyxControl('note')) = GInput, 'zoom retains the same editor');
     {$ifdef PAS2JS}
     Check((GInput.value = CNote) and (document.activeElement = GInput),

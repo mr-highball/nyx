@@ -173,7 +173,7 @@ implementation
 uses
   nyx.text.index, nyx.data, nyx.publication, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.inspector.groups, nyx.reusable.editor,
-  nyx.parts.editor, nyx.button.editor,
+  nyx.parts.editor, nyx.button.editor, nyx.scroll.editor,
   nyx.studio.resize, nyx.studio.move, nyx.studio.collections;
 
 type
@@ -927,6 +927,8 @@ var
       unrelated Inspector fields retain their independent unfinished drafts. }
     Add('inspector-button', [NyxExtension(NyxButtonEditorBaselineKey),
       NyxExtension(NyxButtonEditorValueKey)]);
+    Add('inspector-scroll', [NyxExtension(NyxScrollEditorBaselineKey),
+      NyxExtension(NyxScrollEditorValueKey)]);
     Add('inspector-viewport-rule', [NyxExtension(NyxStudioPropertyOwnerKey)]);
     { Geometry commands carry the selected owner even when they contain no
       editable value. Their event authority must advance in the same group as

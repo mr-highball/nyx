@@ -26,7 +26,8 @@ unit nyx.scroll.chrome.lcl;
 
 interface
 
-uses Controls, nyx.text, nyx.scroll.chrome, nyx.theme, nyx.gestures.lcl;
+uses Controls, nyx.text, nyx.scroll.chrome, nyx.scroll.presentation,
+  nyx.theme, nyx.gestures.lcl;
 
 type
   { Weak exact mount authority. Getters read admission flags without application
@@ -54,6 +55,16 @@ type
     procedure RestoreViewport;
     procedure Retire;
     function Attached: Boolean;
+  end;
+
+  { Additive caller-choice capability preserves the original chrome interface
+    layout. Alternate attachments can retain their existing implementation;
+    explicit policies require this facet. It copies intent, never theme/widget
+    ownership, and resolves size against original widgetset system metrics. }
+  INyxLCLScrollPresentation = interface(IInterface)
+    ['{2BE28849-0D5C-4C2F-9178-1E064532685D}']
+    procedure ProjectPresentation(AScale: Double; ATheme: TNyxTheme;
+      const APresentation: TNyxScrollPresentation);
   end;
 
 { Win32 memo, scrolling-host, grid and Tree nonclient scrolling. Unknown controls
@@ -89,7 +100,7 @@ type
   { Native HWND scope. The installed chain retains a private lease and each
     callback leases it again. Control is borrowed until explicit retirement or
     WM_NCDESTROY; source changes/enable cycling cancel the original drag. }
-  TScrollChrome = class(TInterfacedObject, INyxLCLScrollChrome)
+  TScrollChrome = class(TInterfacedObject, INyxLCLScrollChrome, INyxLCLScrollPresentation)
   private
     FControl: TWinControl;
     FWindow: HWND;
@@ -150,6 +161,8 @@ type
     function Handle(AWindow: HWND; AMessage: UINT; AWParam: WPARAM;
       ALParam: LPARAM): LRESULT;
     procedure Project(AScale: Double; ATheme: TNyxTheme);
+    procedure ProjectPresentation(AScale: Double; ATheme: TNyxTheme;
+      const APresentation: TNyxScrollPresentation);
     procedure RememberViewport;
     procedure RestoreViewport;
     procedure Retire;
@@ -1323,6 +1336,15 @@ begin
   begin
     Paint;
   end;
+end;
+
+procedure TScrollChrome.ProjectPresentation(AScale: Double; ATheme: TNyxTheme;
+  const APresentation: TNyxScrollPresentation);
+begin
+  { Both axes must meet the physical floor. System metrics belong to the
+    original host; the stored frame insets may include borders as well. }
+  Project(APresentation.EffectiveScale(AScale,
+    Min(GetSystemMetrics(SM_CXVSCROLL), GetSystemMetrics(SM_CYHSCROLL))), ATheme);
 end;
 
 procedure TScrollChrome.Project(AScale: Double; ATheme: TNyxTheme);

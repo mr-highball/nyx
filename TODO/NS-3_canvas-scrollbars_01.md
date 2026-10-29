@@ -130,3 +130,27 @@ separate from actual browser display, physical hardware and assistive evidence.
 WORK.md retains failures, source identities, limitations and original Workshop
 compatibility checks. Caller interaction choices and all remaining criteria stay
 open; this does not assign complete scroll/chrome or canvas parity.
+
+## Typed caller-choice checkpoint — 2026-10-29
+
+The opt-in immutable presentation now selects follow-zoom, normal-size or minimum
+displayed thickness through a managed configuration facet. Exact scoped metadata
+and crafted specialized source preserve older absent defaults. The strict integer
+reader and thickness bounds refuse oversized wire values. Studio select/spin fields
+capture the same grouped patch with an exact baseline; shared native/browser
+checks cover source reconciliation, stale refusal, paired Undo/Redo and Save/Open.
+
+The Win32 renderer applies the choice to real chrome, including ordinary views
+outside a canvas; withdrawing it restores native allocation. Browser allocation
+is measured instead of inferred from selector support, with explicit unavailable
+behavior. Actual canvas memo/scroll/code controls retain editing, focus, caret,
+both anchors and input through repeated zoom at wide/compact sizes. The maintained
+target retains both policy choices and original default/table/print regressions.
+WORK.md owns exact counts, source identities, failures and limitations.
+
+This task remains open. Return to the same Workshop's ordinary Studio Inspector
+and observing semantic transaction journey with the policy, then matched delivery.
+The shared form/controller tests do not substitute for those UI/service checks.
+Full widgetset/browser support, foreground native/physical/assistive behavior and
+the remaining original acceptance criteria stay open. Do not add equivalent
+scalar/anchor fixtures instead of those outcomes.

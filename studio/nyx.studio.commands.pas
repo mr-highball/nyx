@@ -81,6 +81,7 @@ uses
   nyx.resources.rows.editor,
   nyx.image.editor,
   nyx.button.editor,
+  nyx.scroll.editor,
   nyx.button.presentation;
 
 function RouteNyxStudioSource(ASession: TNyxStudioSession; ANode: TNyxNode;
@@ -191,6 +192,7 @@ var
   LButtonOwner: TNyxText;
   LButtonBaseline: TNyxText;
   LButtonValue: TNyxButtonPresentation;
+  LScrollChange: TNyxScrollEditorChange;
   LResourceChange: TNyxResourceEditorChange;
 begin
   Result := sacNone;
@@ -203,6 +205,29 @@ begin
 
   AEdit.Selection := ASession.SelectedID;
   AEdit.View := ASession.ActiveViewID;
+
+  if (AEvent = ntChange) and CaptureNyxScrollEditor(ANode, AShellRoot, LScrollChange) then
+  begin
+    LProjection := ASession.SelectedProjection;
+    try
+
+      if (LScrollChange.Owner <> ASession.SelectedID) or
+        (NyxScrollEditorBaseline(ASession.Selected, LProjection) <> LScrollChange.Baseline) then
+      begin
+        raise ENyxModel.Create('Scrollbars changed; review the current selection before editing');
+      end;
+    finally
+      LProjection.Free;
+    end;
+    AEdit.Action := sdaTransaction;
+    AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxDesignStep(ReadNyxDesignPatch(NyxArray([NyxObject([
+        NyxField('op', NyxData('update')), NyxField('id', NyxData(LScrollChange.Owner)),
+        NyxField('properties', NyxObject([NyxField(NyxAttributeName(atScrollPresentation),
+          NyxData(LScrollChange.Wire))]))])])))]));
+    Exit(sacEdit);
+  end;
 
   if (AEvent = ntClick) and CaptureNyxButtonEditor(ANode, AShellRoot,
     LButtonOwner, LButtonBaseline, LButtonValue) then

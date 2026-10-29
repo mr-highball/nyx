@@ -36,6 +36,7 @@ uses
   nyx.colors,
   nyx.images,
   nyx.button.presentation,
+  nyx.scroll.presentation,
   nyx.bytes,
   nyx.resources,
   nyx.resources.rows, nyx.data.rows,
@@ -917,7 +918,8 @@ type
     vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision,
     vkDiagramPortRef, vkDiagramPort, vkKanbanIntent, vkKanbanOptions, vkKanbanLane,
     vkDateRangeOptions, vkMasterDetailOptions, vkMasterDetailIntent,
-    vkButtonPresentation, vkGlyphCell, vkButtonContent, vkButtonDensity,
+    vkButtonPresentation, vkScrollPresentation, vkScrollSizing,
+    vkGlyphCell, vkButtonContent, vkButtonDensity,
     vkButtonAlignment, vkButtonWeight, vkGlyphTone,
     vkValueFormat, vkFormatLocale, vkFormatterRef, vkFormatDateOrder,
     vkTableWorkbenchPolicy, vkTableExportPolicy, vkWorkbenchExportAction,
@@ -975,6 +977,7 @@ type
     RGBColor: TNyxRGBColor;
     ImageSource: TNyxImageSource;
     ButtonPresentation: TNyxButtonPresentation;
+    ScrollPresentation: TNyxScrollPresentation;
     GlyphCell: TNyxGlyphCell;
     ImageValidation: TNyxImageValidationPolicy;
     ResourceDefinitionData: TNyxDataValue;
@@ -1146,7 +1149,8 @@ type
     { Reads copied target/field/query choices; never configures/replaces nodes. }
     function DataToolbarConstructor(const AName: TNyxText): TValue;
     function ButtonPresentationConstructor(const AName: TNyxText): TValue;
-    procedure ButtonConfiguration;
+    function ScrollPresentationConstructor: TValue;
+    procedure PresentationConfiguration(AAttribute: TNyxAttribute);
     function SelectionOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
@@ -1234,7 +1238,7 @@ const
     'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
     'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment', 'SliderIntervals',
     'ImageFit', 'ImageHorizontal', 'ImageVertical', 'PageView', 'Indeterminate',
-    'ButtonPresentation');
+    'ButtonPresentation', 'ScrollPresentation');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -1249,7 +1253,7 @@ const
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
     'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate',
-    'atButtonPresentation');
+    'atButtonPresentation', 'atScrollPresentation');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -1849,6 +1853,9 @@ begin
   RegisterEnum(vkButtonWeight, Ord(nbwSemibold), 'nbwSemibold');
   RegisterEnum(vkGlyphTone, Ord(ngtOriginal), 'ngtOriginal');
   RegisterEnum(vkGlyphTone, Ord(ngtForeground), 'ngtForeground');
+  RegisterEnum(vkScrollSizing, Ord(nssFollowZoom), 'nssFollowZoom');
+  RegisterEnum(vkScrollSizing, Ord(nssKeepSize), 'nssKeepSize');
+  RegisterEnum(vkScrollSizing, Ord(nssMinimumThickness), 'nssMinimumThickness');
   RegisterEnum(vkImageFormat, Ord(nimJPEG), 'nimJPEG');
   RegisterEnum(vkResourceKind, Ord(nrkImage), 'nrkImage');
   RegisterEnum(vkResourceKind, Ord(nrkJSON), 'nrkJSON');
@@ -3109,6 +3116,11 @@ begin
         if (LName = 'nyxbuttonpresentation') or (LName = 'nyxglyphcell') then
         begin
           Exit(ButtonPresentationConstructor(LName));
+        end;
+
+        if LName = 'nyxscrollpresentation' then
+        begin
+          Exit(ScrollPresentationConstructor);
         end;
 
         if LName = 'nyximagelocation' then
@@ -5027,6 +5039,7 @@ begin
     atSliderIntervals: Require(vkInteger);
     atImageFit: Require(vkImageFit);
     atButtonPresentation: Require(vkButtonPresentation);
+    atScrollPresentation: Require(vkScrollPresentation);
     atImageHorizontal, atImageVertical: Require(vkImageAnchor);
     atCrossAlignment: Require(vkCrossAlignment);
     atJustification: Require(vkJustification);
@@ -5086,6 +5099,7 @@ begin
       end;
     atImageFit: LConfigure.ImageFit(TNyxImageFit(LValue.Ordinal));
     atButtonPresentation: LConfigure.ButtonPresentation(LValue.ButtonPresentation);
+    atScrollPresentation: LConfigure.ScrollPresentation(LValue.ScrollPresentation);
     atImageHorizontal: LConfigure.ImageHorizontal(TNyxImageAnchor(LValue.Ordinal));
     atImageVertical: LConfigure.ImageVertical(TNyxImageAnchor(LValue.Ordinal));
     atAlt: LConfigure.AlternativeText(LValue.Text);
@@ -6749,6 +6763,7 @@ var
   LGeneratedImports: TNyxImportClause;
   LImportIndex: Integer;
   LNeedsTypeAhead: Boolean;
+  LNeedsScrollPresentation: Boolean;
   {$ifdef NYX_SOURCE_PROFILE}
   LStarted: Double;
   LRenderStarted: Double;
@@ -6785,10 +6800,13 @@ begin
       while reconciling this required dependency through the ordinary boundary. }
     LGeneratedImports := ReadNyxImports(LPrefix, nisInterface);
     LNeedsTypeAhead := False;
+    LNeedsScrollPresentation := False;
     for LImportIndex := 0 to LGeneratedImports.Count - 1 do
     begin
       LNeedsTypeAhead := LNeedsTypeAhead or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.typeahead');
+      LNeedsScrollPresentation := LNeedsScrollPresentation or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.scroll.presentation');
     end;
 
     if FCustomFrame then
@@ -6808,6 +6826,11 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.images');
     LPrefix := WithNyxImport(LPrefix, 'nyx.button.presentation');
     LPrefix := WithNyxImport(LPrefix, 'nyx.button.configuration');
+    if LNeedsScrollPresentation then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.scroll.presentation');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.scroll.configuration');
+    end;
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow.declarations');
 
     if ADocument.Programs.Count > 0 then

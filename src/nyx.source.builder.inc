@@ -631,7 +631,13 @@ begin
 
   if At('NyxButtonConfigure') then
   begin
-    ButtonConfiguration;
+    PresentationConfiguration(atButtonPresentation);
+    Exit;
+  end;
+
+  if At('NyxScrollConfigure') then
+  begin
+    PresentationConfiguration(atScrollPresentation);
     Exit;
   end;
 

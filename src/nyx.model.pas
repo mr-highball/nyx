@@ -36,6 +36,7 @@ uses
   nyx.colors,
   nyx.images,
   nyx.button.presentation,
+  nyx.scroll.presentation,
   nyx.resources,
   nyx.resource.context,
   nyx.root.types,
@@ -136,6 +137,11 @@ type
     FHasButtonPresentation: Boolean;
     FButtonPresentationWire: TNyxText;
     FButtonPresentation: TNyxButtonPresentation;
+    { Same exact-wire cache discipline for opt-in scrolling chrome. Presentation
+      values retain no host/window and remain independent in descriptor clones. }
+    FHasScrollPresentation: Boolean;
+    FScrollPresentationWire: TNyxText;
+    FScrollPresentation: TNyxScrollPresentation;
     FExtensions: TNyxExtensions;
     FChildren: array of TNyxNode;
     FChildReferences: array of INyxNode;
@@ -189,6 +195,7 @@ type
     function GetChild(AIndex: Integer): TNyxNode;
     function GetProjectionKind: TNyxText;
     function GetButtonPresentation: TNyxButtonPresentation;
+    function GetScrollPresentation: TNyxScrollPresentation;
     function GetID: TNyxText;
     function GetDesignID: TNyxText;
     function GetIsRealized: Boolean;
@@ -242,6 +249,9 @@ type
       fluent values are independent. This runtime cache is neither persisted nor
       copied into clones and shares the descriptor's ordinary caller confinement. }
     property ButtonPresentation: TNyxButtonPresentation read GetButtonPresentation;
+    { Copied, admitted chrome intent. Empty metadata reads the default value;
+      the adapter checks presence separately to preserve platform defaults. }
+    property ScrollPresentation: TNyxScrollPresentation read GetScrollPresentation;
     { UI-thread runtime constraints are retained only on realized copies, never
       serialized. Nil policies or authored nodes raise ENyxModel before mutation.
       Identity repeats are no-ops. Policies cannot retain this tree back; their
@@ -544,6 +554,9 @@ type
     { Copied presentation changes the existing button face, never its command,
       event route or accessible name. Scopes follow every other typed setter. }
     function ButtonPresentation(const AValue: TNyxButtonPresentation): TNyxNodeConfig;
+    { Opt-in chrome sizing in this exact base/platform/viewport/named scope.
+      Content layout and text remain owned by their independent contracts. }
+    function ScrollPresentation(const AValue: TNyxScrollPresentation): TNyxNodeConfig;
     function ImageFit(AValue: TNyxImageFit): TNyxNodeConfig;
     function ImageHorizontal(AValue: TNyxImageAnchor): TNyxNodeConfig;
     function ImageVertical(AValue: TNyxImageAnchor): TNyxNodeConfig;
@@ -2345,6 +2358,11 @@ begin
   Result := Put(atButtonPresentation, AValue.ToData.ToJSON);
 end;
 
+function TNyxNodeConfig.ScrollPresentation(const AValue: TNyxScrollPresentation): TNyxNodeConfig;
+begin
+  Result := Put(atScrollPresentation, AValue.ToData.ToJSON);
+end;
+
 function TNyxNodeConfig.ImageFit(AValue: TNyxImageFit): TNyxNodeConfig;
 begin
   Result := Put(atImageFit, NyxImageFitName(AValue));
@@ -3067,6 +3085,30 @@ begin
   begin
     Result := FKind;
   end;
+end;
+
+function TNyxNode.GetScrollPresentation: TNyxScrollPresentation;
+var
+  LWire: TNyxText;
+  LCandidate: TNyxScrollPresentation;
+begin
+  LWire := Prop(NyxAttributeName(atScrollPresentation));
+
+  if not FHasScrollPresentation or (LWire <> FScrollPresentationWire) then
+  begin
+    LCandidate := NyxScrollPresentation;
+
+    if LWire <> '' then
+    begin
+      LCandidate := TNyxScrollPresentation.FromData(TNyxDataValue.ParseJSON(LWire));
+    end;
+    { Publish only a fully admitted value. A malformed direct Props mutation
+      cannot poison the prior cached face or be hidden by that cache. }
+    FScrollPresentation := LCandidate;
+    FScrollPresentationWire := LWire;
+    FHasScrollPresentation := True;
+  end;
+  Result := FScrollPresentation;
 end;
 
 function TNyxNode.GetButtonPresentation: TNyxButtonPresentation;

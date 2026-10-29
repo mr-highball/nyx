@@ -77,6 +77,9 @@ type
     Seen: Boolean;
     Grid: TNativeGridMetrics;
     Chrome: INyxLCLScrollChrome;
+    HasScrollPresentation: Boolean;
+    PublicScrollFace: Boolean;
+    ScrollPresentation: TNyxScrollPresentation;
     Scroll: TNativeScrollPosition;
   end;
 
@@ -182,6 +185,7 @@ type
     procedure RestoreTree(AControl: TControl; AChildren: Boolean;
       const AGeneration: INyxLCLBindingGeneration);
     procedure CheckRows(AHost: TWinControl; AScale: Double);
+    procedure ReadScrollPresentations(const AGeneration: INyxLCLBindingGeneration);
     procedure NotifyGrids(const AGeneration: INyxLCLBindingGeneration);
     procedure RememberGridViewports(const AGeneration: INyxLCLBindingGeneration);
     procedure RestoreGridViewports(const AGeneration: INyxLCLBindingGeneration);
@@ -836,6 +840,86 @@ begin
   end;
 end;
 
+procedure TNativeContentScale.ReadScrollPresentations(
+  const AGeneration: INyxLCLBindingGeneration);
+var
+  LIndex: Integer;
+  LRow: Integer;
+  LParentRow: Integer;
+  LControl: TControl;
+  LParent: TControl;
+  LBinding: TNyxLCLBinding;
+begin
+  RequireNativeGeneration(AGeneration);
+  for LIndex := 0 to High(FRows) do
+  begin
+    FRows[LIndex].HasScrollPresentation := False;
+    FRows[LIndex].PublicScrollFace := False;
+  end;
+  { One indexed pass copies explicit policies onto their actual input face.
+    No node, binding or renderer reference survives this preparation. }
+  for LIndex := 0 to High(AGeneration.Receiver.FBindings) do
+  begin
+    LBinding := AGeneration.Receiver.FBindings[LIndex];
+
+    LControl := LBinding.FControl;
+
+    if LBinding.FInput is TWinControl then
+    begin
+      LControl := LBinding.FInput;
+    end;
+
+    if FIndex.TryGetValue(LControl, LRow) then
+    begin
+      FRows[LRow].PublicScrollFace := True;
+    end;
+
+    if LBinding.FNode.Prop(NyxAttributeName(atScrollPresentation)) = '' then
+    begin
+      Continue;
+    end;
+
+    if not (LControl is TWinControl) or
+      not NyxLCLSupportsScrollChrome(TWinControl(LControl)) then
+    begin
+      raise ENyxModel.Create('Scroll presentation is unavailable for this native face');
+    end;
+
+    if FIndex.TryGetValue(LControl, LRow) then
+    begin
+      FRows[LRow].ScrollPresentation := LBinding.FNode.ScrollPresentation;
+      FRows[LRow].HasScrollPresentation := True;
+    end;
+  end;
+  { Private grid panes share their outer control's policy. Public descendant
+    bindings, including those with no explicit policy, remain independent. }
+  for LIndex := 0 to High(FRows) do
+  begin
+    LControl := FRows[LIndex].Control;
+
+    if (LControl = nil) or FRows[LIndex].PublicScrollFace or
+      FRows[LIndex].HasScrollPresentation or
+      not (LControl is TNyxCollectionStringGrid) then
+    begin
+      Continue;
+    end;
+    LParent := LControl.Parent;
+    while LParent <> nil do
+    begin
+
+      if FIndex.TryGetValue(LParent, LParentRow) and
+        FRows[LParentRow].HasScrollPresentation and
+        (LParent is TNyxCollectionStringGrid) then
+      begin
+        FRows[LIndex].ScrollPresentation := FRows[LParentRow].ScrollPresentation;
+        FRows[LIndex].HasScrollPresentation := True;
+        Break;
+      end;
+      LParent := LParent.Parent;
+    end;
+  end;
+end;
+
 procedure TNativeContentScale.CheckRows(AHost: TWinControl; AScale: Double);
 var
   LIndex: Integer;
@@ -903,6 +987,7 @@ begin
   begin
     Capture(AHost, False, AGeneration);
     Capture(ARoot, True, AGeneration);
+    ReadScrollPresentations(AGeneration);
   end;
   CheckRows(AHost, AScale);
 end;
@@ -936,6 +1021,7 @@ var
   LControl: TControl;
   LBounds: TRect;
   LScrollLifetime: INyxLCLScrollChromeLifetime;
+  LPresentation: INyxLCLScrollPresentation;
 begin
   RequireNativeGeneration(AGeneration);
   for LIndex := 0 to High(FRows) do
@@ -944,6 +1030,7 @@ begin
   end;
   Capture(AHost, False, AGeneration);
   Capture(ARoot, True, AGeneration);
+  ReadScrollPresentations(AGeneration);
   CheckRows(AHost, AScale);
   { Capture/validation completes before the first physical metric changes. The
     host itself keeps physical dimensions; only its font and live children
@@ -1010,7 +1097,19 @@ begin
       RequireNativeGeneration(AGeneration);
     end;
 
-    if (LControl <> AHost) and (LControl is TWinControl) and
+    if (AGeneration.Receiver.FContentLayoutWidth = 0) and
+      not LRow.HasScrollPresentation and (LRow.Chrome <> nil) then
+    begin
+      { Withdrawing an ordinary view's opt-in restores its original native
+        frame. A retained scale lease is harmless and may still serve grids. }
+      LRow.Chrome.Retire;
+      RequireNativeGeneration(AGeneration);
+      FRows[LIndex].Chrome := nil;
+      LRow.Chrome := nil;
+    end;
+
+    if ((AGeneration.Receiver.FContentLayoutWidth > 0) or LRow.HasScrollPresentation) and
+      (LControl <> AHost) and (LControl is TWinControl) and
       NyxLCLSupportsScrollChrome(TWinControl(LControl)) then
     begin
 
@@ -1034,7 +1133,22 @@ begin
 
       if LRow.Chrome <> nil then
       begin
-        LRow.Chrome.Project(AScale, AGeneration.Receiver.FTheme);
+        if LRow.HasScrollPresentation then
+        begin
+          LPresentation := nil;
+
+          if not Supports(LRow.Chrome, INyxLCLScrollPresentation, LPresentation) then
+          begin
+            raise ENyxModel.Create('The native chrome attachment has no presentation capability');
+          end;
+          LPresentation.ProjectPresentation(AScale, AGeneration.Receiver.FTheme,
+            LRow.ScrollPresentation);
+          LPresentation := nil;
+        end
+        else
+        begin
+          LRow.Chrome.Project(AScale, AGeneration.Receiver.FTheme);
+        end;
         RequireNativeGeneration(AGeneration);
       end;
     end;

@@ -94,7 +94,9 @@ begin
   end;
 end;
 
-procedure TConfigurationReader.ButtonConfiguration;
+{ Share exact scope selection across managed presentation facades. Only the
+  two declared typed value families can cross this literal admission boundary. }
+procedure TConfigurationReader.PresentationConfiguration(AAttribute: TNyxAttribute);
 var
   LLocal: Integer;
   LNode: TNyxNode;
@@ -104,14 +106,23 @@ var
   LPresentation: TNyxPresentationRef;
   LMethod: TNyxText;
   LArgs: TValues;
+  LDefault: Boolean;
 begin
-  Expect('NyxButtonConfigure');
+
+  if AAttribute = atScrollPresentation then
+  begin
+    Expect('NyxScrollConfigure');
+  end
+  else
+  begin
+    Expect('NyxButtonConfigure');
+  end;
   Expect('(');
   LLocal := LocalIndex(FTokens[FCursor].Text);
 
   if (LLocal < 0) or not FLocals[LLocal].Admitted then
   begin
-    Fail('Button presentation requires an already owned control');
+    Fail('Presentation requires an already owned control');
   end;
   LNode := AdmittedNode(LLocal);
   Inc(FCursor);
@@ -129,7 +140,7 @@ begin
 
     if Length(LArgs) <> 1 then
     begin
-      Fail('Choose a typed button configuration scope');
+      Fail('Choose a typed presentation configuration scope');
     end;
 
     if (LMethod = 'forplatform') and (LArgs[0].Kind = vkPlatform) then
@@ -153,17 +164,42 @@ begin
     end
     else
     begin
-      Fail('Button configuration accepts only typed scope selectors');
+      Fail('Presentation configuration accepts only typed scope selectors');
     end;
   end;
   Expect(')');
   Expect('.');
-  Expect('Presentation');
-  LArgs := Arguments(1);
+  LDefault := (AAttribute = atScrollPresentation) and At('UseDefault');
 
-  if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkButtonPresentation) then
+  if LDefault then
   begin
-    Fail('Presentation requires NyxButtonPresentation');
+    Inc(FCursor);
+
+    if At('(') then
+    begin
+      LArgs := Arguments(0);
+
+      if Length(LArgs) <> 0 then
+      begin
+        Fail('UseDefault takes no arguments');
+      end;
+    end;
+  end
+  else
+  begin
+    Expect('Presentation');
+    LArgs := Arguments(1);
+
+    if Length(LArgs) <> 1 then
+    begin
+      Fail('Presentation requires one typed value');
+    end;
+
+    if ((AAttribute = atButtonPresentation) and (LArgs[0].Kind <> vkButtonPresentation)) or
+      ((AAttribute = atScrollPresentation) and (LArgs[0].Kind <> vkScrollPresentation)) then
+    begin
+      Fail('Presentation argument belongs to a different typed family');
+    end;
   end;
 
   if FApply then
@@ -178,7 +214,19 @@ begin
     begin
       LScope := LScope.WhenViewport(LViewport);
     end;
-    LScope.ButtonPresentation(LArgs[0].ButtonPresentation);
+
+    if LDefault then
+    begin
+      LScope.Metadata(atScrollPresentation, '');
+    end
+    else if AAttribute = atScrollPresentation then
+    begin
+      LScope.ScrollPresentation(LArgs[0].ScrollPresentation);
+    end
+    else
+    begin
+      LScope.ButtonPresentation(LArgs[0].ButtonPresentation);
+    end;
   end;
 
   if At('.') then
@@ -195,4 +243,53 @@ begin
     end;
   end;
   Expect(';');
+end;
+
+{ Evaluate immutable configuration only. No platform styling, capability probe
+  or arbitrary Pascal function is executed while importing an authored view. }
+function TConfigurationReader.ScrollPresentationConstructor: TValue;
+var
+  LArgs: TValues;
+  LMethod: TNyxText;
+begin
+  Result := Default(TValue);
+  Result.Kind := vkScrollPresentation;
+  Result.ScrollPresentation := NyxScrollPresentation;
+
+  if At('(') then
+  begin
+    LArgs := Arguments(0);
+
+    if Length(LArgs) <> 0 then
+    begin
+      Fail('NyxScrollPresentation takes no constructor arguments');
+    end;
+  end;
+  while At('.') do
+  begin
+    Inc(FCursor);
+    LMethod := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    LArgs := Arguments(1);
+
+    if Length(LArgs) <> 1 then
+    begin
+      Fail('Scroll presentation methods require one typed argument');
+    end;
+
+    if (LMethod = 'sizing') and (LArgs[0].Kind = vkScrollSizing) then
+    begin
+      Result.ScrollPresentation := Result.ScrollPresentation.Sizing(
+        TNyxScrollSizing(LArgs[0].Ordinal));
+    end
+    else if (LMethod = 'minimumthickness') and (LArgs[0].Kind = vkInteger) then
+    begin
+      Result.ScrollPresentation := Result.ScrollPresentation.MinimumThickness(
+        StrToInt(LArgs[0].Text));
+    end
+    else
+    begin
+      Fail('Unknown scroll presentation method or incorrect argument type: ' + LMethod);
+    end;
+  end;
 end;

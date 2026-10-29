@@ -174,7 +174,7 @@ type
     atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight,
     atQueryContainer, atContainerContainment, atSliderIntervals,
     atImageFit, atImageHorizontal, atImageVertical, atPageView, atIndeterminate,
-    atButtonPresentation);
+    atButtonPresentation, atScrollPresentation);
 
   { Open application names are distinct value types, never behavioral keywords.
     These records own immutable text values, without mutable arrays/UI handles.
@@ -331,7 +331,7 @@ const
     'min-width', 'max-width', 'min-height', 'max-height',
     'query-container', 'container-containment', 'slider-intervals',
     'image-fit', 'image-position-x', 'image-position-y', 'page-view', 'indeterminate',
-    'button-presentation');
+    'button-presentation', 'scroll-presentation');
   CLayoutNames: array[TNyxLayoutMode] of TNyxText = ('column', 'row', 'grid', 'absolute');
   CVariantNames: array[TNyxVariant] of TNyxText =
     ('', 'primary', 'secondary', 'danger', 'success', 'warning', 'ghost');
@@ -417,7 +417,7 @@ begin
     atSplitResizable, atDragSource, atDropTarget, atTouchBehavior,
     atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing,
     atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight,
-    atImageFit, atImageHorizontal, atImageVertical, atButtonPresentation];
+    atImageFit, atImageHorizontal, atImageVertical, atButtonPresentation, atScrollPresentation];
 end;
 
 function NyxPlatformKey(APlatform: TNyxPlatform; AAttribute: TNyxAttribute): TNyxText;

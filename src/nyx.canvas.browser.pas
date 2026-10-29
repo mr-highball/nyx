@@ -361,6 +361,11 @@ begin
   begin
     Exit;
   end;
+
+  if AMount.Renderer <> nil then
+  begin
+    AMount.Renderer.SetContentChromeScale(AFrame.ContentScale);
+  end;
   LFormat := FormatSettings;
   LFormat.DecimalSeparator := '.';
   AMount.LayoutHost.style.setProperty('width', IntToStr(AFrame.LayoutWidth) + 'px');
@@ -618,6 +623,11 @@ begin
     end;
     FSurface.appendChild(Result.Host);
     Result.Renderer := TNyxBrowserRenderer.Create(FTheme);
+
+    if FScaling = nccsUniform then
+    begin
+      Result.Renderer.SetContentChromeScale(AFrame.ContentScale);
+    end;
 
     if Assigned(FSetup) then
     begin

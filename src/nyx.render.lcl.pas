@@ -1046,7 +1046,7 @@ uses
   nyx.collections.arrangement.lcl,
   nyx.collections.cell.lcl,
   nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl,
-  nyx.scroll.chrome.lcl, nyx.coordinators.internal;
+  nyx.scroll.chrome.lcl, nyx.scroll.presentation, nyx.coordinators.internal;
 
 type
 
@@ -5860,6 +5860,21 @@ begin
         Exit;
       end;
       LScale := nil;
+
+      if FContentScaleState = nil then
+      begin
+        for LIndex := 0 to High(FBindings) do
+        begin
+
+          if FBindings[LIndex].FNode.Prop(NyxAttributeName(atScrollPresentation)) <> '' then
+          begin
+            { An ordinary, unzoomed view can opt into the same adapter. Merely
+              enabling chrome does not create a canvas/world layout frame. }
+            FContentScaleState := TNativeContentScale.Create;
+            Break;
+          end;
+        end;
+      end;
 
       if (FContentScaleState <> nil) and (FPanel <> nil) and (FRoot <> nil) then
       begin

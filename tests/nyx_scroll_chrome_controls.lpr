@@ -26,7 +26,8 @@ program nyx_scroll_chrome_controls;
 uses
   Interfaces, Forms, SysUtils, Classes, Controls, StdCtrls, Grids, Windows,
   nyx.text, nyx.types, nyx.controls, nyx.model, nyx.codec, nyx.render.lcl,
-  nyx.scroll.chrome, nyx.scroll.chrome.lcl, nyx.gestures.lcl, nyx.theme;
+  nyx.scroll.chrome, nyx.scroll.chrome.lcl, nyx.gestures.lcl, nyx.theme,
+  nyx.scroll.presentation, nyx.scroll.configuration;
 
 type
   { Detached flags emulate one collection input authority. The host and native
@@ -380,6 +381,53 @@ begin
   Result := (LWindow.Right - LWindow.Left) - (LClient.Right - LClient.Left);
 end;
 
+{ Full Render is deliberately allowed to replace controls. This checks that
+  opting in outside a canvas and then withdrawing it restores native default
+  allocation, without changing ordinary view dimensions or source content. }
+procedure RunOrdinaryPresentation;
+var
+  LDocument: TNyxDocument;
+  LRenderer: TNyxLCLRenderer;
+  LHost: TForm;
+  LMemo: INyxMemo;
+  LInput: TMemo;
+  LDefaultWidth: Integer;
+begin
+  LDocument := TNyxDocument.Create;
+  LRenderer := TNyxLCLRenderer.Create;
+  LHost := TForm.CreateNew(nil);
+  try
+    LHost.ClientWidth := 400;
+    LHost.ClientHeight := 240;
+    LHost.Show;
+    LDocument.AddPage(NewNyxPage('home'));
+    LMemo := NewNyxMemo('ordinary-note');
+    LMemo.Configure.Height(180).Value('Your notes').Done;
+    LDocument.Pages[0].Add(LMemo);
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    Application.ProcessMessages;
+    LInput := TMemo(LRenderer.InputFor('ordinary-note'));
+    LDefaultWidth := NonClientWidth(LInput);
+    NyxScrollConfigure(LMemo.Configure).Presentation(NyxScrollPresentation.MinimumThickness(32));
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    Application.ProcessMessages;
+    LInput := TMemo(LRenderer.InputFor('ordinary-note'));
+    Check(NonClientWidth(LInput) >= 32, 'an ordinary unzoomed memo honors explicit minimum chrome');
+    Check(LRenderer.ContentScale = 1, 'chrome opt-in does not change ordinary content scale');
+    NyxScrollConfigure(LMemo.Configure).UseDefault;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    Application.ProcessMessages;
+    LInput := TMemo(LRenderer.InputFor('ordinary-note'));
+    Check(NonClientWidth(LInput) = LDefaultWidth, 'withdrawing ordinary policy restores original native allocation');
+    Check(TNyxText(LInput.Text) = 'Your notes', 'default restoration retains authored content');
+  finally
+    LRenderer.Free;
+    LHost.Free;
+    LMemo := nil;
+    LDocument.Free;
+  end;
+end;
+
 procedure Run;
 const
   CScales: array[0..3] of Double = (0.75, 1.5, 0.5, 1.0);
@@ -589,6 +637,7 @@ begin
     try
       Check(not NyxLCLSupportsScrollChrome(nil), 'an absent native control advertises no scroll capability');
       Run;
+      RunOrdinaryPresentation;
       RunDeferredGrid;
       RunHorizontalMemo(1000);
       RunHorizontalMemo(20000);

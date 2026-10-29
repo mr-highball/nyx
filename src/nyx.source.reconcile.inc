@@ -510,7 +510,8 @@ var
         Continue;
       end;
 
-      if SameText(ATokens[LToken].Text, 'NyxButtonConfigure') and
+      if (SameText(ATokens[LToken].Text, 'NyxButtonConfigure') or
+        SameText(ATokens[LToken].Text, 'NyxScrollConfigure')) and
         (ATokens[LToken + 1].Text = '(') then
       begin
         { The inner owner.Configure selects the optional facade's scope. It is
@@ -652,6 +653,8 @@ begin
     vkResourceDefinition: LPayload := AValue.ResourceDefinitionData.ToJSON;
     vkResourceCache: LPayload := AValue.ResourceCache.ToData.ToJSON;
     vkButtonPresentation: LPayload := AValue.ButtonPresentation.ToData.ToJSON;
+    vkScrollPresentation: LPayload := AValue.ScrollPresentation.ToData.ToJSON;
+    vkScrollSizing: LPayload := IntToStr(AValue.Ordinal);
     vkGlyphCell: LPayload := AValue.GlyphCell.ToData.ToJSON;
     vkButtonContent, vkButtonDensity, vkButtonAlignment, vkButtonWeight,
       vkGlyphTone: LPayload := IntToStr(AValue.Ordinal);
@@ -742,7 +745,7 @@ begin
             field must not replace a whole object/domain and erase unrelated
             authored expressions or notes in its other values. }
           LExpression := not (LValue.Kind in [vkDataField, vkDomain, vkCollectionView,
-            vkButtonPresentation, vkGlyphCell]) and
+            vkButtonPresentation, vkScrollPresentation, vkGlyphCell]) and
             not ((LValue.Kind = vkData) and (LValue.Data.Kind in [ndObject, ndArray]));
 
           if LExpression then
@@ -1330,7 +1333,8 @@ begin
       begin
         LName := LTokens[LIndex + 2].Text;
       end
-      else if SameText(LTokens[LIndex].Text, 'NyxButtonConfigure') and
+      else if (SameText(LTokens[LIndex].Text, 'NyxButtonConfigure') or
+        SameText(LTokens[LIndex].Text, 'NyxScrollConfigure')) and
         (LTokens[LIndex + 1].Text = '(') and (LTokens[LIndex + 3].Text = '.') and
         SameText(LTokens[LIndex + 4].Text, 'Configure') then
       begin
@@ -1909,7 +1913,8 @@ begin
         end
         else if (LTokens[LIndex].Kind = tkWord) and
           (SameText(LTokens[LIndex].Text, 'NyxCallbacks') or
-          SameText(LTokens[LIndex].Text, 'NyxButtonConfigure')) then
+          SameText(LTokens[LIndex].Text, 'NyxButtonConfigure') or
+          SameText(LTokens[LIndex].Text, 'NyxScrollConfigure')) then
         begin
           LRemoved := Removed(LSymbolNames.IndexOf(LowerCase(LTokens[LIndex + 2].Text)));
         end

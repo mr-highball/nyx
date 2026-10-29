@@ -53,6 +53,7 @@ uses
   nyx.theme.editor,
   nyx.image.editor,
   nyx.button.editor,
+  nyx.scroll.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette, nyx.diagrams.palette,
@@ -2061,6 +2062,12 @@ begin
         AddNyxDateDomainInspector(LComponentGroup.BodyColumn.Node, ASession);
         AddNyxTimeDomainInspector(LComponentGroup.BodyColumn.Node, ASession);
 
+        if NyxSupportsViewport(LSelectedProjection) then
+        begin
+          LComponentGroup.BodyColumn.Add(NewNyxScrollEditor('inspector-scroll',
+            LSelected, LSelectedProjection));
+        end;
+
         if (LSelectedProjection <> nil) and
           (LSelectedProjection.ProjectionKind = NyxKindName(nkButton)) then
         begin
@@ -2100,7 +2107,7 @@ begin
         begin
 
           if TryNyxAttribute(LProperties[LIndex].Key, LAttribute) and
-            (LAttribute = atButtonPresentation) then
+            (LAttribute in [atButtonPresentation, atScrollPresentation]) then
           begin
             { The grouped typed editor owns the structured value. A raw JSON
               text field would make ordinary behavior strings the public UI. }

@@ -35,6 +35,7 @@ uses
   nyx.types,
   nyx.images,
   nyx.button.presentation,
+  nyx.scroll.presentation,
   nyx.resources,
   nyx.responsive,
   nyx.presentations,
@@ -340,6 +341,9 @@ procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument = nil
 { Validate all portable properties, including inherited reusable overrides.
   The document is borrowed. Structural references/ownership are admitted first. }
 procedure ValidateNyxDocumentProperties(ADocument: TNyxDocument);
+{ Exact reserved attribute identity across direct, platform, viewport and named
+  presentation wires. Sequential decoding preserves each successful scope. }
+function NyxMatchesAttributeKey(const AKey: TNyxText; AAttribute: TNyxAttribute): Boolean;
 { Checks exact effective control/event support and explicitly selected callback
   ordering. Graph/state admission remains pure in nyx.flow.routes. Runtime uses
   this same boundary before installing revocable event observers. }
@@ -1194,6 +1198,22 @@ begin
           LDescription := 'Button presentation requires a button projection.';
         end;
       end;
+    atScrollPresentation:
+      begin
+        LBrowser := ncBasic;
+        LNative := ncBasic;
+        LDescription := 'Typed scroll-chrome zoom, fixed-size or minimum physical thickness. ' +
+          'Requires a measured browser scrollbar-styling capability or supported Win32 LCL face.';
+
+        if (AKind <> 'memo') and (AKind <> 'code-editor') and (AKind <> 'code') and
+          (AKind <> 'scroll') and (AKind <> 'table') and (AKind <> 'list') and
+          (AKind <> 'tree') then
+        begin
+          LBrowser := ncMissing;
+          LNative := ncMissing;
+          LDescription := 'Scroll presentation requires a scrollable projection.';
+        end;
+      end;
     atSource, atAlt, atImageFit, atImageHorizontal, atImageVertical:
       begin
 
@@ -1802,6 +1822,7 @@ begin
     case LAttribute of
       atText: LTitle := 'Text';
       atButtonPresentation: LTitle := 'Button presentation';
+      atScrollPresentation: LTitle := 'Scroll presentation';
       atImageFit:
         begin
           LAttributeType := npChoice;
@@ -3173,21 +3194,61 @@ end;
 { Reserved scopes retain the ordinary typed attribute identity. Parse actual
   properties rather than Inspector defaults so descriptors cannot hide malformed
   data behind their deferred target schema or a platform/presentation prefix. }
-function IsButtonPresentationKey(const AKey: TNyxText): Boolean;
+function NyxMatchesAttributeKey(const AKey: TNyxText;
+  AAttribute: TNyxAttribute): Boolean;
 var
   LPlatform: TNyxPlatform;
   LAttribute: TNyxAttribute;
   LViewport: TNyxViewportCondition;
   LPresentation: TNyxPresentationRef;
 begin
-  Result := AKey = NyxAttributeName(atButtonPresentation);
-
-  if not Result then
+  if AKey = NyxAttributeName(AAttribute) then
   begin
-    Result := (TryNyxPlatformKey(AKey, LPlatform, LAttribute) or
-      TryNyxViewportKey(AKey, LViewport, LPlatform, LAttribute) or
-      TryNyxPresentationKey(AKey, LPresentation, LPlatform, LAttribute)) and
-      (LAttribute = atButtonPresentation);
+    Exit(True);
+  end;
+
+  if TryNyxPlatformKey(AKey, LPlatform, LAttribute) then
+  begin
+    Exit(LAttribute = AAttribute);
+  end;
+
+  if TryNyxViewportKey(AKey, LViewport, LPlatform, LAttribute) then
+  begin
+    Exit(LAttribute = AAttribute);
+  end;
+
+  if TryNyxPresentationKey(AKey, LPresentation, LPlatform, LAttribute) then
+  begin
+    Exit(LAttribute = AAttribute);
+  end;
+  Result := False;
+end;
+
+function IsButtonPresentationKey(const AKey: TNyxText): Boolean;
+begin
+  Result := NyxMatchesAttributeKey(AKey, atButtonPresentation);
+end;
+
+function ValidateScrollPresentationMetadata(ANode: TNyxNode): Boolean;
+var
+  LIndex: Integer;
+  LText: TNyxText;
+begin
+  Result := False;
+  for LIndex := 0 to ANode.Props.Count - 1 do
+  begin
+
+    if not NyxMatchesAttributeKey(ANode.Props.Names[LIndex], atScrollPresentation) then
+    begin
+      Continue;
+    end;
+    LText := ANode.Prop(ANode.Props.Names[LIndex]);
+
+    if LText <> '' then
+    begin
+      TNyxScrollPresentation.FromData(TNyxDataValue.ParseJSON(LText));
+      Result := True;
+    end;
   end;
 end;
 
@@ -3739,6 +3800,7 @@ var
   end;
 begin
   ValidateButtonPresentationMetadata(ANode);
+  ValidateScrollPresentationMetadata(ANode);
   ANode.Contract.Validate;
   ValidateNyxCallbacks(ANode);
   ValidateNyxDrawingNode(ANode);
@@ -4070,6 +4132,7 @@ var
       ValidateNyxMasterDetailIntent(ANode);
       ValidateNyxDataToolbarIntent(ANode);
       ValidateButtonPresentationMetadata(ANode);
+      ValidateScrollPresentationMetadata(ANode);
     end
     else
     begin
@@ -4260,7 +4323,8 @@ var
       HasNyxDataToolbarIntent(ANode) or
       ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
       (ANode.Prop(NyxAttributeName(atPageView)) <> '') or
-      ValidateButtonPresentationMetadata(ANode);
+      ValidateButtonPresentationMetadata(ANode) or
+      ValidateScrollPresentationMetadata(ANode);
     { A plain creator with an empty authored stream otherwise needs no
       realization. Match its exact restricted stream without calling discovery
       (which itself realizes), and leave unrelated legacy roots unchanged. }
