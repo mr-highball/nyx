@@ -943,6 +943,21 @@ commands. `Enabled(False)` disables table commands while retaining authored
 visibility and pins. Minimum center width is a positive logical pixel value;
 Fit samples at most `AutoSizeRows` current-page rows, bounded to 1..1024.
 
+When the requested edge widths plus `MinimumCenter` exceed the available logical
+clip, both pin groups temporarily join the horizontally scrolling columns. The
+host deducts its actual scrollbar and gridline space before making this decision;
+a window width alone does not establish that the pins fit. Widening the table
+automatically restores the requested pins. Neither transition changes authored
+widths, runtime preferences, row identities or accepted values.
+
+Native cell tooltips combine current authored help with query, sizing and pin
+suspension guidance. The native adapter reads this owned text through LCL's
+cell-hint callback because the grid's `Hint` property is a transient hover cache.
+Renderer synchronization updates authored help through the optional
+`INyxLCLCollectionHints` facet without refreshing data or dismissing a draft.
+Disconnect restores the latest authored hint and the former host callback;
+retained disconnected facets ignore later updates.
+
 An absent policy differs from an explicitly applied default object. Either a
 table or column declaration opts into the arrangement contract. A complete
 default policy remains a declaration; an explicit empty feature set remains

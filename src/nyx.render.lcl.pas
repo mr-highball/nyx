@@ -14047,6 +14047,7 @@ var
   LDrawingLabel: TNyxText;
   LCanvasView: INyxCanvasWorkspaceView;
   LCollectionMount: INyxCollectionMount;
+  LCollectionHints: INyxLCLCollectionHints;
   LCanvasAccessibility: INyxCanvasAccessibilityView;
   LCanvasName: TNyxText;
   LCanvasDescription: TNyxText;
@@ -14180,9 +14181,20 @@ begin
             LNode := LBinding.FNode;
             LBinding.FControl.Visible := NyxInteractionPolicy(LNode).Visible;
             RequireNativeGeneration(LGeneration);
-            LBinding.FControl.Hint := LNode.Prop('hint');
-            RequireNativeGeneration(LGeneration);
-            LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
+            { A live collection composes authored text with current query/pin
+              guidance. Keep that adapter-owned help across ordinary viewport
+              synchronization without refreshing data or disturbing a draft. }
+
+            if Supports(LBinding.FCollectionMount, INyxLCLCollectionHints, LCollectionHints) then
+            begin
+              LCollectionHints.SetAuthoredHint(LNode.Prop('hint'));
+            end
+            else
+            begin
+              LBinding.FControl.Hint := LNode.Prop('hint');
+              RequireNativeGeneration(LGeneration);
+              LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
+            end;
             RequireNativeGeneration(LGeneration);
             LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
             RequireNativeGeneration(LGeneration);

@@ -3,6 +3,39 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Native compact return and reassessment — 2026-10-29:**
+
+The saved pin widths plus minimum center require336 logical pixels; the64-row
+compact host has337 client pixels but333 after native gridlines. Group suspension
+therefore agrees with the original contract. The maintained exact generated
+consumer now independently checks that budget, both pin preferences, real resize
+and automatic repinning, unchanged data/defaults and physical cell reachability
+for all four visible typed fields. Tall/short measured page-key assertions remain.
+
+The resulting native help failure is repaired in the adapter and renderer.
+Current authored Unicode hints compose with query/pin/sizing guidance. LCL's
+ordinary cell-hint port reads that owned text despite its transient hover cache;
+the optional native facet updates authored help without a data refresh. Actual
+hover messages qualify the outer grid and both owned edge panes. Disconnect
+restores the latest authored hint and former callback; retained retired receivers
+cannot touch the former control.
+
+The exact saved application's native consumer passes283 at each width with clean
+heaps. Full query/arrangement native checks pass1498/1496 at1280/390, including the
+original cursor/foreground launcher assertions, in fresh isolated runs. An earlier
+overlapping GUI run fails foreground activation; an attempted reused evidence
+folder refuses an existing output. Neither earns input credit. Final native
+Studio and affected consumer compiles have zero warnings. Browser code/evidence
+is unchanged; full physical/AT/visual/target qualification remains distinct.
+WORK.md retains the failures, source identities and bounded MCP observation.
+
+This third bounded workbench batch after output-host acceptance resolves the
+concrete native gates but accepts none of the seven complete original criteria.
+Reassessment changes the next action to the ranked Studio browser editing
+journey under [Studio slice](NS-4_studio-slice_01.md), retaining its prerequisites,
+ordinary Save/Open, source/draft and paired-history requirements. Stop further
+table hint/geometry/profile variants. The full W1/W2 acceptance remains here.
+
 **Current checkpoint and return path — 2026-10-29:**
 
 Criterion6's compact named column-move gap is addressed. `move-column` uses an

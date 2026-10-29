@@ -56,6 +56,15 @@ type
     host omitting it retains ordinary native row/editor input behavior. }
   TNyxLCLRangePointerDispatch = nyx.collections.lcl.grid.TNyxGridRangePointerDispatch;
 
+  { Optional native hint composition. The mount borrows its connected control
+    and combines current authored text with its own runtime guidance. Updating
+    the text never refreshes data or dismisses an editor; detach restores the
+    latest authored grid hint. Retired mounts ignore subsequent updates. }
+  INyxLCLCollectionHints = interface(IInterface)
+    ['{1A31E921-E305-44E4-A13C-8E4D8DBB16FD}']
+    procedure SetAuthoredHint(const AHint: TNyxText);
+  end;
+
   { Optional native sustained-pointer route. Each call reserves one synchronous
     envelope before hit/focus reads. Original event flags and detached pending
     data survive messages; no entry, event router or renderer is retained by a
@@ -523,7 +532,8 @@ type
     to edit, and input/layout commands retain their original admission facts. }
   TNativeMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxLCLCollectionObservation, INyxLCLCollectionCellContextInput,
-    INyxCollectionFocusedDraftInput, INyxLCLCollectionCellRangeStrokeInput)
+    INyxCollectionFocusedDraftInput, INyxLCLCollectionCellRangeStrokeInput,
+    INyxLCLCollectionHints)
   private
     FList: TListBox;
     FGrid: TStringGrid;
@@ -775,6 +785,14 @@ type
     FCustomHeaderApplied: Boolean;
     FPreviousGridHint: String;
     FPreviousGridShowHint: Boolean;
+    FPreviousCellHint: TGetCellHintEvent;
+    { Copied adapter guidance is separate from the latest authored/restoration
+      hint. Renderer synchronization must not erase resize/query help. }
+    FGridHelp: TNyxText;
+    function GridHint: String;
+    procedure GridCellHint(Sender: TObject; AColumn, ARow: Integer;
+      var AHint: String);
+    procedure ApplyGridHint;
     function TreeRows: INyxTreeRows;
     procedure SizeGridColumns;
     procedure ReserveHeader;
@@ -836,6 +854,7 @@ type
     procedure RenderDataset; override;
     procedure DetachTarget; override;
   public
+    procedure SetAuthoredHint(const AHint: TNyxText);
     function BeginRangeStroke(ASender: TObject; APhase: TNyxCollectionRangeStrokePhase;
       AShift: TShiftState; AX, AY: Integer;
       const AGeneration: INyxCancellationScope): INyxCollectionCellRangePointerEntry;
@@ -896,6 +915,101 @@ function NyxLCLCollectionCaptureInput(
   const ALifetime: INyxCollectionInputLifetime): INyxLCLCaptureInput;
 begin
   Result := TCollectionCaptureInput.Create(ALifetime);
+end;
+
+function TNativeMount.GridHint: String;
+begin
+  Result := FPreviousGridHint;
+
+  if (Result <> '') and (FGridHelp <> '') then
+  begin
+    Result := Result + ' ';
+  end;
+  Result := Result + DisplayText(FGridHelp);
+end;
+
+procedure TNativeMount.GridCellHint(Sender: TObject; AColumn, ARow: Integer;
+  var AHint: String);
+var
+  LPrevious: TGetCellHintEvent;
+begin
+
+  if not GetConnected then
+  begin
+    Exit;
+  end;
+  AHint := GridHint;
+  LPrevious := FPreviousCellHint;
+  { LCL temporarily rewrites Hint during hover and restores its entry-time
+    copy on leave. Its ordinary cell-hint port must read our current owned
+    metadata instead. The prior host callback may customize it; touch no mount
+    or borrowed widget after that external call. }
+
+  if Assigned(LPrevious) then
+  begin
+    LPrevious(Sender, AColumn, ARow, AHint);
+  end;
+end;
+
+procedure TNativeMount.ApplyGridHint;
+
+  { Only the mount's own two edge panes share this copied guidance. Other
+    child controls retain their independent metadata and callbacks. }
+  procedure ApplyPaneHint(APane: TColumnPane);
+  begin
+
+    if APane = nil then
+    begin
+      Exit;
+    end;
+    APane.Grid.Hint := FGrid.Hint;
+    APane.Grid.ShowHint := FGrid.ShowHint;
+    APane.Grid.Options := APane.Grid.Options + [goCellHints];
+    APane.Grid.OnGetCellHint := GridCellHint;
+  end;
+begin
+
+  if not GetConnected or (FGrid = nil) then
+  begin
+    Exit;
+  end;
+  FGrid.Hint := GridHint;
+  FGrid.ShowHint := FPreviousGridShowHint or (FGridHelp <> '');
+  FGrid.Options := FGrid.Options + [goCellHints];
+  FGrid.OnGetCellHint := GridCellHint;
+  ApplyPaneHint(FStartPane);
+  ApplyPaneHint(FEndPane);
+end;
+
+procedure TNativeMount.SetAuthoredHint(const AHint: TNyxText);
+var
+  LControl: TControl;
+begin
+
+  if not GetConnected then
+  begin
+    Exit;
+  end;
+
+  if FGrid <> nil then
+  begin
+    FPreviousGridHint := DisplayText(AHint);
+    FPreviousGridShowHint := AHint <> '';
+    ApplyGridHint;
+    Exit;
+  end;
+  LControl := FList;
+
+  if LControl = nil then
+  begin
+    LControl := FTree;
+  end;
+
+  if LControl <> nil then
+  begin
+    LControl.Hint := DisplayText(AHint);
+    LControl.ShowHint := AHint <> '';
+  end;
 end;
 
 function TNativeMount.CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
@@ -5362,11 +5476,11 @@ begin
       Exit;
     end;
     SynchronizePaneRows;
-    FGrid.Hint := FQuerySummary;
+    FGridHelp := FQuerySummary;
 
     if FColumnPresentation.PinsSuspended then
     begin
-      FGrid.Hint := FGrid.Hint + ' Pinned columns are scrolling at this width.';
+      FGridHelp := FGridHelp + ' Pinned columns are scrolling at this width.';
     end;
     for LIndex := 0 to FColumnLayout.Count - 1 do
     begin
@@ -5374,12 +5488,12 @@ begin
       if FColumnLayout.ColumnAt(LIndex).IsVisible and
         (nclfAutoSize in FColumnLayout.ColumnAt(LIndex).Features) then
       begin
-        FGrid.Hint := FGrid.Hint +
+        FGridHelp := FGridHelp +
           ' Fit a column: double-click its header edge, or press Ctrl+Shift+F in its cell.';
         Break;
       end;
     end;
-    FGrid.ShowHint := True;
+    ApplyGridHint;
     SynchronizeFitButtons;
     SynchronizeColumnsButton;
     PrepareTextRows(AData);
@@ -6325,6 +6439,7 @@ begin
         FFocusedCanonical := -1;
         FPreviousGridHint := FGrid.Hint;
         FPreviousGridShowHint := FGrid.ShowHint;
+        FPreviousCellHint := FGrid.OnGetCellHint;
         FPreviousDefaultRowHeight := FGrid.DefaultRowHeight;
         FPreviousCell := FGrid.OnSelectCell;
         FPreviousValidate := FGrid.OnValidateEntry;
@@ -8027,9 +8142,9 @@ begin
 
       if FQueries <> nil then
       begin
-        FGrid.Hint := FQuerySummary + TNyxText('. Header arrow or Alt+Down: filter. ') +
+        FGridHelp := FQuerySummary + TNyxText('. Header arrow or Alt+Down: filter. ') +
           TNyxText('Header title: sort; Shift: add a sort key.');
-        FGrid.ShowHint := True;
+        ApplyGridHint;
       end;
       { Preserve drafts when their accepted scalar is unchanged. Native grid
         cells are positional, so moved/new rows must receive their new content;
@@ -8508,6 +8623,7 @@ begin
         FGrid.MouseWheelOption := FPreviousMouseWheelOption;
         FGrid.Hint := FPreviousGridHint;
         FGrid.ShowHint := FPreviousGridShowHint;
+        FGrid.OnGetCellHint := FPreviousCellHint;
 
         if FQueryHeaderAdjusted then
         begin

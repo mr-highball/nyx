@@ -94,10 +94,15 @@ and preserved fixed-slot LAN delivery. Continue the remaining ordinary keyboard/
 context-action W1/W2 journey in the same workbench. Its browser managed-Tab commit
 repair now passes the full query/arrangement regression and real saved-application
 keyboard inspection/copy at both widths. The saved native desktop consumer passes;
-its compact stress pin-budget assertion and Windows cursor-dependent manager
-checks remain explicit gates. Continue that native field-reachability/budget
-decision next. Full criteria and broader input/quality remain open;
-stop further host/profile variants.
+its compact stress expectation is now qualified against actual native chrome:
+the requested pins correctly suspend as one group. Native help composition and
+hover are repaired, all four fields remain reachable, and automatic repinning
+preserves preferences/defaults. The exact saved consumer passes283 per width;
+full isolated native query/arrangement passes1498/1496 with clean heaps, including
+the cursor/foreground launcher. Full original criteria and broader input/quality
+remain open. Reassessment returns to the next ranked Studio browser editing
+journey with ordinary Save/Open, draft/history and preview. Stop further table
+hint/geometry/host/profile variants.
 
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |

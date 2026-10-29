@@ -9,7 +9,75 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Service monitor keyboard and context actions — 2026-10-29
+## Current work — Native compact table pin budget and input — 2026-10-29
+
+Previous goal turn: PROGRESS.53821be1 is pushed and remote-verified. Root stays
+SOLO. Continue workbench03's existing native pin-budget/field-reachability gate
+under criteria1/4/7. Current source confirms documented group suspension when
+requested pins plus MinimumCenter exceed the actual logical clip. Native deducts
+scrollbars/gridlines before that allocation. The old64-row assertion assumes
+three panes even when those saved widths cannot fit; do not change caller widths
+or minimum-center policy to make it pass. Qualify the budget, actual field access,
+unchanged preferences/defaults and automatic repinning across real native resize.
+Then continue native keyboard editing through the existing consumer; retain the
+separate cursor-dependent pointer gate. A concrete failure owns the next repair.
+Use the exact previously MCP-built saved constructor and a new external
+native-table-workflow-01 packet; all owned process TEMP/TMP and outputs stay on E:.
+No full criterion credit or new approval boundary is introduced by this plan.
+
+Qualified native return: the saved fixed pins require336 logical pixels, while
+the compact64-row table initially has337 client pixels and333 after gridlines.
+The existing group suspension is correct; the old three-pane stress expectation
+is replaced by an independent budget assertion, not smaller caller widths or a
+weakened minimum. Real wide/narrow/wide resizing preserves exact runtime column
+preferences, the independent accepted snapshot and authored defaults. Typed
+lookup now exercises Notes as well as Service, Process ID and Status, checks
+painted reachability and retains measured Shift+PageDown/Up/Escape assertions for
+both tall and short64-row viewports.
+
+This finds a genuine native help defect. Renderer Sync overwrites the mount's
+query/pin guidance, and LCL independently replaces Hint during hover then restores
+its entry-time cache. An optional native hint facet now composes current authored
+text with owned collection guidance without refreshing data or dismissing edits.
+The ordinary cell-hint port supplies current text on the outer grid and its own
+two edge panes. Prior host callbacks remain chained/restored; disconnect restores
+the latest authored grid hint and retained retired facets cannot touch a control.
+Direct callback reads and actual LCL hover messages qualify supplementary Unicode,
+updated runtime help, every owned pane and teardown. The first attempted live-help
+assertion changes the source document rather than the independently realized
+runtime tree; targeting the actual runtime node corrects that qualifier. Earlier
+UTF8Encode assertion mistakes and temporary trace runs remain in the packet.
+
+Final exact-MCP-constructor native checks pass283 at1280 and283 at390, each with
+a complete clean heap. The complete unchanged query/arrangement consumer passes
+1498/1496 with clean heaps when GUI readers run serially. The first full query
+attempt cannot activate its foreground window while another GUI qualifier is
+running and earns no pass; a subsequent reused evidence-directory attempt refuses
+its existing output before meaningful interaction. Fresh isolated runs qualify
+the original cursor/foreground/launcher assertions without bypassing them. All
+actual compiler/runtime readers are terminal. Final native compiles report zero
+warnings, including full native Studio; browser code is unchanged and its prior
+1484/1482 evidence remains separate. No SDK source or warning suppression changes
+occur. Temporary tracing is absent from the maintained sources.
+
+Authenticated bounded MCP observation retains Service monitor revision9, original
+selection/view, no pending source and the same history availability. No active
+project, output profile, browser asset or QA/LAN service is modified by this native
+repair. Private logs, exact generated input, source identities and source-review
+receipts remain in native-table-workflow-01 on the external evidence volume;
+all owned TEMP/TMP paths stay external as well.
+
+Reassessment: this third bounded workbench batch after output-host acceptance
+closes the concrete compact-native budget/reachability and current native-input
+gates, not any complete original criterion. All seven original criteria remain
+open; broader physical/assistive input, complete visual/target quality and the
+remaining original W1/W2 outcomes retain their requirements. Stop further table
+hint/geometry/source/profile variants. Return to the next ranked Studio outcome:
+the same component-to-Properties/Events-to-source/preview browser editing journey,
+using existing consumers and prerequisite evidence, with ordinary Save/Open,
+history and draft retention. No additional planning task or approval is needed.
+
+## Previous checkpoint — Service monitor keyboard and context actions — 2026-10-29
 
 Previous goal turn: PROGRESS.03921a15 is pushed and remote-verified. Root stays
 SOLO. Return to workbench03 criteria4/7's ordinary W1/W2 user journey. Inspect
