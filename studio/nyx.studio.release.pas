@@ -45,8 +45,9 @@ procedure ValidateNyxStudioDirectoryPath(const APath: TNyxText;
   AAllowMissing: Boolean = False);
 
 { Copy the owned compiler sources, the two production HTML hosts, the MIT license
-  and the explicitly matched runtime into a NEW directory. Source directories
-  are flat and only Pascal units/includes/programs are admitted. Configuration,
+  and the explicitly matched runtime into a NEW directory. Unit directories are
+  flat; owned glyph includes retain their studio/assets/glyphs path. Only Pascal
+  units/includes/programs are admitted as compiler sources. Configuration,
   saved projects, tests, dependencies and prior compiler artifacts are excluded.
   Compile backend/editor/worker/preview from this snapshot before sealing it.
   A failed copy leaves an unsealed directory for inspection; it is never reused. }
@@ -78,6 +79,9 @@ uses
 const
   CManifestName = 'release.nyx';
   CMaximumFiles = 1024;
+  { License, two HTML hosts, matched RTL, three compiled browser programs and
+    one backend must fit beside sources in the same unchanged manifest budget. }
+  CNonSourceFiles = 8;
   CMaximumFileBytes = 32 * 1024 * 1024;
   CMaximumTotalBytes = 128 * 1024 * 1024;
 
@@ -192,6 +196,13 @@ begin
   begin
     Exit;
   end;
+
+  if (Copy(APath, 1, Length('studio/assets/glyphs/')) = 'studio/assets/glyphs/') and
+    IsSourceName(Copy(APath, Length('studio/assets/glyphs/') + 1, MaxInt)) and
+    (ExtractFileExt(APath) = '.inc') then
+  begin
+    Exit;
+  end;
   LSlash := Pos('/', APath);
   LDirectory := Copy(APath, 1, LSlash - 1);
   LName := Copy(APath, LSlash + 1, MaxInt);
@@ -285,7 +296,8 @@ begin
   end;
 end;
 
-procedure CopySources(const ASource, ADestination: TNyxText);
+procedure CopySources(const ASource, ADestination: TNyxText;
+  var ARemainingFiles: Integer; AIncludesOnly: Boolean = False);
 var
   LSearch: TSearchRec;
   LCount: Integer;
@@ -300,14 +312,18 @@ begin
   try
     repeat
 
-      if (LSearch.Attr and faDirectory = 0) and IsSourceName(LSearch.Name) then
+      if (LSearch.Attr and faDirectory = 0) and IsSourceName(LSearch.Name) and
+        (not AIncludesOnly or (ExtractFileExt(LSearch.Name) = '.inc')) then
       begin
-        Inc(LCount);
+        { Source folders need not have equal sizes. Spend one shared allowance
+          before each copy; restarting enumeration must not reset the total. }
 
-        if LCount > CMaximumFiles div 2 then
+        if ARemainingFiles = 0 then
         begin
           raise ENyxStudioRelease.Create('Compiler source inventory exceeds its budget');
         end;
+        Dec(ARemainingFiles);
+        Inc(LCount);
         CopyNewFile(ASource + LSearch.Name, ADestination + LSearch.Name);
       end;
     until FindNext(LSearch) <> 0;
@@ -325,6 +341,9 @@ procedure PrepareNyxStudioRelease(const ARepository, ARuntime, ADestination: TNy
 var
   LRepository: TNyxText;
   LDestination: TNyxText;
+  LRemainingSources: Integer;
+  LGlyphSources: TNyxText;
+  LGlyphDestination: TNyxText;
 begin
   LRepository := RootPath(ARepository);
   LDestination := RootPath(ADestination);
@@ -347,8 +366,28 @@ begin
   begin
     raise ENyxStudioRelease.Create('Cannot create release layout');
   end;
-  CopySources(LRepository + 'src' + PathDelim, LDestination + 'src' + PathDelim);
-  CopySources(LRepository + 'studio' + PathDelim, LDestination + 'studio' + PathDelim);
+  LRemainingSources := CMaximumFiles - CNonSourceFiles;
+  CopySources(LRepository + 'src' + PathDelim, LDestination + 'src' + PathDelim,
+    LRemainingSources);
+  CopySources(LRepository + 'studio' + PathDelim, LDestination + 'studio' + PathDelim,
+    LRemainingSources);
+  LGlyphSources := LRepository + 'studio' + PathDelim + 'assets' + PathDelim +
+    'glyphs' + PathDelim;
+
+  if DirectoryExists(LGlyphSources) then
+  begin
+    LGlyphDestination := LDestination + 'studio' + PathDelim + 'assets' + PathDelim;
+
+    if not CreateDir(LGlyphDestination) or
+      not CreateDir(LGlyphDestination + 'glyphs') then
+    begin
+      raise ENyxStudioRelease.Create('Cannot create release glyph source layout');
+    end;
+    { These are compiler include dependencies with embedded image bytes, not
+      an export of arbitrary working assets or private resource directories. }
+    CopySources(LGlyphSources, LGlyphDestination + 'glyphs' + PathDelim,
+      LRemainingSources, True);
+  end;
   CopyNewFile(LRepository + 'LICENSE', LDestination + 'LICENSE');
   CopyNewFile(LRepository + 'studio' + PathDelim + 'web' + PathDelim + 'index.html',
     LDestination + 'web' + PathDelim + 'index.html');
@@ -376,86 +415,85 @@ end;
 
 function Inventory(const ARoot: TNyxText): TStringList;
 var
-  LSearch: TSearchRec;
-  LMemberSearch: TSearchRec;
-  LName: TNyxText;
-  LDirectory: TNyxText;
-  LMember: TNyxText;
-begin
-  Result := TStringList.Create;
-  { All admitted file names are ASCII. This RTL list stores no user text. Exact
-    ordinal order makes manifests repeatable across source enumeration order. }
-  Result.CaseSensitive := True;
-  try
-    RequireOrdinaryAncestors(ARoot);
+  LFiles: TStringList;
 
-    if FindFirst(ARoot + '*', faAnyFile, LSearch) <> 0 then
+  { Only this fixed directory tree can recurse. Validate each directory before
+    descending and every file independently, so glyph support admits neither an
+    arbitrary asset tree nor links, traversal, extra nesting or private files. }
+  procedure Scan(const ARelative: TNyxText);
+  var
+    LSearch: TSearchRec;
+    LDirectory: TNyxText;
+    LMember: TNyxText;
+  begin
+    LDirectory := ARoot + StringReplace(ARelative, '/', PathDelim, [rfReplaceAll]);
+
+    if ARelative <> '' then
+    begin
+      LDirectory := IncludeTrailingPathDelimiter(LDirectory);
+    end;
+
+    if FindFirst(LDirectory + '*', faAnyFile, LSearch) <> 0 then
     begin
       raise ENyxStudioRelease.Create('Release directory is missing');
     end;
     try
       repeat
-        LName := LSearch.Name;
 
-        if (LName = '.') or (LName = '..') then
+        if (LSearch.Name = '.') or (LSearch.Name = '..') then
         begin
           Continue;
         end;
-        RequireOrdinaryPath(ARoot + LName);
+        LMember := LSearch.Name;
 
-        if LSearch.Attr and faDirectory = 0 then
+        if ARelative <> '' then
+        begin
+          LMember := ARelative + '/' + LMember;
+        end;
+        RequireOrdinaryPath(LDirectory + LSearch.Name);
+
+        if LSearch.Attr and faDirectory <> 0 then
         begin
 
-          if LName <> CManifestName then
+          if (LMember <> 'src') and (LMember <> 'studio') and
+            (LMember <> 'web') and (LMember <> 'bin') and
+            (LMember <> 'studio/assets') and (LMember <> 'studio/assets/glyphs') then
           begin
-            RequireReleasePath(LName);
-            Result.Add(LName);
+            raise ENyxStudioRelease.Create('Unexpected release directory: ' + LMember);
           end;
+          Scan(LMember);
           Continue;
         end;
 
-        if (LName <> 'src') and (LName <> 'studio') and
-          (LName <> 'web') and (LName <> 'bin') then
+        if (ARelative = '') and (LSearch.Name = CManifestName) then
         begin
-          raise ENyxStudioRelease.Create('Unexpected release directory: ' + LName);
+          Continue;
         end;
-        LDirectory := ARoot + LName + PathDelim;
+        RequireReleasePath(LMember);
+        LFiles.Add(LMember);
 
-        if FindFirst(LDirectory + '*', faAnyFile, LMemberSearch) = 0 then
+        if LFiles.Count > CMaximumFiles then
         begin
-          try
-            repeat
-
-              if (LMemberSearch.Name = '.') or (LMemberSearch.Name = '..') then
-              begin
-                Continue;
-              end;
-              LMember := LName + '/' + LMemberSearch.Name;
-              RequireReleasePath(LMember);
-              RequireOrdinaryPath(LocalMember(ARoot, LMember));
-
-              if LMemberSearch.Attr and faDirectory <> 0 then
-              begin
-                raise ENyxStudioRelease.Create('Nested release directories are not admitted');
-              end;
-              Result.Add(LMember);
-
-              if Result.Count > CMaximumFiles then
-              begin
-                raise ENyxStudioRelease.Create('Release inventory exceeds its file budget');
-              end;
-            until FindNext(LMemberSearch) <> 0;
-          finally
-            SysUtils.FindClose(LMemberSearch);
-          end;
+          raise ENyxStudioRelease.Create('Release inventory exceeds its file budget');
         end;
       until FindNext(LSearch) <> 0;
     finally
       SysUtils.FindClose(LSearch);
     end;
-    Result.CustomSort(CompareReleaseMembers);
+  end;
+
+begin
+  LFiles := TStringList.Create;
+  { All admitted file names are ASCII. This RTL list stores no user text. Exact
+    ordinal order makes manifests repeatable across source enumeration order. }
+  LFiles.CaseSensitive := True;
+  try
+    RequireOrdinaryAncestors(ARoot);
+    Scan('');
+    LFiles.CustomSort(CompareReleaseMembers);
+    Result := LFiles;
   except
-    Result.Free;
+    LFiles.Free;
     raise;
   end;
 end;
@@ -467,6 +505,11 @@ const
     'web/nyx_studio.js', 'web/nyx_source_worker.js', 'web/nyx_studio_preview.js',
     'src/nyx.model.pas', 'src/nyx.content.pas', 'src/nyx.content.editor.pas',
     'studio/nyx_studio_server.lpr', 'studio/nyx_studio.lpr', 'studio/nyx_source_worker.lpr');
+  CGlyphIncludes: array[0..3] of String = (
+    'studio/assets/glyphs/nyx.studio.glyphs.inc',
+    'studio/assets/glyphs/nyx.studio.editglyphs.inc',
+    'studio/assets/glyphs/nyx.studio.movedownglyph.inc',
+    'studio/assets/glyphs/nyx.studio.deleteglyph.inc');
 var
   LIndex: Integer;
 begin
@@ -476,6 +519,21 @@ begin
     if AFiles.IndexOf(CRequired[LIndex]) < 0 then
     begin
       raise ENyxStudioRelease.Create('Required release artifact is missing: ' + CRequired[LIndex]);
+    end;
+  end;
+
+  { Historical packages without this module keep their original closure. A
+    package that includes it must also carry every embedded compiler include. }
+
+  if AFiles.IndexOf('studio/nyx.studio.glyphs.pas') >= 0 then
+  begin
+    for LIndex := Low(CGlyphIncludes) to High(CGlyphIncludes) do
+    begin
+
+      if AFiles.IndexOf(CGlyphIncludes[LIndex]) < 0 then
+      begin
+        raise ENyxStudioRelease.Create('Required glyph source is missing: ' + CGlyphIncludes[LIndex]);
+      end;
     end;
   end;
 

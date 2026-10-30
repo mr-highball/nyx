@@ -11,7 +11,7 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Studio named Save/Open authoring return — 2026-10-30
 
-Previous goal turn: PROGRESS. The focused native acknowledgement case now passes
+Previous goal turn: PROGRESS.559e4a54 is pushed and remote-verified. The focused native acknowledgement case now passes
 without increasing the original deadline; the following full sequence still
 fails its compiler budget, as recorded below. ab4dbb22 is pushed and remote-verified. Root remains
 SOLO. Return to Studio-slice criterion3 and full-authoring criteria2/5 using the
@@ -26,15 +26,16 @@ credit for repeating them. Do not expand resolver, JSON/profile or chrome-only
 variants. New private runners, artifacts and owned TEMP/TMP stay on E: in
 studio-authoring-return-01. Original acceptance scope and prerequisites remain.
 
-Current bounded batch: diagnose the existing native constructor deadline in the
-same maintained saved-project consumer. No compiler/test process is live at entry;
-both serving processes remain independent frozen builds. Observe one unchanged
-run's actual compiler CPU, I/O and source progress under the existing60000ms
-limit, then select a concrete repair or return to the full shared Open gate.
-Stop this diagnostic after its first compiler observation; do not create another
-fixture/profile family or infer performance from successful compilation alone.
-Sources remain stable while that owned reader is active. Free memory/disk are
-observed available; they are not an identified cause or a request for cleanup.
+Current bounded batch: finish the existing matched-release-03 package consumer,
+then preserve and deliver that matched Studio payload through the fixed slots.
+Its backend, Studio, independent worker and preview compile from frozen sources;
+the sealed789-file inventory includes all four glyph dependencies. There are zero
+owned warnings and21 installed Classes warnings across the browser builds. The
+maintained native manifest/refusal and source-capacity consumer is still live;
+follow its same owner to terminal. Do not re-run the full native shared suite,
+expand compiler/deadline budgets or begin another equivalent diagnostic family.
+The full shared-provider compiler-throughput gate remains open. No task/DONE or
+completion credit follows from this package checkpoint.
 
 The unchanged current-source direct saved-project regression now passes50 with
 all2210726 blocks freed. Its five native compilations take16.7/14.8/16.2/15.8/15.9s
@@ -79,6 +80,49 @@ orchestration fix makes that target use the same configured scratch selection as
 ordinary Studio builds while preserving the explicit final ReleaseOutput. Script
 parsing passes. The regression readers are joined before actual preparation,
 so release compiler/storage load cannot interfere with that native observation.
+
+Actual preparation in matched-release-01 refuses the current owned sources:
+CopySources allocates half the unchanged1024-file inventory to each source folder.
+The flat library now has more than512 admitted members while the complete source
+inventory still fits the existing total. A shared remaining allowance replaces
+that arbitrary division and reserves the same eight production non-source files;
+neither manifest count nor byte/deadline budgets increase. The maintained package
+consumer now prepares an uneven1016-source fixture at capacity and refuses one
+additional source across the folder boundary. Fresh matched-release-02 preparation
+is active; its maintained runtime/manifest and new boundary checks remain pending.
+The first failed directory and logs are retained. QA's ordinary root Start now
+executes/publishes all20 saved constructors across nine projects. LAN requires no
+compiler recovery and independently exports its three project pairs/revisions.
+Exact QA comparisons and the owned history return remain next.
+
+matched-release-02 now finishes native compilation but refuses browser compilation
+because the flat-only packager omitted four embedded glyph includes. Preparation
+now preserves owned include files beneath studio/assets/glyphs and spends the
+same global source allowance. The verifier admits only this fixed nested directory
+tree and Pascal include names, requiring all four when the glyph unit is present;
+older packages without that unit retain their original closure. Maintained checks
+now cover altered/missing glyph includes and unexpected nested assets/directories.
+Both failed candidates are retained; no candidate has replaced a live payload.
+
+After QA's20/20 executed recovery, independent bounded semantic exports match all
+nine complete pairs and revisions from the prior checkpoint. The owned Workshop
+then returns through11 ordinary paired Undo operations to its exact initial six-
+field packet at71, followed by an ordinary revision-checked selection restoration
+at72. Its initial node/view, no-pending-draft and Undo/Redo availability are retained;
+this does not claim identity of the deliberately replaced future redo branch.
+The eight unrelated projects receive no mutation. Private owned-history-return
+retains every full-pair digest, operation arguments and receipts. Next compare the
+final unrelated/project/settings baseline and qualify the matched release before
+replacement. Full native-provider/performance and parent authoring criteria stay
+open; the compiler limit is unchanged and no equivalent full rerun is planned.
+An independent revision72 export also equals the initial packet after selection.
+Both effective output-profile files equal their pre-restart hashes. The retained
+browser shows the restored Workshop; its ordinary preview toggle and Fit content
+show the independent interactive canvas without changing the shared pair. The
+first locator used a visible caption instead of its accessible name and refused;
+fresh semantic UI inspection finds Preview interactions. A timed-out click is
+observed complete through its pressed state before the next action, never retried
+blindly. The preview image is retained in the same external packet.
 
 Current continuation: finish the same named-project owner through shared
 compiler-backed Open, on both adapters, without weakening the file boundary.

@@ -3,7 +3,7 @@
 [Build entry point](../tools/build.ps1) · [Agent workflows](studio-agents.md) ·
 [Current work](../WORK.md)
 
-The current observing product is frozen `7422453` (2026-10-11). Its 349-file
+The historical 2026-10-11 observing checkpoint is frozen `7422453`. Its 349-file
 payload passes integrity, integrated compiler/runtime and recovery qualification,
 plus 110 checks against the complete retained user checkpoint. Actual installed
 HTTP recovery executes/publishes all 14 units across nine projects. Installation keeps
@@ -16,9 +16,10 @@ against the preserved primary. Nine captures and six exact LAN artifact
 checks qualify this host. The optional `--resources`/`--workspace` arguments make no
 import, proposal or document edit. Physical phone and full native Studio/CI remain
 separate scopes. See the
-[current installed packet](../WORK.md#current-return-path-preserving-compiler-import-delivery--2026-10-11).
+[historical installed packet](../WORK.md#current-return-path-preserving-compiler-import-delivery--2026-10-11).
+The current work entry owns subsequent deliveries and active process identities.
 
-Fresh installed MCP advertises 23 tools, including `nyx_project`'s explicit
+That checkpoint's installed MCP advertises 23 tools, including `nyx_project`'s explicit
 compiler-backed project review. The checked source-workshop consumer imports the
 exact handwritten qualification unit in its explicit independent review and passes
 38 assertions, five immutable jobs (one constructor review and four browser/LCL
@@ -45,9 +46,15 @@ builds; the explicit `-ReleaseOutput` still determines the final bundle location
 Point both locations and the private `TEMP_ROOT` at the external scratch volume.
 With no configured scratch root, intermediates retain the repository's
 `build/studio-release` default. Keep machine-specific paths out of commits.
+The unchanged inventory limit is shared by both source folders, reserving room
+for the eight production host/compiler artifacts; an uneven source layout does
+not reduce that total allowance.
 
 The Pascal packager first copies owned `src/` and
-`studio/` Pascal units/includes/programs into a frozen snapshot. The backend,
+`studio/` Pascal units/includes/programs into a frozen snapshot. Embedded glyph
+includes retain their `studio/assets/glyphs/` compiler paths. The manifest admits
+those Pascal includes without bundling arbitrary working image/resource files.
+The backend,
 browser Studio, independent source worker and preview program are compiled from
 that snapshot. The two production HTML hosts, matched pas2js runtime and MIT
 license complete the bundle. Compiler units, logs and qualification fixtures stay

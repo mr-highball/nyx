@@ -154,9 +154,12 @@ source-queue cancellation are repaired; native embedding Load keeps fresh histor
 and its original source-workspace regression passes86 with a clean heap. The
 full native shared-provider run now passes its real ordinary Open/history case
 and later reaches a compiler deadline before its server-error acknowledgement
-case publishes. Resolve that same consumer's qualification,
-then finish owned-history restoration and matched delivery. Broader authoring
-acceptance remains open; stop equivalent chrome/source fixture variants.
+case publishes. Its focused acknowledgement check passes; the following full
+sequence still hits the original compiler budget before execution. The owned
+initial pair/selection is now restored through ordinary history. Finish the
+existing matched-package qualification and preserving delivery; full native
+provider/throughput qualification and broader authoring
+acceptance remain open; stop equivalent chrome/source fixture variants.
 
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |

@@ -104,6 +104,15 @@ Finish that affected consumer, final preservation
 checks and the matched delivery before task acceptance. WORK owns current runs,
 source identities and evidence; the parent criteria remain open.
 
+The focused native server-error case now passes with a clean heap; another full
+sequence retains the original compiler time-limit failure before execution.
+The owned Workshop returns through its ordinary history to the exact initial
+pair and selection, while nine recovered QA pairs and both output profiles match
+the preserved baselines. Packaging exposes and repairs the existing scratch,
+uneven-inventory and missing embedded-glyph dependencies under the delivery owner.
+Its matched artifact/remaining consumer and preserving rollout are still pending;
+none of these partial results close the native gate or this task.
+
 **Blockers**
 
 - None for implementation. Existing live checkpoint, captured-project storage,

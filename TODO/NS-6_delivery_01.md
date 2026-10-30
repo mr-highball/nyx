@@ -4,6 +4,17 @@
 
 **Description:**
 
+Packaging continuation (2026-10-30): the current named-project delivery exposes
+release intermediates ignoring configured scratch storage and an arbitrary
+half-budget per source folder, followed by missing embedded glyph includes. The
+build target now honors the existing scratch selection. Preparation preserves
+those owned include paths and spends one shared source allowance while reserving
+eight production artifacts under the unchanged1024-file manifest limit. The
+fresh789-member matched bundle compiles and seals, including all four glyph
+dependencies. Maintained capacity/over-budget and manifest/refusal checks remain
+live; WORK owns their terminal evidence. This required packaging repair
+does not close the original setup, CI, platform or installed-interaction criteria.
+
 Current qualification gap (2026-10-25): the shared `RunOwned` redirected-output
 path stalls during a native link and can lose the terminal receipt when its
 closed-log hash encounters a lingering writer. Launch identity survives, but
