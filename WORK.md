@@ -11,7 +11,57 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Table pointer and selection return — 2026-10-30
 
-Previous goal turn: PROGRESS.493aa1a9 is pushed and remote-verified; matched QA
+Current prerequisite: [collection recovery01](TODO/NS-3_collection-recovery_01.md).
+The original table W2 return remains its owner; Root continues SOLO. The previous
+goal turn is PROGRESS:4901ef1d delivered the browser pin-suspension explanation
+and its real pointer/viewport evidence. This turn uses table-selection-return-01
+on external scratch, without changing either listener or the LAN payload.
+
+Ordinary disabled-host Copy gives an explicit refusal, while full command-line
+inspection shows the exact untruncated raw text. After enabling only the existing
+local clipboard choice and rebuilding through semantic MCP, selected source IDs
+copy exactly as ID/newline/gateway. Filtering that selected record out keeps its
+source identity and accepted RAW row copy; page-selection actions are absent for
+the now-empty selected page cohort. The unfinished draft never replaces accepted
+source values in these transfers. The output fingerprint then returns exactly
+to its original value, all four services disabled. The empty clipboard returns
+to empty text; this tool cannot write an empty structured item list. An original
+no-host application is requested and actually mounted after the configuration
+restoration. Only owned test runtime drafts are retired in that replacement.
+
+Reopening the hidden/returned row shows accepted text. A filter-only repetition
+isolates the transition from Copy. Initial evidence labels this as observed draft
+loss, but source review and the existing recovery contract establish the intended
+inert-journal transition: clearing a filter must not silently reapply recovered
+text. The concrete usability gap is ordinary access to that journal. Actual
+live journal contents cannot yet be inspected through this saved application's
+standard UI; the new prerequisite retains that integration requirement rather
+than claiming its runtime recovery is already qualified. Source/page IDs and
+accepted RAW transfer pass; selected-range output and peer independence remain.
+
+The reusable public NewNyxRecoveredDraftReview now supplies a specialized,
+detached read-only Card with named Heading/Label/Memo parts. It copies typed
+item/field, exact unfinished text, accepted scalar, scalar caret, reason and
+source revisions while clearing active editor flags. Escaped previews remain
+separate from raw data, and original journal retirement/discard cannot invalidate
+the card. It holds no journal, mount, source, router or host. Existing model-mounted
+recovery checks now exercise this ownership and supplementary/NUL/CRLF behavior.
+Both targets pass34; native frees all38486 blocks. Both compilers have zero owned
+warnings, with the browser's installed Classes warnings separate. These are
+executed model/control-construction checks, not widget/visual/Studio integration.
+The first compile's local-constant/API spelling mistakes and enum-else warning
+are preserved and repaired; no tolerance, compiler dependency or guard changes.
+
+Next implement the same prerequisite's ordinary Table count/launcher, bounded
+stable-entry navigation and explicit exact Copy through the existing shared
+presentation/input lifetimes. Reuse this compound and the existing journal;
+do not automatically restore old text or build another recovery store. Qualify
+the same saved/generated Service monitor at both native/browser sizes before
+accepting recovery01, then return to W2. No task/criterion/percentage closes here.
+
+### Previous pointer checkpoint
+
+Previous goal turn: PROGRESS.4901ef1d is pushed and remote-verified; matched QA
 and frozen LAN delivery preserves all projects/settings as recorded below. Root
 remains SOLO. Current owner is workbench03 W1/W2: actual pointer resizing with
 filters/hidden/pinned fields and retained edit state, followed by selected/range
@@ -55,6 +105,15 @@ project/settings or LAN payload is edited. Browser viewport overrides are reset;
 the owned QA application keeps its unfinished runtime draft for the W2 return.
 Both manual TSV saves from the earlier accepted output-host journey remain present;
 their accepted results are not counted again. Compiler and test owners are joined.
+
+Current bounded return: selected-record/cell-range output uses the same saved
+Service monitor, existing output choices and table-selection-return-01 packet on
+external scratch. The prior full raw command inspection and disabled clipboard
+result pass through actual managed actions. Distinguish source/page selection,
+hidden selected records and exact accepted range values from the unfinished edit.
+Restore the original output profile and exact project pair after testing; preserve
+other projects, fixed serving slots and unrelated work. Stop at the first actual
+defect and repair its owning contract/adapter with a meaningful existing regression.
 
 Next: the same workbench's selected-record/cell-range output and peer independence,
 using its existing output choices and original W2 criteria. Stop further caption/

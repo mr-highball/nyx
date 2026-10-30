@@ -26,7 +26,8 @@ program nyx_collection_recovery_mount_tests;
 uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   nyx.collections.arrangement, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.recovery, nyx.collections.inspection,
-  nyx.collections.query, nyx.collections.position, nyx.collections.recovery.policy
+  nyx.collections.query, nyx.collections.position, nyx.collections.recovery.policy,
+  nyx.collections.recovery.controls, nyx.controls, nyx.types
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -409,9 +410,72 @@ begin
   LMount.Disconnect;
 end;
 
+{ A detached review must outlive the original entry/journal without borrowing
+  editing authority. This exercises the same entry produced by real recovery,
+  including preview-safe control characters and exact supplementary text/caret. }
+procedure ReviewChecks;
+const
+  CDraft: TNyxText = 'Hold 🌙' + #0 + #13#10 + 'this draft';
+  CPreview: TNyxText = 'Hold 🌙\0\r' + #10 + 'this draft';
+  COriginal: TNyxText = 'Original 🌙';
+var
+  LWriter: INyxCollectionDraftRecoveryWriter;
+  LJournal: INyxCollectionDraftRecovery;
+  LEntry: INyxRecoveredCollectionDraft;
+  LReview: INyxRecoveredDraftReview;
+  LCell: TNyxCollectionCellEdit;
+  LMemo: INyxMemo;
+  LFailed: Boolean;
+begin
+  LWriter := NewNyxCollectionDraftRecovery;
+  LJournal := LWriter.Recovery;
+  LCell := NyxCollectionCellEdit(NyxItem(NyxCollection('review'), 'gateway'),
+    NyxColumnIdentity(NyxTextField('name')), TNyxStateValue.FromText(COriginal),
+    CDraft, NyxTextSelection(CDraft, 1, 4), True, True);
+  LEntry := LWriter.Preserve(LCell, ncdlHidden, 3, 4);
+  LReview := NewNyxRecoveredDraftReview('recovered-edit', LEntry);
+  Check((LJournal.Capture.Count = 1) and (LJournal.EntryAt(0) = LEntry),
+    'constructing a read-only review neither discards nor replaces its journal entry');
+  Check((LReview.Cell.Text = CDraft) and
+    LReview.Cell.Selection.SameRange(LCell.Selection) and
+    LReview.Cell.Accepted.SameValue(LCell.Accepted) and
+    LReview.Cell.Field.Same(LCell.Field) and (LReview.Cell.Item.ID = 'gateway') and
+    (LReview.Reason = ncdlHidden) and (LReview.BeforeRevision = 3) and
+    (LReview.AfterRevision = 4) and not LReview.Cell.Editing and not LReview.Cell.Focused,
+    'review preserves exact typed provenance and scalar caret without live editor flags');
+  Check(Supports(LReview.Children[4], INyxMemo, LMemo) and
+    (LReview.Node.Part(NyxPart(NyxRecoveredDraftTextPart)) = LMemo.Node) and
+    LMemo.ReadOnly and (LMemo.Value = CPreview),
+    'unfinished preview is a real read-only Memo with explicit control escaping');
+  Check(Supports(LReview.Children[5], INyxMemo, LMemo) and
+    (LReview.Node.Part(NyxPart(NyxRecoveredDraftAcceptedPart)) = LMemo.Node) and
+    LMemo.ReadOnly and (LMemo.Value = COriginal),
+    'accepted value has a separate read-only named control');
+  LJournal.Discard(LEntry);
+  LWriter.Retire;
+  LEntry := nil;
+  LWriter := nil;
+  LJournal := nil;
+  Check((LReview.Cell.Text = CDraft) and
+    (LReview.Cell.Accepted.TextValue = COriginal) and
+    (LReview.Reason = ncdlHidden),
+    'detached review remains exact after explicit discard and journal retirement');
+  LFailed := False;
+  try
+    NewNyxRecoveredDraftReview('missing', nil);
+  except
+    on ENyxCollection do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'absent recovery entry refuses instead of displaying invented data');
+end;
+
 begin
   try
     Run;
+    ReviewChecks;
     SavedPolicy;
     PressureChecks;
     {$ifdef PAS2JS}

@@ -363,6 +363,25 @@ Applications should warn before discarding. Retired journals remain readable
 and explicitly discardable; retirement clears `Active` before target teardown
 and refuses further capture. Retaining one entry does not retain its writer.
 
+`nyx.collections.recovery.controls` provides a reusable detached review card:
+
+```pascal
+LReview := NewNyxRecoveredDraftReview('recovered-service-edit', LEntry);
+LPage.Add(LReview);
+```
+
+Declare `LReview: INyxRecoveredDraftReview`. The card uses specialized Heading,
+Label and read-only Memo controls with named parts. It copies the entry's typed
+cell, reason and source revisions; its `Cell` property returns exact raw text and
+scalar caret with inactive editing/focus flags. The card remains usable after
+the original journal is retired or its entry is explicitly discarded. Both
+previews visibly escape control characters and backslashes; preview selection
+therefore copies that displayed representation. An authorized application can
+use the separate raw `Cell.Text` for exact transfer through its existing host.
+This compound grants no clipboard authority and performs no restore or discard.
+The ordinary Table launcher, journal count and bounded navigation remain the
+open [recovery review integration](../TODO/NS-3_collection-recovery_01.md).
+
 `ConfigureWarnings(NyxDraftRecoveryWarnings.Entries(64).Bytes(8 * 1024 * 1024))`
 configures advisory thresholds; these are also the defaults. Zero disables the
 corresponding warning. Warnings never truncate, expire or discard text. Byte

@@ -853,6 +853,8 @@ needs qualification against the portable contract.
 
 **Blockers**
 
+- [Recovered-edit review](NS-3_collection-recovery_01.md) supplies the missing
+  ordinary access to drafts safely journaled when a filter hides an edited row.
 - [Table output hosts](DONE/NS-4_table-output-hosts_01.md) supply the missing generated
   clipboard/export services through existing explicit runtime output choices.
 - [Embedded popover viewport](DONE/NS-2_popover-viewport_01.md) repairs the observed

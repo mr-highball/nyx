@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The current table selection/copy return identifies an ordinary recovery-review
+gap under [collection recovery01](NS-3_collection-recovery_01.md). Follow that
+prerequisite before returning to the existing workbench's W2 outcome; it adds no
+separate completion credit and preserves the inert-journal contract.
+
 ## Current priority — useful everyday workflows — 2026-10-26
 
 The same Workshop's compact Studio qualification repairs and accepts the concrete
