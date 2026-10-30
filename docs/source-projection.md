@@ -258,6 +258,44 @@ from that body. Its inert leg really waits for the production deadline; the
 harness does not shorten the worker timeout. PASS10 proves these failure/draft
 and recovery boundaries, separately from ordinary full Studio responsiveness.
 
+### Reusing the literal browser worker
+
+An ordinary source-command controller retains one idle browser helper after a
+fully decoded result, including a valid positioned-diagnostic result. Each
+request still constructs fresh schema/document/session owners. It never retains
+the editor's live tree in that worker. Cancel, detach, timeout, script failure
+and malformed current replies terminate the helper; later work starts a fresh
+one. Detach retires it immediately even if the embedding host keeps the command
+object. Native scheduling is unchanged.
+
+Structured-clone framing carries a positive controller-local request ordinal
+and the original JSON text as two array elements. It does not add a JSON nesting
+level or alter the existing logical packet's byte/depth limits. The receiver
+checks both the actual worker and ordinal before decoding a current result;
+stale replies cannot satisfy or retire later work. The first matching result
+revokes its reply slot before decoding, so duplicates cannot publish twice.
+Prepared-value, document epoch/revision and UI-port admission remain separate.
+The worker explicitly preserves the old text-only transport for older hosts.
+
+`TNyxSourceCommands.BrowserWorkerState` exposes only a typed observation:
+unavailable on native, stopped, idle or waiting. It is independent of overall
+`Busy`, grants no host object or publication authority, and starts no work.
+
+The [transport regression](../tests/nyx_source_worker_transport_browser.lpr)
+executes malformed identity/shape, exact Unicode/large-number text and original
+4 MiB admission-boundary checks. The [reuse regression](../tests/nyx_source_worker_reuse_browser.lpr)
+executes cold/warm Apply, diagnostic recovery, stale malformed text, duplicate
+results, cancellation, recreation and detach through real workers. Its
+[controlled Pascal helper](../tests/nyx_source_worker_replay.lpr) performs real
+source preparation and owns delayed/replayed result packets, without borrowing a
+Studio receiver. A private observation channel confirms a fully prepared result
+and armed reply timer before cancel/detach; it cannot admit a result or touch the
+editor. Compile the two regressions for `-Tbrowser` and that helper for
+`-Tmodule`, alongside the production worker and matched RTL as above. Read
+`data-test-result` and `data-test-checks`; the original failure regression and
+its actual thirty-second timeout remain required. These checks establish
+lifecycle/admission behavior, separately from full saved-Workshop latency.
+
 ### Native strategy shutdown
 
 The native strategy exclusively owns its scheduler and bounded admitted jobs.

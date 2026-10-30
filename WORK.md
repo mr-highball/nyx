@@ -9,7 +9,78 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Ordinary Source and Outputs refresh cost — 2026-10-29
+## Current work — Saved Workshop responsiveness — 2026-10-29
+
+Previous goal turn: PROGRESS.2401c6cb is pushed and remote-verified. Root stays
+SOLO. Follow the performance owner's original full saved Workshop; its functional
+desktop/compact Apply/history/Save/Open already has accepted evidence. This
+checkpoint qualifies browser helper reuse and immediate detach retirement, not
+overall near-real-time editor performance or another original criterion closure.
+
+Bounded semantic canvas inspection selects an existing owned QA copy. A current
+production-worker Uniform Apply completes normally. A diagnostic worker then
+attributes roughly 5.2 seconds to fresh session construction and 3.9 to editing,
+with another startup interval before its time origin. These are single inclusive
+observations; do not sum nested counters or infer a causal percentage. The
+controller unnecessarily recreates its worker for every edit. It now retains one
+idle helper, while each request reconstructs fresh schema/document/session owners.
+
+Structured-clone framing carries a positive request ordinal beside exact original
+JSON text. Existing logical depth/byte limits and prepared-value admission stay
+unchanged. Actual-worker and ordinal checks precede current payload decoding;
+stale replies cannot retire later work, and matching duplicates cannot enqueue a
+second delivery. Valid positioned diagnostics retain the helper. Cancel, detach,
+script/protocol failure and the unchanged 30000ms deadline terminate it. Detach
+now retires the helper immediately even when the embedding host retains its
+controller. Typed read-only worker state grants no host or publication authority.
+The worker preserves legacy text framing; native scheduling is unchanged.
+
+Real browser regressions pass 53 lifecycle, 26 transport and all 10 unchanged
+failure/timeout assertions. They cover warm work, rejected-source recovery,
+deliberately malformed stale text, duplicate results, cancelled/detached delayed
+replies and recreation. A private observation channel confirms real preparation
+and an armed reply timer before cancel/detach; it carries no source or authority.
+This strengthens the initial 51-check run without removing its assertions.
+The original inert leg still waits its actual thirty
+seconds. Transport checks preserve exact Unicode/large-number text and the
+original 4 MiB JSON boundary. Maintained full native source-editor checks pass
+450/450 ownership and 86 actual workspace assertions with three clean heaps.
+Full native Studio plus five browser/module consumers compile with zero owned
+warnings; 42 installed Classes warning occurrences remain visible. The unchanged
+full browser workspace again passes 91 at 1280x720 and 390x900 under its original
+30000ms journey guard. Final unprofiled bytes are the executed fixture bytes.
+
+In the same full compact Workshop, ordinary Uniform Apply, Undo and Uniform Apply
+reuse one worker time origin and creation ordinal across requests 1 and 2. This
+single paired sample measures 11208.7ms cold versus 7736.1ms warm from send to
+reply; total edit-to-local-delivery is 20118.3 versus 17081.3ms. Local delivery
+remains 6720.5/6979.2ms. These are diagnostic observations, not robust published
+budgets or a whole-editor speedup percentage. The warm pair is independently
+exported and byte-identical to the original accepted Uniform pair. Ordinary Undo
+restores the original Reflow pair. QA copy revision advances 20 to 28 across this
+turn's four Apply/Undo pairs; original selection/view and history availability
+remain. All nine exact QA pairs and the other eight revisions match their initial
+exports. Normal new edits replace this owned copy's prior redo branch; no claim
+is made that internal history is byte-identical.
+
+Matched QA/LAN delivery verifies twelve served assets and no-store headers,
+without replacing either serving process or binary/listener. All three LAN
+pairs/revisions, 82 durable configuration/project files and the effective output
+fingerprint remain exact, with all four runtime service permissions disabled.
+The live process lock is excluded from durable hashing. All temporary profile
+worker replacements are restored before staging the qualified release. Compiler
+and test readers are joined; owned browser tabs close and viewport overrides
+reset. Original review tabs remain handed off. Evidence, new private runners,
+owned TEMP/TMP and artifacts stay on E: in workshop-current-response-01.
+
+Reassessment: this removes repeated helper startup from warm edits and closes a
+concrete lifetime gap. Fresh session/edit preparation and the approximately
+seven-second local admission/refresh remain material costs. Return to those
+measured owning paths in the same full consumer before further profiling or
+fixture variants. Original latency, scale, physical/assistive and broader quality
+criteria remain open; task identities and completion credit are unchanged.
+
+## Previous checkpoint — Ordinary Source and Outputs refresh cost — 2026-10-29
 
 Previous goal turn: PROGRESS.b568857f is pushed and remote-verified. Root stays
 SOLO. Follow the existing performance owner's criterion2 and retained-update

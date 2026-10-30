@@ -44,6 +44,10 @@ type
     means paired publication, separately from later presentation callbacks. }
   TNyxSourceCommandState = (nssIdle, nssPreparing, nssApplied, nssRejected,
     nssStale, nssCancelled, nssFailed);
+  { Read-only browser helper lifecycle, independent of overall command Busy.
+    Idle retains compiled helper code, never an accepted model or active reply.
+    Native commands have no browser helper and report Unavailable. }
+  TNyxSourceWorkerState = (nwsUnavailable, nwsStopped, nwsIdle, nwsWaiting);
   { Borrowed UI receiver; detach the processor before disposing its host.
     Notifications may enqueue work but cannot free the notifying processor. }
   TNyxSourceCommandChanged = procedure(AState: TNyxSourceCommandState;
@@ -153,7 +157,12 @@ type
     {$ifndef PAS2JS}
     FExecutions: array of INyxExecution;
     {$else}
+    { At most one browser worker belongs to this controller. Idle reuse retains
+      compiled code only; each request reconstructs its own owners. Awaiting is
+      revoked before decoding a matching reply, so duplicates cannot enqueue a
+      second delivery. Cancel/fault/timeout/detach terminate the worker. }
     FWorker: TJSWorker;
+    FWorkerAwaiting: Boolean;
     FWorkerURL: TNyxText;
     FTimeout: NativeInt;
     FReceiveHandler: TJSEventHandler;
@@ -164,16 +173,18 @@ type
     FProfileChannel: TJSBroadcastChannel;
     FProfileHandler: TJSEventHandler;
     FProfileLines: Integer;
+    FProfileSequence: Integer;
     function ReceiveProfile(AEvent: TJSEvent): Boolean;
     {$endif}
     function Receive(AEvent: TJSEvent): Boolean;
     function WorkerError(AEvent: TJSEvent): Boolean;
     procedure WorkerTimeout;
-    procedure RetireWorker;
+    procedure RetireWorker(AKeepIdle: Boolean = False);
     {$endif}
     procedure RetainNameDraft(const AEdit: TNyxStudioDesignEdit);
     procedure RetirePublishedNameDraft;
     function GetBusy: Boolean;
+    function GetBrowserWorkerState: TNyxSourceWorkerState;
     function GetProjectCompilerAvailable: Boolean;
     function GetCanOpenProject: Boolean;
     function NextSequence: Integer;
@@ -312,6 +323,9 @@ type
     property CompletedFileChange: TNyxPascalFileChange read FCompletedFileChange;
     property Message: TNyxText read FMessage;
     property Busy: Boolean read GetBusy;
+    { Value-only observation for embedding hosts and diagnostics. This grants no
+      Worker access, starts no work and is not publication/revision authority. }
+    property BrowserWorkerState: TNyxSourceWorkerState read GetBrowserWorkerState;
     { Current notification's typed design effect. False for source/status-only
       notifications; consumers may follow structural results without parsing
       status text or retargeting another project's callback. }
@@ -350,7 +364,7 @@ uses
   nyx.studio.commands, nyx.codec, nyx.canvas.editing, nyx.canvas.route.types,
   nyx.studio.transactions, nyx.flow.editing, nyx.programs.editing, nyx.diagram.editing,
   nyx.studio.callbackedits
-  {$ifndef PAS2JS}, Classes{$endif};
+  {$ifndef PAS2JS}, Classes{$else}, nyx.studio.worker.transport{$endif};
 
 type
   { Private optional submission face on the existing revocable source port.
@@ -801,6 +815,25 @@ begin
   begin
     Result := Result or FSharedHost.Waiting;
   end;
+end;
+
+function TNyxSourceCommands.GetBrowserWorkerState: TNyxSourceWorkerState;
+begin
+  {$ifdef PAS2JS}
+
+  if FWorker = nil then
+  begin
+    Exit(nwsStopped);
+  end;
+
+  if FWorkerAwaiting then
+  begin
+    Exit(nwsWaiting);
+  end;
+  Result := nwsIdle;
+  {$else}
+  Result := nwsUnavailable;
+  {$endif}
 end;
 
 function TNyxSourceCommands.NextSequence: Integer;
@@ -1927,32 +1960,43 @@ begin
     {$ifdef PAS2JS}
     {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('launch', FActive.Sequence);{$endif}
     {$ifdef NYX_SOURCE_PROFILE}
-    CreateGUID(LProfileID);
-    LProfileName := Copy(GUIDToString(LProfileID), 2, 36);
     FProfileLines := 0;
+    FProfileSequence := FActive.Sequence;
     document.body.setAttribute('data-nyx-source-profile', '');
-    FProfileChannel := TJSBroadcastChannel.new(LProfileName);
-    FProfileHandler := @ReceiveProfile;
-    FProfileChannel.addEventListener('message', FProfileHandler);
-    FWorker := TJSWorker.new(FWorkerURL + '?nyx-profile=' + LProfileName);
-    {$else}
-    FWorker := TJSWorker.new(FWorkerURL);
     {$endif}
-    FWorker.addEventListener('message', FReceiveHandler);
-    FWorker.addEventListener('error', FErrorHandler);
+
+    if FWorker = nil then
+    begin
+      {$ifdef NYX_SOURCE_PROFILE}
+      CreateGUID(LProfileID);
+      LProfileName := Copy(GUIDToString(LProfileID), 2, 36);
+      FProfileChannel := TJSBroadcastChannel.new(LProfileName);
+      FProfileHandler := @ReceiveProfile;
+      FProfileChannel.addEventListener('message', FProfileHandler);
+      FWorker := TJSWorker.new(FWorkerURL + '?nyx-profile=' + LProfileName);
+      SourceJobProfile('worker-created', FActive.Sequence);
+      {$else}
+      FWorker := TJSWorker.new(FWorkerURL);
+      {$endif}
+      FWorker.addEventListener('message', FReceiveHandler);
+      FWorker.addEventListener('error', FErrorHandler);
+    end;
+    FWorkerAwaiting := True;
     FTimeout := window.setTimeout(@WorkerTimeout, 30000);
 
     if FActive.Kind = eskPascal then
     begin
-      FWorker.postMessage(NyxObject([NyxField('version', NyxData(1)),
+      FWorker.postMessage(TNyxSourceWorkerPacket.Tagged(
+        TNyxSourceWorkerSequence(FActive.Sequence), NyxObject([NyxField('version', NyxData(1)),
         NyxField('source', NyxData(FActive.Source.Source)),
-        NyxField('schemas', FActive.Schemas.Value.ToData)]).ToJSON);
+        NyxField('schemas', FActive.Schemas.Value.ToData)]).ToJSON).ToValue);
     end
     else
     begin
-      FWorker.postMessage(NyxObject([NyxField('version', NyxData(2)),
+      FWorker.postMessage(TNyxSourceWorkerPacket.Tagged(
+        TNyxSourceWorkerSequence(FActive.Sequence), NyxObject([NyxField('version', NyxData(2)),
         NyxField('request', FActive.Design.ToData),
-        NyxField('schemas', FActive.Schemas.Value.ToData)]).ToJSON);
+        NyxField('schemas', FActive.Schemas.Value.ToData)]).ToJSON).ToValue);
     end;
     {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('sent', FActive.Sequence);{$endif}
     {$else}
@@ -2460,6 +2504,17 @@ begin
   begin
     FCompilations[LIndex].Cancel;
   end;
+  {$ifdef PAS2JS}
+  { Detach itself is a lifetime boundary, even when the embedding host retains
+    this command object. No idle code or pending browser timer survives it. }
+  RetireWorker;
+
+  if FRunning then
+  begin
+    RetireJob(FActive);
+    FRunning := False;
+  end;
+  {$endif}
 end;
 
 function TNyxSourceCommands.CompletedEvent(out AIntent: TNyxStudioEventIntent;
@@ -2974,11 +3029,12 @@ begin
 end;
 
 {$ifdef PAS2JS}
-procedure TNyxSourceCommands.RetireWorker;
+procedure TNyxSourceCommands.RetireWorker(AKeepIdle: Boolean);
 begin
+  FWorkerAwaiting := False;
   {$ifdef NYX_SOURCE_PROFILE}
 
-  if FProfileChannel <> nil then
+  if not AKeepIdle and (FProfileChannel <> nil) then
   begin
     FProfileChannel.removeEventListener('message', FProfileHandler);
     FProfileChannel.close;
@@ -2993,7 +3049,7 @@ begin
     FTimeout := -1;
   end;
 
-  if FWorker <> nil then
+  if not AKeepIdle and (FWorker <> nil) then
   begin
     FWorker.removeEventListener('message', FReceiveHandler);
     FWorker.removeEventListener('error', FErrorHandler);
@@ -3008,14 +3064,28 @@ end;
 function TNyxSourceCommands.ReceiveProfile(AEvent: TJSEvent): Boolean;
 var
   LText: TNyxText;
+  LPacket: TNyxSourceWorkerPacket;
 begin
   Result := True;
 
-  if (FProfileLines >= 256) or not isString(TJSMessageEvent(AEvent).data) then
+  if FProfileLines >= 256 then
   begin
     Exit;
   end;
-  LText := String(TJSMessageEvent(AEvent).data);
+  try
+    LPacket := TNyxSourceWorkerPacket.Read(TJSMessageEvent(AEvent).data);
+  except
+    on ENyxSourceWorkerTransport do
+    begin
+      Exit;
+    end;
+  end;
+
+  if LPacket.HasSequence and (Integer(LPacket.Sequence) <> FProfileSequence) then
+  begin
+    Exit;
+  end;
+  LText := LPacket.Text;
 
   if Length(LText) > 256 then
   begin
@@ -3032,20 +3102,37 @@ var
   LDelivery: TSourceDelivery;
   LWork: INyxWork;
   LData: TNyxDataValue;
+  LPacket: TNyxSourceWorkerPacket;
+  LKeepIdle: Boolean;
 begin
-  {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('receive', FActive.Sequence);{$endif}
   Result := True;
+
+  if not FWorkerAwaiting or (FWorker = nil) or (AEvent.target <> FWorker) then
+  begin
+    Exit;
+  end;
   LDelivery := TSourceDelivery.Create;
   LWork := LDelivery;
   LDelivery.Port := FPort;
   LDelivery.Sequence := FActive.Sequence;
+  LKeepIdle := False;
   try
+    LPacket := TNyxSourceWorkerPacket.Read(TJSMessageEvent(AEvent).data);
 
-    if not isString(TJSMessageEvent(AEvent).data) then
+    if not LPacket.HasSequence then
     begin
-      raise ENyxModel.Create('Editor worker returned non-text protocol data');
+      raise ENyxModel.Create('Editor worker returned unsequenced protocol data');
     end;
-    LData := TNyxDataValue.ParseJSON(TNyxText(TJSMessageEvent(AEvent).data));
+
+    if Integer(LPacket.Sequence) <> FActive.Sequence then
+    begin
+      { An earlier request can never satisfy or retire the current one. Its
+        timeout remains armed; no model/source decoder sees stale payload text. }
+      Exit;
+    end;
+    FWorkerAwaiting := False;
+    {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('receive', FActive.Sequence);{$endif}
+    LData := TNyxDataValue.ParseJSON(LPacket.Text);
 
     if FActive.Kind = eskPascal then
     begin
@@ -3055,13 +3142,14 @@ begin
     begin
       LDelivery.Design := ReceiveNyxPreparedDesign(LData, FActive.Design, FActive.Schemas.Value);
     end;
+    LKeepIdle := True;
   except
     on LException: Exception do
     begin
       LDelivery.Failure := LException.Message;
     end;
   end;
-  RetireWorker;
+  RetireWorker(LKeepIdle);
   {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('decoded', FActive.Sequence);{$endif}
   FScheduler.PostUI(LWork);
 end;
@@ -3071,6 +3159,20 @@ var
   LMessage: TNyxText;
 begin
   Result := False;
+
+  if (FWorker = nil) or (AEvent.target <> FWorker) then
+  begin
+    Exit;
+  end;
+
+  if not FWorkerAwaiting then
+  begin
+    { A fault after a fully received reply retires only its idle worker. The
+      already decoded UI delivery owns independent immutable prepared values. }
+    AEvent.preventDefault;
+    RetireWorker;
+    Exit;
+  end;
   { The browser owns this transient ErrorEvent. Copy its plain diagnostic before
     retiring the worker; suppressing the default console report must not erase
     the actual failure or turn a script error into an apparent timeout. }
@@ -3089,6 +3191,11 @@ end;
 
 procedure TNyxSourceCommands.WorkerTimeout;
 begin
+
+  if not FWorkerAwaiting then
+  begin
+    Exit;
+  end;
   {$ifdef NYX_SOURCE_PROFILE}SourceJobProfile('timeout', FActive.Sequence);{$endif}
   RetireWorker;
   Finish(FActive.Sequence, nil, nil,

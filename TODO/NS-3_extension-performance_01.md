@@ -2,6 +2,22 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Worker-lifetime continuation,2026-10-29: the same compact saved Workshop now
+reuses one idle browser helper across ordinary Uniform Apply/Undo/Apply, with
+fresh request-owned sessions and unchanged 30000ms deadlines. Actual-worker and
+request-ordinal checks reject stale/duplicate delivery before logical admission;
+cancel, detach and faults terminate the helper. Browser lifecycle53, transport26,
+original failure10 and full workspace91 at each width pass; maintained native
+ownership450/450 and actual workspace86 retain clean heaps. One paired diagnostic
+measures send-to-reply11208.7ms cold/7736.1ms warm, while local delivery remains
+6720.5/6979.2ms. The exact Uniform pair and original Reflow restoration are
+independently verified. Matched delivery preserves projects/settings. This is
+incremental startup/lifetime progress, not acceptance of original latency/scale
+criteria or a statistically established speedup. WORK.md and the external
+workshop-current-response-01 packet own evidence. Return to measured fresh
+session/edit preparation and local refresh in this same full consumer; stop
+further helper/transport fixture variants.
+
 Ordinary-workspace continuation,2026-10-29: the same full browser source-workspace
 consumer now executes91 checks at1280x720 and390x900 under its unchanged30000ms
 journey limit. Source tabs and expansion/return use the independent source mount

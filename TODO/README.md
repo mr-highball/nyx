@@ -116,6 +116,24 @@ that concrete [ordinary-refresh performance gate](NS-3_extension-performance_01.
 using the same consumer and current timing hooks. Full named Save/Open, original
 criteria, physical/AT and broad quality remain open; stop caret/toolbar variants.
 
+That ordinary source-workspace gate now passes91 checks at both browser sizes
+without increasing its30-second guard. Independent source presentation preserves
+the surrounding mounted workspace; exact-context/recovery and whole-refresh
+requests retain the complete admission path. Matched QA/LAN delivery preserves
+all project pairs/settings. The performance owner retains original saved-Workshop
+responsiveness, while its functional Apply/history/Save/Open already has desktop/
+compact evidence. Measure the same full consumer on the current build before
+another optimization; do not repeat accepted journeys or source-tab variants.
+
+That full Workshop now qualifies idle browser-helper reuse and immediate detach
+retirement, preserving fresh request owners and strict ordinal/value admission.
+The same cold/warm pair observes less repeated startup; about seven seconds of
+local delivery remains. Full workspace91 per width and native ownership/actual
+source checks pass. Exact QA/LAN pairs and settings survive matched delivery.
+This does not close original performance criteria. Return to measured session/
+edit preparation and local refresh in that consumer, rather than more helper or
+transport fixture variants; WORK.md retains timings and limitations.
+
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |

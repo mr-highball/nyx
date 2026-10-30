@@ -28,7 +28,8 @@ program nyx_source_worker;
 uses
   SysUtils, JS, WebWorker, WebOrWorker,
   {$ifdef NYX_SOURCE_PROFILE}nyx.source,{$endif}
-  nyx.text, nyx.data, nyx.schema, nyx.source.preparation, nyx.studio.session;
+  nyx.text, nyx.data, nyx.schema, nyx.source.preparation, nyx.studio.session,
+  nyx.studio.worker.transport;
 
 {$ifdef NYX_SOURCE_PROFILE}
 var
@@ -36,6 +37,7 @@ var
   GProfileLines: Integer;
   GProfileChannel: TJSBroadcastChannel;
   GProfileName: JSValue;
+  GProfileSequence: TNyxSourceWorkerSequence;
 
 { A diagnostic-only BroadcastChannel is separate from result postMessage. Its
   name comes from this worker's URL, never project/source content or authority. }
@@ -45,7 +47,16 @@ begin
 
   if GProfileChannel <> nil then
   begin
-    GProfileChannel.postMessage(AText);
+
+    if GProfileSequence > 0 then
+    begin
+      GProfileChannel.postMessage(TNyxSourceWorkerPacket.Tagged(
+        GProfileSequence, AText).ToValue);
+    end
+    else
+    begin
+      GProfileChannel.postMessage(AText);
+    end;
   end;
 end;
 
@@ -83,6 +94,7 @@ end;
 
 function Receive(AEvent: TJSEvent): Boolean;
 var
+  LPacket: TNyxSourceWorkerPacket;
   LRequest: TNyxDataValue;
   LReply: INyxPreparedSource;
   LDesign: INyxPreparedDesign;
@@ -92,22 +104,28 @@ var
   LStarted: Double;
   LReplyText: TNyxText;
   {$endif}
+
+  procedure Reply(const AText: TNyxText);
+  begin
+    { Structured cloning copies both identity and exact logical JSON. The old
+      text-only caller receives its original text-only response shape. }
+    WebWorker.Self_.postMessage(LPacket.WithText(AText).ToValue);
+  end;
 begin
   Result := False;
-  {$ifdef NYX_SOURCE_PROFILE}
-  ResetNyxSourceProfile(@ProfileClock);
-  GProfileSeen := ReadNyxSourceProfile;
-  GProfileLines := 0;
-  LStarted := SourceProfileStart;
-  ProfileLine('received at=' + FloatToStr(performance.now));
-  {$endif}
+  LPacket := Default(TNyxSourceWorkerPacket);
   try
-
-    if not isString(TJSMessageEvent(AEvent).data) then
-    begin
-      raise EArgumentException.Create('Source worker input must be a JSON text packet');
-    end;
-    LRequest := TNyxDataValue.ParseJSON(String(TJSMessageEvent(AEvent).data));
+    LPacket := TNyxSourceWorkerPacket.Read(TJSMessageEvent(AEvent).data);
+    {$ifdef NYX_SOURCE_PROFILE}
+    GProfileSequence := LPacket.Sequence;
+    ResetNyxSourceProfile(@ProfileClock);
+    GProfileSeen := ReadNyxSourceProfile;
+    GProfileLines := 0;
+    LStarted := SourceProfileStart;
+    ProfileLine('received at=' + FloatToStr(performance.now) +
+      ' origin=' + FloatToStr(performance.timeOrigin));
+    {$endif}
+    LRequest := TNyxDataValue.ParseJSON(LPacket.Text);
 
     if (LRequest.Kind <> ndObject) or (LRequest.Count <> 3) then
     begin
@@ -123,7 +141,7 @@ begin
       1:
         begin
           LReply := PrepareNyxSource(LRequest.Field('source').AsText, LSchemas);
-          WebWorker.Self_.postMessage(LReply.ToData.ToJSON);
+          Reply(LReply.ToData.ToJSON);
         end;
       2:
         begin
@@ -140,9 +158,9 @@ begin
           LReplyText := LDesign.ToData.ToJSON;
           SourceProfileFinish(spWorkerReply, LStarted);
           ReportProfile;
-          WebWorker.Self_.postMessage(LReplyText);
+          Reply(LReplyText);
           {$else}
-          WebWorker.Self_.postMessage(LDesign.ToData.ToJSON);
+          Reply(LDesign.ToData.ToJSON);
           {$endif}
         end;
     else
@@ -155,7 +173,7 @@ begin
     begin
       { Protocol/startup failures are distinct from positioned user diagnostics.
         The host must reject this reply and retain its own accepted pair/draft. }
-      WebWorker.Self_.postMessage(NyxObject([
+      Reply(NyxObject([
         NyxField('version', NyxData(1)),
         NyxField('protocolError', NyxData(TNyxText(LException.Message)))]).ToJSON);
     end;
@@ -165,7 +183,8 @@ end;
 begin
   { Built with the matched RTL embedded and -Tmodule for its generated rtl.run
     entry. This ordinary Pascal program creates no DOM/Studio/server and accepts
-    no filesystem/URL/compiler instruction. Each request reconstructs fresh owners. }
+    no filesystem/URL/compiler instruction. A host may retain this idle worker;
+    every request still reconstructs fresh document/session/schema owners. }
   {$ifdef NYX_SOURCE_PROFILE}
   GProfileName := TJSURLSearchParams.new(String(WebWorker.location.search)).get('nyx-profile');
 
