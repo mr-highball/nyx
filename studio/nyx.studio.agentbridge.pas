@@ -289,6 +289,12 @@ type
       frame before server diagnostics can borrow this observer's source text.
       Pending local publications and protected conflicts cannot grant navigation. }
     function SourceSynchronized: Boolean;
+    { Named persistence may reuse only this observer's acknowledged exact pair.
+      The returned versioned envelope contains copied context, never execution
+      proof. ACapability belongs only in the private same-origin request header.
+      An unconnected observer retains the existing literal-save contract. }
+    function ProjectSaveRequest(const AExpected: TNyxText;
+      const APair: TNyxProjectPair; out ACapability: TNyxText): TNyxDataValue;
     { Configure a separate owned private exchange before queries. Reconfiguration
       retires pending delivery; never share the polling transport with analysis. }
     procedure UseCompletionExchange(AExchange: TNyxStudioEditorExchange);
@@ -1000,6 +1006,40 @@ begin
     (FObservationFailures = 0) and
     not FSharedReserved and not FSharedAcknowledging and not FSharedDirty and
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
+end;
+
+function TNyxStudioAgentBridge.ProjectSaveRequest(const AExpected: TNyxText;
+  const APair: TNyxProjectPair; out ACapability: TNyxText): TNyxDataValue;
+var
+  LPacket: TNyxText;
+begin
+  ACapability := '';
+  LPacket := EncodeNyxProject(APair);
+
+  if LPacket <> EncodeNyxProject(FSession.ProjectSnapshot) then
+  begin
+    raise ENyxProjectConflict.Create('The project changed before its save was captured');
+  end;
+
+  if SourceSynchronized then
+  begin
+    ACapability := FToken;
+    Result := NyxObject([
+      NyxField('version', NyxData(2)),
+      NyxField('expected', NyxData(AExpected)),
+      NyxField('project', NyxData(LPacket)),
+      NyxField('workspace', NyxData(FWorkspace.ID)),
+      NyxField('revision', NyxData(FView.Revision))
+    ]);
+  end
+  else
+  begin
+    Result := NyxObject([
+      NyxField('version', NyxData(1)),
+      NyxField('expected', NyxData(AExpected)),
+      NyxField('project', NyxData(LPacket))
+    ]);
+  end;
 end;
 
 function TNyxStudioAgentBridge.CanCancelBuild: Boolean;

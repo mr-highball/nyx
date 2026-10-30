@@ -2072,6 +2072,8 @@ physical input and full Resources UX remain required. See
 
 **Blockers**
 
+- [Compiler-admitted named Save/Open](NS-4_named-projects_01.md).
+
 - [NS-4_studio-slice_01](NS-4_studio-slice_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.

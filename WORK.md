@@ -9,7 +9,115 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Full Workshop refresh cost — 2026-10-29
+## Current work — Studio named Save/Open authoring return — 2026-10-29
+
+Previous goal turn: PROGRESS.e3e00947 is pushed and remote-verified. Root remains
+SOLO. Return to Studio-slice criterion3 and full-authoring criteria2/5 using the
+same existing owned QA Workshop copy. Inspect bounded semantic context, retain
+the exact initial pair, then exercise actual design/Pascal edits, pending draft,
+ordinary named Save/Open, paired history and its own compiled preview at desktop
+and compact widths. Preserve all other QA/LAN projects and local output choices.
+At the first concrete defect, retain failure evidence and repair its owning
+library/adapter/controller before rerunning that same consumer. Existing canvas
+Save/Open and source-workspace acceptance remain supporting evidence, not new
+credit for repeating them. Do not expand resolver, JSON/profile or chrome-only
+variants. New private runners, artifacts and owned TEMP/TMP stay on E: in
+studio-authoring-return-01. Original acceptance scope and prerequisites remain.
+
+Current result: ordinary desktop Properties/Pascal Apply, named Save with an
+unfinished Unicode draft, genuinely different local edit, Open and paired
+Undo/Redo preserve all six project fields exactly. The actual saved main Pascal
+and design members agree with the full packet. Applying the restored draft and
+building its own application permits real JSON input/Format output with exact
+supplementary Unicode. The pre-open backup seam captures the exact current pair;
+this is not a physical disk backup claim. The maintained browser host changes
+only that file-exchange seam and disables local recovery for this owned test.
+
+The compact continuation successfully applies Pascal and retains a fresh draft,
+but its named Save returns “Pascal 69:10: Expected BuildNyxDocument”. The exact
+accepted source has BuildNyxOriginalDocument at that position. The named HTTP
+route always selects literal SaveProject despite the existing trusted
+SaveCapturedProject/EditorCaptureProject contracts. The new required owner is
+NS-4_named-projects_01, linked from Studio-slice and the ranked catalog. Repair
+the actual persistence/admission path, then repeat this same consumer; do not
+weaken literal validation or treat a serialized checkpoint as execution proof.
+The owned QA copy remains at revision49, selected return-action with its exact
+pending pair retained (SHA256 3C7C0CC7C19A8AA20E0949FAE295751E1266A89B87997AB32C1582A805708C46).
+At the initial failure capture, neither serving process nor output configuration
+had changed.
+
+Save repair continuation: previous turn PROGRESS (independent table disk receipt
+and the concrete named-project prerequisite). The browser bridge now emits a
+version2 named-save envelope only for its synchronized exact pair, with the
+private editor capability in its request header. The backend captures its own
+live checkpoint at the requested workspace/revision, compares the complete pair,
+then performs SaveCapturedProject outside the model guard. Version1 retains
+literal admission. No incoming checkpoint/execution claim grants trust.
+
+The expanded maintained shared-source publication consumer passes57 with all
+3040846 blocks freed. It actually compiles/executes its rich constructor and checks
+named disk round-trip, stale disk revision, wrong authority/workspace/revision,
+substituted source/design/draft and unchanged live pair/history. Legacy literal
+save still refuses that rich source before allocating its directory. Full server
+and the ordinary browser test host compile; the latter retains7 installed SDK
+warning occurrences, without owned warnings. These checks do not establish the
+ordinary HTTP browser save or richer-source Open yet.
+
+All nine QA pairs/revisions are independently exported before replacement,
+including the exact pending revision49 above. The21 durable QA runtime files
+are copied and independently hash-verified before/after stopping its exact owner.
+Copying the live lock initially refuses; it is explicitly excluded from durable
+backup and all21 real files verify. The old process is joined before replacing
+the fixed QA executable. Its listeners return in the same slots with a new owner;
+LAN is not replaced. The existing root recovery UI is now performing the actual
+whole-registry constructor recovery before further browser Save input. Keep its
+live handle/tab and follow it to terminal; do not restart on observation timeout.
+The initial browser navigation times out but the same tab loads normally.
+
+After recovery, verify all nine pairs/revisions, resume the owned named-project
+host and retry the exact compact Save. Reopening arbitrary compiled companions
+still requires proper shared compiler/project admission; do not substitute a
+compile-only local Open followed by an untrusted ordinary synchronization commit.
+NS-4_named-projects_01 and the parent authoring criteria remain open.
+
+QA recovery is now terminal-success through the ordinary root UI. Independent
+before-stop/after exports match all nine project identities, titles, revisions
+and exact full-pair hashes. The first comparison incorrectly serializes unordered
+PowerShell property bags; its false mismatch is corrected by exact per-field
+comparison, with the original receipts retained. No document discrepancy exists.
+The root tab is reused for the owned named-project host; all prior test tabs had
+closed at the previous turn boundary. The service retains the exact pending pair.
+
+The same failed compact Save now succeeds at390x900; at1280x720 a second named
+save preserves the identical full pair. Independent checks confirm all six
+packet fields and the adjacent31574-byte design/30630-byte Pascal files; each
+130202-byte packet retains the unfinished moon-bearing draft/baseline. The two
+new named copies are intentional QA evidence. Revision49, return-action/home,
+pending status and history availability remain. Captured pre-open backup is
+exact. Ordinary Open of the newly saved rich pair now reproduces the separate
+literal-reader refusal; the full shared compiler-backed project admission remains
+the next required repair. No false successful Open/history/preview claim is made.
+
+Both real Studio targets also compile. Across server, native regression, native
+Studio and two browser consumers there are zero owned warnings; the browser
+consumers each retain7 installed Classes warning occurrences. A final style-only
+blank-line repair is recompiled for both browser consumers; their generated
+bytes equal the exact previously executed/qualified payloads. All compiler/test
+readers are joined; only the intentional QA/LAN servers remain. QA uses its
+existing fixed executable/listeners, while LAN's executable/listeners stay exact.
+Private packet studio-authoring-return-01 retains the failed/repaired source,
+native checks, adjacent-file comparisons, backup verification and inspected
+compact/desktop Save images. Save is qualified on QA; complete task acceptance
+and matched LAN rollout remain pending the Open continuation.
+
+The user's delayed second table-export confirmation is independently reconciled:
+the actual browser page file is452 bytes/four rows, filtered is175 bytes/two
+Running rows, both match fixed expected UTF-8 TSV bytes, and filtered equals the
+accepted native disk output. confirmed-table-saves.json retains hashes/checks
+under the current external packet. The already accepted table-output-hosts task
+is unchanged; this acknowledgement adds no new acceptance credit.
+
+## Previous checkpoint — Full Workshop refresh cost — 2026-10-29
 
 Previous goal turn: PROGRESS.6378c7dd is pushed and remote-verified. Root remains
 SOLO. This checkpoint advances the existing performance owner's criteria2/3 in

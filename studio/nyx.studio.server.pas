@@ -124,7 +124,8 @@ type
 implementation
 
 uses
-  nyx.data, nyx.studio.sourcebuilds, nyx.studio.sourceprojection, nyx.studio.outputstore;
+  nyx.data, nyx.studio.sourcebuilds, nyx.studio.sourceprojection, nyx.studio.outputstore,
+  nyx.studio.workspaces;
 
 function RequestText(ARequest: TFPHTTPConnectionRequest): TNyxText;
 var
@@ -396,9 +397,11 @@ var
   LResult: TJSONObject;
   LMessage: TNyxDataValue;
   LPair: TNyxProjectPair;
+  LCheckpoint: TNyxSourceCheckpoint;
   LRevision: TNyxText;
   LRemote: TNyxText;
   LAfter: Integer;
+  LSaved: Boolean;
 begin
   AResponse.CustomHeaders.Values['Cache-Control'] := 'no-store';
   AResponse.CustomHeaders.Values['X-Content-Type-Options'] := 'nosniff';
@@ -608,15 +611,38 @@ begin
       begin
         LMessage := TNyxDataValue.ParseJSON(RequestText(ARequest));
 
-        if (LMessage.Kind <> ndObject) or (LMessage.Count <> 3) or
-          (LMessage.Field('version').AsInteger <> 1) then
+        if (LMessage.Kind <> ndObject) or
+          not (((LMessage.Field('version').AsInteger = 1) and (LMessage.Count = 3)) or
+            ((LMessage.Field('version').AsInteger = 2) and (LMessage.Count = 5))) then
         begin
-          raise ENyxModel.Create('POST version, expected revision and project packet');
+          raise ENyxModel.Create('POST a supported versioned project save request');
         end;
         LPair := DecodeNyxProject(LMessage.Field('project').AsText);
 
-        if not FProjects.SaveProject(QueryText(ARequest, 'name'),
-          LMessage.Field('expected').AsText, LPair, LRevision, LRemote) then
+        if LMessage.Field('version').AsInteger = 2 then
+        begin
+
+          if LOrigin = '' then
+          begin
+            raise ENyxProjectConflict.Create('Use the same-origin private editor connection to save its captured project');
+          end;
+          { Capture under the model guard, then release it before disk I/O. This
+            owned immutable checkpoint belongs to the exact requested snapshot;
+            later edits may proceed without changing the save or its receipt. }
+          LCheckpoint := FMCP.EditorCaptureProjectSave(
+            ARequest.GetFieldByName('X-Nyx-Editor'),
+            NyxWorkspace(LMessage.Field('workspace').AsText),
+            LMessage.Field('revision').AsInteger, LPair);
+          LSaved := FProjects.SaveCapturedProject(QueryText(ARequest, 'name'),
+            LMessage.Field('expected').AsText, LPair, LCheckpoint, LRevision, LRemote);
+        end
+        else
+        begin
+          LSaved := FProjects.SaveProject(QueryText(ARequest, 'name'),
+            LMessage.Field('expected').AsText, LPair, LRevision, LRemote);
+        end;
+
+        if not LSaved then
         begin
           AResponse.Code := 409;
         end;

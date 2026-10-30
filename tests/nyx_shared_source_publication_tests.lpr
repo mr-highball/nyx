@@ -28,6 +28,7 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.source, nyx.schema, nyx.studio.projects, nyx.studio.session, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.workspaces, nyx.studio.sourceprojection,
+  nyx.studio.projectstore,
   nyx.test.projection;
 
 const
@@ -147,6 +148,105 @@ begin
     NyxField('op', NyxData('commit')), NyxField('expectedRevision', NyxData(ARevision)),
     NyxField('project', NyxData(EncodeNyxProject(APair))),
     NyxField('selection', NyxData('heading-1')), NyxField('view', NyxData('notebook-1'))]));
+end;
+
+{ Exercise named storage with an actual compiler-admitted pair. The store owns
+  only this test runtime; no listener, user's project or serialized trust claim
+  supplies its checkpoint. Every refusal leaves the original saved bytes intact. }
+procedure CheckNamedSaving(const ADirectories: TNyxStudioDirectories;
+  const APair: TNyxProjectPair; ARevision: Integer);
+var
+  LStore: TNyxProjectStore;
+  LCheckpoint: TNyxSourceCheckpoint;
+  LChanged: TNyxProjectPair;
+  LVersion: TNyxText;
+  LRemote: TNyxText;
+  LSaved: TNyxText;
+  LBefore: TNyxDataValue;
+  LAfter: TNyxDataValue;
+  LIndex: Integer;
+  LRefused: Boolean;
+begin
+  LBefore := Observe;
+  LStore := TNyxProjectStore.Create(ADirectories.Projects);
+  try
+    LCheckpoint := GEngine.EditorCaptureProjectSave(GToken, NyxPrimaryWorkspace,
+      ARevision, APair);
+    Check((LCheckpoint.Source = APair.Source) and (LCheckpoint.Design = APair.Design),
+      'named saving captures the exact live compiled source and design');
+    Check(LStore.SaveCapturedProject('compiled-save', '', APair, LCheckpoint,
+      LVersion, LRemote), 'named storage accepts the live executed checkpoint');
+    LSaved := LStore.ReadProject('compiled-save', LVersion);
+    Check(EncodeNyxProject(DecodeNyxProject(LSaved)) = EncodeNyxProject(APair),
+      'named disk packet retains the complete exact compiled pair');
+    Check(not LStore.SaveCapturedProject('compiled-save', '', APair, LCheckpoint,
+      LVersion, LRemote), 'old disk revision cannot overwrite the named project');
+    Check(LRemote = LSaved, 'disk conflict returns the exact saved packet');
+    for LIndex := 0 to 5 do
+    begin
+      LChanged := APair;
+      LRefused := False;
+      try
+        case LIndex of
+          0:
+            LCheckpoint := GEngine.EditorCaptureProjectSave('wrong-editor',
+              NyxPrimaryWorkspace, ARevision, LChanged);
+          1:
+            LCheckpoint := GEngine.EditorCaptureProjectSave(GToken,
+              NyxWorkspace('missing-save-workspace'), ARevision, LChanged);
+          2:
+            LCheckpoint := GEngine.EditorCaptureProjectSave(GToken,
+              NyxPrimaryWorkspace, ARevision - 1, LChanged);
+          3:
+            begin
+              LChanged.Source := LChanged.Source + #10 + '{ substituted source }';
+              LCheckpoint := GEngine.EditorCaptureProjectSave(GToken,
+                NyxPrimaryWorkspace, ARevision, LChanged);
+            end;
+          4:
+            begin
+              LChanged.Design := LChanged.Design + ' ';
+              LCheckpoint := GEngine.EditorCaptureProjectSave(GToken,
+                NyxPrimaryWorkspace, ARevision, LChanged);
+            end;
+          5:
+            begin
+              LChanged.Pending := True;
+              LChanged.Draft := APair.Source + CDraftSuffix;
+              LChanged.DraftBase := APair.Source;
+              LCheckpoint := GEngine.EditorCaptureProjectSave(GToken,
+                NyxPrimaryWorkspace, ARevision, LChanged);
+            end;
+        end;
+      except
+        on LException: Exception do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused, 'named save refuses substituted authority/context/pair case ' + IntToStr(LIndex));
+      Check(LStore.ReadProject('compiled-save', LVersion) = LSaved,
+        'refused save preserves exact named disk bytes');
+    end;
+    LRefused := False;
+    try
+      LStore.SaveProject('untrusted-save', '', APair, LVersion, LRemote);
+    except
+      on LException: Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'legacy literal storage cannot adopt compiled source through a file claim');
+    Check(not DirectoryExists(ADirectories.Projects + 'untrusted-save'),
+      'untrusted refusal precedes named directory allocation');
+    LAfter := Observe;
+    Check((LBefore.Field('project').AsText = LAfter.Field('project').AsText) and
+      (LBefore.Field('session').ToJSON = LAfter.Field('session').ToJSON),
+      'saving and all refusals leave live project, draft, revision and history intact');
+  finally
+    LStore.Free;
+  end;
 end;
 
 function History(const ADirection: TNyxText; ARevision: Integer): TNyxDataValue;
@@ -270,6 +370,7 @@ begin
     GEngine.EditorCaptureProject(GToken, NyxPrimaryWorkspace, LRevision, LPair, LFrame);
     Check((LFrame.Origin = nsoExecuted) and (LFrame.Source = LSource),
       'authorized observer receives opaque live execution origin/exact source');
+    CheckNamedSaving(LDirectories, LPair, LRevision);
     { The incoming real constructor turns the former root identity into a
       descendant and moves its selection to another page. Both existed before
       and after, so an existence-only fallback would leave an unusable view. }

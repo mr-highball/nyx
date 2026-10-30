@@ -117,6 +117,13 @@ either order. **Download design + Pascal** exports only the accepted pair; brows
 may require allowing multiple downloads. Use the single backup to carry drafts.
 No target or installed application compiler is required for these operations.
 
+A synchronized browser project can save its compiler-admitted Pascal, including
+visual continuations, through the server's existing accepted source checkpoint.
+Save does not compile that source again. The complete captured project and shared
+revision must still match; a different draft or stale observer cannot borrow
+another project's checkpoint. Disconnected literal projects retain their ordinary
+source admission. A saved file itself never supplies execution authority.
+
 Both members are admitted before replacing the session or touching saved files.
 Matching pairs preserve imports, helpers, callbacks, local names and comments
 exactly. Unsupported or mismatched input remains downloadable while the current

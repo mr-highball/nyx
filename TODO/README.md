@@ -143,6 +143,14 @@ variants and return to the ranked Studio authoring journey's remaining named
 Save/Open, paired draft/history and preview outcomes. The existing performance
 owner retains fresh session/edit, full shell and projection/fallback costs.
 
+The ordinary named-project return now exposes the required
+[compiler-admitted Save/Open prerequisite](NS-4_named-projects_01.md). Desktop
+literal-pair Save/Open, exact draft/history and its own runtime pass; compact
+compiler-backed continuation Save now passes at both widths through live captured
+checkpoints, with exact disk members and draft. Its ordinary Open still refuses
+through the literal path. Continue shared compiler-backed project admission in
+that same consumer before broader authoring acceptance.
+
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |

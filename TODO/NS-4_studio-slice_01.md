@@ -1,5 +1,16 @@
 # NS-4_studio-slice_01 — Studio end-to-end designer
 
+**Named Save/Open prerequisite — 2026-10-29:**
+
+The ordinary authoring return passes desktop named Save/Open with a retained
+Unicode draft and exact paired Undo/Redo, followed by its own compiled application's
+JSON formatting workflow. Compact compiler-backed continuation exposes the required
+[named-project prerequisite](NS-4_named-projects_01.md). Its Save repair now passes
+at both widths through exact live checkpoints and independently verified adjacent
+files/drafts. Ordinary Open still rejects the valid richer companion through
+its literal reader, retaining the current pair. Follow that owner before claiming
+criterion 3; no original criterion or task closes. WORK owns evidence.
+
 **Browser editing return — 2026-10-29:**
 
 Bounded MCP composes one button in an owned existing QA copy; ordinary browser
@@ -161,6 +172,8 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Real browser journeys prove design, save/load, undo/redo, compilation and failure recovery.
 
 **Blockers**
+
+- [Compiler-admitted named Save/Open](NS-4_named-projects_01.md).
 
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_codegen_01](NS-1_codegen_01.md) must have accepted evidence (update link when moved to DONE).

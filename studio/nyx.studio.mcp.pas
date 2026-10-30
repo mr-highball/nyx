@@ -224,6 +224,13 @@ type
     procedure EditorCaptureProject(const AToken: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
       out APair: TNyxProjectPair; out ACheckpoint: TNyxSourceCheckpoint);
+    { Named saving captures only the exact acknowledged complete pair. The
+      checkpoint is obtained from this live guarded session, never supplied by
+      an HTTP body or restored from an exported file. Stale/foreign/substituted
+      requests fail before the caller can write project files. }
+    function EditorCaptureProjectSave(const AToken: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+      const APair: TNyxProjectPair): TNyxSourceCheckpoint;
     { Trusted native hosting seam used by the authenticated MCP ordinary-tool
       route. It owns locking, semantic dispatch and durable admission together.
       Host supplies the already authenticated private owner/display actor; neither
@@ -1247,6 +1254,20 @@ begin
     LSession.CaptureEditorProject(AExpected, APair, ACheckpoint);
   finally
     FGuard.Release;
+  end;
+end;
+
+function TNyxStudioMCP.EditorCaptureProjectSave(const AToken: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+  const APair: TNyxProjectPair): TNyxSourceCheckpoint;
+var
+  LCaptured: TNyxProjectPair;
+begin
+  EditorCaptureProject(AToken, AWorkspace, AExpected, LCaptured, Result);
+
+  if EncodeNyxProject(APair) <> EncodeNyxProject(LCaptured) then
+  begin
+    raise ENyxProjectConflict.Create('The saved project differs from the acknowledged editor pair');
   end;
 end;
 

@@ -5444,6 +5444,8 @@ procedure TNyxStudio.ProjectRequest(AOperation: TNyxProjectOperation);
 var
   LField: TJSHTMLInputElement;
   LExpected: TNyxText;
+  LCapability: TNyxText;
+  LSave: TNyxDataValue;
 begin
 
   if (AOperation = npoOpen) and not FSourceCommands.CanOpenProject then
@@ -5474,8 +5476,6 @@ begin
   FProjectOperation := AOperation;
   FProjectRequestName := FProjectName;
   FProjectSent := EncodeNyxProject(FSession.ProjectSnapshot);
-  FProjectRequest := TJSXMLHttpRequest.new;
-  FProjectRequest.onreadystatechange := ProjectReady;
 
   if AOperation = npoSave then
   begin
@@ -5485,13 +5485,21 @@ begin
     begin
       LExpected := FProjectRevision;
     end;
+    LSave := FAgents.ProjectSaveRequest(LExpected, FSession.ProjectSnapshot, LCapability);
+  end;
+  FProjectRequest := TJSXMLHttpRequest.new;
+  FProjectRequest.onreadystatechange := ProjectReady;
+
+  if AOperation = npoSave then
+  begin
     FProjectRequest.open('POST', '/api/project?name=' + encodeURIComponent(FProjectName), True);
     FProjectRequest.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-    FProjectRequest.send(NyxObject([
-      NyxField('version', NyxData(1)),
-      NyxField('expected', NyxData(LExpected)),
-      NyxField('project', NyxData(FProjectSent))
-    ]).ToJSON);
+
+    if LCapability <> '' then
+    begin
+      FProjectRequest.setRequestHeader('X-Nyx-Editor', LCapability);
+    end;
+    FProjectRequest.send(LSave.ToJSON);
     FStatus := 'Saving paired project files';
   end
   else
