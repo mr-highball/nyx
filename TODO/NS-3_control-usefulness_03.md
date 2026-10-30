@@ -3,6 +3,22 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Browser pointer return — 2026-10-30:**
+
+The same saved Service monitor now exercises actual desktop/compact pointer
+resizing, filtering, hidden-column reveal and horizontal scrolling while retaining
+its exact unfinished Unicode edit, caret and focus. W1's missing visible narrow
+degradation is repaired: a caption status explains suspended pins alongside the
+reachable Columns action, and clears when requested pins fit again. The existing
+full browser consumer fails on the original adapter and passes1490/1489 after the
+repair, without changing tolerances. Its first caption-sizing failure is retained.
+Native compilation passes with zero warnings; this adds no native input claim.
+Independent semantic export retains the exact revision9 pair and local output
+fingerprint. WORK.md records receipts, viewport emulation and remaining limits.
+Return to the same workbench's W2 selected/range output and peer independence;
+stop equivalent caption/hint/geometry variants. No full parent criterion is
+accepted by this repair, and all original criteria below remain intact.
+
 **Native compact return and reassessment — 2026-10-29:**
 
 The saved pin widths plus minimum center require336 logical pixels; the64-row

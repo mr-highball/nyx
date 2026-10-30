@@ -950,6 +950,11 @@ a window width alone does not establish that the pins fit. Widening the table
 automatically restores the requested pins. Neither transition changes authored
 widths, runtime preferences, row identities or accepted values.
 
+Browser tables explain temporary pin suspension in a visible caption status
+beside **Columns**. Both remain within the horizontal scrollport as middle
+columns scroll. The message clears when the requested pins fit again, without
+replacing authored help or dismissing an unfinished cell edit.
+
 Native cell tooltips combine current authored help with query, sizing and pin
 suspension guidance. The native adapter reads this owned text through LCL's
 cell-hint callback because the grid's `Hint` property is a transient hover cache.

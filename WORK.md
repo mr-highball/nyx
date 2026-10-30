@@ -9,7 +9,60 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Studio named Save/Open authoring return — 2026-10-30
+## Current work — Table pointer and selection return — 2026-10-30
+
+Previous goal turn: PROGRESS.493aa1a9 is pushed and remote-verified; matched QA
+and frozen LAN delivery preserves all projects/settings as recorded below. Root
+remains SOLO. Current owner is workbench03 W1/W2: actual pointer resizing with
+filters/hidden/pinned fields and retained edit state, followed by selected/range
+output. Preserve its same saved Service monitor and unrelated QA/LAN projects.
+Semantic MCP captures the exact revision9 pair and bounded table/binding context,
+builds its own browser application and requests ordinary observing launch. Actual
+desktop pointer resizing retains the exact unfinished supplementary-Unicode edit
+and caret. Filtering to two Running rows and revealing the hidden Command line
+preserve the same draft. Compact pointer resizing and real horizontal scrolling
+retain it as well. The first concrete gap is W1's visible narrow degradation:
+pins correctly suspend, but only a hidden browser attribute explains the state.
+
+The browser adapter now presents an accessible status beside Columns in its
+existing caption. The complete strip follows the real horizontal clip; requested
+pins, fixed widths, authored help and runtime preferences keep their ownership.
+Automatic repinning clears the cue. A meaningful assertion in the existing full
+consumer fails on the original adapter. The first repair stretches fixed columns
+through caption intrinsic sizing; both failed results are retained. Limiting the
+strip's explicit width to the actual suspended state repairs that failure without
+changing any test tolerance. Full browser regression passes1490 at1280x720 and1489
+at390x900. All-hidden manager recovery, arrangement, edit/query coexistence and
+existing command/lifetime checks remain in that same consumer. Native checked
+compilation succeeds with zero warnings; native behavior is not rerun or credited
+for this browser-only change. Installed Classes browser warnings are separate.
+
+The same current-source MCP-built saved application mounts in ordinary Studio.
+Actual pointer input changes Service160 to200 at desktop, then200 to240 at compact
+width. Running filter, revealed Command line, horizontal scroll390 and the exact
+Gateway draft plus moon scalar retain caret16 and editing focus. The cue and
+Columns stay visible while scrolling, then the cue clears at desktop width and
+the draft/focus remain exact. These are browser viewport emulations, not physical
+phone or assistive-technology qualification. Screenshots and failure/pass receipts
+are retained in table-pointer-return-01 on external scratch; all owned TEMP/TMP
+also use the configured external path. No new host or permission is introduced.
+
+Independent semantic export retains the exact13555-byte revision9 project pair;
+its SHA256 remains55B8676F7694B40C3E6C1BA592797E402292FF3D91D774120E31833C165F7BD2.
+Selection/view, draft absence and history availability are unchanged. The original
+output fingerprint and all four disabled runtime services remain exact. No other
+project/settings or LAN payload is edited. Browser viewport overrides are reset;
+the owned QA application keeps its unfinished runtime draft for the W2 return.
+Both manual TSV saves from the earlier accepted output-host journey remain present;
+their accepted results are not counted again. Compiler and test owners are joined.
+
+Next: the same workbench's selected-record/cell-range output and peer independence,
+using its existing output choices and original W2 criteria. Stop further caption/
+hint/geometry variants. This bounded repair accepts no complete parent criterion,
+task or north-star percentage. Physical/AT, complete target/performance, full
+native shared-provider and original workbench criteria remain open.
+
+## Previous checkpoint — Studio named Save/Open authoring return — 2026-10-30
 
 Previous goal turn: PROGRESS.51bbdb81 is pushed and remote-verified. Packaging's
 scratch, shared inventory and embedded-glyph repairs now compile/seal the complete

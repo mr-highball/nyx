@@ -2871,6 +2871,41 @@ var
       (LButtonBounds.right <= LTableBounds.left + LClip.clientLeft + LClip.clientWidth + 1),
       'column manager launcher remains inside the visible table scrollport');
   end;
+
+  { The suspension cue is ordinary visible content in the actual scrollport,
+    not merely a diagnostic attribute. Its caption must remain reachable with
+    the manager while the intrinsic table is wider than its allocated viewport. }
+  procedure PinStatusVisible(ASuspended: Boolean);
+  var
+    LStatus: TJSHTMLElement;
+    LClip: TJSHTMLElement;
+    LBounds: TJSDOMRect;
+    LClipBounds: TJSDOMRect;
+  begin
+    LStatus := TJSHTMLElement(LTable.querySelector('[data-nyx-column-status]'));
+    Check(LStatus <> nil, 'actual table owns an accessible column status');
+    Check(LStatus.getAttribute('role') = 'status',
+      'column status exposes changes without taking editing focus');
+
+    if ASuspended then
+    begin
+      Check(LStatus.textContent = 'Pinned columns are scrolling at this width.',
+        'suspended pins explain their temporary scrolling behavior');
+      LClip := ScrollSurface(LTable);
+      LBounds := LStatus.getBoundingClientRect;
+      LClipBounds := LClip.getBoundingClientRect;
+      Check((LBounds.width > 0) and (LBounds.height > 0) and
+        (LBounds.left >= LClipBounds.left + LClip.clientLeft - 1) and
+        (LBounds.right <= LClipBounds.left + LClip.clientLeft + LClip.clientWidth + 1),
+        'suspended-pin explanation remains inside the real horizontal clip');
+    end
+    else
+    begin
+      Check((LStatus.textContent = '') and (LStatus.getBoundingClientRect.width = 0),
+        'effective pins clear and hide their temporary suspension explanation');
+    end;
+    LauncherReachable;
+  end;
   {$endif}
 
   procedure PaintedWidth(const AField: TNyxColumnIdentity; AWidth: Integer);
@@ -3736,6 +3771,7 @@ begin
     {$ifdef PAS2JS}
     Check(LTable.getAttribute('data-nyx-pins-suspended') = 'true',
       'actual compact horizontal clip suspends oversized pins as one group');
+    PinStatusVisible(True);
     {$else}
     Check(Pos('Pinned columns are scrolling at this width.', TNyxText(LGrid.Hint)) > 0,
       'actual compact native allocation exposes the suspended-pin explanation');
@@ -3748,6 +3784,7 @@ begin
     {$ifdef PAS2JS}
     Check(LTable.getAttribute('data-nyx-pins-suspended') = 'false',
       'actual wide horizontal clip retains both effective pin edges');
+    PinStatusVisible(False);
     {$else}
     Check(Pos('Pinned columns are scrolling at this width.', TNyxText(LGrid.Hint)) = 0,
       'actual wide native allocation retains both effective pin edges');

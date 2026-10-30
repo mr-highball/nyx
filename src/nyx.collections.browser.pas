@@ -592,7 +592,8 @@ type
 
   { Owns projected collection rows and pending layout commands while borrowing
     its host DOM. Input envelopes retain this exact mount through synchronous
-    callbacks; terminal detachment revokes their authority before DOM removal. }
+    callbacks; terminal detachment revokes their authority before DOM removal.
+    Caption actions and live column status belong to that same DOM lifetime. }
   TBrowserMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
@@ -622,6 +623,11 @@ type
     { A permanent caption survives an empty visible-column map. Opening focus
       suppresses only its own synchronous blur/change noise, not later edits. }
     FColumnLauncher: TJSHTMLElement;
+    { Host-owned caption children, borrowed by this mount. The action strip
+      follows the real horizontal clip, so transient pin help and its recovery
+      command remain visible without changing authored help or column choices. }
+    FColumnBar: TJSHTMLElement;
+    FColumnStatus: TJSHTMLElement;
     FOpeningColumnManager: Boolean;
     FCellPresentationDepth: Integer;
     FColumnManagerSerial: Integer;
@@ -5302,6 +5308,23 @@ begin
       LCaption := NewElement('caption');
       LCaption.style.setProperty('text-align', 'end');
       LCaption.style.setProperty('padding', '6px');
+      FColumnBar := NewElement('span');
+      FColumnBar.style.setProperty('display', 'inline-flex');
+      FColumnBar.style.setProperty('align-items', 'center');
+      FColumnBar.style.setProperty('justify-content', 'flex-end');
+      FColumnBar.style.setProperty('gap', '8px');
+      FColumnBar.style.setProperty('max-width', '100%');
+      FColumnStatus := NewElement('span');
+      FColumnStatus.setAttribute('data-nyx-column-status', '');
+      FColumnStatus.setAttribute('role', 'status');
+      FColumnStatus.style.setProperty('display', 'none');
+      FColumnStatus.style.setProperty('flex', '1 1 0');
+      FColumnStatus.style.setProperty('min-width', '0');
+      FColumnStatus.style.setProperty('text-align', 'start');
+      FColumnStatus.style.setProperty('white-space', 'normal');
+      FColumnStatus.style.setProperty('overflow-wrap', 'anywhere');
+      FColumnStatus.style.setProperty('font-size', '0.85em');
+      FColumnBar.appendChild(FColumnStatus);
       FColumnLauncher := NewElement('button');
       FColumnLauncher.setAttribute('type', 'button');
       FColumnLauncher.className := 'nyx-button';
@@ -5313,14 +5336,16 @@ begin
       FColumnLauncher.style.setProperty('padding', '6px 12px');
       FColumnLauncher.style.setProperty('border-radius', '6px');
       FColumnLauncher.style.setProperty('cursor', 'pointer');
+      FColumnLauncher.style.setProperty('flex', '0 0 auto');
       { The caption spans the complete intrinsic table. Keep its end-aligned
         action inside the table's horizontal scrollport as columns widen or
         scroll; otherwise a manager command can move its own anchor out of view.
         The caption/launcher also survives an empty visible-column map. }
-      FColumnLauncher.style.setProperty('position', 'sticky');
-      FColumnLauncher.style.setProperty('inset-inline-end', '6px');
+      FColumnBar.style.setProperty('position', 'sticky');
+      FColumnBar.style.setProperty('inset-inline-end', '6px');
       FColumnLauncher.addEventListener('pointerdown', @ColumnLauncherPointer);
-      LCaption.appendChild(FColumnLauncher);
+      FColumnBar.appendChild(FColumnLauncher);
+      LCaption.appendChild(FColumnBar);
       FHost.appendChild(LCaption);
     end;
     LHeader := NewElement('thead');
@@ -6957,6 +6982,29 @@ begin
     FColumnLayoutSerial := FColumnLayout.Serial;
     FHost.setAttribute('data-nyx-pins-suspended',
       LowerCase(BoolToStr(FColumnPresentation.PinsSuspended, True)));
+    { Use the allocator's effective state rather than inferring pin behavior
+      from authored widths. Updating only a caption keeps live editors, caret,
+      row identities and caller help intact. No runtime preference is written. }
+
+    if FColumnPresentation.PinsSuspended then
+    begin
+      { Suspended pins already require more than the clip's width. Only that
+        state may widen this caption strip: a full-width caption on a smaller
+        table would make browser table layout stretch the caller's fixed cells. }
+      FColumnBar.style.setProperty('width', IntToStr(Max(1, LAvailable - 12)) + 'px');
+
+      if FColumnStatus.textContent = '' then
+      begin
+        FColumnStatus.style.removeProperty('display');
+        FColumnStatus.textContent := 'Pinned columns are scrolling at this width.';
+      end;
+    end
+    else
+    begin
+      FColumnBar.style.removeProperty('width');
+      FColumnStatus.textContent := '';
+      FColumnStatus.style.setProperty('display', 'none');
+    end;
   end
   else
   begin
