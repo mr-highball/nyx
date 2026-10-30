@@ -639,6 +639,7 @@ type
     procedure SynchronizeRecovery;
   protected
     procedure RefreshTargetIdle; override;
+    procedure RecoveryMembershipChanged(const AObservation: TNyxDraftRecoveryObservation); override;
   private
     FOpeningColumnManager: Boolean;
     FCellPresentationDepth: Integer;

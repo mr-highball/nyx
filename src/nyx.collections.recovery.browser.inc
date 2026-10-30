@@ -7,6 +7,21 @@ begin
   SynchronizeRecovery;
 end;
 
+procedure TBrowserMount.RecoveryMembershipChanged(
+  const AObservation: TNyxDraftRecoveryObservation);
+var
+  LLease: INyxCollectionMount;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if InputLifetimeCurrent and not FUpdating then
+  begin
+    { A capture inside RenderDataset is published by RefreshTargetIdle instead.
+      External discard needs only its caption; live row/editor DOM stays put. }
+    SynchronizeRecovery;
+  end;
+end;
+
 procedure TBrowserMount.SynchronizeRecovery;
 var
   LCount: Integer;

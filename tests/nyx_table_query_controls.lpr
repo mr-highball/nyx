@@ -2371,6 +2371,8 @@ const
   CDraft: TNyxText = 'Recovered 🌙 unfinished';
 var
   LMount: INyxCollectionMount;
+  LInput: INyxCollectionInputAdmission;
+  LCountLifetime: INyxCollectionInputLifetime;
   LEdits: INyxCollectionEditMount;
   LReview: INyxCollectionRecoveryReviewMount;
   LCells: INyxCollectionCellActionsMount;
@@ -2380,6 +2382,8 @@ var
   LSource: INyxCollectionSnapshot;
   LPeer: INyxCollectionSnapshot;
   LFailure: TNyxText;
+  LCountRefresh: Integer;
+  LCountEpoch: Integer;
   LIteration: Integer;
   LDraft: TNyxText;
   LFirstEntry: INyxRecoveredCollectionDraft;
@@ -2401,6 +2405,7 @@ var
   LTarget: INyxLCLPopover;
   LGrid: TStringGrid;
   LEditor: TCustomEdit;
+  LCompositionHandle: HWND;
   {$endif}
 
   procedure ResolveReview;
@@ -2454,7 +2459,8 @@ begin
   LMount := FApp.View.CollectionMount(CArrangementFirst);
   Check(Supports(LMount, INyxCollectionEditMount, LEdits) and
     Supports(LMount, INyxCollectionRecoveryReviewMount, LReview) and
-    Supports(LMount, INyxCollectionCellActionsMount, LCells),
+    Supports(LMount, INyxCollectionCellActionsMount, LCells) and
+    Supports(LMount, INyxCollectionInputAdmission, LInput),
     'ordinary table exposes independent typed edit, recovery and presentation capabilities');
   LActions := LCells.CellActions;
   Check(LActions <> nil, 'renderer configures managed recovery presentation');
@@ -2563,6 +2569,16 @@ begin
     (LJournal.EntryAt(0) = LFirstEntry) and (LJournal.EntryAt(1) = LSecondEntry),
     'navigation closes the old presentation and preserves exact stable journal identities');
   Check(LJournal.Discard(LFirstEntry), 'external explicit discard removes only its exact receipt');
+  {$ifdef PAS2JS}await(UITurn);await(ArrangementFrame);{$else}Pump;Application.Idle(False);Pump;{$endif}
+  {$ifdef PAS2JS}
+  Check(TJSHTMLElement(LTable.querySelector('[data-nyx-recovery-button]')).textContent =
+    'Recovered edits (1)',
+    'external journal discard refreshes the visible browser count without a source refresh');
+  {$else}
+  Check(TNyxCollectionColumnButton(LGrid.FindComponent('NyxRecoveredEditsButton')).Caption =
+    'Recovered (1)',
+    'external journal discard refreshes the visible native count without a source refresh');
+  {$endif}
   ReviewAction(NyxRecoveredEditsPreviousID);
   {$ifdef PAS2JS}await(AwaitRecoveryAction(LActions));{$else}AwaitRecoveryAction(LActions);{$endif}
   CheckReviewText(CDraft + ' second');
@@ -2577,6 +2593,84 @@ begin
     (LJournal.EntryAt(0) = LSecondEntry),
     'recovery inspection preserves accepted data, independent peer, authored defaults and journal ownership');
   LActions.Close;
+  {$ifdef PAS2JS}await(UITurn);await(ArrangementFrame);{$else}Pump;Application.Idle(False);Pump;{$endif}
+  FViews[0].ConfigureQuery(Baseline);
+  FApp.View.Reveal(CArrangementFirst, niRuntime);
+  {$ifdef PAS2JS}await(ArrangementFrame);{$else}Pump;{$endif}
+  LDraft := CDraft + ' live';
+  {$ifdef PAS2JS}
+  LItem := FViews[0].Snapshot.ItemAt(0).Ref;
+  LCell := TJSHTMLElement(LTable.querySelector('tr[data-nyx-item="' + LItem.ID +
+    '"] td[data-nyx-column="0"]'));
+  LCell.focus;
+  LCell.dispatchEvent(TReviewKey.new('keydown', LOptions));
+  await(ArrangementFrame);
+  LEditor := TJSHTMLInputElement(LCell.querySelector('input.nyx-cell-editor'));
+  Check(LEditor <> nil, 'start a new real live edit before discarding an older recovered entry');
+  LEditor.value := LDraft;
+  LEditor.setSelectionRange(1, 4);
+  {$else}
+  LGrid.Col := 0;
+  LGrid.Row := 1;
+  LGrid.SetFocus;
+  SendMessage(LGrid.Handle, WM_KEYDOWN, VK_F2, 0);
+  Pump;
+  Check(LGrid.EditorMode and (LGrid.Editor is TCustomEdit),
+    'start a new real live edit before discarding an older recovered entry');
+  LEditor := TCustomEdit(LGrid.Editor);
+  LEditor.Text := LDraft;
+  LEditor.SelStart := 1;
+  LEditor.SelLength := 3;
+  LCompositionHandle := LEditor.Handle;
+  SendMessage(LCompositionHandle, WM_IME_STARTCOMPOSITION, 0, 0);
+  {$endif}
+  try
+    LCountRefresh := LMount.RefreshCount;
+    LCountLifetime := LInput.GetInputLifetime;
+    LCountEpoch := LCountLifetime.Epoch;
+    Check(LJournal.Discard(LSecondEntry) and (LReview.RecoveredEditCount = 0),
+      'explicit final discard empties the actual journal after review closes');
+    {$ifdef PAS2JS}await(UITurn);await(ArrangementFrame);{$else}Pump;Application.Idle(False);Pump;{$endif}
+    Check((LMount.RefreshCount = LCountRefresh) and
+      (LInput.GetInputLifetime = LCountLifetime) and (LCountLifetime.Epoch = LCountEpoch),
+      'a count-only notification never refreshes rows or replaces original input admission');
+    {$ifndef PAS2JS}
+    Check(TControl(LGrid.FindComponent('NyxRecoveredEditsButton')).Visible and
+      LGrid.EditorMode and (LGrid.Editor = LEditor),
+      'native count presentation waits for composition without closing the live editor');
+    {$endif}
+  finally
+    {$ifndef PAS2JS}
+
+    if IsWindow(LCompositionHandle) then
+    begin
+      SendMessage(LCompositionHandle, WM_IME_ENDCOMPOSITION, 0, 0);
+    end;
+    {$endif}
+  end;
+  {$ifndef PAS2JS}
+  Pump;
+  Application.Idle(False);
+  Pump;
+  {$endif}
+  {$ifdef PAS2JS}
+  LCell := TJSHTMLElement(LTable.querySelector('[data-nyx-recovery-button]'));
+  Check((LCell = nil) or (LCell.getBoundingClientRect.width = 0),
+    'the browser launcher disappears after external final discard with no other editor action');
+  Check(Web.document.body.contains(LEditor) and (Web.document.activeElement = LEditor) and
+    (LEditor.value = LDraft) and (LEditor.selectionStart = 1) and (LEditor.selectionEnd = 4),
+    'browser count presentation preserves the exact live editor, draft, focus and caret');
+  {$else}
+  Check((LGrid.FindComponent('NyxRecoveredEditsButton') = nil) or
+    not TControl(LGrid.FindComponent('NyxRecoveredEditsButton')).Visible,
+    'the native launcher disappears after external final discard with no other editor action');
+  Check(LGrid.EditorMode and (LGrid.Editor = LEditor) and LEditor.Focused and
+    (TNyxText(LEditor.Text) = LDraft) and (LEditor.SelStart = 1) and (LEditor.SelLength = 3),
+    'native deferred count presentation preserves the exact live editor, draft, focus and caret');
+  {$endif}
+  Check((FViews[0].Store.Snapshot = LSource) and (FViews[1].Store.Snapshot = LPeer) and
+    (TNyxCodec.Encode(FDocument) = FAuthored),
+    'live-edit count updates preserve original source data, independent peer and authored defaults');
 end;
 
 procedure TArrangementReview.ColumnManagerCases; {$ifdef PAS2JS}async;{$endif}
@@ -3291,6 +3385,8 @@ var
     LActualCursor: Types.TPoint;
     LDoubleWidth: Integer;
     LDoubleHeight: Integer;
+    LCursorAvailable: Boolean;
+    LCursorError: DWORD;
   {$endif}
   begin
     {$ifdef PAS2JS}
@@ -3308,8 +3404,12 @@ var
     LButton := TButton(LGrid.FindComponent('NyxColumnManagerButton'));
     Check((LButton <> nil) and LButton.Visible and LButton.Enabled,
       'native column launcher remains available independently of visible fields');
-    Check(Windows.GetCursorPos(Windows.POINT(LFormerCursor)),
-      'native launcher captures the caller cursor before physical input');
+    Windows.SetLastError(0);
+    LCursorAvailable := Windows.GetCursorPos(Windows.POINT(LFormerCursor));
+    LCursorError := Windows.GetLastError;
+    Check(LCursorAvailable,
+      'native launcher captures the caller cursor before physical input; Win32 error=' +
+      TNyxText(IntToStr(LCursorError)));
     try
 
       if Windows.GetForegroundWindow <> FApp.Window.Handle then

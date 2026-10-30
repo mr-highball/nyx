@@ -96,6 +96,9 @@ var
   LButton: TNyxCollectionColumnButton;
   LPopup: INyxLCLPopover;
   LMemo: INyxMemo;
+  LEntry: INyxRecoveredCollectionDraft;
+  LReplacement: INyxCollectionMount;
+  LReplacementReview: INyxCollectionRecoveryReviewMount;
 
   { Pinned fields can live in an ordinary child grid. Resolve the saved field's
     actual header face before F2, rather than mistaking the outer spacer for
@@ -225,7 +228,35 @@ begin
     Check(not LReview.OpenRecoveredEdits and (LReview.RecoveredEditCount = 0) and
       (LJournal.EntryAt(0).Cell.Text = CDraft),
       'Retired mounted callbacks cannot reopen review while detached retained text stays readable');
+    LEntry := LJournal.EntryAt(0);
+    { The application contract admits one mount. A fresh application consumes
+      the same unchanged generated document while old data handles stay owned
+      by this check, reproducing a real target replacement without remounting. }
+    FreeAndNil(LApp);
+    LApp := TNyxLCLApplication.Create;
+    LApp.Mount(LDocument);
+    LApp.Window.ClientWidth := AWidth;
+    LApp.Window.ClientHeight := 900;
+    LApp.Window.Show;
+    Pump;
+    LReplacement := LApp.View.CollectionMount(CTable);
+    Check((LReplacement <> LMount) and
+      Supports(LReplacement, INyxCollectionRecoveryReviewMount, LReplacementReview) and
+      (LReplacementReview.RecoveredEditCount = 0),
+      'The same saved application replacement has independent recovery ownership');
+    Check(LJournal.Discard(LEntry) and (LEntry.Cell.Text = CDraft),
+      'An old data reader may explicitly discard its retained entry after replacement');
+    Pump;
+    LGrid := TStringGrid(LApp.View.ControlFor(CTable));
+    Check((LReplacementReview.RecoveredEditCount = 0) and
+      ((LGrid.FindComponent('NyxRecoveredEditsButton') = nil) or
+       not TControl(LGrid.FindComponent('NyxRecoveredEditsButton')).Visible) and
+      (TNyxCodec.Encode(LDocument) = LAuthored),
+      'Retired journal notifications cannot reach the replacement table or alter its authored source');
   finally
+    LReplacementReview := nil;
+    LReplacement := nil;
+    LEntry := nil;
     LPopup := nil;
     LMemo := nil;
     LActions := nil;

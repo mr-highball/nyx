@@ -3,6 +3,14 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Ordinary recovered-edit review](NS-3_collection-recovery_01.md) was accepted
+on2026-10-30. Both targets expose detached exact text, bounded stable navigation,
+fresh journal counts and explicit-host raw Copy. Full browser1545/1544, focused
+native56/56 and the same generated native application20/20 retain exact live
+draft/caret and replacement isolation, with clean heaps. Saved pairs/output
+choices remain exact. Full table workflows and the separate native cursor-input
+gate remain open; the prerequisite adds no separate completion credit.
+
 [Generated table output hosts](NS-4_table-output-hosts_01.md) was accepted
 on 2026-10-29. Independent typed local choices, exact old profile meanings,
 ordinary Outputs and eight real saved-application builds feed generated services.

@@ -24,6 +24,15 @@ are a checkpoint; its remaining scale/parity work is parked with an explicit
 return path. The resolver remains deferred. Existing scope, prerequisites,
 original acceptance criteria and pending completion assessments are unchanged.
 
+Ordinary [recovered-edit review](TODO/DONE/NS-3_collection-recovery_01.md) is
+accepted on2026-10-30 for detached exact presentation, bounded navigation,
+explicit-host raw Copy, fresh counts and retired-owner isolation. Both targets
+exercise the same saved Service monitor at wide/compact widths with exact paired
+project/configuration preservation and clean native heaps. The separate full
+native cursor-input gate remains open. Return to W2 selected/cell-range output
+and peer independence. This prerequisite adds no separate credit; NS-3 and overall
+completion remain Pending assessment under the original workbench/parity scope.
+
 [Embedded popover visibility](TODO/DONE/NS-2_popover-viewport_01.md) is accepted
 on2026-10-29. The original clipping failure is reproduced and repaired; desktop/
 compact nested geometry, existing browser/native interaction and the same saved

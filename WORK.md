@@ -11,11 +11,13 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Table pointer and selection return — 2026-10-30
 
-Current prerequisite: [collection recovery01](TODO/NS-3_collection-recovery_01.md).
-The original table W2 return remains its owner; Root continues SOLO. The previous
-goal turn is PROGRESS:b1d170a9 added the detached review compound and prerequisite.
-The current integration uses table-recovery-entry-01 on external scratch, without
-changing either listener or the LAN payload.
+Accepted prerequisite: [collection recovery01](TODO/DONE/NS-3_collection-recovery_01.md).
+Return to [table workbench03 W2](TODO/NS-3_control-usefulness_03.md): selected/cell-range
+transfer and independent table-instance behavior in the same Service monitor.
+Root continues SOLO.43de43c7 supplied ordinary managed review; the current
+table-recovery-count-01 qualification closes its count-freshness gap without
+changing either fixed listener or the LAN payload. Original workbench acceptance
+and goal percentages remain unchanged; the prerequisite has no separate credit.
 
 Ordinary disabled-host Copy gives an explicit refusal, while full command-line
 inspection shows the exact untruncated raw text. After enabling only the existing
@@ -112,13 +114,64 @@ MCP compiles, launches and exports the saved pair; ephemeral runtime recovery is
 qualified by the actual input consumers, not an invented semantic journal read.
 All owned compiler/runtime readers are joined. No task/criterion/percentage closes.
 
-Next check visible toolbar-count freshness after deliberate external journal
-discard/reload; the existing navigation test proves stable-entry refusal and
-fresh panel content but does not assert that background count. Resolve that
-criterion before accepting recovery01 and returning to W2. Retain the existing
-full native cursor failure and honest physical/AT/performance limits. Preserve
-exact paired projects, output choices and both fixed listeners. Stop equivalent
-model/capture variants; no task/criterion/percentage closes here.
+The current count return revalidates the exact revision9 session and preserves
+the unrelated operator edits. A meaningful added assertion shows the native
+caption remains stale after an external exact discard; its failed run frees
+all490326 blocks. The first browser navigation count passes, but the quiet
+closed-panel/final-discard case fails: its empty journal leaves the old launcher
+visible. Both failures are retained. Neither listener is restarted. The repair
+exposes optional writer-owned membership observations with borrowed,
+disconnectable receivers. The data reader cannot acquire capture/subscription
+authority; retirement detaches the notification channel while retained entries
+remain inert. Mounts update only caption/header presentation; busy native input
+defers through its existing idle boundary. No row/source refresh or polling loop
+stands in for the missing invalidation.
+
+### Collection recovery review accepted — 2026-10-30
+
+All five unchanged scoped criteria pass, combining43de43c7 and the current
+count-freshness repair. Final full browser query/arrangement checks pass1545 at1280
+and1544 at390. Focused native real-control checks pass56 per width, freeing
+all604265 blocks each. Exact live editor identity, Unicode draft, focus/caret,
+input lifetime/epoch and row refresh count survive final external discard.
+Native synthetic composition defers only the caption work until its ordinary
+idle boundary. Observer ownership/failure checks pass44 native/45 browser;
+native frees all232 blocks. Detached model-mounted checks pass38 on both targets,
+with all39020 native blocks freed. Independent receivers still run after a
+Unicode/foreign browser failure; last-token release and retirement during delivery
+revoke borrowed callbacks. The data reader cannot acquire the writer facet.
+
+The unchanged saved Service monitor consumer passes20 at1280 and20 at390,
+freeing all826253/826163 blocks. Old journal discard cannot affect its fresh
+replacement application. The one-mount application contract remains unchanged;
+the initial attempted remount failure is retained. Final native consumers have
+zero compiler warnings. The browser has no owned warnings; seven installed RTL
+Classes case warnings remain separate. Earlier syntax/setup failures are retained.
+The complete native query consumer still stops at its original physical cursor
+gate, now reporting Win32 error5 (access denied), before that pointer action;
+all7425107 blocks are freed. No assertion, deadline or physical-input gate is
+removed or relaxed. Focused checks do not claim that broader gate passed.
+
+Authenticated semantic MCP rebuilds/launches the same original-profile browser
+application. Its observed artifact is job-1C46AA95-948C-48B2-A524-4BEF9C80EEDE,
+with the unchanged7288-byte source fingerprint10ad448099499de2d1262e851067d77a.
+The observing Studio reconnects after a transient compile-load timeout and
+actually mounts its four accepted rows with no test draft/dialog. Independent
+bounded export retains the exact13555-byte pair and SHA256
+55B8676F7694B40C3E6C1BA592797E402292FF3D91D774120E31833C165F7BD2.
+Revision9, selection/view, pending-draft absence, Undo/Redo and output fingerprint
+da83d63c57383b9aa777fcaf3c2b8a3c remain exact; all four runtime services stay
+disabled. Previous actual wide/compact raw-Copy checks and original clipboard
+restoration remain applicable to the unchanged copy path. No other project or
+listener is modified. All owned compiler/test readers are joined; temporary tabs
+are closed and viewport overrides reset. Private evidence is in
+table-recovery-entry-01 and table-recovery-count-01 on external scratch.
+
+Acceptance is limited to ordinary inert recovery review. Full table workflows,
+physical/assistive input, production performance and broader parity remain open.
+Next bounded W2 action: qualify selected cell-range transfer, hidden selected
+rows/page scope and peer independence through existing managed commands in the
+same saved workbench. Stop equivalent recovery/model/capture variants.
 
 ### Previous pointer checkpoint
 

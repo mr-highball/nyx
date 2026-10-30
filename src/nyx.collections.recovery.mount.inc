@@ -17,6 +17,7 @@ function TNyxCollectionMountBase.GetDraftRecovery: INyxCollectionDraftRecovery;
 var
   LWriter: INyxCollectionDraftRecoveryWriter;
   LBudget: INyxCollectionDraftRecoveryBudget;
+  LChanges: INyxCollectionDraftRecoveryChanges;
 begin
 
   if FRecoveryWriter = nil then
@@ -36,6 +37,13 @@ begin
     if (FView = nil) or FDisconnecting then
     begin
       FRecoveryWriter.Retire;
+    end
+    else if Supports(LWriter, INyxCollectionDraftRecoveryChanges, LChanges) then
+    begin
+      { The writer borrows this receiver only while its mount-owned token is
+        connected. Disconnect revokes it before any target/receiver teardown. }
+      FRecoverySubscription := LChanges.Subscribe(
+        {$ifdef PAS2JS}@{$endif}RecoveryMembershipChanged);
     end;
   end;
   Result := FRecoveryWriter.Recovery;

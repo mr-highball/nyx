@@ -25,7 +25,7 @@ program nyx_collection_recovery_tests;
 
 uses SysUtils, nyx.text, nyx.state, nyx.editing, nyx.bytes, nyx.collections,
   nyx.collections.arrangement, nyx.collections.edits, nyx.collections.recovery
-  {$ifdef PAS2JS}, Web{$endif};
+  {$ifdef PAS2JS}, Web, JS{$endif};
 
 const
   CExact: TNyxText = 'A moon 🌙' + #0 + #13#10 + 'unfinished tail';
@@ -40,6 +40,188 @@ begin
   if not AValue then
   begin
     raise Exception.Create(AReason);
+  end;
+end;
+
+type
+  { Borrowed notification receiver exercises committed membership, mutation
+    refusal and sibling delivery. Its journal reference owns data only; tokens
+    are disconnected before this receiver is freed. Browser raw failure is a
+    deliberate foreign throw, not a platform/UI dependency. }
+  TRecoveryProbe = class
+  public
+    Calls: Integer;
+    Last: TNyxDraftRecoveryObservation;
+    Journal: INyxCollectionDraftRecovery;
+    TryMutation: Boolean;
+    MutationRefused: Boolean;
+    Fail: Boolean;
+    RawFailure: Boolean;
+    { Kept only until a callback explicitly retires its capture owner. The
+      channel borrows this receiver and therefore cannot form a cycle. }
+    RetireWriter: INyxCollectionDraftRecoveryWriter;
+    procedure Changed(const AObservation: TNyxDraftRecoveryObservation);
+  end;
+
+procedure TRecoveryProbe.Changed(const AObservation: TNyxDraftRecoveryObservation);
+begin
+  Inc(Calls);
+  Last := AObservation;
+
+  if RetireWriter <> nil then
+  begin
+    RetireWriter.Retire;
+    RetireWriter := nil;
+  end;
+
+  if TryMutation then
+  begin
+    try
+      Journal.ConfigureWarnings(NyxDraftRecoveryWarnings.Entries(1));
+    except
+      on ENyxCollection do
+      begin
+        MutationRefused := True;
+      end;
+    end;
+  end;
+
+  if Fail then
+  begin
+    raise ENyxCollection.Create('Recovery receiver 🌙 failed');
+  end;
+  {$ifdef PAS2JS}
+
+  if RawFailure then
+  begin
+    asm throw undefined; end;
+  end;
+  {$endif}
+end;
+
+{ Observing the capture writer never lends subscription/capture authority to
+  retained readers. Explicit data mutations notify after admission, independently
+  of widgets and with the same borrowed-token discipline as ordinary stores. }
+procedure ObservationChecks;
+const
+  CFailure: TNyxText =
+    'Recovery membership committed; observer failed: Recovery receiver 🌙 failed';
+var
+  LWriter: INyxCollectionDraftRecoveryWriter;
+  LJournal: INyxCollectionDraftRecovery;
+  LChanges: INyxCollectionDraftRecoveryChanges;
+  LForbidden: INyxCollectionDraftRecoveryChanges;
+  LFirstToken: INyxCollectionSubscription;
+  LSecondToken: INyxCollectionSubscription;
+  LFirst: TRecoveryProbe;
+  LSecond: TRecoveryProbe;
+  LCell: TNyxCollectionCellEdit;
+  LEntry: INyxRecoveredCollectionDraft;
+  LRefused: Boolean;
+  LFailureText: TNyxText;
+  LBeforeRetireCalls: Integer;
+  {$ifndef PAS2JS}LFailureBytes: RawByteString;{$endif}
+  {$ifdef PAS2JS}
+  LRawFailed: Boolean;
+  LBeforeCalls: Integer;
+  {$endif}
+begin
+  LFirst := TRecoveryProbe.Create;
+  LSecond := TRecoveryProbe.Create;
+  try
+    LWriter := NewNyxCollectionDraftRecovery;
+    LJournal := LWriter.Recovery;
+    Check(Supports(LWriter, INyxCollectionDraftRecoveryChanges, LChanges) and
+      not Supports(LJournal, INyxCollectionDraftRecoveryChanges, LForbidden),
+      'only the capture writer can register borrowed membership observers');
+    LFirst.Journal := LJournal;
+    LFirst.TryMutation := True;
+    LFirstToken := LChanges.Subscribe({$ifdef PAS2JS}@{$endif}LFirst.Changed);
+    LSecondToken := LChanges.Subscribe({$ifdef PAS2JS}@{$endif}LSecond.Changed);
+    LCell := NyxCollectionCellEdit(NyxItem(NyxCollection('services'), 'gateway'),
+      NyxColumnIdentity(NyxTextField('notes')), TNyxStateValue.FromText('Accepted'),
+      CExact, NyxTextSelection(CExact, 1, 9), False, False);
+    LEntry := LWriter.Preserve(LCell, ncdlHidden, 1, 2);
+    Check((LFirst.Calls = 1) and (LSecond.Calls = 1) and
+      (LFirst.Last.Count = 1) and (LSecond.Last.Revision = LJournal.Capture.Revision) and
+      LFirst.MutationRefused and (LJournal.EntryAt(0) = LEntry),
+      'observers see committed membership while reentrant journal mutation refuses');
+    LFirst.TryMutation := False;
+    LFirst.Fail := True;
+    LRefused := False;
+    LFailureText := '';
+    try
+      LJournal.Discard(LEntry);
+    except
+      on E: ENyxCollectionNotification do
+      begin
+        LRefused := True;
+        {$ifdef PAS2JS}
+        LFailureText := E.Message;
+        {$else}
+        LFailureBytes := RawByteString(E.Message);
+        SetCodePage(LFailureBytes, CP_UTF8, False);
+        LFailureText := TNyxText(LFailureBytes);
+        {$endif}
+      end;
+    end;
+    Check(LRefused and (LJournal.Capture.Count = 0) and (LSecond.Calls = 2) and
+      (LSecond.Last.Count = 0) and
+      (LFailureText = CFailure),
+      'a committed observer failure preserves exact Unicode and never skips independent receivers');
+    LFirstToken.Disconnect;
+    LWriter.Preserve(LCell, ncdlHidden, 2, 3);
+    Check(not LFirstToken.Connected and (LFirst.Calls = 2) and (LSecond.Calls = 3),
+      'disconnecting one token revokes only that borrowed callback');
+    LSecondToken := nil;
+    LWriter.Preserve(LCell, ncdlHidden, 3, 4);
+    Check(LSecond.Calls = 3, 'last-token release disconnects without the channel retaining it');
+    LSecondToken := LChanges.Subscribe({$ifdef PAS2JS}@{$endif}LSecond.Changed);
+    LChanges := nil;
+    LWriter := nil;
+    Check(not LSecondToken.Connected and not LJournal.Capture.Active and
+      LJournal.Discard(LJournal.EntryAt(0)) and (LSecond.Calls = 3),
+      'writer destruction detaches all callbacks while retained data remains explicitly discardable');
+    {$ifdef PAS2JS}
+    LWriter := NewNyxCollectionDraftRecovery;
+    LJournal := LWriter.Recovery;
+    Supports(LWriter, INyxCollectionDraftRecoveryChanges, LChanges);
+    LFirst.Fail := False;
+    LFirst.RawFailure := True;
+    LFirstToken := LChanges.Subscribe(@LFirst.Changed);
+    LSecondToken := LChanges.Subscribe(@LSecond.Changed);
+    LBeforeCalls := LSecond.Calls;
+    LRawFailed := False;
+    try
+      LWriter.Preserve(LCell, ncdlHidden, 4, 5);
+    except
+      LRawFailed := isUndefined(JSExceptValue);
+    end;
+    Check(LRawFailed and (LJournal.Capture.Count = 1) and
+      (LSecond.Calls = LBeforeCalls + 1),
+      'a raw undefined observer failure stays exact after other browser observers run');
+    {$endif}
+    LWriter := NewNyxCollectionDraftRecovery;
+    LJournal := LWriter.Recovery;
+    Supports(LWriter, INyxCollectionDraftRecoveryChanges, LChanges);
+    LFirst.Fail := False;
+    LFirst.RawFailure := False;
+    LFirst.RetireWriter := LWriter;
+    LFirstToken := LChanges.Subscribe({$ifdef PAS2JS}@{$endif}LFirst.Changed);
+    LSecondToken := LChanges.Subscribe({$ifdef PAS2JS}@{$endif}LSecond.Changed);
+    LBeforeRetireCalls := LSecond.Calls;
+    LEntry := LWriter.Preserve(LCell, ncdlHidden, 5, 6);
+    Check(not LFirstToken.Connected and not LSecondToken.Connected and
+      not LJournal.Capture.Active and (LJournal.EntryAt(0) = LEntry) and
+      (LSecond.Calls = LBeforeRetireCalls),
+      'retirement inside a notification revokes remaining callbacks without losing the committed entry');
+  finally
+    LFirstToken := nil;
+    LSecondToken := nil;
+    LChanges := nil;
+    LWriter := nil;
+    LFirst.Free;
+    LSecond.Free;
   end;
 end;
 
@@ -288,6 +470,7 @@ begin
   try
     Run;
     BudgetChecks;
+    ObservationChecks;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-recovery-checks', IntToStr(GChecks));
     {$else}

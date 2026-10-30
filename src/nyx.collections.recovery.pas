@@ -175,6 +175,26 @@ type
     property Recovery: INyxCollectionDraftRecovery read GetRecovery;
   end;
 
+  { UI-owner notification after an admitted insertion or explicit discard.
+    The bounded value describes committed membership. Receivers are borrowed;
+    retain/disconnect their token before freeing them. Read-only entry access
+    is safe inside a callback; journal mutation and new subscriptions refuse.
+    Disconnect and writer retirement remain safe during notification. }
+  TNyxDraftRecoveryObserver = procedure(
+    const AObservation: TNyxDraftRecoveryObservation) of object;
+
+  { Optional capture-writer capability; a readonly journal cannot acquire it.
+    Tokens use the ordinary collection subscription lifetime and borrow this
+    writer's independent channel. Last-token release disconnects. Retirement
+    silently detaches every receiver before clearing the journal's borrowed
+    channel, so retained data/entries own no notification or UI resources.
+    All live receivers see one committed observation even after a sibling fails;
+    Pascal failure reports ENyxCollectionNotification after commit. }
+  INyxCollectionDraftRecoveryChanges = interface(IInterface)
+    ['{6E875E9B-BCE6-4EA9-941F-44344060335A}']
+    function Subscribe(AObserver: TNyxDraftRecoveryObserver): INyxCollectionSubscription;
+  end;
+
   { Opaque identity for one physical recovery pass and its retries. Only the
     factory creates its private inert marker; copying retains no snapshot,
     store, control or executable callback. Undefined is never a scoped frame.
@@ -243,9 +263,40 @@ function NewNyxCollectionDraftRecovery: INyxCollectionDraftRecoveryWriter;
 
 implementation
 
-uses SysUtils, nyx.bytes, nyx.text, nyx.state, nyx.collections.recovery.policy;
+uses SysUtils, nyx.bytes, nyx.text, nyx.state, nyx.collections.recovery.policy
+  {$ifdef PAS2JS}, JS{$endif};
 
 type
+  { Writer-owned channel, completed below. The journal borrows it only until
+    retirement; neither the channel nor its tokens owns a callback receiver. }
+  TRecoveryChanges = class;
+  { Caller-owned observation lease. Its owner pointer is borrowed and cleared
+    before channel destruction, so a retained token cannot keep a writer alive. }
+  TRecoverySubscription = class(TInterfacedObject, INyxCollectionSubscription)
+  private
+    FOwner: TRecoveryChanges;
+    FObserver: TNyxDraftRecoveryObserver;
+  public
+    destructor Destroy; override;
+    function GetConnected: Boolean;
+    procedure Disconnect;
+  end;
+  { Independent UI-only membership channel. Its raw token directory never
+    extends token/receiver lifetime; entered notification takes local leases.
+    No journal, source, mount, widget or capture writer is retained. }
+  TRecoveryChanges = class(TInterfacedObject)
+  private
+    FActive: Boolean;
+    FNotifying: Boolean;
+    FTokens: array of TRecoverySubscription;
+    procedure Remove(AToken: TRecoverySubscription);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function Subscribe(AObserver: TNyxDraftRecoveryObserver): INyxCollectionSubscription;
+    procedure Publish(const AObservation: TNyxDraftRecoveryObservation);
+    procedure Stop;
+  end;
   { Owns exact review data and an inert frame marker; no target/source/callback
     survives through this receipt. Cell getters detach managed scalar records. }
   TPendingDraft = class(TInterfacedObject, INyxPendingCollectionDraft)
@@ -280,7 +331,8 @@ type
 
   { Data owner has no pointer back to its capture writer or any physical target.
     Hard admission bounds its entries and all retained text/provenance. Refusal
-    retains only scalar diagnostics. Last-entry release invokes no callback. }
+    retains only scalar diagnostics. The writer's borrowed notification channel
+    is detached before retirement. Last-entry release invokes no callback. }
   TJournal = class(TInterfacedObject, INyxCollectionDraftRecovery,
     INyxCollectionDraftRecoveryBudget)
   private
@@ -295,8 +347,10 @@ type
     FRefusal: TNyxDraftRecoveryPressure;
     FRequiredBytes: Integer;
     FRequiredSaturated: Boolean;
+    FChanges: TRecoveryChanges;
     procedure RequireRevision;
     procedure ClearRefusal;
+    procedure NotifyMembership;
   public
     constructor Create;
     function Capture: TNyxDraftRecoveryObservation;
@@ -312,16 +366,20 @@ type
   end;
 
   { Only this private writer can add or retire. The public data interface owns
-    the journal; its raw class address is borrowed while that interface lives. }
+    the journal; its raw class address is borrowed while that interface lives.
+    The independent notification channel belongs to this writer only. }
   TWriter = class(TInterfacedObject, INyxCollectionDraftRecoveryWriter,
-    INyxCollectionDraftRecoveryScopedWriter)
+    INyxCollectionDraftRecoveryScopedWriter, INyxCollectionDraftRecoveryChanges)
   private
     FRecovery: INyxCollectionDraftRecovery;
     FJournal: TJournal;
+    FChanges: TRecoveryChanges;
+    FChangesLease: IInterface;
   public
     constructor Create;
     destructor Destroy; override;
     function GetRecovery: INyxCollectionDraftRecovery;
+    function Subscribe(AObserver: TNyxDraftRecoveryObserver): INyxCollectionSubscription;
     function Preserve(const ACell: TNyxCollectionCellEdit;
       AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer):
       INyxRecoveredCollectionDraft;
@@ -330,6 +388,8 @@ type
       const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
     procedure Retire;
   end;
+
+{$include nyx.collections.recovery.changes.inc}
 
 constructor TPendingDraft.Create(const ACell: TNyxCollectionCellEdit;
   const AFrame: TNyxDraftRecoveryFrame);
@@ -611,6 +671,11 @@ end;
 procedure TJournal.RequireRevision;
 begin
 
+  if (FChanges <> nil) and FChanges.FNotifying then
+  begin
+    raise ENyxCollection.Create('Recovery membership cannot change during notification');
+  end;
+
   if FRevision = High(Integer) then
   begin
     raise ENyxCollection.Create('The recovery journal revision is exhausted');
@@ -676,6 +741,7 @@ begin
       SetLength(FEntryBytes, Length(FEntryBytes) - 1);
       SetLength(FEntryFrames, Length(FEntryFrames) - 1);
       Inc(FRevision);
+      NotifyMembership;
       Exit(True);
     end;
   end;
@@ -796,10 +862,14 @@ begin
   FRequiredSaturated := False;
   Inc(FRevision);
   Result := LEntry;
+  NotifyMembership;
 end;
 
 procedure TJournal.Retire;
 begin
+  { Writer retirement disconnects its channel before the retained data port can
+    outlive that writer. Retired readers may still explicitly discard entries. }
+  FChanges := nil;
 
   if FActive and (FRevision < High(Integer)) then
   begin
@@ -813,6 +883,9 @@ begin
   inherited Create;
   FJournal := TJournal.Create;
   FRecovery := FJournal;
+  FChanges := TRecoveryChanges.Create;
+  FChangesLease := FChanges;
+  FJournal.FChanges := FChanges;
 end;
 
 destructor TWriter.Destroy;
@@ -829,7 +902,10 @@ end;
 function TWriter.Preserve(const ACell: TNyxCollectionCellEdit;
   AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer):
   INyxRecoveredCollectionDraft;
+var
+  LLease: INyxCollectionDraftRecoveryWriter;
 begin
+  LLease := Self;
   Result := FJournal.Preserve(ACell, AReason, ABeforeRevision, AAfterRevision,
     Default(TNyxDraftRecoveryFrame));
 end;
@@ -837,7 +913,10 @@ end;
 function TWriter.PreserveInFrame(const ACell: TNyxCollectionCellEdit;
   AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer;
   const AFrame: TNyxDraftRecoveryFrame): INyxRecoveredCollectionDraft;
+var
+  LLease: INyxCollectionDraftRecoveryWriter;
 begin
+  LLease := Self;
 
   if not AFrame.Defined then
   begin
@@ -848,6 +927,11 @@ end;
 
 procedure TWriter.Retire;
 begin
+
+  if FChanges <> nil then
+  begin
+    FChanges.Stop;
+  end;
 
   if FJournal <> nil then
   begin

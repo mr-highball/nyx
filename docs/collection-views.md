@@ -348,8 +348,8 @@ end;
 
 Declare `LRecovery: INyxCollectionDraftRecovery`,
 `LEntry: INyxRecoveredCollectionDraft` and `LText: TNyxText`. Alternative mounts
-may return nil. The independent data port retains no view, source snapshot,
-renderer, widget, event router or executable callback. Read/capture it on its UI
+may return nil. The independent data port owns no view, source snapshot,
+renderer, widget, event router or callback receiver. Read/capture it on its UI
 owner. Immutable entries may outlive both journal and mount. Each entry retains
 exact text, scalar caret range, typed field, accepted scalar, loss reason and
 before/after source revisions. Its copied cell has no edit/focus authority.
@@ -362,6 +362,24 @@ exact entry interface, so a stale index cannot discard a different user's work.
 Applications should warn before discarding. Retired journals remain readable
 and explicitly discardable; retirement clears `Active` before target teardown
 and refuses further capture. Retaining one entry does not retain its writer.
+
+Capture owners may use the optional `INyxCollectionDraftRecoveryChanges` facet
+on their writer. `Subscribe` accepts a typed `TNyxDraftRecoveryObserver` and
+returns an ordinary `INyxCollectionSubscription`. Receivers are borrowed: keep
+and disconnect their token before freeing them. Last-token release disconnects;
+writer retirement silently detaches all receivers and the journal's borrowed
+notification channel. Retained readers cannot acquire this writer capability,
+and entries/snapshots contain no callbacks.
+
+An admitted insertion or explicit discard sends one bounded committed membership
+observation to every remaining live receiver. Reads, limits/warning changes and
+coalesced retries do not announce another membership change. Journal mutation
+and new subscriptions refuse inside notification; disconnect/retirement remain
+safe. A failing receiver does not skip siblings; a Pascal failure reports
+`ENyxCollectionNotification` after commit. Browser foreign thrown values retain
+their original identity. Ordinary table mounts own one token and update only
+their count presentation. Native busy input defers that work through its existing
+idle boundary, without rebuilding rows or changing accepted input ownership.
 
 `nyx.collections.recovery.controls` provides a reusable detached review card:
 
@@ -396,8 +414,9 @@ the exact raw transfer, which is prepared lazily from the frozen review through
 `NewNyxCollectionRecoveredDraftText`. Existing copy byte limits, original input
 epoch, successful-popover lifetime and write-slot cancellation remain in force.
 No additional resource, file or clipboard authority comes from opening review.
-Full saved-application and target qualification remains with the open
-[recovery review integration](../TODO/NS-3_collection-recovery_01.md).
+Scoped saved-application and target qualification is recorded in the accepted
+[recovery review integration](../TODO/DONE/NS-3_collection-recovery_01.md).
+Full workbench, physical/assistive input and production performance remain open.
 The maintained `nyx_table_recovery_application_controls` native consumer compiles
 beside the unchanged `nyx.generated.view` unit from Studio's Service monitor job.
 It uses the real pinned/compact grid faces and managed popup, retaining the exact

@@ -1,7 +1,7 @@
 # NS-3_collection-recovery_01 — Review recovered table edits through ordinary controls
 
-[North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Table workbench](NS-3_control-usefulness_03.md) · [Task flow](../TASKFLOW.MD)
+[North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
+[Table workbench](../NS-3_control-usefulness_03.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
@@ -19,6 +19,40 @@ Use the existing journal, immutable entry identities, popover/menu ownership and
 explicit clipboard host. Do not create a second draft store, automatic restore,
 implicit discard or new clipboard authority. This is a prerequisite of the
 existing table workbench; it adds no separate completion percentage or credit.
+
+Accepted on2026-10-30 for all five unchanged criteria.43de43c7 implements the
+specialized detached compound and ordinary table launcher/navigation/Copy; the
+following membership-observation repair qualifies deliberate external discard
+without row refresh or input replacement. Both maintained Pascal compiler targets
+and the same saved/generated Service monitor are exercised. Detailed evidence,
+retained failures and exact project/configuration identities are recorded in
+[WORK](../../WORK.md#collection-recovery-review-accepted--2026-10-30).
+
+- Detached model-mounted checks pass38 per target, including supplementary text,
+  NUL/CRLF, raw versus escaped presentation, retirement and lazy represented Copy.
+- Full browser query/arrangement checks pass1545 at1280 and1544 at390; focused
+  native recovery controls pass56 per width. Counts track external discard even
+  while a separate exact live draft/caret remains. Navigation retains captured
+  identities and refuses a stale journal until explicit Reload.
+- Actual saved-application browser review and exact authorized Copy pass at both
+  widths; disabled-host refusal stays visible. The same unchanged generated
+  native application passes20 per width, including replacement/retired callbacks.
+  All native executed checks retain clean heap receipts.
+- Writer-only observer checks pass44 native/45 browser. Borrowed tokens detach
+  on last release or retirement, independent siblings survive a failed receiver,
+  and retained entries remain inert/readable after their source retires.
+- Semantic build/observing launch and independent bounded export preserve the
+  exact revision9 pair, history availability and original local output choices.
+  The final mounted original-profile application has four accepted rows and no
+  test draft. Both fixed listeners and unrelated projects remain unchanged.
+
+The full native query consumer retains its separate original cursor-input failure
+(Win32 access denied before that pointer action), with every allocation freed.
+Focused recovery checks do not waive that gate. Native widget-message and browser
+input evidence do not establish hardware/assistive quality or production latency.
+The parent workbench remains open with its original criteria and no duplicate
+completion credit. Existing explicit discard remains an application-author API;
+this review provides neither automatic restoration nor a destructive UI action.
 
 **Acceptance Criteria:**
 

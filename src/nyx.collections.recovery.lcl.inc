@@ -2,6 +2,41 @@
   Native recovery launcher shares the existing canonical table-toolbar command
   and deferred gesture frame. No native data store or recovery dialog is added. }
 
+function TNativeMount.RecoveryPresentationReady: Boolean;
+begin
+  Result := InputLifetimeCurrent and not FUpdating and not FEditsSuspended and
+    not FDraftRecoveryHeld and not FLayoutGesture and (FColumnFrame <> nil) and
+    not FColumnFrame.Dispatching and not ColumnInputBusy and
+    (FGrid is TNyxCollectionStringGrid) and
+    not TNyxCollectionStringGrid(FGrid).ValidationActive and
+    ((FStartPane = nil) or not FStartPane.Grid.ValidationActive) and
+    ((FEndPane = nil) or not FEndPane.Grid.ValidationActive);
+end;
+
+procedure TNativeMount.RecoveryMembershipChanged(
+  const AObservation: TNyxDraftRecoveryObservation);
+var
+  LLease: INyxCollectionMount;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+  FRecoveryCountPending := True;
+
+  if not FUpdating and not FEditsSuspended and not FDraftRecoveryHeld then
+  begin
+
+    if RecoveryPresentationReady then
+    begin
+      SynchronizeRecovery;
+    end;
+    ArmCellRefreshIdle;
+  end;
+end;
+
 function TNativeMount.PrepareRecoveryButton(Sender: TObject): INyxGridColumnButtonCommand;
 var
   LLease: INyxCollectionMount;
@@ -56,6 +91,7 @@ begin
   begin
     Exit;
   end;
+  FRecoveryCountPending := False;
   LCount := GetRecoveredEditCount;
 
   if not InputLifetimeCurrent or ((LCount = 0) and (FRecoveryButton = nil)) then
@@ -158,6 +194,11 @@ begin
     end;
   finally
     FRecoverySyncing := False;
+
+    if FRecoveryCountPending then
+    begin
+      ArmCellRefreshIdle;
+    end;
     { Deferred native retirement/destruction is the last outward action. }
     LFrame.Leave;
   end;

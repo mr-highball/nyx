@@ -581,6 +581,7 @@ type
     FColumnsButton: TNyxCollectionColumnButton;
     FRecoveryButton: TNyxCollectionColumnButton;
     FRecoverySyncing: Boolean;
+    FRecoveryCountPending: Boolean;
     FColumnsButtonSerial: Integer;
     FColumnToolbarApplied: Boolean;
     FColumnToolbarHeight: Integer;
@@ -609,6 +610,7 @@ type
     function PrepareColumnButtonDraft(Sender: TObject): Boolean;
     procedure SynchronizeColumnsButton;
     procedure SynchronizeRecovery;
+    function RecoveryPresentationReady: Boolean;
     function PrepareRecoveryButton(Sender: TObject): INyxGridColumnButtonCommand;
     procedure RetireColumnsButton;
     procedure PrepareFitButtonFocus(Sender: TObject);
@@ -685,8 +687,8 @@ type
     procedure CellCompositionEnded(Sender: TObject);
     procedure RefreshAfterComposition(AData: PtrInt);
     procedure CellRefreshIdle(Sender: TObject; var ADone: Boolean);
-    { One existing ordinary idle registration serves both deferred cell refresh
-      and resize retirement. It never spins a nested pump or adds a second queue. }
+    { One existing ordinary idle registration serves deferred cell refresh,
+      count presentation and resize retirement. No nested pump or second queue. }
     procedure ArmCellRefreshIdle;
     function ColumnInputBusy: Boolean;
     function InputGrid(ASender: TObject): TStringGrid;
@@ -857,6 +859,7 @@ type
     function DeferTargetRefresh: Boolean; override;
     function DeferComposingRefresh: Boolean; override;
     procedure RefreshTargetIdle; override;
+    procedure RecoveryMembershipChanged(const AObservation: TNyxDraftRecoveryObservation); override;
     procedure RetireTargetInput; override;
     procedure RenderDataset; override;
     procedure DetachTarget; override;
@@ -4919,7 +4922,8 @@ begin
     Exit;
   end;
 
-  if (FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending)) and ((FResizeRequest = nil) or
+  if not FRecoveryCountPending and
+    (FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending)) and ((FResizeRequest = nil) or
     FResizeRequest.Publishing or FResizeQueued or
     not (FResizeRequest.Retired or FResizeReleased)) then
   begin
@@ -4952,6 +4956,24 @@ begin
     RetireColumnResize(LRequest);
   end;
 
+  if FRecoveryCountPending then
+  begin
+
+    if RecoveryPresentationReady then
+    begin
+      SynchronizeRecovery;
+
+      if not InputLifetimeCurrent then
+      begin
+        Exit;
+      end;
+      { Presentation setters may enter callbacks which replace the current
+        resize request. Recapture that exact slot before its ordinary drain. }
+      LRequest := FResizeRequest;
+      LRequestLease := FResizeRequestLease;
+    end;
+  end;
+
   if (LRequest <> nil) and not LRequest.Publishing and not FResizeQueued and
     (LRequest.Retired or FResizeReleased) then
   begin
@@ -4977,6 +4999,13 @@ begin
 
   if FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending) or FCellRefreshQueued then
   begin
+    { A count-only wake must survive composition/entered input without turning
+      into a row refresh. One registration waits for the next ordinary idle. }
+
+    if FRecoveryCountPending and not FDraftRecoveryHeld then
+    begin
+      Exit;
+    end;
     { Queued work now owns its retry. A busy publisher explicitly rearms this
       same registration, even when there will be no later native Activity.Leave. }
     Application.RemoveOnIdleHandler(CellRefreshIdle);

@@ -5,6 +5,14 @@
 
 **Browser pointer return — 2026-10-30:**
 
+The discovered ordinary [recovery review](DONE/NS-3_collection-recovery_01.md)
+prerequisite is accepted. Both targets expose exact detached drafts, stable
+navigation and authorized Copy; external discard refreshes only the count while
+preserving live input. The same saved application and retired replacements pass
+wide/compact checks with clean native heaps. WORK.md retains the separate full
+native physical-cursor failure and broader limits. Resume W2 selected/cell-range
+transfer and peer independence; no original parent criterion or credit closes.
+
 The same saved Service monitor now exercises actual desktop/compact pointer
 resizing, filtering, hidden-column reveal and horizontal scrolling while retaining
 its exact unfinished Unicode edit, caret and focus. W1's missing visible narrow
@@ -853,7 +861,7 @@ needs qualification against the portable contract.
 
 **Blockers**
 
-- [Recovered-edit review](NS-3_collection-recovery_01.md) supplies the missing
+- [Recovered-edit review](DONE/NS-3_collection-recovery_01.md) supplies the missing
   ordinary access to drafts safely journaled when a filter hides an edited row.
 - [Table output hosts](DONE/NS-4_table-output-hosts_01.md) supply the missing generated
   clipboard/export services through existing explicit runtime output choices.

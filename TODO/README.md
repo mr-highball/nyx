@@ -3,10 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-The current table selection/copy return identifies an ordinary recovery-review
-gap under [collection recovery01](NS-3_collection-recovery_01.md). Follow that
-prerequisite before returning to the existing workbench's W2 outcome; it adds no
-separate completion credit and preserves the inert-journal contract.
+Ordinary [recovered-edit review](DONE/NS-3_collection-recovery_01.md) is accepted
+on2026-10-30: detached exact presentation, bounded navigation, authorized raw Copy
+and fresh counts preserve live drafts and retired-owner isolation on both targets.
+Return to the existing workbench's W2 selected/cell-range transfer and independent
+instances in the same saved Service monitor. Full parent criteria remain open;
+this prerequisite adds no separate credit and preserves the inert-journal contract.
 
 ## Current priority — useful everyday workflows — 2026-10-26
 

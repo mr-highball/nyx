@@ -318,6 +318,7 @@ type
     FPositionState: INyxCollectionPositionState;
     FPositionStateObject: TObject; { Borrowed while FPositionState retains it. }
     FRecoveryWriter: INyxCollectionDraftRecoveryWriter;
+    FRecoverySubscription: INyxCollectionSubscription;
     { Captured authored defaults apply only when this mount creates its own
       journal. Later runtime overrides are never reset by source refreshes. }
     FRecoveryPolicy: TNyxCollectionDraftRecoveryPolicy;
@@ -535,6 +536,10 @@ type
       shields. A native target may arm its existing idle handler here, including
       an early composition-deferred return. This is not a final-ready fence. }
     procedure RefreshTargetIdle; virtual;
+    { Bounded membership notification updates presentation only. A target may
+      defer while its existing physical input frame is busy; never Refresh the
+      view or change source/selection merely to update a journal caption. }
+    procedure RecoveryMembershipChanged(const AObservation: TNyxDraftRecoveryObservation); virtual;
     { Admit target observation before the first authored/runtime presentation
       pass. A target may refuse unsupported direct mounts; failure does not
       claim activation or make an old physical surface authoritative. }
@@ -3522,6 +3527,12 @@ begin
   FConnected := False;
   FCellFocusValid := False;
 
+  if FRecoverySubscription <> nil then
+  begin
+    FRecoverySubscription.Disconnect;
+    FRecoverySubscription := nil;
+  end;
+
   if FRecoveryWriter <> nil then
   begin
     FRecoveryWriter.Retire;
@@ -3900,6 +3911,12 @@ end;
 procedure TNyxCollectionMountBase.RefreshTargetIdle;
 begin
   { Ordinary targets have no deferred native-tail drain. }
+end;
+
+procedure TNyxCollectionMountBase.RecoveryMembershipChanged(
+  const AObservation: TNyxDraftRecoveryObservation);
+begin
+  { Data-only mounts expose their current count without physical presentation. }
 end;
 
 procedure TNyxCollectionMountBase.RetireTargetInput;
