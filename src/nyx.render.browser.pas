@@ -5705,6 +5705,11 @@ begin
           ConfigureNyxTableWorkbench(Result, LWorkbenchSpec.TableWorkbenchPolicy,
             FTableWorkbenchServices, NewNyxBrowserCollectionCellPresenterFactory(LElement),
             FCollectionQueryEvents);
+        end
+        else
+        begin
+          ConfigureNyxTableRecoveryReview(Result,
+            NewNyxBrowserCollectionCellPresenterFactory(LElement), FCollectionQueryEvents);
         end;
       end;
       Exit;

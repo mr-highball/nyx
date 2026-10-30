@@ -41,6 +41,60 @@ begin
   Result := FRecoveryWriter.Recovery;
 end;
 
+procedure TRecoveryReviewReadiness.CheckReady;
+begin
+
+  if (Input = nil) or not Input.Ready or (Epoch <= 0) or
+    (Epoch >= High(Integer)) or (Input.Epoch <> Epoch) then
+  begin
+    raise ENyxSchedule.Create('The original recovery review input is no longer ready');
+  end;
+end;
+
+function TNyxCollectionMountBase.GetRecoveredEditCount: Integer;
+var
+  LJournal: INyxCollectionDraftRecovery;
+begin
+  Result := 0;
+
+  if not InputLifetimeCurrent or (FRecoveryWriter = nil) then
+  begin
+    Exit;
+  end;
+  LJournal := FRecoveryWriter.Recovery;
+  Result := LJournal.Capture.Count;
+end;
+
+function TNyxCollectionMountBase.OpenRecoveredEdits: Boolean;
+var
+  LLease: INyxCollectionMount;
+  LActions: INyxCollectionCellActions;
+  LRecovery: INyxCollectionCellRecoveryActions;
+  LReady: TRecoveryReviewReadiness;
+  LReadyLease: INyxCancellationReadiness;
+  LAllowCopy: Boolean;
+begin
+  Result := False;
+  LLease := Self as INyxCollectionMount;
+  LActions := FCellActions;
+
+  if not GetInputReady or (LActions = nil) or not FEnabled or
+    not Supports(LActions, INyxCollectionCellRecoveryActions, LRecovery) then
+  begin
+    Exit;
+  end;
+  LReady := TRecoveryReviewReadiness.Create;
+  LReadyLease := LReady;
+  LReady.Input := GetInputLifetime;
+  LReady.Epoch := LReady.Input.Epoch;
+  LAllowCopy := (FClipboardCommands <> nil) and (nccaCell in FClipboardOptions.Actions);
+
+  if GetInputReady and (FCellActions = LActions) then
+  begin
+    Result := LRecovery.OpenRecovery(LReadyLease, LAllowCopy);
+  end;
+end;
+
 function NyxCollectionDraftRecoveryHeld(const AOwner: IInterface): Boolean;
 var
   LStatus: INyxCollectionDraftRecoveryStatus;

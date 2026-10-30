@@ -26,7 +26,8 @@ unit nyx.collections.representation;
 interface
 
 uses nyx.text, nyx.state, nyx.contract, nyx.collections,
-  nyx.collections.arrangement, nyx.collections.clipboard, nyx.formatting;
+  nyx.collections.arrangement, nyx.collections.clipboard, nyx.formatting,
+  nyx.collections.recovery, nyx.collections.edits;
 
 type
   { Invalid representation/cell provenance refuses before any output authority. }
@@ -94,6 +95,17 @@ type
   one-cell quoted row, cannot be relabeled as an accepted raw cell. }
 function NewNyxCollectionCellText(const ARaw: INyxCollectionClipboardText;
   AMaximumUTF8Bytes: Integer = 4194304): INyxCollectionCellText;
+{ Explicit inert recovered text, with copied original accepted provenance.
+  This is an ExplicitDraft representation, never a claim of current editor
+  focus. No journal/entry, source, mount or clipboard authority is retained.
+  Existing represented-copy permissions and byte limits still apply. }
+function NewNyxCollectionRecoveredDraftText(const AEntry: INyxRecoveredCollectionDraft;
+  AMaximumUTF8Bytes: Integer = 4194304): INyxCollectionCellText; overload;
+{ Frozen review consumers can prepare Copy lazily from already captured values.
+  This data-only overload grants no current editor or clipboard authority. }
+function NewNyxCollectionRecoveredDraftText(const ACell: TNyxCollectionCellEdit;
+  ABeforeRevision: Integer;
+  AMaximumUTF8Bytes: Integer = 4194304): INyxCollectionCellText; overload;
 function NewNyxCollectionCellDisplay(const ARaw: INyxCollectionClipboardText;
   const AFormatter: TNyxValueFormat; const ADomain: TNyxValueDomain;
   AMaximumUTF8Bytes: Integer = 4194304): INyxCollectionCellText;
@@ -138,6 +150,48 @@ type
     function GetFormatter: TNyxValueFormat;
     function GetDomain: TNyxValueDomain;
   end;
+
+function NewNyxCollectionRecoveredDraftText(const AEntry: INyxRecoveredCollectionDraft;
+  AMaximumUTF8Bytes: Integer): INyxCollectionCellText;
+var
+  LDraft: TNyxCollectionCellEdit;
+  LRevision: Integer;
+begin
+
+  if AEntry = nil then
+  begin
+    raise ENyxCollectionRepresentation.Create('Recovered text requires an exact entry');
+  end;
+  LDraft := AEntry.Cell.Copy;
+  LRevision := AEntry.BeforeRevision;
+  Result := NewNyxCollectionRecoveredDraftText(LDraft, LRevision, AMaximumUTF8Bytes);
+end;
+
+function NewNyxCollectionRecoveredDraftText(const ACell: TNyxCollectionCellEdit;
+  ABeforeRevision, AMaximumUTF8Bytes: Integer): INyxCollectionCellText;
+var
+  LCell: TCellText;
+  LLease: INyxCollectionCellText;
+  LDraft: TNyxCollectionCellEdit;
+begin
+  LDraft := ACell.Copy;
+  LDraft.Validate;
+  LCell := TCellText.Create;
+  LLease := LCell;
+  LCell.Representation := nccrExplicitDraft;
+  LCell.Text := LDraft.Text;
+  LCell.RawText := NyxCellEditWireText(LDraft.Accepted);
+  LCell.Bytes := NyxUTF8ByteCount(LCell.Text);
+  LCell.Item := LDraft.Item;
+  LCell.Field := LDraft.Field;
+  LCell.Revision := ABeforeRevision;
+  LCell.Value := LDraft.Accepted.Copy;
+  LCell.HasFormatter := False;
+  LCell.Domain := NyxNoDomain;
+  { The ordinary representation normalizer checks complete provenance and
+    byte admission. Recovery never invents a current schema/domain or store. }
+  Result := CopyNyxCollectionCellText(LLease, AMaximumUTF8Bytes);
+end;
 
 function NyxCollectionCellDisplayPolicy(const AField: TNyxColumnIdentity;
   const AFormatter: TNyxValueFormat; const ADomain: TNyxValueDomain;

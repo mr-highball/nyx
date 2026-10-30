@@ -379,8 +379,30 @@ previews visibly escape control characters and backslashes; preview selection
 therefore copies that displayed representation. An authorized application can
 use the separate raw `Cell.Text` for exact transfer through its existing host.
 This compound grants no clipboard authority and performs no restore or discard.
-The ordinary Table launcher, journal count and bounded navigation remain the
-open [recovery review integration](../TODO/NS-3_collection-recovery_01.md).
+
+Renderer-managed tables expose **Recovered edits (N)** beside Columns when the
+journal contains entries, including an empty filtered result. The panel presents
+one immutable entry at a time. Previous/Next retain the captured journal revision;
+if another caller changes the journal, navigation refuses visibly until Reload.
+The current detached preview remains the same entry. Review never commits,
+restores or discards a draft. The optional `INyxCollectionRecoveryReviewMount`
+facet exposes `RecoveredEditCount` and `OpenRecoveredEdits`; alternative mounts
+may lack it or return false when presentation/input is unavailable.
+
+Ordinary tables without a clipboard policy receive read-only review. Copy needs
+the existing cell-copy policy and an explicitly configured clipboard host. Its
+unavailable/refused result remains visible. Preview escaping is separate from
+the exact raw transfer, which is prepared lazily from the frozen review through
+`NewNyxCollectionRecoveredDraftText`. Existing copy byte limits, original input
+epoch, successful-popover lifetime and write-slot cancellation remain in force.
+No additional resource, file or clipboard authority comes from opening review.
+Full saved-application and target qualification remains with the open
+[recovery review integration](../TODO/NS-3_collection-recovery_01.md).
+The maintained `nyx_table_recovery_application_controls` native consumer compiles
+beside the unchanged `nyx.generated.view` unit from Studio's Service monitor job.
+It uses the real pinned/compact grid faces and managed popup, retaining the exact
+authored design and source data. Public query changes isolate recovery from the
+separate physical filter/pointer gate; they do not qualify hardware input.
 
 `ConfigureWarnings(NyxDraftRecoveryWarnings.Entries(64).Bytes(8 * 1024 * 1024))`
 configures advisory thresholds; these are also the defaults. Zero disables the

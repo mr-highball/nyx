@@ -9263,6 +9263,12 @@ begin
         FTableWorkbenchServices,
         NewNyxLCLCollectionCellPresenterFactory(TWinControl(LBinding.FControl)),
         FCollectionQueryEvents);
+    end
+    else
+    begin
+      ConfigureNyxTableRecoveryReview(Result,
+        NewNyxLCLCollectionCellPresenterFactory(TWinControl(LBinding.FControl)),
+        FCollectionQueryEvents);
     end;
   end;
 end;

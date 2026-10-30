@@ -27,10 +27,11 @@ program nyx_table_query_controls;
 uses
   SysUtils,
   {$ifdef PAS2JS}JS, Web, nyx.application.browser, nyx.render.browser,
-    nyx.collections.query.browser,
+    nyx.collections.query.browser, nyx.popover.browser,
   {$else}Classes, Types, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
     LazFileUtils,
     LCLType, nyx.application.lcl, nyx.render.lcl, nyx.collections.query.lcl,
+    nyx.popover.lcl,
   {$endif}
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec, nyx.codegen, nyx.contract,
   nyx.source, nyx.schema, nyx.data, nyx.state, nyx.events, nyx.behavior,
@@ -44,7 +45,7 @@ uses
   {$ifdef PAS2JS}nyx.collections.arrangement.browser,{$else}
   nyx.collections.arrangement.lcl, nyx.collections.lcl.grid,{$endif}
   nyx.application.state, nyx.collections.bindings, nyx.composition,
-  nyx.popover, nyx.editing,
+  nyx.popover, nyx.editing, nyx.collections.recovery, nyx.collections.cell.actions,
   {$ifdef PAS2JS}nyx.editing.browser,{$else}nyx.editing.lcl,{$endif}
   {$ifndef PAS2JS}ExtCtrls, Windows,{$endif}
   { END COLUMN ARRANGEMENT IMPORTS }
@@ -1305,6 +1306,7 @@ type
     destructor Destroy; override;
     procedure Run; {$ifdef PAS2JS}async;{$endif}
     procedure QueryLifetimeCases; {$ifdef PAS2JS}async;{$endif}
+    procedure RecoveryReviewCases; {$ifdef PAS2JS}async;{$endif}
     procedure ColumnManagerCases; {$ifdef PAS2JS}async;{$endif}
     procedure ColumnActivationCases; {$ifdef PAS2JS}async;{$endif}
     {$ifdef PAS2JS}procedure KeyboardCommitCases; async;{$endif}
@@ -2337,6 +2339,246 @@ begin
     LReview.Free;
   end;
 end;
+{ Import into the actual mounted editor, then hide its row through the same
+  runtime query owner. This is a real target/journal/presenter path, with no
+  fabricated recovery receipt or replacement clipboard implementation. }
+{ Navigation has two legitimate queued steps: the original form default then
+  its managed replacement presentation. Await their actual execution receipts,
+  rather than treating one animation frame as completion of the UI queue. }
+procedure AwaitRecoveryAction(const AActions: INyxCollectionCellActions);
+  {$ifdef PAS2JS}async;{$endif}
+var
+  LExecution: INyxExecution;
+  {$ifdef PAS2JS}LStarted: Double;{$else}LStarted: QWord;{$endif}
+begin
+  {$ifdef PAS2JS}LStarted := window.performance.now;{$else}LStarted := GetTickCount64;{$endif}
+  repeat
+    LExecution := AActions.LastExecution;
+
+    if (LExecution = nil) or not (LExecution.Status in [nesPending, nesRunning]) then
+    begin
+      Break;
+    end;
+    {$ifdef PAS2JS}await(UITurn);{$else}Pump;{$endif}
+  until {$ifdef PAS2JS}window.performance.now{$else}GetTickCount64{$endif} - LStarted > 1000;
+  LExecution := AActions.LastExecution;
+  Check((LExecution <> nil) and (LExecution.Status = nesSucceeded),
+    'recovery action reaches successful actual UI execution within its bounded one-second budget');
+end;
+
+procedure TArrangementReview.RecoveryReviewCases; {$ifdef PAS2JS}async;{$endif}
+const
+  CDraft: TNyxText = 'Recovered 🌙 unfinished';
+var
+  LMount: INyxCollectionMount;
+  LEdits: INyxCollectionEditMount;
+  LReview: INyxCollectionRecoveryReviewMount;
+  LCells: INyxCollectionCellActionsMount;
+  LActions: INyxCollectionCellActions;
+  LJournal: INyxCollectionDraftRecovery;
+  LEditsSnapshot: INyxCollectionEditsSnapshot;
+  LSource: INyxCollectionSnapshot;
+  LPeer: INyxCollectionSnapshot;
+  LFailure: TNyxText;
+  LIteration: Integer;
+  LDraft: TNyxText;
+  LFirstEntry: INyxRecoveredCollectionDraft;
+  LSecondEntry: INyxRecoveredCollectionDraft;
+  LPresentation: INyxPopover;
+  LRenderer: TReviewRenderer;
+  LMemo: INyxMemo;
+  LOldPresentation: INyxPopover;
+  LOldOpen: INyxPopoverOpenLifetime;
+  LAdmission: INyxPopoverOpenAdmission;
+  {$ifdef PAS2JS}
+  LTarget: INyxBrowserPopover;
+  LItem: TNyxItemRef;
+  LTable: TJSHTMLElement;
+  LCell: TJSHTMLElement;
+  LEditor: TJSHTMLInputElement;
+  LOptions: TJSObject;
+  {$else}
+  LTarget: INyxLCLPopover;
+  LGrid: TStringGrid;
+  LEditor: TCustomEdit;
+  {$endif}
+
+  procedure ResolveReview;
+  begin
+    LPresentation := LActions.Inspector;
+    Check((LPresentation <> nil) and LPresentation.IsOpen,
+      'recovery navigation retains an actual open presentation');
+    {$ifdef PAS2JS}
+    Check(Supports(LPresentation, INyxBrowserPopover, LTarget),
+      'recovery uses the real browser Nyx popover');
+    {$else}
+    Check(Supports(LPresentation, INyxLCLPopover, LTarget),
+      'recovery uses the real native Nyx popover');
+    {$endif}
+    LRenderer := LTarget.Renderer;
+  end;
+
+  procedure ReviewAction(const AID: TNyxText);
+  begin
+    ResolveReview;
+    LRenderer.Reveal(AID, niRuntime);
+    {$ifdef PAS2JS}
+    TJSHTMLElement(LRenderer.ElementFor(AID)).click;
+    {$else}
+    TButton(LRenderer.ControlFor(AID)).Click;
+    {$endif}
+    Pump;
+  end;
+
+  procedure CheckReviewText(const AText: TNyxText);
+  begin
+    ResolveReview;
+    Check(Supports(RetainNyxControl(LPresentation.Content.Node.Find(
+      'nyx-recovered-edit-draft')), INyxMemo, LMemo),
+      'recovery exposes its specialized Nyx Memo');
+    Check(LMemo.ReadOnly and (LMemo.Value = AText),
+      'recovery presents the expected individual unfinished value in a readonly Nyx Memo; ' +
+      'expected=' + AText + '; actual=' + LMemo.Value +
+      '; readonly=' + TNyxText(BoolToStr(LMemo.ReadOnly, True)));
+    {$ifdef PAS2JS}
+    Check(TJSHTMLTextAreaElement(LRenderer.InputFor('nyx-recovered-edit-draft')).readOnly,
+      'browser recovery Memo is physically readonly');
+    {$else}
+    Check(TCustomMemo(LRenderer.InputFor('nyx-recovered-edit-draft')).ReadOnly,
+      'native recovery Memo is physically readonly');
+    {$endif}
+  end;
+begin
+  FApp.View.Reveal(CArrangementFirst, niRuntime);
+  {$ifdef PAS2JS}await(ArrangementFrame);{$else}Pump;{$endif}
+  LMount := FApp.View.CollectionMount(CArrangementFirst);
+  Check(Supports(LMount, INyxCollectionEditMount, LEdits) and
+    Supports(LMount, INyxCollectionRecoveryReviewMount, LReview) and
+    Supports(LMount, INyxCollectionCellActionsMount, LCells),
+    'ordinary table exposes independent typed edit, recovery and presentation capabilities');
+  LActions := LCells.CellActions;
+  Check(LActions <> nil, 'renderer configures managed recovery presentation');
+  LSource := FViews[0].Store.Snapshot;
+  LPeer := FViews[1].Store.Snapshot;
+  for LIteration := 0 to 1 do
+  begin
+    LDraft := CDraft;
+
+    if LIteration = 1 then
+    begin
+      FViews[0].ConfigureQuery(Baseline);
+      LDraft := CDraft + ' second';
+      FApp.View.Reveal(CArrangementFirst, niRuntime);
+      {$ifdef PAS2JS}await(ArrangementFrame);{$else}Pump;{$endif}
+    end;
+    { Enter through the same real F2 editor path used by the ordinary query
+      journey. Restoring a detached snapshot has a separate focus admission
+      contract and must not stand in for the user starting an unfinished edit. }
+    {$ifdef PAS2JS}
+    LItem := FViews[0].Snapshot.ItemAt(0).Ref;
+    LTable := FApp.View.ElementFor(CArrangementFirst);
+    LCell := TJSHTMLElement(LTable.querySelector('tr[data-nyx-item="' + LItem.ID +
+      '"] td[data-nyx-column="0"]'));
+    Check(LCell <> nil, 'recovery starts in the exact retained row and typed field');
+    LCell.focus;
+    LOptions := TJSObject.new;
+    LOptions['key'] := 'F2';
+    LOptions['bubbles'] := True;
+    LOptions['cancelable'] := True;
+    LCell.dispatchEvent(TReviewKey.new('keydown', LOptions));
+    await(ArrangementFrame);
+    LEditor := TJSHTMLInputElement(LCell.querySelector('input.nyx-cell-editor'));
+    Check((LEditor <> nil) and (Web.document.activeElement = LEditor),
+      'recovery F2 enters the actual focused browser editor');
+    LEditor.value := LDraft;
+    LEditor.setSelectionRange(1, 4);
+    {$else}
+    LGrid := TStringGrid(FApp.View.ControlFor(CArrangementFirst));
+    LGrid.Col := 0;
+    LGrid.Row := 1;
+    LGrid.SetFocus;
+    SendMessage(LGrid.Handle, WM_KEYDOWN, VK_F2, 0);
+    Pump;
+    Check(LGrid.EditorMode and (LGrid.Editor is TCustomEdit),
+      'recovery F2 enters the actual focused native editor');
+    LEditor := TCustomEdit(LGrid.Editor);
+    LEditor.Text := LDraft;
+    LEditor.SelStart := 1;
+    LEditor.SelLength := 3;
+    {$endif}
+    LEditsSnapshot := LEdits.SuspendCellEdits;
+    try
+      Check((LEditsSnapshot.Count = 1) and (LEditsSnapshot.CellAt(0).Text = LDraft) and
+        LEditsSnapshot.CellAt(0).Editing and LEditsSnapshot.CellAt(0).Focused and
+        (LEditsSnapshot.CellAt(0).Selection.Start = 1) and
+        (LEditsSnapshot.CellAt(0).Selection.Finish = 4),
+        'actual unfinished edit captures exact text, editing focus and scalar caret');
+    finally
+      LEdits.ResumeCellEdits(LEditsSnapshot, True);
+    end;
+    FViews[0].ConfigureQuery(NyxCollectionQuery.Where(
+      NyxWhere(PersonName).EqualTo('no matching recovered row')));
+    {$ifdef PAS2JS}await(ArrangementFrame);{$else}Pump;{$endif}
+    LJournal := NyxCollectionDraftRecovery(LMount);
+    Check((FViews[0].Snapshot.Count = 0) and
+      (LReview.RecoveredEditCount = LIteration + 1) and
+      (LJournal.EntryAt(LIteration).Cell.Text = LDraft),
+      'empty filtered result retains its actual unfinished text and ordinary review count');
+  end;
+  LFirstEntry := LJournal.EntryAt(0);
+  LSecondEntry := LJournal.EntryAt(1);
+  {$ifdef PAS2JS}
+  LCell := TJSHTMLElement(LTable.querySelector('[data-nyx-recovery-button]'));
+  Check((LCell <> nil) and (LCell.textContent = 'Recovered edits (2)') and
+    (LCell.getBoundingClientRect.width > 0),
+    'empty browser result retains a visible recovery count and launcher');
+  LCell.click;
+  {$else}
+  Check((LGrid.FindComponent('NyxRecoveredEditsButton') <> nil) and
+    TControl(LGrid.FindComponent('NyxRecoveredEditsButton')).Visible,
+    'empty native result retains a visible recovery count and launcher');
+  TNyxCollectionColumnButton(LGrid.FindComponent('NyxRecoveredEditsButton')).Click;
+  {$endif}
+  {$ifdef PAS2JS}await(AwaitRecoveryAction(LActions));{$else}AwaitRecoveryAction(LActions);{$endif}
+  LFailure := '';
+
+  if LActions.LastExecution <> nil then
+  begin
+    LFailure := LActions.LastExecution.Failure;
+  end;
+  Check((LActions.Inspector <> nil) and LActions.Inspector.IsOpen,
+    'actual recovery popup opens for a hidden row; execution failure=' + LFailure);
+  CheckReviewText(CDraft);
+  Check((LPresentation.Content.Node.Find(NyxRecoveredEditsCopyID) = nil) and
+    (LPresentation.Content.Node.Find('nyx-recovered-copy-disabled') <> nil),
+    'readonly recovery visibly explains unavailable Copy without granting clipboard authority');
+  LOldPresentation := LPresentation;
+  Check(Supports(LOldPresentation, INyxPopoverOpenAdmission, LAdmission),
+    'real recovery presentation supplies its original lifetime');
+  LOldOpen := LAdmission.GetOpenLifetime;
+  ReviewAction(NyxRecoveredEditsNextID);
+  {$ifdef PAS2JS}await(AwaitRecoveryAction(LActions));{$else}AwaitRecoveryAction(LActions);{$endif}
+  CheckReviewText(CDraft + ' second');
+  Check(not LOldPresentation.IsOpen and not LOldOpen.Current and
+    (LJournal.EntryAt(0) = LFirstEntry) and (LJournal.EntryAt(1) = LSecondEntry),
+    'navigation closes the old presentation and preserves exact stable journal identities');
+  Check(LJournal.Discard(LFirstEntry), 'external explicit discard removes only its exact receipt');
+  ReviewAction(NyxRecoveredEditsPreviousID);
+  {$ifdef PAS2JS}await(AwaitRecoveryAction(LActions));{$else}AwaitRecoveryAction(LActions);{$endif}
+  CheckReviewText(CDraft + ' second');
+  Check(Pos('list changed', LPresentation.State.GetValue(
+    NyxTextState(NyxCellInspectorStatusState))) > 0,
+    'stale navigation visibly refuses instead of substituting the row now at that position');
+  ReviewAction(NyxRecoveredEditsReloadID);
+  {$ifdef PAS2JS}await(AwaitRecoveryAction(LActions));{$else}AwaitRecoveryAction(LActions);{$endif}
+  CheckReviewText(CDraft + ' second');
+  Check((FViews[0].Store.Snapshot = LSource) and (FViews[1].Store.Snapshot = LPeer) and
+    (TNyxCodec.Encode(FDocument) = FAuthored) and (LJournal.Capture.Count = 1) and
+    (LJournal.EntryAt(0) = LSecondEntry),
+    'recovery inspection preserves accepted data, independent peer, authored defaults and journal ownership');
+  LActions.Close;
+end;
+
 procedure TArrangementReview.ColumnManagerCases; {$ifdef PAS2JS}async;{$endif}
 var
   LMount: INyxCollectionMount;
@@ -4735,24 +4977,50 @@ begin
 end;
 { END COLUMN ARRANGEMENT CASES }
 
+procedure RecoveryCases; {$ifdef PAS2JS}async;{$endif}
+var
+  LReview: TArrangementReview;
+begin
+  LReview := TArrangementReview.Create;
+  try
+    {$ifdef PAS2JS}await(LReview.RecoveryReviewCases);{$else}LReview.RecoveryReviewCases;{$endif}
+  finally
+    LReview.Free;
+  end;
+end;
+
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 begin
+  {$ifdef PAS2JS}
+  Web.document.body.setAttribute('data-query-workbench-stage', 'run');
+  {$endif}
   try
     Start;
+    {$ifdef PAS2JS}
+    Web.document.body.setAttribute('data-query-workbench-stage', 'mounted');
+    {$endif}
     InitialAndSortCases;
     DraftAndNegotiationCases;
     ScalarAndSortFormCases;
     PeerAndRecoveryCases;
     PolicyAndTakeoverCases;
+    {$ifdef PAS2JS}
+    Web.document.body.setAttribute('data-query-workbench-stage', 'queued-fences');
+    {$endif}
     {$ifdef PAS2JS}await(QueuedAndFinalFenceCases);{$else}QueuedAndFinalFenceCases;{$endif}
     LifetimeCases;
+    {$ifdef PAS2JS}
+    Web.document.body.setAttribute('data-query-workbench-stage', 'arrangement');
+    {$endif}
     { BEGIN COLUMN ARRANGEMENT CALL }
+    {$ifdef PAS2JS}await(RecoveryCases);{$else}RecoveryCases;{$endif}
     {$ifdef PAS2JS}await(ArrangementCases);{$else}ArrangementCases;{$endif}
     {$ifdef PAS2JS}await(ArrangedQueryCases);{$else}ArrangedQueryCases;{$endif}
     {$ifdef PAS2JS}await(ManagedColumnCases);{$else}ManagedColumnCases;{$endif}
     { END COLUMN ARRANGEMENT CALL }
     Cleanup;
     {$ifdef PAS2JS}
+    Web.document.body.setAttribute('data-query-workbench-stage', 'completed');
     Web.document.body.setAttribute('data-query-workbench-checks', IntToStr(GChecks));
     Web.document.body.setAttribute('data-query-workbench', 'passed');
     {$else}
@@ -4777,6 +5045,7 @@ end;
 begin
   GWidth := 1280;
   {$ifdef PAS2JS}
+  Web.document.body.setAttribute('data-query-workbench-stage', 'main');
 
   if window.innerWidth < 640 then
   begin
@@ -4809,7 +5078,28 @@ begin
   GFailures := TFailureObserver.Create;
   Application.OnException := GFailures.Failed;
   try
-    Run;
+    { Focused recovery qualification still uses the maintained real-control
+      consumer. The default full regression and all its original pointer
+      assertions remain unchanged; no cursor-dependent test is waived. }
+
+    if (ParamCount = 3) and (ParamStr(3) = 'recovery') then
+    begin
+      try
+        RecoveryCases;
+        WriteLn('PASS ', GChecks, ' actual focused table recovery checks at ', GWidth);
+      except
+        on E: Exception do
+        begin
+          WriteLn('FAIL ', E.Message);
+          DumpExceptionBackTrace(Output);
+          ExitCode := 1;
+        end;
+      end;
+    end
+    else
+    begin
+      Run;
+    end;
   finally
     Application.OnException := nil;
     GFailures.Free;

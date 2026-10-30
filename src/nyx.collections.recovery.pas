@@ -148,6 +148,17 @@ type
     procedure ConfigureWarnings(const AWarnings: TNyxDraftRecoveryWarnings);
   end;
 
+  { Optional ordinary-table review entry. Count is a bounded journal observation;
+    opening is UI-only and returns False when this mount lacks managed review
+    presentation or its original input is unavailable. It grants no restore,
+    discard or clipboard authority, and remains callable for an empty page. }
+  INyxCollectionRecoveryReviewMount = interface(IInterface)
+    ['{FD227FCE-9DCE-412D-A536-B537C142D879}']
+    function GetRecoveredEditCount: Integer;
+    function OpenRecoveredEdits: Boolean;
+    property RecoveredEditCount: Integer read GetRecoveredEditCount;
+  end;
+
   { The mounted writer owns lifecycle/capture authority separately from readers.
     The returned journal cannot QueryInterface back to this writer. Preserve
     copies before a physical draft is overwritten/removed. Capacity refusal

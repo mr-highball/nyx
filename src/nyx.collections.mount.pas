@@ -300,7 +300,9 @@ type
     viewport intent uses this same input incarnation and success-only refresh
     acknowledgement, without keeping physical callbacks in its request. UI-thread
     confinement is inherited from the view/store contract. Position recovery is
-    a detached observation only; it cannot select rows or revive target input. }
+    a detached observation only; it cannot select rows or revive target input.
+    Recovery review borrows its managed actions only during UI entry and hands
+    queued presentation independent input flags rather than a mount callback. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionInputPreparation,
@@ -310,7 +312,7 @@ type
     INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
     INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation,
     INyxCollectionDraftRecoveryMount, INyxCollectionDraftRecoveryStatus,
-    INyxCollectionPendingDraftMount)
+    INyxCollectionPendingDraftMount, INyxCollectionRecoveryReviewMount)
   private
     FToken: INyxCollectionViewSubscription;
     FPositionState: INyxCollectionPositionState;
@@ -615,6 +617,8 @@ type
       const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionCellActionOptions);
     function GetCellActions: INyxCollectionCellActions;
+    function GetRecoveredEditCount: Integer;
+    function OpenRecoveredEdits: Boolean;
     procedure ObserveSelection(AObserver: TNyxCollectionSelectionObserver);
     function Select(const AItem: TNyxItemRef): Boolean; overload;
     function Select(const AItem: TNyxItemRef; AAction: TNyxSelectionAction): Boolean; overload;
@@ -770,6 +774,16 @@ type
   public
     Input: INyxCollectionInputLifetime;
     Scope: INyxCancellationScope;
+    Epoch: Integer;
+    procedure CheckReady;
+  end;
+
+  { Recovery may remain readable after source membership changes, but its UI
+    owner must still be this exact mounted input incarnation. This proof owns
+    canonical flags and epoch only, never a view, mount or physical control. }
+  TRecoveryReviewReadiness = class(TInterfacedObject, INyxCancellationReadiness)
+  public
+    Input: INyxCollectionInputLifetime;
     Epoch: Integer;
     procedure CheckReady;
   end;
@@ -2810,6 +2824,7 @@ var
   LExports: INyxCollectionExportCommands;
   LExporter: INyxCollectionExportCapturedSave;
   LOptions: TNyxCollectionCellActionOptions;
+  LRecovery: INyxCollectionCellRecoveryActions;
 
   procedure Current;
   begin
@@ -2823,10 +2838,10 @@ var
 begin
 
   if FConfiguringCellActions or not FConnected or FDisconnecting or
-    (FClipboardCommands = nil) or (FCellActions <> nil) or
+    (FCellActions <> nil) or
     (AFactory = nil) or (AScheduler = nil) then
   begin
-    raise ENyxCollectionClipboard.Create('Cell actions require one configured table-copy incarnation');
+    raise ENyxCollectionClipboard.Create('Cell presentation requires one live table incarnation');
   end;
   FConfiguringCellActions := True;
   try
@@ -2851,6 +2866,12 @@ begin
       LCandidate := NewNyxCollectionCellActions(LFactory, LWriter, LScheduler, LOptions,
         BeginCellPresentation, LExporter);
       Current;
+
+      if Supports(LCandidate, INyxCollectionCellRecoveryActions, LRecovery) then
+      begin
+        LRecovery.AttachRecovery(GetDraftRecovery);
+        Current;
+      end;
       FCellFactory := LFactory;
       FCellActions := LCandidate;
     except

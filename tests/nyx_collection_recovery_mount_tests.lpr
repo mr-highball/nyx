@@ -27,7 +27,7 @@ uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   nyx.collections.arrangement, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.recovery, nyx.collections.inspection,
   nyx.collections.query, nyx.collections.position, nyx.collections.recovery.policy,
-  nyx.collections.recovery.controls, nyx.controls, nyx.types
+  nyx.collections.recovery.controls, nyx.collections.representation, nyx.controls, nyx.types
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -425,6 +425,8 @@ var
   LReview: INyxRecoveredDraftReview;
   LCell: TNyxCollectionCellEdit;
   LMemo: INyxMemo;
+  LText: INyxCollectionCellText;
+  LNormalized: INyxCollectionCellText;
   LFailed: Boolean;
 begin
   LWriter := NewNyxCollectionDraftRecovery;
@@ -433,6 +435,25 @@ begin
     NyxColumnIdentity(NyxTextField('name')), TNyxStateValue.FromText(COriginal),
     CDraft, NyxTextSelection(CDraft, 1, 4), True, True);
   LEntry := LWriter.Preserve(LCell, ncdlHidden, 3, 4);
+  LText := NewNyxCollectionRecoveredDraftText(LEntry);
+  LNormalized := CopyNyxCollectionCellText(LText);
+  Check((LNormalized.Representation = nccrExplicitDraft) and
+    (LNormalized.Text = CDraft) and (LNormalized.RawText = COriginal) and
+    (LNormalized.ByteCount = 22) and (LNormalized.Revision = 3) and
+    LNormalized.Value.SameValue(LCell.Accepted) and
+    LNormalized.Field.Same(LCell.Field) and (LNormalized.Item.ID = 'gateway') and
+    not LNormalized.HasFormatter and not LNormalized.Domain.Defined,
+    'recovered copy is an explicit exact draft with accepted provenance, not RAW or focused editor authority');
+  LFailed := False;
+  try
+    NewNyxCollectionRecoveredDraftText(LEntry, 21);
+  except
+    on ENyxCollection do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'complete recovered-text bytes must fit before represented host admission');
   LReview := NewNyxRecoveredDraftReview('recovered-edit', LEntry);
   Check((LJournal.Capture.Count = 1) and (LJournal.EntryAt(0) = LEntry),
     'constructing a read-only review neither discards nor replaces its journal entry');
@@ -456,6 +477,12 @@ begin
   LEntry := nil;
   LWriter := nil;
   LJournal := nil;
+  LText := NewNyxCollectionRecoveredDraftText(LReview.Cell, LReview.BeforeRevision);
+  Check((LText.Text = CDraft) and (LText.RawText = COriginal) and
+    (LText.Revision = 3),
+    'lazy represented Copy uses the frozen review after the original journal and entry retire');
+  Check((LNormalized.Text = CDraft) and (LNormalized.RawText = COriginal),
+    'normalized recovered transfer owns its original bytes after journal retirement');
   Check((LReview.Cell.Text = CDraft) and
     (LReview.Cell.Accepted.TextValue = COriginal) and
     (LReview.Reason = ncdlHidden),

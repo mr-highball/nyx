@@ -100,9 +100,16 @@ procedure ConfigureNyxTableWorkbench(const AMount: INyxCollectionMount;
   const AFactory: INyxCollectionCellPresenterFactory;
   const AEvents: INyxEvents);
 
+{ Configure readonly recovery presentation for a table without authored Copy
+  actions. No clipboard/export/range service is installed. The fresh factory
+  and original input lifetime have the same publication/retirement rules as
+  the complete workbench; ordinary source edits keep their existing ownership. }
+procedure ConfigureNyxTableRecoveryReview(const AMount: INyxCollectionMount;
+  const AFactory: INyxCollectionCellPresenterFactory; const AEvents: INyxEvents);
+
 implementation
 
-uses SysUtils, nyx.clipboard.unavailable, nyx.files.save.unavailable,
+uses SysUtils, nyx.collections, nyx.clipboard.unavailable, nyx.files.save.unavailable,
   nyx.collections.range.commands,
   nyx.scheduler;
 
@@ -498,6 +505,78 @@ begin
       LFactory.Revoke;
     except
       { Factory cleanup cannot replace the original failure. }
+    end;
+    raise;
+  end;
+end;
+
+procedure ConfigureNyxTableRecoveryReview(const AMount: INyxCollectionMount;
+  const AFactory: INyxCollectionCellPresenterFactory; const AEvents: INyxEvents);
+var
+  LMount: INyxCollectionMount;
+  LFactory: INyxCollectionCellPresenterFactory;
+  LAdmission: INyxCollectionInputAdmission;
+  LPreparation: INyxCollectionInputPreparation;
+  LInput: INyxCollectionInputLifetime;
+  LActions: INyxCollectionCellActionOptionsMount;
+  LScheduler: INyxScheduler;
+  LEpoch: Integer;
+
+  procedure RequireCurrent;
+  begin
+
+    if not LMount.Connected or not LInput.Current or (LInput.Epoch <> LEpoch) then
+    begin
+      raise ENyxCollection.Create('Table retired while configuring recovery review');
+    end;
+  end;
+
+begin
+  LMount := AMount;
+  LFactory := AFactory;
+
+  if (LMount = nil) or (LFactory = nil) or (AEvents = nil) or
+    not Supports(LMount, INyxCollectionInputAdmission, LAdmission) or
+    not Supports(LMount, INyxCollectionCellActionOptionsMount, LActions) then
+  begin
+    raise ENyxCollection.Create('Recovery review requires a fresh managed table');
+  end;
+
+  if Supports(LMount, INyxCollectionInputPreparation, LPreparation) then
+  begin
+    LPreparation.PrepareInputTracking;
+  end;
+  LInput := LAdmission.GetInputLifetime;
+
+  if LInput = nil then
+  begin
+    raise ENyxCollection.Create('Recovery review requires original input ownership');
+  end;
+  LEpoch := LInput.Epoch;
+  RequireCurrent;
+  LScheduler := AEvents.Scheduler;
+  RequireCurrent;
+
+  if LScheduler = nil then
+  begin
+    raise ENyxCollection.Create('Recovery review requires a UI scheduler');
+  end;
+  LScheduler.RequireUI;
+  RequireCurrent;
+  try
+    LActions.ConfigureCellActionsWithOptions(LFactory, LScheduler,
+      TNyxCollectionCellActionOptions.Defaults);
+    RequireCurrent;
+  except
+    try
+      LMount.Disconnect;
+    except
+      { Preserve original admission failure while retiring this partial owner. }
+    end;
+    try
+      LFactory.Revoke;
+    except
+      { Target cleanup cannot replace the original failure. }
     end;
     raise;
   end;

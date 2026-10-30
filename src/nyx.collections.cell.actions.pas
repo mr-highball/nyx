@@ -31,10 +31,12 @@ uses
   nyx.collections.arrangement, nyx.collections.clipboard,
   nyx.collections.clipboard.actions, nyx.collections.export,
   nyx.collections.export.actions, nyx.collections.view, nyx.files.save,
-  nyx.collections.representation, nyx.collections.draft, nyx.collections.identities;
+  nyx.collections.representation, nyx.collections.draft, nyx.collections.identities,
+  nyx.collections.recovery;
 
 const
   NyxCellActionsInspectID = 'nyx-cell-actions-inspect';
+  NyxCellActionsRecoveryID = 'nyx-cell-actions-recovery';
   NyxCellActionsCopyID = 'nyx-cell-actions-copy';
   NyxCellActionsCopyRangeID = 'nyx-cell-actions-copy-range';
   NyxCellActionsCopySourceRowsID = 'nyx-cell-actions-copy-source-rows';
@@ -52,6 +54,10 @@ const
   NyxCellInspectorCopyDraftID = 'nyx-cell-inspector-copy-draft';
   NyxCellInspectorCloseID = 'nyx-cell-inspector-close';
   NyxCellInspectorStatusState = 'nyx-cell-inspector-status';
+  NyxRecoveredEditsPreviousID = 'nyx-recovered-edits-previous';
+  NyxRecoveredEditsNextID = 'nyx-recovered-edits-next';
+  NyxRecoveredEditsReloadID = 'nyx-recovered-edits-reload';
+  NyxRecoveredEditsCopyID = 'nyx-recovered-edits-copy';
 
 type
   { Runtime-only opt-in controls whether a managed editor context may capture
@@ -212,9 +218,24 @@ type
     property LastExportResult: TNyxFileSaveResult read GetLastExportResult;
   end;
 
+  { Optional journal review is independent of a current source row/cell. The
+    attached data-only journal owns no mount. Open retains only caller-provided
+    owner-free original input flags, and uses the same managed popup/write slot.
+    AllowCopy may narrow the table's existing cell-copy permission; it cannot
+    grant host or controller authority. Entry navigation never applies/discards. }
+  INyxCollectionCellRecoveryActions = interface(IInterface)
+    ['{625629F3-09C3-45AC-9751-B4334AFB2780}']
+    procedure AttachRecovery(const AJournal: INyxCollectionDraftRecovery);
+    function GetRecoveryCount: Integer;
+    function OpenRecovery(const AReadiness: INyxCancellationReadiness;
+      AAllowCopy: Boolean): Boolean;
+    property RecoveryCount: Integer read GetRecoveryCount;
+  end;
+
   { Optional mount capability leaves every existing GUID/vtable unchanged.
-    ConfigureClipboard must already provide accepted-cell capture and explicit
-    host authority; no second write engine or saved capability is introduced.
+    ConfigureClipboard supplies accepted-cell capture and explicit write authority
+    when present. A missing writer permits readonly recovered-edit review only;
+    no second write engine or saved capability is introduced.
     Factory ownership transfers only through a successful managed assignment. }
   INyxCollectionCellActionsMount = interface(IInterface)
     ['{26E7D2DD-C22F-40E7-A4A8-0121B695C30C}']
@@ -256,7 +277,8 @@ implementation
 
 uses
   SysUtils, nyx.types, nyx.controls, nyx.state, nyx.behavior,
-  nyx.formatting, nyx.numbers.decimal, nyx.times, nyx.collections.range.actions
+  nyx.formatting, nyx.numbers.decimal, nyx.times, nyx.collections.range.actions,
+  nyx.collections.recovery.controls
   {$ifdef PAS2JS}, JS{$endif};
 
 type
@@ -286,6 +308,21 @@ type
     Launch: INyxCollectionClipboardCommand;
     Draft: INyxCollectionFocusedDraftCapture;
     destructor Destroy; override;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
+
+  { Queued recovery presentation leaves the original native/browser input
+    frame. Only inert input flags and a weak session cross that boundary;
+    no source row, journal enumeration or mount lease is retained by this work. }
+  TRecoveryOpenWork = class(TInterfacedObject, INyxWork)
+  public
+    Port: TCellPort;
+    PortLease: IInterface;
+    Serial: Integer;
+    Index: Integer;
+    Revision: Integer;
+    AllowCopy: Boolean;
+    Ready: INyxCancellationReadiness;
     procedure Execute(const AExecution: INyxExecution);
   end;
 
@@ -408,11 +445,14 @@ type
     Explicit draft and selected-cell sessions keep only copied provenance/text
     and independent inert flags; retiring a range never retires its RAW cell.
     Captured copy permission controls transfers independently of inspection.
-    Row payloads have separate original-cohort readiness from cell/range data. }
+    Row payloads have separate original-cohort readiness from cell/range data.
+    Recovery keeps a data-only journal, a detached review and lazily copied
+    represented text. Current membership never substitutes another recovered edit. }
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
     INyxCollectionCellActionIntent, INyxCollectionCellExportActions,
     INyxCollectionCellRepresentationActions, INyxCollectionCellActionInput,
-    INyxCollectionCellDraftActions, INyxCollectionCellIdentityActions)
+    INyxCollectionCellDraftActions, INyxCollectionCellIdentityActions,
+    INyxCollectionCellRecoveryActions)
   private
     FFactory: INyxCollectionCellPresenterFactory;
     FWriter: INyxCollectionClipboardCapturedWrite;
@@ -435,6 +475,20 @@ type
     FOpen: INyxPopoverOpenLifetime;
     FSnapshot: INyxCollectionClipboardText;
     FCellCopyAllowed: Boolean;
+    FRecovery: INyxCollectionDraftRecovery;
+    FRecoveryReview: INyxRecoveredDraftReview;
+    FRecoveryValue: INyxCollectionCellText;
+    FSessionReady: INyxCancellationReadiness;
+    FRecoveryIndex: Integer;
+    FRecoveryRevision: Integer;
+    FRecoveryCopyAllowed: Boolean;
+    function QueueRecovery(const AReadiness: INyxCancellationReadiness;
+      AAllowCopy: Boolean; AIndex, ARevision: Integer): Boolean;
+    procedure ShowRecovery(ASerial: Integer;
+      const AReadiness: INyxCancellationReadiness; AAllowCopy: Boolean;
+      AIndex, ARevision: Integer);
+    procedure RecoveryDefault(AKind, ASerial: Integer);
+  private
     FRangePayload: INyxCollectionClipboardText;
     FRangeReady: INyxCancellationReadiness;
     FSourceRowsPayload: INyxCollectionClipboardText;
@@ -525,6 +579,10 @@ type
     function GetIntent: Integer;
     function GetExportEnabled: Boolean;
     function GetLastExportResult: TNyxFileSaveResult;
+    procedure AttachRecovery(const AJournal: INyxCollectionDraftRecovery);
+    function GetRecoveryCount: Integer;
+    function OpenRecovery(const AReadiness: INyxCancellationReadiness;
+      AAllowCopy: Boolean): Boolean;
   end;
 
   { Short-lived original physical-input envelope changes only its default:
@@ -864,9 +922,9 @@ var
 begin
   inherited Create;
 
-  if (AFactory = nil) or (AWriter = nil) or (AScheduler = nil) then
+  if (AFactory = nil) or (AScheduler = nil) then
   begin
-    raise ENyxCollectionClipboard.Create('Cell actions require a factory, mounted writer and scheduler');
+    raise ENyxCollectionClipboard.Create('Cell presentation requires a factory and scheduler');
   end;
   FFactory := AFactory;
   FWriter := AWriter;
@@ -969,6 +1027,10 @@ begin
   FReplyLease := nil;
   FSnapshot := nil;
   FCellCopyAllowed := False;
+  FRecoveryReview := nil;
+  FRecoveryValue := nil;
+  FSessionReady := nil;
+  FRecoveryCopyAllowed := False;
   FRangePayload := nil;
   FRangeReady := nil;
   FSourceRowsPayload := nil;
@@ -1196,6 +1258,10 @@ begin
   else if AKind = 4 then
   begin
     CopyDraft(ASerial);
+  end
+  else if AKind in [5, 6, 7, 8] then
+  begin
+    RecoveryDefault(AKind, ASerial);
   end
   else
   begin
@@ -1517,6 +1583,7 @@ begin
     Exit;
   end;
   FSnapshot := LPayload;
+  FSessionReady := LScope;
   FCellCopyAllowed := LCellCopyAllowed;
   FRangePayload := LRangePayload;
   FRangeReady := LRangeReady;
@@ -1542,6 +1609,15 @@ begin
     LDocument.AddPage(LPage);
     LItems := NyxMenuItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectID),
       NyxMenuCommand('inspect')));
+
+    if GetRecoveryCount > 0 then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsRecoveryID).Configure
+        .PartName(NyxPart(NyxCellActionsRecoveryID)).Text(
+          'Review recovered edits (' + TNyxText(IntToStr(GetRecoveryCount)) + ')').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsRecoveryID),
+        NyxMenuCommand('review-recovery')));
+    end;
 
     if FCellCopyAllowed then
     begin
@@ -1727,6 +1803,10 @@ begin
     else if LInvocation.Command.Name = 'copy-draft' then
     begin
       CopyDraft(ASerial);
+    end
+    else if LInvocation.Command.Name = 'review-recovery' then
+    begin
+      OpenRecovery(FSessionReady, FCellCopyAllowed);
     end
     else if LInvocation.Command.Name = 'export-page' then
     begin
@@ -2208,11 +2288,19 @@ begin
   if (AValue <> nil) and (AValue.Representation = nccrExplicitDraft) then
   begin
 
-    if FDraft = nil then
+    if (FRecoveryValue <> nil) and (AValue = FRecoveryValue) and
+      (FRecoveryReview <> nil) then
+    begin
+      LDraftReady := FSessionReady;
+    end
+    else if FDraft = nil then
     begin
       Exit;
+    end
+    else
+    begin
+      LDraftReady := FDraft.Readiness;
     end;
-    LDraftReady := FDraft.Readiness;
   end;
 
   if ARange then
@@ -2737,6 +2825,7 @@ begin
   FActionWriter := nil;
   FRepresentationWriter := nil;
   FIdentityWriter := nil;
+  FRecovery := nil;
   FExporter := nil;
   FScheduler := nil;
   LFailure := Default(TCellCleanupFailure);
@@ -3213,6 +3302,8 @@ begin
     FLaunch.Retire;
   end;
 end;
+
+{$include nyx.collections.cell.recovery.inc}
 
 function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenterFactory;
   const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;

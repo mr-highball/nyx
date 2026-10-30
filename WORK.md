@@ -13,9 +13,9 @@ preference. Do not refill the helper queue or start another helper.
 
 Current prerequisite: [collection recovery01](TODO/NS-3_collection-recovery_01.md).
 The original table W2 return remains its owner; Root continues SOLO. The previous
-goal turn is PROGRESS:4901ef1d delivered the browser pin-suspension explanation
-and its real pointer/viewport evidence. This turn uses table-selection-return-01
-on external scratch, without changing either listener or the LAN payload.
+goal turn is PROGRESS:b1d170a9 added the detached review compound and prerequisite.
+The current integration uses table-recovery-entry-01 on external scratch, without
+changing either listener or the LAN payload.
 
 Ordinary disabled-host Copy gives an explicit refusal, while full command-line
 inspection shows the exact untruncated raw text. After enabling only the existing
@@ -52,12 +52,73 @@ executed model/control-construction checks, not widget/visual/Studio integration
 The first compile's local-constant/API spelling mistakes and enum-else warning
 are preserved and repaired; no tolerance, compiler dependency or guard changes.
 
-Next implement the same prerequisite's ordinary Table count/launcher, bounded
-stable-entry navigation and explicit exact Copy through the existing shared
-presentation/input lifetimes. Reuse this compound and the existing journal;
-do not automatically restore old text or build another recovery store. Qualify
-the same saved/generated Service monitor at both native/browser sizes before
-accepting recovery01, then return to W2. No task/criterion/percentage closes here.
+Current integration uses table-recovery-entry-01 on external scratch. Shared
+actions, original mount input flags and both target adapters now provide a visible
+count/launcher and bounded review through the detached compound. Ordinary tables
+without a clipboard policy receive read-only presentation only; this grants no
+host authority. Navigation retains the captured journal revision, refuses stale
+positions and offers explicit Reload. Represented Copy is prepared separately
+from review and uses the existing original write slot and configured limits.
+
+The full browser consumer first passes its original1490 wide/1489 compact. New
+recovery checks expose a missing read-only setup, then an inappropriate test
+snapshot-focus assumption. The real F2 editor path now preserves the actual draft
+and caret before filtering it out; its popup check exposes an uninitialized domain
+in the new represented-text helper. These failures are retained. The current
+source repairs that helper with typed NyxNoDomain and prepares Copy lazily from
+the frozen review. Navigation's initial assertion then reads before its two
+legitimate queued steps finish. Waiting on actual execution receipts repairs
+the test setup; no existing assertion, timeout or physical-pointer gate changes.
+Final-source full browser runs pass1538 at1280 and1537 at390. They exercise the
+real empty-page launcher, two actual drafts, readonly physical Memos, stable
+entry navigation, external exact discard, stale-index refusal and explicit Reload.
+Original accepted data, independent instance store and authored defaults remain
+exact. Shared value/ownership checks pass38 on each target, including lazy Copy
+after journal retirement. Native frees all38991 model-check allocations.
+
+The maintained native consumer compiles with zero warnings and passes the new
+recovery cases. Its full run later stops at the existing caller-cursor assertion:
+Windows GetCursorPos fails before that older pointer action. All7381514 blocks
+are freed. Focused real-control runs pass48 at1280 and48 at390, freeing all560729
+blocks each. These do not waive or claim the original full pointer gate. The
+exact generated Service monitor consumer then passes17 at1280 and17 at390,
+freeing all466798/466754 blocks. It compiles the unchanged7288-byte Pascal unit
+from the same semantic application job. F2, hidden-row draft/caret/provenance,
+empty-page launcher, readonly recovered/accepted Memos, unavailable Copy, exact
+source/default preservation and retired-owner refusal execute through native
+controls. The first native application check selects the outer Notes cell when
+Service is pinned; that failed result is retained. Resolving the actual saved
+header's child grid before typing repairs the check and asserts the exact name
+field. No alternate seed, source data or library behavior is substituted.
+The first full compile takes673.2 seconds under this load. Reordering the private
+runner to search its checked unit cache before source avoids recompiling that
+unchanged graph on the repair. Neither compiler facts nor deadlines are changed.
+Source capture, widget interaction and physical/visual qualification stay distinct.
+
+The same revision9 Service monitor builds/launches through authenticated semantic
+MCP. Its actual browser F2 edit survives the Status filter into ordinary recovery;
+the panel shows exact unfinished supplementary-Unicode text separately from the
+accepted Request gateway value. Disabled-host Copy visibly refuses. Enabling
+only the existing QA clipboard choice and rebuilding then copies the exact draft
+at wide/compact widths. The original clipboard items and output profile are
+restored; fingerprint da83d63c57383b9aa777fcaf3c2b8a3c and all four disabled
+services match. Viewport overrides are reset. A fresh original-profile application
+actually mounts in the observing Studio; it has its original four accepted rows
+and no test runtime draft. Independent bounded MCP export retains revision9 and
+the exact13555-byte paired file with SHA256
+55B8676F7694B40C3E6C1BA592797E402292FF3D91D774120E31833C165F7BD2.
+Selection/view, pending-draft absence and Undo/Redo availability remain unchanged.
+MCP compiles, launches and exports the saved pair; ephemeral runtime recovery is
+qualified by the actual input consumers, not an invented semantic journal read.
+All owned compiler/runtime readers are joined. No task/criterion/percentage closes.
+
+Next check visible toolbar-count freshness after deliberate external journal
+discard/reload; the existing navigation test proves stable-entry refusal and
+fresh panel content but does not assert that background count. Resolve that
+criterion before accepting recovery01 and returning to W2. Retain the existing
+full native cursor failure and honest physical/AT/performance limits. Preserve
+exact paired projects, output choices and both fixed listeners. Stop equivalent
+model/capture variants; no task/criterion/percentage closes here.
 
 ### Previous pointer checkpoint
 

@@ -452,12 +452,15 @@ type
 
   { One persistent manager launch retains its original input incarnation while
     a real native button is pressed. Canonical callbacks keep ordinary lifetime
-    continuity, but opening the default form requires the original epoch/map. }
+    continuity, but opening the default form requires the original epoch/map.
+    Recovery selects the same entered command route with data-only review. }
   TNativeColumnManagerCommand = class(TInterfacedObject, INyxGridColumnButtonCommand)
   private
     FOwner: TNativeMount;
     FOwnerLease: INyxCollectionMount;
     FManager: INyxColumnArrangementManager;
+    FCells: INyxCollectionCellActions;
+    FRecovery: Boolean;
     FView: INyxCollectionView;
     FInput: INyxCollectionInputLifetime;
     FEpoch: Integer;
@@ -469,7 +472,7 @@ type
     FRetired: Boolean;
     function LifetimeCurrent: Boolean;
   public
-    constructor Create(AOwner: TNativeMount; ASerial: Integer);
+    constructor Create(AOwner: TNativeMount; ASerial: Integer; ARecovery: Boolean = False);
     function DispatchCurrent: Boolean;
     procedure Invoke;
     procedure Retire;
@@ -576,6 +579,8 @@ type
     { Exact immutable field faces, owned as components by the outer grid. }
     FFitButtons: array of TNyxCollectionFitButton;
     FColumnsButton: TNyxCollectionColumnButton;
+    FRecoveryButton: TNyxCollectionColumnButton;
+    FRecoverySyncing: Boolean;
     FColumnsButtonSerial: Integer;
     FColumnToolbarApplied: Boolean;
     FColumnToolbarHeight: Integer;
@@ -603,6 +608,8 @@ type
     function PrepareColumnsButton(Sender: TObject): INyxGridColumnButtonCommand;
     function PrepareColumnButtonDraft(Sender: TObject): Boolean;
     procedure SynchronizeColumnsButton;
+    procedure SynchronizeRecovery;
+    function PrepareRecoveryButton(Sender: TObject): INyxGridColumnButtonCommand;
     procedure RetireColumnsButton;
     procedure PrepareFitButtonFocus(Sender: TObject);
     procedure FitButtonKeyDown(Sender: TObject; var AKey: Word; AShift: TShiftState);
@@ -1317,26 +1324,32 @@ begin
 end;
 
 constructor TNativeColumnManagerCommand.Create(AOwner: TNativeMount;
-  ASerial: Integer);
+  ASerial: Integer; ARecovery: Boolean);
 begin
   inherited Create;
   FOwner := AOwner;
   FOwnerLease := AOwner as INyxCollectionMount;
   FManager := AOwner.FColumnManager;
+  FCells := AOwner.FCellActions;
+  FRecovery := ARecovery;
   FView := AOwner.FView;
   FInput := AOwner.GetInputLifetime;
   FEpoch := FInput.Epoch;
   FSerial := ASerial;
   FMutation := AOwner.FCellMutationSerial;
   FRevision := AOwner.FArrangedRevision;
-  FLayoutSerial := AOwner.FColumnLayout.Serial;
+  if not ARecovery then
+  begin
+    FLayoutSerial := AOwner.FColumnLayout.Serial;
+  end;
 end;
 
 function TNativeColumnManagerCommand.LifetimeCurrent: Boolean;
 begin
   Result := not FRetired and (FInput <> nil) and FInput.Current and
     (FOwner.FView = FView) and (FOwner.GetInputLifetime = FInput) and
-    (FOwner.FColumnManager = FManager) and (FManager <> nil) and FInput.Current;
+    (((not FRecovery) and (FOwner.FColumnManager = FManager) and (FManager <> nil)) or
+     (FRecovery and (FOwner.FCellActions = FCells) and (FCells <> nil))) and FInput.Current;
 end;
 
 function TNativeColumnManagerCommand.DispatchCurrent: Boolean;
@@ -1379,7 +1392,7 @@ begin
       (FOwner.FColumnsButtonSerial <> FSerial) or
       (FOwner.FCellMutationSerial <> FMutation) or
       (FOwner.FArrangedRevision <> FRevision) or
-      (FOwner.FColumnLayout.Serial <> FLayoutSerial) or
+      (not FRecovery and (FOwner.FColumnLayout.Serial <> FLayoutSerial)) or
       FOwner.FUpdating or FOwner.ColumnInputBusy or
       (FInput.Epoch <> FEpoch) or not FInput.Ready then
     begin
@@ -1387,7 +1400,14 @@ begin
     end;
     { Last outward operation. The retained exact manager owns its presentation;
       callback retirement cannot redirect this default into a successor table. }
-    FManager.Open;
+    if FRecovery then
+    begin
+      FOwner.OpenRecoveredEdits;
+    end
+    else
+    begin
+      FManager.Open;
+    end;
   finally
     Retire;
   end;
@@ -1465,19 +1485,42 @@ end;
 procedure TNativeMount.RetireColumnsButton;
 var
   LButton: TNyxCollectionColumnButton;
+  LRecovery: TNyxCollectionColumnButton;
   LFrame: INyxNativeGestureFrame;
 begin
   LButton := FColumnsButton;
+  LRecovery := FRecoveryButton;
   FColumnsButton := nil;
+  FRecoveryButton := nil;
   LFrame := FColumnFrame;
 
-  if LButton <> nil then
+  if (LButton <> nil) or (LRecovery <> nil) then
   begin
-    LButton.RetireColumnAction;
-    TNyxCollectionStringGrid(FGrid).UnregisterColumnButton(LButton);
-    LFrame.Retire(LButton);
+    { Keep both component destructions deferred until all borrowed button/grid
+      accesses finish, including any callback-bearing destruction tail. }
+    LFrame.Enter;
+    try
+
+      if LRecovery <> nil then
+      begin
+        LRecovery.RetireColumnAction;
+        TNyxCollectionStringGrid(FGrid).UnregisterColumnButton(LRecovery);
+        LFrame.Retire(LRecovery);
+      end;
+
+      if LButton <> nil then
+      begin
+        LButton.RetireColumnAction;
+        TNyxCollectionStringGrid(FGrid).UnregisterColumnButton(LButton);
+        LFrame.Retire(LButton);
+      end;
+    finally
+      LFrame.Leave;
+    end;
   end;
 end;
+
+{$include nyx.collections.recovery.lcl.inc}
 
 procedure TNativeMount.SynchronizeColumnsButton;
 var
@@ -1513,6 +1556,7 @@ begin
     begin
       FColumnsButton.Visible := False;
     end;
+    SynchronizeRecovery;
     Exit;
   end;
   LInput := GetInputLifetime;
@@ -1596,6 +1640,7 @@ begin
       Exit;
     end;
     LButton.BringToFront;
+    SynchronizeRecovery;
   finally
     { Exact frame retained before native setters; deferred component retirement
       and its destructor tails run only after every borrowed button use ends. }
@@ -4763,6 +4808,8 @@ begin
   { Base Refresh has cleared BOTH shields, including on its composition-deferred
     early return. Only register an ordinary wake; never drain/repaint in this tail. }
 
+  SynchronizeRecovery;
+
   if ColumnResizeInterrupted(FResizeRequest) then
   begin
     RetireColumnResize(FResizeRequest);
@@ -5556,7 +5603,7 @@ begin
   if not FQueryHeaderAdjusted then
   begin
 
-    if (FQueries = nil) and not LHeader.Defined then
+    if (FQueries = nil) and not LHeader.Defined and (FColumnToolbarHeight = 0) then
     begin
       Exit;
     end;

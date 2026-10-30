@@ -460,13 +460,18 @@ type
     constructor Create(ACommand: TBrowserColumnCommand);
   end;
 
-  { A Columns intention and optional held Space press retain value/identity
+  { A Columns/recovery intention and optional held Space press retain value/identity
     witnesses only. There is no mount, renderer, event or widget-owner reference
     back to this lease, so retaining it on the mount cannot create a cycle. }
   TBrowserManagerPress = class(TInterfacedObject)
   public
     View: INyxCollectionView;
     Manager: INyxColumnArrangementManager;
+    { A recovery launch has no positional source-row dependency. Its physical
+      button still uses this same original input/press lifetime and callback
+      dispatch, while the managed actions owner queues data-only review. }
+    Recovery: Boolean;
+    Cells: INyxCollectionCellActions;
     Input: INyxCollectionInputLifetime;
     Capture: INyxCollectionColumnsCapture;
     Rendered: INyxCollectionSnapshot;
@@ -593,7 +598,8 @@ type
   { Owns projected collection rows and pending layout commands while borrowing
     its host DOM. Input envelopes retain this exact mount through synchronous
     callbacks; terminal detachment revokes their authority before DOM removal.
-    Caption actions and live column status belong to that same DOM lifetime. }
+    Caption actions, recovered-edit access and live column status belong to
+    that same DOM lifetime. Recovery uses the original managed command route. }
   TBrowserMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
@@ -628,6 +634,12 @@ type
       command remain visible without changing authored help or column choices. }
     FColumnBar: TJSHTMLElement;
     FColumnStatus: TJSHTMLElement;
+    FRecoveryLauncher: TJSHTMLElement;
+    FRecoveryInputBound: Boolean;
+    procedure SynchronizeRecovery;
+  protected
+    procedure RefreshTargetIdle; override;
+  private
     FOpeningColumnManager: Boolean;
     FCellPresentationDepth: Integer;
     FColumnManagerSerial: Integer;
@@ -2265,15 +2277,17 @@ function TBrowserManagerCommand.CurrentOriginal: Boolean;
 begin
   Result := not FRetired and (FPress <> nil) and not FPress.Cancelled and
     (FOwner.FView = FPress.View) and (FOwner.FHost = FPress.Host) and
-    (FOwner.FColumnLauncher = FPress.Launcher) and
-    (FOwner.FColumnManager = FPress.Manager) and (FPress.Manager <> nil) and
+    (((not FPress.Recovery) and (FOwner.FColumnLauncher = FPress.Launcher) and
+      (FOwner.FColumnManager = FPress.Manager) and (FPress.Manager <> nil)) or
+     (FPress.Recovery and (FOwner.FRecoveryLauncher = FPress.Launcher) and
+      (FOwner.FCellActions = FPress.Cells) and (FPress.Cells <> nil))) and
     (FOwner.FColumnManagerSerial = FPress.ManagerSerial) and
     (FPress.ManagerSerial < High(Integer)) and
     (FOwner.FColumnResizeSerial = FPress.ResizeSerial) and
     (FPress.ResizeSerial < High(Integer)) and
     (FOwner.FCellMutationSerial = FPress.Mutation) and
     (FPress.Mutation < High(Integer)) and
-    (FOwner.FColumnLayout.Serial = FPress.LayoutSerial) and
+    (FPress.Recovery or (FOwner.FColumnLayout.Serial = FPress.LayoutSerial)) and
     (FOwner.FRendered = FPress.Rendered) and FOwner.FEnabled and
     not FOwner.FUpdating and not FOwner.FEditsSuspended and
     not FOwner.FOpeningColumnManager and (FOwner.FComposingInput = nil);
@@ -2355,6 +2369,14 @@ begin
 
   if not FAllowOpen or not CurrentOriginal then
   begin
+    Exit;
+  end;
+
+  if FPress.Recovery then
+  begin
+    { Readonly journal review has no current column/preference dependency.
+      The original view, input epoch, command serial and owner still qualify
+      its default. An empty/legacy table need not manufacture a layout capture. }
     Exit;
   end;
   LColumns := NyxCollectionColumns(FPress.View);
@@ -2450,7 +2472,7 @@ begin
   try
 
     if not AAllowDefault or not FAllowOpen or not FPrepared or
-      FEvent.defaultPrevented or (FPress.Capture = nil) or
+      FEvent.defaultPrevented or (not FPress.Recovery and (FPress.Capture = nil)) or
       not CurrentOriginal or (FPress.ManagerSerial >= High(Integer) - 1) or
       (FPress.ResizeSerial >= High(Integer) - 1) then
     begin
@@ -2471,7 +2493,14 @@ begin
     end;
     FOwner.FOpeningColumnManager := True;
     try
-      FPress.Manager.Open;
+      if FPress.Recovery then
+      begin
+        FOwner.OpenRecoveredEdits;
+      end
+      else
+      begin
+        FPress.Manager.Open;
+      end;
     finally
       { The entered command keeps this original mount alive. No controller or
         borrowed DOM is read after Open, including its exception/retirement tail. }
@@ -4089,7 +4118,8 @@ begin
     Exit;
   end;
 
-  if AEvent.target = FColumnLauncher then
+  if ((FColumnLauncher <> nil) and (AEvent.target = FColumnLauncher)) or
+    ((FRecoveryLauncher <> nil) and (AEvent.target = FRecoveryLauncher)) then
   begin
     Exit(NewColumnManagerCommand(AEvent));
   end;
@@ -4115,7 +4145,8 @@ begin
     (AEvent.button = 0) then
   begin
 
-    if AEvent.target = FColumnLauncher then
+    if ((FColumnLauncher <> nil) and (AEvent.target = FColumnLauncher)) or
+      ((FRecoveryLauncher <> nil) and (AEvent.target = FRecoveryLauncher)) then
     begin
       { The two Clicks already own button activation. Canonical DoubleClick is
         still delivered, but its claimed default must not open a third time. }
@@ -4133,7 +4164,8 @@ begin
   Result := nil;
 
   if (AEvent._type = ColumnFitClickEvent) and (AEvent.button = 0) and
-    (AEvent.target = FColumnLauncher) then
+    (((FColumnLauncher <> nil) and (AEvent.target = FColumnLauncher)) or
+     ((FRecoveryLauncher <> nil) and (AEvent.target = FRecoveryLauncher))) then
   begin
     { Claim even an already-prevented same-host event. The renderer's canonical
       route or direct fallback must not recapture a fresh default later. }
@@ -4514,6 +4546,12 @@ begin
       FColumnLauncher.setAttribute('disabled', '');
     end;
     InvalidateColumnResizes;
+
+    if FRecoveryLauncher <> nil then
+    begin
+      FRecoveryLauncher.removeEventListener('pointerdown', @ColumnLauncherPointer);
+      FRecoveryLauncher.setAttribute('disabled', '');
+    end;
     FComposingInput := nil;
     FCompositionEnding := False;
     FCompositionChange := Default(TCompositionChange);
@@ -5202,12 +5240,15 @@ var
   LKeepAlive: INyxCollectionMount;
   LPress: TBrowserManagerPress;
   LLease: IInterface;
+  LRecovery: Boolean;
 begin
   Result := nil;
   LKeepAlive := Self as INyxCollectionMount;
 
-  if not FHasColumnLayout or (FView = nil) or (FHost = nil) or
-    (FColumnLauncher = nil) or (AEvent.target <> FColumnLauncher) then
+  LRecovery := (FRecoveryLauncher <> nil) and (AEvent.target = FRecoveryLauncher);
+
+  if (not FHasColumnLayout and not LRecovery) or (FView = nil) or (FHost = nil) or
+    (not LRecovery and ((FColumnLauncher = nil) or (AEvent.target <> FColumnLauncher))) then
   begin
     Exit;
   end;
@@ -5215,6 +5256,8 @@ begin
   LLease := LPress;
   LPress.View := FView;
   LPress.Manager := FColumnManager;
+  LPress.Recovery := LRecovery;
+  LPress.Cells := FCellActions;
   LPress.Input := GetInputLifetime;
 
   if LPress.Input <> nil then
@@ -5223,9 +5266,18 @@ begin
   end;
   LPress.Host := FHost;
   LPress.Launcher := FColumnLauncher;
+
+  if LRecovery then
+  begin
+    LPress.Launcher := FRecoveryLauncher;
+  end;
   LPress.Rendered := FRendered;
   LPress.Mutation := FCellMutationSerial;
-  LPress.LayoutSerial := FColumnLayout.Serial;
+
+  if not LRecovery then
+  begin
+    LPress.LayoutSerial := FColumnLayout.Serial;
+  end;
   LPress.ResizeSerial := FColumnResizeSerial;
   LPress.ManagerSerial := FColumnManagerSerial;
   LPress.Active := FColumnResize;
@@ -5245,7 +5297,7 @@ begin
     LPress.PendingActivity := LPress.Pending.Activity;
   end;
 
-  if not FHost.contains(FColumnLauncher) or
+  if not FHost.contains(LPress.Launcher) or
     ((AEvent is TJSKeyboardEvent) and
     (document.activeElement <> LPress.Launcher)) then
   begin
@@ -5253,6 +5305,8 @@ begin
   end;
   Result := TBrowserManagerCommand.Create(Self, LPress, LLease, AEvent, AAllowOpen);
 end;
+
+{$include nyx.collections.recovery.browser.inc}
 
 constructor TBrowserMount.Create(AHost: TJSHTMLElement;
   const AView: INyxCollectionView; const ALimits: TNyxTableTextWorkLimits;
@@ -7040,6 +7094,7 @@ begin
     OrderColumnChildren(TJSHTMLElement(FHeaderCells[0].parentElement), FHeaderCells);
   end;
   RefreshColumnResizers;
+  SynchronizeRecovery;
 end;
 
 procedure TBrowserMount.RecoverRowDrafts(const AData: INyxCollectionSnapshot);
@@ -8379,6 +8434,18 @@ begin
     begin
       FColumnLauncher.setAttribute('disabled', '');
     end;
+
+    if FRecoveryLauncher <> nil then
+    begin
+      if FEnabled then
+      begin
+        FRecoveryLauncher.removeAttribute('disabled');
+      end
+      else
+      begin
+        FRecoveryLauncher.setAttribute('disabled', '');
+      end;
+    end;
   end;
   RefreshQueryHeaders;
   case FView.Projection of
@@ -8751,7 +8818,7 @@ begin
       FHost.removeEventListener('keydown', @RangeGestureCancel);
       window.removeEventListener('blur', @RangeGestureCancel);
 
-      if FHasColumnLayout then
+      if FHasColumnLayout or FRecoveryInputBound then
       begin
         FHost.removeEventListener('pointerdown', @ColumnResizeDown);
         FHost.removeEventListener('pointermove', @ColumnResizeMove);
@@ -8767,7 +8834,7 @@ begin
         FHost.removeEventListener(ColumnFitDoubleEvent, @ColumnFitInput);
       end;
 
-      if FHasColumnLayout or FObservesTablePresentation then
+      if FHasColumnLayout or FObservesTablePresentation or FRecoveryInputBound then
       begin
         TCapturedElement(FHost).removeEventListener(ColumnCompositionStart,
           @CellComposition, True);
