@@ -7,9 +7,14 @@ Unicode draft and exact paired Undo/Redo, followed by its own compiled applicati
 JSON formatting workflow. Compact compiler-backed continuation exposes the required
 [named-project prerequisite](NS-4_named-projects_01.md). Its Save repair now passes
 at both widths through exact live checkpoints and independently verified adjacent
-files/drafts. Ordinary Open still rejects the valid richer companion through
-its literal reader, retaining the current pair. Follow that owner before claiming
-criterion 3; no original criterion or task closes. WORK owns evidence.
+files/drafts. The subsequent shared compiler-backed Open now retains the complete
+imported pair and qualifies ordinary paired Undo/Redo at both browser widths,
+followed by Apply and its own compiled application. The exact initial Workshop
+pair/selection is restored, and matched frozen delivery preserves all projects and
+profiles on QA/LAN. The full native shared-provider run still meets its original
+compiler deadline before a later case; its focused acknowledgement check passes.
+Keep that gate and broader authoring/native/physical/performance criteria open.
+No original criterion or task closes from this checkpoint; WORK owns evidence.
 
 **Browser editing return — 2026-10-29:**
 

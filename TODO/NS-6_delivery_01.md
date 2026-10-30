@@ -11,8 +11,15 @@ build target now honors the existing scratch selection. Preparation preserves
 those owned include paths and spends one shared source allowance while reserving
 eight production artifacts under the unchanged1024-file manifest limit. The
 fresh789-member matched bundle compiles and seals, including all four glyph
-dependencies. Maintained capacity/over-budget and manifest/refusal checks remain
-live; WORK owns their terminal evidence. This required packaging repair
+dependencies. All45 maintained capacity/over-budget and manifest/refusal checks
+pass with a complete clean heap. The launcher now accepts byte-identical fixed
+slots and configured frozen defaults; a mismatched slot refuses without disturbing
+existing owners. Actual matched QA/LAN delivery preserves all nine/three exact
+projects and both output profiles after109 durable files and old payloads are
+backed up. QA executes20/20 recovery constructors; six served artifacts match on
+each host, and desktop/compact public observers show Project actions/glyphs.
+Physical phone, full native-provider/performance and original CI/platform gates
+remain separate. WORK owns terminal evidence. This required packaging repair
 does not close the original setup, CI, platform or installed-interaction criteria.
 
 Current qualification gap (2026-10-25): the shared `RunOwned` redirected-output

@@ -117,6 +117,17 @@ payload and installed binary afterward. Same-host LAN requests establish local
 delivery; access from a phone requires separate confirmation. The current retained
 path and private preservation baselines belong to WORK.md.
 
+Release launches use an explicit `-Server` or the configured `STUDIO_SERVER` fixed
+slot when present. Its ordinary file must match the bundle's backend bytes;
+otherwise launch refuses before opening listeners. The launcher never replaces
+that file or stops its owner. With neither configured nor explicit slot, it uses
+the bundle's own executable. Pascal still verifies the complete payload at startup.
+Private `STUDIO_RELEASE_ROOT`, `STUDIO_RUNTIME_ROOT` and
+`STUDIO_ENROLLMENT_ROOT` settings can retain that installation for a later default
+launch. An explicit repository `-Server` or `-WebRoot` keeps the earlier development
+behavior unless `-ReleaseRoot` is also supplied. A configured release skips Studio
+compilation and uses its own manifest-owned web/source paths.
+
 MCP enrollment defaults to the runtime root. Optional `-EnrollmentRoot` chooses
 the project whose `.codex/config.toml` is refreshed, including an explicitly enrolled
 user entry. Its `.codex` and `.local` write locations must be outside the payload.

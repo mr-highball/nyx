@@ -78,6 +78,18 @@ $nyxPreviousTmp = $env:TMP
 $nyxPreviousRuntime = $env:NYX_STUDIO_RUNTIME_ROOT
 $nyxPreviousEnrollment = $env:NYX_STUDIO_ENROLLMENT_ROOT
 try {
+  # Installed defaults remain distinct from explicit repository/test hosts.
+  # Supplying -Server or -WebRoot keeps the earlier repository invocation unless
+  # the caller explicitly also selects -ReleaseRoot.
+  if (-not $ReleaseRoot -and -not $Server -and -not $WebRoot) {
+    $ReleaseRoot = Get-NyxConfiguration 'STUDIO_RELEASE_ROOT'
+  }
+  if ($ReleaseRoot -and -not $RuntimeRoot) {
+    $RuntimeRoot = Get-NyxConfiguration 'STUDIO_RUNTIME_ROOT'
+  }
+  if ($ReleaseRoot -and -not $EnrollmentRoot) {
+    $EnrollmentRoot = Get-NyxConfiguration 'STUDIO_ENROLLMENT_ROOT'
+  }
 
   if ($ReleaseRoot -and -not $RuntimeRoot) {
     throw 'Supply -RuntimeRoot for an installed release.'
@@ -151,10 +163,25 @@ try {
       $nyxPackagedServer = Join-Path $nyxReleaseRoot 'bin/nyx_studio_server'
     }
 
-    if ($nyxServer -and (Resolve-Path -LiteralPath $nyxServer).Path -ne $nyxPackagedServer) {
-      throw 'A release launch must use its own staged backend executable.'
+    if (-not $nyxServer) { $nyxServer = Get-NyxConfiguration 'STUDIO_SERVER' }
+    if (-not $nyxServer) { $nyxServer = $nyxPackagedServer }
+    $nyxSelectedServer = (Resolve-Path -LiteralPath $nyxServer).Path
+
+    if ($nyxSelectedServer -ne $nyxPackagedServer) {
+      # The existing firewall allowance may name a fixed executable slot. Its
+      # staged bytes must still belong to this bundle. Do not copy over a live
+      # owner, choose a fresh listener path or silently launch another binary.
+      $nyxSelectedItem = Get-Item -LiteralPath $nyxSelectedServer
+      if ($nyxSelectedItem.PSIsContainer -or
+        (($nyxSelectedItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) -or
+        ((Get-FileHash -LiteralPath $nyxSelectedServer -Algorithm SHA256).Hash -ne
+         (Get-FileHash -LiteralPath $nyxPackagedServer -Algorithm SHA256).Hash)) {
+        throw 'The fixed release backend must be an ordinary file matching the bundle. Stage it after stopping its owner.'
+      }
     }
-    $nyxServer = $nyxPackagedServer
+    # Pascal verifies the complete immutable payload before opening listeners;
+    # the external executable choice does not change web/source/runtime roots.
+    $nyxServer = $nyxSelectedServer
   }
   elseif (-not $nyxServer) {
     if ($SkipBuild) { $nyxServer = Get-NyxConfiguration 'STUDIO_SERVER' }

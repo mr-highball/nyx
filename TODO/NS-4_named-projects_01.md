@@ -110,8 +110,12 @@ The owned Workshop returns through its ordinary history to the exact initial
 pair and selection, while nine recovered QA pairs and both output profiles match
 the preserved baselines. Packaging exposes and repairs the existing scratch,
 uneven-inventory and missing embedded-glyph dependencies under the delivery owner.
-Its matched artifact/remaining consumer and preserving rollout are still pending;
-none of these partial results close the native gate or this task.
+Its789-member matched artifact passes45 package checks with a clean heap and is
+delivered through the original QA/LAN slots. All nine QA/three LAN pairs and both
+profiles stay exact; the ordinary QA root executes20/20 recovery constructors.
+Current public editor observation shows Project actions/glyphs at both widths.
+These results close that delivery checkpoint, while the full native gate and this
+task remain open; no original criterion or parent quality gate is waived.
 
 **Blockers**
 

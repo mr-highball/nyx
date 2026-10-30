@@ -156,8 +156,10 @@ full native shared-provider run now passes its real ordinary Open/history case
 and later reaches a compiler deadline before its server-error acknowledgement
 case publishes. Its focused acknowledgement check passes; the following full
 sequence still hits the original compiler budget before execution. The owned
-initial pair/selection is now restored through ordinary history. Finish the
-existing matched-package qualification and preserving delivery; full native
+initial pair/selection is now restored through ordinary history. The matched789-
+member bundle passes45 packaging checks and preserving QA/LAN delivery, retaining
+all projects/profiles with ordinary public-root recovery and both-width Project
+actions/glyphs. Return to the ranked user-facing outcomes; full native
 provider/throughput qualification and broader authoring
 acceptance remain open; stop equivalent chrome/source fixture variants.
 

@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Native constructor-throughput gap,2026-10-30: unchanged saved-project compiles
+can finish in roughly15..21s, while retained full shared-provider runs also reach
+the original60000ms compiler guard before execution/publication. Ordinary native
+Open/history passes and the focused server-error case passes with clean heaps;
+the full gate remains open. One contemporaneous slow disk-write observation
+does not establish causality. Preserve these failures and the existing bounds;
+do not repeat equivalent full runs without a concrete measurement/repair decision.
+WORK and the existing studio-authoring-return-01 packet own the evidence. Return
+to the ranked user-facing workflows while this original performance gate remains.
+
 Full-refresh continuation,2026-10-29: renderer phase observation identifies
 repeated large resource strings in full context admission. Browser JSON parsing
 now locates ordinary runs with a private host scanner after complete Unicode/

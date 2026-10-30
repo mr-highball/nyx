@@ -11,9 +11,10 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Studio named Save/Open authoring return — 2026-10-30
 
-Previous goal turn: PROGRESS.559e4a54 is pushed and remote-verified. The focused native acknowledgement case now passes
-without increasing the original deadline; the following full sequence still
-fails its compiler budget, as recorded below. ab4dbb22 is pushed and remote-verified. Root remains
+Previous goal turn: PROGRESS.51bbdb81 is pushed and remote-verified. Packaging's
+scratch, shared inventory and embedded-glyph repairs now compile/seal the complete
+matched bundle. The full native shared sequence still fails its original compiler
+budget, as recorded below; no deadline is expanded. Root remains
 SOLO. Return to Studio-slice criterion3 and full-authoring criteria2/5 using the
 same existing owned QA Workshop copy. Inspect bounded semantic context, retain
 the exact initial pair, then exercise actual design/Pascal edits, pending draft,
@@ -26,16 +27,68 @@ credit for repeating them. Do not expand resolver, JSON/profile or chrome-only
 variants. New private runners, artifacts and owned TEMP/TMP stay on E: in
 studio-authoring-return-01. Original acceptance scope and prerequisites remain.
 
-Current bounded batch: finish the existing matched-release-03 package consumer,
-then preserve and deliver that matched Studio payload through the fixed slots.
+Current bounded batch: matched-release-03 is delivered through both fixed slots.
+Finish the current preservation/observer record, then return to the ranked
+user-facing backlog without another equivalent packaging or diagnostic batch.
 Its backend, Studio, independent worker and preview compile from frozen sources;
 the sealed789-file inventory includes all four glyph dependencies. There are zero
 owned warnings and21 installed Classes warnings across the browser builds. The
-maintained native manifest/refusal and source-capacity consumer is still live;
-follow its same owner to terminal. Do not re-run the full native shared suite,
+maintained native manifest/refusal and source-capacity consumer passes45 with
+all295581 blocks freed. Its actual owner is joined. All781 frozen compiler-source
+members match the pushed source checkpoint independently; the manifest records
+the earlier capture checkpoint as documented. Fresh semantic exports match all
+nine QA and three LAN pairs/revisions/titles plus both exact output profiles.
+QA's27 durable files and old payload are backed up and hash-verified before its
+old owner is stopped/joined. The new backend and six matched public browser roots
+occupy the same QA paths. Actual ordinary root recovery executes/publishes20/20
+constructors. Independent semantic exports match all nine exact pairs, revisions
+and titles, including the restored owned72 pair/selection. Both-width public-root
+observation shows the current Project actions and custom glyphs.
+Do not re-run the full native shared suite,
 expand compiler/deadline budgets or begin another equivalent diagnostic family.
 The full shared-provider compiler-throughput gate remains open. No task/DONE or
 completion credit follows from this package checkpoint.
+
+The existing launcher had required a release backend to run inside a fresh bundle,
+contradicting the approved fixed-slot requirement. It now selects an explicit or
+configured slot, requiring an ordinary file with exactly matching backend bytes;
+the Pascal host still verifies the complete payload. A mismatched configured slot
+refuses before launch while both original owners remain live. After preserving82
+LAN durable files plus its old payload, the old owner is stopped/joined and the
+same configured executable receives the verified candidate bytes. Default launch
+now consumes private release/runtime/enrollment settings, with explicit repository
+hosts retaining their earlier path. Its actual LAN process uses frozen source/web
+roots, and three independent semantic exports retain exact pairs/revisions/titles
+and output bytes. All six public HTTP members match the candidate on QA and LAN.
+The LAN-address browser loads ordinary desktop/compact editor faces and Project
+actions. This is same-host LAN access, not a new physical phone confirmation.
+No firewall settings or listener paths change; no running file is overwritten.
+
+One private staging-script block omitted invocation and printed rather than
+executing its legacy-web copy. This is caught before the new LAN launch. The
+explicit copy is then executed/byte-checked while the old owner is stopped; the
+frozen LAN launch uses the pristine candidate independently. The corrected helper
+and failed/skipped-step evidence are retained. Both old payloads and109 durable
+files remain recoverable; no runtime/project overwrite or rollback is performed.
+
+Delivery is terminal-success: the frozen LAN default launcher retains its old
+executable path, runtime and enrollment. Private settings add only the frozen
+release/enrollment choices; all previous setting values remain intact. The
+ordinary LAN-address editor exposes New/Open/Save/Switch and their glyphs at390
+pixels; sizing is reset after capture. The final owned QA session is72 with its
+original selection, view, no pending draft and both history directions available.
+All12 exported pairs/revisions/titles and both output profiles are exact, and both
+listeners retain their original address/port scopes. Physical phone input is not
+claimed. No owned compiler/test reader remains; only the two intended services
+remain active. The package consumer's original process is joined, not restarted.
+
+Next return: existing workbench03 W1's actual pointer column-resize journey in
+the saved Service monitor, then W2 selected/range output and independence. Keep
+the same owned QA fixture, capture its exact baseline and use semantic MCP to
+inspect/build; use actual input only for the controls it must qualify. Stop at
+the first concrete failure and repair its owner. Retain original physical/AT,
+target, native full-provider/compiler-throughput and broader authoring criteria;
+do not expand resolver, packaging, hint, geometry or host/profile fixture variants.
 
 The unchanged current-source direct saved-project regression now passes50 with
 all2210726 blocks freed. Its five native compilations take16.7/14.8/16.2/15.8/15.9s
