@@ -9,7 +9,72 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Saved Workshop responsiveness — 2026-10-29
+## Current work — Full Workshop refresh cost — 2026-10-29
+
+Previous goal turn: PROGRESS.6378c7dd is pushed and remote-verified. Root remains
+SOLO. This checkpoint advances the existing performance owner's criteria2/3 in
+the same full saved Workshop, without closing its original latency/scale gates
+or repeating accepted functional journeys as new acceptance.
+
+One opt-in renderer phase trace separates full property admission, context,
+realization, recipe cloning, rollback and synchronization. It identifies repeated
+large serialized resource strings in context reads. The browser strict JSON
+reader now locates ordinary string boundaries with its own standard RegExp,
+declared/used in Pascal, after the existing complete raw Unicode/UTF-8 byte check.
+The same Pascal escape, raw-control, duplicate-key, decimal, depth/member and
+trailing-data admission remains. No mutable caller-document validation is cached
+or omitted. Each reader retains its own cursor/scanner; native parsing is unchanged.
+The renderer trace is bounded diagnostic-only observation under NYX_SOURCE_PROFILE;
+production builds add no trace or extra renderer work.
+
+The complete native JSON/value suite passes226 with a clean heap; the browser
+suite passes233 through its ordinary two checkpoint acknowledgements. New checks
+cover long raw/escaped strings after supplementary Unicode, following values,
+every raw control at its exact target-unit error position, late incomplete
+escapes/surrogates and the original 4 MiB boundary. Matching-production real worker
+preparation/replay/cancel/detach passes53, including an armed prepared-reply timer.
+Its module bytes equal the final maintained worker. The unchanged full browser
+workspace passes91 at1280x720 and390x900 under its original30000ms guard. Maintained
+native ownership450/450 and actual source workspace86 pass with three more clean
+heaps. Full native Studio and five browser/module consumers compile, with zero
+owned warnings and42 visible installed Classes warning occurrences. Compiler/test
+readers are joined; useful failures remain: the first diagnostic build needs the
+window-qualified clock, and the first native runner lacks its Studio unit path.
+Both are corrected before executed acceptance, without SDK changes or suppression.
+
+The same compact ordinary Uniform Apply completes normally before/after repair.
+Single observations measure local delivery8150.2ms before/6764.6ms after, and total
+edit-to-local-completion21333.5/19901.4ms. Send-to-reply10670.0/10898.9ms does not
+improve in this sample. Observed shell context318.9/277.2ms and Inspector
+context404.5/316.0ms retain the phase attribution. These normal observing-editor
+samples are not isolated statistical benchmarks, causal percentages or near-real-
+time acceptance. The remaining approximately6.8-second local path is material.
+Do not claim the goal's performance requirement from this improvement.
+
+Independent full exports prove the baseline and repaired Uniform pairs identical
+to the accepted pair at revisions29/31. Ordinary Undo restores the original Reflow
+pair at30/32. The owned QA copy advances28 to32 while selection/view and history
+availability remain; its normal new edit replaces the earlier owned redo branch.
+All nine QA pairs and the other eight revisions remain exact. Matched QA/LAN
+assets verify all twelve served hashes/no-store headers. All three LAN project
+pairs/revisions,82 durable configuration/project files and the effective output
+fingerprint remain unchanged, with all four runtime service permissions disabled.
+The live lock is excluded from durable hashing. Neither serving process, binary
+or listener is replaced. No root-worker profile replacement is needed this turn.
+Owned browser tabs close, viewport overrides reset and original review tabs stay
+handed off. New private runners, artifacts and owned TEMP/TMP stay on E: in
+workshop-refresh-cost-01; source identities and raw measurements are retained.
+
+Reassessment: the measured browser read path is repaired and qualified through
+the full consumer. Fresh session/edit preparation, complete shell composition
+and projection/context/fallback work still prevent near-real-time editing. Keep
+these with the existing performance owner; stop additional JSON/profile fixture
+variants. Return to the ranked ordinary Studio authoring outcome, including its
+remaining named Save/Open, paired draft/history and preview workflows. Preserve
+all original scope and performance gates; no task identity or completion credit
+is added by this checkpoint.
+
+## Previous checkpoint — Saved Workshop responsiveness — 2026-10-29
 
 Previous goal turn: PROGRESS.2401c6cb is pushed and remote-verified. Root stays
 SOLO. Follow the performance owner's original full saved Workshop; its functional

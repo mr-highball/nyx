@@ -79,7 +79,8 @@ function NyxJSONStringByteLength(const AText: TNyxText;
 implementation
 
 uses
-  nyx.state;
+  nyx.state
+  {$ifdef PAS2JS}, JS{$endif};
 
 function NyxJSONStringByteLength(const AText: TNyxText;
   AStrict: Boolean): Integer;
@@ -197,10 +198,17 @@ type
     procedure Clear; override;
   end;
 
+  { One complete strict read owns its source cursor and partial JSON trees.
+    Unicode/byte admission precedes parsing. Browser string-boundary scanning
+    owns a private RegExp with UTF-16 offsets; no DOM object or shared mutable
+    scanner is retained, and escape/grammar admission remains in Pascal. }
   TNyxJSONReader = class
   private
     FSource: TNyxText;
     FIndex: Integer;
+    {$ifdef PAS2JS}
+    FStringBoundary: TJSRegExp;
+    {$endif}
     procedure Problem(const AReason: TNyxText);
     procedure SkipSpace;
     procedure Require(AChar: Char);
@@ -537,12 +545,19 @@ begin
 end;
 
 function TNyxJSONReader.ReadString: TNyxText;
+{$ifdef PAS2JS}
+const
+  CJSONStringBoundary = '["\\\x00-\x1f]';
+{$endif}
 var
   LParts: TNyxStrings;
   LStart: Integer;
   LChar: Char;
   LScalar: Integer;
   LLow: Integer;
+  {$ifdef PAS2JS}
+  LMatch: TJSObject;
+  {$endif}
 begin
   Require('"');
   LParts := TNyxStrings.Create;
@@ -550,6 +565,26 @@ begin
     LStart := FIndex;
     while FIndex <= Length(FSource) do
     begin
+      {$ifdef PAS2JS}
+
+      if FStringBoundary = nil then
+      begin
+        FStringBoundary := TJSRegExp.new(CJSONStringBoundary, 'g');
+      end;
+      { The constructor already validates every raw scalar and UTF-8 byte.
+        Find the next quote, escape or forbidden raw control in one host scan.
+        Every match is one UTF-16 unit: its zero-based end is exactly our
+        one-based cursor. No ordinary text is decoded, normalized or coerced. }
+      FStringBoundary.lastIndex := FIndex - 1;
+      LMatch := FStringBoundary.execFull(FSource);
+
+      if LMatch = nil then
+      begin
+        FIndex := Length(FSource) + 1;
+        Break;
+      end;
+      FIndex := FStringBoundary.lastIndex;
+      {$endif}
       LChar := FSource[FIndex];
 
       if LChar = '"' then

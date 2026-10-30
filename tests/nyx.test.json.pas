@@ -69,6 +69,33 @@ begin
   end;
 end;
 
+{ Error positions remain in target storage units after a long raw Unicode run.
+  A boundary scanner must not skip a forbidden control or move its diagnostic. }
+procedure RejectAt(const ASource: TNyxText; APosition: Integer; var ACount: Integer);
+var
+  LData: TJSONData;
+  LRejected: Boolean;
+  LSuffix: TNyxText;
+begin
+  LData := nil;
+  LRejected := False;
+  LSuffix := ' at JSON position ' + IntToStr(APosition);
+  try
+    try
+      LData := DecodeNyxJSON(ASource);
+    except
+      on LException: ENyxJSON do
+      begin
+        LRejected := Copy(LException.Message,
+          Length(LException.Message) - Length(LSuffix) + 1, Length(LSuffix)) = LSuffix;
+      end;
+    end;
+    Check(LRejected, 'raw string control retains its exact error position', ACount);
+  finally
+    LData.Free;
+  end;
+end;
+
 function RunNyxJSONTests: Integer;
 const
   CInvalid: array[0..23] of TNyxText = (
@@ -167,6 +194,34 @@ begin
   for LIndex := 0 to High(CInvalid) do
   begin
     Reject(CInvalid[LIndex], Result);
+  end;
+  { Real resource/context packets contain long raw spans. Exercise boundaries
+    after a supplementary scalar, escapes, following values and every forbidden
+    raw control without reducing the shared byte/depth/member budgets. }
+  LText := TNyxText(StringOfChar('r', 65536)) + TNyxText(' 🌙 tail');
+  LExpected := LText + TNyxText(#0#10) + TNyxText(' " \ / escaped tail');
+  LData := DecodeNyxJSON('["before",' + EncodeNyxJSONString(LExpected) + ',"after"]');
+  try
+    Check((LData.Count = 3) and (LData.Items[1].AsString = LExpected) and
+      (LData.Items[2].AsString = 'after'),
+      'long raw Unicode/escaped string leaves the following value exact', Result);
+  finally
+    LData.Free;
+  end;
+  for LIndex := 0 to 31 do
+  begin
+    RejectAt('"' + LText + TNyxText(Char(LIndex)) + '"', Length(LText) + 2, Result);
+  end;
+  Reject('"' + LText + '\', Result);
+  Reject('"' + LText + '\"', Result);
+  Reject('"' + LText + '\ud800x"', Result);
+  Reject('"' + LText + '\udc00"', Result);
+  LText := StringOfChar('x', NyxMaximumJSONBytes - 2);
+  LData := DecodeNyxJSON('"' + LText + '"');
+  try
+    Check(LData.AsString = LText, 'maximum raw string packet remains admitted exactly', Result);
+  finally
+    LData.Free;
   end;
   Reject('"raw' + #9 + 'tab"', Result);
   LText := StringOfChar('[', NyxMaximumJSONDepth) + '0' +

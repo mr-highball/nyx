@@ -4978,6 +4978,37 @@ var
   LFrame: TNyxViewFrame;
   LMeasurements: INyxContainerSnapshot;
   LNextSelection: TNyxPresentationSelection;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LProfileStarted: Double;
+
+  { Opt-in phase observation owns no model or callback. Bound inert attribute
+    text identifies this renderer/root and the elapsed synchronous refresh work;
+    it is never consumed as admission, revision or publication authority. }
+  procedure Profile(const APhase: TNyxText);
+  var
+    LText: TNyxText;
+  begin
+
+    if (document.body = nil) or (ARoot = nil) then
+    begin
+      Exit;
+    end;
+    LText := '';
+
+    if document.body.hasAttribute('data-nyx-projection-trace') then
+    begin
+      LText := document.body.getAttribute('data-nyx-projection-trace');
+    end;
+
+    if Length(LText) > 16384 then
+    begin
+      LText := '';
+    end;
+    document.body.setAttribute('data-nyx-projection-trace', LText +
+      ARoot.ID + '/' + APhase + '/' + FloatToStr(window.performance.now) + '/' +
+      FloatToStr(window.performance.now - LProfileStarted) + #10);
+  end;
+  {$endif}
 
   function Compatible(AFrom, ATo: TNyxNode; AArrange: Boolean): Boolean;
   begin
@@ -5055,6 +5086,10 @@ var
 begin
   FEvents.Scheduler.RequireUI;
   Result := False;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LProfileStarted := window.performance.now;
+  Profile('begin');
+  {$endif}
 
   { Data notification keeps the mounted board and calls Sync. Authored tree
     replacement takes full candidate admission for exact node/view authority. }
@@ -5085,12 +5120,14 @@ begin
     end;
   end;
   ValidateNyxDocumentProperties(ADocument);
+  {$ifdef NYX_SOURCE_PROFILE}Profile('properties');{$endif}
 
 
   if NyxProjectionContext(ADocument) <> FProjectionContext then
   begin
     Exit;
   end;
+  {$ifdef NYX_SOURCE_PROFILE}Profile('context');{$endif}
   LCandidate := nil;
   LPrevious := nil;
   LProjectedCandidate := nil;
@@ -5113,6 +5150,7 @@ begin
     begin
       Exit;
     end;
+    {$ifdef NYX_SOURCE_PROFILE}Profile('theme');{$endif}
     LFrame := FViewportBinding.Frame(FHost.clientWidth, FHost.clientHeight);
     LNextSelection := FPresentationSelection.Reconciled(ADocument.Presentations.Snapshot);
 
@@ -5122,6 +5160,7 @@ begin
     end;
     LMeasurements := MeasureContainers;
     LCandidate := RealizeNyxView(ADocument, ARoot, LFrame, LMeasurements);
+    {$ifdef NYX_SOURCE_PROFILE}Profile('realize');{$endif}
 
     if FResourceContext <> nil then
     begin
@@ -5129,6 +5168,7 @@ begin
         FResourceContext.Locale, FResourceContext.Fallback);
     end;
     LContentBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
+    {$ifdef NYX_SOURCE_PROFILE}Profile('blueprint');{$endif}
     ApplyNyxPlatform(LCandidate, npfBrowser);
 
     LAccepted := LCandidate;
@@ -5155,6 +5195,7 @@ begin
       Exit;
     end;
     LPrevious := FRoot.Clone;
+    {$ifdef NYX_SOURCE_PROFILE}Profile('backup');{$endif}
     LPreviousSelection := FPresentationSelection;
 
     try
@@ -5163,6 +5204,7 @@ begin
       begin
         Exit;
       end;
+      {$ifdef NYX_SOURCE_PROFILE}Profile('apply');{$endif}
 
       if LArrangement then
       begin
@@ -5171,6 +5213,7 @@ begin
       RestoreFields;
       FPresentationSelection := FPresentationSelection.Reconciled(FRoot.PresentationSnapshot);
       Sync;
+      {$ifdef NYX_SOURCE_PROFILE}Profile('sync');{$endif}
       { First-rule admission starts observation; removing the last rule retires
         it. A retained projection must follow the same mount lifetime as Render. }
       ObserveViewport;
@@ -5210,6 +5253,7 @@ begin
     ReleaseNyxNode(LProjectedCandidate);
     ReleaseNyxNode(LPrevious);
     ReleaseNyxNode(LCandidate);
+    {$ifdef NYX_SOURCE_PROFILE}Profile('release');{$endif}
   end;
 end;
 

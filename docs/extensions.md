@@ -106,6 +106,16 @@ enforces valid Unicode, decoded duplicate-key refusal, 4 MiB UTF-8 and depth lim
 Export checks the complete design against import budgets: combining otherwise
 valid payloads cannot produce an unreadable saved file.
 
+Browser JSON readers locate ordinary string runs through a private standard
+browser scanner, declared and used from Pascal. Complete raw Unicode and UTF-8
+byte admission still precedes parsing. Pascal checks every escape, raw control,
+decoded duplicate key and structural budget, preserving exact text and target
+storage-unit error positions. Each reader owns its cursor/scanner independently;
+native decoding retains its direct character scanner. The complete
+[JSON/value suite](../tests/nyx_json_value_tests.lpr) includes long resource-sized
+runs, supplementary text, following values, all raw controls and the unchanged
+4 MiB boundary. Full saved-application performance remains separately measured.
+
 Clone/view builds copy project data and each retained node's data. Reusable
 instances overlay whole values by key, then named-part rules overlay the affected
 part. Nested objects are replaced without implicit deep merging. Runtime changes

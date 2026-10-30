@@ -2,6 +2,22 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Full-refresh continuation,2026-10-29: renderer phase observation identifies
+repeated large resource strings in full context admission. Browser JSON parsing
+now locates ordinary runs with a private host scanner after complete Unicode/
+byte preflight; Pascal retains all grammar, escape, duplicate-key and budget
+checks. Native226/browser233 complete JSON/value checks, real worker53, full
+workspace91 per width and native ownership450/450/actual workspace86 pass with
+four clean native heaps. The same saved Workshop preserves its exact Uniform
+pair and ordinary Undo restoration. Single local-delivery samples8150.2/6764.6ms
+and total edit21333.5/19901.4ms are diagnostic observations, not statistical or
+near-real-time acceptance; worker reply time does not improve in this sample.
+Matched delivery preserves projects/settings. WORK.md and the external
+workshop-refresh-cost-01 packet retain attribution, limitations and failures.
+Fresh session/edit, complete shell and projection/fallback costs remain here.
+Stop JSON/profile variants and return to the ranked full Studio authoring
+journey without waiving these original performance/scale criteria.
+
 Worker-lifetime continuation,2026-10-29: the same compact saved Workshop now
 reuses one idle browser helper across ordinary Uniform Apply/Undo/Apply, with
 fresh request-owned sessions and unchanged 30000ms deadlines. Actual-worker and

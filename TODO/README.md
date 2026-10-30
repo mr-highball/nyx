@@ -134,6 +134,15 @@ This does not close original performance criteria. Return to measured session/
 edit preparation and local refresh in that consumer, rather than more helper or
 transport fixture variants; WORK.md retains timings and limitations.
 
+The full saved Workshop's refresh attribution now yields a qualified browser
+JSON string-read improvement with exact full-pair restoration. Complete JSON/
+value, worker lifecycle and full desktop/compact workspace journeys pass; matched
+delivery preserves projects/settings. Local refresh still takes about6.8s in one
+observation, so original performance criteria remain open. Stop JSON/profile
+variants and return to the ranked Studio authoring journey's remaining named
+Save/Open, paired draft/history and preview outcomes. The existing performance
+owner retains fresh session/edit, full shell and projection/fallback costs.
+
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |
 | 1 — Checkpoint delivered; gates open | A table people can comfortably work in | [Workbench03 W1/W2](NS-3_control-usefulness_03.md): native Studio/Save/Open and its own generated application now exercise column arrangement, full-value inspection, draft preservation, Copy and explicit page/filtered export. Browser, physical-input, visual and remaining original criteria stay open. Return for those checks and concrete failures; stop internal order/policy variants. |
