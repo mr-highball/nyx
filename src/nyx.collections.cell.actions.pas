@@ -256,6 +256,19 @@ type
       const AOptions: TNyxCollectionCellActionOptions);
   end;
 
+  { Automatic recovery is a replaceable default, not the caller's one explicit
+    presenter assignment. Supporting mounts retain the factory only on success,
+    refresh default actions when explicit transfer services are first supplied,
+    and retire that default when the caller supplies a presenter. No service or
+    clipboard permission is inferred. Older mounts keep their existing ABI and
+    may honestly omit this separate capability. }
+  INyxCollectionCellActionDefaultsMount = interface(IInterface)
+    ['{AE0A26F2-099F-4EE7-BB16-E0B63865A5FC}']
+    procedure ConfigureDefaultCellActions(
+      const AFactory: INyxCollectionCellPresenterFactory;
+      const AScheduler: INyxScheduler);
+  end;
+
 { Neither constructor retains a mount, tree or renderer. The temporary launch
   envelope may retain the mount's final fence only during canonical dispatch. }
 function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenterFactory;

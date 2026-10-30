@@ -414,8 +414,20 @@ the exact raw transfer, which is prepared lazily from the frozen review through
 `NewNyxCollectionRecoveredDraftText`. Existing copy byte limits, original input
 epoch, successful-popover lifetime and write-slot cancellation remain in force.
 No additional resource, file or clipboard authority comes from opening review.
-Scoped saved-application and target qualification is recorded in the accepted
-[recovery review integration](../TODO/DONE/NS-3_collection-recovery_01.md).
+Automatic recovery uses the optional `INyxCollectionCellActionDefaultsMount`.
+It does not consume the caller's one explicit presenter assignment. The established
+Render, ConfigureClipboard, ConfigureExport, ConfigureCellActions sequence remains
+valid. First explicit services rebuild the default against those exact controllers;
+first explicit presentation replaces it. Duplicate explicit assignments still
+refuse. Candidate failure leaves the previous default, journal and live input
+intact. Each controller has a revocable lease on the target factory, while the
+mount owns the underlying anchor; old callbacks cannot reach a replacement.
+Cleanup after successful adoption is diagnostic and cannot roll back that new
+owner. Alternative mounts may omit the defaults facet without losing their
+legacy explicit setup contract.
+Scoped saved-application and target qualification is recorded in
+[recovery review integration](../TODO/DONE/NS-3_collection-recovery_01.md) and
+[action adoption](../TODO/DONE/NS-3_collection-action-adoption_01.md).
 Full workbench, physical/assistive input and production performance remain open.
 The maintained `nyx_table_recovery_application_controls` native consumer compiles
 beside the unchanged `nyx.generated.view` unit from Studio's Service monitor job.
@@ -1990,10 +2002,29 @@ selected-source IDs, independent runtime stores/ranges/query and one-sided
 application retirement. Its real LCL clipboard adapter uses an explicit recording
 publication target; this adds no OS clipboard or hardware-input evidence.
 The same MCP-built browser application transfers exact RAW rectangles through its
-actual menu at both widths, with independent runs. Actual browser keyboard Copy
-remains unresolved: the observed clipboard stays unchanged, while menu Copy works.
-The keyboard contract above remains required; these results do not establish its
-actual browser input delivery or full workbench acceptance. See
+actual menu at both widths, with independent runs. The initial automated browser
+shortcut leaves the clipboard unchanged. The focused
+`nyx_table_workbench_keyboard_browser` consumer now identifies why: the browser
+driver emits a standard Copy event rather than a DOM copy key. The new optional
+`INyxBrowserCollectionCopyInput` adapter facet reserves the same original command
+for a cancellable Copy event on the exact focused resident cell. It uses existing
+policy, source/input fences and the single configured host, with no invented key/
+Click callbacks or direct event clipboard-data writes. Active editors/custom
+descendants retain their native Copy route. Default handling is claimed only for
+that original data command, and the exact listener detaches with its binding.
+The same generated application's actual Copy now writes its exact173-byte RAW
+rectangle through the real host at both widths. Full regression remains pending
+the explicit-adoption prerequisite. Its separately
+labeled Pascal synthetic producer reaches the original keyboard command and
+writes the exact173-byte range through the real browser host at both widths,
+without Nyx key subscribers. This establishes synthetic routing and real host
+completion, not physical keyboard/assistive input or full workbench acceptance.
+Recording is the default no-OS-effect mode; explicit `?browser` uses the real
+adapter and `?unavailable` exercises the existing missing-service host. The helper
+retains bounded key/host/result observations and explicit retirement. The admitted
+unavailable keyboard result still lacks an ordinary visible Table explanation;
+[Copy feedback](../TODO/NS-3_collection-copy-feedback_01.md) owns that remaining
+user-facing gap. See
 [the current work](../WORK.md#current-work--table-pointer-and-selection-return--2026-10-30).
 
 ## Saving table workbench action choices

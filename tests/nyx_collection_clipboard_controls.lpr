@@ -30,6 +30,7 @@ uses
   nyx.collections, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query, nyx.collections.arrangement,
   nyx.collections.mount, nyx.collections.clipboard, nyx.collections.clipboard.actions
+  , nyx.collections.recovery
   , nyx.collections.cell.actions, nyx.menu, nyx.popover, nyx.bytes,
   nyx.files.save, nyx.collections.paging, nyx.collections.export,
   nyx.collections.export.actions
@@ -51,6 +52,11 @@ type
     initializer. It is a synthetic fixture producer, not trusted OS input. }
   TCopyKeyEvent = class external name 'KeyboardEvent'(TJSKeyboardEvent)
   public
+    constructor new(const AType: String; AInit: TJSObject); reintroduce;
+  end;
+  { Standard semantic Copy producer supplies no invented key fields. It is
+    synthetic DOM input; the existing injected host prevents OS side effects. }
+  TSemanticCopyEvent = class external name 'ClipboardEvent'(TJSEvent)
     constructor new(const AType: String; AInit: TJSObject); reintroduce;
   end;
   { Standard cancellable context event enters the real renderer/table route.
@@ -314,6 +320,7 @@ type
     function HasMenuAction(const AID: TNyxText): Boolean;
     function HasInspectorAction(const AID: TNyxText): Boolean;
     procedure InspectorAction(const AID: TNyxText);
+    procedure RunDefaultRecovery; {$ifdef PAS2JS}async;{$endif}
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
     procedure RunAuthoredExport(AChoice: TAuthoredExportChoice); {$ifdef PAS2JS}async;{$endif}
@@ -321,6 +328,9 @@ type
     procedure RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
     procedure RunDraftActions; {$ifdef PAS2JS}async;{$endif}
     procedure RunCellRange; {$ifdef PAS2JS}async;{$endif}
+    {$ifdef PAS2JS}
+    procedure RunSemanticCopy; async;
+    {$endif}
     procedure RunPointerRange; {$ifdef PAS2JS}async;{$endif}
     procedure RunRangeMenu; {$ifdef PAS2JS}async;{$endif}
     procedure RunAuthoredWorkbench; {$ifdef PAS2JS}async;{$endif}
@@ -338,7 +348,8 @@ type
       AAuthoredWorkbench: Boolean = False; AUnavailableClipboard: Boolean = False;
       ACopyActions: TNyxWorkbenchCopyActions =
         [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange];
-      AAuthoredExports: Boolean = False; AExportChoice: TAuthoredExportChoice = aeLegacy);
+      AAuthoredExports: Boolean = False; AExportChoice: TAuthoredExportChoice = aeLegacy;
+      ADefaultPresenter: Boolean = False);
     destructor Destroy; override;
     procedure Run; {$ifdef PAS2JS}async;{$endif}
   end;
@@ -351,7 +362,9 @@ const
 var
   GChecks: Integer;
   {$ifdef PAS2JS}
-  GRangeCapturedID: NativeInt = -1;
+  { DOM capture belongs to each pointer independently. An unrelated caller's
+    capture must not overwrite the range stroke's original captured pointer. }
+  GRangeCapturedIDs: array of NativeInt;
   GRangeCaptureRefused: Boolean;
   GRangeCaptures: Integer;
   {$endif}
@@ -383,27 +396,59 @@ end;
   test, canonical callbacks, mounted capture lifecycle and release remain live.
   These seams make no trusted hardware or browser-device capture claim. }
 procedure CaptureRangePointer(AID: NativeInt);
+var
+  LIndex: Integer;
 begin
 
   if GRangeCaptureRefused then
   begin
     raise Exception.Create('Injected platform capture refusal');
   end;
-  GRangeCapturedID := AID;
   Inc(GRangeCaptures);
+  for LIndex := 0 to High(GRangeCapturedIDs) do
+  begin
+
+    if GRangeCapturedIDs[LIndex] = AID then
+    begin
+      Exit;
+    end;
+  end;
+  SetLength(GRangeCapturedIDs, Length(GRangeCapturedIDs) + 1);
+  GRangeCapturedIDs[High(GRangeCapturedIDs)] := AID;
 end;
 
 function HasRangePointer(AID: NativeInt): Boolean;
+var
+  LIndex: Integer;
 begin
-  Result := GRangeCapturedID = AID;
+  Result := False;
+  for LIndex := 0 to High(GRangeCapturedIDs) do
+  begin
+
+    if GRangeCapturedIDs[LIndex] = AID then
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 procedure ReleaseRangePointer(AID: NativeInt);
+var
+  LIndex: Integer;
+  LTail: Integer;
 begin
-
-  if GRangeCapturedID = AID then
+  for LIndex := 0 to High(GRangeCapturedIDs) do
   begin
-    GRangeCapturedID := -1;
+
+    if GRangeCapturedIDs[LIndex] = AID then
+    begin
+      for LTail := LIndex to High(GRangeCapturedIDs) - 1 do
+      begin
+        GRangeCapturedIDs[LTail] := GRangeCapturedIDs[LTail + 1];
+      end;
+      SetLength(GRangeCapturedIDs, Length(GRangeCapturedIDs) - 1);
+      Exit;
+    end;
   end;
 end;
 
@@ -738,7 +783,7 @@ end;
 constructor TCopyReview.Create(AArranged: Boolean; ADraftActions: Boolean;
   AAuthoredWorkbench: Boolean; AUnavailableClipboard: Boolean;
   ACopyActions: TNyxWorkbenchCopyActions; AAuthoredExports: Boolean;
-  AExportChoice: TAuthoredExportChoice);
+  AExportChoice: TAuthoredExportChoice; ADefaultPresenter: Boolean);
 var
   LCallback: TKeyCallback;
   LAdmission: INyxCollectionInputAdmission;
@@ -871,7 +916,8 @@ begin
   end;
   Check(Supports(FMount, INyxCollectionCellActionsMount, FCellMount),
     'actual mounted table exposes managed cell context actions');
-  if not FAuthoredWorkbench then
+
+  if not FAuthoredWorkbench and not ADefaultPresenter then
   begin
     LFactory := {$ifdef PAS2JS}NewNyxBrowserCollectionCellPresenterFactory(FTable)
       {$else}NewNyxLCLCollectionCellPresenterFactory(FGrid){$endif};
@@ -2100,6 +2146,187 @@ end;
   through the optional typed mount contract; paired real key routes then copy
   that exact range. This slice proves mounted paint/copy, not a hardware range
   drag or OS clipboard effect. Gesture navigation is a separate next input. }
+procedure TCopyReview.RunDefaultRecovery; {$ifdef PAS2JS}async;{$endif}
+var
+  LJournal: INyxCollectionDraftRecovery;
+  LEntry: INyxRecoveredCollectionDraft;
+  LReview: INyxCollectionRecoveryReviewMount;
+  LRepresentation: INyxCollectionCellRepresentationActions;
+  LSource: INyxCollectionSnapshot;
+  LBefore: Integer;
+  {$ifdef PAS2JS}
+  LEditor: TJSHTMLInputElement;
+  {$endif}
+begin
+  { This additional case keeps the original constructor's explicit service
+    sequence, but deliberately retains the renderer's replaceable presenter.
+    Existing legacy cases still configure their explicit presenter unchanged. }
+  LSource := FView.Store.Snapshot;
+  FocusCell;
+  {$ifdef PAS2JS}
+  Key(Cell, 'F2', False);
+  await(Drain);
+  LEditor := TJSHTMLInputElement(Cell.querySelector('input.nyx-cell-editor'));
+  Check(LEditor <> nil, 'default recovery begins in the actual browser editor');
+  LEditor.value := CDraft;
+  {$else}
+  SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+  Drain;
+  Check(FGrid.EditorMode, 'default recovery begins in the actual native editor');
+  RestoreNyxLCLInputText(TCustomEdit(FGrid.Editor), CDraft);
+  {$endif}
+  FView.ConfigureQuery(NyxCollectionQuery.Where(NyxWhere(NyxIntegerField('Score')).AtLeast(99)));
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LJournal := NyxCollectionDraftRecovery(FMount);
+  Check((FView.Snapshot.Count = 0) and (LJournal.Capture.Count = 1) and
+    (FView.Store.Snapshot = LSource),
+    'default presenter remains reachable with an empty filtered result and inert exact draft');
+  LEntry := LJournal.EntryAt(0);
+  Check((LEntry.Cell.Text = CDraft) and
+    Supports(FMount, INyxCollectionRecoveryReviewMount, LReview) and
+    LReview.OpenRecoveredEdits,
+    'ordinary default review opens the same journal after late explicit services');
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(HasInspectorAction(NyxRecoveredEditsCopyID),
+    'the replaced readonly default now exposes only its explicitly permitted Copy action');
+  LBefore := FHost.Writes;
+  InspectorAction(NyxRecoveredEditsCopyID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FHost.Writes = LBefore + 1) and (FHost.Text = CDraft) and
+    Supports(FCellActions, INyxCollectionCellRepresentationActions, LRepresentation) and
+    LRepresentation.HasRepresentationResult and
+    (LRepresentation.LastRepresentationResult.Outcome = ncwoWritten) and
+    (LRepresentation.LastRepresentation.Representation = nccrExplicitDraft) and
+    (LRepresentation.LastRepresentation.RawText = CText) and
+    (LJournal.EntryAt(0) = LEntry) and (FView.Store.Snapshot = LSource) and
+    (TNyxCodec.Encode(FDocument) = FAuthored),
+    'default recovery uses the original explicit host once without applying/discarding or authoring changes');
+end;
+
+{$ifdef PAS2JS}
+procedure TCopyReview.RunSemanticCopy; async;
+var
+  LBefore: Integer;
+  LReplies: Integer;
+  LKeys: Integer;
+  LClicks: Integer;
+  LSource: INyxCollectionSnapshot;
+  LRows: TNyxCollectionSelectionSnapshot;
+  LRanges: INyxCollectionCellRangeMount;
+  LIntent: INyxCollectionCellRangeIntent;
+  LExpected: TNyxText;
+  LEditor: TJSHTMLInputElement;
+  LChild: TJSHTMLElement;
+  LTarget: TJSHTMLElement;
+
+  function CopyEvent(ATarget: TJSHTMLElement; ACancelable: Boolean = True;
+    AAlreadyClaimed: Boolean = False): Boolean;
+  var
+    LOptions: TJSObject;
+    LEvent: TJSEvent;
+  begin
+    LOptions := TJSObject.new;
+    LOptions['bubbles'] := True;
+    LOptions['cancelable'] := ACancelable;
+    LEvent := TSemanticCopyEvent.new('copy', LOptions);
+
+    if AAlreadyClaimed then
+    begin
+      LEvent.preventDefault;
+    end;
+    ATarget.dispatchEvent(LEvent);
+    Result := LEvent.defaultPrevented;
+  end;
+
+begin
+  FMode := kmObserve;
+  FContextColumn := 0;
+  FocusCell;
+  LSource := FView.Store.Snapshot;
+  LRows := FView.Selection.Snapshot;
+  LKeys := FKeys;
+  LClicks := FRangeClicks;
+  LBefore := FHost.Writes;
+  LReplies := FReplies;
+  Check(CopyEvent(Cell), 'standard Copy on the exact focused data cell claims its native default');
+  await(Drain);
+  Check((FHost.Writes = LBefore + 1) and (FReplies = LReplies + 1) and
+    (FHost.Text = CText) and (FCommands.LastResult.Outcome = ncwoWritten) and
+    (FKeys = LKeys) and (FRangeClicks = LClicks),
+    'semantic cell Copy writes exact Unicode/NUL/newlines once without inventing key or Click callbacks');
+  LBefore := FHost.Writes;
+  LReplies := FReplies;
+  Check(CopyEvent(Cell, True, True), 'a prior receiver can already own the Copy event');
+  Check(not CopyEvent(Cell, False), 'noncancellable Copy cannot admit a second browser default');
+  await(Drain);
+  Check((FHost.Writes = LBefore) and (FReplies = LReplies),
+    'claimed or noncancellable events never reach the clipboard host');
+  Key(Cell, 'F2', False);
+  await(Drain);
+  LEditor := TJSHTMLInputElement(Cell.querySelector('input.nyx-cell-editor'));
+  Check((LEditor <> nil) and (document.activeElement = LEditor),
+    'the real active editor is present before checking native Copy bypass');
+  LEditor.value := 'Unfinished copy 🌙';
+  LEditor.setSelectionRange(1, 4);
+  Check(not CopyEvent(LEditor), 'active editor Copy remains the browser text-selection route');
+  await(Drain);
+  Check((FHost.Writes = LBefore) and (LEditor.value = 'Unfinished copy 🌙') and
+    (LEditor.selectionStart = 1) and (LEditor.selectionEnd = 4),
+    'editor bypass preserves exact live text/caret and never invokes the table host');
+  Key(LEditor, 'Escape', False);
+  await(Drain);
+  LChild := TJSHTMLElement(document.createElement('button'));
+  LChild.textContent := 'Custom child';
+  Cell.appendChild(LChild);
+  try
+    LChild.focus;
+    Check(not CopyEvent(LChild), 'custom interactive descendants keep their own Copy behavior');
+  finally
+    LChild.remove;
+  end;
+  FocusCell;
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges),
+    'semantic Copy shares the original optional range owner');
+  LRanges.ConfigureCellRange(True);
+  Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+    NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+    'semantic range setup uses original typed source/page endpoints');
+  LIntent := LRanges.CellRange;
+  LExpected := LIntent.Capture.Payload.Text;
+  LBefore := FHost.Writes;
+  { Entering/cancelling the real editor legitimately focuses its source row and
+    delivers key callbacks. Compare this separate Copy against its own immediate
+    selection/input baseline; accepted source and authored defaults still compare
+    with their original values from before the editor journey. }
+  LRows := FView.Selection.Snapshot;
+  LKeys := FKeys;
+  LClicks := FRangeClicks;
+  Check(CopyEvent(Cell), 'standard Copy claims the original selected rectangle');
+  await(Drain);
+  Check((FHost.Writes = LBefore + 1) and (FHost.Text = LExpected),
+    'semantic range Copy writes the original rectangle exactly once');
+  Check((FLastPayload.RowCount = 2) and (FLastPayload.CellValue(0, 0).TextValue = CText),
+    'semantic range Copy retains the original accepted RAW provenance');
+  Check((FKeys = LKeys) and (FRangeClicks = LClicks),
+    'semantic range Copy invents no keyboard or Click callbacks');
+  Check(FView.Selection.Snapshot.SameState(LRows),
+    'semantic range Copy preserves ordinary row membership');
+  Check((FView.Store.Snapshot = LSource) and (TNyxCodec.Encode(FDocument) = FAuthored),
+    'semantic range Copy preserves accepted source and authored defaults');
+  LBefore := FHost.Writes;
+  FMount.SetInteraction(False, False);
+  Check(not CopyEvent(Cell), 'disabled input cannot reserve semantic Copy authority');
+  FMount.SetInteraction(True, False);
+  FocusCell;
+  LTarget := Cell;
+  FMount.Disconnect;
+  Check(not CopyEvent(LTarget), 'retired data-cell listeners cannot reserve a new Copy command');
+  await(Drain);
+  Check((FHost.Writes = LBefore) and not LIntent.Current,
+    'disabled/retired input never enters the host or revives its retained range');
+end;
+{$endif}
+
 procedure TCopyReview.RunCellRange; {$ifdef PAS2JS}async;{$endif}
 var
   LRanges: INyxCollectionCellRangeMount;
@@ -2824,7 +3051,7 @@ var
       begin
         FMode := kmObserve;
         GRangeCaptureRefused := LRound = 3;
-        GRangeCapturedID := -1;
+        GRangeCapturedIDs := nil;
         LRanges.ClearCellRange;
         FocusOrigin;
         LOriginCell.scrollIntoView;
@@ -2842,20 +3069,22 @@ var
 
         if LRound = 3 then
         begin
-          Check((GRangeCapturedID = -1) and (GRangeCaptures = LCaptures),
+          Check((not HasRangePointer(73)) and (GRangeCaptures = LCaptures),
             'Refused capture preserves Shift-click without a false live drag');
           Continue;
         end;
-        Check((GRangeCapturedID = 73) and (GRangeCaptures = LCaptures + 1),
+        Check((HasRangePointer(73)) and (GRangeCaptures = LCaptures + 1),
           'Current original down acquires one injected platform capture');
         Send('pointermove', LOriginCell, 74);
-        Check((LRanges.CellRange = LAccepted) and (GRangeCapturedID = 73),
-          'Wrong pointer cannot move or cancel another pending stroke');
+        Check((LRanges.CellRange = LAccepted) and (HasRangePointer(73)),
+          'Wrong pointer cannot move or cancel another pending stroke; round=' +
+          TNyxText(IntToStr(LRound)) + '; pointer73=' + TNyxText(BoolToStr(HasRangePointer(73), True)) +
+          '; same range=' + TNyxText(BoolToStr(LRanges.CellRange = LAccepted, True)));
 
         if LRound = 5 then
         begin
           Send('pointermove', nil);
-          Check((GRangeCapturedID = -1) and (LRanges.CellRange = LAccepted) and
+          Check((not HasRangePointer(73)) and (LRanges.CellRange = LAccepted) and
             LAccepted.Current,
             'Outside-grid hit cancels without constructing an undefined identity');
           Continue;
@@ -2865,7 +3094,7 @@ var
         begin
           Send('lostpointercapture', LOriginCell, 74);
           Send('lostpointercapture', LOriginCell);
-          Check(GRangeCapturedID = 73,
+          Check(HasRangePointer(73),
             'Wrong-pointer and delayed loss cannot revoke a still-captured current pair');
           ReleaseRangePointer(73);
           Send('lostpointercapture', LOriginCell);
@@ -2878,7 +3107,7 @@ var
         if LRound = 7 then
         begin
           FMount.Refresh;
-          Check((GRangeCapturedID = -1) and (LRanges.CellRange = LAccepted) and
+          Check((not HasRangePointer(73)) and (LRanges.CellRange = LAccepted) and
             LAccepted.Current,
             'Refresh releases original gesture capture without changing accepted cells');
           Continue;
@@ -2894,7 +3123,7 @@ var
 
         if LRound = 4 then
         begin
-          Check((GRangeCapturedID = 73) and
+          Check((HasRangePointer(73)) and
             (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
             'Explicit application capture outranks the optional range drag');
           ReleaseRangePointer(73);
@@ -2903,7 +3132,7 @@ var
 
         if LRound = 1 then
         begin
-          Check((GRangeCapturedID = -1) and LAccepted.Current and
+          Check((not HasRangePointer(73)) and LAccepted.Current and
             (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
             'Consumed original move releases capture and restores accepted paint');
           Continue;
@@ -2914,7 +3143,7 @@ var
         if LRound = 2 then
         begin
           Send('pointercancel', LOriginCell);
-          Check((GRangeCapturedID = -1) and (LRanges.CellRange = LAccepted) and
+          Check((not HasRangePointer(73)) and (LRanges.CellRange = LAccepted) and
             LAccepted.Current and
             (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
             'Matching cancellation releases capture and restores accepted rectangle');
@@ -2922,7 +3151,7 @@ var
         else
         begin
           Send('pointerup', LOriginCell);
-          Check((GRangeCapturedID = -1) and (LRanges.CellRange <> LAccepted) and
+          Check((not HasRangePointer(73)) and (LRanges.CellRange <> LAccepted) and
             LRanges.CellRange.Capture.Anchor.Same(LOrigin) and
             LRanges.CellRange.Capture.Focus.Same(LOrigin) and
             (document.activeElement = LOriginCell),
@@ -4932,6 +5161,44 @@ var
   {$endif}
 begin
   try
+    LReview := TCopyReview.Create(False, False, False, False,
+      [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange], False, aeLegacy, True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunDefaultRecovery);{$else}LReview.RunDefaultRecovery;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(True, False, False, False,
+      [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange], False, aeLegacy, True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunDefaultRecovery);{$else}LReview.RunDefaultRecovery;{$endif}
+    finally
+      LReview.Free;
+    end;
+    {$ifdef PAS2JS}
+    CaptureRangePointer(73);
+    CaptureRangePointer(74);
+    Check(HasRangePointer(73) and HasRangePointer(74),
+      'injected DOM capture supports two independent pointers');
+    ReleaseRangePointer(74);
+    Check(HasRangePointer(73) and not HasRangePointer(74),
+      'releasing an unrelated injected capture preserves the original pointer');
+    ReleaseRangePointer(73);
+    Check(Length(GRangeCapturedIDs) = 0,
+      'injected pointer retirement leaves no capture after both owners release');
+    LReview := TCopyReview.Create(False, True);
+    try
+      await(LReview.RunSemanticCopy);
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(True, True);
+    try
+      await(LReview.RunSemanticCopy);
+    finally
+      LReview.Free;
+    end;
+    {$endif}
     LReview := TCopyReview.Create;
     try
       {$ifdef PAS2JS}

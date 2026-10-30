@@ -302,12 +302,15 @@ type
     confinement is inherited from the view/store contract. Position recovery is
     a detached observation only; it cannot select rows or revive target input.
     Recovery review borrows its managed actions only during UI entry and hands
-    queued presentation independent input flags rather than a mount callback. }
+    queued presentation independent input flags rather than a mount callback.
+    Automatic presenters are replaceable defaults; the first explicit assignment
+    retains its original one-time meaning and never replaces journal ownership. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionInputPreparation,
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
+    INyxCollectionCellActionDefaultsMount,
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
     INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
     INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation,
@@ -352,6 +355,26 @@ type
       factory/controller being configured across scheduler admission. }
     FConfiguringCellActions: Boolean;
     FCellFactory: INyxCollectionCellPresenterFactory;
+    { Default controllers can be rebuilt with newly admitted services without
+      revoking their shared target factory. Every controller gets a private,
+      revocable factory lease; this mount alone owns the underlying factory. }
+    FCellActionsDefault: Boolean;
+    FCellDefaultScheduler: INyxScheduler;
+    function NewCellActionsCandidate(
+      const AFactory: INyxCollectionCellPresenterFactory;
+      const AScheduler: INyxScheduler;
+      const AOptions: TNyxCollectionCellActionOptions;
+      const AClipboard: INyxCollectionClipboardCommands;
+      const AExports: INyxCollectionExportCommands): INyxCollectionCellActions;
+    procedure ConfigureCellActionsCore(
+      const AFactory: INyxCollectionCellPresenterFactory;
+      const AScheduler: INyxScheduler;
+      const AOptions: TNyxCollectionCellActionOptions; ADefault: Boolean);
+    { Runs after flags-only adoption. Cleanup failures are mount diagnostics,
+      never a false admission failure or permission to roll back a new owner. }
+    procedure RetireAdoptedCellActions(const APrevious: INyxCollectionCellActions;
+      const AFactory: INyxCollectionCellPresenterFactory = nil);
+  private
     FColumnFactory: INyxColumnArrangementPresenterFactory;
     FError: TNyxText;
     FFailure: TNyxBindingFailure;
@@ -621,6 +644,9 @@ type
       const AFactory: INyxCollectionCellPresenterFactory;
       const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionCellActionOptions);
+    procedure ConfigureDefaultCellActions(
+      const AFactory: INyxCollectionCellPresenterFactory;
+      const AScheduler: INyxScheduler);
     function GetCellActions: INyxCollectionCellActions;
     function GetRecoveredEditCount: Integer;
     function OpenRecoveredEdits: Boolean;
@@ -667,7 +693,7 @@ function PrepareNyxCollectionInput(
 implementation
 
 uses
-  nyx.text.index,
+  nyx.text.index, nyx.model, nyx.root.types, nyx.menu, nyx.popover,
   nyx.collections.view.types, nyx.collections.query,
   nyx.collections.query.session,
   nyx.collections.query.workbench,
@@ -676,6 +702,22 @@ uses
   {$ifdef PAS2JS}, JS{$endif};
 
 type
+  { One controller's revocable view of a mount-owned target factory. Revoking
+    this lease only withdraws its own future calls; it never revokes the shared
+    DOM/LCL anchor. The mount retires the underlying factory after its last
+    admitted controller. Entered calls retain their original factory locally. }
+  TCellFactoryLease = class(TInterfacedObject, INyxCollectionCellPresenterFactory)
+  private
+    FFactory: INyxCollectionCellPresenterFactory;
+  public
+    constructor Create(const AFactory: INyxCollectionCellPresenterFactory);
+    function CreateMenu(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+      const AItems: TNyxMenuItems): INyxMenu;
+    function CreateInspector(ADocument: TNyxDocument;
+      const ARoot: TNyxRootRef): INyxPopover;
+    procedure Revoke;
+  end;
+
   { One data-only port can outlive the physical target. Its writer belongs
     exclusively to the mount; readonly clients cannot obtain an owner callback. }
   TPositionState = class(TInterfacedObject, INyxCollectionPositionState)
@@ -959,6 +1001,45 @@ begin
   end;
   {$endif}
   raise ENyxCollection.Create(AFailure.Message);
+end;
+
+constructor TCellFactoryLease.Create(const AFactory: INyxCollectionCellPresenterFactory);
+begin
+  inherited Create;
+  FFactory := AFactory;
+end;
+
+function TCellFactoryLease.CreateMenu(ADocument: TNyxDocument;
+  const ARoot: TNyxRootRef; const AItems: TNyxMenuItems): INyxMenu;
+var
+  LFactory: INyxCollectionCellPresenterFactory;
+begin
+  LFactory := FFactory;
+
+  if LFactory = nil then
+  begin
+    raise ENyxCollectionClipboard.Create('The original cell presenter lease is retired');
+  end;
+  Result := LFactory.CreateMenu(ADocument, ARoot, AItems);
+end;
+
+function TCellFactoryLease.CreateInspector(ADocument: TNyxDocument;
+  const ARoot: TNyxRootRef): INyxPopover;
+var
+  LFactory: INyxCollectionCellPresenterFactory;
+begin
+  LFactory := FFactory;
+
+  if LFactory = nil then
+  begin
+    raise ENyxCollectionClipboard.Create('The original cell presenter lease is retired');
+  end;
+  Result := LFactory.CreateInspector(ADocument, ARoot);
+end;
+
+procedure TCellFactoryLease.Revoke;
+begin
+  FFactory := nil;
 end;
 
 procedure TCellStrokeReadiness.CheckReady;
@@ -2737,21 +2818,24 @@ var
   LScheduler: INyxScheduler;
   LOptions: TNyxCollectionExportOptions;
   LCommands: INyxCollectionExportCommands;
+  LPrevious: INyxCollectionCellActions;
+  LCandidate: INyxCollectionCellActions;
 
   procedure Current;
   begin
 
     if not FConnected or FDisconnecting or (FView <> LView) or
       (FInputLifetime <> LInput) or not LInput.Current or
-      (FExportCommands <> nil) then
+      (FExportCommands <> nil) or (FCellActions <> LPrevious) then
     begin
       raise ENyxCollectionExport.Create('Table changed while configuring export authority');
     end;
   end;
 begin
 
-  if FConfiguringExport or not FConnected or FDisconnecting or
-    (FExportCommands <> nil) or (FCellActions <> nil) or (AHost = nil) or
+  if FConfiguringExport or FConfiguringClipboard or FConfiguringCellActions or
+    not FConnected or FDisconnecting or (FExportCommands <> nil) or
+    ((FCellActions <> nil) and not FCellActionsDefault) or (AHost = nil) or
     (AEvents = nil) or (AScheduler = nil) then
   begin
     raise ENyxCollectionExport.Create('Export configures once before contextual table actions');
@@ -2761,6 +2845,7 @@ begin
     LLease := Self as INyxCollectionMount;
     LView := FView;
     LInput := FInputLifetime;
+    LPrevious := FCellActions;
     LHost := AHost;
     LEvents := AEvents;
     LScheduler := AScheduler;
@@ -2778,7 +2863,21 @@ begin
       LCommands := NewNyxCollectionExportCommands(LView, LInput, LEvents,
         LHost, LScheduler, LOptions, PrepareClipboardInput);
       Current;
+
+      if FCellActionsDefault then
+      begin
+        LCandidate := NewCellActionsCandidate(FCellFactory, FCellDefaultScheduler,
+          TNyxCollectionCellActionOptions.Defaults, FClipboardCommands, LCommands);
+        Current;
+        LPrevious.Revoke;
+      end;
       FExportCommands := LCommands;
+
+      if LCandidate <> nil then
+      begin
+        FCellActions := LCandidate;
+        RetireAdoptedCellActions(LPrevious);
+      end;
     except
       try
 
@@ -2818,32 +2917,143 @@ procedure TNyxCollectionMountBase.ConfigureCellActionsWithOptions(
   const AFactory: INyxCollectionCellPresenterFactory;
   const AScheduler: INyxScheduler;
   const AOptions: TNyxCollectionCellActionOptions);
+begin
+  ConfigureCellActionsCore(AFactory, AScheduler, AOptions, False);
+end;
+
+procedure TNyxCollectionMountBase.ConfigureDefaultCellActions(
+  const AFactory: INyxCollectionCellPresenterFactory;
+  const AScheduler: INyxScheduler);
+begin
+  ConfigureCellActionsCore(AFactory, AScheduler,
+    TNyxCollectionCellActionOptions.Defaults, True);
+end;
+
+function TNyxCollectionMountBase.NewCellActionsCandidate(
+  const AFactory: INyxCollectionCellPresenterFactory;
+  const AScheduler: INyxScheduler;
+  const AOptions: TNyxCollectionCellActionOptions;
+  const AClipboard: INyxCollectionClipboardCommands;
+  const AExports: INyxCollectionExportCommands): INyxCollectionCellActions;
 var
-  LLease: INyxCollectionMount;
   LView: INyxCollectionView;
   LInput: INyxCollectionInputLifetime;
-  LFactory: INyxCollectionCellPresenterFactory;
-  LWriter: INyxCollectionClipboardCapturedWrite;
-  LScheduler: INyxScheduler;
-  LCandidate: INyxCollectionCellActions;
+  LPrevious: INyxCollectionCellActions;
+  LClipboard: INyxCollectionClipboardCommands;
   LExports: INyxCollectionExportCommands;
+  LFactoryLease: INyxCollectionCellPresenterFactory;
+  LWriter: INyxCollectionClipboardCapturedWrite;
+  LCandidate: INyxCollectionCellActions;
   LExporter: INyxCollectionExportCapturedSave;
-  LOptions: TNyxCollectionCellActionOptions;
   LRecovery: INyxCollectionCellRecoveryActions;
+  LEpoch: Integer;
 
   procedure Current;
   begin
 
     if not FConnected or FDisconnecting or (FView <> LView) or
-      (FInputLifetime <> LInput) or not LInput.Current or (FCellActions <> nil) then
+      (FInputLifetime <> LInput) or not LInput.Current or (LInput.Epoch <> LEpoch) or
+      (FCellActions <> LPrevious) or (FClipboardCommands <> LClipboard) or
+      (FExportCommands <> LExports) then
     begin
       raise ENyxCollectionClipboard.Create('Table changed while configuring cell actions');
     end;
   end;
 begin
+  LView := FView;
+  LInput := FInputLifetime;
+  LEpoch := LInput.Epoch;
+  LPrevious := FCellActions;
+  LClipboard := FClipboardCommands;
+  LExports := FExportCommands;
+  LFactoryLease := TCellFactoryLease.Create(AFactory);
+  try
+    Supports(AClipboard, INyxCollectionClipboardCapturedWrite, LWriter);
+    Current;
 
-  if FConfiguringCellActions or not FConnected or FDisconnecting or
-    (FCellActions <> nil) or
+    if AExports <> nil then
+    begin
+      Supports(AExports, INyxCollectionExportCapturedSave, LExporter);
+      Current;
+    end;
+    LCandidate := NewNyxCollectionCellActions(LFactoryLease, LWriter, AScheduler,
+      AOptions, BeginCellPresentation, LExporter);
+    Current;
+
+    if Supports(LCandidate, INyxCollectionCellRecoveryActions, LRecovery) then
+    begin
+      LRecovery.AttachRecovery(GetDraftRecovery);
+      Current;
+    end;
+    Result := LCandidate;
+  except
+    try
+
+      if LCandidate <> nil then
+      begin
+        LCandidate.Disconnect;
+      end;
+    except
+      { Preserve the original admission failure. Only the private lease retires;
+        the caller/default's underlying target factory is still authoritative. }
+    end;
+    raise;
+  end;
+end;
+
+procedure TNyxCollectionMountBase.RetireAdoptedCellActions(
+  const APrevious: INyxCollectionCellActions;
+  const AFactory: INyxCollectionCellPresenterFactory);
+var
+  LFailure: TMountCleanupFailure;
+begin
+  LFailure := Default(TMountCleanupFailure);
+  try
+
+    if APrevious <> nil then
+    begin
+      APrevious.Disconnect;
+    end;
+  except
+    {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
+    {$else}on E: Exception do CaptureMountCleanup(LFailure, TNyxText(E.Message));{$endif}
+  end;
+  try
+
+    if AFactory <> nil then
+    begin
+      AFactory.Revoke;
+    end;
+  except
+    {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
+    {$else}on E: Exception do CaptureMountCleanup(LFailure, TNyxText(E.Message));{$endif}
+  end;
+
+  if LFailure.Captured then
+  begin
+    FFailure := nbfNotificationFailed;
+    FError := LFailure.Message;
+  end;
+end;
+
+procedure TNyxCollectionMountBase.ConfigureCellActionsCore(
+  const AFactory: INyxCollectionCellPresenterFactory;
+  const AScheduler: INyxScheduler;
+  const AOptions: TNyxCollectionCellActionOptions; ADefault: Boolean);
+var
+  LLease: INyxCollectionMount;
+  LView: INyxCollectionView;
+  LInput: INyxCollectionInputLifetime;
+  LFactory: INyxCollectionCellPresenterFactory;
+  LPreviousFactory: INyxCollectionCellPresenterFactory;
+  LPrevious: INyxCollectionCellActions;
+  LCandidate: INyxCollectionCellActions;
+  LScheduler: INyxScheduler;
+begin
+
+  if FConfiguringCellActions or FConfiguringClipboard or FConfiguringExport or
+    not FConnected or FDisconnecting or
+    ((FCellActions <> nil) and (ADefault or not FCellActionsDefault)) or
     (AFactory = nil) or (AScheduler = nil) then
   begin
     raise ENyxCollectionClipboard.Create('Cell presentation requires one live table incarnation');
@@ -2853,48 +3063,43 @@ begin
     LLease := Self as INyxCollectionMount;
     LView := FView;
     LInput := FInputLifetime;
-    LExports := FExportCommands;
+    LPrevious := FCellActions;
+    LPreviousFactory := FCellFactory;
     LFactory := AFactory;
     LScheduler := AScheduler;
-    LOptions := AOptions;
     LScheduler.RequireUI;
-    Current;
-    Supports(FClipboardCommands, INyxCollectionClipboardCapturedWrite, LWriter);
-    Current;
 
-    if LExports <> nil then
+    if not FConnected or FDisconnecting or (FView <> LView) or
+      (FInputLifetime <> LInput) or not LInput.Current or
+      (FCellActions <> LPrevious) or (FCellFactory <> LPreviousFactory) then
     begin
-      Supports(LExports, INyxCollectionExportCapturedSave, LExporter);
-      Current;
+      raise ENyxCollectionClipboard.Create('Table changed while configuring cell actions');
     end;
-    try
-      LCandidate := NewNyxCollectionCellActions(LFactory, LWriter, LScheduler, LOptions,
-        BeginCellPresentation, LExporter);
-      Current;
+    LCandidate := NewCellActionsCandidate(LFactory, LScheduler, AOptions,
+      FClipboardCommands, FExportCommands);
+    { All outward admission has finished. The old controller is our own managed
+      implementation: Revoke clears its port/intent and local cancellation flags
+      before publishing the candidate. No cleanup callback can revive old UI. }
 
-      if Supports(LCandidate, INyxCollectionCellRecoveryActions, LRecovery) then
-      begin
-        LRecovery.AttachRecovery(GetDraftRecovery);
-        Current;
-      end;
-      FCellFactory := LFactory;
-      FCellActions := LCandidate;
-    except
-      try
-
-        if LCandidate <> nil then
-        begin
-          LCandidate.Disconnect;
-        end
-        else
-        begin
-          LFactory.Revoke;
-        end;
-      except
-        { Preserve the original construction/admission failure. }
-      end;
-      raise;
+    if LPrevious <> nil then
+    begin
+      LPrevious.Revoke;
     end;
+    FCellFactory := LFactory;
+    FCellActions := LCandidate;
+    FCellActionsDefault := ADefault;
+    FCellDefaultScheduler := nil;
+
+    if ADefault then
+    begin
+      FCellDefaultScheduler := LScheduler;
+    end;
+
+    if LPreviousFactory = LFactory then
+    begin
+      LPreviousFactory := nil;
+    end;
+    RetireAdoptedCellActions(LPrevious, LPreviousFactory);
   finally
     FConfiguringCellActions := False;
   end;
@@ -2914,6 +3119,8 @@ var
   LSpec: TNyxCollectionViewSpec;
   LFields: TNyxCollectionClipboardFields;
   LCommands: INyxCollectionClipboardCommands;
+  LPrevious: INyxCollectionCellActions;
+  LCandidate: INyxCollectionCellActions;
   LIndex: Integer;
 
   procedure Current;
@@ -2921,14 +3128,15 @@ var
 
     if not FConnected or FDisconnecting or (FView <> LView) or
       (FInputLifetime <> LInput) or not LInput.Current or
-      (FClipboardCommands <> nil) then
+      (FClipboardCommands <> nil) or (FCellActions <> LPrevious) then
     begin
       raise ENyxCollectionClipboard.Create('Table changed while configuring clipboard authority');
     end;
   end;
 begin
 
-  if FConfiguringClipboard or not FConnected or FDisconnecting or
+  if FConfiguringClipboard or FConfiguringExport or FConfiguringCellActions or
+    not FConnected or FDisconnecting or
     (FClipboardCommands <> nil) or (AHost = nil) or
     (AEvents = nil) or (AScheduler = nil) then
   begin
@@ -2939,6 +3147,7 @@ begin
     LLease := Self as INyxCollectionMount;
     LView := FView;
     LInput := FInputLifetime;
+    LPrevious := FCellActions;
     LHost := AHost;
     LEvents := AEvents;
     LScheduler := AScheduler;
@@ -2964,9 +3173,23 @@ begin
       LCommands := NewNyxCollectionClipboardCommands(LView, LInput, LEvents,
         LHost, LScheduler, LOptions, PrepareClipboardInput);
       Current;
+
+      if FCellActionsDefault then
+      begin
+        LCandidate := NewCellActionsCandidate(FCellFactory, FCellDefaultScheduler,
+          TNyxCollectionCellActionOptions.Defaults, LCommands, FExportCommands);
+        Current;
+        LPrevious.Revoke;
+      end;
       FClipboardFields := LFields;
       FClipboardOptions := LOptions;
       FClipboardCommands := LCommands;
+
+      if LCandidate <> nil then
+      begin
+        FCellActions := LCandidate;
+        RetireAdoptedCellActions(LPrevious);
+      end;
     except
 
       if (LCommands <> nil) and (FClipboardCommands = LCommands) then
@@ -3575,6 +3798,8 @@ begin
   FExportCommands := nil;
   FCellActions := nil;
   FCellFactory := nil;
+  FCellActionsDefault := False;
+  FCellDefaultScheduler := nil;
   FClipboardFields := nil;
   FColumnManager := nil;
   FColumnFactory := nil;

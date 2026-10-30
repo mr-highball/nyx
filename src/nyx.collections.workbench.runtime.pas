@@ -103,7 +103,9 @@ procedure ConfigureNyxTableWorkbench(const AMount: INyxCollectionMount;
 { Configure readonly recovery presentation for a table without authored Copy
   actions. No clipboard/export/range service is installed. The fresh factory
   and original input lifetime have the same publication/retirement rules as
-  the complete workbench; ordinary source edits keep their existing ownership. }
+  the complete workbench; ordinary source edits keep their existing ownership.
+  The mount must support replaceable defaults. Older alternative mounts are
+  left unconfigured rather than consuming their one explicit presenter slot. }
 procedure ConfigureNyxTableRecoveryReview(const AMount: INyxCollectionMount;
   const AFactory: INyxCollectionCellPresenterFactory; const AEvents: INyxEvents);
 
@@ -518,7 +520,7 @@ var
   LAdmission: INyxCollectionInputAdmission;
   LPreparation: INyxCollectionInputPreparation;
   LInput: INyxCollectionInputLifetime;
-  LActions: INyxCollectionCellActionOptionsMount;
+  LActions: INyxCollectionCellActionDefaultsMount;
   LScheduler: INyxScheduler;
   LEpoch: Integer;
 
@@ -536,10 +538,17 @@ begin
   LFactory := AFactory;
 
   if (LMount = nil) or (LFactory = nil) or (AEvents = nil) or
-    not Supports(LMount, INyxCollectionInputAdmission, LAdmission) or
-    not Supports(LMount, INyxCollectionCellActionOptionsMount, LActions) then
+    not Supports(LMount, INyxCollectionInputAdmission, LAdmission) then
   begin
     raise ENyxCollection.Create('Recovery review requires a fresh managed table');
+  end;
+
+  if not Supports(LMount, INyxCollectionCellActionDefaultsMount, LActions) then
+  begin
+    { The fresh factory has not been transferred. Honest optional support must
+      not consume an alternative mount's legacy explicit configuration slot. }
+    LFactory.Revoke;
+    Exit;
   end;
 
   if Supports(LMount, INyxCollectionInputPreparation, LPreparation) then
@@ -564,8 +573,7 @@ begin
   LScheduler.RequireUI;
   RequireCurrent;
   try
-    LActions.ConfigureCellActionsWithOptions(LFactory, LScheduler,
-      TNyxCollectionCellActionOptions.Defaults);
+    LActions.ConfigureDefaultCellActions(LFactory, LScheduler);
     RequireCurrent;
   except
     try

@@ -5,6 +5,15 @@
 
 **Parked checkpoint and reassessment — 2026-10-25:**
 
+Additional evidence on2026-10-30: the standalone handwritten
+nyx_collection_recovery_browser consumer stops during partial view cleanup with
+an undefined RetireRowCopy receiver. Preserve pending-fixture-42-error.json in
+table-copy-input-01. Its initial failure still needs classification and a focused
+repair; it earns no browser-demo acceptance. The ordinary table's separate full
+query/recovery and legacy action-adoption regressions pass, but do not establish
+this live-inspection journey. Follow this failure when returning to the existing
+end-to-end L1 criteria; keep the current ranked workbench priority unchanged.
+
 The2026-10-28 browser rerun of the unchanged full Tree inspection consumer
 fails at its original Find assertion: source/result/match/context/disclosed
 counts remain7/7/7/0/2 instead of7/5/1/4/1. Preserve that assertion and the

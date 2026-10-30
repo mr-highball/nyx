@@ -3,35 +3,38 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
-**Browser pointer return — 2026-10-30:**
+**Copy and recovery return — 2026-10-30:**
 
-The discovered ordinary [recovery review](DONE/NS-3_collection-recovery_01.md)
-prerequisite is accepted. Both targets expose exact detached drafts, stable
-navigation and authorized Copy; external discard refreshes only the count while
-preserving live input. The same saved application and retired replacements pass
-wide/compact checks with clean native heaps. WORK.md retains the separate full
-native physical-cursor failure and broader limits. Resume W2 selected/cell-range
-transfer and peer independence; no original parent criterion or credit closes.
+[Action adoption](DONE/NS-3_collection-action-adoption_01.md) and
+[browser semantic Copy](DONE/NS-2_browser-copy-input_01.md) are accepted;
+[recovery review](DONE/NS-3_collection-recovery_01.md) acceptance is restored after
+its reproduced legacy setup failure. Automatic defaults no longer consume the
+caller's explicit presenter assignment or hold outdated service authority.
+Failed admission preserves useful defaults, journals and live drafts/caret.
 
-The W2 range return now checks the same saved/generated Service monitor. Actual
-browser wide/compact managed-menu Copy transfers the exact two-by-two accepted
-RAW TSV; filtering withdraws that range while preserving hidden source-ID scope.
-A separate browser run retains independent filters/range and copies its own
-Status rectangle. The maintained native saved-application consumer passes25 per
-width through widget keyboard messages and actual Nyx menu buttons, with clean
-heaps and an explicit recording target at the final clipboard publication boundary.
-Its two application instances keep separate stores/selection/ranges through
-filtering and one-sided retirement. Exact source pairs, clipboard items, original
-runtime output choices and fixed listeners are preserved. No full criterion closes.
+Full clipboard controls pass1499 per browser width and1680/1669 native with clean
+heaps, including late-service default recovery from an empty filtered result.
+Shared ownership/admission checks pass50 per target. Full browser query/recovery
+passes1545/1544 and focused native recovery passes56 per width. The original
+browser consumer independently exposes an injected single-pointer-capture error;
+the corrected seam models independent captures and retains the meaningful range/
+intent assertions. WORK.md preserves the original failures and target limits.
 
-Actual browser keyboard Copy still leaves a test sentinel unchanged despite
-correct range paint and cell focus; native and browser menu routes pass. Input
-production versus original command/host refusal is not yet established. Continue
-with one maintained Pascal observation of the same application's actual canonical
-key/modifiers and terminal outcome, then repair the responsible boundary. Retain
-that failure; do not substitute menu success for the original keyboard workflow.
-WORK.md owns receipts and target/input limits. Stop equivalent range/geometry/
-profile variants. The separate full native physical-cursor gate remains open.
+The same unchanged saved/generated Service monitor passes25 native range/peer
+checks per width, with clean heaps and an explicit recording publication target.
+Actual browser semantic Copy writes the exact173-byte RAW rectangle through the
+real configured host at both widths, with independent readback. The driver sends
+one Copy event rather than a keydown; no key/Click callbacks or event clipboard
+writes are invented. Both original clipboard and authored document are restored.
+Revision9, paired source, output choices and fixed listeners remain unchanged.
+
+Next follow [visible Copy feedback01](NS-3_collection-copy-feedback_01.md): an
+admitted Unavailable keyboard/semantic command still has no ordinary visible Table
+explanation. Preserve original W2 and all complete criteria below, with no extra
+completion credit. Full physical/assistive/production performance and the separate
+native cursor-input gate remain open. Stop equivalent geometry/profile fixtures.
+
+Previous pointer/layout checkpoint:
 
 The same saved Service monitor now exercises actual desktop/compact pointer
 resizing, filtering, hidden-column reveal and horizontal scrolling while retaining
@@ -881,8 +884,17 @@ needs qualification against the portable contract.
 
 **Blockers**
 
+- [Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) restores the
+  older public runtime setup alongside automatic recovery defaults.
+
+- [Browser semantic Copy input](DONE/NS-2_browser-copy-input_01.md) routes standard
+  Copy events through the existing scoped cell/range command.
+
+- [Keyboard-copy feedback](NS-3_collection-copy-feedback_01.md) supplies visible
+  ordinary outcomes for the existing admitted keyboard clipboard command.
+
 - [Recovered-edit review](DONE/NS-3_collection-recovery_01.md) supplies the missing
-  ordinary access to drafts safely journaled when a filter hides an edited row.
+    ordinary access to drafts safely journaled when a filter hides an edited row.
 - [Table output hosts](DONE/NS-4_table-output-hosts_01.md) supply the missing generated
   clipboard/export services through existing explicit runtime output choices.
 - [Embedded popover viewport](DONE/NS-2_popover-viewport_01.md) repairs the observed

@@ -3,13 +3,17 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
-[Ordinary recovered-edit review](NS-3_collection-recovery_01.md) was accepted
-on2026-10-30. Both targets expose detached exact text, bounded stable navigation,
-fresh journal counts and explicit-host raw Copy. Full browser1545/1544, focused
-native56/56 and the same generated native application20/20 retain exact live
-draft/caret and replacement isolation, with clean heaps. Saved pairs/output
-choices remain exact. Full table workflows and the separate native cursor-input
-gate remain open; the prerequisite adds no separate completion credit.
+[Explicit action adoption](NS-3_collection-action-adoption_01.md) and
+[standard browser Copy input](NS-2_browser-copy-input_01.md) were accepted on
+2026-10-30. Full clipboard controls pass1499 per browser width and1680/1669
+native, with clean heaps. The same saved application writes its exact173-byte
+range through the real browser host at both widths. Defaults remain replaceable
+without losing journals or consuming the caller's explicit assignment.
+[Ordinary recovered-edit review](NS-3_collection-recovery_01.md) acceptance is
+restored after that reproduced compatibility regression. Browser1545/1544,
+focused native56/56, shared50 per target and saved native25 per width retain the
+scoped evidence. Parent workflows, visible Copy feedback and broader physical/
+assistive quality remain open; no duplicate completion credit is assigned.
 
 [Generated table output hosts](NS-4_table-output-hosts_01.md) was accepted
 on 2026-10-29. Independent typed local choices, exact old profile meanings,

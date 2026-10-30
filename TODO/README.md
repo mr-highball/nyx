@@ -3,12 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Ordinary [recovered-edit review](DONE/NS-3_collection-recovery_01.md) is accepted
-on2026-10-30: detached exact presentation, bounded navigation, authorized raw Copy
-and fresh counts preserve live drafts and retired-owner isolation on both targets.
-Return to the existing workbench's W2 selected/cell-range transfer and independent
-instances in the same saved Service monitor. Full parent criteria remain open;
-this prerequisite adds no separate credit and preserves the inert-journal contract.
+Current prerequisite is [visible Copy feedback](NS-3_collection-copy-feedback_01.md).
+[Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) and
+[browser Copy input](DONE/NS-2_browser-copy-input_01.md) are accepted, restoring
+[recovery review](DONE/NS-3_collection-recovery_01.md) acceptance. Full clipboard
+controls pass1499 per browser width and1680/1669 native with clean heaps. The same
+saved application copies its exact173-byte range through the real browser host
+at both widths. Preserve those scoped results and the retained failures; ordinary
+keyboard/semantic Copy still needs visible failure feedback. Parent workbench/
+parity criteria and pending assessments stay unchanged, with no separate credit.
 
 ## Current priority — useful everyday workflows — 2026-10-26
 

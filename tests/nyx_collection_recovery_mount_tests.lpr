@@ -26,11 +26,43 @@ program nyx_collection_recovery_mount_tests;
 uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   nyx.collections.arrangement, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.recovery, nyx.collections.inspection,
+  nyx.collections.selection,
   nyx.collections.query, nyx.collections.position, nyx.collections.recovery.policy,
-  nyx.collections.recovery.controls, nyx.collections.representation, nyx.controls, nyx.types
+  nyx.collections.recovery.controls, nyx.collections.representation, nyx.controls, nyx.types,
+  nyx.model, nyx.root.types, nyx.menu, nyx.popover, nyx.scheduler, nyx.events,
+  nyx.collections.cell.actions, nyx.collections.workbench.runtime,
+  nyx.collections.clipboard, nyx.collections.clipboard.actions,
+  nyx.collections.export, nyx.collections.export.actions,
+  nyx.clipboard.unavailable, nyx.files.save.unavailable
   {$ifdef PAS2JS}, Web{$endif};
 
 type
+  { Model-only presenter proves factory ownership across default replacement.
+    Physical menu/popover input belongs to the maintained control consumers. }
+  TAdoptionFactory = class(TInterfacedObject, INyxCollectionCellPresenterFactory)
+  public
+    Revocations: Integer;
+    function CreateMenu(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+      const AItems: TNyxMenuItems): INyxMenu;
+    function CreateInspector(ADocument: TNyxDocument;
+      const ARoot: TNyxRootRef): INyxPopover;
+    procedure Revoke;
+  end;
+
+  { An alternative scheduler refuses admission from an actual RequireUI call.
+    It retains only its base scheduler; it owns no mount, presenter or callbacks. }
+  TAdoptionRefusal = class(TInterfacedObject, INyxScheduler)
+  public
+    Base: INyxScheduler;
+    function GetCapabilities: TNyxSchedulerCapabilities;
+    procedure RequireUI;
+    procedure Admit(APolicy: TNyxExecutionPolicy);
+    function Submit(const AWork: INyxWork; APolicy: TNyxExecutionPolicy): INyxExecution;
+    function PostUI(const AWork: INyxWork;
+      const AParent: INyxExecution = nil): INyxExecution;
+    procedure Shutdown;
+  end;
+
   { Model-only target exercises the actual mount notification, recovery and
     input-lifetime machinery, including capacity holds and follow acknowledgement after success.
     Its copied frame/drafts/position are values, not widgets. Multiple dirty
@@ -62,6 +94,57 @@ type
 
 var
   GChecks: Integer;
+
+function TAdoptionFactory.CreateMenu(ADocument: TNyxDocument;
+  const ARoot: TNyxRootRef; const AItems: TNyxMenuItems): INyxMenu;
+begin
+  Result := nil;
+  raise Exception.Create('Model adoption must not present physical menus');
+end;
+
+function TAdoptionFactory.CreateInspector(ADocument: TNyxDocument;
+  const ARoot: TNyxRootRef): INyxPopover;
+begin
+  Result := nil;
+  raise Exception.Create('Model adoption must not present physical popovers');
+end;
+
+procedure TAdoptionFactory.Revoke;
+begin
+  Inc(Revocations);
+end;
+
+function TAdoptionRefusal.GetCapabilities: TNyxSchedulerCapabilities;
+begin
+  Result := Base.Capabilities;
+end;
+
+procedure TAdoptionRefusal.RequireUI;
+begin
+  raise ENyxSchedule.Create('Deliberate presenter admission refusal');
+end;
+
+procedure TAdoptionRefusal.Admit(APolicy: TNyxExecutionPolicy);
+begin
+  Base.Admit(APolicy);
+end;
+
+function TAdoptionRefusal.Submit(const AWork: INyxWork;
+  APolicy: TNyxExecutionPolicy): INyxExecution;
+begin
+  Result := Base.Submit(AWork, APolicy);
+end;
+
+function TAdoptionRefusal.PostUI(const AWork: INyxWork;
+  const AParent: INyxExecution): INyxExecution;
+begin
+  Result := Base.PostUI(AWork, AParent);
+end;
+
+procedure TAdoptionRefusal.Shutdown;
+begin
+  Base.Shutdown;
+end;
 
 procedure Check(AValue: Boolean; const AMessage: TNyxText);
 begin
@@ -499,12 +582,181 @@ begin
   Check(LFailed, 'absent recovery entry refuses instead of displaying invented data');
 end;
 
+procedure ActionAdoption;
+const
+  CInertDraft: TNyxText = 'An inert draft 🌙';
+  CLiveDraft: TNyxText = 'Still editing 🌙';
+var
+  LKey: TNyxCollectionRef;
+  LItem: TNyxItemRef;
+  LStore: INyxCollection;
+  LView: INyxCollectionView;
+  LTarget: TRecoveryTarget;
+  LMount: INyxCollectionMount;
+  LJournal: INyxCollectionDraftRecovery;
+  LEntry: INyxRecoveredCollectionDraft;
+  LDefaultFactory: TAdoptionFactory;
+  LDefaultLease: INyxCollectionCellPresenterFactory;
+  LExplicitFactory: TAdoptionFactory;
+  LExplicitLease: INyxCollectionCellPresenterFactory;
+  LScheduler: INyxScheduler;
+  LRefusal: TAdoptionRefusal;
+  LRefusalLease: INyxScheduler;
+  LEvents: INyxEvents;
+  LCells: INyxCollectionCellActionsMount;
+  LClipboard: INyxCollectionClipboardMount;
+  LExport: INyxCollectionExportMount;
+  LRecovery: INyxCollectionCellRecoveryActions;
+  LExportActions: INyxCollectionCellExportActions;
+  LOld: INyxCollectionCellActions;
+  LIntent: INyxCollectionCellActionIntent;
+  LSource: INyxCollectionSnapshot;
+  LSelection: TNyxCollectionSelectionSnapshot;
+  LFailed: Boolean;
+begin
+  LKey := NyxCollection('adoption');
+  LItem := NyxItem(LKey, 'reader');
+  LStore := NewNyxCollection(LKey, NyxCollectionSchema.Text(NyxTextField('name'), ''), [
+    NyxCollectionItem(LItem).WithValue(NyxTextField('name'), 'Original')]);
+  LView := NewNyxCollectionView(LStore, NyxCollectionView(LKey)
+    .Column(NyxTextField('name'), 'Name', cmEditable), cpTable);
+  LTarget := TRecoveryTarget.Create(LView);
+  LMount := LTarget;
+  LTarget.Activate;
+  LJournal := NyxCollectionDraftRecovery(LMount);
+  LTarget.Draft := NyxCollectionCellEdit(LItem, NyxColumnIdentity(NyxTextField('name')),
+    TNyxStateValue.FromText('Original'), CInertDraft,
+    NyxTextSelection(CInertDraft, 1, 4), True, True);
+  LStore.Update(NyxCollectionItem(LItem).WithValue(NyxTextField('name'), 'Incoming'));
+  LEntry := LJournal.EntryAt(0);
+  LSource := LStore.Snapshot;
+  LSelection := LView.Selection.Snapshot;
+  LTarget.Draft := NyxCollectionCellEdit(LItem, LEntry.Cell.Field,
+    TNyxStateValue.FromText('Incoming'), CLiveDraft,
+    NyxTextSelection(CLiveDraft, 2, 5), True, True);
+  LScheduler := NewNyxScheduler;
+  LEvents := NewNyxEvents(LScheduler);
+  LDefaultFactory := TAdoptionFactory.Create;
+  LDefaultLease := LDefaultFactory;
+  LExplicitFactory := TAdoptionFactory.Create;
+  LExplicitLease := LExplicitFactory;
+  LRefusal := TAdoptionRefusal.Create;
+  LRefusal.Base := LScheduler;
+  LRefusalLease := LRefusal;
+  ConfigureNyxTableRecoveryReview(LMount, LDefaultLease, LEvents);
+  Check(Supports(LMount, INyxCollectionCellActionsMount, LCells) and
+    Supports(LMount, INyxCollectionClipboardMount, LClipboard) and
+    Supports(LMount, INyxCollectionExportMount, LExport),
+    'the ordinary mount exposes unchanged explicit contracts beside automatic recovery');
+  LOld := LCells.CellActions;
+  Check((LOld <> nil) and (LClipboard.ClipboardCommands = nil) and
+    (LExport.ExportCommands = nil) and
+    Supports(LOld, INyxCollectionCellRecoveryActions, LRecovery) and
+    (LRecovery.RecoveryCount = 1),
+    'automatic review retains the original journal without granting transfer services');
+  LFailed := False;
+  try
+    LCells.ConfigureCellActions(LExplicitLease, LRefusalLease);
+  except
+    on ENyxSchedule do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCells.CellActions = LOld) and
+    (LDefaultFactory.Revocations = 0) and (LExplicitFactory.Revocations = 0) and
+    (NyxCollectionDraftRecovery(LMount) = LJournal) and (LJournal.EntryAt(0) = LEntry),
+    'outward scheduler admission failure preserves the useful default and both factory owners');
+  LFailed := False;
+  try
+    LClipboard.ConfigureClipboard(NewNyxUnavailableClipboardWriteHost, LEvents,
+      LRefusalLease, TNyxCollectionClipboardOptions.Defaults);
+  except
+    on ENyxSchedule do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCells.CellActions = LOld) and
+    (LClipboard.ClipboardCommands = nil) and (LDefaultFactory.Revocations = 0),
+    'failed clipboard authority admission leaves the old readonly default installed');
+  LClipboard.ConfigureClipboard(NewNyxUnavailableClipboardWriteHost, LEvents,
+    LScheduler, TNyxCollectionClipboardOptions.Defaults);
+  Check((LCells.CellActions <> LOld) and (LDefaultFactory.Revocations = 0) and
+    Supports(LOld, INyxCollectionCellActionIntent, LIntent) and
+    (LIntent.Intent = 0),
+    'first explicit clipboard service retires old action authority without revoking the default anchor');
+  LOld := LCells.CellActions;
+  LFailed := False;
+  try
+    LExport.ConfigureExport(NewNyxUnavailableFileSaveHost, LEvents, LRefusalLease,
+      TNyxCollectionExportOptions.Defaults);
+  except
+    on ENyxSchedule do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCells.CellActions = LOld) and
+    (LExport.ExportCommands = nil) and (LDefaultFactory.Revocations = 0),
+    'failed export authority admission preserves the existing clipboard/default incarnation');
+  LExport.ConfigureExport(NewNyxUnavailableFileSaveHost, LEvents, LScheduler,
+    TNyxCollectionExportOptions.Defaults);
+  Check((LCells.CellActions <> LOld) and (LDefaultFactory.Revocations = 0) and
+    Supports(LCells.CellActions, INyxCollectionCellExportActions, LExportActions) and
+    LExportActions.ExportEnabled and
+    Supports(LCells.CellActions, INyxCollectionCellRecoveryActions, LRecovery) and
+    (LRecovery.RecoveryCount = 1),
+    'export refreshes the managed default against the same explicit controller and journal');
+  LOld := LCells.CellActions;
+  LFailed := False;
+  try
+    LExport.ConfigureExport(NewNyxUnavailableFileSaveHost, LEvents, LScheduler,
+      TNyxCollectionExportOptions.Defaults);
+  except
+    on ENyxCollectionExport do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCells.CellActions = LOld) and (LDefaultFactory.Revocations = 0),
+    'duplicate explicit export refuses without replacing a valid default');
+  LCells.ConfigureCellActions(LExplicitLease, LScheduler);
+  Check((LCells.CellActions <> LOld) and (LDefaultFactory.Revocations = 1) and
+    (LExplicitFactory.Revocations = 0) and
+    Supports(LOld, INyxCollectionCellActionIntent, LIntent) and
+    (LIntent.Intent = 0),
+    'the first explicit presenter takes precedence and revokes only the displaced default factory');
+  LOld := LCells.CellActions;
+  LFailed := False;
+  try
+    LCells.ConfigureCellActions(LExplicitLease, LScheduler);
+  except
+    on ENyxCollectionClipboard do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LCells.CellActions = LOld) and (LExplicitFactory.Revocations = 0),
+    'automatic adoption does not weaken the original duplicate explicit presenter refusal');
+  Check((LStore.Snapshot = LSource) and LView.Selection.Snapshot.SameState(LSelection) and
+    (LJournal.EntryAt(0) = LEntry) and (LTarget.Draft.Text = CLiveDraft) and
+    LTarget.Draft.Selection.SameRange(NyxTextSelection(CLiveDraft, 2, 5)),
+    'default/service/presenter adoption never refreshes accepted rows, selection or exact live draft/caret');
+  LMount.Disconnect;
+  Check((LExplicitFactory.Revocations = 1) and (LDefaultFactory.Revocations = 1) and
+    (LEntry.Cell.Text = CInertDraft),
+    'final retirement revokes each real factory once while detached journal entries remain readable');
+  LScheduler.Shutdown;
+end;
+
 begin
   try
     Run;
     ReviewChecks;
     SavedPolicy;
     PressureChecks;
+    ActionAdoption;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-recovery-mount-checks', IntToStr(GChecks));
     {$else}

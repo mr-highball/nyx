@@ -9,19 +9,95 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Table pointer and selection return — 2026-10-30
+## Current work — Table Copy feedback return — 2026-10-30
 
-Accepted prerequisite: [collection recovery01](TODO/DONE/NS-3_collection-recovery_01.md).
-Return to [table workbench03 W2](TODO/NS-3_control-usefulness_03.md): selected/cell-range
-transfer and independent table-instance behavior in the same Service monitor.
-Root continues SOLO.43de43c7 supplied ordinary managed review; the current
-table-recovery-count-01 qualification closes its count-freshness gap without
-changing either fixed listener or the LAN payload. Original workbench acceptance
-and goal percentages remain unchanged; the prerequisite has no separate credit.
+Current prerequisite: [visible Copy feedback01](TODO/NS-3_collection-copy-feedback_01.md).
+Return owner: [table workbench03 W2](TODO/NS-3_control-usefulness_03.md). Root stays
+SOLO. This turn is PROGRESS. [Action adoption01](TODO/DONE/NS-3_collection-action-adoption_01.md)
+and [browser Copy input01](TODO/DONE/NS-2_browser-copy-input_01.md) are accepted;
+[recovery01](TODO/DONE/NS-3_collection-recovery_01.md) acceptance is restored after
+the reproduced compatibility regression. Parent criteria, goal percentages and
+broader physical/assistive/performance requirements remain open without extra credit.
 
-Current batch: W2 selected/cell-range transfer and independent instance state,
-using table-range-return-01 on external scratch. The previous goal turn is
-PROGRESS:dd3bb282 is pushed and remote-verified, and recovery01 is accepted.
+The bounded table-keyboard-return-01 observer first captures keys only. Trusted
+arrows arrive but the browser driver's Control+C produces no keydown. Broader
+capture corrects the initial interpretation: one cancellable, bubbling, untrusted
+Copy event reaches the focused TD/gridcell, but no original host is entered.
+Its separately labeled Pascal producer proves the existing synthetic-key route;
+that does not substitute for actual semantic Copy. The new optional Copy facet
+and renderer listener reuse the original exact cell/range command, canonical
+clipboard stages and single host slot. No invented key/Click callback or event
+clipboard-data write is introduced. Original editor/custom-child defaults,
+composition/readiness/retirement fences and listener teardown stay authoritative.
+
+The original full consumer then stops during its unchanged Render/Clipboard/
+Export/presenter setup: automatic recovery had occupied the explicit action slot.
+A git-archived HEAD consumer and both pre-Copy browser adapters reproduce that
+constructor failure independently. Replaceable automatic defaults now have their
+own optional contract. First explicit services refresh only the default against
+those exact controllers; first explicit presentation replaces it. Private factory
+leases preserve the underlying target across refresh and revoke displaced input.
+Failed admission preserves the former owner, journal and live draft/caret;
+post-adoption cleanup failures are diagnostics, not false admission failures.
+Original GUIDs/vtables and duplicate explicit refusal remain intact.
+
+Final evidence in table-copy-input-01:
+
+- Full clipboard controls pass1499 at both browser widths and1680/1669 native.
+  Added ordinary/arranged cases keep the default presenter after explicit services,
+  hide an actual unfinished editor into an empty result and copy its represented
+  draft through the original host. Native frees all23522401/23915465 blocks.
+- Shared model-mounted recovery/admission/ownership checks pass50 per target;
+  native frees all40893 blocks. Full browser query/arrangement/recovery passes
+  1545/1544. Focused native recovery passes56 per width, freeing604395/604313 blocks.
+- The unchanged generated Service monitor passes25 saved native range/peer checks
+  per width, freeing1556402/1556182 blocks. The same saved browser unit writes the
+  exact173-byte two-by-two RAW TSV through its real browser host at1280x900 and
+  390x900. Each trace has one Copy, one host call, one Written receipt and exact
+  independent clipboard readback. The driver still produces no Copy keydown.
+- The independent original browser consumer gets past the repaired constructor
+  and reproduces a later pointer assertion. Diagnostics isolate round4: an
+  explicit caller captures pointer74 while the range's73 remains valid. The
+  injected seam incorrectly kept one global ID. It now models independent DOM
+  captures, with direct two-pointer/release checks; original stroke/range/intent
+  assertions stay. Original baseline48 and diagnostic55 retain that failure.
+- Initial new-test mistakes are retained: editor F2/Escape legitimately change
+  the immediate key/row baseline; a retired public intent is0; recovered text uses
+  the represented receipt facet. Correct typed checks preserve original-source
+  and authored invariants. Native literal conversion warnings are repaired with
+  typed text constants. Final native compiles have zero warnings; browser's
+  installed Classes warnings remain external. No dependency/guard/tolerance changes.
+
+The private query-workbench application runner used the Service monitor's generated
+unit by mistake and earns no product evidence; the correct table-query consumer
+passes above. An additional standalone pending-recovery demo run stops in partial
+view cleanup with undefined RetireRowCopy. Its raw failure is retained as
+pending-fixture-42-error.json, is not a pass and needs classification under the
+existing [live inspection04](TODO/NS-3_control-usefulness_04.md) before broader demo acceptance. It
+is outside this ordinary-table scoped acceptance. The separate full native
+query consumer's earlier physical-cursor access-denied gate is also unchanged.
+
+Final authenticated bounded MCP reads retain revision9, selection service-table,
+view services, no pending draft, Undo/Redo and original output fingerprint
+da83d63c57383b9aa777fcaf3c2b8a3c with all four services disabled. The paired design
+remains the13555-byte SHA25655B8676F7694B40C3E6C1BA592797E402292FF3D91D774120E31833C165F7BD2
+checkpoint; this batch makes no design writes. Both helper retirements preserve
+the exact generated document. Original structured clipboard items are restored
+and verified; viewport overrides reset and owned browser helpers close. Both fixed
+listeners retain their original process owners and paths; no LAN/QA replacement
+or output-profile change occurs. All owned compiler/native readers are joined.
+
+Reassessment: next implement ordinary clipboard completion feedback through the
+existing shared table-caption/controller ownership, then return to W2 and its
+original user-facing criteria. The admitted Unavailable keyboard/semantic command
+currently records zero bytes and a reason but has no visible Table explanation,
+unlike menu Copy. Preserve live drafts/caret, selection, input epochs and caller
+observers. Stop equivalent geometry/key-spelling/profile or scalar fixture variants.
+The goal remains active; no user input is required for this next authorized task.
+
+### Previous range transfer checkpoint
+
+The preceding table-range-return-01 batch records W2 range/instance evidence.
 Authenticated MCP revalidates the same revision9 pair/session and original output
 fingerprint, with no pending source draft and all runtime services disabled.
 The saved application's actual browser managed range transfer now passes at wide

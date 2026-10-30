@@ -245,6 +245,9 @@ type
     function ForwardRadioFocus(AEvent: TEventListenerEvent): Boolean;
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     function KeyUp(AEvent: TJSKeyboardEvent): Boolean;
+    { Browser menus/semantic clients may send Copy with no keydown. This route
+      reserves the same original data command and invents no keyboard/Click. }
+    function ClipboardCopy(AEvent: TJSEvent): Boolean;
     function Keyboard(AEvent: TJSKeyboardEvent; ATrigger: TNyxTrigger): Boolean;
     { Arranged-column defaults retain their entry proof across the SAME public
       callbacks. These claimed routes never let bubbling recapture a newer view. }
@@ -2757,6 +2760,7 @@ begin
     Result.addEventListener('focusout', @LBinding.Leave);
     Result.addEventListener('keydown', @LBinding.KeyDown, not LBinding.FCustom);
     Result.addEventListener('keyup', @LBinding.KeyUp, not LBinding.FCustom);
+    Result.addEventListener('copy', @LBinding.ClipboardCopy, not LBinding.FCustom);
   end;
 
   if LInput <> nil then
@@ -9189,6 +9193,8 @@ begin
   if FElement <> nil then
   begin
     FElement.onclick := nil;
+    FElement.removeEventListener('copy', @ClipboardCopy);
+    TNyxPreviewEventTarget(FElement).Unlisten('copy', @ClipboardCopy, True);
   end;
 
   if FInput <> nil then
@@ -9609,6 +9615,75 @@ begin
     end;
   except
     on E: ENyxBrowserViewRetired do
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxBrowserBinding.ClipboardCopy(AEvent: TJSEvent): Boolean;
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LMount: INyxCollectionMount;
+  LInput: INyxBrowserCollectionCopyInput;
+  LCommand: INyxBrowserColumnCommand;
+begin
+  Result := True;
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (LGeneration = nil) or not LGeneration.Current or FDisconnected or
+      CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode or FComposing or
+      AEvent.defaultPrevented then
+    begin
+      Exit;
+    end;
+    LMount := FCollectionMount;
+
+    if not Supports(LMount, INyxBrowserCollectionCopyInput, LInput) then
+    begin
+      Exit;
+    end;
+    LCommand := LInput.BeginClipboardCopy(AEvent);
+
+    if LCommand = nil then
+    begin
+      Exit;
+    end;
+    Result := False;
+    try
+      try
+
+        if not LGeneration.Current or FDisconnected or not LCommand.Current then
+        begin
+          Exit;
+        end;
+        LCommand.Prepare;
+
+        if LGeneration.Current and not FDisconnected and LCommand.DispatchCurrent then
+        begin
+          { The portable command performs its existing named clipboard stages,
+            original-source fences and host request. ClipboardEvent is not a key. }
+          LCommand.Complete(not AEvent.defaultPrevented);
+        end;
+      except
+        on ENyxColumnInputRetired do
+        begin
+          { As in keyboard dispatch, retirement during an outward source read is
+            an expected refusal. The original claim still suppresses fallback. }
+        end;
+      end;
+    finally
+      { Once claimed, suppress browser fallback even when the original command
+        becomes stale. Returning cannot copy a different current DOM selection. }
+      AEvent.preventDefault;
+      AEvent.stopPropagation;
+      LCommand.Retire;
+    end;
+  except
+    on ENyxBrowserViewRetired do
     begin
       Exit(True);
     end;

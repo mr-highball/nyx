@@ -72,6 +72,15 @@ type
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
   end;
 
+  { Optional standard Copy-event entry, independent of keyboard production.
+    Only a cancellable event on the exact focused resident data cell qualifies;
+    editors/custom descendants retain native copying. The returned original
+    envelope uses the existing controller/host, never event clipboard-data writes. }
+  INyxBrowserCollectionCopyInput = interface(IInterface)
+    ['{81D21E39-34DB-403B-B100-4C5DCEA75151}']
+    function BeginClipboardCopy(AEvent: TJSEvent): INyxBrowserColumnCommand;
+  end;
+
   { Optional explicitly enabled cell-range key route. Only exact resident cells
     qualify; editors retain their own selection/caret and default-off tables keep
     ordinary row navigation. It uses the existing canonical keyboard envelope. }
@@ -603,6 +612,7 @@ type
   TBrowserMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
+    INyxBrowserCollectionCopyInput,
     INyxBrowserCollectionCellContextInput, INyxCollectionFocusedDraftInput,
     INyxBrowserCollectionCellRangeInput, INyxBrowserCollectionCellRangePointerInput,
     INyxBrowserCollectionCellRangeStrokeInput)
@@ -807,6 +817,11 @@ type
     function CommitCellEditor(AInput: TJSHTMLInputElement;
       const AItem: TNyxItemRef; AColumn: Integer): Boolean;
     function Key(AEvent: TJSKeyboardEvent): Boolean;
+    { Private resident identity matching is shared by key and semantic Copy.
+      Reservation/capture still belongs to the original portable controller. }
+    function BeginClipboardTarget(ATarget: TJSEventTarget;
+      const ACommands: INyxCollectionClipboardCommands;
+      const AIntent: INyxCollectionCellRangeIntent): INyxBrowserColumnCommand;
     function CellContext(AEvent: TJSMouseEvent): Boolean;
     function VisibleOrder: TNyxItemRefs;
     procedure Gesture(const AItem: TNyxItemRef; AShift, AControl: Boolean;
@@ -835,6 +850,7 @@ type
       const AInputGate: INyxCollectionInputGate = nil);
     function BeginColumnKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
+    function BeginClipboardCopy(AEvent: TJSEvent): INyxBrowserColumnCommand;
     function BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginRangePointer(AEvent: TJSPointerEvent): INyxBrowserColumnCommand;
     function BeginRangeStroke(AEvent: TJSPointerEvent;
@@ -2165,21 +2181,53 @@ end;
 function TBrowserMount.BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
 var
   LCommands: INyxCollectionClipboardCommands;
-  LCommand: INyxCollectionClipboardCommand;
-  LRow: TBrowserRow;
-  LIndex: Integer;
-  LColumn: Integer;
   LIntent: INyxCollectionCellRangeIntent;
-  LRangeInput: INyxCollectionClipboardRangeInput;
-  LRangeCommand: INyxCollectionClipboardRangeCommand;
 begin
   Result := nil;
   LCommands := FClipboardCommands;
   LIntent := GetCellRange;
 
-  if (LCommands = nil) or AEvent.defaultPrevented or AEvent.isComposing or
-    AEvent.altKey or AEvent.shiftKey or AEvent.getModifierState('AltGraph') or
+  if (LCommands = nil) or AEvent.defaultPrevented or AEvent.isComposing or AEvent.altKey or
+    AEvent.shiftKey or AEvent.getModifierState('AltGraph') or
     not (AEvent.ctrlKey xor AEvent.metaKey) or (LowerCase(AEvent.key) <> 'c') then
+  begin
+    Exit;
+  end;
+  Result := BeginClipboardTarget(AEvent.target, LCommands, LIntent);
+end;
+
+function TBrowserMount.BeginClipboardCopy(AEvent: TJSEvent): INyxBrowserColumnCommand;
+var
+  LCommands: INyxCollectionClipboardCommands;
+  LIntent: INyxCollectionCellRangeIntent;
+begin
+  Result := nil;
+  LCommands := FClipboardCommands;
+  LIntent := GetCellRange;
+
+  if (LCommands = nil) or AEvent.defaultPrevented or not AEvent.cancelable or
+    (AEvent.target <> document.activeElement) or not GetInputReady or
+    FEditsSuspended or not FEnabled or not ClipboardInputAvailable then
+  begin
+    Exit;
+  end;
+  Result := BeginClipboardTarget(AEvent.target, LCommands, LIntent);
+end;
+
+function TBrowserMount.BeginClipboardTarget(ATarget: TJSEventTarget;
+  const ACommands: INyxCollectionClipboardCommands;
+  const AIntent: INyxCollectionCellRangeIntent): INyxBrowserColumnCommand;
+var
+  LCommand: INyxCollectionClipboardCommand;
+  LRow: TBrowserRow;
+  LIndex: Integer;
+  LColumn: Integer;
+  LRangeInput: INyxCollectionClipboardRangeInput;
+  LRangeCommand: INyxCollectionClipboardRangeCommand;
+begin
+  Result := nil;
+
+  if ACommands = nil then
   begin
     Exit;
   end;
@@ -2197,23 +2245,23 @@ begin
     for LColumn := 0 to Length(LRow.FCells) - 1 do
     begin
 
-      if AEvent.target = LRow.FCells[LColumn] then
+      if ATarget = LRow.FCells[LColumn] then
       begin
 
-        if LIntent <> nil then
+        if AIntent <> nil then
         begin
 
-          if not Supports(LCommands, INyxCollectionClipboardRangeInput, LRangeInput) then
+          if not Supports(ACommands, INyxCollectionClipboardRangeInput, LRangeInput) then
           begin
             raise ENyxCollection.Create('Collection clipboard cannot reserve original cell range input');
           end;
           LRangeCommand := LRangeInput.BeginRangeInput;
-          LRangeCommand.ResolveRange(LIntent);
+          LRangeCommand.ResolveRange(AIntent);
           LCommand := LRangeCommand;
         end
         else
         begin
-          LCommand := LCommands.BeginCell(LRow.FRef, ClipboardField(LColumn));
+          LCommand := ACommands.BeginCell(LRow.FRef, ClipboardField(LColumn));
         end;
         Exit(TBrowserCopyCommand.Create(LCommand));
       end;

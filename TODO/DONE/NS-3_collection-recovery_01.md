@@ -1,6 +1,6 @@
 # NS-3_collection-recovery_01 — Review recovered table edits through ordinary controls
 
-[North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
+[North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Table workbench](../NS-3_control-usefulness_03.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
@@ -20,7 +20,20 @@ explicit clipboard host. Do not create a second draft store, automatic restore,
 implicit discard or new clipboard authority. This is a prerequisite of the
 existing table workbench; it adds no separate completion percentage or credit.
 
-Accepted on2026-10-30 for all five unchanged criteria.43de43c7 implements the
+Acceptance restored on2026-10-30 after
+[action adoption01](NS-3_collection-action-adoption_01.md) repairs the discovered
+legacy configuration regression. Full original clipboard controls now pass1499
+per browser width and1680/1669 native with clean heaps. The added ordinary and
+arranged cases retain automatic presentation after explicit services, recover a
+real editor into an empty filtered result and copy its exact represented draft
+through the original host. Shared admission/ownership checks pass50 per target;
+full browser recovery/query checks pass1545/1544 and focused native checks pass56
+per width. The saved native application passes25 range/peer checks per width.
+The original failure and independent archived baseline remain retained. Existing
+criteria and broader native physical/assistive limits are unchanged; no separate
+completion credit is assigned.
+
+Previous acceptance checkpoint on2026-10-30:43de43c7 implements the
 specialized detached compound and ordinary table launcher/navigation/Copy; the
 following membership-observation repair qualifies deliberate external discard
 without row refresh or input replacement. Both maintained Pascal compiler targets
@@ -83,5 +96,5 @@ this review provides neither automatic restoration nor a destructive UI action.
 
 **Blockers**
 
-- None for implementation. Existing draft recovery, managed presentation, exact
-  text controls and configured clipboard hosts are available.
+- [Explicit action adoption](NS-3_collection-action-adoption_01.md) restores the
+  older runtime setup alongside automatic recovery presentation.

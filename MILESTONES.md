@@ -24,14 +24,23 @@ are a checkpoint; its remaining scale/parity work is parked with an explicit
 return path. The resolver remains deferred. Existing scope, prerequisites,
 original acceptance criteria and pending completion assessments are unchanged.
 
-Ordinary [recovered-edit review](TODO/DONE/NS-3_collection-recovery_01.md) is
-accepted on2026-10-30 for detached exact presentation, bounded navigation,
-explicit-host raw Copy, fresh counts and retired-owner isolation. Both targets
-exercise the same saved Service monitor at wide/compact widths with exact paired
-project/configuration preservation and clean native heaps. The separate full
-native cursor-input gate remains open. Return to W2 selected/cell-range output
-and peer independence. This prerequisite adds no separate credit; NS-3 and overall
-completion remain Pending assessment under the original workbench/parity scope.
+Ordinary [recovered-edit review](TODO/DONE/NS-3_collection-recovery_01.md)
+acceptance is restored on2026-10-30 after
+[action adoption](TODO/DONE/NS-3_collection-action-adoption_01.md) repairs the
+reproduced legacy runtime setup regression. Full clipboard controls pass1499 per
+browser width and1680/1669 native, with clean heaps. The shared ownership checks
+pass50 per target and recovery/query controls pass1545/1544 browser and56 per
+native width. These are scoped prerequisites; NS-3 and overall completion remain
+Pending assessment with no separate credit assigned.
+
+The same saved workbench's Copy continuation identifies a standard browser Copy
+event with no keydown. The accepted [input bridge](TODO/DONE/NS-2_browser-copy-input_01.md)
+uses the existing scoped command/host and writes the exact173-byte range at both
+widths, without invented key callbacks or event clipboard-data writes. Original
+parent acceptance remains open. Next,
+[ordinary feedback](TODO/NS-3_collection-copy-feedback_01.md) must surface failed/
+unavailable outcomes without disturbing live input. Physical/assistive and the
+separate full native cursor-input gate remain open; no extra credit is assigned.
 
 [Embedded popover visibility](TODO/DONE/NS-2_popover-viewport_01.md) is accepted
 on2026-10-29. The original clipping failure is reproduced and repaired; desktop/
