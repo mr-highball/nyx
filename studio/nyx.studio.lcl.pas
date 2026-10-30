@@ -2223,7 +2223,9 @@ begin
   FOpeningRevision := '';
   FImportOpening := True;
   try
-    FSourceCommands.OpenProject(APair, AResolution);
+    { Embedding LoadProject establishes an independent initial project. Ordinary
+      file Open uses AcceptImport and retains its paired Undo/Redo command. }
+    FSourceCommands.OpenProject(APair, AResolution, pohNewHistory);
   except
     FImportOpening := False;
     raise;
@@ -2276,6 +2278,7 @@ begin
     FImportOpening := False;
   end;
   FState.ImportConflict := FImportPacket <> '';
+  FState.ImportChecking := FImportOpening;
   FState.MenuEditorDraft.Clear;
   FState.MenuBarEditorDraft.Clear;
   FState.TabsEditorDraft.Clear;
@@ -2854,6 +2857,7 @@ begin
   end;
   FState.Agents := GetAgentState;
   FState.ImportConflict := FImportPacket <> '';
+  FState.ImportChecking := FImportOpening;
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
   FState.BuildInspectionReady := (CurrentBridge <> nil) and
@@ -5375,6 +5379,14 @@ begin
       end;
       FProjectFiles.ExportFiles([NyxTextFile(
         FSession.SourceFileTitle(FSession.ActiveSourceFile), FSession.ActiveSourceText)]);
+      Exit;
+    end;
+
+    { The source pane retains its own controls outside the shell placeholder.
+      Validate cancellation against that exact current owner on both targets. }
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-cancel-source') then
+    begin
+      FSourceCommands.Route(ANode, AEvent, FSourcePaneView.Root);
       Exit;
     end;
 

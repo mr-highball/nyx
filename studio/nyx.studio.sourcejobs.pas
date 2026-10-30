@@ -32,7 +32,7 @@ uses
   nyx.behavior,
   nyx.source.preparation, nyx.studio.sourcecompilation, nyx.studio.session,
   nyx.studio.sourcecompilation.shared, nyx.studio.sourcepublications,
-  nyx.studio.projects,
+  nyx.studio.projects, nyx.studio.projectopening.shared,
   nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.canvas.editor, nyx.studio.collectionintent, nyx.studio.collections,
   nyx.tabs.pages.editor, nyx.programs.declarations, nyx.canvas.adoption,
@@ -104,6 +104,9 @@ type
     Context: TNyxStudioCommandContext;
     Source: TNyxStudioSourceRequest;
     Project: TNyxStudioProjectRequest;
+    { Dispatch choice is retained while waiting; lost shared capability cannot
+      silently redirect an imported project to a local compile-only provider. }
+    SharedProject: Boolean;
     Edit: TNyxStudioDesignEdit;
     Design: TNyxStudioDesignRequest;
     Schemas: TNyxEditorSchemaLease;
@@ -243,11 +246,13 @@ type
     procedure UseProjectCompiler(const ACompiler: INyxSourceCompiler);
     { Ordinary Open/recovery workflow. A configured driver executes the accepted
       saved source, not its unfinished draft, and then admits the complete pair
-      under sealed file/load/schema guards. Open deliberately starts new history;
-      it is not Apply. Original input belongs to the host until PublishedProject.
-      Without a driver, existing strict compiler-independent admission applies. }
+      under sealed file/load/schema guards. Original input belongs to the host
+      until PublishedProject. Without a driver, strict literal admission applies.
+      Ordinary Open is one paired command. An embedding loader can explicitly
+      start fresh local history; that policy never borrows shared publication. }
     procedure OpenProject(const APair: TNyxProjectPair;
-      AResolution: TNyxProjectResolution = nprRequireMatch);
+      AResolution: TNyxProjectResolution = nprRequireMatch;
+      AHistory: TNyxProjectOpeningHistory = pohPairedCommand);
     { Explicit alternative for owning-server compilation. Its coordinator gates
       dispatch/observing acknowledgement and cannot be installed as local-only
       compilation. Configure while idle; detach the borrowed UI port on retirement. }
@@ -1038,7 +1043,7 @@ end;
 
 function TNyxSourceCommands.GetProjectCompilerAvailable: Boolean;
 begin
-  Result := FProjectCompiler <> nil;
+  Result := (FProjectCompiler <> nil) or NyxSharedProjectOpeningAvailable(FSharedHost);
 end;
 
 function TNyxSourceCommands.GetCanOpenProject: Boolean;
@@ -1060,7 +1065,7 @@ begin
 end;
 
 procedure TNyxSourceCommands.OpenProject(const APair: TNyxProjectPair;
-  AResolution: TNyxProjectResolution);
+  AResolution: TNyxProjectResolution; AHistory: TNyxProjectOpeningHistory);
 var
   LJob: TNyxEditorSourceJob;
 begin
@@ -1071,21 +1076,32 @@ begin
     raise ENyxModel.Create('Wait for pending editor changes before opening a project');
   end;
 
-  if (FProjectCompiler = nil) or (AResolution = nprUseDesign) then
+  if not ProjectCompilerAvailable or (AResolution = nprUseDesign) or
+    ((AHistory = pohNewHistory) and (FProjectCompiler = nil)) then
   begin
-    FSession.LoadProject(APair, AResolution);
+
+    if AHistory = pohNewHistory then
+    begin
+      FSession.LoadProject(APair, AResolution);
+    end
+    else
+    begin
+      FSession.OpenProject(APair, AResolution);
+    end;
     Notify(nssApplied, 'Project opened with its Pascal companion and retained draft',
       False, sdaProperty, True);
     Exit;
   end;
   LJob := Default(TNyxEditorSourceJob);
   LJob.Kind := eskProject;
+  LJob.SharedProject := (AHistory = pohPairedCommand) and (FProjectCompiler = nil) and
+    NyxSharedProjectOpeningAvailable(FSharedHost);
   LJob.Context := FSession.CommandContext;
   LJob.Sequence := NextSequence;
   LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
   try
     LJob.Project := FSession.PrepareProjectRequest(APair, AResolution,
-      LJob.Schemas.Value.Revision);
+      LJob.Schemas.Value.Revision, AHistory);
     Enqueue(LJob);
     LJob.Schemas := nil;
     try
@@ -1811,7 +1827,8 @@ begin
     Exit;
   end;
 
-  if (FSharedHost <> nil) and (FQueue[0].Kind <> eskProject) and not FSharedHost.Ready then
+  if (FSharedHost <> nil) and
+    ((FQueue[0].Kind <> eskProject) or FQueue[0].SharedProject) and not FSharedHost.Ready then
   begin
     Exit;
   end;
@@ -1901,7 +1918,7 @@ begin
       end;
       SetLength(FCompilations, LCompilationCount);
 
-      if (FActive.Kind = eskPascal) and (FSharedHost <> nil) then
+      if (FSharedHost <> nil) and ((FActive.Kind = eskPascal) or FActive.SharedProject) then
       begin
         LSharedPort := TSharedCompilationPort.Create;
         LSharedLease := LSharedPort;
@@ -1909,20 +1926,28 @@ begin
         LSharedPort.Scheduler := FScheduler;
         LSharedPort.Schemas := FActive.Schemas.Value;
         LSharedPort.Sequence := FActive.Sequence;
-        LSharedPort.ExpectedSource := FActive.Source.Source;
 
-        if FActive.Source.FileChange.IsDefined then
+        if FActive.SharedProject then
         begin
+          LSharedPort.ExpectedSource := FActive.Project.Source;
+          FCompilation := StartNyxSharedProjectOpening(FSharedHost,
+            FActive.Project, LSharedLease);
+        end
+        else if FActive.Source.FileChange.IsDefined then
+        begin
+          LSharedPort.ExpectedSource := FActive.Source.Source;
           FCompilation := StartNyxSharedFileChangeCompilation(FSharedHost,
             FActive.Source, LSharedLease);
         end
         else if FActive.Source.IsFileEdit then
         begin
+          LSharedPort.ExpectedSource := FActive.Source.Source;
           FCompilation := StartNyxSharedFileCompilation(FSharedHost,
             FActive.Source, LSharedLease);
         end
         else
         begin
+          LSharedPort.ExpectedSource := FActive.Source.Source;
           FCompilation := FSharedHost.Start(FActive.Source.Source, LSharedLease);
         end;
       end
@@ -2376,10 +2401,23 @@ begin
         Finish(ASequence, ASource, nil, '', True, LCompletion);
         Exit;
       end;
+
+      if (AOutcome = npoRefused) and FActive.SharedProject and
+        (ASource <> nil) and ASource.Diagnostic.Defined then
+      begin
+        Finish(ASequence, ASource, nil, '', True, nscRejected);
+        Exit;
+      end;
       Finish(ASequence, nil, nil, LMessage);
       Exit;
     end;
-    if FActive.Kind = eskDesign then
+
+    if FActive.SharedProject then
+    begin
+      LCompletion := AdmitNyxSharedProjectOpening(FSharedHost,
+        FActive.Project, ASource, AReceipt);
+    end
+    else if FActive.Kind = eskDesign then
     begin
 
       if not Supports(FSharedHost, INyxSharedDesignSourceHost, LSharedHost) then
@@ -2626,6 +2664,7 @@ function TNyxSourceCommands.Route(ANode: TNyxNode; ATrigger: TNyxTrigger;
   AShellRoot: TNyxNode): Boolean;
 const
   CApply = 'action-apply-source';
+  CCancel = 'action-cancel-source';
   CRestore = 'action-reset-source';
   CDelete = 'action-delete';
   CDuplicate = 'action-duplicate';
@@ -2681,6 +2720,17 @@ begin
 
   if ATrigger = ntClick then
   begin
+
+    if ANode.ID = CCancel then
+    begin
+
+      if (AShellRoot = nil) or (AShellRoot.Find(CCancel) <> ANode) then
+      begin
+        raise ENyxModel.Create('Cancel belongs to the current source workspace');
+      end;
+      Cancel;
+      Exit(True);
+    end;
 
     if RouteNyxCanvasPrecisionGuide(ANode, AShellRoot) then
     begin

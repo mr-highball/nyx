@@ -9,9 +9,9 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Studio named Save/Open authoring return — 2026-10-29
+## Current work — Studio named Save/Open authoring return — 2026-10-30
 
-Previous goal turn: PROGRESS.e3e00947 is pushed and remote-verified. Root remains
+Previous goal turn: PROGRESS.59f43f37 is pushed and remote-verified. Root remains
 SOLO. Return to Studio-slice criterion3 and full-authoring criteria2/5 using the
 same existing owned QA Workshop copy. Inspect bounded semantic context, retain
 the exact initial pair, then exercise actual design/Pascal edits, pending draft,
@@ -23,6 +23,145 @@ Save/Open and source-workspace acceptance remain supporting evidence, not new
 credit for repeating them. Do not expand resolver, JSON/profile or chrome-only
 variants. New private runners, artifacts and owned TEMP/TMP stay on E: in
 studio-authoring-return-01. Original acceptance scope and prerequisites remain.
+
+Current continuation: finish the same named-project owner through shared
+compiler-backed Open, on both adapters, without weakening the file boundary.
+Capture the imported pair and resolution separately from the live baseline;
+compile/execute it through the existing private producer, admit the whole project
+once and wait for exact observing acknowledgement. Ordinary Open must be a paired
+history command; preserve the direct session loader's existing new-history
+contract through an explicit typed policy. Retain stale/cancelled/newer-draft,
+helper-inventory and creator guards. No owned compiler/test reader remains active
+before these source changes; serving executables are independent frozen builds.
+
+Open source continuation now implements a distinct sealed project publication,
+strict versioned imported-pair intent, explicit paired/new-history policy and
+optional shared opening interfaces. Backend capture separates imported source,
+helpers and unfinished buffers from the live baseline. Publication reuses the
+ordinary complete-project preparation and durable rollback. Private operator
+metadata negotiates opening support; older/absent providers retain their prior
+behavior without a compile-only publication fallback. Browser/native factories,
+the revocable bridge and the ordinary command queue are connected in source.
+
+The portable Open wire/literal-history checks pass25 on native and browser;
+native frees all385338 blocks. Actual native constructor publication passes71
+with all4286561 blocks freed, including one paired Undo/Redo, wrong authority,
+stale/newer draft and failed durable Open followed by retry of the same capture.
+The first actual constructor run hit the unchanged60000ms compiler limit before
+execution; retain its log/failure dump. An unchanged rerun passes under that same
+limit (observed native compilation21.4s, browser4.9s). No deadline/SDK/source
+assertion is weakened. Two new test literal-concatenation warnings are corrected
+with explicit TNyxText before the accepted runs. The full browser host and new
+server compile; their payloads are not installed in the serving slots yet.
+
+Current running qualification is the maintained full shared-command/native
+provider regression, extended with ordinary Open and shared Undo/Redo after the
+real helper create/remove workflow. It uses the actual production native factory
+and backend with a controlled in-process transport; this is distinct from HTTP
+or native pointer input. Existing scenarios/assertions remain. Its fresh runtime
+and logs are in open-native-shared beneath the current external packet. Follow
+its live process to terminal before further source edits or acceptance. Then
+return to the same ordinary desktop/compact saved Workshop on QA; active pair49,
+the eight unrelated QA projects and LAN are still on the serving59f43f37 build.
+No complete named-project or parent authoring criterion is accepted yet.
+
+That first full shared run is terminal-failed during visual scenario3, before
+its new Open/provider case: the customized native constructor's compiler reaches
+the unchanged60000ms limit. The failure is retained, with20564006 blocks freed
+and zero outstanding blocks; it is not a source-compilation error or a passed
+full regression. An unchanged second run is active in its fresh runtime-02,
+using the same limits and assertions. Follow that existing process rather than
+restarting on an observation timeout. The fixed QA/LAN servers are unchanged.
+The new ordinary browser host and native provider regression compile, and the
+candidate server is built. No new binaries or main browser assets are installed.
+
+The unchanged second full shared regression is now terminal-failed at another
+native constructor compilation before its provider/Open case. It retains the
+original60000ms compiler refusal and frees all7698763 blocks. No compiler reader
+remains from either run. After two failed full batches, the next bounded outcome
+switches to the actual named-project HTTP journey rather than another equivalent
+full rerun. Full native-provider acceptance remains outstanding. The maintained
+direct queue regression now asserts exact paired Undo/Redo for ordinary Open;
+the explicit direct loader/new-history assertions remain in its shared fixture.
+
+Before QA replacement, independent semantic exports retain all nine exact pairs
+and revisions;27 durable runtime files are copied and hash-verified, excluding
+the live lock. The fixed QA owner is stopped and joined, its existing slot gets
+the candidate server, and only the private named-project browser host is updated.
+The matched candidate has no root/main browser rollout yet. Actual whole-registry
+recovery is running through the ordinary root UI on the same fixed slots. Its
+new owner is independent of the unchanged LAN service. Follow this recovery to
+terminal, compare all nine exports/settings and then exercise the same rich pair
+through ordinary desktop/compact Open/history/compiled runtime. No task is DONE.
+
+QA recovery is terminal-success. Independent exports match all nine exact pairs,
+revisions and titles; output configuration and LAN remain unchanged. The same
+compiled Workshop opens through ordinary controls at1280x720 and390x900. A
+distinct unfinished draft precedes each Open. Complete semantic exports prove
+each imported packet and one-step Undo/Redo byte-identical to the respective
+saved/pre-Open packets (desktop revisions50..53, compact54..57). Pre-open backup
+capture remains distinct from physical file delivery. Applying its restored draft
+publishes58 without a pending buffer. Ordinary Build app then runs that exact
+application; real JSON input/Format output at both widths preserves supplementary
+Unicode and exact arrays. Expanding the runtime retains its independently owned
+output. This is actual HTTP/worker/UI execution, not a stored projection claim.
+
+The same journey repairs two concrete cancellation presentation gaps. A retained
+import now says it is being checked rather than declaring unsupported Pascal
+while its compiler runs. Backup/cancel remain available, and duplicate resolution
+choices wait for a terminal result. Cancelling a shared Open retains the exact
+packet/revision and correctly requires explicit sync reconciliation. A subsequent
+waiting Apply exposed no source-queue cancellation control. The shared source
+toolbar now exposes the existing Cancel operation during queued/running work;
+retained activity updates preserve its editor/caret/scroll. Its first route used
+the shell placeholder and refused; both adapters now pass the independently owned
+live source pane. The repaired actual compact cancellation clears that waiting
+queue and preserves the complete packet/revision. It does not infer remote rollback
+or silently waive the existing reconciliation policy.
+
+The maintained native source-workspace regression initially fails its original
+final history assertion. Programmatic native LoadProject had unintentionally
+inherited ordinary Open's new paired history. An explicit typed queue history
+parameter restores the embedding loader's fresh-history contract while ordinary
+file Open remains paired. The original assertion is retained. The full repaired
+native consumer passes86 with all20041143 blocks freed, after its real source,
+modal, caret, draft/history and compact control journey. The direct native saved
+project queue/journal consumer also passes50 with all2114279 blocks freed; its
+new assertions explicitly qualify ordinary paired Undo/Redo. These are independent
+of the still outstanding full native shared-provider regression described above.
+
+Current owned packet additionally retains the desktop/compact exact history
+exports, cancellation captures, both actual compiled-runtime JSON results and
+inspected images. Its small private Pascal observer uses the existing bounded
+semantic tools on one retained authenticated connection, without adding a product
+tool or returning complete model state to the agent. Its checked heaps are clean.
+The final browser rebuild includes the explicit loader policy; affected native
+readers are joined before the next build. Full original criteria, native shared
+provider completion, final owned-history restoration and matched LAN rollout
+remain open; no completion percentage or DONE move follows this checkpoint.
+
+Final source now also preserves explicit embedding-load history. Both real Studio
+entry points compile, with no owned warnings; each browser build retains7 installed
+Classes warning occurrences. The final browser host repeats ordinary Open at59
+and one ordinary Undo at60: full packets equal the saved pending project and the
+pre-Open compiled pair respectively. The final preservation pass matches all
+eight unrelated QA pairs/revisions/titles and the owned compiled pair, plus the
+exact output configuration. The private observer initially sends an empty primary
+workspace reference and is correctly refused; it now omits that optional routing
+field for the primary project. The refused observation changes no project, and
+its diagnostic is retained. All nine final exports then pass with clean heaps.
+
+The final native direct-queue rerun reaches its original60000ms compiler limit
+before its first constructor executes (canvas type compilation), freeing all9607
+blocks. It is not a current-source runtime pass. Retain that failure alongside
+the earlier50-check pass and the two full shared-command deadline failures; do
+not widen the limit or remove assertions. The repaired current-source native
+workspace's86 checks and clean heap are accepted independently. No compiler/test
+reader remains active at this checkpoint; only the intentional QA/LAN services
+remain. Next: resolve the actual native constructor-throughput qualification in
+this same consumer, finish the full shared provider/Open checks, restore the
+owned initial history and prepare matched delivery. No resolver, JSON/profile,
+chrome-only variant or renewed file/host approval is needed.
 
 Current result: ordinary desktop Properties/Pascal Apply, named Save with an
 unfinished Unicode draft, genuinely different local edit, Open and paired

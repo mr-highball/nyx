@@ -376,6 +376,15 @@ type
       const ABaseline: TNyxProjectPair; const AProjection: INyxSourceProjection;
       const ARequest: TNyxStudioSourceRequest; const ASchemas: INyxSchemaSnapshot;
       const ASelection, AView: TNyxControlRef): TNyxDataValue;
+    { A private editor Open captures its imported pair separately from the live
+      baseline. Successful owned execution publishes one complete history command;
+      no file, checkpoint decoder or agent flag grants this admission. }
+    function CaptureProjectOpening(AExpected: Integer; const APair: TNyxProjectPair;
+      AResolution: TNyxProjectResolution; out ARequest: TNyxStudioProjectRequest;
+      out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    function CommitProjectOpening(AExpected: Integer; const ABaseline: TNyxProjectPair;
+      const AProjection: INyxSourceProjection; const ARequest: TNyxStudioProjectRequest;
+      const ASchemas: INyxSchemaSnapshot): TNyxDataValue;
     { Capture the ordinary source request and immutable creator environment
       without changing the draft. Source must be the editor's exact current
       buffer, including accepted text when no draft is pending. }
@@ -4418,6 +4427,51 @@ begin
   Changed;
   FClaimed := True;
   Log('Studio', 'source publication', 'completed');
+  Result := EditorState(0);
+end;
+
+function TNyxAgentSession.CaptureProjectOpening(AExpected: Integer;
+  const APair: TNyxProjectPair; AResolution: TNyxProjectResolution;
+  out ARequest: TNyxStudioProjectRequest;
+  out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+begin
+  Result := EditorSourcePair(AExpected);
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareProjectRequest(APair, AResolution, ASchemas.Revision,
+    pohPairedCommand);
+end;
+
+function TNyxAgentSession.CommitProjectOpening(AExpected: Integer;
+  const ABaseline: TNyxProjectPair; const AProjection: INyxSourceProjection;
+  const ARequest: TNyxStudioProjectRequest;
+  const ASchemas: INyxSchemaSnapshot): TNyxDataValue;
+var
+  LCurrent: TNyxProjectPair;
+  LPrepared: INyxPreparedSource;
+  LCompletion: TNyxSourceCompletion;
+begin
+  LCurrent := EditorSourcePair(AExpected);
+
+  if EncodeNyxProject(LCurrent) <> EncodeNyxProject(ABaseline) then
+  begin
+    raise ENyxProjectConflict.Create('Project Open baseline changed; current work is retained');
+  end;
+
+  if (AProjection = nil) or (AProjection.State <> spsExecuted) or
+    (AProjection.Source <> ARequest.Source) or (ARequest.History <> pohPairedCommand) then
+  begin
+    raise ENyxProjectConflict.Create('Project Open needs its exact executed constructor and history policy');
+  end;
+  LPrepared := PrepareNyxProjectedSource(AProjection, ASchemas);
+  LCompletion := FSession.CompleteProjectRequest(ARequest, LPrepared);
+
+  if not (LCompletion in [nscApplied, nscUnchanged]) then
+  begin
+    raise ENyxProjectConflict.Create('Project Open became stale or refused; current work is retained');
+  end;
+  Changed;
+  FClaimed := True;
+  Log('Studio', 'project Open', 'completed');
   Result := EditorState(0);
 end;
 

@@ -27,7 +27,7 @@ unit nyx.studio.sourcebuilds;
 interface
 
 uses nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
-  nyx.studio.sourceprojection;
+  nyx.studio.sourceprojection, nyx.studio.projects;
 
 const
   { JSON escaping can expand the admitted 1 MiB UTF-8 source by six. This HTTP
@@ -84,10 +84,124 @@ function WithNyxSourceFile(const AArguments: TNyxDataValue;
   const AFile: TNyxPascalSourceRef): TNyxDataValue;
 function ReadNyxSourceFile(const AArguments: TNyxDataValue): TNyxPascalSourceRef;
 
+{ Explicit private editor Open intent, independent of the current accepted
+  source/files. The candidate remains data: its constructor still requires owned
+  compilation/execution. Main/helper bytes must equal the same request's inputs.
+  Existing requests keep their exact shape when this extension is absent. }
+function WithNyxProjectOpening(const AArguments: TNyxDataValue;
+  const APair: TNyxProjectPair; AResolution: TNyxProjectResolution): TNyxDataValue;
+function ReadNyxProjectOpening(const AArguments: TNyxDataValue;
+  out APair: TNyxProjectPair; out AResolution: TNyxProjectResolution): Boolean;
+
 implementation
 
 uses nyx.bytes, nyx.model, nyx.source, nyx.studio.builds, nyx.studio.compiler,
-  nyx.studio.projectinputs, nyx.pascal.names;
+  nyx.studio.projectinputs, nyx.pascal.names, nyx.codec;
+
+function ReadNyxProjectOpening(const AArguments: TNyxDataValue;
+  out APair: TNyxProjectPair; out AResolution: TNyxProjectResolution): Boolean;
+var
+  LIndex: Integer;
+  LOpening: TNyxDataValue;
+  LResolution: TNyxText;
+  LDocument: TNyxDocument;
+begin
+  APair := Default(TNyxProjectPair);
+  AResolution := nprRequireMatch;
+  Result := False;
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+
+    if AArguments.Key(LIndex) = 'opening' then
+    begin
+      Result := True;
+    end;
+  end;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+
+    if (AArguments.Key(LIndex) = 'visual') or (AArguments.Key(LIndex) = 'sourceFile') then
+    begin
+      raise ENyxModel.Create('Project Open cannot also be an Apply, visual or selected-file intent');
+    end;
+  end;
+  LOpening := AArguments.Field('opening');
+
+  if (LOpening.Kind <> ndObject) or (LOpening.Count <> 3) or
+    (LOpening.Field('version').AsInteger <> 1) or
+    not AArguments.Field('publish').AsBoolean then
+  begin
+    raise ENyxModel.Create('Project Open requires its versioned shared publication intent');
+  end;
+  LResolution := LOpening.Field('resolution').AsText;
+
+  if LResolution = 'require-match' then
+  begin
+    AResolution := nprRequireMatch;
+  end
+  else if LResolution = 'use-pascal' then
+  begin
+    AResolution := nprUsePascal;
+  end
+  else
+  begin
+    raise ENyxModel.Create('Compiled project Open requires require-match or use-pascal');
+  end;
+  APair := DecodeNyxProject(LOpening.Field('project').AsText);
+
+  if (APair.Source <> AArguments.Field('source').AsText) or
+    (APair.Files.Encoded <> ReadNyxSourceProjectFiles(AArguments).Encoded) then
+  begin
+    raise ENyxModel.Create('Project Open differs from its exact constructor inputs');
+  end;
+  { Ordinary codec formatting is not a source/design conflict. This owns the
+    detached candidate only; creator admission still runs at sealed capture. }
+  LDocument := TNyxCodec.Decode(APair.Design);
+  try
+    APair.Design := TNyxCodec.Encode(LDocument);
+  finally
+    LDocument.Free;
+  end;
+end;
+
+function WithNyxProjectOpening(const AArguments: TNyxDataValue;
+  const APair: TNyxProjectPair; AResolution: TNyxProjectResolution): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LResolution: TNyxText;
+  LChecked: TNyxProjectPair;
+  LChoice: TNyxProjectResolution;
+begin
+
+  if not (AResolution in [nprRequireMatch, nprUsePascal]) then
+  begin
+    raise ENyxModel.Create('Design-only Open does not invoke a constructor');
+  end;
+  LResolution := 'require-match';
+
+  if AResolution = nprUsePascal then
+  begin
+    LResolution := 'use-pascal';
+  end;
+  SetLength(LFields, AArguments.Count + 1);
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(AArguments.Key(LIndex),
+      AArguments.Field(AArguments.Key(LIndex)));
+  end;
+  LFields[High(LFields)] := NyxField('opening', NyxObject([
+    NyxField('version', NyxData(1)),
+    NyxField('project', NyxData(EncodeNyxProject(APair))),
+    NyxField('resolution', NyxData(LResolution))]));
+  Result := NyxObject(LFields);
+  ReadNyxProjectOpening(Result, LChecked, LChoice);
+end;
 
 { Both public overloads share strict receipt admission. Captured inputs remain
   caller-owned; a wire record never supplies their text or execution authority. }

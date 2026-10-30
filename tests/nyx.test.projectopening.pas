@@ -167,6 +167,23 @@ begin
       'a different creator generation cannot publish prepared owners');
     Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore,
       'creator-generation refusal preserves the complete local pair');
+
+    { Explicit editor opening keeps the direct loader's tested reset policy
+      above, while publishing this alternative as one complete Undo command. }
+    Baseline;
+    LRequest := LSession.PrepareProjectRequest(LPair, nprRequireMatch,
+      LSchemas.Revision, pohPairedCommand);
+    LPrepared := PrepareNyxProjectedSource(AProjection, LSchemas);
+    Check(LSession.CompleteProjectRequest(LRequest, LPrepared) = nscApplied,
+      'explicit paired-history policy admits the complete executed project');
+    Check(LSession.CanUndo and not LSession.CanRedo,
+      'editor Open records one complete history command');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore,
+      'paired Open Undo restores all previous files and independent draft');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LPair),
+      'paired Open Redo restores the exact imported project and unfinished baseline');
   finally
     LPrepared := nil;
     LSchemas := nil;

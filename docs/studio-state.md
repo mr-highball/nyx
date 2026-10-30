@@ -124,6 +124,26 @@ revision must still match; a different draft or stale observer cannot borrow
 another project's checkpoint. Disconnected literal projects retain their ordinary
 source admission. A saved file itself never supplies execution authority.
 
+When the connected compiler service supports complete-project opening, ordinary
+**Open saved project** checks and executes the saved companion before replacing
+the live pair. Its helper inventory and unfinished buffers travel together;
+unfinished drafts are retained as data rather than compiled. The editor waits
+for the same shared revision to acknowledge the complete replacement. Checking
+keeps both inputs available and offers backup/cancel, without claiming an input
+is unsupported while work is still running.
+
+A successful ordinary Open is one paired history command: **Undo** restores the
+previous project, source and drafts; **Redo** restores the opened pair. The direct
+session and native embedding `LoadProject` APIs retain their separate fresh-history
+contract. Older or unavailable shared providers retain literal admission; a file cannot substitute
+a serialized execution claim for the compiler service's owned result.
+
+The source toolbar exposes **Cancel** while changes are queued or running. It
+retires that work and keeps accepted files and drafts. A cancelled shared job can
+require an explicit choice in **Agents and sync** before further shared edits;
+waiting source work can be cancelled in the source toolbar without discarding
+the project.
+
 Both members are admitted before replacing the session or touching saved files.
 Matching pairs preserve imports, helpers, callbacks, local names and comments
 exactly. Unsupported or mismatched input remains downloadable while the current

@@ -150,6 +150,11 @@ type
     Diagnostics/stale work retain the current owners and independent buffers. }
   TNyxSourceCompletion = (nscUnchanged, nscApplied, nscRejected, nscStale);
 
+  { Direct loading can start an independent history; an editor Open command
+    instead keeps the previous complete pair as one Undo entry. This host choice
+    is never inferred from a saved file or a constructor's execution result. }
+  TNyxProjectOpeningHistory = (pohNewHistory, pohPairedCommand);
+
   { A saved project is data, never execution evidence. This sealed opening
     request captures its complete pair, explicit resolution, creator revision
     and the current session/load/files/draft. Compiler preparation owns no live
@@ -161,12 +166,16 @@ type
     FBaseline: TNyxText;
     FPair: TNyxProjectPair;
     FResolution: TNyxProjectResolution;
+    FHistory: TNyxProjectOpeningHistory;
     FSchemaRevision: Integer;
     function GetSource: TNyxText;
     function GetFiles: TNyxPascalProjectFiles;
   public
     property Source: TNyxText read GetSource;
     property Files: TNyxPascalProjectFiles read GetFiles;
+    property Pair: TNyxProjectPair read FPair;
+    property Resolution: TNyxProjectResolution read FResolution;
+    property History: TNyxProjectOpeningHistory read FHistory;
   end;
 
   { Closed editor intent. Names/values are data at the inspector/catalog boundary;
@@ -589,6 +598,10 @@ type
       wrappers use this same history/reset policy; no parsing follows transfer. }
     procedure LoadAdmittedProject(ADocument: TNyxDocument;
       AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair);
+    { Transfer one explicitly opened pair through ordinary history, retiring
+      input captured in the old load even when visible identities are reused. }
+    procedure PublishOpenedProject(var ADocument: TNyxDocument;
+      var AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair);
     function CallbackCandidate: TNyxDocument;
     function DoAddCallback(ATrigger: TNyxTrigger; const AName: TNyxEventRef;
       out ALine: Integer): TNyxHandlerRef;
@@ -735,14 +748,22 @@ type
     function ProjectSnapshot: TNyxProjectPair;
     procedure LoadProject(const APair: TNyxProjectPair;
       AResolution: TNyxProjectResolution = nprRequireMatch);
+    { Ordinary editor Open keeps the previous complete pair as one Undo command.
+      Unsupported/conflicting files refuse before any accepted owner is changed. }
+    procedure OpenProject(const APair: TNyxProjectPair;
+      AResolution: TNyxProjectResolution = nprRequireMatch);
     { Explicit compiler-backed file/recovery opening. Capture validates the
       saved design and packet but grants no authority to a serialized origin.
       Complete receives fully admitted independent owners from the configured
-      compiler, preserves pending draft/base verbatim, and starts fresh history
-      exactly like LoadProject. Stale/failing results retain all current owners,
-      navigation, buffers and Undo/Redo. Choosing the design uses LoadProject. }
+      compiler and preserves pending draft/base verbatim. Default loading starts
+      fresh history; an explicit editor policy records one paired command.
+      Stale/failing results retain owners, navigation, buffers and Undo/Redo. }
     function PrepareProjectRequest(const APair: TNyxProjectPair;
-      AResolution: TNyxProjectResolution; ASchemaRevision: Integer): TNyxStudioProjectRequest;
+      AResolution: TNyxProjectResolution; ASchemaRevision: Integer;
+      AHistory: TNyxProjectOpeningHistory = pohNewHistory): TNyxStudioProjectRequest;
+    { Read-only dispatch guard: imported intent must still belong to this exact
+      load, live pair and creator generation before any external compiler work. }
+    function ProjectRequestCurrent(const ARequest: TNyxStudioProjectRequest): Boolean;
     function CompleteProjectRequest(const ARequest: TNyxStudioProjectRequest;
       const APrepared: INyxPreparedSource): TNyxSourceCompletion;
     { Explicit owning-editor load of a live admitted source frame. Stages current
@@ -970,15 +991,16 @@ type
     destructor Destroy; override;
     procedure Execute;
   end;
-  { Synchronous creator-guarded opening. Both replacement owners remain owned
-    here until LoadAdmittedProject publishes them together. The borrowed session
-    exists only for the duration of CommitNyxSchemaRevision, never on a worker. }
+  { Synchronous creator-guarded opening owns both replacements until the chosen
+    history policy publishes them together. Its session borrow exists only for
+    CommitNyxSchemaRevision, never on a worker. }
   TProjectLoadPublication = class(TInterfacedObject, INyxSchemaAction)
   public
     Session: TNyxStudioSession;
     Document: TNyxDocument;
     Workspace: TNyxSourceWorkspace;
     Pair: TNyxProjectPair;
+    History: TNyxProjectOpeningHistory;
     destructor Destroy; override;
     procedure Execute;
   end;
@@ -992,9 +1014,17 @@ end;
 
 procedure TProjectLoadPublication.Execute;
 begin
-  Session.LoadAdmittedProject(Document, Workspace, Pair);
-  Document := nil;
-  Workspace := nil;
+
+  if History = pohPairedCommand then
+  begin
+    Session.PublishOpenedProject(Document, Workspace, Pair);
+  end
+  else
+  begin
+    Session.LoadAdmittedProject(Document, Workspace, Pair);
+    Document := nil;
+    Workspace := nil;
+  end;
 end;
 
 destructor TSourcePairPublication.Destroy;
@@ -2782,6 +2812,38 @@ begin
   LoadAdmittedProject(LDocument, LWorkspace, LResolved);
 end;
 
+procedure TNyxStudioSession.PublishOpenedProject(var ADocument: TNyxDocument;
+  var AWorkspace: TNyxSourceWorkspace; const AResolved: TNyxProjectPair);
+begin
+
+  if FSourceGeneration = High(Integer) then
+  begin
+    raise ENyxModel.Create('Source session generation is exhausted');
+  end;
+  AdoptAdmittedProject(ADocument, AWorkspace, AResolved, spaCommand);
+  Inc(FSourceGeneration);
+  CancelPlacement;
+  FActiveSourceFile := TNyxPascalSourceRef.Main;
+end;
+
+procedure TNyxStudioSession.OpenProject(const APair: TNyxProjectPair;
+  AResolution: TNyxProjectResolution);
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    AdmitNyxProject(APair, AResolution, LDocument, LWorkspace, LResolved);
+    PublishOpenedProject(LDocument, LWorkspace, LResolved);
+  finally
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+
 procedure TNyxStudioSession.LoadCapturedProject(const APair: TNyxProjectPair;
   const ACheckpoint: TNyxSourceCheckpoint);
 var
@@ -2809,7 +2871,8 @@ begin
 end;
 
 function TNyxStudioSession.PrepareProjectRequest(const APair: TNyxProjectPair;
-  AResolution: TNyxProjectResolution; ASchemaRevision: Integer): TNyxStudioProjectRequest;
+  AResolution: TNyxProjectResolution; ASchemaRevision: Integer;
+  AHistory: TNyxProjectOpeningHistory): TNyxStudioProjectRequest;
 var
   LDocument: TNyxDocument;
 begin
@@ -2817,6 +2880,11 @@ begin
   if not (AResolution in [nprRequireMatch, nprUsePascal]) then
   begin
     raise ENyxModel.Create('Compiler-backed opening requires a Pascal resolution');
+  end;
+
+  if not (AHistory in [pohNewHistory, pohPairedCommand]) then
+  begin
+    raise ENyxModel.Create('Unknown project opening history policy');
   end;
   Result := Default(TNyxStudioProjectRequest);
   Result.FPair := DecodeNyxProject(EncodeNyxProject(APair));
@@ -2844,7 +2912,17 @@ begin
   Result.FGeneration := FSourceGeneration;
   Result.FBaseline := EncodeNyxProject(ProjectSnapshot);
   Result.FResolution := AResolution;
+  Result.FHistory := AHistory;
   Result.FSchemaRevision := ASchemaRevision;
+end;
+
+function TNyxStudioSession.ProjectRequestCurrent(
+  const ARequest: TNyxStudioProjectRequest): Boolean;
+begin
+  Result := (ARequest.FOwner = FSourceIdentity) and
+    (ARequest.FGeneration = FSourceGeneration) and
+    (ARequest.FSchemaRevision = NyxSchemaRevision) and
+    (ARequest.FBaseline = EncodeNyxProject(ProjectSnapshot));
 end;
 
 function TNyxStudioSession.CompleteProjectRequest(
@@ -2856,10 +2934,7 @@ var
 begin
   Result := nscStale;
 
-  if (ARequest.FOwner <> FSourceIdentity) or
-    (ARequest.FGeneration <> FSourceGeneration) or
-    (ARequest.FSchemaRevision <> NyxSchemaRevision) or
-    (ARequest.FBaseline <> EncodeNyxProject(ProjectSnapshot)) then
+  if not ProjectRequestCurrent(ARequest) then
   begin
     Exit;
   end;
@@ -2890,6 +2965,7 @@ begin
   LAction := LPublication;
   LPublication.Session := Self;
   LPublication.Pair := ARequest.FPair;
+  LPublication.History := ARequest.FHistory;
   LPublication.Pair.Design := APrepared.Design;
   APrepared.Take(LPublication.Document, LPublication.Workspace);
 

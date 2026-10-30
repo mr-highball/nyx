@@ -38,9 +38,9 @@ type
   TNyxSourcePublicationOutcome = (npoCommitted, npoRefused, npoUnconfirmed);
   {$ifndef PAS2JS}
   { Apply consumes its acknowledged draft. Visual publication preserves that
-    buffer and verifies an independently server-prepared semantic proposal. }
+    buffer; project Open admits an independent captured pair as one command. }
   TNyxStudioSourcePublicationKind = (spkApply, spkVisual, spkProjectImportReview,
-    spkSourceEdit);
+    spkSourceEdit, spkProjectOpening);
   { Opaque precompile capture. Values and immutable creators remain independently
     owned; no document, session, renderer or worker is borrowed. There is no wire
     decoder for this ticket. Authority comparison never exposes its credential.
@@ -72,6 +72,9 @@ type
     { Import construction prepares a transport-owned review, never automatic
       adoption. Input is an immutable complete upload captured by its session. }
     FProjectImport: INyxProjectImportReviewRequest;
+    { The server captures this ordinary sealed project request against its own
+      baseline. It carries imported files/drafts, never serialized trust. }
+    FOpeningRequest: TNyxStudioProjectRequest;
     { Focused data tools share visual construction but retain their typed origin
       for observing activity. Default Design means the mixed transaction tool. }
     FTransactionDomain: TNyxTransactionDomain;
@@ -79,6 +82,7 @@ type
     function GetIsVisual: Boolean;
     function GetIsCallbacks: Boolean;
     function GetIsSourceEdit: Boolean;
+    function GetIsProjectOpening: Boolean;
   public
     function IsCaptured: Boolean;
     function OwnedBy(const AAuthority: TNyxText): Boolean;
@@ -101,6 +105,8 @@ type
     property IsSourceEdit: Boolean read GetIsSourceEdit;
     property SourceEditArguments: TNyxDataValue read FSourceEditArguments;
     property ProjectImport: INyxProjectImportReviewRequest read FProjectImport;
+    property IsProjectOpening: Boolean read GetIsProjectOpening;
+    property OpeningRequest: TNyxStudioProjectRequest read FOpeningRequest;
     property TransactionDomain: TNyxTransactionDomain read FTransactionDomain;
   end;
 
@@ -177,6 +183,13 @@ function CaptureNyxStudioProjectImportReview(const AAuthority: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; const ABaseline: TNyxProjectPair;
   const ARequest: INyxProjectImportReviewRequest;
   const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+{ Ordinary private editor Open differs from transport-owned import review:
+  successful execution may publish the complete captured pair immediately as
+  one undoable command. Baseline, creators and issuing authority stay private. }
+function CaptureNyxStudioProjectOpening(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioProjectRequest;
+  const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
 {$endif}
 
 { Construct after staging successful publication, with its exact next revision.
@@ -194,6 +207,11 @@ implementation
 {$ifndef PAS2JS}
 function TNyxStudioSourcePublication.GetSource: TNyxText;
 begin
+
+  if FKind = spkProjectOpening then
+  begin
+    Exit(FOpeningRequest.Source);
+  end;
 
   if FKind = spkProjectImportReview then
   begin
@@ -220,6 +238,32 @@ end;
 function TNyxStudioSourcePublication.GetIsSourceEdit: Boolean;
 begin
   Result := FKind = spkSourceEdit;
+end;
+
+function TNyxStudioSourcePublication.GetIsProjectOpening: Boolean;
+begin
+  Result := FKind = spkProjectOpening;
+end;
+
+function CaptureNyxStudioProjectOpening(const AAuthority: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ABaseline: TNyxProjectPair; const ARequest: TNyxStudioProjectRequest;
+  const ASchemas: INyxSchemaSnapshot): TNyxStudioSourcePublication;
+begin
+
+  if (AAuthority = '') or (ARevision < 0) or (ASchemas = nil) or
+    (ARequest.Source = '') or (ARequest.History <> pohPairedCommand) then
+  begin
+    raise ENyxProjectConflict.Create('Project opening publication needs its complete captured context');
+  end;
+  Result := Default(TNyxStudioSourcePublication);
+  Result.FAuthority := AAuthority;
+  Result.FWorkspace := AWorkspace;
+  Result.FRevision := ARevision;
+  Result.FBaseline := ABaseline;
+  Result.FSchemas := ASchemas;
+  Result.FKind := spkProjectOpening;
+  Result.FOpeningRequest := ARequest;
 end;
 
 function TNyxStudioSourcePublication.IsCaptured: Boolean;

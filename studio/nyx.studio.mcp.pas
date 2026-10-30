@@ -211,6 +211,13 @@ type
     function EditorCaptureVisualPublication(const AToken: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
       const AIntent: TNyxDataValue; const ASource: TNyxText): TNyxStudioSourcePublication;
+    { Explicit ordinary Open uses imported data and the current editor baseline
+      as separate captures. Compilation/execution precedes whole-pair admission;
+      imported drafts never replace live work merely because parsing succeeded. }
+    function EditorCaptureProjectOpening(const AToken: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+      const APair: TNyxProjectPair;
+      AResolution: TNyxProjectResolution): TNyxStudioSourcePublication;
     { Trusted in-process compiler completion; no HTTP/MCP payload can supply its
       live executed result. Exact captured authority/workspace/revision/full pair
       bind publication. The ordinary durable rollback covers owners/history and
@@ -908,6 +915,9 @@ var
   LMode: TNyxText;
   LPair: TNyxProjectPair;
   LPublication: TNyxStudioSourcePublication;
+  LOpening: TNyxProjectPair;
+  LOpeningRequest: TNyxStudioProjectRequest;
+  LResolution: TNyxProjectResolution;
   LSourceRequest: TNyxStudioSourceRequest;
   LFileChange: TNyxPascalFileChange;
   LDesignRequest: TNyxStudioDesignRequest;
@@ -959,7 +969,16 @@ begin
         if NyxAgentHas(LArguments, 'publish') and LArguments.Field('publish').AsBoolean then
         begin
 
-          if NyxAgentHas(LArguments, 'visual') then
+          if ReadNyxProjectOpening(LArguments, LOpening, LResolution) then
+          begin
+            LPair := LSession.CaptureProjectOpening(
+              LArguments.Field('expectedRevision').AsInteger, LOpening, LResolution,
+              LOpeningRequest, LSchemas);
+            LPublication := CaptureNyxStudioProjectOpening(FEditorToken, LWorkspace,
+              LArguments.Field('expectedRevision').AsInteger, LPair,
+              LOpeningRequest, LSchemas);
+          end
+          else if NyxAgentHas(LArguments, 'visual') then
           begin
             LPair := LSession.CaptureVisualPublication(LArguments.Field('expectedRevision').AsInteger,
               LArguments.Field('visual'), LArguments.Field('source').AsText,
@@ -1056,7 +1075,12 @@ begin
       LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
       try
 
-        if LPublication.IsVisual then
+        if LPublication.IsProjectOpening then
+        begin
+          LSession.CommitProjectOpening(LPublication.Revision, LPublication.Baseline,
+            LProjection, LPublication.OpeningRequest, LPublication.Schemas);
+        end
+        else if LPublication.IsVisual then
         begin
           LSession.CommitVisualProjection(LPublication.Revision, LPublication.Baseline,
             LProjection, LPublication.DesignRequest, LPublication.DesignProposal, LPublication.Schemas);
@@ -1133,7 +1157,17 @@ begin
       begin
         raise ENyxProjectConflict.Create('Source publication completion does not match its captured unit');
       end;
-      if ARequest.IsVisual then
+      if ARequest.IsProjectOpening then
+      begin
+
+        if (ASelection.ID <> '') or (AView.ID <> '') then
+        begin
+          raise ENyxProjectConflict.Create('Project Open has no substituted selection or view intent');
+        end;
+        LSession.CommitProjectOpening(ARequest.Revision, ARequest.Baseline, AProjection,
+          ARequest.OpeningRequest, ARequest.Schemas);
+      end
+      else if ARequest.IsVisual then
       begin
         LSession.CommitVisualProjection(ARequest.Revision, ARequest.Baseline, AProjection,
           ARequest.DesignRequest, ARequest.DesignProposal, ARequest.Schemas);
@@ -1226,6 +1260,39 @@ begin
       LRequest, LProposal, LSchemas);
     Result := CaptureNyxStudioVisualPublication(FEditorToken, AWorkspace,
       AExpected, LPair, LRequest, LProposal, LSchemas);
+  finally
+    FGuard.Release;
+  end;
+end;
+
+function TNyxStudioMCP.EditorCaptureProjectOpening(const AToken: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpected: Integer;
+  const APair: TNyxProjectPair;
+  AResolution: TNyxProjectResolution): TNyxStudioSourcePublication;
+var
+  LSession: TNyxAgentSession;
+  LBaseline: TNyxProjectPair;
+  LRequest: TNyxStudioProjectRequest;
+  LSchemas: INyxSchemaSnapshot;
+begin
+
+  if AToken <> FEditorToken then
+  begin
+    raise ENyxProjectConflict.Create('Project Open editor capability is missing or expired');
+  end;
+  FGuard.Acquire;
+  try
+    RequireRecovered;
+    LSession := FWorkspaces.Find(AWorkspace);
+
+    if LSession = nil then
+    begin
+      raise ENyxProjectConflict.Create('Project Open workspace is missing or closed');
+    end;
+    LBaseline := LSession.CaptureProjectOpening(AExpected, APair, AResolution,
+      LRequest, LSchemas);
+    Result := CaptureNyxStudioProjectOpening(FEditorToken, AWorkspace, AExpected,
+      LBaseline, LRequest, LSchemas);
   finally
     FGuard.Release;
   end;
@@ -2091,6 +2158,8 @@ begin
   LFields[High(LFields)] := NyxField('sharedSourcePublication', NyxData(True));
   SetLength(LFields, Length(LFields) + 1);
   LFields[High(LFields)] := NyxField('sharedVisualSourcePublication', NyxData(True));
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('sharedProjectOpening', NyxData(True));
   { Only the authenticated owning editor receives this admission envelope.
     Capture under the same registry lock/revision as the exact paired reply.
     Public MCP tools and persisted/exported projects never contain this frame. }

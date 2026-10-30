@@ -28,7 +28,7 @@ uses Classes, SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
   nyx.source, nyx.schema, nyx.studio.projects, nyx.studio.session, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
   nyx.studio.builds, nyx.studio.workspaces, nyx.studio.sourceprojection,
-  nyx.studio.projectstore,
+  nyx.studio.projectstore, nyx.studio.sourcebuilds,
   nyx.test.projection;
 
 const
@@ -254,6 +254,110 @@ begin
   Result := GEngine.EditorExchange(GToken, NyxObject([
     NyxField('op', NyxData('history')), NyxField('direction', NyxData(ADirection)),
     NyxField('expectedRevision', NyxData(ARevision))]));
+end;
+
+{ The actual executed fixture opens through the private publication path. Input
+  drafts are independent of the live baseline, and history remains paired. This
+  owns only the already isolated test engine and never starts an HTTP listener. }
+procedure CheckProjectOpening(const AProjection: INyxSourceProjection;
+  const ADirectories: TNyxStudioDirectories);
+var
+  LBefore: TNyxDataValue;
+  LState: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LRead: TNyxProjectPair;
+  LIncoming: TNyxProjectPair;
+  LChanged: TNyxProjectPair;
+  LResolution: TNyxProjectResolution;
+  LRequest: TNyxStudioSourcePublication;
+  LRevision: Integer;
+  LRefused: Boolean;
+  LBeforeBytes: TNyxBytes;
+  LLock: TFileStream;
+begin
+  LBefore := Observe;
+  LRevision := LBefore.Field('session').Field('revision').AsInteger;
+  LIncoming := NyxProjectPair(AProjection.Design, AProjection.Source);
+  LIncoming.Pending := True;
+  LIncoming.Draft := AProjection.Source + CDraftSuffix;
+  LIncoming.DraftBase := AProjection.Source + #10 + '{ An older independent baseline. }';
+  LArguments := NyxObject([
+    NyxField('mode', NyxData('request')), NyxField('operationId', NyxData('opening-wire')),
+    NyxField('expectedRevision', NyxData(LRevision)),
+    NyxField('source', NyxData(LIncoming.Source)), NyxField('publish', NyxData(True)),
+    NyxField('issuer', NyxData('fixture-issuer'))]);
+  Check(not ReadNyxProjectOpening(LArguments, LRead, LResolution),
+    'ordinary constructor requests retain their original no-Open meaning');
+  LArguments := WithNyxProjectOpening(LArguments, LIncoming, nprRequireMatch);
+  Check(ReadNyxProjectOpening(LArguments, LRead, LResolution) and
+    (EncodeNyxProject(LRead) = EncodeNyxProject(LIncoming)) and
+    (LResolution = nprRequireMatch), 'Open wire retains the full Unicode pair and explicit resolution');
+  LRequest := GEngine.EditorCaptureProjectOpening(GToken, NyxPrimaryWorkspace,
+    LRevision, LIncoming, nprRequireMatch);
+  Check(LRequest.IsProjectOpening and (LRequest.Source = LIncoming.Source) and
+    (EncodeNyxProject(LRequest.Baseline) = LBefore.Field('project').AsText),
+    'opening capture binds imported input separately from the exact live pair');
+  Refuse('wrong-editor', LRequest, AProjection,
+    Default(TNyxControlRef), Default(TNyxControlRef), 'wrong editor cannot publish a project Open');
+  Refuse(GToken, LRequest, nil,
+    Default(TNyxControlRef), Default(TNyxControlRef), 'Open without executed construction cannot publish');
+  Refuse(GToken, LRequest, AProjection,
+    NyxControl('heading-1'), Default(TNyxControlRef), 'Open cannot substitute an unrelated selection intent');
+  LBeforeBytes := ReadBytes(ADirectories.SessionCheckpoint);
+  LLock := TFileStream.Create(ADirectories.SessionCheckpoint, fmOpenRead or fmShareExclusive);
+  try
+    Refuse(GToken, LRequest, AProjection,
+      Default(TNyxControlRef), Default(TNyxControlRef),
+      'failed durable Open rolls back the whole live project and history');
+  finally
+    LLock.Free;
+  end;
+  Check(SameBytes(LBeforeBytes, ReadBytes(ADirectories.SessionCheckpoint)),
+    'failed durable Open preserves the exact earlier checkpoint bytes');
+  { Retry the same private capture: rollback must not silently revoke its
+    unchanged baseline while reporting that the attempted Open never published. }
+  LState := GEngine.EditorCommitSourceProjection(GToken, LRequest, AProjection,
+    Default(TNyxControlRef), Default(TNyxControlRef));
+  Check((LState.Field('project').AsText = EncodeNyxProject(LIncoming)) and
+    (LState.Field('session').Field('revision').AsInteger = LRevision + 1) and
+    LState.Field('session').Field('canUndo').AsBoolean,
+    'executed Open publishes the complete imported draft and one revision');
+  LState := History('undo', LRevision + 1);
+  Check((LState.Field('project').AsText = LBefore.Field('project').AsText) and
+    LState.Field('session').Field('canRedo').AsBoolean,
+    'one Undo restores the complete pre-Open pair and draft');
+  LState := History('redo', LRevision + 2);
+  Check(LState.Field('project').AsText = EncodeNyxProject(LIncoming),
+    'one Redo restores every imported source, draft and baseline value');
+  LState := History('undo', LRevision + 3);
+  LRevision := LState.Field('session').Field('revision').AsInteger;
+  LRequest := GEngine.EditorCaptureProjectOpening(GToken, NyxPrimaryWorkspace,
+    LRevision, LIncoming, nprRequireMatch);
+  LChanged := DecodeNyxProject(LState.Field('project').AsText);
+  LChanged.Pending := True;
+  LChanged.Draft := LChanged.Source + #10 + TNyxText('{ Newer local work 🌙 }');
+  LChanged.DraftBase := LChanged.Source;
+  LState := GEngine.EditorExchange(GToken, NyxObject([
+    NyxField('op', NyxData('commit')), NyxField('expectedRevision', NyxData(LRevision)),
+    NyxField('project', NyxData(EncodeNyxProject(LChanged))),
+    NyxField('selection', LState.Field('session').Field('selection')),
+    NyxField('view', LState.Field('session').Field('view'))]));
+  Refuse(GToken, LRequest, AProjection,
+    Default(TNyxControlRef), Default(TNyxControlRef), 'newer independent draft retires an earlier Open');
+  LState := Observe;
+  Check(LState.Field('project').AsText = EncodeNyxProject(LChanged),
+    'stale Open preserves the exact newer live draft');
+  LRefused := False;
+  try
+    GEngine.EditorCaptureProjectOpening(GToken, NyxPrimaryWorkspace,
+      LRevision, LIncoming, nprRequireMatch);
+  except
+    on LException: Exception do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'stale Open capture refuses before any compiler effect');
 end;
 
 var
@@ -509,6 +613,7 @@ begin
       end;
     end;
     Check(LRejected, 'observer cannot capture a stale revision');
+    CheckProjectOpening(LBuild.Projection, LDirectories);
     FreeAndNil(GEngine);
     FreeAndNil(LObserver);
     FreeAndNil(LLocal);
@@ -527,7 +632,7 @@ begin
       LLocal.Free;
       LProfile.Free;
       WriteLn('FAIL ', LException.Message);
-      Halt(1);
+      ExitCode := 1;
     end;
   end;
 end.

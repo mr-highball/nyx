@@ -147,9 +147,15 @@ The ordinary named-project return now exposes the required
 [compiler-admitted Save/Open prerequisite](NS-4_named-projects_01.md). Desktop
 literal-pair Save/Open, exact draft/history and its own runtime pass; compact
 compiler-backed continuation Save now passes at both widths through live captured
-checkpoints, with exact disk members and draft. Its ordinary Open still refuses
-through the literal path. Continue shared compiler-backed project admission in
-that same consumer before broader authoring acceptance.
+checkpoints, with exact disk members and draft. Shared compiler-backed Open now
+passes the same desktop/compact exact-pair and ordinary Undo/Redo journey, followed
+by Apply and its own compiled application at both widths. Import checking and
+source-queue cancellation are repaired; native embedding Load keeps fresh history,
+and its original source-workspace regression passes86 with a clean heap. The
+full native shared-provider gate still encounters the original compiler deadline
+before its constructor/Open case. Resolve that same consumer's qualification,
+then finish owned-history restoration and matched delivery. Broader authoring
+acceptance remains open; stop equivalent chrome/source fixture variants.
 
 | Order | User outcome | Existing owners and next useful delivery |
 | --- | --- | --- |

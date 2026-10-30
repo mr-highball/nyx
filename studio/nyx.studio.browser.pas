@@ -1128,6 +1128,7 @@ begin
   LState.ProjectName := FProjectName;
   LState.ProjectConflict := FProjectConflict <> '';
   LState.ImportConflict := FImportPacket <> '';
+  LState.ImportChecking := FImportOpening;
   LState.ProjectBusy := FProjectRequest <> nil;
   LState.AdvancedProperties := FAdvancedProperties;
   LState.InspectorTab := FInspectorTab;
@@ -4003,6 +4004,14 @@ begin
       FSourceLine := 1;
       FSourceColumn := 1;
       Refresh(True, True);
+      Exit;
+    end;
+
+    { Source controls have an independent retained renderer. Cancellation must
+      validate against that live owner, rather than its shell placeholder. }
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-cancel-source') then
+    begin
+      FSourceCommands.Route(ANode, AEvent, FSourcePaneRenderer.Root);
       Exit;
     end;
 

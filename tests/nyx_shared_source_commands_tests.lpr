@@ -33,7 +33,7 @@ uses Interfaces, Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx
   nyx.studio.sourceprojection, nyx.studio.sourcepublications,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared,
   nyx.studio.sourcecompilation.shared.native, nyx.studio.transport, nyx.scheduler, nyx.codec,
-  nyx.studio.lcl, nyx.test.projection;
+  nyx.studio.lcl, nyx.test.projection, nyx.studio.projectopening.shared;
 
 type
   { Explicit deterministic delivery to the actual owning backend. The bridge
@@ -98,12 +98,16 @@ type
     tokens, so cancellation/retirement is qualified from terminal native state,
     never inferred from an editor's locally idle presentation or a timeout. }
   TObservedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
-    INyxSharedVisualSourceCompilerFactory, INyxSharedFileChangeCompilerFactory)
+    INyxSharedVisualSourceCompilerFactory, INyxSharedFileChangeCompilerFactory,
+    INyxSharedProjectOpeningCompilerFactory)
   public
     Inner: INyxSharedSourceCompilerFactory;
     Operations: array of INyxSourceCompilation;
     function CreateCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+    function CreateOpeningCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const ARequest: TNyxStudioProjectRequest): INyxSharedSourceCompiler;
     function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
       const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
@@ -332,6 +336,26 @@ begin
   LCompiler.Owner := Self;
   LCompiler.Lease := Self;
   LCompiler.Inner := Inner.CreateCompiler(ACapability, AIssuer, AWorkspace, ARevision);
+end;
+
+function TObservedFactory.CreateOpeningCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ARequest: TNyxStudioProjectRequest): INyxSharedSourceCompiler;
+var
+  LCompiler: TObservedCompiler;
+  LFactory: INyxSharedProjectOpeningCompilerFactory;
+begin
+
+  if not Supports(Inner, INyxSharedProjectOpeningCompilerFactory, LFactory) then
+  begin
+    raise Exception.Create('Real native provider lacks its project Open contract');
+  end;
+  LCompiler := TObservedCompiler.Create;
+  Result := LCompiler;
+  LCompiler.Owner := Self;
+  LCompiler.Lease := Self;
+  LCompiler.Inner := LFactory.CreateOpeningCompiler(ACapability, AIssuer,
+    AWorkspace, ARevision, ARequest);
 end;
 
 function TObservedFactory.CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
@@ -1334,6 +1358,8 @@ var
   LRemoval: TNyxStudioFileRemovalReview;
   LBeforeFiles: TNyxProjectPair;
   LCreatedFiles: TNyxProjectPair;
+  LOpeningPair: TNyxProjectPair;
+  LBeforeOpen: TNyxText;
 
   procedure AwaitDispatch(AOperationCount: Integer);
   var
@@ -1639,6 +1665,35 @@ begin
     LJourney.Session.Redo;
     Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
       'first-helper paired Redo retains the explicit empty scope after removal');
+
+    if AScenario = tsOrdinary then
+    begin
+      LBeforeOpen := EncodeNyxProject(LJourney.Session.ProjectSnapshot);
+      LOpeningPair := NyxProjectPair(ExpectedNyxProjectionDesign, GSource);
+      LOpeningPair.Pending := True;
+      LOpeningPair.Draft := GSource + CLaterNotes;
+      LOpeningPair.DraftBase := GSource + #10 + '{ Independent imported baseline. }';
+      Check(LJourney.Commands.ProjectCompilerAvailable,
+        'shared project Open is negotiated with the actual owning backend');
+      LJourney.Commands.OpenProject(LOpeningPair);
+      AwaitDispatch(6);
+      AwaitCommand;
+      Acknowledge;
+      Check((LJourney.Commands.State = nssApplied) and
+        (EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LOpeningPair)),
+        'real native shared Open retains complete imported files, draft and baseline');
+      LRemote := DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText);
+      Check(EncodeNyxProject(LRemote) = EncodeNyxProject(LOpeningPair),
+        'the backend independently admits the same complete opened pair');
+      LJourney.Bridge.History(nehUndo);
+      LJourney.Drain;
+      Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = LBeforeOpen,
+        'one shared Undo restores every pre-Open file and independent draft');
+      LJourney.Bridge.History(nehRedo);
+      LJourney.Drain;
+      Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LOpeningPair),
+        'one shared Redo restores the exact imported project');
+    end;
   finally
     LTransport.ReleaseReply.SetEvent;
     LJourney.Free;

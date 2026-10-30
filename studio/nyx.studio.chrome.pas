@@ -350,6 +350,7 @@ begin
   Glyph('action-project-export', nsgExport);
   Glyph('action-project-import', nsgOpen);
   Glyph('action-project-export-files', nsgExport);
+  Glyph('action-cancel-source', nsgClose);
   Glyph('action-duplicate', nsgDuplicate);
   Glyph('action-up', nsgMoveUp);
   Glyph('action-down', nsgMoveDown);

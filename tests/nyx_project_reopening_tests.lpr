@@ -165,7 +165,16 @@ begin
     Check((LCommands.State = nssApplied) and
       (EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LPair)),
       'configured Open compiles accepted source while carrying invalid unfinished Pascal as data');
-    Check(not LSession.CanUndo and not LSession.CanRedo, 'opening starts fresh project history');
+    Check(LSession.CanUndo and not LSession.CanRedo,
+      'ordinary Open creates one paired history command');
+    LSession.Undo;
+    Check((EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LBefore)) and
+      not LSession.CanUndo and LSession.CanRedo,
+      'one Undo restores the exact previous project and history boundary');
+    LSession.Redo;
+    Check((EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LPair)) and
+      LSession.CanUndo and not LSession.CanRedo,
+      'one Redo restores every imported file and unfinished source buffer');
 
     LStore := TNyxProjectStore.Create(LDirectories.RuntimeRoot + PathDelim + 'paired');
     LRefused := False;

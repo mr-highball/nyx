@@ -1466,7 +1466,11 @@ begin
     else if APublication.IsCaptured then
     begin
 
-      if APublication.ProjectImport <> nil then
+      if APublication.IsProjectOpening then
+      begin
+        LSourceFiles := APublication.OpeningRequest.Files;
+      end
+      else if APublication.ProjectImport <> nil then
       begin
         { Import review executes the uploaded candidate, independently of the
           destination's current helper inventory. Review still cannot publish. }
@@ -1568,8 +1572,10 @@ end;
 procedure TNyxBuildJobs.AdmitSourceRequest(const AArguments: TNyxDataValue);
 var
   LOperation: TNyxText;
+  LOpening: TNyxProjectPair;
+  LResolution: TNyxProjectResolution;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|target|pascalFiles|sourceFile|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|target|pascalFiles|sourceFile|opening|');
 
   if AArguments.Field('mode').AsText <> 'request' then
   begin
@@ -1621,6 +1627,7 @@ begin
     end;
   end;
   ReadNyxSourceProjectFiles(AArguments);
+  ReadNyxProjectOpening(AArguments, LOpening, LResolution);
 
   if NyxAgentHas(AArguments, 'sourceFile') then
   begin
@@ -1662,8 +1669,24 @@ end;
 function TNyxBuildJobs.RequestSource(const AArguments: TNyxDataValue;
   const APair: TNyxProjectPair; const AWorkspace: TNyxWorkspaceRef;
   const AOwner: TNyxText; const APublication: TNyxStudioSourcePublication): TNyxDataValue;
+var
+  LOpening: TNyxProjectPair;
+  LResolution: TNyxProjectResolution;
 begin
   AdmitSourceRequest(AArguments);
+
+  if ReadNyxProjectOpening(AArguments, LOpening, LResolution) <>
+    APublication.IsProjectOpening then
+  begin
+    raise ENyxModel.Create('Project Open requires its independently captured publication');
+  end;
+
+  if APublication.IsProjectOpening and
+    ((EncodeNyxProject(LOpening) <> EncodeNyxProject(APublication.OpeningRequest.Pair)) or
+      (LResolution <> APublication.OpeningRequest.Resolution)) then
+  begin
+    raise ENyxModel.Create('Project Open changed its captured pair or resolution');
+  end;
 
   if (NyxAgentHas(AArguments, 'publish') and
     AArguments.Field('publish').AsBoolean) <> APublication.IsCaptured then
@@ -1691,7 +1714,8 @@ begin
     raise ENyxModel.Create('Shared visual job changed its captured semantic intent');
   end;
 
-  if APublication.IsCaptured and not APublication.Request.IsFileEdit and
+  if APublication.IsCaptured and not APublication.IsProjectOpening and
+    not APublication.Request.IsFileEdit and
     NyxAgentHas(AArguments, 'pascalFiles') and
     (ReadNyxSourceProjectFiles(AArguments).Encoded <> APublication.Baseline.Files.Encoded) then
   begin

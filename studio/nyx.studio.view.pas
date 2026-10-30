@@ -115,7 +115,8 @@ type
     This record borrows no widgets or document nodes. Outputs is an optional
     borrowed configuration, read only while the view is built; nil means empty
     profiles. Copying the record never transfers profile ownership. Preview is
-    copied from the controller's current mode solely to present its toggle. }
+    copied from the controller's current mode solely to present its toggle.
+    Import checking is presentation of a retained input, never a source verdict. }
   TNyxStudioViewState = record
     CodeVisible: Boolean;
     CodePresentation: TNyxStudioCodePresentation;
@@ -194,6 +195,9 @@ type
     ProjectName: TNyxText;
     ProjectConflict: Boolean;
     ImportConflict: Boolean;
+    { A retained imported packet is not a conflict while its constructor is
+      being checked. Keep backup/cancel available without offering a second Open. }
+    ImportChecking: Boolean;
     ProjectBusy: Boolean;
     AdvancedProperties: Boolean;
     InspectorTab: TNyxInspectorTab;
@@ -366,6 +370,7 @@ end;
 function RestoreNyxStudioSourceActivity(APane: TNyxNode; AWorking: Boolean): Boolean;
 var
   LActivity: TNyxNode;
+  LCancel: TNyxNode;
 begin
   Result := False;
 
@@ -375,12 +380,20 @@ begin
   end;
   LActivity := APane.Find('studio-source-progress');
 
-  if (LActivity = nil) or (NyxInteractionPolicy(LActivity).Visible = AWorking) then
+  if (LActivity <> nil) and (NyxInteractionPolicy(LActivity).Visible <> AWorking) then
   begin
-    Exit;
+    LActivity.Configure.Visible(AWorking).Done;
+    Result := True;
   end;
-  LActivity.Configure.Visible(AWorking).Done;
-  Result := True;
+  { Activity updates retain the editor owner and its text/caret/scroll. Keep
+    cancellation reachable even when queued work is waiting for shared sync. }
+  LCancel := APane.Find('action-cancel-source');
+
+  if (LCancel <> nil) and (NyxInteractionPolicy(LCancel).Visible <> AWorking) then
+  begin
+    LCancel.Configure.Visible(AWorking).Done;
+    Result := True;
+  end;
 end;
 
 procedure SuspendNyxStudioResourceSelectionViews(ARoot: TNyxNode;
@@ -722,6 +735,11 @@ begin
       .Hint('Apply this file through project compilation; retain other unfinished drafts. ' +
         'Add uses/include references where you need a helper.')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Apply').Done);
+    LActions.Add(Button('action-cancel-source', 'Cancel').Configure
+      .AccessibleName('Cancel pending Pascal changes')
+      .Hint('Cancel queued or running changes; retain accepted files and drafts. ' +
+        'Review Agents if shared compilation needs reconciliation.')
+      .Visible(AState.SourceWorking).Done);
     LButton := Button('action-expand-source', 'Expand');
     LActions.Add(LButton);
 
@@ -1504,12 +1522,26 @@ begin
 
     if AState.ImportConflict then
     begin
-      LViews.Add(Caption('project-import-warning',
-        'The files disagree or Pascal is unsupported. Export the input before ' +
-        'merging. Your current project is unchanged.'));
+
+      if AState.ImportChecking then
+      begin
+        LViews.Add(Caption('project-import-warning',
+          'Checking the saved Pascal before opening. Your current project and ' +
+          'the imported input are retained.'));
+      end
+      else
+      begin
+        LViews.Add(Caption('project-import-warning',
+          'The files disagree or Pascal is unsupported. Export the input before ' +
+          'merging. Your current project is unchanged.'));
+      end;
       LViews.Add(Button('action-project-input-backup', 'Export imported backup'));
-      LViews.Add(Button('action-project-use-pascal', 'Open using Pascal values'));
-      LViews.Add(Button('action-project-use-design', 'Open design; keep Pascal as draft'));
+
+      if not AState.ImportChecking then
+      begin
+        LViews.Add(Button('action-project-use-pascal', 'Open using Pascal values'));
+        LViews.Add(Button('action-project-use-design', 'Open design; keep Pascal as draft'));
+      end;
       LViews.Add(Button('action-project-cancel-import', 'Cancel import'));
     end;
   end;

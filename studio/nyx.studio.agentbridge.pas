@@ -32,6 +32,7 @@ uses
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
   nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared,
+  nyx.studio.projectopening.shared,
   nyx.studio.sourcepublications, nyx.source.preparation, nyx.studio.builddiagnostics,
   nyx.pascal.sources, nyx.pascal.completion, nyx.pascal.definition, nyx.studio.completion;
 
@@ -143,6 +144,7 @@ type
     FSharedDispatch: INyxSharedSourceDispatch;
     FSharedAvailable: Boolean;
     FSharedVisualAvailable: Boolean;
+    FSharedOpeningAvailable: Boolean;
     FSharedReserved: Boolean;
     { An immutable request, not a borrowed worker/tree. The shared frame is
       reserved while the independent proposal is prepared and then compiled. }
@@ -155,6 +157,11 @@ type
     FSharedAccepted: TNyxProjectPair;
     function StartSharedSource(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function StartSharedOpening(const ARequest: TNyxStudioProjectRequest;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function AdmitSharedOpening(const ARequest: TNyxStudioProjectRequest;
+      const APrepared: INyxPreparedSource;
+      const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
     procedure ReserveSharedFrame;
     procedure ReserveSharedDesign(const ARequest: TNyxStudioDesignRequest);
     procedure ReleaseSharedDesignPreparation;
@@ -168,7 +175,8 @@ type
     function StartSharedCompiler(const ASource: TNyxText;
       const ACompiler: INyxSharedSourceCompiler;
       const AFiles: TNyxPascalProjectFiles;
-      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+      const APort: INyxSharedSourceCompilationPort;
+      const AOpening: TNyxStudioProjectRequest): INyxSourceCompilation;
     function AdmitSharedSource(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource;
       const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
@@ -176,7 +184,8 @@ type
       const APrepared: INyxPreparedDesign;
       const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
     procedure AwaitSharedAcknowledgement(const AReceipt: TNyxSourcePublicationReceipt;
-      AConsumeFile: Boolean; const AFile: TNyxPascalSourceRef);
+      AConsumeFile: Boolean; const AFile: TNyxPascalSourceRef;
+      AProjectOpening: Boolean = False);
     procedure AbandonSharedSource(AOutcome: TNyxSourcePublicationOutcome;
       const AMessage: TNyxText);
     procedure Initialize(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
@@ -347,7 +356,7 @@ type
     retirement; compiler ports retain this courier rather than the bridge. }
   TBridgeSharedPort = class(TInterfacedObject, INyxSharedSourceHost,
     INyxSharedDesignSourceHost, INyxSharedFileSourceHost, INyxSharedDesignPreparationHost,
-    INyxSharedFileChangeSourceHost)
+    INyxSharedFileChangeSourceHost, INyxSharedProjectOpeningSourceHost)
   public
     { Sole borrow, revoked by the bridge before its transport/session retirement. }
     Owner: TNyxStudioAgentBridge;
@@ -355,6 +364,12 @@ type
     procedure Detach;
     function Ready: Boolean;
     function Waiting: Boolean;
+    function OpeningAvailable: Boolean;
+    function StartOpening(const ARequest: TNyxStudioProjectRequest;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function AdmitOpening(const ARequest: TNyxStudioProjectRequest;
+      const APrepared: INyxPreparedSource;
+      const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
     function Start(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
     function StartFile(const ARequest: TNyxStudioSourceRequest;
@@ -554,6 +569,37 @@ begin
     (Owner.FSharedReserved or Owner.FSharedAcknowledging);
 end;
 
+function TBridgeSharedPort.OpeningAvailable: Boolean;
+var
+  LFactory: INyxSharedProjectOpeningCompilerFactory;
+begin
+  Result := (Owner <> nil) and Owner.FView.Connected and Owner.FSharedOpeningAvailable and
+    Supports(Owner.FSharedFactory, INyxSharedProjectOpeningCompilerFactory, LFactory);
+end;
+
+function TBridgeSharedPort.StartOpening(const ARequest: TNyxStudioProjectRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxProjectConflict.Create('Project Open editor has retired');
+  end;
+  Result := Owner.StartSharedOpening(ARequest, APort);
+end;
+
+function TBridgeSharedPort.AdmitOpening(const ARequest: TNyxStudioProjectRequest;
+  const APrepared: INyxPreparedSource;
+  const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxProjectConflict.Create('Project Open editor has retired');
+  end;
+  Result := Owner.AdmitSharedOpening(ARequest, APrepared, AReceipt);
+end;
+
 function TBridgeSharedPort.Start(const ASource: TNyxText;
   const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
 begin
@@ -681,7 +727,51 @@ begin
   end;
   LCompiler := FSharedFactory.CreateCompiler(FToken, FSourceObservationIssuer,
     FWorkspace, FView.Revision);
-  Result := StartSharedCompiler(ASource, LCompiler, FSession.ProjectSnapshot.Files, APort);
+  Result := StartSharedCompiler(ASource, LCompiler, FSession.ProjectSnapshot.Files,
+    APort, Default(TNyxStudioProjectRequest));
+end;
+
+function TNyxStudioAgentBridge.StartSharedOpening(const ARequest: TNyxStudioProjectRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LFactory: INyxSharedProjectOpeningCompilerFactory;
+  LCompiler: INyxSharedSourceCompiler;
+begin
+
+  if not FSharedPort.Ready or (APort = nil) or
+    not FSession.ProjectRequestCurrent(ARequest) or (ARequest.History <> pohPairedCommand) or
+    not Supports(FSharedFactory, INyxSharedProjectOpeningCompilerFactory, LFactory) then
+  begin
+    raise ENyxProjectConflict.Create('Project Open requires its exact acknowledged editor and provider');
+  end;
+  LCompiler := LFactory.CreateOpeningCompiler(FToken, FSourceObservationIssuer,
+    FWorkspace, FView.Revision, ARequest);
+  Result := StartSharedCompiler(ARequest.Source, LCompiler, ARequest.Files, APort, ARequest);
+end;
+
+function TNyxStudioAgentBridge.AdmitSharedOpening(const ARequest: TNyxStudioProjectRequest;
+  const APrepared: INyxPreparedSource;
+  const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
+begin
+  Result := nscStale;
+
+  if not FSharedReserved or not FEnabled or FView.Conflict or
+    (AReceipt.Issuer <> FSourceObservationIssuer) or
+    (AReceipt.Workspace.ID <> FWorkspace.ID) or (AReceipt.Revision <> FSharedRevision + 1) or
+    (ARequest.Source <> FSharedSource) or (APrepared = nil) or
+    (APrepared.Source <> FSharedSource) then
+  begin
+    AbandonSharedSource(npoUnconfirmed, 'Committed project Open belongs to a changed editor context');
+    Exit;
+  end;
+  Result := FSession.CompleteProjectRequest(ARequest, APrepared);
+
+  if not (Result in [nscApplied, nscUnchanged]) then
+  begin
+    AbandonSharedSource(npoUnconfirmed, 'The shared project opened; newer local work needs reconciliation');
+    Exit;
+  end;
+  AwaitSharedAcknowledgement(AReceipt, False, TNyxPascalSourceRef.Main, True);
 end;
 
 function TNyxStudioAgentBridge.StartSharedFile(const ARequest: TNyxStudioSourceRequest;
@@ -727,7 +817,8 @@ begin
     LCompiler := LFactory.CreateFileCompiler(FToken, FSourceObservationIssuer,
       FWorkspace, FView.Revision, ARequest.FileReference);
   end;
-  Result := StartSharedCompiler(ARequest.Source, LCompiler, ARequest.Files, APort);
+  Result := StartSharedCompiler(ARequest.Source, LCompiler, ARequest.Files,
+    APort, Default(TNyxStudioProjectRequest));
 end;
 
 procedure TNyxStudioAgentBridge.ReserveSharedFrame;
@@ -812,13 +903,15 @@ begin
   begin
     raise ENyxProjectConflict.Create('Shared visual proposal has stale supporting Pascal files');
   end;
-  Result := StartSharedCompiler(AProposal.Source, LCompiler, ARequest.Files, APort);
+  Result := StartSharedCompiler(AProposal.Source, LCompiler, ARequest.Files,
+    APort, Default(TNyxStudioProjectRequest));
 end;
 
 function TNyxStudioAgentBridge.StartSharedCompiler(const ASource: TNyxText;
   const ACompiler: INyxSharedSourceCompiler;
   const AFiles: TNyxPascalProjectFiles;
-  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+  const APort: INyxSharedSourceCompilationPort;
+  const AOpening: TNyxStudioProjectRequest): INyxSourceCompilation;
 var
   LCompiler: INyxSharedProjectSourceCompiler;
   LProject: INyxPascalProject;
@@ -847,6 +940,13 @@ begin
   FSharedPreparing := False;
   FSharedPreparation := Default(TNyxStudioDesignRequest);
   FSharedSource := ASource;
+
+  if AOpening.Source <> '' then
+  begin
+    { Seed the expected imported drafts before a provider can complete inline.
+      Admission later updates only the accepted design/source/helper members. }
+    FSharedAccepted := AOpening.Pair;
+  end;
   try
 
     if LProject = nil then
@@ -923,7 +1023,7 @@ end;
 
 procedure TNyxStudioAgentBridge.AwaitSharedAcknowledgement(
   const AReceipt: TNyxSourcePublicationReceipt; AConsumeFile: Boolean;
-  const AFile: TNyxPascalSourceRef);
+  const AFile: TNyxPascalSourceRef; AProjectOpening: Boolean);
 var
   LPublished: TNyxProjectPair;
 begin
@@ -953,6 +1053,11 @@ begin
   FSharedReserved := False;
   FSharedAcknowledging := True;
   FView.Status := 'Pascal applied; waiting for shared acknowledgement';
+
+  if AProjectOpening then
+  begin
+    FView.Status := 'Project opened; waiting for shared acknowledgement';
+  end;
   Schedule;
 end;
 
@@ -1880,6 +1985,9 @@ begin
       FSharedVisualAvailable := FSharedAvailable and
         NyxAgentHas(LState, 'sharedVisualSourcePublication') and
         LState.Field('sharedVisualSourcePublication').AsBoolean;
+      FSharedOpeningAvailable := FSharedAvailable and
+        NyxAgentHas(LState, 'sharedProjectOpening') and
+        LState.Field('sharedProjectOpening').AsBoolean;
 
       if (LOperation <> 'claim') and
         (LSummary.Field('revision').AsInteger < FView.Revision) then

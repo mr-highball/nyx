@@ -73,6 +73,33 @@ project Open. Continue proper shared project admission and its paired history,
 cancellation and observing acknowledgement; a compile-only local Open followed
 by an ordinary untrusted commit is insufficient. WORK owns current evidence.
 
+**Open checkpoint — 2026-10-30:**
+
+The shared compiler service now captures imported source/helpers/drafts separately
+from the exact live baseline, executes the constructor and publishes the complete
+project once. Browser/native provider strategies use typed optional capabilities;
+the authenticated editor waits for exact shared acknowledgement. Serialized files
+still supply no execution authority. Ordinary Open records one paired command;
+direct session/native embedding loaders retain explicit fresh-history behavior.
+
+The same saved compiler-backed Workshop now passes ordinary Open and exact paired
+Undo/Redo at desktop and compact widths. Semantic full-packet comparisons retain
+all imported and pre-Open fields. Applying the restored draft and building its own
+application produces correct actual JSON/Unicode behavior at both widths. Import
+checking/backup/cancel presentation and a missing source-queue Cancel control are
+repaired through this journey; cancellation retains the exact pair/revision and
+keeps explicit shared reconciliation. The pre-open backup seam remains a capture,
+not proof of physical file writes.
+
+Maintained native publication checks pass71, portable Open wire checks pass25 per
+target, direct native queue/journal checks pass50, and the unchanged full native
+source-workspace regression passes86 after restoring programmatic Load history.
+Native checked heaps are clean for those accepted runs. Two full shared-command
+runs hit the existing compiler time limit before their real native provider/Open
+case; those failures remain. Finish that affected consumer, final preservation
+checks and the matched delivery before task acceptance. WORK owns current runs,
+source identities and evidence; the parent criteria remain open.
+
 **Blockers**
 
 - None for implementation. Existing live checkpoint, captured-project storage,

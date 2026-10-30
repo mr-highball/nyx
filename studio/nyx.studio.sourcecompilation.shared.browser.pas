@@ -46,7 +46,8 @@ implementation
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.pascal.project, nyx.studio.sourcecompilation,
   nyx.studio.sourceprojection, nyx.studio.sourcepublications,
-  nyx.studio.workspaces, nyx.studio.sourcecompilation.service.browser;
+  nyx.studio.workspaces, nyx.studio.sourcecompilation.service.browser,
+  nyx.studio.session, nyx.studio.projectopening.shared;
 
 type
   { One shared browser operation coordinates private compilation, a separately
@@ -102,9 +103,12 @@ type
     no factory or produced compiler retains a mutable Studio session. }
   TSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
     INyxSharedVisualSourceCompilerFactory, INyxSharedFileSourceCompilerFactory,
-    INyxSharedFileChangeCompilerFactory)
+    INyxSharedFileChangeCompilerFactory, INyxSharedProjectOpeningCompilerFactory)
     function CreateCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
+    function CreateOpeningCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const ARequest: TNyxStudioProjectRequest): INyxSharedSourceCompiler;
     function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
       const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
@@ -121,6 +125,14 @@ function TSharedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
 begin
   Result := NewNyxSharedBrowserSourceCompiler(NewNyxSharedBrowserSourceService(
     ACapability, AIssuer, AWorkspace, ARevision));
+end;
+
+function TSharedFactory.CreateOpeningCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const ARequest: TNyxStudioProjectRequest): INyxSharedSourceCompiler;
+begin
+  Result := NewNyxSharedBrowserSourceCompiler(NewNyxProjectOpeningBrowserSourceService(
+    ACapability, AIssuer, AWorkspace, ARevision, ARequest));
 end;
 
 function TSharedFactory.CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
