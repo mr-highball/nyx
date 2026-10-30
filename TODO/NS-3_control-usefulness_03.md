@@ -13,6 +13,26 @@ wide/compact checks with clean native heaps. WORK.md retains the separate full
 native physical-cursor failure and broader limits. Resume W2 selected/cell-range
 transfer and peer independence; no original parent criterion or credit closes.
 
+The W2 range return now checks the same saved/generated Service monitor. Actual
+browser wide/compact managed-menu Copy transfers the exact two-by-two accepted
+RAW TSV; filtering withdraws that range while preserving hidden source-ID scope.
+A separate browser run retains independent filters/range and copies its own
+Status rectangle. The maintained native saved-application consumer passes25 per
+width through widget keyboard messages and actual Nyx menu buttons, with clean
+heaps and an explicit recording target at the final clipboard publication boundary.
+Its two application instances keep separate stores/selection/ranges through
+filtering and one-sided retirement. Exact source pairs, clipboard items, original
+runtime output choices and fixed listeners are preserved. No full criterion closes.
+
+Actual browser keyboard Copy still leaves a test sentinel unchanged despite
+correct range paint and cell focus; native and browser menu routes pass. Input
+production versus original command/host refusal is not yet established. Continue
+with one maintained Pascal observation of the same application's actual canonical
+key/modifiers and terminal outcome, then repair the responsible boundary. Retain
+that failure; do not substitute menu success for the original keyboard workflow.
+WORK.md owns receipts and target/input limits. Stop equivalent range/geometry/
+profile variants. The separate full native physical-cursor gate remains open.
+
 The same saved Service monitor now exercises actual desktop/compact pointer
 resizing, filtering, hidden-column reveal and horizontal scrolling while retaining
 its exact unfinished Unicode edit, caret and focus. W1's missing visible narrow

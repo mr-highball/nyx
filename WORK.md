@@ -19,6 +19,64 @@ table-recovery-count-01 qualification closes its count-freshness gap without
 changing either fixed listener or the LAN payload. Original workbench acceptance
 and goal percentages remain unchanged; the prerequisite has no separate credit.
 
+Current batch: W2 selected/cell-range transfer and independent instance state,
+using table-range-return-01 on external scratch. The previous goal turn is
+PROGRESS:dd3bb282 is pushed and remote-verified, and recovery01 is accepted.
+Authenticated MCP revalidates the same revision9 pair/session and original output
+fingerprint, with no pending source draft and all runtime services disabled.
+The saved application's actual browser managed range transfer now passes at wide
+and compact widths. Keyboard arrows select the intended two-by-two rectangle;
+Copy selected cells writes exact accepted RAW TSV, with field headers and LF,
+without display wrapping or the hidden Command line. Disabled-host refusal remains
+visible and retains the selected rectangle. Filtering to Idle withdraws the old
+range rather than retargeting it, retains hidden selected gateway identity, and
+offers source-ID Copy without a selected-page/range command. That ID transfer
+stays exactly ID/newline/gateway. Explicit Clear all user filters resets the
+owned runtime query. These actions edit no authored source or accepted row data.
+
+Two actual browser runs of the same immutable generated application retain
+independent query/range state: the compact first run stays filtered to one row
+with no old rectangle; the fresh wide peer has four rows and its own two Status
+cells. Its real menu copies exactly status/newline/Running/newline/Idle without
+changing the first run. The new maintained native
+nyx_table_workbench_application_controls consumes the unchanged generated unit
+and the real LCL adapter with an explicit recording publication target. It passes
+25 checks at1280 and25 at390, including keyboard Copy without event subscribers,
+the actual managed menu button, hidden source-ID scope, separate stores/selection,
+range/query independence and retirement of only one application. All1556346/
+1556180 allocations are freed. It performs no OS clipboard write or physical
+pointer/assistive-input qualification. Native compiles with zero warnings.
+The first compile's missing import/Point qualification and first run's incorrect
+empty native selection assumption are retained. Comparing each actual initial
+selection with SameState repairs that setup and preserves the stronger invariant;
+native realization may already select its first row. Existing gates are unchanged.
+
+The actual browser keyboard Copy result is still unqualified. After a sentinel
+write, embedded Control+C leaves the clipboard unchanged with four correct
+selected cells and the exact data cell focused. The native browser key wrapper,
+alternate platform modifier and a standalone run do not establish a write either.
+Managed menu Copy succeeds in those same applications. The receipt retains the
+observed sentinel; it does not classify input production, original command refusal
+or host activation as the cause. Do not claim browser shortcut parity or replace
+it with menu-only acceptance. Next bounded action: observe the produced canonical
+key/modifier and command/host outcome through a maintained Pascal consumer of this
+same generated application, then repair/retest the responsible boundary. Avoid
+another generic range, geometry, host-profile or source-capture fixture sequence.
+
+Only the existing local clipboard output choice is enabled for this check, through
+ordinary Outputs/Apply; semantic MCP builds/launches the revision9 pair. Other
+services stay disabled. The exact original output fingerprint and all four false
+choices are restored, as are the original structured clipboard items. Some browser
+observations time out around Apply, but authoritative output reads confirm the
+actual saved choices; no service is restarted. The original-profile job is reused
+and actually observed with four accepted rows, no test range and no sync refusal.
+Independent bounded export retains13555 bytes and SHA256
+55B8676F7694B40C3E6C1BA592797E402292FF3D91D774120E31833C165F7BD2.
+Revision9, selection/view, pending-draft absence and Undo/Redo remain exact.
+Viewport overrides reset; the standalone peer closes. Both fixed listeners and
+unrelated projects are untouched. All owned compiler/native test jobs are joined.
+W2 and all original full criteria stay open; no completion percentage changes.
+
 Ordinary disabled-host Copy gives an explicit refusal, while full command-line
 inspection shows the exact untruncated raw text. After enabling only the existing
 local clipboard choice and rebuilding through semantic MCP, selected source IDs

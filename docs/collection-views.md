@@ -1983,6 +1983,19 @@ and selected-row menu choices remain required. These results do not establish re
 OS clipboard effects, native qualification at two widths or complete workbench
 acceptance.
 
+The maintained `nyx_table_workbench_application_controls` consumer compiles beside
+Studio's unchanged generated Service monitor. It now passes25 native checks per
+wide/compact width, with clean heaps: keyboard and managed-menu range Copy, hidden
+selected-source IDs, independent runtime stores/ranges/query and one-sided
+application retirement. Its real LCL clipboard adapter uses an explicit recording
+publication target; this adds no OS clipboard or hardware-input evidence.
+The same MCP-built browser application transfers exact RAW rectangles through its
+actual menu at both widths, with independent runs. Actual browser keyboard Copy
+remains unresolved: the observed clipboard stays unchanged, while menu Copy works.
+The keyboard contract above remains required; these results do not establish its
+actual browser input delivery or full workbench acceptance. See
+[the current work](../WORK.md#current-work--table-pointer-and-selection-return--2026-10-30).
+
 ## Saving table workbench action choices
 
 `nyx.collections.workbench.policy` supplies a pure authored policy. Apply it to
