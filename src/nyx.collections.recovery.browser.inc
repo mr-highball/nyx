@@ -5,6 +5,115 @@
 procedure TBrowserMount.RefreshTargetIdle;
 begin
   SynchronizeRecovery;
+  SynchronizeClipboardFeedback;
+end;
+
+procedure TBrowserMount.ClipboardFeedbackChanged;
+begin
+  SynchronizeClipboardFeedback;
+end;
+
+procedure TBrowserMount.SynchronizeClipboardFeedback;
+var
+  LLease: INyxCollectionMount;
+  LHost: TJSHTMLElement;
+  LCaption: TJSHTMLElement;
+  LFeedback: TNyxCollectionClipboardFeedback;
+  LText: TNyxText;
+  LWidth: Integer;
+  LTotal: Double;
+  LIndex: Integer;
+begin
+  LLease := Self as INyxCollectionMount;
+  LHost := FHost;
+
+  if not InputLifetimeCurrent or (LHost = nil) or (FView = nil) or
+    (FView.Projection <> cpTable) then
+  begin
+    Exit;
+  end;
+
+  if not HasClipboardFeedback or not GetClipboardFeedbackEnabled then
+  begin
+
+    if FClipboardStatus <> nil then
+    begin
+      FClipboardStatus.style.setProperty('visibility', 'hidden');
+      FClipboardStatus.setAttribute('aria-hidden', 'true');
+      FClipboardStatus.removeAttribute('tabindex');
+    end;
+    Exit;
+  end;
+  LFeedback := GetClipboardFeedback;
+  LText := NyxCollectionCellInspectionText(NyxCollectionClipboardFeedbackText(LFeedback));
+
+  if FClipboardStatus = nil then
+  begin
+    LCaption := TJSHTMLElement(LHost.querySelector('caption'));
+
+    if LCaption = nil then
+    begin
+      LCaption := NewElement('caption');
+      LCaption.style.setProperty('padding', '6px');
+      LHost.insertBefore(LCaption, LHost.firstChild);
+    end;
+    FClipboardStatus := NewElement('output');
+    FClipboardStatus.setAttribute('data-nyx-clipboard-status', '');
+    FClipboardStatus.setAttribute('role', 'status');
+    FClipboardStatus.setAttribute('aria-label', 'Clipboard result');
+    FClipboardStatus.setAttribute('aria-live', 'polite');
+    FClipboardStatus.setAttribute('aria-atomic', 'true');
+    FClipboardStatus.setAttribute('tabindex', '0');
+    FClipboardStatus.style.setProperty('position', 'sticky');
+    FClipboardStatus.style.setProperty('inset-inline-start', '6px');
+    FClipboardStatus.style.setProperty('box-sizing', 'border-box');
+    FClipboardStatus.style.setProperty('max-width', '100%');
+    FClipboardStatus.style.setProperty('min-height', '1.5em');
+    FClipboardStatus.style.setProperty('height', '2.5em');
+    FClipboardStatus.style.setProperty('max-height', '2.5em');
+    FClipboardStatus.style.setProperty('overflow-y', 'auto');
+    FClipboardStatus.style.setProperty('white-space', 'normal');
+    FClipboardStatus.style.setProperty('overflow-wrap', 'anywhere');
+    FClipboardStatus.style.setProperty('text-align', 'start');
+    FClipboardStatus.style.setProperty('font-size', '0.85em');
+    LCaption.appendChild(FClipboardStatus);
+  end;
+  FClipboardStatus.style.setProperty('display', 'block');
+  FClipboardStatus.style.setProperty('visibility', 'visible');
+  FClipboardStatus.removeAttribute('aria-hidden');
+  FClipboardStatus.setAttribute('tabindex', '0');
+  { Clamp to both the real clip and the intrinsic data-column budget, as for
+    recovery access. Long diagnostics scroll inside this bounded output rather
+    than stretching fixed columns or rebuilding the data face. }
+  LWidth := ColumnClipWidth;
+  LTotal := 0;
+  for LIndex := 0 to High(FColumnWidths) do
+  begin
+    LTotal := LTotal + FColumnWidths[LIndex];
+  end;
+
+  if LTotal > 0 then
+  begin
+    LWidth := Min(LWidth, Floor(LTotal));
+  end;
+
+  if not InputLifetimeCurrent or (FHost <> LHost) or
+    (GetClipboardFeedback.Serial <> LFeedback.Serial) or
+    (GetClipboardFeedback.Phase <> LFeedback.Phase) then
+  begin
+    Exit;
+  end;
+
+  if LWidth > 12 then
+  begin
+    FClipboardStatus.style.setProperty('width', IntToStr(LWidth - 12) + 'px');
+  end;
+
+  if FClipboardStatus.textContent <> LText then
+  begin
+    FClipboardStatus.textContent := LText;
+  end;
+  FClipboardStatus.setAttribute('data-copy-phase', IntToStr(Ord(LFeedback.Phase)));
 end;
 
 procedure TBrowserMount.RecoveryMembershipChanged(

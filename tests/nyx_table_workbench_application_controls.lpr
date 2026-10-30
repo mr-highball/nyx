@@ -31,6 +31,7 @@ program nyx_table_workbench_application_controls;
 uses
   Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Windows, Types,
   nyx.text, nyx.bytes, nyx.model, nyx.codec, nyx.scheduler, nyx.application.lcl,
+  nyx.editing.lcl, nyx.collections.clipboard.actions,
   nyx.clipboard, nyx.clipboard.lcl, nyx.collections, nyx.collections.query,
   nyx.collections.mount, nyx.collections.arrangement,
   nyx.collections.selection,
@@ -85,6 +86,9 @@ end;
 procedure Pump;
 begin
   Application.ProcessMessages;
+  { Match the ordinary LCL loop: presentation deferred past an input frame is
+    delivered during idle, without refreshing rows or extending action budgets. }
+  Application.Idle(False);
   CheckSynchronize(1);
 end;
 
@@ -168,6 +172,7 @@ var
   LIntent: INyxCollectionCellRangeIntent;
   LPeerIntent: INyxCollectionCellRangeIntent;
   LCells: INyxCollectionCellActionsMount;
+  LFeedback: INyxCollectionClipboardFeedbackMount;
   LActions: INyxCollectionCellActions;
   LMenu: INyxLCLMenu;
   LSource: INyxCollectionSnapshot;
@@ -177,6 +182,7 @@ var
   LAuthored: TNyxText;
   LGrid: TStringGrid;
   LFace: TStringGrid;
+  LStatus: TMemo;
   LColumn: Integer;
   LSavedKeys: TKeyboardState;
   LCopyKeys: TKeyboardState;
@@ -283,6 +289,18 @@ begin
     Pump;
     Check((LRecorded.Writes = LWrites + 1) and (LRecorded.Text = CRange),
       'Native keyboard Copy writes the original range once without requiring event subscribers');
+    Check(Supports(LMount, INyxCollectionClipboardFeedbackMount, LFeedback) and
+      (LFeedback.ClipboardFeedback.Phase = nccpCompleted) and
+      (LFeedback.ClipboardFeedback.Result.Outcome = ncwoWritten),
+      'The same saved application retains the original typed keyboard completion');
+    LStatus := TMemo(LGrid.FindComponent('NyxClipboardStatus'));
+    Check(LStatus <> nil, 'The saved native table owns its readonly completion control');
+    Check((LStatus <> nil) and LStatus.Visible and LStatus.ReadOnly and LStatus.TabStop and
+      (LStatus.AccessibleName = 'Clipboard result') and
+      (NyxLCLInputText(LStatus) = 'Copied to clipboard.') and
+      (LStatus.Left >= 0) and (LStatus.Left + LStatus.Width <= LGrid.ClientWidth) and
+      (Screen.ActiveControl = LFace),
+      'The saved native table exposes readable bounded feedback without taking keyboard focus');
     ContextAtNotes;
     Check(LMenu.Presentation.Content.Node.Find(NyxCellActionsCopyRangeID) <> nil,
       'The real context menu exposes range transfer separately from accepted-cell Copy');
@@ -331,6 +349,7 @@ begin
     FreeAndNil(LPeerApp);
     LActions := nil;
     LCells := nil;
+    LFeedback := nil;
     LIntent := nil;
     LPeerIntent := nil;
     LRanges := nil;

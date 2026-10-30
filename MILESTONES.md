@@ -37,9 +37,13 @@ The same saved workbench's Copy continuation identifies a standard browser Copy
 event with no keydown. The accepted [input bridge](TODO/DONE/NS-2_browser-copy-input_01.md)
 uses the existing scoped command/host and writes the exact173-byte range at both
 widths, without invented key callbacks or event clipboard-data writes. Original
-parent acceptance remains open. Next,
-[ordinary feedback](TODO/NS-3_collection-copy-feedback_01.md) must surface failed/
-unavailable outcomes without disturbing live input. Physical/assistive and the
+parent acceptance remains open. Scoped
+[ordinary feedback](TODO/DONE/NS-3_collection-copy-feedback_01.md) is accepted:
+six typed outcomes are visible without disturbing live input. Full controls pass
+1683 at measured1280/390 browser widths and1868/1857 native, with clean heaps;
+the same saved native application passes28 per width. Actual browser clipboard
+writes, activation refusal and observing MCP-built Studio Unavailable retain
+distinct evidence. Return to the original W2 workflows. Physical/assistive and the
 separate full native cursor-input gate remain open; no extra credit is assigned.
 
 [Embedded popover visibility](TODO/DONE/NS-2_popover-viewport_01.md) is accepted

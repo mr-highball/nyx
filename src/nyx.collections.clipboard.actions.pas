@@ -71,6 +71,37 @@ type
     Completed has a host result, which may itself be unavailable/denied/failed. }
   TNyxCollectionClipboardPhase = (nccpIdle, nccpPending, nccpCompleted, nccpCancelled);
 
+  { Presentation-only observation of the existing single write slot. Serial is
+    the original admitted request, not a new operation. Result is meaningful
+    only when Phase=Completed; cancellation without a host receipt never invents
+    an outcome. No copied cell, payload, source, target or callback is retained. }
+  TNyxCollectionClipboardFeedback = record
+    Serial: Integer;
+    Phase: TNyxCollectionClipboardPhase;
+    Result: TNyxClipboardWriteResult;
+  end;
+
+  { Separate borrowed UI receiver preserves application-owned raw, represented
+    and identity observers. The owner detaches it before retirement. Delivery is
+    UI-only; it must not throw, and must fence any reentrant presentation work
+    against the supplied serial. This callback grants no transfer authority. }
+  TNyxCollectionClipboardFeedbackObserver = procedure(
+    const AFeedback: TNyxCollectionClipboardFeedback) of object;
+
+  { Optional copied state and default-presentation choice, without changing any
+    established mount GUID/vtable. Disabling default presentation preserves the
+    receipt and all caller observers. Target adapters provide the actual surface;
+    this state contract alone makes no widget or accessibility claim. }
+  INyxCollectionClipboardFeedbackMount = interface(IInterface)
+    ['{3D574B92-F501-4363-8322-E956EF382AB4}']
+    function GetClipboardFeedback: TNyxCollectionClipboardFeedback;
+    function GetClipboardFeedbackEnabled: Boolean;
+    procedure SetClipboardFeedbackEnabled(AEnabled: Boolean);
+    property ClipboardFeedback: TNyxCollectionClipboardFeedback read GetClipboardFeedback;
+    property ClipboardFeedbackEnabled: Boolean read GetClipboardFeedbackEnabled
+      write SetClipboardFeedbackEnabled;
+  end;
+
   { A borrowed mounted owner supplies a newly captured callback-free final fence
     for each command. The owner remains alive while its canonical input Current
     is true and revokes this callback before retiring. Each returned fence may
@@ -360,7 +391,66 @@ type
     property ClipboardCommands: INyxCollectionClipboardCommands read GetClipboardCommands;
   end;
 
+{ Shared English status formatting keeps browser/native meanings equal. Host
+  diagnostics remain plain portable text, never markup or a claimed write. }
+function NyxCollectionClipboardFeedbackText(
+  const AFeedback: TNyxCollectionClipboardFeedback): TNyxText;
+
 implementation
+
+function NyxCollectionClipboardFeedbackText(
+  const AFeedback: TNyxCollectionClipboardFeedback): TNyxText;
+begin
+  Result := 'Copy results appear here.';
+  case AFeedback.Phase of
+    nccpIdle:
+      begin
+        Exit;
+      end;
+    nccpPending:
+      begin
+        Result := 'Copying to clipboard...';
+      end;
+    nccpCancelled:
+      begin
+        Result := 'Copy completion was interrupted.';
+      end;
+    nccpCompleted:
+      begin
+        case AFeedback.Result.Outcome of
+          ncwoWritten:
+            begin
+              Result := 'Copied to clipboard.';
+            end;
+          ncwoUnavailable:
+            begin
+              Result := 'Clipboard unavailable.';
+            end;
+          ncwoActivationRequired:
+            begin
+              Result := 'Choose Copy again from a current user action.';
+            end;
+          ncwoDenied:
+            begin
+              Result := 'Clipboard permission was denied.';
+            end;
+          ncwoCancelled:
+            begin
+              Result := 'Copy was cancelled.';
+            end;
+          ncwoFailed:
+            begin
+              Result := 'Copy failed.';
+            end;
+        end;
+
+        if AFeedback.Result.Error <> '' then
+        begin
+          Result := Result + ' ' + AFeedback.Result.Error;
+        end;
+      end;
+  end;
+end;
 
 class function TNyxCollectionClipboardOptions.Defaults: TNyxCollectionClipboardOptions;
 begin

@@ -1,9 +1,43 @@
 # NS-3_collection-copy-feedback_01 — Show keyboard-copy outcomes in ordinary Tables
 
-[North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Table workbench](NS-3_control-usefulness_03.md) · [Task flow](../TASKFLOW.MD)
+[North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](README.md) ·
+[Table workbench](../NS-3_control-usefulness_03.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
+
+Accepted on2026-10-30. Ordinary browser/LCL Tables now show the existing typed
+clipboard result through a separate borrowed presentation receiver. Pending
+withdraws an older outcome; all six host outcomes stay distinct. The default
+bounded caption surface is accessible and scrollable, and an optional mount
+facet exposes copied state and presentation visibility. No caller observer,
+original host slot, accepted rows, range or active editor is replaced.
+
+Evidence in table-copy-feedback-01: shared command checks pass318 per target;
+model-mounted admission/retirement checks pass55. Full controls pass1683 in
+measured1280/390 browser viewports and1868/1857 native. Saved/generated Service
+monitor checks pass28 native per width, including visible Written and preserved
+focus. All native heaps are clean. The same generated browser application copies
+the exact173-byte range through its real host at both widths, with terminal
+Written and exact readback; actual activation refusal and pending state are
+retained separately. The authenticated MCP build/launch is acknowledged mounted,
+and its observing Studio shows Unavailable at both widths without a design edit.
+
+Retained failures explain the repairs: the first added test omitted two imports;
+the compact runner initially measured a default wide tab; measured compact input
+then sent a synthetic pointer to an off-screen origin after legitimate focus
+scrolling. Its visible same-column contraction now matches the native journey,
+with all original range/capture/intent assertions retained. The saved native
+harness omitted ordinary LCL idle delivery; its corrected pump retains the same
+one-second action budget. Ownership tests also protect against a presentation
+callout retiring a mount before candidate adoption. No product dependency,
+deadline, tolerance or acceptance criterion was relaxed.
+
+Original structured clipboard items are restored and verified. Session revision9,
+exact source/design identities, history availability and output choices remain
+unchanged. Fixed listeners retain their process owners/paths; no LAN replacement
+occurs. This closes only the scoped feedback prerequisite. Full workbench,
+physical/assistive and production performance requirements remain open with no
+separate completion percentage or credit. [WORK](../../WORK.md) retains details.
 
 The same saved Service monitor exposes a concrete feedback gap. A correctly
 produced keyboard range-copy command reaches the ordinary unavailable clipboard
@@ -22,13 +56,13 @@ the existing workbench's visible-outcome/keyboard criteria, with no separate
 completion credit or percentage.
 
 Starting evidence: the maintained
-[same-application browser consumer](../tests/nyx_table_workbench_keyboard_browser.lpr)
+[same-application browser consumer](../../tests/nyx_table_workbench_keyboard_browser.lpr)
 separates raw input, host entry and terminal receipt without keyboard subscribers.
 The browser driver's Control+C shortcut produces no DOM key; that is separate
 from Nyx's admitted keyboard command. Explicitly labeled Pascal synthetic input
 proves exact real clipboard writes at both widths. The unavailable case completes
 honestly but has no ordinary visible feedback. Receipts and the wide screenshot
-are in table-keyboard-return-01; [WORK](../WORK.md) records the target/input limits.
+are in table-keyboard-return-01; [WORK](../../WORK.md) records the target/input limits.
 
 **Acceptance Criteria:**
 
@@ -59,10 +93,10 @@ are in table-keyboard-return-01; [WORK](../WORK.md) records the target/input lim
 
 **Blockers**
 
-- [Browser semantic Copy input](DONE/NS-2_browser-copy-input_01.md) supplies the missing
+- [Browser semantic Copy input](NS-2_browser-copy-input_01.md) supplies the missing
   standard Copy-event entry before qualifying ordinary browser outcome feedback.
 
-- [Generated table output hosts](DONE/NS-4_table-output-hosts_01.md) supplies the
+- [Generated table output hosts](NS-4_table-output-hosts_01.md) supplies the
   existing explicit clipboard capability and honest runtime absence.
-- [Ordinary recovered-edit review](DONE/NS-3_collection-recovery_01.md) supplies
+- [Ordinary recovered-edit review](NS-3_collection-recovery_01.md) supplies
   the shared table-caption ownership and busy-input presentation baseline.

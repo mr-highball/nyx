@@ -30,12 +30,15 @@ uses nyx.collections.view, nyx.collections.inspection, nyx.collections.mount,
 
 { Mounts provide the ORIGINAL canonical input port and a borrowed synchronous
   final-fence factory. The controller owns no mount, renderer or control. The
-  factory is withdrawn on Revoke and is entered only while Input.Current. }
+  factory is withdrawn on Revoke and is entered only while Input.Current.
+  Optional presentation feedback is separate from caller observers, contains
+  no payload, must not throw and is withdrawn before cancellation/retirement. }
 function NewNyxCollectionClipboardCommands(const AView: INyxCollectionView;
   const AInput: INyxCollectionInputLifetime; const AEvents: INyxEvents;
   const AHost: INyxClipboardWriteHost; const AScheduler: INyxScheduler;
   const AOptions: TNyxCollectionClipboardOptions;
-  AReadiness: TNyxCollectionClipboardReadinessFactory): INyxCollectionClipboardCommands;
+  AReadiness: TNyxCollectionClipboardReadinessFactory;
+  AFeedback: TNyxCollectionClipboardFeedbackObserver = nil): INyxCollectionClipboardCommands;
 
 implementation
 
@@ -267,7 +270,8 @@ type
     A receipt borrows this owner; it is revoked before host Cancel. No member
     retains a command, live range selection or mount-retaining synchronous fence.
     Optional readonly context entry shares original command arbitration without
-    changing physical-copy eligibility. }
+    changing physical-copy eligibility. Feedback borrows a separately revocable
+    UI receiver; notification never installs another host/request engine. }
   TCommands = class(TInterfacedObject, INyxCollectionClipboardCommands,
     INyxCollectionClipboardCellInput, INyxCollectionClipboardCapturedWrite,
     INyxCollectionClipboardRepresentationWrite, INyxCollectionClipboardRangeInput,
@@ -283,6 +287,8 @@ type
     FScheduler: INyxScheduler;
     FOptions: TNyxCollectionClipboardOptions;
     FReadiness: TNyxCollectionClipboardReadinessFactory;
+    FFeedback: TNyxCollectionClipboardFeedbackObserver;
+    FFeedbackSerial: Integer;
     FRevoked: Boolean;
     FSerial: Integer;
     FRequest: INyxClipboardWriteRequest;
@@ -300,6 +306,8 @@ type
     FIdentityResult: TNyxClipboardWriteResult;
     FIdentities: INyxCollectionIdentityText;
     FIdentityObserver: TNyxCollectionIdentityObserver;
+    procedure Feedback(ASerial: Integer; APhase: TNyxCollectionClipboardPhase;
+      const AResult: TNyxClipboardWriteResult);
     procedure Start(ACommand: TCommand);
     function SubmitPayload(const APayload: INyxCollectionClipboardText;
       const ACancellation: INyxCancellationScope;
@@ -356,7 +364,8 @@ type
       const AInput: INyxCollectionInputLifetime; const AEvents: INyxEvents;
       const AHost: INyxClipboardWriteHost; const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionClipboardOptions;
-      AReadiness: TNyxCollectionClipboardReadinessFactory);
+      AReadiness: TNyxCollectionClipboardReadinessFactory;
+      AFeedback: TNyxCollectionClipboardFeedbackObserver);
     destructor Destroy; override;
   end;
 
@@ -1443,7 +1452,8 @@ constructor TCommands.Create(const AView: INyxCollectionView;
   const AInput: INyxCollectionInputLifetime; const AEvents: INyxEvents;
   const AHost: INyxClipboardWriteHost; const AScheduler: INyxScheduler;
   const AOptions: TNyxCollectionClipboardOptions;
-  AReadiness: TNyxCollectionClipboardReadinessFactory);
+  AReadiness: TNyxCollectionClipboardReadinessFactory;
+  AFeedback: TNyxCollectionClipboardFeedbackObserver);
 var
   LView: INyxCollectionView;
   LInput: INyxCollectionInputLifetime;
@@ -1480,6 +1490,7 @@ begin
   FScheduler := LScheduler;
   FOptions := LOptions;
   FReadiness := AReadiness;
+  FFeedback := AFeedback;
   Supports(LView, INyxCollectionSelectedRowsView, LRowsView);
   FRowsView := LRowsView;
   FTransferIdentity := TInterfacedObject.Create;
@@ -1494,6 +1505,31 @@ begin
     { Explicit Revoke is the fallible boundary; final release cannot escape. }
   end;
   inherited Destroy;
+end;
+
+procedure TCommands.Feedback(ASerial: Integer; APhase: TNyxCollectionClipboardPhase;
+  const AResult: TNyxClipboardWriteResult);
+var
+  LFeedback: TNyxCollectionClipboardFeedbackObserver;
+  LValue: TNyxCollectionClipboardFeedback;
+begin
+
+  if FRevoked or (ASerial <= 0) or (ASerial >= High(Integer)) or
+    (ASerial < FFeedbackSerial) then
+  begin
+    Exit;
+  end;
+  FFeedbackSerial := ASerial;
+  LFeedback := FFeedback;
+
+  if Assigned(LFeedback) then
+  begin
+    LValue := Default(TNyxCollectionClipboardFeedback);
+    LValue.Serial := ASerial;
+    LValue.Phase := APhase;
+    LValue.Result := AResult;
+    LFeedback(LValue);
+  end;
 end;
 
 function TCommands.BeginCell(const AItem: TNyxItemRef;
@@ -1856,6 +1892,29 @@ begin
     FRepresentationPhase := nccpPending;
   end;
   try
+    Feedback(LReceipt.Serial, nccpPending, Default(TNyxClipboardWriteResult));
+
+    if FRevoked or (FReceipt <> LReceipt) or (FSerial <> LReceipt.Serial) then
+    begin
+      Exit;
+    end;
+    try
+      AReadiness.CheckReady;
+    except
+      { A presentation callback may retire the original input. It cannot grant
+        permission to enter the host with a newer row, epoch or command. }
+
+      if not FRevoked and (FReceipt = LReceipt) and (FSerial = LReceipt.Serial) then
+      begin
+        CancelCurrent;
+      end;
+      Exit;
+    end;
+
+    if FRevoked or (FReceipt <> LReceipt) or (FSerial <> LReceipt.Serial) then
+    begin
+      Exit;
+    end;
 
     if AIdentities <> nil then
     begin
@@ -1895,6 +1954,7 @@ begin
       begin
         FRepresentationPhase := nccpCancelled;
       end;
+      Feedback(LReceipt.Serial, nccpCancelled, Default(TNyxClipboardWriteResult));
     end;
     raise;
   end;
@@ -1973,58 +2033,72 @@ begin
   end;
   { Alternate hosts share the same terminal receipt contract as built-ins.
     Detach first: an invalid receipt is terminal even when validation raises. }
-  ValidateNyxClipboardWriteResult(LResult, LBytes);
+  try
+    ValidateNyxClipboardWriteResult(LResult, LBytes);
+  except
+    Feedback(AReceipt.Serial, nccpCancelled, Default(TNyxClipboardWriteResult));
+    raise;
+  end;
 
   if not LReady then
   begin
+    Feedback(AReceipt.Serial, nccpCancelled, Default(TNyxClipboardWriteResult));
     Exit;
   end;
 
-  if LIdentities <> nil then
-  begin
-    FIdentityResult := LResult;
-    FIdentities := LIdentities;
-    FIdentityPhase := nccpCompleted;
-    LIdentityObserver := FIdentityObserver;
+  try
 
-    if Assigned(LIdentityObserver) then
+    if LIdentities <> nil then
     begin
-      LIdentityObserver(LIdentities, LResult);
-    end;
-  end
-  else if LValue = nil then
-  begin
-    FResult := LResult;
-    FPayload := LPayload;
-    FPhase := nccpCompleted;
-    LObserver := FObserver;
+      FIdentityResult := LResult;
+      FIdentities := LIdentities;
+      FIdentityPhase := nccpCompleted;
+      LIdentityObserver := FIdentityObserver;
 
-    if Assigned(LObserver) then
+      if Assigned(LIdentityObserver) then
+      begin
+        LIdentityObserver(LIdentities, LResult);
+      end;
+    end
+    else if LValue = nil then
     begin
-      LObserver(LPayload, LResult);
-    end;
-  end
-  else
-  begin
-    FRepresentationResult := LResult;
-    FRepresentation := LValue;
-    FRepresentationPhase := nccpCompleted;
-    LRepresentationObserver := FRepresentationObserver;
+      FResult := LResult;
+      FPayload := LPayload;
+      FPhase := nccpCompleted;
+      LObserver := FObserver;
 
-    if Assigned(LRepresentationObserver) then
+      if Assigned(LObserver) then
+      begin
+        LObserver(LPayload, LResult);
+      end;
+    end
+    else
     begin
-      LRepresentationObserver(LValue, LResult);
-    end;
-  end;
+      FRepresentationResult := LResult;
+      FRepresentation := LValue;
+      FRepresentationPhase := nccpCompleted;
+      LRepresentationObserver := FRepresentationObserver;
 
-  if not FRevoked and (FSerial = AReceipt.Serial) and Assigned(LReply) then
-  begin
-    try
-      AReceipt.Scope.CheckReady;
-    except
-      Exit;
+      if Assigned(LRepresentationObserver) then
+      begin
+        LRepresentationObserver(LValue, LResult);
+      end;
     end;
-    LReply(LResult);
+
+    if not FRevoked and (FSerial = AReceipt.Serial) and Assigned(LReply) then
+    begin
+      try
+        AReceipt.Scope.CheckReady;
+      except
+        Exit;
+      end;
+      LReply(LResult);
+    end;
+  finally
+    { Existing application observers/replies keep their original ordering and
+      exception behavior. Even a throwing observer does not hide a valid result
+      from the default UI. A newer nested attempt or retirement wins the fence. }
+    Feedback(AReceipt.Serial, nccpCompleted, LResult);
   end;
 end;
 
@@ -2032,12 +2106,15 @@ procedure TCommands.CancelCurrent;
 var
   LRequest: INyxClipboardWriteRequest;
   LReceiptLease: IInterface;
+  LSerial: Integer;
 begin
   LRequest := FRequest;
   LReceiptLease := FReceiptLease;
+  LSerial := 0;
 
   if FReceipt <> nil then
   begin
+    LSerial := FReceipt.Serial;
     FReceipt.Owner := nil;
   end;
   FRequest := nil;
@@ -2058,6 +2135,7 @@ begin
   begin
     FIdentityPhase := nccpCancelled;
   end;
+  Feedback(LSerial, nccpCancelled, Default(TNyxClipboardWriteResult));
 
   if LRequest <> nil then
   begin
@@ -2094,6 +2172,7 @@ begin
   end;
   FRevoked := True;
   FReadiness := nil;
+  FFeedback := nil;
   FObserver := nil;
   FRepresentationObserver := nil;
   FIdentityObserver := nil;
@@ -2219,9 +2298,11 @@ function NewNyxCollectionClipboardCommands(const AView: INyxCollectionView;
   const AInput: INyxCollectionInputLifetime; const AEvents: INyxEvents;
   const AHost: INyxClipboardWriteHost; const AScheduler: INyxScheduler;
   const AOptions: TNyxCollectionClipboardOptions;
-  AReadiness: TNyxCollectionClipboardReadinessFactory): INyxCollectionClipboardCommands;
+  AReadiness: TNyxCollectionClipboardReadinessFactory;
+  AFeedback: TNyxCollectionClipboardFeedbackObserver): INyxCollectionClipboardCommands;
 begin
-  Result := TCommands.Create(AView, AInput, AEvents, AHost, AScheduler, AOptions, AReadiness);
+  Result := TCommands.Create(AView, AInput, AEvents, AHost, AScheduler, AOptions,
+    AReadiness, AFeedback);
 end;
 
 end.

@@ -11,9 +11,11 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Table Copy feedback return — 2026-10-30
 
-Current prerequisite: [visible Copy feedback01](TODO/NS-3_collection-copy-feedback_01.md).
-Return owner: [table workbench03 W2](TODO/NS-3_control-usefulness_03.md). Root stays
-SOLO. This turn is PROGRESS. [Action adoption01](TODO/DONE/NS-3_collection-action-adoption_01.md)
+Scoped [visible Copy feedback01](TODO/DONE/NS-3_collection-copy-feedback_01.md) is
+accepted. Return owner: [table workbench03 W2](TODO/NS-3_control-usefulness_03.md).
+Root stays SOLO. Next advance its ordinary keyboard/context-action and output/
+preference lifecycle criteria; stop equivalent geometry/profile fixture variants.
+[Action adoption01](TODO/DONE/NS-3_collection-action-adoption_01.md)
 and [browser Copy input01](TODO/DONE/NS-2_browser-copy-input_01.md) are accepted;
 [recovery01](TODO/DONE/NS-3_collection-recovery_01.md) acceptance is restored after
 the reproduced compatibility regression. Parent criteria, goal percentages and
@@ -87,13 +89,89 @@ and verified; viewport overrides reset and owned browser helpers close. Both fix
 listeners retain their original process owners and paths; no LAN/QA replacement
 or output-profile change occurs. All owned compiler/native readers are joined.
 
-Reassessment: next implement ordinary clipboard completion feedback through the
-existing shared table-caption/controller ownership, then return to W2 and its
-original user-facing criteria. The admitted Unavailable keyboard/semantic command
-currently records zero bytes and a reason but has no visible Table explanation,
-unlike menu Copy. Preserve live drafts/caret, selection, input epochs and caller
-observers. Stop equivalent geometry/key-spelling/profile or scalar fixture variants.
-The goal remains active; no user input is required for this next authorized task.
+The prior reassessment identified missing ordinary clipboard completion feedback
+through the existing shared table-caption/controller ownership. The admitted
+Unavailable keyboard/semantic command recorded zero bytes and a reason without
+a visible Table explanation. The accepted continuation below repairs that gap
+while preserving live drafts/caret, selection, input epochs and caller observers.
+Return to W2's original user-facing criteria. Stop equivalent geometry/key-spelling/
+profile or scalar fixture variants. The goal remains active; no user input is
+required for that authorized return.
+
+### Accepted feedback implementation
+
+The previous progress commit4c655817 is pushed and exact-remote-verified. This
+continuation accepts feedback01. Shared command feedback uses a separate borrowed
+typed receiver, preserving application observers and the single host slot. Pending
+withdraws an older terminal message; silent cancellation never invents a host
+outcome. A shared formatter distinguishes all six outcomes. Optional mount state
+and default visibility preserve existing GUIDs/vtables. Browser output and a
+native readonly caption Memo reuse existing target/retirement infrastructure.
+Stable geometry, escaped visible control characters and bounded scrolling keep
+the explanation readable without row refresh, input-epoch change or focus theft.
+
+Evidence in table-copy-feedback-01:
+
+- Shared command checks pass318 on native/browser, including all six outcomes,
+  nested pending/completion, retirement, invalidated readiness, throwing legacy
+  observers and exact Unicode/NUL diagnostics. Native frees all734452 blocks.
+  Model-mounted checks pass55 per target, including a feedback callout that
+  retires its mount during service admission. All candidate owners now install
+  before that outward call; paint failures remain notification diagnostics.
+  Native frees all44802 blocks.
+- Full control journeys pass1683 at measured1280x900 and390x900 browser sizes and
+  1868/1857 native. Actual delayed completion preserves the active editor's text,
+  caret, focus, original epoch, rows and selection. Long diagnostics scroll without
+  data navigation; opt-out and late completion preserve independent peers.
+  Native frees all24853942/25219948 blocks. New browser-only producer assertions
+  do not change the qualified native branch.
+- Full query/header/recovery regression passes1545 at measured1280x720 and1544
+  at390x900 browser sizes. Focused native recovery passes56 per width, freeing
+  all604384/604307 blocks. The separate full native physical-cursor gate remains
+  unchanged; no new hardware-input claim is made.
+- The unchanged Studio-generated Service monitor passes28 native checks per
+  width, including visible Written, bounded readonly status, retained focus,
+  original range/menu/source-ID transfers and independent peers. Native frees
+  all1556844/1556612 blocks. The same saved browser unit writes the exact173-byte
+  RAW rectangle through the real host at measured1280/390 widths. Trace/readback
+  distinguish one admitted request per command, terminal Written and unchanged
+  focused cell/four-cell range. A second attempt after activation expired reports
+  ActivationRequired rather than stale success; fresh input visibly progresses
+  through Pending to Written. These are browser-driver Copy events, not Copy
+  keydowns or physical keyboard/assistive qualification.
+- Authenticated MCP requests a current application build and launch from the
+  owned Service monitor workspace. The browser acknowledges mounted. Observing
+  Studio at measured390/1280 shows the ordinary Unavailable explanation with
+  retained focus/range and unchanged clipboard. No document operation or output
+  profile change is needed. The generated source stays7288 bytes with original
+  MD5 10ad448099499de2d1262e851067d77a; design MD5 remains
+  ba30a14cbeb1630c1a71eb2c80dfbd02.
+
+Retained failures are explicit. Initial added tests missed two imports. The first
+browser compact runner sized before creating a tab; the measured default wide
+result is marked non-compact. Corrected runs create the blank tab, size it, then
+navigate and record measured dimensions. Actual compact pointer checks then send
+their synthetic movement to an origin at x=-483 after legitimate focus scrolling.
+The producer now contracts vertically within the visible field, matching the
+existing native journey, while preserving outside-hit cancellation and original
+range/capture/intent assertions. Failure receipts28/30 retain actual geometry.
+The first diagnostic compile needed integer coordinates at the RTL hit API.
+Saved native presentation initially remains Idle because that harness omitted
+Application.Idle; the corrected pump follows ordinary LCL delivery without
+changing the existing one-second action budget. Failure logs27/31 remain intact.
+No product dependency, tolerance, deadline or acceptance criterion is weakened.
+
+Final bounded MCP reads retain revision9, service-table/services, no pending draft,
+Undo/Redo and original output fingerprint da83d63c57383b9aa777fcaf3c2b8a3c with all
+four runtime services disabled. The paired design stays the13555-byte
+SHA25655B8676F7694B40C3E6C1BA592797E402292FF3D91D774120E31833C165F7BD2 checkpoint.
+Structured clipboard items are restored and verified. Both helper applications
+retire with authored-unchanged receipts; owned browser tabs close, viewport
+overrides reset and the observing Studio remains available. All owned compiler/
+native readers are joined. Both fixed listeners retain their executable paths
+and original process owners. No LAN service replacement occurs in this batch.
+Native compiles have zero warnings; installed pas2js Classes warnings stay
+external. The parked standalone pending demo and broader acceptance stay open.
 
 ### Previous range transfer checkpoint
 

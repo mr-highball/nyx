@@ -28,9 +28,15 @@ one Copy event rather than a keydown; no key/Click callbacks or event clipboard
 writes are invented. Both original clipboard and authored document are restored.
 Revision9, paired source, output choices and fixed listeners remain unchanged.
 
-Next follow [visible Copy feedback01](NS-3_collection-copy-feedback_01.md): an
-admitted Unavailable keyboard/semantic command still has no ordinary visible Table
-explanation. Preserve original W2 and all complete criteria below, with no extra
+The scoped [visible Copy feedback01](DONE/NS-3_collection-copy-feedback_01.md) is
+accepted: all six host outcomes are visible without replacing caller observers,
+input ownership or live drafts/caret. Full controls pass1683 in measured1280/390
+browser viewports and1868/1857 native, with clean heaps. The same saved native
+application passes28 checks per width; its browser host confirms exact173-byte
+writes with visible Written. MCP build/launch delivers ordinary Unavailable in
+the observing Studio. Actual activation refusal, pending state and original
+failure evidence remain retained. Return to W2's keyboard/context-action and
+output/preference lifecycle criteria. Preserve all complete criteria below, with no extra
 completion credit. Full physical/assistive/production performance and the separate
 native cursor-input gate remain open. Stop equivalent geometry/profile fixtures.
 
@@ -890,7 +896,7 @@ needs qualification against the portable contract.
 - [Browser semantic Copy input](DONE/NS-2_browser-copy-input_01.md) routes standard
   Copy events through the existing scoped cell/range command.
 
-- [Keyboard-copy feedback](NS-3_collection-copy-feedback_01.md) supplies visible
+- [Keyboard-copy feedback](DONE/NS-3_collection-copy-feedback_01.md) supplies visible
   ordinary outcomes for the existing admitted keyboard clipboard command.
 
 - [Recovered-edit review](DONE/NS-3_collection-recovery_01.md) supplies the missing

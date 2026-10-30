@@ -3,14 +3,22 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current prerequisite is [visible Copy feedback](NS-3_collection-copy-feedback_01.md).
+The scoped [visible Copy feedback](DONE/NS-3_collection-copy-feedback_01.md) is
+accepted. Return to the same [table workbench W2](NS-3_control-usefulness_03.md)
+keyboard/context-action and output/preference lifecycle criteria. Current full
+clipboard controls pass1683 at measured1280/390 browser widths and1868/1857
+native, with clean heaps; saved native feedback/input checks pass28 per width.
+The MCP-built observing application shows Unavailable and its unchanged generated
+browser consumer confirms exact real writes. Preserve the retained failures and
+original broader acceptance; stop equivalent geometry/profile fixtures.
+
 [Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) and
 [browser Copy input](DONE/NS-2_browser-copy-input_01.md) are accepted, restoring
 [recovery review](DONE/NS-3_collection-recovery_01.md) acceptance. Full clipboard
 controls pass1499 per browser width and1680/1669 native with clean heaps. The same
 saved application copies its exact173-byte range through the real browser host
 at both widths. Preserve those scoped results and the retained failures; ordinary
-keyboard/semantic Copy still needs visible failure feedback. Parent workbench/
+keyboard/semantic Copy now has visible failure feedback. Parent workbench/
 parity criteria and pending assessments stay unchanged, with no separate credit.
 
 ## Current priority — useful everyday workflows — 2026-10-26

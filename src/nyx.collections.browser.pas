@@ -644,12 +644,17 @@ type
       command remain visible without changing authored help or column choices. }
     FColumnBar: TJSHTMLElement;
     FColumnStatus: TJSHTMLElement;
+    { Caption-owned output borrows no document/controller. Its text is updated
+      in place; keyboard focus, data rows and range input remain untouched. }
+    FClipboardStatus: TJSHTMLElement;
     FRecoveryLauncher: TJSHTMLElement;
     FRecoveryInputBound: Boolean;
     procedure SynchronizeRecovery;
+    procedure SynchronizeClipboardFeedback;
   protected
     procedure RefreshTargetIdle; override;
     procedure RecoveryMembershipChanged(const AObservation: TNyxDraftRecoveryObservation); override;
+    procedure ClipboardFeedbackChanged; override;
   private
     FOpeningColumnManager: Boolean;
     FCellPresentationDepth: Integer;
@@ -4678,6 +4683,11 @@ begin
   Result := True;
   LKeepAlive := Self as INyxCollectionMount;
 
+  if (FClipboardStatus <> nil) and (AEvent.target = FClipboardStatus) then
+  begin
+    Exit;
+  end;
+
   if (FHasColumnLayout or FObservesTablePresentation) and not GetInputReady then
   begin
     AEvent.preventDefault;
@@ -7144,6 +7154,7 @@ begin
   end;
   RefreshColumnResizers;
   SynchronizeRecovery;
+  SynchronizeClipboardFeedback;
 end;
 
 procedure TBrowserMount.RecoverRowDrafts(const AData: INyxCollectionSnapshot);
@@ -8941,6 +8952,7 @@ begin
     FHeaderFilters := nil;
     FHeaderResizers := nil;
     FBody := nil;
+    FClipboardStatus := nil;
     FHost := nil;
   end;
 end;

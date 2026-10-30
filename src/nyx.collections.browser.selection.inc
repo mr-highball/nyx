@@ -417,6 +417,13 @@ var
   LCopy: INyxBrowserColumnCommand;
 begin
   Result := True;
+  { Readonly caption feedback owns its own keyboard scrolling/text selection;
+    it is never a data-cell navigation or Copy source. }
+
+  if (FClipboardStatus <> nil) and (AEvent.target = FClipboardStatus) then
+  begin
+    Exit;
+  end;
   LCopy := BeginRangeKey(AEvent);
 
   if LCopy = nil then

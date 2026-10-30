@@ -141,7 +141,9 @@ type
   { Real shared terminal request writes only a copied fixture counter/text. }
   TWrite = class(TNyxClipboardWriteRequest)
   public
-    procedure Finish;
+    procedure Hold;
+    procedure Finish(AOutcome: TNyxClipboardWriteOutcome = ncwoWritten;
+      const AError: TNyxText = '');
   end;
 
   { Injected authority performs no native/browser clipboard API operation. }
@@ -149,6 +151,11 @@ type
   public
     Writes: Integer;
     Text: TNyxText;
+    Outcome: TNyxClipboardWriteOutcome;
+    Diagnostic: TNyxText;
+    HoldCompletion: Boolean;
+    PendingWrite: TWrite;
+    PendingLease: INyxClipboardWriteRequest;
     function BeginWriteText(const AText: TNyxText;
       const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
       AReply: TNyxClipboardWriteReply): INyxClipboardWriteRequest;
@@ -321,6 +328,7 @@ type
     function HasInspectorAction(const AID: TNyxText): Boolean;
     procedure InspectorAction(const AID: TNyxText);
     procedure RunDefaultRecovery; {$ifdef PAS2JS}async;{$endif}
+    procedure RunFeedback; {$ifdef PAS2JS}async;{$endif}
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
     procedure RunAuthoredExport(AChoice: TAuthoredExportChoice); {$ifdef PAS2JS}async;{$endif}
@@ -686,9 +694,22 @@ begin
   Result := Commands.LastPayload;
 end;
 
-procedure TWrite.Finish;
+procedure TWrite.Hold;
 begin
-  Complete(ncwoWritten, FByteCount, '', nctrExactUTF8);
+  RetainPending;
+end;
+
+procedure TWrite.Finish(AOutcome: TNyxClipboardWriteOutcome; const AError: TNyxText);
+begin
+
+  if AOutcome = ncwoWritten then
+  begin
+    Complete(AOutcome, FByteCount, '', nctrExactUTF8);
+  end
+  else
+  begin
+    Complete(AOutcome, 0, AError);
+  end;
 end;
 
 function THost.BeginWriteText(const AText: TNyxText;
@@ -701,7 +722,17 @@ begin
   Result := LWrite;
   Inc(Writes);
   Text := AText;
-  LWrite.Finish;
+
+  if HoldCompletion then
+  begin
+    PendingWrite := LWrite;
+    PendingLease := Result;
+    LWrite.Hold;
+  end
+  else
+  begin
+    LWrite.Finish(Outcome, Diagnostic);
+  end;
 end;
 
 procedure TSave.Finish(AOutcome: TNyxFileSaveOutcome);
@@ -1514,6 +1545,12 @@ begin
       (AResult.Representation = nctrNone) and (AResult.Error <> ''),
       'actual absent-service input gets one explicit non-write receipt and diagnostic');
   end
+  else if FHost.Outcome <> ncwoWritten then
+  begin
+    Check((AResult.Outcome = FHost.Outcome) and (AResult.ByteCount = 0) and
+      (AResult.Representation = nctrNone) and (AResult.Error = FHost.Diagnostic),
+      'actual input preserves its explicitly configured nonwriting receipt and diagnostic');
+  end
   else
   begin
     Check((AResult.Outcome = ncwoWritten) and (AResult.ByteCount = APayload.ByteCount),
@@ -2146,6 +2183,219 @@ end;
   through the optional typed mount contract; paired real key routes then copy
   that exact range. This slice proves mounted paint/copy, not a hardware range
   drag or OS clipboard effect. Gesture navigation is a separate next input. }
+procedure TCopyReview.RunFeedback; {$ifdef PAS2JS}async;{$endif}
+const
+  CDiagnostic: TNyxText = 'Provider detail 🌙' + #0 + ' Copy needs attention.';
+var
+  LFeedback: INyxCollectionClipboardFeedbackMount;
+  LObservation: TNyxCollectionClipboardFeedback;
+  LSource: INyxCollectionSnapshot;
+  LRows: TNyxCollectionSelectionSnapshot;
+  LOutcome: TNyxClipboardWriteOutcome;
+  LEpoch: Integer;
+  LRefresh: Integer;
+  LBefore: Integer;
+  LReplies: Integer;
+  LPeer: TCopyReview;
+  {$ifdef PAS2JS}
+  LEditor: TJSHTMLInputElement;
+  LRetiredStatus: TJSHTMLElement;
+  LReadableStatus: TJSHTMLElement;
+  {$else}
+  LEditor: TCustomEdit;
+  LSelection: TNyxTextSelection;
+  LReadableStatus: TMemo;
+  {$endif}
+
+  function StatusText: TNyxText;
+  {$ifdef PAS2JS}
+  var
+    LStatus: TJSHTMLElement;
+  {$else}
+  var
+    LStatus: TMemo;
+  {$endif}
+  begin
+    {$ifdef PAS2JS}
+    LStatus := TJSHTMLElement(FTable.querySelector('[data-nyx-clipboard-status]'));
+    Check((LStatus <> nil) and (LStatus.getAttribute('role') = 'status') and
+      (LStatus.getAttribute('aria-live') = 'polite'),
+      'browser feedback is a real accessible table output');
+    Result := LStatus.textContent;
+    {$else}
+    LStatus := TMemo(FGrid.FindComponent('NyxClipboardStatus'));
+    Check((LStatus <> nil) and LStatus.ReadOnly and LStatus.TabStop and
+      (LStatus.AccessibleName = 'Clipboard result') and (LStatus.Height > 0),
+      'native feedback is a reachable readonly text surface inside the table');
+    Result := NyxLCLInputText(LStatus);
+    {$endif}
+  end;
+
+begin
+  FMode := kmObserve;
+  Check(Supports(FMount, INyxCollectionClipboardFeedbackMount, LFeedback),
+    'the actual mounted table exposes copied feedback through an optional typed contract');
+  LSource := FView.Store.Snapshot;
+  FocusCell;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(StatusText = 'Copy results appear here.', 'initial feedback claims no clipboard capability or write');
+  for LOutcome := Low(TNyxClipboardWriteOutcome) to High(TNyxClipboardWriteOutcome) do
+  begin
+    FHost.Outcome := LOutcome;
+    FHost.Diagnostic := '';
+
+    if LOutcome <> ncwoWritten then
+    begin
+      FHost.Diagnostic := CDiagnostic;
+    end;
+    LBefore := FHost.Writes;
+    LReplies := FReplies;
+    LEpoch := FInput.Epoch;
+    LRefresh := FMount.RefreshCount;
+    LRows := FView.Selection.Snapshot;
+    CopyKey;
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    LObservation := LFeedback.ClipboardFeedback;
+    Check((LObservation.Phase = nccpCompleted) and
+      (LObservation.Result.Outcome = LOutcome) and
+      (LObservation.Result.Error = FHost.Diagnostic) and
+      (StatusText = NyxCollectionCellInspectionText(NyxCollectionClipboardFeedbackText(LObservation))),
+      'each typed outcome is visible with the exact original diagnostic and readable control notation');
+    Check((FHost.Writes = LBefore + 1) and (FReplies = LReplies + 1) and
+      (FInput.Epoch = LEpoch) and (FMount.RefreshCount = LRefresh) and
+      FView.Selection.Snapshot.SameState(LRows) and (FView.Store.Snapshot = LSource),
+      'feedback preserves caller observation, original input, accepted data and row membership without refresh');
+  end;
+  FHost.Outcome := ncwoFailed;
+  FHost.Diagnostic := CDiagnostic + TNyxText(StringOfChar('x', 2048));
+  LEpoch := FInput.Epoch;
+  LRefresh := FMount.RefreshCount;
+  CopyKey;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LObservation := LFeedback.ClipboardFeedback;
+  Check((StatusText = NyxCollectionCellInspectionText(NyxCollectionClipboardFeedbackText(LObservation))) and
+    (FInput.Epoch = LEpoch) and (FMount.RefreshCount = LRefresh),
+    'a long supplementary/control-character explanation stays complete without resizing the input frame');
+  LRows := FView.Selection.Snapshot;
+  {$ifdef PAS2JS}
+  LReadableStatus := TJSHTMLElement(FTable.querySelector('[data-nyx-clipboard-status]'));
+  Check(LReadableStatus.scrollHeight > LReadableStatus.clientHeight,
+    'long browser diagnostics have a bounded scrollable output');
+  LReadableStatus.focus;
+  Key(LReadableStatus, 'PageDown', False);
+  await(Drain);
+  {$else}
+  LReadableStatus := TMemo(FGrid.FindComponent('NyxClipboardStatus'));
+  LReadableStatus.SetFocus;
+  SendMessage(LReadableStatus.Handle, WM_VSCROLL, SB_BOTTOM, 0);
+  Drain;
+  Check(GetScrollPos(LReadableStatus.Handle, SB_VERT) > 0,
+    'long native diagnostics can scroll inside their readonly status surface');
+  {$endif}
+  Check(FView.Selection.Snapshot.SameState(LRows) and (FView.Store.Snapshot = LSource),
+    'reading feedback cannot navigate or mutate the table rows');
+  FocusCell;
+  FHost.Outcome := ncwoWritten;
+  FHost.Diagnostic := '';
+  FHost.HoldCompletion := True;
+  LBefore := FHost.Writes;
+  CopyKey;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FHost.Writes = LBefore + 1) and (StatusText = 'Copying to clipboard...'),
+    'actual delayed host admission withdraws an earlier terminal message');
+  {$ifdef PAS2JS}
+  Key(Cell, 'F2', False);
+  await(Drain);
+  LEditor := TJSHTMLInputElement(Cell.querySelector('input.nyx-cell-editor'));
+  Check(LEditor <> nil, 'a real browser editor exists before delayed completion');
+  LEditor.value := CDraft;
+  LEditor.setSelectionRange(1, 4);
+  {$else}
+  SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+  Drain;
+  LEditor := TCustomEdit(FGrid.Editor);
+  Check(FGrid.EditorMode and (LEditor <> nil),
+    'a real native editor exists before delayed completion');
+  RestoreNyxLCLInputText(LEditor, CDraft);
+  LEditor.SelStart := 1;
+  LEditor.SelLength := 3;
+  LSelection := CaptureNyxLCLSelection(LEditor);
+  {$endif}
+  LEpoch := FInput.Epoch;
+  LRefresh := FMount.RefreshCount;
+  LRows := FView.Selection.Snapshot;
+  LReplies := FReplies;
+  FHost.PendingWrite.Finish;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((StatusText = 'Copied to clipboard.') and (FReplies = LReplies + 1) and
+    (FInput.Epoch = LEpoch) and (FMount.RefreshCount = LRefresh) and
+    FView.Selection.Snapshot.SameState(LRows) and (FView.Store.Snapshot = LSource),
+    'delayed completion updates only status while the real editor remains active');
+  {$ifdef PAS2JS}
+  Check((document.activeElement = LEditor) and (LEditor.value = CDraft) and
+    (LEditor.selectionStart = 1) and (LEditor.selectionEnd = 4),
+    'browser completion preserves exact unfinished text, focus and caret');
+  Key(LEditor, 'Escape', False);
+  await(Drain);
+  {$else}
+  Check(FGrid.EditorMode and (FGrid.Editor = LEditor) and
+    (Screen.ActiveControl = LEditor) and (NyxLCLInputText(LEditor) = CDraft) and
+    CaptureNyxLCLSelection(LEditor).SameRange(LSelection),
+    'native completion preserves exact unfinished text, focus and scalar caret');
+  SendMessage(LEditor.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
+  Drain;
+  {$endif}
+  LObservation := LFeedback.ClipboardFeedback;
+  LBefore := FHost.Writes;
+  FMode := kmConsume;
+  CopyKey;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FHost.Writes = LBefore) and
+    (LFeedback.ClipboardFeedback.Serial = LObservation.Serial),
+    'consumed input cannot claim a newer clipboard outcome');
+  FMode := kmObserve;
+  LEpoch := FInput.Epoch;
+  LRefresh := FMount.RefreshCount;
+  LFeedback.ClipboardFeedbackEnabled := False;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  {$ifdef PAS2JS}
+  Check(LReadableStatus.style.getPropertyValue('visibility') = 'hidden',
+    'the caller can hide default browser feedback');
+  {$else}
+  Check(not LReadableStatus.Visible, 'the caller can hide default native feedback');
+  {$endif}
+  LFeedback.ClipboardFeedbackEnabled := True;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((LFeedback.ClipboardFeedback.Serial = LObservation.Serial) and
+    (FInput.Epoch = LEpoch) and (FMount.RefreshCount = LRefresh) and
+    (StatusText = 'Copied to clipboard.'),
+    'caller visibility choice retains copied feedback without host, source or input changes');
+  CopyKey;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  {$ifdef PAS2JS}
+  LRetiredStatus := TJSHTMLElement(FTable.querySelector('[data-nyx-clipboard-status]'));
+  {$endif}
+  LReplies := FReplies;
+  FMount.Disconnect;
+  LPeer := TCopyReview.Create;
+  try
+    FHost.PendingWrite.Finish;
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((FReplies = LReplies) and (LPeer.FHost.Writes = 0) and
+      (LPeer.FView.Store <> FView.Store) and (TNyxCodec.Encode(FDocument) = FAuthored),
+      'late completion cannot update the retired receiver, independent peer or saved source');
+    {$ifdef PAS2JS}
+    Check(LRetiredStatus.textContent = 'Copying to clipboard...',
+      'late browser completion cannot rewrite its retired status node');
+    {$else}
+    Check(FGrid.FindComponent('NyxClipboardStatus') = nil,
+      'native status ownership retires through the original physical frame');
+    {$endif}
+  finally
+    LPeer.Free;
+  end;
+end;
+
 procedure TCopyReview.RunDefaultRecovery; {$ifdef PAS2JS}async;{$endif}
 var
   LJournal: INyxCollectionDraftRecovery;
@@ -2996,6 +3246,10 @@ var
     LMoveToken: INyxEventSubscription;
     LCaptures: Integer;
     LRound: Integer;
+    LHitBounds: TJSDOMRect;
+    LHit: TJSElement;
+    LReleaseCell: TJSHTMLElement;
+    LReleaseIdentity: TNyxCollectionCellIdentity;
 
     procedure Send(const AKind: String; ACell: TJSHTMLElement; AID: Integer = 73);
     var
@@ -3066,6 +3320,27 @@ var
         Check((LAccepted <> nil) and LAccepted.Current and
           LAccepted.Capture.Focus.Same(LTarget),
           'Shift-down retains its immediate exact accepted endpoint');
+        LReleaseCell := LOriginCell;
+        LReleaseIdentity := LOrigin;
+        LHitBounds := LReleaseCell.getBoundingClientRect;
+
+        if (LHitBounds.left + LHitBounds.width / 2 < 0) or
+          (LHitBounds.left + LHitBounds.width / 2 >= window.innerWidth) then
+        begin
+          { Focusing the down endpoint legitimately scrolls a compact table.
+            As in the native journey, contract vertically within its currently
+            visible field instead of inventing an off-screen pointer position. }
+          LReleaseCell := TJSHTMLElement(FTable.querySelector(
+            '[data-nyx-item="a"] [role="gridcell"][data-nyx-column="1"]'));
+          LReleaseIdentity := NyxCollectionCellIdentity(ItemA, LScore);
+        end;
+        Check(LReleaseCell <> nil, 'Resolve an exact owned resident release cell');
+        LHitBounds := LReleaseCell.getBoundingClientRect;
+        Check((LHitBounds.left + LHitBounds.width / 2 >= 0) and
+          (LHitBounds.left + LHitBounds.width / 2 < window.innerWidth) and
+          (LHitBounds.top + LHitBounds.height / 2 >= 0) and
+          (LHitBounds.top + LHitBounds.height / 2 < window.innerHeight),
+          'The sustained browser pointer uses an actual visible release point');
 
         if LRound = 3 then
         begin
@@ -3075,7 +3350,7 @@ var
         end;
         Check((HasRangePointer(73)) and (GRangeCaptures = LCaptures + 1),
           'Current original down acquires one injected platform capture');
-        Send('pointermove', LOriginCell, 74);
+        Send('pointermove', LReleaseCell, 74);
         Check((LRanges.CellRange = LAccepted) and (HasRangePointer(73)),
           'Wrong pointer cannot move or cancel another pending stroke; round=' +
           TNyxText(IntToStr(LRound)) + '; pointer73=' + TNyxText(BoolToStr(HasRangePointer(73), True)) +
@@ -3092,12 +3367,12 @@ var
 
         if LRound = 6 then
         begin
-          Send('lostpointercapture', LOriginCell, 74);
-          Send('lostpointercapture', LOriginCell);
+          Send('lostpointercapture', LReleaseCell, 74);
+          Send('lostpointercapture', LReleaseCell);
           Check(HasRangePointer(73),
             'Wrong-pointer and delayed loss cannot revoke a still-captured current pair');
           ReleaseRangePointer(73);
-          Send('lostpointercapture', LOriginCell);
+          Send('lostpointercapture', LReleaseCell);
           Check((LRanges.CellRange = LAccepted) and LAccepted.Current and
             (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
             'Actual matching loss withdraws the preview and restores accepted paint');
@@ -3117,7 +3392,7 @@ var
         begin
           FMode := kmConsume;
         end;
-        Send('pointermove', LOriginCell);
+        Send('pointermove', LReleaseCell);
         Check(LRanges.CellRange = LAccepted,
           'Captured movement paints only preview, preserving accepted cells');
 
@@ -3137,12 +3412,23 @@ var
             'Consumed original move releases capture and restores accepted paint');
           Continue;
         end;
+        { Preserve actual viewport/hit facts before normal fixture retirement.
+          A synthetic pointer outside the visible clip cannot prove hit testing. }
+        LHitBounds := LReleaseCell.getBoundingClientRect;
+        LHit := document.elementFromPoint(Round(LHitBounds.left + LHitBounds.width / 2),
+          Round(LHitBounds.top + LHitBounds.height / 2));
+        document.body.setAttribute('data-pointer-range-hit',
+          'round=' + IntToStr(LRound) + ';viewport=' + IntToStr(window.innerWidth) +
+          ';left=' + FloatToStr(LHitBounds.left) + ';top=' + FloatToStr(LHitBounds.top) +
+          ';width=' + FloatToStr(LHitBounds.width) + ';height=' + FloatToStr(LHitBounds.height) +
+          ';hitRelease=' + BoolToStr((LHit = LReleaseCell) or
+            ((LHit <> nil) and LReleaseCell.contains(LHit)), True));
         Check(LTargetCell.getAttribute('data-nyx-range-selected') <> 'true',
           'Physical hit test paints the smaller pending rectangle');
 
         if LRound = 2 then
         begin
-          Send('pointercancel', LOriginCell);
+          Send('pointercancel', LReleaseCell);
           Check((not HasRangePointer(73)) and (LRanges.CellRange = LAccepted) and
             LAccepted.Current and
             (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
@@ -3150,11 +3436,11 @@ var
         end
         else
         begin
-          Send('pointerup', LOriginCell);
+          Send('pointerup', LReleaseCell);
           Check((not HasRangePointer(73)) and (LRanges.CellRange <> LAccepted) and
             LRanges.CellRange.Capture.Anchor.Same(LOrigin) and
-            LRanges.CellRange.Capture.Focus.Same(LOrigin) and
-            (document.activeElement = LOriginCell),
+            LRanges.CellRange.Capture.Focus.Same(LReleaseIdentity) and
+            (document.activeElement = LReleaseCell),
             'Matching release commits the preview and exact physical endpoint focus');
         end;
       end;
@@ -5161,6 +5447,18 @@ var
   {$endif}
 begin
   try
+    LReview := TCopyReview.Create(False);
+    try
+      {$ifdef PAS2JS}await(LReview.RunFeedback);{$else}LReview.RunFeedback;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunFeedback);{$else}LReview.RunFeedback;{$endif}
+    finally
+      LReview.Free;
+    end;
     LReview := TCopyReview.Create(False, False, False, False,
       [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange], False, aeLegacy, True);
     try

@@ -24,6 +24,7 @@ program nyx_collection_recovery_mount_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
+  nyx.binding.types, nyx.clipboard,
   nyx.collections.arrangement, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.recovery, nyx.collections.inspection,
   nyx.collections.selection,
@@ -37,6 +38,9 @@ uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   {$ifdef PAS2JS}, Web{$endif};
 
 type
+  { One controlled target callout proves feedback admission/retirement ordering
+    without pretending to exercise a native or browser presentation surface. }
+  TFeedbackReentry = (frNone, frRetire, frThrow);
   { Model-only presenter proves factory ownership across default replacement.
     Physical menu/popover input belongs to the maintained control consumers. }
   TAdoptionFactory = class(TInterfacedObject, INyxCollectionCellPresenterFactory)
@@ -76,6 +80,8 @@ type
     Fail: Boolean;
     Loss: TNyxCollectionDraftLoss;
     Position: TNyxCollectionPositionRecovery;
+    FeedbackReentry: TFeedbackReentry;
+    procedure ClipboardFeedbackChanged; override;
     function ReadRecoveryDraft(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean; override;
     function DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean; override;
@@ -153,6 +159,28 @@ begin
   if not AValue then
   begin
     raise Exception.Create(AMessage);
+  end;
+end;
+
+procedure TRecoveryTarget.ClipboardFeedbackChanged;
+var
+  LAction: TFeedbackReentry;
+begin
+  LAction := FeedbackReentry;
+  FeedbackReentry := frNone;
+  case LAction of
+    frRetire:
+      begin
+        Disconnect;
+      end;
+    frThrow:
+      begin
+        raise Exception.Create('Deliberate feedback paint failure');
+      end;
+    frNone:
+      begin
+        { This model target claims no physical feedback surface. }
+      end;
   end;
 end;
 
@@ -750,6 +778,86 @@ begin
   LScheduler.Shutdown;
 end;
 
+procedure FeedbackAdmission;
+var
+  LMode: TFeedbackReentry;
+  LKey: TNyxCollectionRef;
+  LItem: TNyxItemRef;
+  LStore: INyxCollection;
+  LView: INyxCollectionView;
+  LTarget: TRecoveryTarget;
+  LMount: INyxCollectionMount;
+  LFactory: TAdoptionFactory;
+  LFactoryLease: INyxCollectionCellPresenterFactory;
+  LScheduler: INyxScheduler;
+  LEvents: INyxEvents;
+  LClipboard: INyxCollectionClipboardMount;
+  LCells: INyxCollectionCellActionsMount;
+  LFeedback: INyxCollectionClipboardFeedbackMount;
+  LCommand: INyxCollectionClipboardCommand;
+  LSource: INyxCollectionSnapshot;
+begin
+  for LMode := frRetire to frThrow do
+  begin
+    LKey := NyxCollection('feedback-admission');
+    LItem := NyxItem(LKey, 'reader');
+    LStore := NewNyxCollection(LKey, NyxCollectionSchema.Text(NyxTextField('name'), ''), [
+      NyxCollectionItem(LItem).WithValue(NyxTextField('name'), 'Original')]);
+    LView := NewNyxCollectionView(LStore, NyxCollectionView(LKey)
+      .Column(NyxTextField('name'), 'Name', cmEditable), cpTable);
+    LTarget := TRecoveryTarget.Create(LView);
+    LMount := LTarget;
+    LTarget.Activate;
+    LSource := LStore.Snapshot;
+    LFactory := TAdoptionFactory.Create;
+    LFactoryLease := LFactory;
+    LScheduler := NewNyxScheduler;
+    LEvents := NewNyxEvents(LScheduler);
+    ConfigureNyxTableRecoveryReview(LMount, LFactoryLease, LEvents);
+    Supports(LMount, INyxCollectionClipboardMount, LClipboard);
+    Supports(LMount, INyxCollectionCellActionsMount, LCells);
+    Supports(LMount, INyxCollectionClipboardFeedbackMount, LFeedback);
+    LTarget.FeedbackReentry := LMode;
+    LClipboard.ConfigureClipboard(NewNyxUnavailableClipboardWriteHost, LEvents,
+      LScheduler, TNyxCollectionClipboardOptions.Defaults);
+
+    if LMode = frRetire then
+    begin
+      Check(not LMount.Connected and (LClipboard.ClipboardCommands = nil) and
+        (LCells.CellActions = nil) and (LFactory.Revocations = 1),
+        'feedback reentry cannot reinstall a candidate presenter after original mount retirement');
+    end
+    else
+    begin
+      Check(LMount.Connected and (LClipboard.ClipboardCommands <> nil) and
+        (LCells.CellActions <> nil) and (LMount.Failure = nbfNotificationFailed) and
+        (LMount.ErrorText = 'Deliberate feedback paint failure'),
+        'post-admission presentation failure is diagnostic and preserves the admitted authority');
+      LCommand := LClipboard.ClipboardCommands.BeginCell(LItem,
+        NyxColumnIdentity(NyxTextField('name')));
+      LCommand.Prepare;
+      LCommand.Complete(True);
+      Check((LFeedback.ClipboardFeedback.Phase = nccpCompleted) and
+        (LFeedback.ClipboardFeedback.Result.Outcome = ncwoUnavailable),
+        'a presentation failure cannot prevent the original typed host result');
+      LCommand := nil;
+      LMount.Disconnect;
+    end;
+    Check((LStore.Snapshot = LSource) and (LFactory.Revocations = 1),
+      'feedback target callouts preserve source ownership and retire the exact factory once');
+    LScheduler.Shutdown;
+    LClipboard := nil;
+    LCells := nil;
+    LFeedback := nil;
+    LMount := nil;
+    LFactoryLease := nil;
+    LEvents := nil;
+    LScheduler := nil;
+    LView := nil;
+    LStore := nil;
+  end;
+end;
+
 begin
   try
     Run;
@@ -757,6 +865,7 @@ begin
     SavedPolicy;
     PressureChecks;
     ActionAdoption;
+    FeedbackAdmission;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-recovery-mount-checks', IntToStr(GChecks));
     {$else}

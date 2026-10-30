@@ -2013,8 +2013,8 @@ Click callbacks or direct event clipboard-data writes. Active editors/custom
 descendants retain their native Copy route. Default handling is claimed only for
 that original data command, and the exact listener detaches with its binding.
 The same generated application's actual Copy now writes its exact173-byte RAW
-rectangle through the real host at both widths. Full regression remains pending
-the explicit-adoption prerequisite. Its separately
+rectangle through the real host at both widths. The explicit-adoption
+prerequisite is accepted, with its original failure retained. Its separately
 labeled Pascal synthetic producer reaches the original keyboard command and
 writes the exact173-byte range through the real browser host at both widths,
 without Nyx key subscribers. This establishes synthetic routing and real host
@@ -2022,10 +2022,51 @@ completion, not physical keyboard/assistive input or full workbench acceptance.
 Recording is the default no-OS-effect mode; explicit `?browser` uses the real
 adapter and `?unavailable` exercises the existing missing-service host. The helper
 retains bounded key/host/result observations and explicit retirement. The admitted
-unavailable keyboard result still lacks an ordinary visible Table explanation;
-[Copy feedback](../TODO/NS-3_collection-copy-feedback_01.md) owns that remaining
-user-facing gap. See
-[the current work](../WORK.md#current-work--table-pointer-and-selection-return--2026-10-30).
+unavailable keyboard result is also the starting case for
+[default Copy feedback](../TODO/DONE/NS-3_collection-copy-feedback_01.md). See
+[the current work](../WORK.md#current-work--table-copy-feedback-return--2026-10-30).
+
+### Ordinary Table Copy feedback
+
+Renderer-managed Tables provide a default result surface when clipboard actions
+are configured. It reports the original controller's pending state and typed
+Written, Unavailable, ActivationRequired, Denied, Cancelled or Failed receipt.
+A new request clears the previous terminal message. Silent withdrawal displays
+an interrupted completion; it never manufactures a host cancellation or success.
+Host explanations remain plain text. Visible control characters use the existing
+cell-inspection notation; the copied result retains the exact original text.
+
+The optional `INyxCollectionClipboardFeedbackMount` exposes copied
+`TNyxCollectionClipboardFeedback` state and `ClipboardFeedbackEnabled`, which is
+enabled by default. A caller may hide the default surface and present that state
+elsewhere. The admitted caption space stays allocated when hidden, preserving
+data geometry and live input. The facet is optional: an alternative mount's state
+support alone does not claim a visual surface. Existing interfaces keep their
+GUIDs and methods.
+
+The browser uses a focusable, politely announced status output inside the Table
+caption. Native LCL uses a readonly, keyboard-reachable text control in the same
+header band as column/recovery actions. Long explanations scroll inside that
+bounded surface. Reading it does not perform data-cell navigation. Completion
+changes no accepted rows, row/range selection, input epoch, editor text or caret;
+it does not refresh the row presentation. The reserved height does not grow when
+the outcome changes.
+
+This separate borrowed presentation receiver preserves application observers,
+menu replies and the original single host request slot. Retirement withdraws it
+before cancellation or target teardown. Original serial/readiness checks prevent
+stale or cancelled work from changing a newer or replacement mount's outcome.
+Presentation failure is a mount notification diagnostic and cannot turn an
+accepted service assignment into an admission failure.
+
+The feedback qualification executes318 shared command checks and55 model-mounted
+admission/retirement checks per target. Full control journeys pass1683 in measured
+1280/390 browser viewports and1868/1857 native, with clean native heaps. The same
+saved Service monitor passes28 native checks per width, including visible status
+and retained keyboard focus. Its real browser host writes the exact173-byte RAW
+range at both widths and reports an actual activation refusal separately; an
+MCP-built observing Studio preview displays Unavailable. This is browser-driver
+and native widget-message evidence, without physical/assistive-input claims.
 
 ## Saving table workbench action choices
 

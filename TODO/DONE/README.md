@@ -3,6 +3,16 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Ordinary Table Copy feedback](NS-3_collection-copy-feedback_01.md) is accepted
+on2026-10-30. Shared checks pass318 and model-mounted ownership checks55 per
+target. Full controls pass1683 in measured1280/390 browser viewports and1868/1857
+native; the same saved native application passes28 per width. Native heaps are
+clean. Real browser writes retain the exact173-byte RAW range and visible Written;
+actual activation refusal, pending state and observing Studio Unavailable remain
+distinct. Original clipboard, project/history/output choices and fixed listener
+owners are preserved. Return to the original W2 criteria; broader physical/
+assistive/performance requirements remain open without duplicate credit.
+
 [Explicit action adoption](NS-3_collection-action-adoption_01.md) and
 [standard browser Copy input](NS-2_browser-copy-input_01.md) were accepted on
 2026-10-30. Full clipboard controls pass1499 per browser width and1680/1669
@@ -12,7 +22,7 @@ without losing journals or consuming the caller's explicit assignment.
 [Ordinary recovered-edit review](NS-3_collection-recovery_01.md) acceptance is
 restored after that reproduced compatibility regression. Browser1545/1544,
 focused native56/56, shared50 per target and saved native25 per width retain the
-scoped evidence. Parent workflows, visible Copy feedback and broader physical/
+scoped evidence. Parent workflows and broader physical/
 assistive quality remain open; no duplicate completion credit is assigned.
 
 [Generated table output hosts](NS-4_table-output-hosts_01.md) was accepted

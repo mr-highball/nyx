@@ -580,6 +580,12 @@ type
     FFitButtons: array of TNyxCollectionFitButton;
     FColumnsButton: TNyxCollectionColumnButton;
     FRecoveryButton: TNyxCollectionColumnButton;
+    { Grid-owned readonly status surface has no binding/host authority. Its
+      stable caption band is allocated at service admission; text updates never
+      refresh data or move an existing editor. Retirement uses the same frame. }
+    FClipboardStatus: TMemo;
+    FClipboardStatusPending: Boolean;
+    FClipboardStatusSyncing: Boolean;
     FRecoverySyncing: Boolean;
     FRecoveryCountPending: Boolean;
     FColumnsButtonSerial: Integer;
@@ -610,6 +616,10 @@ type
     function PrepareColumnButtonDraft(Sender: TObject): Boolean;
     procedure SynchronizeColumnsButton;
     procedure SynchronizeRecovery;
+    procedure SynchronizeClipboardFeedback;
+    function ClipboardStatusHeight: Integer;
+    function RequiredToolbarHeight(ARecoveryCount: Integer): Integer;
+    procedure ApplyToolbarHeight(AHeight: Integer);
     function RecoveryPresentationReady: Boolean;
     function PrepareRecoveryButton(Sender: TObject): INyxGridColumnButtonCommand;
     procedure RetireColumnsButton;
@@ -860,6 +870,7 @@ type
     function DeferComposingRefresh: Boolean; override;
     procedure RefreshTargetIdle; override;
     procedure RecoveryMembershipChanged(const AObservation: TNyxDraftRecoveryObservation); override;
+    procedure ClipboardFeedbackChanged; override;
     procedure RetireTargetInput; override;
     procedure RenderDataset; override;
     procedure DetachTarget; override;
@@ -1489,20 +1500,29 @@ procedure TNativeMount.RetireColumnsButton;
 var
   LButton: TNyxCollectionColumnButton;
   LRecovery: TNyxCollectionColumnButton;
+  LStatus: TMemo;
   LFrame: INyxNativeGestureFrame;
 begin
   LButton := FColumnsButton;
   LRecovery := FRecoveryButton;
+  LStatus := FClipboardStatus;
   FColumnsButton := nil;
   FRecoveryButton := nil;
+  FClipboardStatus := nil;
+  FClipboardStatusPending := False;
   LFrame := FColumnFrame;
 
-  if (LButton <> nil) or (LRecovery <> nil) then
+  if (LButton <> nil) or (LRecovery <> nil) or (LStatus <> nil) then
   begin
     { Keep both component destructions deferred until all borrowed button/grid
       accesses finish, including any callback-bearing destruction tail. }
     LFrame.Enter;
     try
+
+      if LStatus <> nil then
+      begin
+        LFrame.Retire(LStatus);
+      end;
 
       if LRecovery <> nil then
       begin
@@ -1524,6 +1544,7 @@ begin
 end;
 
 {$include nyx.collections.recovery.lcl.inc}
+{$include nyx.collections.clipboard.feedback.lcl.inc}
 
 procedure TNativeMount.SynchronizeColumnsButton;
 var
@@ -1623,7 +1644,7 @@ begin
       Exit;
     end;
     LWidth := Min(Max(1, FGrid.ClientWidth - Round(8 * LScale)), Round(112 * LScale));
-    LHeight := Max(1, FColumnToolbarHeight - Round(8 * LScale));
+    LHeight := Max(1, FColumnToolbarHeight - ClipboardStatusHeight - Round(8 * LScale));
     LLeft := Round(4 * LScale);
 
     if FGrid.UseRightToLeftAlignment then
@@ -4812,6 +4833,7 @@ begin
     early return. Only register an ordinary wake; never drain/repaint in this tail. }
 
   SynchronizeRecovery;
+  SynchronizeClipboardFeedback;
 
   if ColumnResizeInterrupted(FResizeRequest) then
   begin
@@ -4922,7 +4944,7 @@ begin
     Exit;
   end;
 
-  if not FRecoveryCountPending and
+  if not FRecoveryCountPending and not FClipboardStatusPending and
     (FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending)) and ((FResizeRequest = nil) or
     FResizeRequest.Publishing or FResizeQueued or
     not (FResizeRequest.Retired or FResizeReleased)) then
@@ -4974,6 +4996,18 @@ begin
     end;
   end;
 
+  if FClipboardStatusPending and RecoveryPresentationReady then
+  begin
+    SynchronizeClipboardFeedback;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+    LRequest := FResizeRequest;
+    LRequestLease := FResizeRequestLease;
+  end;
+
   if (LRequest <> nil) and not LRequest.Publishing and not FResizeQueued and
     (LRequest.Retired or FResizeReleased) then
   begin
@@ -5002,7 +5036,7 @@ begin
     { A count-only wake must survive composition/entered input without turning
       into a row refresh. One registration waits for the next ordinary idle. }
 
-    if FRecoveryCountPending and not FDraftRecoveryHeld then
+    if (FRecoveryCountPending or FClipboardStatusPending) and not FDraftRecoveryHeld then
     begin
       Exit;
     end;
@@ -5347,10 +5381,9 @@ begin
     { The launcher belongs to the logical table, never a visible field/pin
       group. Its row-zero band survives all-hidden and narrow presentations. }
 
-    if FColumnManager <> nil then
+    if (FColumnManager <> nil) or HasClipboardFeedback then
     begin
-      FColumnToolbarHeight := Max(Round(36 * LScale),
-        FPreviousDefaultRowHeight + Round(8 * LScale));
+      FColumnToolbarHeight := RequiredToolbarHeight(GetRecoveredEditCount);
       FGrid.RowHeights[0] := FGrid.RowHeights[0] + FColumnToolbarHeight;
       FColumnToolbarApplied := True;
       LOuter.ColumnToolbarHeight := FColumnToolbarHeight;
@@ -8625,7 +8658,9 @@ begin
         begin
           TNyxCollectionStringGrid(FGrid).ObserveContentProjection(nil);
           TNyxCollectionStringGrid(FGrid).ConfigureContentProjection(nil);
+          TNyxCollectionStringGrid(FGrid).ColumnToolbarHeight := 0;
         end;
+        RetireColumnsButton;
 
         if FHasColumnLayout then
         begin
@@ -8647,7 +8682,6 @@ begin
             FEndPane.Revoke;
           end;
           RetireFitButtons;
-          RetireColumnsButton;
           TNyxCollectionStringGrid(FGrid).ColumnToolbarHeight := 0;
 
           if FColumnToolbarApplied then

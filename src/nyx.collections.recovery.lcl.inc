@@ -108,16 +108,11 @@ begin
     LScale := Max(1, LGrid.Font.PixelsPerInch) / 96;
     LToolbar := 0;
 
-    if (FColumnManager <> nil) or (LCount > 0) then
-    begin
-      LToolbar := Round(40 * LScale);
-    end;
+    LToolbar := RequiredToolbarHeight(LCount);
 
     if FColumnToolbarHeight <> LToolbar then
     begin
-      FColumnToolbarHeight := LToolbar;
-      FCustomHeaderApplied := True;
-      ReserveHeader;
+      ApplyToolbarHeight(LToolbar);
 
       if not Current then
       begin
@@ -174,7 +169,7 @@ begin
     end;
     LWidth := Max(1, Min(Round(160 * LScale),
       LGrid.ClientWidth - LLeft - Round(4 * LScale)));
-    LHeight := Max(1, FColumnToolbarHeight - Round(8 * LScale));
+    LHeight := Max(1, FColumnToolbarHeight - ClipboardStatusHeight - Round(8 * LScale));
 
     if LGrid.UseRightToLeftAlignment then
     begin

@@ -101,6 +101,8 @@ type
   TWrite = class(TNyxClipboardWriteRequest)
   private
     FOwner: THost;
+    FOutcome: TNyxClipboardWriteOutcome;
+    FError: TNyxText;
   protected
     procedure EndHost; override;
   public
@@ -116,6 +118,8 @@ type
     Endings: Integer;
     Text: TNyxText;
     InlineCompletion: Boolean;
+    Outcome: TNyxClipboardWriteOutcome;
+    Error: TNyxText;
     ThrowEnd: Boolean;
     OnEnding: TEndingCallback;
     Last: TWrite;
@@ -201,9 +205,15 @@ type
     function GetReadiness: INyxCancellationReadiness;
   end;
 
+  { Controlled feedback callbacks exercise nested attempts and original-input
+    retirement at both presentation frontiers, without a widget or real host. }
+  TFeedbackAction = (faObserve, faNestedPending, faRetirePending,
+    faInvalidatePending, faNestedCompleted);
+
   { Fixture keeps every borrowed receiver alive through explicit cancellation.
     Only the injected host substitutes authority; the view/store/router and
-    immutable producer are the actual library implementations. }
+    immutable producer are the actual library implementations. Its separate
+    feedback capture neither replaces nor owns the legacy application observer. }
   TFixture = class
   public
     Key: TNyxCollectionRef;
@@ -230,6 +240,8 @@ type
     IdentityReplies: Integer;
     IdentityValue: INyxCollectionIdentityText;
     ThrowIdentity: Boolean;
+    FeedbackValues: array of TNyxCollectionClipboardFeedback;
+    FeedbackAction: TFeedbackAction;
     constructor Create(ADisplay: Boolean = False);
     destructor Destroy; override;
     function Readiness: INyxCancellationReadiness;
@@ -248,6 +260,7 @@ type
       const AChanges: INyxCollectionChanges);
     procedure Identities(const AValue: INyxCollectionIdentityText;
       const AResult: TNyxClipboardWriteResult);
+    procedure FeedbackReceived(const AFeedback: TNyxCollectionClipboardFeedback);
   end;
 
   { Foreign representation getters can synchronously run an application action.
@@ -446,6 +459,8 @@ end;
 procedure TWrite.Start(AOwner: THost);
 begin
   FOwner := AOwner;
+  FOutcome := AOwner.Outcome;
+  FError := AOwner.Error;
   RetainPending;
 end;
 
@@ -474,7 +489,15 @@ end;
 
 procedure TWrite.Finish;
 begin
-  Complete(ncwoWritten, FByteCount, '', nctrExactUTF8);
+
+  if FOutcome = ncwoWritten then
+  begin
+    Complete(ncwoWritten, FByteCount, '', nctrExactUTF8);
+  end
+  else
+  begin
+    Complete(FOutcome, 0, FError);
+  end;
 end;
 
 function THost.BeginWriteText(const AText: TNyxText;
@@ -561,7 +584,7 @@ begin
   Events := NewNyxEvents(Scheduler);
   Commands := NewNyxCollectionClipboardCommands(View, InputLease, Events,
     HostLease, Scheduler, TNyxCollectionClipboardOptions.Defaults,
-    {$ifdef PAS2JS}@{$endif}Readiness);
+    {$ifdef PAS2JS}@{$endif}Readiness, {$ifdef PAS2JS}@{$endif}FeedbackReceived);
   Commands.Observe({$ifdef PAS2JS}@{$endif}Reply);
 end;
 
@@ -651,8 +674,18 @@ procedure TFixture.Reply(const APayload: INyxCollectionClipboardText;
 begin
   Inc(Replies);
   LastPayload := APayload;
-  Check((AResult.Outcome = ncwoWritten) and
-    (AResult.ByteCount = APayload.ByteCount), 'observer receives original exact payload/result');
+
+  if Host.Outcome = ncwoWritten then
+  begin
+    Check((AResult.Outcome = ncwoWritten) and
+      (AResult.ByteCount = APayload.ByteCount), 'observer receives original exact payload/result');
+  end
+  else
+  begin
+    Check((AResult.Outcome = Host.Outcome) and (AResult.ByteCount = 0) and
+      (AResult.Representation = nctrNone) and (AResult.Error = Host.Error),
+      'observer receives the original exact nonwriting outcome without invented bytes');
+  end;
 
   if RevokeReply then
   begin
@@ -662,6 +695,43 @@ begin
   if ThrowReply then
   begin
     raise Exception.Create('intentional inline observer failure');
+  end;
+end;
+
+procedure TFixture.FeedbackReceived(const AFeedback: TNyxCollectionClipboardFeedback);
+var
+  LAction: TFeedbackAction;
+  LNested: INyxCollectionClipboardCommand;
+begin
+  SetLength(FeedbackValues, Length(FeedbackValues) + 1);
+  FeedbackValues[High(FeedbackValues)] := AFeedback;
+  LAction := FeedbackAction;
+
+  if ((AFeedback.Phase = nccpPending) and
+      (LAction in [faNestedPending, faRetirePending, faInvalidatePending])) or
+    ((AFeedback.Phase = nccpCompleted) and (LAction = faNestedCompleted)) then
+  begin
+    FeedbackAction := faObserve;
+    case LAction of
+      faNestedPending, faNestedCompleted:
+        begin
+          LNested := Cell;
+          LNested.Complete(True);
+        end;
+      faRetirePending:
+        begin
+          Commands.Revoke;
+        end;
+      faInvalidatePending:
+        begin
+          Inc(Input.EpochValue);
+          Inc(Input.Mutation);
+        end;
+      faObserve:
+        begin
+          { Passive capture never enters the controller again. }
+        end;
+    end;
   end;
 end;
 
@@ -682,7 +752,7 @@ begin
   Commands.Revoke;
   Commands := NewNyxCollectionClipboardCommands(View, InputLease, Events,
     HostLease, Scheduler, TNyxCollectionClipboardOptions.Defaults.AllowOnly(AActions),
-    {$ifdef PAS2JS}@{$endif}Readiness);
+    {$ifdef PAS2JS}@{$endif}Readiness, {$ifdef PAS2JS}@{$endif}FeedbackReceived);
   Commands.Observe({$ifdef PAS2JS}@{$endif}Reply);
 end;
 
@@ -2938,6 +3008,136 @@ begin
   end;
 end;
 
+procedure FeedbackChecks;
+const
+  CDiagnostic: TNyxText = 'Provider detail 🌙' + #0 + #13#10 + 'Keep the original reason.';
+var
+  LFixture: TFixture;
+  LCommand: INyxCollectionClipboardCommand;
+  LSource: INyxCollectionSnapshot;
+  LSelection: TNyxCollectionSelectionSnapshot;
+  LOutcome: TNyxClipboardWriteOutcome;
+  LAction: TFeedbackAction;
+  LFeedback: TNyxCollectionClipboardFeedback;
+  LBefore: Integer;
+  LFailed: Boolean;
+begin
+  for LOutcome := Low(TNyxClipboardWriteOutcome) to High(TNyxClipboardWriteOutcome) do
+  begin
+    LFixture := TFixture.Create;
+    try
+      LFixture.Host.Outcome := LOutcome;
+
+      if LOutcome <> ncwoWritten then
+      begin
+        LFixture.Host.Error := CDiagnostic;
+      end;
+      LSource := LFixture.Store.Snapshot;
+      LSelection := LFixture.View.Selection.Snapshot;
+      LCommand := LFixture.Cell;
+      LCommand.Complete(True);
+      Check((Length(LFixture.FeedbackValues) = 2) and
+        (LFixture.FeedbackValues[0].Phase = nccpPending) and
+        (LFixture.FeedbackValues[1].Phase = nccpCompleted) and
+        (LFixture.FeedbackValues[0].Serial = LFixture.FeedbackValues[1].Serial),
+        'one original admitted write publishes Pending then its exact terminal feedback');
+      LFeedback := LFixture.FeedbackValues[1];
+      Check((LFeedback.Result.Outcome = LOutcome) and
+        (LFeedback.Result.Error = LFixture.Host.Error) and
+        (LFixture.Replies = 1) and (LFixture.Host.Writes = 1),
+        'all six outcomes preserve exact diagnostics and the independent application observer');
+      Check((LFixture.Store.Snapshot = LSource) and
+        LFixture.View.Selection.Snapshot.SameState(LSelection) and
+        (LFixture.Input.EpochValue = 1),
+        'feedback has no source, row-selection or input-epoch side effect');
+      LFixture.Host.InlineCompletion := False;
+      LCommand := LFixture.Cell;
+      LCommand.Complete(True);
+      LFeedback := LFixture.FeedbackValues[High(LFixture.FeedbackValues)];
+      Check((LFeedback.Phase = nccpPending) and
+        (NyxCollectionClipboardFeedbackText(LFeedback) = 'Copying to clipboard...'),
+        'a newer pending attempt cannot silently retain an earlier success or refusal');
+      LFixture.Commands.CancelPending;
+      LFeedback := LFixture.FeedbackValues[High(LFixture.FeedbackValues)];
+      LBefore := Length(LFixture.FeedbackValues);
+      LFixture.Host.Last.Finish;
+      Check((LFeedback.Phase = nccpCancelled) and (LFixture.Replies = 1) and
+        (Length(LFixture.FeedbackValues) = LBefore) and
+        (NyxCollectionClipboardFeedbackText(LFeedback) = 'Copy completion was interrupted.'),
+        'silent receiver cancellation withdraws Pending without inventing a host result or late update');
+    finally
+      LCommand := nil;
+      LFixture.Free;
+    end;
+  end;
+  for LAction := faNestedPending to faNestedCompleted do
+  begin
+    LFixture := TFixture.Create;
+    try
+      LFixture.FeedbackAction := LAction;
+      LCommand := LFixture.Cell;
+      LCommand.Complete(True);
+      LFeedback := LFixture.FeedbackValues[High(LFixture.FeedbackValues)];
+      case LAction of
+        faNestedPending:
+          begin
+            Check((LFixture.Host.Writes = 1) and (LFixture.Replies = 1) and
+              (LFeedback.Phase = nccpCompleted) and
+              (LFeedback.Serial > LFixture.FeedbackValues[0].Serial),
+              'nested pending feedback admits only the newer original host request');
+          end;
+        faRetirePending:
+          begin
+            Check((LFixture.Host.Writes = 0) and (LFixture.Replies = 0) and
+              (Length(LFixture.FeedbackValues) = 1),
+              'retirement during Pending detaches the receiver before any host effect');
+          end;
+        faInvalidatePending:
+          begin
+            Check((LFixture.Host.Writes = 0) and (LFixture.Replies = 0) and
+              (LFeedback.Phase = nccpCancelled),
+              'input invalidation during presentation refuses before host entry');
+          end;
+        faNestedCompleted:
+          begin
+            Check((LFixture.Host.Writes = 2) and (LFixture.Replies = 2) and
+              (LFeedback.Phase = nccpCompleted) and
+              (LFeedback.Serial > LFixture.FeedbackValues[0].Serial),
+              'a completed callback cannot replace a newer nested outcome on return');
+          end;
+        faObserve:
+          begin
+            { The loop covers the four active reentrant cases. }
+          end;
+      end;
+    finally
+      LCommand := nil;
+      LFixture.Free;
+    end;
+  end;
+  LFixture := TFixture.Create;
+  try
+    LFixture.ThrowReply := True;
+    LCommand := LFixture.Cell;
+    LFailed := False;
+    try
+      LCommand.Complete(True);
+    except
+      on Exception do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LFixture.Replies = 1) and (LFixture.Host.Writes = 1) and
+      (Length(LFixture.FeedbackValues) = 2) and
+      (LFixture.FeedbackValues[1].Phase = nccpCompleted),
+      'a throwing application observer keeps its original exception and one visible terminal receipt');
+  finally
+    LCommand := nil;
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     Run;
@@ -2955,6 +3155,7 @@ begin
     MountedRangeReentry;
     MountedPointerAdmission;
     MountedStrokeAdmission;
+    FeedbackChecks;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-collection-clipboard-commands', 'passed');
     document.body.setAttribute('data-collection-clipboard-command-checks', IntToStr(GChecks));

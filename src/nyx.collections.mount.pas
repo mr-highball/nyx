@@ -304,10 +304,12 @@ type
     Recovery review borrows its managed actions only during UI entry and hands
     queued presentation independent input flags rather than a mount callback.
     Automatic presenters are replaceable defaults; the first explicit assignment
-    retains its original one-time meaning and never replaces journal ownership. }
+    retains its original one-time meaning and never replaces journal ownership.
+    Clipboard feedback is copied presentation state with a separately borrowed
+    receiver, never the application's completion-observer slot. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
-    INyxCollectionInputPreparation,
+    INyxCollectionInputPreparation, INyxCollectionClipboardFeedbackMount,
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
     INyxCollectionCellActionDefaultsMount,
@@ -345,6 +347,10 @@ type
     { A host/scheduler callback cannot install another clipboard controller
       while the exact original runtime authority is being configured. }
     FConfiguringClipboard: Boolean;
+    FClipboardFeedback: TNyxCollectionClipboardFeedback;
+    FClipboardFeedbackEnabled: Boolean;
+    procedure ClipboardFeedbackReceived(const AFeedback: TNyxCollectionClipboardFeedback);
+  private
     { Range enablement may read a foreign view; recursive configuration cannot
       replace a newer mode while the original entry is still inspecting it. }
     FConfiguringCellRange: Boolean;
@@ -563,6 +569,11 @@ type
       defer while its existing physical input frame is busy; never Refresh the
       view or change source/selection merely to update a journal caption. }
     procedure RecoveryMembershipChanged(const AObservation: TNyxDraftRecoveryObservation); virtual;
+    { Presentation only. Prepare stable target space at service admission;
+      later outcomes change text without row refresh, focus or input epochs.
+      Exceptions become mount diagnostics and cannot swallow caller completion. }
+    procedure ClipboardFeedbackChanged; virtual;
+    function HasClipboardFeedback: Boolean;
     { Admit target observation before the first authored/runtime presentation
       pass. A target may refuse unsupported direct mounts; failure does not
       claim activation or make an old physical surface authoritative. }
@@ -624,6 +635,9 @@ type
       const AEvents: INyxEvents; const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionClipboardOptions);
     function GetClipboardCommands: INyxCollectionClipboardCommands;
+    function GetClipboardFeedback: TNyxCollectionClipboardFeedback;
+    function GetClipboardFeedbackEnabled: Boolean;
+    procedure SetClipboardFeedbackEnabled(AEnabled: Boolean);
     procedure ConfigureCellRange(AEnabled: Boolean);
     function SelectCells(const AAnchor, AFocus: TNyxCollectionCellIdentity): Boolean;
     procedure ClearCellRange;
@@ -2801,6 +2815,71 @@ begin
   Result := FClipboardCommands;
 end;
 
+function TNyxCollectionMountBase.GetClipboardFeedback: TNyxCollectionClipboardFeedback;
+begin
+  Result := FClipboardFeedback;
+end;
+
+function TNyxCollectionMountBase.GetClipboardFeedbackEnabled: Boolean;
+begin
+  Result := FClipboardFeedbackEnabled;
+end;
+
+function TNyxCollectionMountBase.HasClipboardFeedback: Boolean;
+begin
+  Result := (FClipboardCommands <> nil) and (FClipboardOptions.Actions <> []);
+end;
+
+procedure TNyxCollectionMountBase.SetClipboardFeedbackEnabled(AEnabled: Boolean);
+var
+  LLease: INyxCollectionMount;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if FClipboardFeedbackEnabled = AEnabled then
+  begin
+    Exit;
+  end;
+  FClipboardFeedbackEnabled := AEnabled;
+  ClipboardFeedbackReceived(FClipboardFeedback);
+end;
+
+procedure TNyxCollectionMountBase.ClipboardFeedbackChanged;
+begin
+  { Alternative targets retain copied state without claiming a visual surface. }
+end;
+
+procedure TNyxCollectionMountBase.ClipboardFeedbackReceived(
+  const AFeedback: TNyxCollectionClipboardFeedback);
+var
+  LLease: INyxCollectionMount;
+  LValue: TNyxCollectionClipboardFeedback;
+  LFailure: TMountCleanupFailure;
+begin
+  LLease := Self as INyxCollectionMount;
+  LValue := AFeedback;
+
+  if not FConnected or FDisconnecting or not InputLifetimeCurrent or
+    (LValue.Serial < FClipboardFeedback.Serial) then
+  begin
+    Exit;
+  end;
+  FClipboardFeedback := LValue;
+  LFailure := Default(TMountCleanupFailure);
+  try
+    ClipboardFeedbackChanged;
+  except
+    {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
+    {$else}on E: Exception do CaptureMountCleanup(LFailure, TNyxText(E.Message));{$endif}
+  end;
+
+  if LFailure.Captured then
+  begin
+    FFailure := nbfNotificationFailed;
+    FError := LFailure.Message;
+  end;
+end;
+
 function TNyxCollectionMountBase.GetExportCommands: INyxCollectionExportCommands;
 begin
   Result := FExportCommands;
@@ -3171,7 +3250,8 @@ begin
     TCollectionInputState(FInputStateObject).InteractionEnabled(FEnabled);
     try
       LCommands := NewNyxCollectionClipboardCommands(LView, LInput, LEvents,
-        LHost, LScheduler, LOptions, PrepareClipboardInput);
+        LHost, LScheduler, LOptions, PrepareClipboardInput,
+        {$ifdef PAS2JS}@{$endif}ClipboardFeedbackReceived);
       Current;
 
       if FCellActionsDefault then
@@ -3190,6 +3270,9 @@ begin
         FCellActions := LCandidate;
         RetireAdoptedCellActions(LPrevious);
       end;
+      { Presentation may reenter or retire the mount. Every managed owner is
+        already installed; no later assignment may resurrect a retired default. }
+      ClipboardFeedbackReceived(FClipboardFeedback);
     except
 
       if (LCommands <> nil) and (FClipboardCommands = LCommands) then
@@ -3471,6 +3554,7 @@ begin
   FView := AView;
   FRecoveryPolicy := AView.Spec.DraftRecoveryPolicy;
   FEnabled := True;
+  FClipboardFeedbackEnabled := True;
   LTable := AView.Projection = cpTable;
   FHasColumnLayout := LTable and AView.Spec.HasLayoutControls;
   FHasTablePresentation := LTable and AView.Spec.HasPresentationPolicy;
