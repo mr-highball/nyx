@@ -1545,8 +1545,17 @@ begin
     if AScenario in [tsWrongAcknowledgement, tsMalformedAcknowledgement,
       tsServerErrorAcknowledgement] then
     begin
+      { A compiler/operation deadline can end before the injected reply is ever
+        reached. Preserve that failure instead of mislabelling it as a broken
+        acknowledgement. The real publication requirement remains mandatory. }
+      Check(LTransport.Completions = 1,
+        'acknowledgement scenario reached one real publication: scenario=' +
+        TNyxText(IntToStr(Ord(AScenario))) + ', completions=' +
+        TNyxText(IntToStr(LTransport.Completions)) + ', state=' +
+        TNyxText(IntToStr(Ord(LJourney.Commands.State))) + ', detail=' +
+        LJourney.Commands.Message);
       LRemote := DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText);
-      Check((LTransport.Completions = 1) and (LRemote.Source = GSource) and
+      Check((LRemote.Source = GSource) and
         (LRemote.Design = ExpectedNyxProjectionDesign),
         'wrong/malformed acknowledgement can follow a real committed server result');
       Check((LJourney.Session.Source = LBefore.Source) and
@@ -1711,9 +1720,12 @@ begin
   LProfile := nil;
   try
 
-    if (ParamCount <> 3) or DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
+    if ((ParamCount <> 3) and ((ParamCount <> 4) or
+      (ParamStr(4) <> '--native-server-error'))) or
+      DirectoryExists(ParamStr(3)) or FileExists(ParamStr(3)) then
     begin
-      raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
+      raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime; ' +
+        'optional --native-server-error selects only that diagnostic case');
     end;
     GDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
       .RunningIn(ParamStr(3)).EnrollingProject(ParamStr(3));
@@ -1724,24 +1736,44 @@ begin
     LProfile.SetField('pas2js', LTools.Field('PAS2JS').AsText);
     LProfile.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
     GProfile := LProfile.Encode;
-    for LScenario := Low(TScenario) to High(TScenario) do
+
+    if ParamCount = 3 then
     begin
-      Run(LScenario);
-    end;
-    Run(ssNormal, True);
-    for LVisualScenario := Low(TVisualScenario) to High(TVisualScenario) do
+      { The default command retains every original scenario and assertion.
+        Focused diagnosis never substitutes for this complete acceptance run. }
+      for LScenario := Low(TScenario) to High(TScenario) do
+      begin
+        Run(LScenario);
+      end;
+      Run(ssNormal, True);
+      for LVisualScenario := Low(TVisualScenario) to High(TVisualScenario) do
+      begin
+        RunVisual(LVisualScenario);
+      end;
+      for LTransportScenario := Low(TTransportScenario) to High(TTransportScenario) do
+      begin
+        WriteLn('Qualifying real native provider scenario ', Ord(LTransportScenario));
+        Flush(Output);
+        RunNativeProvider(LTransportScenario);
+      end;
+    end
+    else
     begin
-      RunVisual(LVisualScenario);
-    end;
-    for LTransportScenario := Low(TTransportScenario) to High(TTransportScenario) do
-    begin
-      WriteLn('Qualifying real native provider scenario ', Ord(LTransportScenario));
+      WriteLn('Focused real native server-error acknowledgement; full regression not run');
       Flush(Output);
-      RunNativeProvider(LTransportScenario);
+      RunNativeProvider(tsServerErrorAcknowledgement);
     end;
     GBuild := nil;
     FreeAndNil(LProfile);
-    WriteLn('PASS ', GChecks, ' actual native shared source queue/bridge coordination checks');
+
+    if ParamCount = 3 then
+    begin
+      WriteLn('PASS ', GChecks, ' actual native shared source queue/bridge coordination checks');
+    end
+    else
+    begin
+      WriteLn('PASS ', GChecks, ' focused native server-error checks; full regression not run');
+    end;
   except
     on LException: Exception do
     begin

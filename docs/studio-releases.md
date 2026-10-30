@@ -39,7 +39,14 @@ Prepare a complete backend/browser candidate without replacing a running Studio:
 ./tools/build.ps1 -Target studio-release -ReleaseOutput build/studio-release/candidate
 ```
 
-The destination must be new. The Pascal packager first copies owned `src/` and
+The destination must be new. Compiler/tool intermediates use the configured
+`NYX_SCRATCH_ROOT` or private `SCRATCH_ROOT`, consistently with ordinary Studio
+builds; the explicit `-ReleaseOutput` still determines the final bundle location.
+Point both locations and the private `TEMP_ROOT` at the external scratch volume.
+With no configured scratch root, intermediates retain the repository's
+`build/studio-release` default. Keep machine-specific paths out of commits.
+
+The Pascal packager first copies owned `src/` and
 `studio/` Pascal units/includes/programs into a frozen snapshot. The backend,
 browser Studio, independent source worker and preview program are compiled from
 that snapshot. The two production HTML hosts, matched pas2js runtime and MIT

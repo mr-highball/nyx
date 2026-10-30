@@ -152,8 +152,9 @@ passes the same desktop/compact exact-pair and ordinary Undo/Redo journey, follo
 by Apply and its own compiled application at both widths. Import checking and
 source-queue cancellation are repaired; native embedding Load keeps fresh history,
 and its original source-workspace regression passes86 with a clean heap. The
-full native shared-provider gate still encounters the original compiler deadline
-before its constructor/Open case. Resolve that same consumer's qualification,
+full native shared-provider run now passes its real ordinary Open/history case
+and later reaches a compiler deadline before its server-error acknowledgement
+case publishes. Resolve that same consumer's qualification,
 then finish owned-history restoration and matched delivery. Broader authoring
 acceptance remains open; stop equivalent chrome/source fixture variants.
 

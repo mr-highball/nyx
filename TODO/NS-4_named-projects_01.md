@@ -96,7 +96,11 @@ target, direct native queue/journal checks pass50, and the unchanged full native
 source-workspace regression passes86 after restoring programmatic Load history.
 Native checked heaps are clean for those accepted runs. Two full shared-command
 runs hit the existing compiler time limit before their real native provider/Open
-case; those failures remain. Finish that affected consumer, final preservation
+case; those failures remain. A subsequent full run passes the real ordinary
+native Open/history case and provider scenarios1..6, then fails before publication
+in scenario7 with a clean heap. The injected acknowledgement has not yet occurred;
+do not misclassify that compiler/operation failure as an acknowledgement defect.
+Finish that affected consumer, final preservation
 checks and the matched delivery before task acceptance. WORK owns current runs,
 source identities and evidence; the parent criteria remain open.
 

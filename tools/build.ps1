@@ -3428,6 +3428,12 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       throw 'Release output already exists; select a new -ReleaseOutput directory.'
     }
     $nyxReleaseBuild = Join-Path $nyxRoot 'build/studio-release'
+
+    # Release tools/intermediates obey the same private scratch selection as
+    # ordinary Studio builds. The caller's final ReleaseOutput stays explicit.
+    if ($nyxScratchRoot) {
+      $nyxReleaseBuild = Join-Path ([IO.Path]::GetFullPath($nyxScratchRoot)) 'studio-release'
+    }
     $nyxReleaseTool = Join-Path $nyxReleaseBuild 'tool'
     $nyxReleaseServerUnits = Join-Path $nyxReleaseBuild 'server-units'
     New-Item -ItemType Directory -Force $nyxReleaseTool, $nyxReleaseServerUnits,

@@ -11,7 +11,9 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Studio named Save/Open authoring return — 2026-10-30
 
-Previous goal turn: PROGRESS.59f43f37 is pushed and remote-verified. Root remains
+Previous goal turn: PROGRESS. The focused native acknowledgement case now passes
+without increasing the original deadline; the following full sequence still
+fails its compiler budget, as recorded below. ab4dbb22 is pushed and remote-verified. Root remains
 SOLO. Return to Studio-slice criterion3 and full-authoring criteria2/5 using the
 same existing owned QA Workshop copy. Inspect bounded semantic context, retain
 the exact initial pair, then exercise actual design/Pascal edits, pending draft,
@@ -23,6 +25,60 @@ Save/Open and source-workspace acceptance remain supporting evidence, not new
 credit for repeating them. Do not expand resolver, JSON/profile or chrome-only
 variants. New private runners, artifacts and owned TEMP/TMP stay on E: in
 studio-authoring-return-01. Original acceptance scope and prerequisites remain.
+
+Current bounded batch: diagnose the existing native constructor deadline in the
+same maintained saved-project consumer. No compiler/test process is live at entry;
+both serving processes remain independent frozen builds. Observe one unchanged
+run's actual compiler CPU, I/O and source progress under the existing60000ms
+limit, then select a concrete repair or return to the full shared Open gate.
+Stop this diagnostic after its first compiler observation; do not create another
+fixture/profile family or infer performance from successful compilation alone.
+Sources remain stable while that owned reader is active. Free memory/disk are
+observed available; they are not an identified cause or a request for cleanup.
+
+The unchanged current-source direct saved-project regression now passes50 with
+all2210726 blocks freed. Its five native compilations take16.7/14.8/16.2/15.8/15.9s
+under the original60000ms limit. One bounded first-compiler observation records
+real CPU/I/O and68-to188 unit progress; it shows useful compiler work and a normal
+completion, not a diagnosis of the earlier intermittent stalls. No deadline,
+quota, assertion, compiler source or product implementation changed for this pass.
+That diagnostic is finished. The maintained full shared-provider regression in
+open-native-shared-03 is terminal-failed later in native scenario7. The ordinary
+native provider/Open case and scenarios1..6 pass; all46729895 blocks are freed.
+The failed case never reaches its injected server-error acknowledgement: its
+compiler log ends during unit compilation before publication. This is not evidence
+of a malformed-acknowledgement product defect. The original60000ms limits remain.
+The maintained consumer now reports whether real publication was reached before
+checking the unchanged exact-result assertions. Its optional focused selector
+runs the same scenario7 for diagnosis, explicitly without claiming the full gate.
+The focused reader in open-native-ack-04 passes all4 unchanged semantic checks,
+with all1515092 blocks freed, after30.6s total. Bounded compiler/disk observations
+are retained; they do not establish the cause of intermittent earlier stalls.
+Its owner is joined. The full original scenario sequence then fails the original
+compiler budget before its first constructor executes, with all568708 blocks freed.
+Its owner is also joined; no compiler/test reader remains. One contemporaneous
+Windows disk counter reports roughly4.18s per E: write, without establishing that
+this caused the failed compile. Preserve the results and stop equivalent full
+reruns; compiler throughput remains an open measured-performance qualification.
+The focused pass and earlier ordinary native Open/history pass are independent
+evidence, not full acceptance or a reason to weaken any deadline/assertion.
+
+The next semantic restoration attempt cannot connect to the QA endpoint. Direct
+OS inspection confirms both previously retained QA/LAN process handles and their
+listeners are absent, rather than merely slow. No restart/replacement has run in
+this continuation, and the cause is not identified. Their durable runtime roots
+remain present. Both readers are now joined. Before restarting the existing fixed
+slots,109 durable files are copied and hash-verified (QA27, LAN82); executable
+hashes still equal the recorded versions. Those same binaries now restart with
+the same ports, roots, enrollment and existing access. Recovery and semantic pair
+comparisons remain to be completed before any new payload rollout.
+
+Preparing its existing matched-delivery return finds that the release target's
+private compiler/tool intermediates ignore configured SCRATCH_ROOT. A disjoint
+orchestration fix makes that target use the same configured scratch selection as
+ordinary Studio builds while preserving the explicit final ReleaseOutput. Script
+parsing passes. The regression readers are joined before actual preparation,
+so release compiler/storage load cannot interfere with that native observation.
 
 Current continuation: finish the same named-project owner through shared
 compiler-backed Open, on both adapters, without weakening the file boundary.
