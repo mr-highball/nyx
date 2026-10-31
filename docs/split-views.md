@@ -76,6 +76,14 @@ authored percentage. A caller can deliberately change the authored configuration
 and replace the mount with `Render`; that replacement uses the newly configured
 position. Interactive resizing does not rewrite the authored document.
 
+The public browser control regression exercises repeated gestures on both axes,
+including opposite-axis nested panes and a continued drag after an in-place
+`Sync`. It checks release, late capture-loss notification, host reflow, retained
+Unicode drafts/ranges/focus, ordinary child input and explicit replacement.
+These are synthesized DOM events in a real browser, separate from the native
+window-message regression. Trusted browser capture and physical-device evidence
+remain tracked by the [open regression](../TODO/NS-2_split-platform_02.md).
+
 The divider also publishes the complete typed focus and keyboard family.
 Sequential before/main key hooks run before the platform resizing default and
 may consume it; after hooks observe Nyx dispatch. `FocusFor` borrows the grip

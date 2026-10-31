@@ -432,7 +432,232 @@ begin
   end;
 end;
 
-{$ifndef PAS2JS}
+{$ifdef PAS2JS}
+{ Borrow actual DOM faces from the public renderer, never its private binding or
+  gesture state. Each axis also contains an opposite-axis split: continuing the
+  same pointer after Sync proves the gesture survives, rather than only checking
+  a static percentage. Synthetic input does not obtain trusted browser capture. }
+procedure RunBrowserAxisCases(AOrientation: TNyxSplitOrientation);
+var
+  LDocument: TNyxDocument;
+  LHost: TJSHTMLElement;
+  LSink: TSink;
+  LOuter: TJSHTMLElement;
+  LGrip: TJSHTMLElement;
+  LNestedControl: INyxSplitView;
+  LNestedOrientation: TNyxSplitOrientation;
+  LInput: TJSHTMLTextAreaElement;
+  LWire: TNyxText;
+  LOuterPosition: Integer;
+  LNestedPosition: Integer;
+  LCount: Integer;
+  LX: Double;
+  LY: Double;
+  LWidth: Double;
+  LHeight: Double;
+
+  function GripFor(const AID: TNyxText): TJSHTMLElement;
+  begin
+    { Each split owns its direct middle child. A descendant separator query
+      would accidentally choose the nested split inside the first pane. }
+    Result := TJSHTMLElement(LSink.Renderer.ElementFor(AID).children[1]);
+  end;
+
+  function PositionFor(const AID: TNyxText): Integer;
+  begin
+    Result := StrToInt(GripFor(AID).getAttribute('data-requested-position'));
+  end;
+
+  procedure DragAndKeep(const AID: TNyxText;
+    AAxis: TNyxSplitOrientation; ADelta: Integer);
+  var
+    LSplit: TJSHTMLElement;
+    LHandle: TJSHTMLElement;
+    LBefore: Integer;
+    LAccepted: Integer;
+    LEvents: Integer;
+    LX: Double;
+    LY: Double;
+    LContinuation: Integer;
+  begin
+    LSplit := LSink.Renderer.ElementFor(AID);
+    LHandle := GripFor(AID);
+    LBefore := PositionFor(AID);
+    LEvents := LSink.Count;
+    LX := LHandle.getBoundingClientRect.left + 12;
+    LY := LHandle.getBoundingClientRect.top + 12;
+    Pointer(LHandle, 'pointerdown', LX, LY);
+    Check((PositionFor(AID) = LBefore) and (LSink.Count = LEvents),
+      'either browser axis starts without a jump or completed change');
+    LContinuation := 12;
+
+    if ADelta < 0 then
+    begin
+      LContinuation := -LContinuation;
+    end;
+
+    if AAxis = nsoStacked then
+    begin
+      LY := LY + ADelta;
+    end
+    else
+    begin
+      LX := LX + ADelta;
+    end;
+    Pointer(LHandle, 'pointermove', LX, LY);
+    LAccepted := PositionFor(AID);
+    Check(LAccepted <> LBefore, 'either browser axis follows the moving pointer');
+    LSink.Renderer.Sync;
+    Check((LSink.Renderer.ElementFor(AID) = LSplit) and
+      (GripFor(AID) = LHandle) and (PositionFor(AID) = LAccepted),
+      'in-drag Sync retains the split, divider and requested percentage');
+
+    if AAxis = nsoStacked then
+    begin
+      LY := LY + LContinuation;
+    end
+    else
+    begin
+      LX := LX + LContinuation;
+    end;
+    Pointer(LHandle, 'pointermove', LX, LY);
+    Check(PositionFor(AID) <> LAccepted,
+      'the same pointer continues its gesture after ordinary Sync');
+    LAccepted := PositionFor(AID);
+    Pointer(LHandle, 'pointerup', LX, LY);
+    Pointer(LHandle, 'lostpointercapture', LX, LY);
+    Check((PositionFor(AID) = LAccepted) and (LSink.Count = LEvents + 1),
+      'release commits once and subsequent capture loss cannot undo it');
+    LSink.Renderer.Sync;
+    Check((LSink.Renderer.ElementFor(AID) = LSplit) and
+      (PositionFor(AID) = LAccepted) and
+      (StrToInt(LSink.Renderer.Root.Find(AID).Prop('split-position')) = LAccepted),
+      'post-release Sync retains the accepted view and runtime percentage');
+    Check((LAccepted >= 10) and (LAccepted <= 90),
+      'every accepted axis gesture stays inside the configured bounds');
+  end;
+
+begin
+  LDocument := CreateNyxSplitFixture;
+  LHost := TJSHTMLElement(document.createElement('div'));
+  LHost.style.cssText := 'width:100%;height:650px;';
+  document.body.appendChild(LHost);
+  LSink := TSink.Create;
+  LSink.Renderer := TNyxBrowserRenderer.Create;
+  try
+    LDocument.Find('work-split').Configure.ForPlatform(npfBrowser)
+      .SplitOrientation(AOrientation).SplitResizable(True);
+    LNestedOrientation := nsoStacked;
+
+    if AOrientation = nsoStacked then
+    begin
+      LNestedOrientation := nsoSideBySide;
+    end;
+    LNestedControl := NewNyxSplitView('nested-split');
+    LNestedControl.Configure.SplitOrientation(LNestedOrientation).SplitPosition(50)
+      .SplitMinimum(10).SplitMaximum(90).Height(160).Done;
+    LNestedControl.Add(NewNyxColumn('nested-first'));
+    LNestedControl.Add(NewNyxColumn('nested-second'));
+    LDocument.Find('first-pane').Add(LNestedControl);
+    LWire := TNyxCodec.Encode(LDocument);
+    LSink.Renderer.OnEvent := @LSink.Event;
+    LSink.Renderer.Render(LDocument, LDocument.Pages[0], LHost);
+    LOuter := LSink.Renderer.ElementFor('work-split');
+    Check((GripFor('work-split').getAttribute('role') = 'separator') and
+      (GripFor('nested-split').getAttribute('role') = 'separator') and
+      (GripFor('work-split').getAttribute('aria-orientation') <>
+        GripFor('nested-split').getAttribute('aria-orientation')),
+      'nested opposite-axis splits expose independent semantic separators');
+    LInput := TJSHTMLTextAreaElement(LSink.Renderer.ElementFor('second-pane').querySelector('textarea'));
+    LInput.value := 'A 🌙 retained browser draft';
+    LInput.focus;
+    LInput.selectionStart := 5;
+    LInput.selectionEnd := 13;
+    DragAndKeep('work-split', AOrientation, -32);
+    DragAndKeep('work-split', AOrientation, 40);
+    DragAndKeep('work-split', AOrientation, -24);
+    LOuterPosition := PositionFor('work-split');
+    DragAndKeep('nested-split', LNestedOrientation, -16);
+    DragAndKeep('nested-split', LNestedOrientation, 24);
+    LNestedPosition := PositionFor('nested-split');
+    Check(PositionFor('work-split') = LOuterPosition,
+      'nested browser gestures leave the outer preference independent');
+    LWidth := LOuter.getBoundingClientRect.width;
+    LHeight := LOuter.getBoundingClientRect.height;
+    LHost.style.setProperty('width', 'calc(100% - 32px)');
+    LSink.Renderer.Root.Find('work-split').Configure.Height(520);
+    LSink.Renderer.Sync;
+    Check((LOuter.getBoundingClientRect.width < LWidth) and
+      (LOuter.getBoundingClientRect.height > LHeight),
+      'browser reflow changes actual allocation along both axes');
+    Check((PositionFor('work-split') = LOuterPosition) and
+      (PositionFor('nested-split') = LNestedPosition),
+      'host reflow preserves independent outer and nested preferences');
+    Check((LSink.Renderer.ElementFor('second-pane').querySelector('textarea') = LInput) and
+      (LInput.value = 'A 🌙 retained browser draft') and
+      (LInput.selectionStart = 5) and (LInput.selectionEnd = 13) and
+      (document.activeElement = LInput),
+      'repeated axis gestures and Sync retain the memo, Unicode draft, range and focus');
+    LCount := LSink.Count;
+    Pointer(LInput, 'pointerdown', 5, 5);
+    Pointer(LInput, 'pointermove', 20, 10);
+    Pointer(LInput, 'pointerup', 20, 10);
+    Check((PositionFor('work-split') = LOuterPosition) and
+      (PositionFor('nested-split') = LNestedPosition) and (LSink.Count = LCount),
+      'ordinary child content input never starts a split gesture');
+    LGrip := GripFor('work-split');
+    LX := LGrip.getBoundingClientRect.left + 12;
+    LY := LGrip.getBoundingClientRect.top + 12;
+    Pointer(LGrip, 'pointerdown', LX, LY);
+
+    if AOrientation = nsoStacked then
+    begin
+      LY := LY + 32;
+    end
+    else
+    begin
+      LX := LX + 32;
+    end;
+    Pointer(LGrip, 'pointermove', LX, LY);
+    Check(PositionFor('work-split') <> LOuterPosition,
+      'either browser axis begins a changed gesture before Escape');
+    LGrip.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'Escape'));
+    Pointer(LGrip, 'pointerup', LX, LY);
+    Check((PositionFor('work-split') = LOuterPosition) and (LSink.Count = LCount),
+      'Escape and late release restore the baseline without a completed gesture');
+    LSink.Renderer.Root.Find('work-split').Configure.Enabled(False);
+    LSink.Renderer.Sync;
+    Pointer(LGrip, 'pointerdown', LX, LY);
+    Pointer(LGrip, 'pointermove', LX + 24, LY + 24);
+    Pointer(LGrip, 'pointerup', LX + 24, LY + 24);
+    Check((PositionFor('work-split') = LOuterPosition) and (LSink.Count = LCount),
+      'disabled browser separators refuse either axis without a change callback');
+    Check(TNyxCodec.Encode(LDocument) = LWire,
+      'browser axis gestures never rewrite the authored document');
+    LDocument.Find('work-split').Configure.SplitPosition(52);
+    LSink.Renderer.Render(LDocument, LDocument.Pages[0], LHost);
+    Check(PositionFor('work-split') = 52,
+      'an explicit replacement mount honors the caller configured percentage');
+    LGrip := GripFor('work-split');
+    LX := LGrip.getBoundingClientRect.left + 12;
+    LY := LGrip.getBoundingClientRect.top + 12;
+    Pointer(LGrip, 'pointerdown', LX, LY);
+    window.dispatchEvent(TJSEvent.new('resize'));
+    LSink.Renderer.Unmount;
+    Pointer(LGrip, 'pointermove', LX + 24, LY + 24);
+    Pointer(LGrip, 'pointerup', LX + 24, LY + 24);
+    Check((LSink.Renderer.Root = nil) and (LSink.Count = LCount) and
+      not Assigned(LGrip.onpointermove) and not Assigned(LGrip.onlostpointercapture),
+      'retirement detaches active input and queued resize without stale completion');
+  finally
+    LSink.Renderer.Free;
+    LSink.Free;
+    LNestedControl := nil;
+    LDocument.Free;
+    LHost.remove;
+  end;
+end;
+{$else}
 { Exercise both axes through complete native messages on ordinary public
   controls. The renderer owns each mounted clone; no widget/state is retained
   after replacement or unmount. Authored configuration is a separate owner. }
@@ -622,7 +847,10 @@ end;
 begin
   try
     Run;
-    {$ifndef PAS2JS}
+    {$ifdef PAS2JS}
+    RunBrowserAxisCases(nsoStacked);
+    RunBrowserAxisCases(nsoSideBySide);
+    {$else}
     RunNativeAxisCases(nsoStacked);
     RunNativeAxisCases(nsoSideBySide);
     {$endif}

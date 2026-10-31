@@ -3,12 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-The retained [splitter regression](NS-2_split-platform_02.md) now has actual
-browser control38/38 and ordinary Studio20/20 plus nine viewport-return checks.
-Its old driver now observes queued presentation instead of reading an unpublished
-source control. Original external reproduction and both-axis/nested/capture
-criteria remain open. WORK records preserved failures and the next bounded
-public-control outcome; stop equivalent Studio-driver variants.
+The retained [splitter regression](NS-2_split-platform_02.md) now passes132 actual
+browser control checks per width and145 current Win32/LCL checks with a clean heap.
+Both axes retain repeated drag/release/reflow/Sync and nested preferences, accepting
+criteria2/3/5/6 alongside ordinary Studio20/20 and nine viewport-return checks.
+Original external reproduction and trusted browser capture/device evidence remain
+open; no task or north-star credit changes. Stop splitter fixture expansion and
+return to the useful data-control workflow's existing
+[Tree inspection Find failure](NS-3_control-usefulness_04.md), preserving its exact
+one-match/four-context expectation and the original scope. WORK owns the return.
 
 The ordinary saved workbench now preserves its active filter and exact Unicode
 draft/selection through runtime column changes and reset at both browser widths.

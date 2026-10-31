@@ -9,7 +9,61 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Browser splitter return — 2026-10-30
+## Current work — Browser split axes — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushed0c51e185 with exact remote match.
+Root remains SOLO. Continue split02 criteria2/3: repeated horizontal/vertical
+gestures must retain accepted positions through in-drag/post-release Sync and
+real reflow, with independent nested panes and retained input. Extend the same
+public-control consumer; no new fixture family or native capture change.
+The existing145 native message checks remain applicable to the unchanged split
+sources since2bbcf42f. Current scope also checks Escape, disabled input, detached
+retirement and the documented explicit replacement configuration boundary.
+
+The bounded deliverable is an actual browser pass at desktop/compact widths on
+both axes, with exact source and runtime identity and recorded input limits.
+The first392506-line compile succeeds, and the unchanged runtime passes all132
+checks at measured1280x900 and390x844 with empty browser error logs. Source634308df,
+artifact12e9e176 and runtimea6c5edc8 are recorded in splitter-browser-axes-01,
+before-01. No browser adapter defect appears and no product code is changed.
+The consumer extends its existing38 assertions with both-axis nested gestures,
+continued input after in-drag Sync, one completed callback after release, late
+capture-loss refusal, actual width/height reflow, exact supplementary-Unicode
+draft/range/focus, child input, Escape, disabled policy, explicit replacement and
+detached active-input/resize retirement. The test tabs close and viewport resets.
+
+The supplementary native-02 compile rebuilds required shared/Studio dependencies
+and executes the unchanged native branch successfully:145 checks, all122272 heap
+blocks freed and zero unfreed blocks. Executabled85ef9ec uses the same634308df
+source. Compilation has zero warnings/two existing notes and takes854.2s for62171
+lines. Live process read/write counters and compilation output advance throughout;
+no timeout, restart or broader compiler-performance claim is assigned. Exec6644
+and its exact compiler/runtime family are joined. The source freeze is released.
+
+Split02 criteria2/3/5/6 now have accepted regression evidence on the current
+Win32/LCL and browser matrix: both-axis release/reflow/Sync, nested/minimum/bounds
+and content interaction, keyboard/default/callback behavior and the documented
+intentional replacement boundary. This ends the consecutive no-criterion-closure
+sequence recorded in the prior checkpoint. It does not accept split02 as a whole:
+original external reproduction and trusted browser capture/device evidence remain
+open under criteria1/4, along with broader renderer/parity/quality requirements.
+No north-star percentage or task credit changes.
+
+All27 protected files are exact; fixed listeners65824/46632 remain unchanged.
+No Studio project, source/default, output profile, listener or LAN payload changes.
+No helper is running this work. All owned process TEMP/TMP and artifacts remain
+on E:. Browser errors are empty; the earlier Studio iframe tooling error is
+distinct evidence and is not erased by this consumer. Original constraints and
+assertions stay intact, with no repair/retry cycle needed for the new132 checks.
+
+Stop splitter fixture expansion here. Return to the ranked useful data-control
+workflow and the existing04 Tree inspection Find failure: reproduce its original
+one-match/four-context-ancestor expectation in the same maintained consumer,
+classify the command/query publication failure and repair the owning library or
+public demo if needed. Do not substitute a smaller source/query fixture or change
+the expected useful result. Original split capture/external evidence remains open.
+
+## Previous work — Browser splitter return — 2026-10-30
 
 Previous goal turn: verified PROGRESS, pushed416a286d with exact remote match.
 Root remains SOLO. This bounded return serves the retained splitter regression's

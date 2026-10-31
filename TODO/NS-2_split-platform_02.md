@@ -2,8 +2,9 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-**Status:** Open regression; native release defect reproduced and repaired.
-External-application reproduction and remaining platform criteria stay open.
+**Status:** Open regression; native release defect repaired and both-axis
+release/reflow regression criteria accepted. External-application reproduction
+and trusted browser capture/device evidence remain open.
 
 **Reported:** 2026-10-20, during external Nyx testing. The user reports that a
 splitter snaps back to its original position when dragged anywhere. A matching
@@ -100,3 +101,29 @@ deferred implementation; the current WORK entry now owns active investigation.
 - Original criteria remain open, including both browser axes/nested repeated Sync,
   original external reproduction and trusted capture/device behavior. WORK owns
   the reassessment and bounded return; no new task or completion credit is added.
+
+**Both-axis regression acceptance — 2026-10-31:**
+
+The maintained public-control consumer now passes132 browser checks at measured
+1280x900 and390x844, with empty error logs. Both axes contain an opposite-axis
+nested split. Each repeated drag continues after in-drag Sync, commits exactly
+one change on release, ignores subsequent capture loss and retains the accepted
+runtime position after another Sync. Actual width/height reflow preserves both
+preferences and the exact memo, supplementary-Unicode draft, range and focus.
+Content input, Escape/late release, disabled input, explicit authored replacement
+and active-input/queued-resize retirement also pass. The prior minimum/bounds and
+typed keyboard/default/callback checks remain intact.
+
+The same source634308df separately compiles for Win32/LCL and passes the original
+145 native message checks, freeing all122272 heap blocks. Compilation has zero
+warnings and two existing notes. Its854.2-second build is retained as an actual
+slow build, with advancing process I/O and no restart; no build-speed claim is
+made. Native executabled85ef9ec, browser artifact12e9e176/runtimea6c5edc8 and the
+complete receipts are retained under external splitter-browser-axes-01.
+
+Criteria2/3/5/6 have accepted regression evidence within this actual Win32/LCL and
+browser matrix. These results establish injected native messages and synthesized
+DOM pointer/keyboard behavior; they do not identify the original external app or
+obtain trusted browser pointer capture. Criteria1/4 remain open for those inputs.
+No runtime splitter source changes, task completion or north-star credit is
+assigned. WORK records the stop point and return to the ranked control workflow.
