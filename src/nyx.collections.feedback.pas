@@ -143,14 +143,16 @@ function BindNyxCollectionFeedback(const AContext: INyxApplicationContext;
 implementation
 
 uses SysUtils, nyx.editing, nyx.scheduler, nyx.collections.inspection,
-  nyx.collections.paging, nyx.collections.view.types, nyx.publication;
+  nyx.collections.paging, nyx.collections.view.types, nyx.publication, nyx.objects;
 
 type
   { Owns context/generation and the ordinary view, with explicitly disconnected
     weak subscriptions. One prepared scalar publication installs all labels,
     counts and affordances before any observer runs. Reentrant view changes
-    during validation refuse that candidate; Refresh reconciles afterward. }
-  TFeedback = class(TInterfacedObject, INyxCollectionFeedback)
+    during validation refuse that candidate; Refresh reconciles afterward.
+    The portable base protects the initial Refresh's entered-call Self lease
+    until construction returns its first ordinary interface owner. }
+  TFeedback = class(TNyxInterfacedObject, INyxCollectionFeedback)
   private
     FContext: INyxApplicationContext;
     FGeneration: INyxCancellationScope;

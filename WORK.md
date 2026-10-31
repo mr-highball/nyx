@@ -9,7 +9,127 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Authored live-inspection construction — 2026-10-31
+## Current work — Usable browser table viewport — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushed9a407fa0 with exact remote match.
+Root remains SOLO. Follow04's original physical context/visible-workload criteria
+after the required two-batch reassessment. Deliver the same authored160px table
+with readable rows, accessible caption feedback/actions and the original complete
+handwritten/generated live-inspection journey at both browser widths. Preserve
+native behavior and the existing clipboard/recovery regressions. Stop after two
+actual repair cycles; classify any next failure rather than expanding fixtures.
+
+The public table's caption/header consume159.75px before its first row. Source
+review also finds that the test's TopItem helper reads the scrolling thead box,
+while the actual viewport excludes sticky th cells. It can therefore call an
+occluded row the reader's anchor. Consolidate caption children into one bounded
+toolbar, place sort/filter faces alongside one another without shrinking fonts
+or removing actions, and measure the actual sticky heading in the maintained
+driver. Keep its original expected surviving successor and add initial visible
+text geometry checks. No demo-height change, new listener, dependency mutation,
+Studio design/profile mutation or helper is needed. New outputs and every owned
+compiler/test TEMP/TMP stay on E:. Existing state and listeners are preserved.
+
+Reassessment before the next required source repair: the first full current
+browser consumer progresses through physical anchor checks into ProducerCases,
+then fails in TFeedback.Refreshing with finalized FActions. Its constructor calls
+Refresh, whose Present takes an entered-call Self lease; TFeedback still uses the
+bare pas2js RTL base. Reuse the already-qualified Nyx construction base for this
+actual feedback prerequisite, then perform one final full-workflow rerun and the
+existing clipboard suite. Do not start another constructor fixture family.
+The private before-01 unit override selects the current adapter through a source-
+local dependency, so it is setup evidence rather than an old-layout baseline.
+The original9a407fa0 screenshots/geometry and full failure in
+inspection-construction-return-01 remain the verified before evidence.
+
+The completed adapter repair uses one caption bar for existing status and action
+nodes, bounded by both the actual clip and the intrinsic column budget. Full
+clipboard diagnostics keep their fixed scrollable height; pin guidance gains
+keyboard access and a full title. Recovery/column commands keep their original
+managed routes and DOM identity. Sort/Filter share a horizontal header row with
+the original line policy, accessible names and natural action allocation. The
+authored height and data font are unchanged. Public wide geometry now measures
+47.375px caption plus52px header, leaving60.625px of the same160px table for data.
+Reviewed desktop/compact captures show complete service text instead of chrome
+covering the data. Initial real-name visibility assertions are added to the same
+full consumer, not a replacement fixture. Its original anchor expectation stays.
+
+TFeedback now uses the existing portable construction base for its constructor's
+initial Refresh/Present lease. Focused feedback tests pass18 on both targets.
+The complete handwritten and fresh generated browser live-inspection consumers
+each pass138 at measured1280x900 and390x844 with empty error logs. These include
+the original physical anchor deletion/successor, sort, pause/resume, following,
+producer cancellation/rejection, distinct feedback, independent peer and retired
+delivery assertions. Native handwritten checks pass89/88 (fresh source export at
+1280), generated checks88/88. All five current native core/control runs free every
+heap block. The new exported source is byte-identical to the prior document,
+SHA25648448234; this repair changes implementation/presentation, not authored data.
+
+The existing complete browser clipboard suite passes1755 per measured viewport,
+including all outcomes, long exact diagnostics, input/selection/epoch retention
+and its existing authored menu/export workflows. The pending recovery consumer
+first retains24 checks, then gains a focused real-journal-entry path because its
+caption command's allocation changed. Every old assertion stays. Final handwritten
+and generated variants each pass34 at both viewports, with exact supplementary/
+NUL draft storage, continued Notes navigation and enabled recovery access fitting
+the table clip. No callback, outcome, deadline or source expectation is weakened.
+
+Final hit-area review finds an introduced18.046875px Status sort face in the first
+compact header layout. Before pushing, Filter receives a decorative currentColor
+SVG funnel with the same full accessible name/title, sort faces keep24px minima
+and filter faces28px minima, and unusually narrow header tool rows can scroll.
+Pointer events stay on the managed button. A new real-geometry assertion covers
+all visible header actions, taking the full browser consumer from136 to138.
+The final handwritten/generated138, clipboard1755 and recovery34 runs all pass
+again at both measured viewports, with empty errors. All20 public header actions
+meet the minimum; a real pointer click opens Filter Service and Escape closes
+without applying. Reviewed final wide/compact screenshots retain readable rows.
+These last source/test additions are PAS2JS-only; the qualified native branch
+and shared feedback implementation remain unchanged. Prior source/result identities
+are retained under final-03 as before-hit-fix evidence, not the final acceptance.
+
+Public desktop/compact clicks verify frozen upper data versus the advancing peer,
+visible paused feedback, and Resume through the feedback card's own button. The
+first wide navigation observation times out; the same tab subsequently reports
+PASS136 with empty errors. It is not restarted or credited as a latency pass.
+Native feedback compilation takes75.8s and the handwritten link completes after
+313.0s, while its actual process I/O and output advance. The generated build takes
+40.6s. These readers finish normally; no build deadline, dependency or compiler
+setup changes and no general cache/performance claim follows. Final native builds
+have zero warnings and existing lifetime/test notes. Seven unchanged upstream
+pas2js RTL case warnings remain outside owned code.
+
+The original representative runtime journey is now qualified on both targets and
+in its own generated application. Full criterion/task acceptance still has the
+existing hard prerequisites02/03 open, plus broader context coverage, native Tree
+inline editing, physical/assistive quality and measured L2 scale. No original full
+criterion or north-star credit is assigned here; this is the third consecutive
+bounded batch without full original04 criterion closure since splitter acceptance.
+The required reassessment now changes the next action to the actual hard gates:
+finish state-collections02's shared/mounted browser replacement/no-op/rollback
+acceptance, then state-collections03's browser and alternative-capability refusal
+acceptance, reusing applicable current native evidence. Their former external
+browser-input condition is no longer missing. Return to04's full original criteria
+afterward. Stop caption, constructor and equivalent source/control variants.
+
+A source-review coverage candidate remains with04's general physical-context
+criteria: WindowMetrics and the current helper choose the first th. Qualify hidden
+leading columns before claiming every header configuration; first-visible sticky
+geometry is not established by this default-column workload. This does not change
+the completed representative result or create another immediate fixture detour.
+
+Evidence: table-chrome-return-01, before-01 (misselected baseline), after-02,
+final-03, native-04, generated-05, recovery-final-06 and hit-final-07. identity-final.json and
+qualification.json retain exact source/generated/runtime/artifact identities,
+counts and limitations. Before-01/after-02 preserve the pre-feedback-repair raw
+TypeError. All actual compiler/runtime readers35246/94465/89404/7643/41877/2622/
+73437/85955 and read-only search97752 are joined; no owned process remains. Every new
+artifact and owned compiler/test TEMP/TMP stays on E:. Test tabs close and viewport
+resets, retaining Service monitor for return. All27 protected files are byte-exact;
+fixed QA65824 and LAN46632 are unchanged. No Studio project/source/profile, live
+LAN payload, firewall, compiler installation or unrelated work changes. Root SOLO.
+
+## Previous work — Authored live-inspection construction — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushede17fd127 with exact remote match.
 Root remains SOLO. Follow04's retained recovery cleanup failure in the existing

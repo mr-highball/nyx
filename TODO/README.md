@@ -3,17 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-The retained [live-recovery cleanup failure](NS-3_control-usefulness_04.md) is
-repaired through a shared portable construction base, preserving the Tree repair.
-Authored-policy checks pass18 on both targets; handwritten/generated recovery
-passes24 per browser viewport and57 per native width with clean heaps. Full
-native live-inspection checks pass89/88 and88/88. The full browser counterpart
-still fails its original deleted-anchor assertion. Public rendering exposes a
-160px table whose caption/header consume159.75px. Stop constructor/recovery fixture
-expansion and return to that concrete table-viewport defect within04's original
-context/visible-workload criteria. Keep the expected successor, actual authored
-height and full journey. Full criteria, task acceptance and north-star credit stay
-open. Tree94 per browser viewport and scheduler104/74 remain intact.
+The retained [live-inspection journey](NS-3_control-usefulness_04.md) now passes138
+checks per measured browser viewport in handwritten/generated applications, with
+89/88 and88/88 native checks and clean heaps. The same160px table has60.625px of
+data space; its bounded caption retains feedback and recovery actions. The full
+clipboard suite passes1755 per viewport, and recovery34 per variant/viewport
+qualifies a real journal entry's visible command. Stop caption/constructor variants.
+Follow the existing hard prerequisites' remaining browser/alternative-capability
+acceptance: [row replacement02](NS-1_state-collections_02.md), then
+[query delivery03](NS-1_state-collections_03.md). The authorized browser connection
+is available. Return to04's complete original criteria afterward; L2/quality and
+task/north-star acceptance remain open. WORK owns the exact results and next action.
 The [splitter regression](NS-2_split-platform_02.md) retains its accepted
 criteria2/3/5/6 and original external/capture limits. WORK owns the return.
 

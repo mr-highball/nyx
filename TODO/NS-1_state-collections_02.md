@@ -44,8 +44,9 @@ state/runtime identity outcomes, counted once.
 - [Observable structured state](DONE/NS-1_state-collections_01.md) supplies the
   existing accepted collection/publication foundation.
 
-Browser execution needs the existing authorized HTTP(S) preview/tool connection
-recorded in WORK.md. Native and source work can continue while that input is absent.
+The existing authorized HTTP preview/browser connection is now available. The
+current return is its remaining shared and actual mounted browser acceptance;
+WORK.md owns the matching native evidence and any necessary source repair.
 
 The correction now preserves explicit removal of an original row through final
 value equality, reusing existing publication. Native collection checks pass 162,

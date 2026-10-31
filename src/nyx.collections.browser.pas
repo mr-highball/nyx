@@ -613,7 +613,8 @@ type
     its host DOM. Input envelopes retain this exact mount through synchronous
     callbacks; terminal detachment revokes their authority before DOM removal.
     Caption actions, recovered-edit access and live column status belong to
-    that same DOM lifetime. Recovery uses the original managed command route. }
+    that same DOM lifetime. One bounded caption row preserves data space without
+    replacing its controls. Recovery uses the original managed command route. }
   TBrowserMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
@@ -654,6 +655,8 @@ type
     FClipboardStatus: TJSHTMLElement;
     FRecoveryLauncher: TJSHTMLElement;
     FRecoveryInputBound: Boolean;
+    procedure EnsureCaptionBar;
+    procedure RefreshCaptionWidth;
     procedure SynchronizeRecovery;
     procedure SynchronizeClipboardFeedback;
   protected
@@ -5399,7 +5402,9 @@ var
   LHeader: TJSHTMLElement;
   LRow: TJSHTMLElement;
   LCell: TJSHTMLElement;
-  LCaption: TJSHTMLElement;
+  LTools: TJSHTMLElement;
+  LFilterIcon: TJSElement;
+  LFilterPath: TJSElement;
   LIndex: Integer;
 begin
   ALimits.Validate;
@@ -5442,21 +5447,15 @@ begin
         the row window, data model and renderer's outer element stay the same. }
       FHost.style.setProperty('border-collapse', 'separate');
       FHost.style.setProperty('border-spacing', '0');
-      LCaption := NewElement('caption');
-      LCaption.style.setProperty('text-align', 'end');
-      LCaption.style.setProperty('padding', '6px');
-      FColumnBar := NewElement('span');
-      FColumnBar.style.setProperty('display', 'inline-flex');
-      FColumnBar.style.setProperty('align-items', 'center');
-      FColumnBar.style.setProperty('justify-content', 'flex-end');
-      FColumnBar.style.setProperty('gap', '8px');
-      FColumnBar.style.setProperty('max-width', '100%');
+      EnsureCaptionBar;
       FColumnStatus := NewElement('span');
       FColumnStatus.setAttribute('data-nyx-column-status', '');
       FColumnStatus.setAttribute('role', 'status');
       FColumnStatus.style.setProperty('display', 'none');
       FColumnStatus.style.setProperty('flex', '1 1 0');
       FColumnStatus.style.setProperty('min-width', '0');
+      FColumnStatus.style.setProperty('max-height', '2.5em');
+      FColumnStatus.style.setProperty('overflow-y', 'auto');
       FColumnStatus.style.setProperty('text-align', 'start');
       FColumnStatus.style.setProperty('white-space', 'normal');
       FColumnStatus.style.setProperty('overflow-wrap', 'anywhere');
@@ -5474,16 +5473,13 @@ begin
       FColumnLauncher.style.setProperty('border-radius', '6px');
       FColumnLauncher.style.setProperty('cursor', 'pointer');
       FColumnLauncher.style.setProperty('flex', '0 0 auto');
+      FColumnLauncher.style.setProperty('margin-inline-start', 'auto');
       { The caption spans the complete intrinsic table. Keep its end-aligned
         action inside the table's horizontal scrollport as columns widen or
         scroll; otherwise a manager command can move its own anchor out of view.
         The caption/launcher also survives an empty visible-column map. }
-      FColumnBar.style.setProperty('position', 'sticky');
-      FColumnBar.style.setProperty('inset-inline-end', '6px');
       FColumnLauncher.addEventListener('pointerdown', @ColumnLauncherPointer);
       FColumnBar.appendChild(FColumnLauncher);
-      LCaption.appendChild(FColumnBar);
-      FHost.appendChild(LCaption);
     end;
     LHeader := NewElement('thead');
     LRow := NewElement('tr');
@@ -5506,9 +5502,22 @@ begin
       LCell.setAttribute('aria-colindex', IntToStr(LIndex + 1));
       LCell.setAttribute('scope', 'col');
       FHeaderCells[LIndex] := LCell;
+      { One horizontal tool row leaves room for data in short tables. The title
+        keeps its authored line policy and full accessible name; the Filter
+        action and resize grip retain their own natural hit targets. }
+      LTools := NewElement('span');
+      LTools.style.setProperty('display', 'flex');
+      LTools.style.setProperty('align-items', 'center');
+      LTools.style.setProperty('gap', '4px');
+      LTools.style.setProperty('min-width', '0');
+      LTools.style.setProperty('overflow-x', 'auto');
+      LTools.style.setProperty('overflow-y', 'hidden');
+      LCell.appendChild(LTools);
       FHeaderLabels[LIndex] := NewElement('span');
       FHeaderLabels[LIndex].textContent := AView.Spec.ColumnAt(LIndex).Title;
-      LCell.appendChild(FHeaderLabels[LIndex]);
+      FHeaderLabels[LIndex].style.setProperty('flex', '1 1 0');
+      FHeaderLabels[LIndex].style.setProperty('min-width', '0');
+      LTools.appendChild(FHeaderLabels[LIndex]);
       FHeaderSorts[LIndex] := NewElement('button');
       FHeaderSorts[LIndex].className := 'nyx-button';
       FHeaderSorts[LIndex].setAttribute('type', 'button');
@@ -5516,17 +5525,41 @@ begin
       FHeaderSorts[LIndex].style.setProperty('white-space', 'normal');
       FHeaderSorts[LIndex].setAttribute('data-nyx-query-sort', IntToStr(LIndex));
       FHeaderSorts[LIndex].style.setProperty('display', 'none');
-      LCell.appendChild(FHeaderSorts[LIndex]);
+      FHeaderSorts[LIndex].style.setProperty('flex', '1 1 0');
+      FHeaderSorts[LIndex].style.setProperty('min-width', '24px');
+      FHeaderSorts[LIndex].style.setProperty('min-height', '24px');
+      LTools.appendChild(FHeaderSorts[LIndex]);
       FHeaderFilters[LIndex] := NewElement('button');
       FHeaderFilters[LIndex].className := 'nyx-button';
-      FHeaderFilters[LIndex].textContent := 'Filter';
       FHeaderFilters[LIndex].setAttribute('type', 'button');
       FHeaderFilters[LIndex].style.setProperty('padding', '4px 6px');
+      FHeaderFilters[LIndex].style.setProperty('min-width', '28px');
+      FHeaderFilters[LIndex].style.setProperty('min-height', '28px');
       FHeaderFilters[LIndex].setAttribute('data-nyx-query-column', IntToStr(LIndex));
       FHeaderFilters[LIndex].setAttribute('aria-label', 'Filter ' + AView.Spec.ColumnAt(LIndex).Title);
+      FHeaderFilters[LIndex].setAttribute('title', 'Filter ' + AView.Spec.ColumnAt(LIndex).Title);
       FHeaderFilters[LIndex].setAttribute('aria-haspopup', 'dialog');
+      { A theme-colored vector leaves space for the field's sort caption without
+        shrinking either hit target. It is decorative; the button retains the
+        complete field-specific name. Pointer input stays on the managed button. }
+      LFilterIcon := document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      LFilterIcon.setAttribute('viewBox', '0 0 16 16');
+      LFilterIcon.setAttribute('width', '14');
+      LFilterIcon.setAttribute('height', '14');
+      LFilterIcon.setAttribute('aria-hidden', 'true');
+      LFilterIcon.setAttribute('focusable', 'false');
+      LFilterIcon.setAttribute('style', 'display:block;pointer-events:none');
+      LFilterPath := document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      LFilterPath.setAttribute('d', 'M2 3H14L9.5 8V12L6.5 13.5V8Z');
+      LFilterPath.setAttribute('fill', 'none');
+      LFilterPath.setAttribute('stroke', 'currentColor');
+      LFilterPath.setAttribute('stroke-width', '1.5');
+      LFilterPath.setAttribute('stroke-linejoin', 'round');
+      LFilterIcon.appendChild(LFilterPath);
+      FHeaderFilters[LIndex].appendChild(LFilterIcon);
       FHeaderFilters[LIndex].style.setProperty('display', 'none');
-      LCell.appendChild(FHeaderFilters[LIndex]);
+      FHeaderFilters[LIndex].style.setProperty('flex', '0 0 auto');
+      LTools.appendChild(FHeaderFilters[LIndex]);
 
       if FHasColumnLayout then
       begin
@@ -7125,22 +7158,23 @@ begin
 
     if FColumnPresentation.PinsSuspended then
     begin
-      { Suspended pins already require more than the clip's width. Only that
-        state may widen this caption strip: a full-width caption on a smaller
-        table would make browser table layout stretch the caller's fixed cells. }
-      FColumnBar.style.setProperty('width', IntToStr(Max(1, LAvailable - 12)) + 'px');
+      { The hint shares the bounded caption row. Its full message remains
+        reachable by keyboard when a compact allocation requires scrolling. }
 
       if FColumnStatus.textContent = '' then
       begin
         FColumnStatus.style.removeProperty('display');
         FColumnStatus.textContent := 'Pinned columns are scrolling at this width.';
+        FColumnStatus.setAttribute('title', FColumnStatus.textContent);
+        FColumnStatus.setAttribute('tabindex', '0');
       end;
     end
     else
     begin
-      FColumnBar.style.removeProperty('width');
       FColumnStatus.textContent := '';
       FColumnStatus.style.setProperty('display', 'none');
+      FColumnStatus.removeAttribute('title');
+      FColumnStatus.removeAttribute('tabindex');
     end;
   end
   else
@@ -7149,6 +7183,7 @@ begin
   end;
   FColumnWidths := LWidths;
   FColumnAvailable := LAvailable;
+  RefreshCaptionWidth;
   for LColumn := 0 to High(LWidths) do
   begin
     LWidth := IntToStr(LWidths[LColumn]) + 'px';

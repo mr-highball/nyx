@@ -2071,6 +2071,16 @@ changes no accepted rows, row/range selection, input epoch, editor text or caret
 it does not refresh the row presentation. The reserved height does not grow when
 the outcome changes.
 
+Browser caption feedback, pin guidance and column/recovery commands share one
+bounded toolbar row. The toolbar follows the real clip without widening authored
+columns; exceptionally narrow allocations scroll its commands. Status text keeps
+its complete accessible value and internal scrolling. Sort and Filter share a
+header row while the authored header-line policy and full accessible names remain
+in force. Filter uses a theme-colored decorative glyph; names/tooltips stay complete
+and header actions retain usable minimum hit areas. These arrangements preserve
+readable data space in short tables without
+changing the authored height or reducing the data font.
+
 This separate borrowed presentation receiver preserves application observers,
 menu replies and the original single host request slot. Retirement withdraws it
 before cancellation or target teardown. Original serial/readiness checks prevent

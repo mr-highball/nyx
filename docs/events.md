@@ -240,6 +240,8 @@ their returned object, and failed construction still unwinds normally.
 The underlying `TNyxInterfacedObject` in `nyx.objects` is also available to other
 Nyx interface implementations that need this construction lifetime. Collection
 views use it when applying their authored inspection defaults.
+Collection feedback presenters also use it for their initial status publication,
+before the binding factory returns its first owning interface.
 
 When `NewNyxEvents` creates its default scheduler, that router owns the terminal
 scheduling boundary. `Close` shuts the private scheduler down even if queued work

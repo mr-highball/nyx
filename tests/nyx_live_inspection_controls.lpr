@@ -126,6 +126,51 @@ var
       'the feed completes through a nonblocking terminal receipt');
   end;
 
+  {$ifdef PAS2JS}
+  procedure CheckInitialViewport;
+  var
+    LTable: TJSHTMLElement;
+    LHeader: TJSHTMLElement;
+    LName: TJSHTMLElement;
+    LButtons: TJSNodeList;
+    LButton: TJSHTMLElement;
+    LIndex: Integer;
+    LShown: Integer;
+    LHitsUsable: Boolean;
+    LTop: Double;
+    LBottom: Double;
+  begin
+    LTable := LApplication.View.ElementFor(ServiceTableID);
+    LHeader := TJSHTMLElement(LTable.querySelector('thead th'));
+    LName := TJSHTMLElement(LTable.querySelector(
+      'tbody [data-nyx-item] [role="gridcell"] .nyx-cell-value'));
+    Check((LHeader <> nil) and (LName <> nil),
+      'the initial table paints its real header and first service name');
+    LTop := Max(0, LTable.getBoundingClientRect.top);
+    LTop := Max(LTop, LHeader.getBoundingClientRect.bottom);
+    LBottom := Min(window.innerHeight, LTable.getBoundingClientRect.bottom);
+    Check((LName.getBoundingClientRect.top >= LTop - 0.5) and
+      (LName.getBoundingClientRect.bottom <= LBottom + 0.5),
+      'the authored short table leaves a complete first service name readable below its chrome');
+    LButtons := LTable.querySelectorAll('thead button');
+    LShown := 0;
+    LHitsUsable := True;
+    for LIndex := 0 to LButtons.length - 1 do
+    begin
+      LButton := TJSHTMLElement(LButtons[LIndex]);
+
+      if (LButton.offsetWidth > 0) and (LButton.offsetHeight > 0) then
+      begin
+        Inc(LShown);
+        LHitsUsable := LHitsUsable and (LButton.getBoundingClientRect.width >= 24) and
+          (LButton.getBoundingClientRect.height >= 24);
+      end;
+    end;
+    Check((LShown > 0) and LHitsUsable,
+      'compact header actions retain usable hit areas without shrinking the data font');
+  end;
+  {$endif}
+
   procedure PositionCases;
   var
     LChanges: array of TNyxCollectionEdit;
@@ -155,7 +200,10 @@ var
       {$ifdef PAS2JS}
       Result := Default(TNyxItemRef);
       LClip := Max(0, LTable.getBoundingClientRect.top);
-      LHeader := TJSHTMLElement(LTable.querySelector('thead'));
+      { The thead box scrolls, but its sticky cells still cover rows. Measure
+        the actual heading face, as the public mount's viewport does, so a
+        covered predecessor is never mistaken for the reader's anchor. }
+      LHeader := TJSHTMLElement(LTable.querySelector('thead th'));
 
       if LHeader <> nil then
       begin
@@ -530,6 +578,9 @@ begin
       'attaching demo callbacks preserves an application caller''s runtime policy override');
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     LField := NyxColumnIdentity(NyxTextField('status'));
+    {$ifdef PAS2JS}
+    CheckInitialViewport;
+    {$endif}
     Check(LFirst.Select(LGateway), 'select an inspected service through its mounted owner');
     Click(InspectionPauseID);
     LOriginal := LFirst.View.Snapshot;

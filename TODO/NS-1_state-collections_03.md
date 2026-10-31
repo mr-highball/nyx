@@ -34,8 +34,9 @@ existing structured publication/lifetime outcomes.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supplies prepared
   collection admission and exact revision ownership.
 
-Browser execution requires the existing authorized HTTP(S)/tool connection;
-native and source work may continue while that external input is absent.
+The existing authorized HTTP preview/browser connection is now available. The
+current return is actual browser execution and alternative-capability refusal
+qualification, using the existing native evidence and maintained consumers.
 
 Native progress on 2026-10-25: the retained negative regression reproduced an
 installation after validator closure. Seven focused checks now pass with clean

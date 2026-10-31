@@ -89,6 +89,8 @@ var
   LHost: TJSHTMLElement;
   LCell: TJSHTMLElement;
   LInput: TJSHTMLInputElement;
+  LRecoveryButton: TJSHTMLElement;
+  LTable: TJSHTMLElement;
   LFirst: INyxCollectionMount;
   LPeer: INyxCollectionMount;
   LAdmission: INyxCollectionInputAdmission;
@@ -190,6 +192,35 @@ begin
       'confirmed pending discard restores current display without source writes or journal capacity');
     Check(not LPending.DiscardPendingDraft(LReview) and
       (TNyxCodec.Encode(LDocument) = LSaved), 'old receipts cannot alter a new frame or saved design');
+
+    { The shared caption must also keep its recovered-edit command reachable
+      when a real journal entry exists, alongside pin and clipboard status. }
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(4).PayloadBytes(8192));
+    LTable := LApplication.View.ElementFor(ServiceTableID);
+    LInput := TJSHTMLInputElement(LTable.querySelector(
+      '[data-nyx-item="gateway"] input[aria-label="Notes"]'));
+    Check(LInput <> nil, 'resumed display retains its mounted Notes editor');
+    LCell := TJSHTMLElement(LInput.closest('[role="gridcell"]'));
+    LCell.focus;
+    LCell.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'F2'));
+    Check(document.activeElement = LInput,
+      'the resumed Notes editor still accepts ordinary navigation');
+    LInput.value := CDraft;
+    LInput.setSelectionRange(2, 6);
+    LFirst.View.Store.Update(NyxCollectionItem(LGateway)
+      .WithValue(NyxTextField('notes'), 'A later accepted note'));
+    Check((LJournal.Capture.Count = 1) and not NyxCollectionDraftRecoveryHeld(LFirst) and
+      (LJournal.EntryAt(0).Cell.Text = CDraft),
+      'available journal capacity preserves the exact conflicting draft and resumes display');
+    LRecoveryButton := TJSHTMLElement(LTable.querySelector('[data-nyx-recovery-button]'));
+    Check((LRecoveryButton <> nil) and not LRecoveryButton.hasAttribute('disabled') and
+      (LRecoveryButton.style.getPropertyValue('display') <> 'none'),
+      'a real recovered entry exposes its enabled caption command');
+    Check((LRecoveryButton.getBoundingClientRect.width > 0) and
+      (LRecoveryButton.getBoundingClientRect.left >= LTable.getBoundingClientRect.left - 1) and
+      (LRecoveryButton.getBoundingClientRect.right <= LTable.getBoundingClientRect.right + 1) and
+      (TNyxCodec.Encode(LDocument) = LSaved),
+      'recovery access fits the table clip without changing the authored project');
     LDemo.Close;
     LApplication.Free;
     LApplication := nil;

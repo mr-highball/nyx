@@ -3,6 +3,37 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Current evidence — 2026-10-31:**
+
+The same160px public table now leaves60.625px for data instead of0.25px: caption
+feedback/actions share one row and Sort/Filter share a header row. Full status
+text, keyboard access, authored column widths and header-line policy remain.
+The maintained driver now measures sticky th cells rather than the scrolling
+thead, preserving its original expected surviving anchor. The next producer
+failure exposes the same constructor Self-lease issue in the feedback presenter;
+it now uses the existing portable construction base.
+
+The complete handwritten/generated browser live-inspection applications each
+pass138 checks at measured1280x900 and390x844 with empty errors. Native equivalents
+pass89/88 and88/88, with clean heaps. Feedback checks pass18 on each target.
+The existing full browser clipboard suite passes1755 per viewport, including
+exact long diagnostics and input/selection preservation. Expanded existing
+recovery consumers pass34 per variant/viewport, preserving all prior assertions
+and qualifying a real journal entry's visible caption command. Fresh generated
+source is byte-identical to the prior document. Public desktop/compact clicks
+and reviewed screenshots show paused data beside a live peer, then successful
+Resume through the feedback card. Evidence: table-chrome-return-01; WORK owns
+exact identities, initial failures and native build/runtime limitations.
+
+This supplies the previously failing representative demonstration's full runtime
+journey. Full criterion/task acceptance still requires the original open blockers:
+finish the browser and alternative-capability acceptance of
+[row replacement02](NS-1_state-collections_02.md) and
+[query delivery03](NS-1_state-collections_03.md), then reassess this task against
+all original criteria. Stop caption/constructor variants here. Measured L2 scale,
+full context coverage, native Tree inline editing and physical/assistive quality
+remain open; no north-star credit or DONE move is assigned.
+
 **Parked checkpoint and reassessment — 2026-10-25:**
 
 The authored-inspection return on2026-10-31 repairs the retained browser
@@ -19,7 +50,7 @@ each pass57 checks per width with clean heaps; the full native live-inspection
 consumer passes89/88 handwritten (including source export) and88/88 generated.
 Scheduler104/74 and full browser Tree94 per viewport remain intact.
 
-The broader handwritten/generated live-inspection browser consumer now stops at
+At that preceding checkpoint, the handwritten/generated browser consumer stops at
 its original deleted-anchor/surviving-successor assertion. Public browser clicks
 verify Pause/Next/Resume and an independently advancing peer. Reviewed rendering
 and measured DOM geometry show a160px table with76.75px caption plus83px header,
