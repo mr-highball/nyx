@@ -69,11 +69,7 @@ var
   LButton: TNyxCollectionColumnButton;
   LSurface: INyxGridInputSurface;
   LCount: Integer;
-  LHeight: Integer;
-  LWidth: Integer;
-  LLeft: Integer;
-  LToolbar: Integer;
-  LScale: Double;
+  LToolbar: TNativeTableToolbarLayout;
 
   function Current: Boolean;
   begin
@@ -105,14 +101,11 @@ begin
   FRecoverySyncing := True;
   LFrame.Enter;
   try
-    LScale := Max(1, LGrid.Font.PixelsPerInch) / 96;
-    LToolbar := 0;
+    LToolbar := ToolbarLayout(LCount);
 
-    LToolbar := RequiredToolbarHeight(LCount);
-
-    if FColumnToolbarHeight <> LToolbar then
+    if FColumnToolbarHeight <> LToolbar.Height then
     begin
-      ApplyToolbarHeight(LToolbar);
+      ApplyToolbarHeight(LToolbar.Height);
 
       if not Current then
       begin
@@ -161,21 +154,8 @@ begin
     end;
     LButton.TabStop := True;
     LButton.Enabled := FEnabled and GetInputReady;
-    LLeft := Round(4 * LScale);
-
-    if (FColumnsButton <> nil) and FColumnsButton.Visible then
-    begin
-      Inc(LLeft, FColumnsButton.Width + Round(8 * LScale));
-    end;
-    LWidth := Max(1, Min(Round(160 * LScale),
-      LGrid.ClientWidth - LLeft - Round(4 * LScale)));
-    LHeight := Max(1, FColumnToolbarHeight - ClipboardStatusHeight - Round(8 * LScale));
-
-    if LGrid.UseRightToLeftAlignment then
-    begin
-      LLeft := Max(0, LGrid.ClientWidth - LLeft - LWidth);
-    end;
-    LButton.SetBounds(LLeft, Round(4 * LScale), LWidth, LHeight);
+    LButton.SetBounds(LToolbar.Recovery.Left, LToolbar.Recovery.Top,
+      LToolbar.Recovery.Width, LToolbar.Recovery.Height);
 
     if not Current then
     begin
@@ -186,6 +166,13 @@ begin
     if Current then
     begin
       LButton.BringToFront;
+    end;
+
+    if Current then
+    begin
+      { A new/released recovered edit can wrap or unwrap the feedback row.
+        Reposition that same memo without publishing data or replacing input. }
+      SynchronizeClipboardFeedback;
     end;
   finally
     FRecoverySyncing := False;

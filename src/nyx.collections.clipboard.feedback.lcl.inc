@@ -1,27 +1,90 @@
 { Nyx. Copyright (c) 2020 mr-highball. MIT license; see LICENSE.
   Readonly clipboard status shares the table's existing header and retirement
-  frame. Its fixed band is admitted with services, not resized per outcome.
+  frame. Its width-aware band is admitted with services, not resized per outcome.
   Raw diagnostics stay in the copied feedback record; visible control characters
   use the same reversible notation as ordinary cell inspection. }
 
-function TNativeMount.ClipboardStatusHeight: Integer;
-begin
-  Result := 0;
+function TNativeMount.ToolbarLayout(ARecoveryCount: Integer): TNativeTableToolbarLayout;
+var
+  LScale: Double;
+  LMargin: Integer;
+  LGap: Integer;
+  LLeft: Integer;
+  LRight: Integer;
+  LWidth: Integer;
+  LRowHeight: Integer;
+  LButtonHeight: Integer;
 
-  if HasClipboardFeedback and (FGrid <> nil) then
+  procedure Mirror(var ABounds: TRect);
+  var
+    LPreviousLeft: Integer;
   begin
-    Result := Round(36 * Max(1, FGrid.Font.PixelsPerInch) / 96);
+
+    if FGrid.UseRightToLeftAlignment and not IsRectEmpty(ABounds) then
+    begin
+      LPreviousLeft := ABounds.Left;
+      ABounds.Left := FGrid.ClientWidth - ABounds.Right;
+      ABounds.Right := FGrid.ClientWidth - LPreviousLeft;
+    end;
   end;
+begin
+  Result := Default(TNativeTableToolbarLayout);
+
+  if FGrid = nil then
+  begin
+    Exit;
+  end;
+  LScale := Max(1, FGrid.Font.PixelsPerInch) / 96;
+  LMargin := Max(1, Round(4 * LScale));
+  LGap := Max(1, Round(8 * LScale));
+  LRowHeight := Max(1, Round(40 * LScale));
+  LButtonHeight := Max(1, LRowHeight - 2 * LMargin);
+  LLeft := LMargin;
+  LRight := Max(LLeft, FGrid.ClientWidth - LMargin);
+
+  if FColumnManager <> nil then
+  begin
+    LWidth := Max(0, Min(Round(112 * LScale), LRight - LLeft));
+    Result.Columns := Rect(LLeft, LMargin, LLeft + LWidth, LMargin + LButtonHeight);
+    Inc(LLeft, LWidth + LGap);
+    Result.Height := LRowHeight;
+  end;
+
+  if ARecoveryCount > 0 then
+  begin
+    LWidth := Max(0, Min(Round(160 * LScale), LRight - LLeft));
+    Result.Recovery := Rect(LLeft, LMargin, LLeft + LWidth, LMargin + LButtonHeight);
+    Inc(LLeft, LWidth + LGap);
+    Result.Height := LRowHeight;
+  end;
+
+  if HasClipboardFeedback then
+  begin
+    { Outcomes never change this decision. Keep the complete readonly memo and
+      its own scrolling; do not shrink fonts or replace text with a tooltip. }
+
+    if (Result.Height > 0) and (LRight - LLeft >= Round(160 * LScale)) then
+    begin
+      Result.Status := Rect(LLeft, LMargin, LRight, LMargin + LButtonHeight);
+    end
+    else
+    begin
+      Result.Status := Rect(LMargin, Result.Height + Max(1, Round(2 * LScale)),
+        LRight, Result.Height + Max(1, Round(34 * LScale)));
+      Inc(Result.Height, Max(1, Round(36 * LScale)));
+    end;
+  end;
+  Mirror(Result.Columns);
+  Mirror(Result.Recovery);
+  Mirror(Result.Status);
 end;
 
 function TNativeMount.RequiredToolbarHeight(ARecoveryCount: Integer): Integer;
+var
+  LLayout: TNativeTableToolbarLayout;
 begin
-  Result := ClipboardStatusHeight;
-
-  if (FGrid <> nil) and ((FColumnManager <> nil) or (ARecoveryCount > 0)) then
-  begin
-    Inc(Result, Round(40 * Max(1, FGrid.Font.PixelsPerInch) / 96));
-  end;
+  LLayout := ToolbarLayout(ARecoveryCount);
+  Result := LLayout.Height;
 end;
 
 procedure TNativeMount.ApplyToolbarHeight(AHeight: Integer);
@@ -53,9 +116,7 @@ var
   LStatus: TMemo;
   LFeedback: TNyxCollectionClipboardFeedback;
   LText: TNyxText;
-  LScale: Double;
-  LToolbar: Integer;
-  LHeight: Integer;
+  LToolbar: TNativeTableToolbarLayout;
 
   function Current: Boolean;
   begin
@@ -90,12 +151,11 @@ begin
   FClipboardStatusPending := False;
   LFrame.Enter;
   try
-    LScale := Max(1, LGrid.Font.PixelsPerInch) / 96;
-    LToolbar := RequiredToolbarHeight(GetRecoveredEditCount);
+    LToolbar := ToolbarLayout(GetRecoveredEditCount);
 
-    if FColumnToolbarHeight <> LToolbar then
+    if FColumnToolbarHeight <> LToolbar.Height then
     begin
-      ApplyToolbarHeight(LToolbar);
+      ApplyToolbarHeight(LToolbar.Height);
 
       if not Current then
       begin
@@ -122,11 +182,33 @@ begin
         Exit;
       end;
     end;
-    LHeight := ClipboardStatusHeight;
-    LStatus.SetBounds(Round(4 * LScale),
-      FColumnToolbarHeight - LHeight + Round(2 * LScale),
-      Max(1, LGrid.ClientWidth - Round(8 * LScale)),
-      Max(1, LHeight - Round(4 * LScale)));
+    { Width, recovery membership and native direction must move the complete
+      composition together. In particular, releasing the last recovered edit
+      must not put the newly inline status over an older action position. }
+
+    if (FColumnsButton <> nil) and FColumnsButton.Visible then
+    begin
+      FColumnsButton.SetBounds(LToolbar.Columns.Left, LToolbar.Columns.Top,
+        LToolbar.Columns.Width, LToolbar.Columns.Height);
+
+      if not Current then
+      begin
+        Exit;
+      end;
+    end;
+
+    if (FRecoveryButton <> nil) and FRecoveryButton.Visible then
+    begin
+      FRecoveryButton.SetBounds(LToolbar.Recovery.Left, LToolbar.Recovery.Top,
+        LToolbar.Recovery.Width, LToolbar.Recovery.Height);
+
+      if not Current then
+      begin
+        Exit;
+      end;
+    end;
+    LStatus.SetBounds(LToolbar.Status.Left, LToolbar.Status.Top,
+      LToolbar.Status.Width, LToolbar.Status.Height);
 
     if not Current then
     begin

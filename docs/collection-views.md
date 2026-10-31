@@ -2152,6 +2152,14 @@ changes no accepted rows, row/range selection, input epoch, editor text or caret
 it does not refresh the row presentation. The reserved height does not grow when
 the outcome changes.
 
+Native actions and feedback share a row when its measured client width leaves
+at least 160 logical pixels for the status. Recovered-edit controls can move
+feedback to a second row; removing the last recovered edit reclaims that space.
+Resizing and right-to-left presentation reposition the complete composition
+together, including tables without column arrangement. Text size and the full
+scrollable diagnostic remain intact. This allocation depends on available width
+and actions, never on a particular clipboard outcome or diagnostic length.
+
 Browser caption feedback, pin guidance and column/recovery commands share one
 bounded toolbar row. The toolbar follows the real clip without widening authored
 columns; exceptionally narrow allocations scroll its commands. Status text keeps

@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The original03 short-table readability return now shares native feedback/actions
+when width permits, retaining a second row for recovery controls when needed.
+The same application's prior31px-for39px compact failure is retained; current
+full-row/generated geometry and compatibility receipts are in WORK. Native
+clipboard1964/1953 and presentation167 per width pass with clean heaps. Long
+status text, recovery, resizing and RTL keep their existing ownership and input.
+Broader layout/physical/assistive criteria and04's timing budgets remain open.
+
 The original04 cost return has used two product repair cycles: canonical scalar
 order identity and completed numeric query-map comparison remove redundant ID
 materialization while retaining full query evaluation and admission. Collections

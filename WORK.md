@@ -9,7 +9,75 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Live table update cost return — 2026-10-31
+## Current work — Native table reading area — 2026-10-31
+
+Previous goal turn: PROGRESS. Pushed91613288 and verified exact remote match;
+all original cost-return jobs joined. Root remains SOLO. Return to03's original
+workbench readability criterion through the same10000-service/five-field/160px
+application. Native compact has39px rows but31px data space. Its management row
+and readonly clipboard feedback currently reserve separate vertical bands.
+
+Deliver one responsive native toolbar composition: share feedback and actions
+when the actual width fits, keep a separate bounded feedback row when recovered
+edit controls need that width, and preserve full diagnostic text, keyboard access,
+font sizes, exact drafts/caret and independent peers. No authored height/data or
+performance threshold changes. Require the same application's complete native
+row-containment assertion to fail before the repair and pass at1280/390 after it;
+retain actual clipboard/recovery/presentation and generated application checks.
+Browser shared consumers remain regression coverage, not proof of native pixels.
+At most two repair/retest cycles; then reassess this original visible outcome.
+Keep protected projects, both fixed listeners and unrelated edits. All new private
+scripts, artifacts and process TEMP/TMP stay on E:. Full03/04/AT/physical/platform
+criteria remain open; the separate100ms p95 cost gap is not accepted here.
+`native-reading-area-01/baseline-01` builds the strengthened original consumer
+against91613288 and fails with actual data31/row39, with a complete clean heap.
+Repair02 composes a copied physical toolbar allocation; actions and readonly
+feedback share one row when160 logical pixels remain for the status. Recovered
+edit actions can wrap it to a second row. No public contract/wire/design changes.
+
+The first recovery/RTL run discovers an overlap after discarding the last entry:
+Columns remains at4,4 while the newly inline status occupies4,4,727,32. Both the
+original failure and direction-diagnostic03 are retained with clean heaps. The
+second product repair repositions all action/status bounds together under the
+existing leased frame and exact input/feedback guards. Legacy tables also queue
+width changes through their ordinary settlement path. Both bounded repair cycles
+are used; no further implementation expansion belongs in this batch.
+
+Final04 passes1964 desktop/1953 compact actual native clipboard checks and167
+presentation checks per width, all with complete zero-unfreed heaps. The added
+assertions retain full diagnostics, stable header height across all outcomes,
+no action/status overlap, recovery membership/discard, width returns and RTL.
+Existing draft/caret/input/selection/host/peer/retirement assertions remain.
+
+Application05 strengthens the same consumer to require whole-row containment,
+replacing the historical partial-row allowance. Handwritten and independently
+compiled byte-identical generated Pascal each pass204 checks at1280/390, with
+four complete clean heaps. Actual data area is84px desktop and67px compact for
+39px rows in the unchanged160px table. The earlier fresh-source export adds one
+assertion in final04; its emitted public source exactly matches the prior packet.
+Heap-traced failed timing budgets remain4/4 handwritten and5/3 generated; these
+runs qualify behavior/ownership, not speed or the open100ms p95 requirement.
+
+Browser02 passes1755 clipboard and159 presentation checks per actual1280x900/
+390x844. The unchanged large application passes167 at each width, errors empty,
+and explicitly retires both times; observed timing-budget failures remain6/5.
+Browser-final05 recompiles all three current-source programs and proves each
+artifact byte-identical to its executed browser02 input. Current native-only
+assertion/diagnostic changes therefore add no unexecuted browser behavior.
+Desktop/compact images are retained and inspected as browser compatibility
+spot checks. They do not prove native display, physical input or AT quality.
+
+All owned jobs are joined; browser tabs are closed and viewport override reset.
+The five final implementation/test identities are in application05's manifest;
+all three adapter inputs and the clipboard consumer match final04's executed
+cohort too. Authenticated nyx_session succeeds through the Pascal client; all27
+protected files remain byte-exact. Neither fixed listener owner/path/payload nor
+any operator project changes. Original03/04/full-platform/AT/physical criteria
+remain open; this batch repairs the identified native short-table reading gap.
+Return to the original publication/observer/retirement/target cost reassessment,
+using the same application and original budgets, alongside broader workbench
+quality. No task/criterion/DONE credit is manufactured from regression volume.
+## Previous work — Live table update cost return — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushed3fb30a45 with exact remote match.
 Root remains SOLO. Return to original04's same10000-service/five-field/160px

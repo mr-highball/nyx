@@ -361,6 +361,16 @@ type
     procedure Revoke;
   end;
 
+  { Copied physical toolbar allocation owns no controls or callbacks. Feedback
+    shares the action row only with a readable width; otherwise its bounded
+    scrollable surface uses a second row. Bounds already follow native RTL. }
+  TNativeTableToolbarLayout = record
+    Height: Integer;
+    Columns: TRect;
+    Recovery: TRect;
+    Status: TRect;
+  end;
+
   { The single active logical native edit. Capturing suspends validation under
     the mount's update guard; it never commits draft text to a different field
     after ordering or pane changes. No widget address is part of this lease. }
@@ -583,8 +593,9 @@ type
     FColumnsButton: TNyxCollectionColumnButton;
     FRecoveryButton: TNyxCollectionColumnButton;
     { Grid-owned readonly status surface has no binding/host authority. Its
-      stable caption band is allocated at service admission; text updates never
-      refresh data or move an existing editor. Retirement uses the same frame. }
+      caption allocation depends on width/actions, never on diagnostic length.
+      Text updates never refresh data or move an existing editor. Retirement
+      uses the same frame. }
     FClipboardStatus: TMemo;
     FClipboardStatusPending: Boolean;
     FClipboardStatusSyncing: Boolean;
@@ -619,7 +630,7 @@ type
     procedure SynchronizeColumnsButton;
     procedure SynchronizeRecovery;
     procedure SynchronizeClipboardFeedback;
-    function ClipboardStatusHeight: Integer;
+    function ToolbarLayout(ARecoveryCount: Integer): TNativeTableToolbarLayout;
     function RequiredToolbarHeight(ARecoveryCount: Integer): Integer;
     procedure ApplyToolbarHeight(AHeight: Integer);
     function RecoveryPresentationReady: Boolean;
@@ -1596,10 +1607,7 @@ var
   LGrid: TStringGrid;
   LSurface: INyxGridInputSurface;
   LButton: TNyxCollectionColumnButton;
-  LScale: Double;
-  LWidth: Integer;
-  LHeight: Integer;
-  LLeft: Integer;
+  LToolbar: TNativeTableToolbarLayout;
 
   function Current: Boolean;
   begin
@@ -1655,7 +1663,6 @@ begin
       LButton.OnKeyUp := FitButtonKeyUp;
       TNyxCollectionStringGrid(FGrid).RegisterColumnButton(LButton);
     end;
-    LScale := Max(1, FGrid.Font.PixelsPerInch) / 96;
     LButton.Parent := FGrid;
 
     if not Current then
@@ -1684,15 +1691,14 @@ begin
     begin
       Exit;
     end;
-    LWidth := Min(Max(1, FGrid.ClientWidth - Round(8 * LScale)), Round(112 * LScale));
-    LHeight := Max(1, FColumnToolbarHeight - ClipboardStatusHeight - Round(8 * LScale));
-    LLeft := Round(4 * LScale);
+    LToolbar := ToolbarLayout(GetRecoveredEditCount);
 
-    if FGrid.UseRightToLeftAlignment then
+    if not Current then
     begin
-      LLeft := Max(0, FGrid.ClientWidth - LWidth - LLeft);
+      Exit;
     end;
-    LButton.SetBounds(LLeft, Round(4 * LScale), LWidth, LHeight);
+    LButton.SetBounds(LToolbar.Columns.Left, LToolbar.Columns.Top,
+      LToolbar.Columns.Width, LToolbar.Columns.Height);
 
     if not Current then
     begin
@@ -8368,6 +8374,15 @@ begin
     (Length(FColumnNatural) > 0) then
   begin
     SizeGridColumns;
+  end;
+
+  if InputLifetimeCurrent and HasClipboardFeedback then
+  begin
+    { Legacy tables without column arrangement also own a width-aware status.
+      Defer under the existing input frame rather than moving a live editor
+      from an entered resize callback. The same memo is reused on settlement. }
+    FClipboardStatusPending := True;
+    ArmCellRefreshIdle;
   end;
 end;
 

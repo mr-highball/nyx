@@ -318,6 +318,7 @@ type
     function RunNativePointerProbe: Boolean;
     procedure PreviousEditorContext(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
+    procedure CheckToolbarGeometry;
     {$endif}
     procedure FocusCell;
     function CopyKey: Boolean;
@@ -2263,6 +2264,48 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+procedure TCopyReview.CheckToolbarGeometry;
+var
+  LStatus: TMemo;
+  LAction: TControl;
+  LIntersection: TRect;
+  LIndex: Integer;
+begin
+  LStatus := TMemo(FGrid.FindComponent('NyxClipboardStatus'));
+  Check((LStatus <> nil) and LStatus.Visible and (LStatus.Width > 0) and
+    (LStatus.Height >= Abs(LStatus.Font.Height)) and
+    (LStatus.Left >= 0) and (LStatus.Top >= 0) and
+    (LStatus.Left + LStatus.Width <= FGrid.ClientWidth) and
+    (LStatus.Top + LStatus.Height <= FGrid.CellRect(0, 0).Bottom),
+    'native clipboard feedback keeps readable text inside its actual header allocation');
+  for LIndex := 0 to 1 do
+  begin
+
+    if LIndex = 0 then
+    begin
+      LAction := TControl(FGrid.FindComponent('NyxColumnManagerButton'));
+    end
+    else
+    begin
+      LAction := TControl(FGrid.FindComponent('NyxRecoveredEditsButton'));
+    end;
+
+    if (LAction <> nil) and LAction.Visible then
+    begin
+      Check((LAction.Width > 0) and (LAction.Height > 0) and
+        not Types.IntersectRect(LIntersection, LAction.BoundsRect, LStatus.BoundsRect),
+        'native clipboard feedback never covers a reachable column or recovery action: ' +
+        TNyxText(LAction.Name) + ';action=' + TNyxText(IntToStr(LAction.Left)) + ',' +
+        TNyxText(IntToStr(LAction.Top)) + ',' + TNyxText(IntToStr(LAction.Width)) + ',' +
+        TNyxText(IntToStr(LAction.Height)) + ';status=' + TNyxText(IntToStr(LStatus.Left)) + ',' +
+        TNyxText(IntToStr(LStatus.Top)) + ',' + TNyxText(IntToStr(LStatus.Width)) + ',' +
+        TNyxText(IntToStr(LStatus.Height)));
+    end;
+  end;
+end;
+{$endif}
+
 procedure TCopyReview.RunFeedback; {$ifdef PAS2JS}async;{$endif}
 const
   CDiagnostic: TNyxText = 'Provider detail 🌙' + #0 + ' Copy needs attention.';
@@ -2285,6 +2328,7 @@ var
   LEditor: TCustomEdit;
   LSelection: TNyxTextSelection;
   LReadableStatus: TMemo;
+  LHeaderHeight: Integer;
   {$endif}
 
   function StatusText: TNyxText;
@@ -2319,6 +2363,10 @@ begin
   FocusCell;
   {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
   Check(StatusText = 'Copy results appear here.', 'initial feedback claims no clipboard capability or write');
+  {$ifndef PAS2JS}
+  CheckToolbarGeometry;
+  LHeaderHeight := FGrid.RowHeights[0];
+  {$endif}
   for LOutcome := Low(TNyxClipboardWriteOutcome) to High(TNyxClipboardWriteOutcome) do
   begin
     FHost.Outcome := LOutcome;
@@ -2345,6 +2393,11 @@ begin
       (FInput.Epoch = LEpoch) and (FMount.RefreshCount = LRefresh) and
       FView.Selection.Snapshot.SameState(LRows) and (FView.Store.Snapshot = LSource),
       'feedback preserves caller observation, original input, accepted data and row membership without refresh');
+    {$ifndef PAS2JS}
+    CheckToolbarGeometry;
+    Check(FGrid.RowHeights[0] = LHeaderHeight,
+      'changing a clipboard outcome preserves the actual native reading-area allocation');
+    {$endif}
   end;
   FHost.Outcome := ncwoFailed;
   FHost.Diagnostic := CDiagnostic + TNyxText(StringOfChar('x', 2048));
@@ -2486,6 +2539,9 @@ var
   LBefore: Integer;
   {$ifdef PAS2JS}
   LEditor: TJSHTMLInputElement;
+  {$else}
+  LWidth: Integer;
+  LDirection: TBiDiMode;
   {$endif}
 begin
   { This additional case keeps the original constructor's explicit service
@@ -2531,6 +2587,33 @@ begin
     (LJournal.EntryAt(0) = LEntry) and (FView.Store.Snapshot = LSource) and
     (TNyxCodec.Encode(FDocument) = FAuthored),
     'default recovery uses the original explicit host once without applying/discarding or authoring changes');
+  {$ifndef PAS2JS}
+  CheckToolbarGeometry;
+  LWidth := FSurface.ClientWidth;
+  LDirection := FGrid.BiDiMode;
+  try
+    { These are real target returns of the same journal/status, not a fresh
+      model or an alternative table allocation. Width and RTL never alter data. }
+    FSurface.ClientWidth := 390;
+    Drain;
+    CheckToolbarGeometry;
+    FSurface.ClientWidth := 900;
+    Drain;
+    CheckToolbarGeometry;
+    FGrid.BiDiMode := bdRightToLeft;
+    Drain;
+    CheckToolbarGeometry;
+    Check((LJournal.EntryAt(0) = LEntry) and (FView.Store.Snapshot = LSource),
+      'responsive recovery feedback preserves the same owned draft and accepted source');
+    Check(LJournal.Discard(LEntry), 'explicit journal discard removes that exact recovered draft');
+    Drain;
+    CheckToolbarGeometry;
+  finally
+    FGrid.BiDiMode := LDirection;
+    FSurface.ClientWidth := LWidth;
+    Drain;
+  end;
+  {$endif}
 end;
 
 {$ifdef PAS2JS}

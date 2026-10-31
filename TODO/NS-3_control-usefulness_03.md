@@ -3,6 +3,25 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Native short-table reading area — 2026-10-31:**
+
+The original 160px live-inspection Table now shares native clipboard feedback
+and management controls when enough horizontal room exists. Recovery actions
+retain a second feedback row when needed. Complete text, keyboard access and
+font size remain intact; width/direction/recovery changes move all surfaces
+together. The previous adapter fails the same application's full-row reading
+assertion at compact width (31px available, 39px row). Current native handwritten
+and generated application qualification and exact measured geometry belong to
+WORK, alongside retained baseline/RTL failures and their repairs.
+
+Native clipboard controls pass 1964/1953 and presentation controls 167 per width,
+with complete clean heaps. These include long diagnostics, stable outcome height,
+recovery membership, width returns and RTL. Browser compatibility remains 1755
+clipboard and 159 presentation checks per actual width, with empty errors.
+This repairs the identified native reading-area gap; broader compact layout,
+physical/assistive/non-Win32 quality, original performance budgets and complete
+workbench acceptance remain open. No task or full criterion is marked DONE.
+
 **Explicit mounted viewport navigation — 2026-10-31:**
 
 The same10000-service application now uses a typed mounted row/field reveal

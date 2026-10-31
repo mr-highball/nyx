@@ -826,21 +826,15 @@ begin
   LRevealBounds := LReadFace.CellRect(LReadColumn, GFirst.View.Snapshot.IndexOf(LDistant) + 1);
   LClipBounds := LReadFace.ClientRect;
   LClipBounds.Top := LReadFace.CellRect(LReadColumn, 0).Bottom;
+  Check(LClipBounds.Bottom - LClipBounds.Top >= LRevealBounds.Bottom - LRevealBounds.Top,
+    'the unchanged native table allocation leaves room for a complete reading row; data=' +
+    TNyxText(IntToStr(LClipBounds.Bottom - LClipBounds.Top)) + ';row=' +
+    TNyxText(IntToStr(LRevealBounds.Bottom - LRevealBounds.Top)));
 
-  if LRevealBounds.Bottom - LRevealBounds.Top <= LClipBounds.Bottom - LClipBounds.Top then
-  begin
-    Check((LRevealBounds.Top >= LClipBounds.Top) and (LRevealBounds.Bottom <= LClipBounds.Bottom),
-      'a native row which fits is wholly visible below the header and inside the data clip');
-  end
-  else
-  begin
-    { The unchanged compact160px allocation leaves31px below its native header,
-      while this row is39px. Useful placement must span that available area and
-      report partial visibility honestly; no scroll can make39px fit into31px. }
-    Check((LRevealBounds.Top <= LClipBounds.Top) and (LRevealBounds.Bottom >= LClipBounds.Bottom) and
-      not LReveal.Capture.FullyVisible,
-      'an oversized native row spans the available clip and honestly reports partial visibility');
-  end;
+  Check((LRevealBounds.Top >= LClipBounds.Top) and (LRevealBounds.Bottom <= LClipBounds.Bottom),
+    'the native reading row is wholly visible below the header and inside the data clip');
+  WriteLn('READING AREA data=', LClipBounds.Bottom - LClipBounds.Top,
+    ';row=', LRevealBounds.Bottom - LRevealBounds.Top, ';table=', LReadFace.Height);
   {$endif}
   RecordSample(wpScroll, 0, LStarted);
   {$ifdef PAS2JS}
