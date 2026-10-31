@@ -48,6 +48,9 @@ uses
   { BEGIN QUERY_CONTROL_READ_IMPORT }
   nyx.collections.query.policy,
   nyx.collections.arrangement, nyx.formatting,
+  nyx.collections.workbench.policy, nyx.collections.presentation,
+  nyx.collections.alignment, nyx.collections.inspection,
+  nyx.collections.recovery.policy,
   { END QUERY_CONTROL_READ_IMPORT }
   { BEGIN QUERY_POLICY_EDIT_IMPORTS }
   nyx.collections.columns, nyx.collections.paging,
@@ -1436,7 +1439,11 @@ var
             end;
           end;
         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
-        scaColumnFormat, scaDefaultColumnFormat:
+        scaColumnFormat, scaDefaultColumnFormat,
+        scaTableWorkbench, scaDefaultTableWorkbench,
+        scaTablePresentation, scaDefaultTablePresentation,
+        scaColumnText, scaDefaultColumnText,
+        scaColumnAlignment, scaDefaultColumnAlignment, scaColumnEarlier, scaColumnLater:
           begin
             { Layout commands carry their own complete binding/schema baseline;
               they must not borrow the independent query editor's draft proof. }
@@ -1449,8 +1456,17 @@ var
               LActionDocument.Free;
             end;
 
-            if LAction in [scaColumnLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
+            if LAction in [scaColumnLayout, scaDefaultColumnLayout,
+              scaColumnFormat, scaDefaultColumnFormat, scaColumnText, scaDefaultColumnText,
+              scaColumnAlignment, scaDefaultColumnAlignment] then
             begin
+              LIntent.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('caption'));
+            end;
+
+            if LAction in [scaColumnEarlier, scaColumnLater] then
+            begin
+              { A middle field has a real neighbour in either direction. Each
+                candidate must move the named field without relying on index0. }
               LIntent.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('caption'));
             end;
 
@@ -1469,6 +1485,60 @@ var
             if LAction = scaColumnFormat then
             begin
               LIntent.ColumnFormat := NyxValueFormat.TextAffixes('[', ']');
+            end;
+
+            if LAction = scaTableWorkbench then
+            begin
+              LIntent.TableWorkbench := NyxTableWorkbench;
+            end;
+
+            if LAction = scaTablePresentation then
+            begin
+              LIntent.TablePresentation := NyxTablePresentation.Density(ntrdCompact);
+            end;
+
+            if LAction = scaColumnText then
+            begin
+              LIntent.ColumnText := NyxColumnText;
+            end;
+
+            if LAction = scaColumnAlignment then
+            begin
+              LIntent.ColumnAlignment := NyxColumnAlignment.Horizontal(nchaEnd);
+            end;
+          end;
+        scaInspection, scaDefaultInspection, scaDraftRecovery, scaDefaultDraftRecovery:
+          begin
+            { These policies deliberately have their own intent baseline slots.
+              The saved binding/schema still supplies the exact current proof;
+              reusing LayoutBaseline would conceal a malformed caller. }
+            LActionDocument := TNyxCodec.Decode(LCurrent.Design);
+            try
+
+              if LAction in [scaInspection, scaDefaultInspection] then
+              begin
+                LIntent.InspectionBaseline := NyxQueryEditorBaseline(
+                  LActionDocument.Collections.Snapshot(LKey).Schema,
+                  LActionDocument.Find('tasks-table').CollectionView);
+              end
+              else
+              begin
+                LIntent.DraftRecoveryBaseline := NyxQueryEditorBaseline(
+                  LActionDocument.Collections.Snapshot(LKey).Schema,
+                  LActionDocument.Find('tasks-table').CollectionView);
+              end;
+            finally
+              LActionDocument.Free;
+            end;
+
+            if LAction = scaInspection then
+            begin
+              LIntent.Inspection := NyxInspectionPolicy;
+            end;
+
+            if LAction = scaDraftRecovery then
+            begin
+              LIntent.DraftRecovery := NyxDraftRecoveryPolicy;
             end;
           end;
         { END CURRENT_INTENT_PAYLOADS }
@@ -1509,6 +1579,18 @@ var
       LActionDocument := TNyxCodec.Decode(LActionPair.Design);
       try
         LActionDocument.Validate;
+
+        if LAction = scaColumnEarlier then
+        begin
+          Check(LActionDocument.Find('tasks-table').CollectionView.ColumnAt(0).FieldName = 'caption',
+            'ordinary earlier action moves the exact named field to its preceding position');
+        end;
+
+        if LAction = scaColumnLater then
+        begin
+          Check(LActionDocument.Find('tasks-table').CollectionView.ColumnAt(2).FieldName = 'caption',
+            'ordinary later action moves the exact named field to its following position');
+        end;
         LNote := LActionPair.Source;
         Check((Pos('CollectionWorkshopNote', LNote) > 0) and
           (EncodeNyxProject(LCurrent) = PairText),

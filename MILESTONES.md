@@ -4,16 +4,21 @@
 [Current work](WORK.md)
 
 The original [table workbench](TODO/NS-3_control-usefulness_03.md) now accepts
-criteria2/3/5 for presentation/inspection, typed output and separate preference/
-lifecycle ownership. Current full browser journeys and retained unchanged native
-heaps/real saved-application effects support that assessment. Remaining criteria
+criteria2/3/5/6 for presentation/inspection, typed output, separate preference/
+lifecycle ownership and authoring parity. Current full browser journeys and
+retained unchanged native heaps/real saved-application effects support that assessment. Remaining criteria
 and native pointer/quality gates stay open. Its
 [typed column-change callbacks](TODO/DONE/NS-1_column-events_01.md) prerequisite
 is accepted. Live Studio/MCP authoring and the exact saved application's
 native85/browser54 qualify manager/Fit/reset, actual LCL sizing handlers and
 callback lifetimes at both allocations. Both delegated compilers accept matching
-source/design manifests. Return to original workbench authoring parity and
-remaining user journeys; its original Win32 cursor/message gate stays open.
+source/design manifests. The complete authoring return adds native/browser policy
+forms, all275 semantic checks, local inheritance/masks, exact paired history and
+independently compiled emitted builders on both targets. Current live bounded MCP
+reads agree without editing the preserved project. Original criteria1/4/7 and the
+Win32 cursor/message gate stay open. Return to the ranked user-facing workflows
+through DataToolbar's existing coordinator/parity prerequisites, preserving the
+table's complete remaining input and quality requirements.
 This assigns no new percentage or full workbench/L2 credit.
 
 Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)

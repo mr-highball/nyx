@@ -5,10 +5,10 @@
 
 **Criterion assessment — 2026-10-31:**
 
-Original criteria2,3 and5 are accepted for the qualified browser/Win32 LCL
-support matrix. This accepts their complete formatting/inspection, typed output
-and preference-ownership requirements, not the whole workbench. The original
-seven criteria below are unchanged; no task move or north-star percentage follows.
+Original criteria2,3,5 and6 are accepted for the qualified browser/Win32 LCL
+support matrix. This accepts their complete formatting/inspection, typed output,
+preference ownership and authoring-parity requirements, not the whole workbench.
+The original seven criteria below are unchanged; no task move or north-star percentage follows.
 
 | Criterion | Assessment and evidence |
 | --- | --- |
@@ -17,10 +17,11 @@ seven criteria below are unchanged; no task move or north-star percentage follow
 | 3 — Copy/export | Accepted. Current browser controls pass1755 per width for exact cell/row/range payloads, raw/display/draft choices, hidden/paged/filtered membership, escaping/headers/endings, six host outcomes and lifecycle refusal. Prior current native1964/1953 has clean heaps and unchanged native/capability sources. Accepted output-hosts01 and browser-copy-input01 retain exact real OS clipboard writes, confirmed native/browser page/filtered TSV and real native save cancellation in the same generated Service monitor. Fresh injected-host regressions do not claim new OS effects. |
 | 4 — Keyboard/context | Open for complete integrated input assessment. Current browser workbench includes commit/cancel/refused numeric drafts and context handling; prior same-application trusted keys and native widget messages remain evidence. Preserve the remaining complete workflow and native input limits. |
 | 5 — Preferences/lifecycle | Accepted. Actual RebindCases qualify independent reusable stores, compatible typed-field transfer, removed-field pruning, stale/foreign/wrong-family refusal, exact Unicode draft/caret/focus through full replacement and source/query separation. Both current native runs execute this earlier section before the later cursor gate; source control flow and failure stacks establish that bounded result, not a full-suite pass. Complete current browser workbench passes, while table-preferences-return-01 retains the same saved application's ordinary filtered reset, order/per-column resets, exact draft and independent peer. Typed persistence remains separate from authored defaults. |
-| 6 — Authoring parity | Open for the complete capability/parity audit. Accepted column-events01 now supplies ordinary Events/Add/source, revision-aware MCP and the exact saved application's native85/browser54 callback paths, including LCL sizing. Review the remaining public policies, local inheritance/masks and source/semantic exposure against this original criterion; the completed event prerequisite does not alone establish full authoring parity. |
+| 6 — Authoring parity | Accepted. Existing ordinary forms, public typed intents and bounded semantic operations agree for sizing/layout, query, formatting/alignment, presentation, workbench output, inspection and recovery. Native/browser policy and source suites pass, including all275 semantic checks, local defaults versus inheritance/masks and exact paired history. Independently compiled emitted builders reconstruct the exact accepted designs on both targets. Actual Inspector controls and the accepted column-events01 Studio/MCP/saved-application journeys supply the mounted property/event paths. WORK retains the coverage, source identities and repaired fixture failures. This accepts authoring capability parity; whole-workbench input, visual quality and production performance remain with the other original criteria. |
 | 7 — Complete public workbench | Open. Saved/generated Service monitor journeys and real output effects remain applicable. Full native input, final integrated visual/quality assessment and all original criteria remain required. |
 
-The current packet is `workbench-acceptance-return-01`; WORK owns exact source
+The current authoring packet is `workbench-authoring-parity04`; the retained
+integrated input packet is `workbench-acceptance-return-01`. WORK owns exact source
 identities, builds, clean heaps, retained failures and the pending user-operated
 desktop runner. Browser dimensions are verified browsing contexts, not an assumed
 viewport override. Logs retain the externally reproduced script-free iframe
@@ -33,10 +34,19 @@ headers remain sticky at the top; start/end pins must clear the opposite edge.
 This preserves the actual unpin requirement and the accepted header-readability
 repair. The original failure and setup-host error remain in the packet.
 
-Continue the concrete typed callback authoring prerequisite rather than another
-manager, preference, header or latency variant. Keep the native cursor assertion
-and pending desktop execution result; do not waive it or treat this whole task
-as externally blocked while useful prerequisite implementation can proceed.
+The complete authoring review found outdated qualification inputs, not a missing
+product policy: the browser test required read-only text to be disabled despite
+the documented inspection/copy behavior, and the older semantic test omitted
+newer typed action payloads. Both are repaired while retaining forced-write
+refusal, strict baseline validation and every existing semantic operation. Named
+column movement also verifies its actual result; the original edge refusal is
+retained in failure evidence. All current ordinary actions are exercised.
+
+Keep the native cursor assertion and pending desktop execution result. Return
+for original criteria1/4/7 and their integrated workflows; no whole task move or
+percentage follows. Do not repeat policy, callback, manager or latency fixtures.
+Continue the ranked user-facing backlog while the external native result remains
+pending, preserving this task's complete finish line.
 
 **Native short-table reading area — 2026-10-31:**
 

@@ -9,7 +9,101 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Return to complete workbench authoring parity — 2026-10-31
+## Current work — Return to useful DataToolbar browser interaction — 2026-10-31
+
+Outcome: PROGRESS from8993ca9a. Root remains SOLO. Original
+[workbench03](TODO/NS-3_control-usefulness_03.md) criterion6 is accepted after
+the complete policy/source/semantic review below. Original criteria2/3/5 remain
+accepted;1/4/7 and the Win32 cursor-input gate stay open. No whole task move,
+north-star percentage or complete Nyx/Studio/L2 acceptance follows. Consecutive
+batches without criterion closure: zero.
+
+Return to the ranked user-facing backlog through the existing
+[parity criterion2](TODO/NS-2_parity-accessibility_01.md) and
+[coordinator](TODO/NS-3_coordinators_01.md) prerequisites of
+[DataToolbar runtime02](TODO/NS-3_data-toolbar_02.md), returning to
+[authoring01](TODO/NS-3_data-toolbar_01.md). The next bounded deliverable is real
+browser Search/Sort/Clear with independent instances, preserved input, refusal
+and lifecycle behavior, followed by its ordinary Studio/saved application path.
+Review the retained native/public-application evidence and existing base/reuse/
+Studio/generated consumers first. Reuse those maintained consumers and repair
+the first demonstrated user-facing gap; do not add a static recipe, source/query
+variant or equivalent table fixture. This does not accept the full parity parent
+or move its hard prerequisite. Stop/reassess after two batches without closure.
+
+The original workbench desktop runner still awaits its external result; do not
+retry the denied GetCursorPos call, weaken that assertion or request another
+permission for already authorized local checks. Return to its original integrated
+input/quality finish line when evidence is available. The broad goal stays active.
+
+Current packet: workbench-authoring-parity04. All compiler/runtime readers are
+joined and the temporary browser tab is closed. Fixed QA/LAN listeners and project
+data remain intact. All new artifacts, private orchestration and process TEMP/TMP
+stay on E:. Preserve unrelated AGENTS/WORK edits and earlier qualification.
+
+## Accepted criterion — Complete table authoring parity — 2026-10-31
+
+The original workbench criterion6 now has an explicit capability review across
+sizing/layout, query policy, formatting/alignment, presentation, workbench
+inspection/copy/export, live-inspection defaults and draft recovery. Existing
+Nyx-built ordinary forms capture the same typed intents as bounded semantic
+operations. Local factory defaults, absent declarations, inherited values,
+binding masks and explicit inheritance retain distinct ownership and source.
+The accepted column-events01 packet supplies ordinary Events/Add/help/source
+navigation, ordered registrations, revision-aware MCP and its exact saved
+application's native85/browser54 callback paths, including actual LCL sizing.
+That prerequisite is combined with the whole policy review, not counted twice.
+
+Current native and executed browser policy checks pass36 workbench,120
+presentation,18 inspection,76 formatting/representation and284 pending-form
+refusal checks. All275 semantic checks pass on both targets, including complete
+current ordinary action payloads, bounded reads, grouped atomic edits, refusals,
+local inheritance/masks and exact paired history. The actual rendered Inspector
+journey passes27 shared/29 native controls and27 shared/32 browser controls,
+including supplementary Unicode/NUL row edits, selection/scope/column properties,
+read-only/disabled refusal, navigation, preview isolation and independent peers.
+The current native rerun has all29307316 blocks freed; the full semantic run has
+all75109923 blocks freed. Every successful native run has a complete clean heap.
+
+Source-reader consumers pass47 workbench and46 presentation checks on both
+targets. Their independently compiled emitted builders pass48 and5 respectively;
+the all-style emitted formatting builder passes77 on each target. These compare
+actual compiler-constructed documents with the exact accepted originals, rather
+than using the configuration reader as proof of compilation. Optional absent
+policy/wire behavior and handwritten companion frames remain in the regressions.
+Browser source/model consumers are not separate viewport or physical-input proofs.
+
+The retained failures are qualification defects. The original browser collection
+test expected read-only text to be disabled, contradicting documented inspection/
+copy behavior. Its repair requires enabled read-only text, retains forced text
+write refusal and adds disabled-checkbox/forced Boolean refusal. Stable row/field
+selectors avoid unrelated controls. The older semantic action enumeration lacked
+new policy baselines/payloads; its repaired exhaustive cases keep all earlier
+operations. An initial move chose the fixture's first field and correctly refused
+its edge; the final candidate uses its actual middle caption field and checks
+both resulting positions. Original failure logs and clean heaps remain. The
+current semantic compiler no longer emits its incomplete-case warning. No product
+policy or acceptance guard is weakened to accommodate these fixtures.
+
+The live native MCP `nyx_collections` discovery and a single-column bindings read
+return the requested query/layout/format/workbench/presentation/alignment facets
+with local/effective declarations. Service monitor stays at revision9; no design
+mutation, new workspace, recovery or service restart occurs. The fixed QA serves
+only additional static qualification assets. All24 recorded source identities
+and36 staged assets match their final manifests. Product src/studio remains
+unchanged from the starting8993ca9a checkout. Twelve browser consumers execute
+successfully with empty captured warnings/errors. The slow all-in-one semantic
+navigation and an interrupted reload observation are retained separately; their
+later terminal verdicts are successful, without restarting either journey.
+
+The packet retains native/build/run logs, emitted units, original/repaired browser
+receipts, bounded MCP request/reply/discovery, source and asset manifests and the
+private runners. This accepts capability authoring parity for the qualified
+browser/Win32 LCL matrix. Original workbench1/4/7, physical/assistive and other
+widgetset/OS quality, whole-editor latency and the original scale budgets remain
+open. No listener payload, runtime storage, project pair or output profile changes.
+
+## Previous checkpoint — Return to complete workbench authoring parity — 2026-10-31
 
 Outcome: PROGRESS fromf00a8dc0. Root remains SOLO. All five original criteria of
 [column-events01](TODO/DONE/NS-1_column-events_01.md) are accepted. Actual LCL

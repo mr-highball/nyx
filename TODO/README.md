@@ -7,20 +7,28 @@
 The same MCP-authored application passes native85 per width, including actual
 LCL sizing handlers, LTR/RTL, Escape/no-op, native header width and bound status.
 Retained browser54, Studio source15 and native/browser48 supply the unchanged
-browser/authoring/data evidence. Return to original workbench03 authoring parity
-and remaining user journeys. Its Win32 cursor/message gate remains unwaived;
+browser/authoring/data evidence. Workbench03's complete authoring parity is now
+accepted below. Its Win32 cursor/message gate remains unwaived;
 do not repeat another callback/payload/manager fixture or infer parent acceptance.
 
-[Workbench03](NS-3_control-usefulness_03.md) now accepts original criteria2,3
-and5: presentation/inspection, typed copy/export and preference/lifecycle
-ownership. Full current browser workbench1576/1577, presentation159 per width
-and clipboard1755 per width complement unchanged clean native evidence and the
-same saved application's real OS effects. Original criteria1/4/6/7 remain open.
+[Workbench03](NS-3_control-usefulness_03.md) now accepts original criteria2,3,5
+and6: presentation/inspection, typed copy/export, preference/lifecycle ownership
+and authoring parity. Full current browser workbench1576/1577, presentation159
+per width and clipboard1755 per width complement unchanged clean native evidence and the
+same saved application's real OS effects. Original criteria1/4/7 remain open.
 Current native full runs retain Win32 cursor error5 and clean heaps; the prepared
 desktop runner awaits the user's result. The
 [typed column-change callback](DONE/NS-1_column-events_01.md) prerequisite is
-accepted; continue the complete original criterion6 capability/parity audit.
-Do not repeat preference/header/latency variants or assign full parent credit.
+accepted; the complete policy/source review now retains executed native/browser
+forms, all275 semantic checks and independently compiled emitted builders on both
+targets. Local defaults, inheritance/masks and exact paired history agree with
+the ordinary Inspector and bounded live MCP reads. WORK retains the repaired
+test-input failures and target limits. No full parent credit follows.
+
+Return to the ranked everyday workflows. The next bounded browser interaction
+return follows DataToolbar's existing coordinator/parity prerequisites, reusing
+its public Search/Sort/Clear consumer and saved-application evidence. Repair a
+demonstrated user-facing gap; do not start another table policy or source variant.
 
 [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) is accepted
 on2026-10-31. Complete admission, copied typed changes and conservative target

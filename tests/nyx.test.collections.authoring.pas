@@ -451,7 +451,8 @@ begin
     {$ifdef PAS2JS}
     Check(LRenderer.ElementFor('tasks-table').querySelectorAll('[data-nyx-item]').length >= 2,
       'authored table mounts actual rows', Result);
-    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector('input'));
+    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector(
+      '[data-nyx-item="root"] input[data-nyx-column="0"]'));
     LInput.value := 'Edited from control';
     LInput.dispatchEvent(TJSEvent.new('change'));
     {$else}
@@ -480,8 +481,13 @@ begin
     LRenderer.Root.Configure.ReadOnly(True).Done;
     LRenderer.Sync;
     {$ifdef PAS2JS}
-    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector('input'));
-    Check(LInput.disabled and LInput.readOnly, 'ancestor read-only reaches generated editor', Result);
+    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector(
+      '[data-nyx-item="root"] input[data-nyx-column="0"]'));
+    { Read-only text keeps its ordinary inspection/copy affordance. Disabling
+      every input would hide that distinction from a genuinely disabled table;
+      the following forced callback must still refuse every data mutation. }
+    Check(not LInput.disabled and LInput.readOnly,
+      'ancestor read-only reaches generated editor while preserving text inspection', Result);
     LInput.value := 'Rejected read-only';
     LInput.dispatchEvent(TJSEvent.new('change'));
     {$else}
@@ -492,10 +498,22 @@ begin
     {$endif}
     Check(LView.CellText(NyxItem(NyxCollection('tasks'), 'root'), 0) = 'Edited from control',
       'forced read-only physical callback cannot mutate data', Result);
+    {$ifdef PAS2JS}
+    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector(
+      '[data-nyx-item="root"] input[data-nyx-column="1"]'));
+    Check(LInput.disabled and LInput.readOnly,
+      'read-only checkbox disables its native toggle affordance', Result);
+    LInput.checked := True;
+    LInput.dispatchEvent(TJSEvent.new('change'));
+    Check(not LView.Snapshot.Item(NyxItem(NyxCollection('tasks'), 'root'))
+      .GetValue(NyxBooleanField('done')),
+      'forced read-only checkbox callback cannot mutate accepted Boolean', Result);
+    {$endif}
     LRenderer.Root.Configure.ReadOnly(False).Enabled(False).Done;
     LRenderer.Sync;
     {$ifdef PAS2JS}
-    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector('input'));
+    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector(
+      '[data-nyx-item="root"] input[data-nyx-column="0"]'));
     Check(LInput.disabled, 'ancestor disabled reaches generated input', Result);
     LInput.value := 'Rejected disabled';
     LInput.dispatchEvent(TJSEvent.new('change'));
@@ -521,7 +539,8 @@ begin
     {$endif}
     {$ifdef PAS2JS}
     LRenderer.Render(LDocument, LDocument.Pages[0], LHost, True);
-    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector('input'));
+    LInput := TJSHTMLInputElement(LRenderer.ElementFor('tasks-table').querySelector(
+      '[data-nyx-item="root"] input[data-nyx-column="0"]'));
     Check(LInput.disabled and LInput.readOnly, 'design preview editors cannot write runtime data', Result);
     {$endif}
     Check(TNyxCodec.Encode(LDocument) = LBefore, 'runtime commands never change saved defaults', Result);
