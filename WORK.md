@@ -9,7 +9,93 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Return to original workbench outcomes — 2026-10-31
+## Current work — Typed column-change callbacks — 2026-10-31
+
+Outcome: PROGRESS from a18e5ec3. Root remains SOLO. Original workbench03 criteria
+2/3/5 are accepted by the assessment below;1/4/6/7 and the complete task remain
+open. No original criterion, full Nyx/Studio goal or latency threshold changes.
+No north-star percentage or duplicate credit is assigned.
+
+Next implement [column-events01](TODO/NS-1_column-events_01.md), the concrete
+workbench03 criterion6 prerequisite. Begin with detached typed committed-change
+data and an optional reference-counted view subscription through the existing
+publication path, then bridge the existing event router/schema/Studio workflow.
+Runtime currently issues a generic nil view notification; Studio advertises
+selection changes but no column-change event. Do not manufacture a custom named
+event workaround, another scheduler or another preference/header/latency fixture.
+Preserve old interfaces, observer/failure order, exact identities and generation
+retirement. The task owns the full authored application acceptance path.
+
+The current native full pointer gate remains at Win32 GetCursorPos error5.
+A hash-checked ordinary-desktop runner is prepared under the external
+workbench-acceptance-return-01 packet; a concise async request awaits the user's
+execution/result. It opens only test windows and writes evidence on E:, with no
+administrator request or server/project change. Do not waive the original
+assertion or rerun the same denied call from this session. This does not block
+useful callback implementation. All owned readers are joined, temporary browser
+tabs are closed and temporary viewport sizing is reset.
+
+Keep new private artifacts/process TEMP/TMP on E:, preserve fixed listeners and
+exact projects/output choices, and leave unrelated AGENTS/WORK edits intact.
+
+## Accepted checkpoint — Workbench criteria2/3/5 — 2026-10-31
+
+The full intended table task is reassessed against all seven original criteria.
+Current source and table-preferences-return-01 already qualify compatible
+recompose/replacement, typed-field pruning, stale/foreign/wrong-family refusal,
+independent reusable stores and saved-application filtered/default/order/per-field
+reset with an exact supplementary-Unicode draft/caret. These are reused rather
+than replaced by another API or equivalent fixture. Criterion5 is accepted.
+
+Fresh complete browser workbench runs execute1576 at verified1280x900 and1577
+at390x844. The initial host references a different program and is corrected
+without a recompile; that setup failure remains. The actual current source first
+fails an old assertion equating column unpinning with removing all sticky CSS.
+Only that test is corrected: unpin must remove both horizontal logical insets
+while preserving the vertical header at top0; each pin also clears the opposite
+edge. Its original failure, source and generated JS remain. Full reruns pass.
+Ordinary compact select/button input independently pins then unpins Name: the
+addressed header changes start0px to absent, retains sticky/top0 and leaves the
+peer untouched. This does not claim a new product fix or full visual acceptance.
+
+Fresh browser presentation159 and clipboard1755 pass at each verified width.
+They cover wrapping/clipping/density/alignment, complete accessible values,
+unchanged RAW Unicode/NUL/numeric/time/line data, exact live editors/peers,
+cell/row/range membership, formatted/RAW/draft choice, escaping/header/endings,
+typed host results and cancellation/refusal/retirement. Prior policy-04 native
+presentation167 and clipboard1964/1953 per width retain their complete clean
+heaps. Their native/capability sources are unchanged from b61e4c2a; the reuse
+receipt verifies the native renderer hash. These are reused, not new executions.
+Accepted output-hosts01/browser-copy-input01 retain the same generated Service
+monitor's real OS writes, user-operated browser saves, exact page/filtered TSV
+and real native cancellation. Current injected-host checks do not claim new OS
+effects. Together these qualify original criteria2/3 for the supported matrix.
+
+Current native full workbench compiles with normal source/dependency checks and
+runs both widths. Both stop at the retained manager Launch cursor-read assertion
+with Win32 error5. All5889099/5889103 allocated blocks are freed. Linear source
+flow and failure stacks establish that the earlier ArrangementCases/RebindCases
+completed, including actual replacement editor/focus checks; they do not prove
+the later physical manager or a full native pass. No assertion is skipped and
+no denied OS access is bypassed. The desktop runner pins that exact binary and
+retains independent run directories. Its external result remains pending.
+
+The new column-events01 prerequisite records the actual missing criterion6
+capability: TColumnPreparation.Notify publishes nil, the closed event family has
+no column trigger and Studio's collection metadata exposes selection changes.
+It requires real typed event data, normal multiple callbacks/policies, schema/
+source/history/MCP parity and the own saved/generated application on both
+targets. This is an implementation deliverable, not another review-only report.
+
+Evidence is workbench-acceptance-return-01: original/final sources, builds,
+runtime receipts, source reuse, native failure heaps and compact rendering.
+Browser logs retain the previously isolated MutationObserver error reproduced
+in a script-free iframe; no empty-console claim is made. No active design,
+serving executable or LAN payload changes. Protected projects/configuration
+remain exact. Physical/assistive, other native widgetsets/OSes, complete W1/W2,
+workbench04's original timing requirements and full Studio remain open.
+
+## Previous work — Return to original workbench outcomes — 2026-10-31
 
 Outcome: PROGRESS from b61e4c2a. Root continues SOLO; all owned compiler/runtime
 readers are joined and temporary browser tabs are closed. The six unchanged

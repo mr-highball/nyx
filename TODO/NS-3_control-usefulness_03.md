@@ -3,6 +3,41 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Criterion assessment — 2026-10-31:**
+
+Original criteria2,3 and5 are accepted for the qualified browser/Win32 LCL
+support matrix. This accepts their complete formatting/inspection, typed output
+and preference-ownership requirements, not the whole workbench. The original
+seven criteria below are unchanged; no task move or north-star percentage follows.
+
+| Criterion | Assessment and evidence |
+| --- | --- |
+| 1 — Column controls | Open. Full browser workbench passes1576/1577 at verified1280x900/390x844, including manager/resize/reset. Current full native runs stop at the original cursor-read assertion with Win32 error5. They have clean heaps; no current full native pointer pass is claimed. |
+| 2 — Presentation/inspection | Accepted. Current browser presentation controls pass159 per width: clipping/wrapping, density, independent header allocation, logical alignment, full accessible values, unchanged RAW Unicode/NUL/line data, live editors and peers. Prior policy-04 native presentation167 per width has clean heaps and unchanged native/capability sources. Public Service monitor inspection and independently compiled saved/generated applications retain their original provenance. Data remains text/typed values, not executable formatting input. |
+| 3 — Copy/export | Accepted. Current browser controls pass1755 per width for exact cell/row/range payloads, raw/display/draft choices, hidden/paged/filtered membership, escaping/headers/endings, six host outcomes and lifecycle refusal. Prior current native1964/1953 has clean heaps and unchanged native/capability sources. Accepted output-hosts01 and browser-copy-input01 retain exact real OS clipboard writes, confirmed native/browser page/filtered TSV and real native save cancellation in the same generated Service monitor. Fresh injected-host regressions do not claim new OS effects. |
+| 4 — Keyboard/context | Open for complete integrated input assessment. Current browser workbench includes commit/cancel/refused numeric drafts and context handling; prior same-application trusted keys and native widget messages remain evidence. Preserve the remaining complete workflow and native input limits. |
+| 5 — Preferences/lifecycle | Accepted. Actual RebindCases qualify independent reusable stores, compatible typed-field transfer, removed-field pruning, stale/foreign/wrong-family refusal, exact Unicode draft/caret/focus through full replacement and source/query separation. Both current native runs execute this earlier section before the later cursor gate; source control flow and failure stacks establish that bounded result, not a full-suite pass. Complete current browser workbench passes, while table-preferences-return-01 retains the same saved application's ordinary filtered reset, order/per-column resets, exact draft and independent peer. Typed persistence remains separate from authored defaults. |
+| 6 — Authoring parity | Open. Runtime operations and ordinary source/Inspector/semantic paths have evidence, but first-class typed column-change callbacks are missing from Studio's Table events. The concrete prerequisite is column-events01 below; a custom named event is not its implementation. |
+| 7 — Complete public workbench | Open. Saved/generated Service monitor journeys and real output effects remain applicable. Full native input, final integrated visual/quality assessment and all original criteria remain required. |
+
+The current packet is `workbench-acceptance-return-01`; WORK owns exact source
+identities, builds, clean heaps, retained failures and the pending user-operated
+desktop runner. Browser dimensions are verified browsing contexts, not an assumed
+viewport override. Logs retain the externally reproduced script-free iframe
+MutationObserver error; do not claim empty consoles. Physical/assistive and other
+native widgetset/OS qualification remain separate broader requirements.
+
+The existing unpin assertion conflated horizontal pinning with vertical sticky
+headers. It now requires both horizontal logical insets to clear while vertical
+headers remain sticky at the top; start/end pins must clear the opposite edge.
+This preserves the actual unpin requirement and the accepted header-readability
+repair. The original failure and setup-host error remain in the packet.
+
+Continue the concrete typed callback authoring prerequisite rather than another
+manager, preference, header or latency variant. Keep the native cursor assertion
+and pending desktop execution result; do not waive it or treat this whole task
+as externally blocked while useful prerequisite implementation can proceed.
+
 **Native short-table reading area — 2026-10-31:**
 
 The original 160px live-inspection Table now shares native clipboard feedback
@@ -1020,6 +1055,9 @@ needs qualification against the portable contract.
   heaps, and state widgetset/clipboard/assistive-input limits honestly.
 
 **Blockers**
+
+- [Typed column-change callbacks](NS-1_column-events_01.md) supplies the missing
+  first-class runtime/Studio event bridge required by criterion6.
 
 - [Typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md) supplies
   portable original cell identity/value to authored context callbacks.

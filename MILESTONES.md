@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The original [table workbench](TODO/NS-3_control-usefulness_03.md) now accepts
+criteria2/3/5 for presentation/inspection, typed output and separate preference/
+lifecycle ownership. Current full browser journeys and retained unchanged native
+heaps/real saved-application effects support that assessment. Remaining criteria
+and native pointer/quality gates stay open. Its next concrete prerequisite is
+[typed column-change callbacks](TODO/NS-1_column-events_01.md) through ordinary
+Studio Events. This assigns no new percentage or full workbench/L2 credit.
+
 Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)
 is accepted on2026-10-31. Complete admission and conservative target fallback
 remain, while supported status changes avoid unrelated setters. Both-target

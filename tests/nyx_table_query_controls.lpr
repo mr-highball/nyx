@@ -3397,8 +3397,15 @@ var
 
     if APin = ncpNone then
     begin
-      Check(LHeader.style.getPropertyValue('position') <> 'sticky',
-        'Unpinned removes sticky authority from the actual browser header');
+      { Column pins own horizontal logical insets. Ordinary headers separately
+        remain sticky vertically while rows scroll; unpinning must preserve
+        that reading behavior rather than equating both axes of positioning. }
+      Check((LHeader.style.getPropertyValue('inset-inline-start') = '') and
+        (LHeader.style.getPropertyValue('inset-inline-end') = ''),
+        'Unpinned removes both logical horizontal pin offsets from the actual browser header');
+      Check((window.getComputedStyle(LHeader).getPropertyValue('position') = 'sticky') and
+        (window.getComputedStyle(LHeader).getPropertyValue('top') = '0px'),
+        'Unpinned retains ordinary vertical header visibility while rows scroll');
     end
     else
     begin
@@ -3407,13 +3414,15 @@ var
 
       if APin = ncpStart then
       begin
-        Check(LHeader.style.getPropertyValue('inset-inline-start') <> '',
-          'start pin uses the logical start edge');
+        Check((LHeader.style.getPropertyValue('inset-inline-start') <> '') and
+          (LHeader.style.getPropertyValue('inset-inline-end') = ''),
+          'start pin uses only the logical start edge');
       end
       else
       begin
-        Check(LHeader.style.getPropertyValue('inset-inline-end') <> '',
-          'end pin uses the logical end edge');
+        Check((LHeader.style.getPropertyValue('inset-inline-end') <> '') and
+          (LHeader.style.getPropertyValue('inset-inline-start') = ''),
+          'end pin uses only the logical end edge');
       end;
     end;
     {$else}

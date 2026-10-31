@@ -3,6 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+[Workbench03](NS-3_control-usefulness_03.md) now accepts original criteria2,3
+and5: presentation/inspection, typed copy/export and preference/lifecycle
+ownership. Full current browser workbench1576/1577, presentation159 per width
+and clipboard1755 per width complement unchanged clean native evidence and the
+same saved application's real OS effects. Original criteria1/4/6/7 remain open.
+Current native full runs retain Win32 cursor error5 and clean heaps; the prepared
+desktop runner awaits the user's result. Next implement the concrete
+[typed column-change callback](NS-1_column-events_01.md) prerequisite of criterion6,
+using existing publications, events, scheduler and Studio source handling.
+Do not repeat preference/header/latency variants or assign full parent credit.
+
 [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) is accepted
 on2026-10-31. Complete admission, copied typed changes and conservative target
 fallback retain ordinary bindings while avoiding unrelated setters. Actual
@@ -2455,6 +2466,7 @@ blockers rather than filename order.
 | NS-1 | [Portable resources and bindings](DONE/NS-1_resources_01.md) | Accepted image/JSON/text/data resources, typed bindings, localization, hosted caches and ordinary Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
+| NS-1 | [Typed Table column-change callbacks](NS-1_column-events_01.md) | Committed arrangement payloads and first-class Studio Events authoring for workbench03 | Prerequisite; pending implementation |
 | NS-1 | [LINQ and safe parallel queries](NS-1_linq-parallel_01.md) | Full generic operators, native helpers and safe worker/UI/collection publication; initial deferred core qualified | Pending assessment |
 | NS-1 | [Typed clock-time prerequisite](DONE/NS-1_time-values_01.md) | Accepted exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
 | NS-1 | [Pascal generation](NS-1_codegen_01.md) | Deterministic adjacent Delphi-dialect source | Pending assessment |
