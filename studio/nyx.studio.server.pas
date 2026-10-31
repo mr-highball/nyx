@@ -71,6 +71,7 @@ type
     never shell commands or arbitrary compiler argument text. }
   TNyxStudioServer = class
   private
+    FCompilerLimits: TNyxCompilerLimits;
     FHTTP: TNyxHTTPServer;
     FDirectories: TNyxStudioDirectories;
     FWebRoot: TNyxText;
@@ -117,6 +118,14 @@ type
       const AWebRoot: TNyxText = '';
       const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
       ARecoveryMode: TNyxRuntimeRecoveryMode = rrmAutomatic); overload;
+    { Explicit host policy covers MCP workers, startup recovery and the legacy
+      HTTP compiler path. It is copied before any source work or listener. }
+    constructor Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
+      const ABindAddress: TNyxText; AMCPPort: Integer;
+      const AWebRoot: TNyxText;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+      ARecoveryMode: TNyxRuntimeRecoveryMode;
+      const ALimits: TNyxCompilerLimits); overload;
     destructor Destroy; override;
     procedure Run;
   end;
@@ -219,8 +228,20 @@ constructor TNyxStudioServer.Create(const ADirectories: TNyxStudioDirectories; A
   const ARecoveryVerifier: INyxRuntimeSourceVerifier;
   ARecoveryMode: TNyxRuntimeRecoveryMode);
 begin
+  Create(ADirectories, APort, ABindAddress, AMCPPort, AWebRoot,
+    ARecoveryVerifier, ARecoveryMode, TNyxCompilerLimits.Default);
+end;
+
+constructor TNyxStudioServer.Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
+  const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText;
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+  ARecoveryMode: TNyxRuntimeRecoveryMode;
+  const ALimits: TNyxCompilerLimits);
+begin
   inherited Create;
   ADirectories.Validate;
+  ALimits.Validate;
+  FCompilerLimits := ALimits;
 
   if (APort < 1024) or (APort > 65535) then
   begin
@@ -264,7 +285,7 @@ begin
     AMCPPort := APort + 1;
   end;
   FMCP := TNyxStudioMCP.Create(FDirectories, APort, AMCPPort, FOutputs.Encode,
-    ARecoveryVerifier, ARecoveryMode);
+    ARecoveryVerifier, ARecoveryMode, FCompilerLimits);
   FMCP.OnOperatorProfileChange := OperatorProfileChanged;
   FHTTP := TNyxHTTPServer.Create(nil);
   FHTTP.Address := FBindAddress;
@@ -378,6 +399,7 @@ var
 begin
   LExecutor := TNyxBuildExecutor.Create(FDirectories, FMCP.OutputProfile);
   try
+    LExecutor.ConfigureLimits(FCompilerLimits);
     Result := LExecutor.Build(ADocument, ATarget, AScope, APage, ACompanion);
   finally
     LExecutor.Free;

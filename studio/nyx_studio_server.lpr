@@ -33,7 +33,8 @@ uses
   SysUtils,
   nyx.studio.server,
   nyx.studio.recovery,
-  nyx.studio.directories;
+  nyx.studio.directories,
+  nyx.studio.buildexecutor;
 
 var
   LServer: TNyxStudioServer;
@@ -47,12 +48,19 @@ var
   LDirectories: TNyxStudioDirectories;
   LRecoveryMode: TNyxRuntimeRecoveryMode;
   LRecoveryChoice: TNyxText;
+  LCompilerLimits: TNyxCompilerLimits;
 const
   { Host CLI boundary only; portable designs never contain this execution choice. }
   CImmediateRecovery = 'immediate';
   CBrowserWorkerRecovery = 'browser-worker';
   CAutomaticRecovery = 'automatic';
 begin
+  { Environment is read once at this trusted process boundary. Invalid values
+    refuse before constructor side effects; design/HTTP/MCP data cannot set it. }
+  LCompilerLimits := NyxCompilerHostLimits(
+    GetEnvironmentVariable(NyxCompilationBudgetEnvironment),
+    GetEnvironmentVariable(NyxExecutionBudgetEnvironment),
+    GetEnvironmentVariable(NyxCompilerLogBudgetEnvironment));
   { Launch from the repository by default. An explicit root lets an IDE or build
     script run the same service without depending on its current directory. }
   LRepository := GetCurrentDir;
@@ -149,7 +157,7 @@ begin
     alone cannot start recovery or supply execution authority. Explicit immediate
     and browser-worker choices retain their trusted-host strategy contracts. }
   LServer := TNyxStudioServer.Create(LDirectories, LPort, LBindAddress, LMCPPort,
-    LWebRoot, nil, LRecoveryMode);
+    LWebRoot, nil, LRecoveryMode, LCompilerLimits);
   try
     LServer.Run;
   finally

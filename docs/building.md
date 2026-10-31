@@ -39,6 +39,33 @@ HTTP/MCP requests retain their fixed arguments and use the trusted host policy.
 Time/log exhaustion and cancellation join the owned process family before a
 result returns; they cannot admit an artifact or an executed design.
 
+`TNyxStudioServer`, `TNyxStudioMCP` and `TNyxBuildJobs` also accept an explicit
+`TNyxCompilerLimits` in their host constructor overloads. Existing overloads keep
+the defaults above. Each owner copies the policy before recovery or job admission;
+each worker retains its own copy. Changing an output profile does not change it.
+
+The standalone server reads these optional environment settings once, before
+constructing a server or opening a listener:
+
+| Setting | Default | Accepted values |
+| --- | --- | --- |
+| `NYX_STUDIO_COMPILATION_MS` | 300000 | 1..4294967295 milliseconds |
+| `NYX_STUDIO_EXECUTION_MS` | 60000 | 1..4294967295 milliseconds |
+| `NYX_STUDIO_COMPILER_LOG_BYTES` | 1048576 | 1..1048576 bytes |
+
+Empty or absent settings retain the default for that axis. Explicit values must
+contain one to ten ASCII decimal digits; signs, whitespace, other numeral sets,
+exponents, zero and overflow refuse startup. `NyxCompilerHostLimits` provides the
+same pure conversion for a host that already owns its configuration. Invalid-value
+errors identify the setting without printing its contents.
+
+Authenticated `nyx_build` with `mode: "outputs"` exposes the copied policy as
+readonly `compilerLimits` with `compilationMilliseconds`, `executionMilliseconds`
+and `logBytes`. Build requests cannot supply or override these fields. These
+settings do not extend source-projection leases, queue leases, transport deadlines
+or any other independent lifecycle policy. A longer compiler allowance helps a
+slow storage host finish; it does not make compilation faster or enable unit reuse.
+
 The maintained `nyx_lcl_tests` program normally prints compact results. Set
 `NYX_NATIVE_TEST_TRACE=1` for flushed standard-error progress through binding and
 Studio authoring checks, including shell construction and native mounting. This

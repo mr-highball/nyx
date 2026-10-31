@@ -31,7 +31,7 @@ uses
   nyx.pascal.drafts, nyx.studio.projects,
   nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces,
   nyx.studio.directories, nyx.studio.sourcepublications, nyx.studio.sourceprojection,
-  nyx.studio.editorbuild;
+  nyx.studio.editorbuild, nyx.studio.buildexecutor;
 
 type
   { Closed internal worker purpose. Source projection shares the application
@@ -63,11 +63,14 @@ type
     and sixteen job handles are retained. Host polling advances the queue;
     cancellation keeps a slot until both child and worker have been joined.
     Terminal handles expire oldest first; artifacts retain the existing service
-    lifecycle. Retry receipts (64) cannot silently submit an expired job again. }
+    lifecycle. Retry receipts (64) cannot silently submit an expired job again.
+    Trusted compiler limits are copied at construction and into each job;
+    request fields and later output-profile changes cannot replace that policy. }
   TNyxBuildJobs = class
   private
     FDirectories: TNyxStudioDirectories;
     FProfile: TNyxText;
+    FCompilerLimits: TNyxCompilerLimits;
     FJobs: TList;
     FReceiptKeys: array of TNyxText;
     FReceiptRequests: array of TNyxText;
@@ -94,6 +97,10 @@ type
       host navigation/configuration cannot redirect that worker's artifact root. }
     constructor Create(const ADirectories: TNyxStudioDirectories;
       const AProfile: TNyxText); overload;
+    { Host-only policy is validated before any job can be queued. The caller's
+      later fluent copies cannot change this owner or an admitted worker. }
+    constructor Create(const ADirectories: TNyxStudioDirectories;
+      const AProfile: TNyxText; const ALimits: TNyxCompilerLimits); overload;
     destructor Destroy; override;
     procedure Configure(const AProfile: TNyxText);
     function Outputs: TNyxDataValue;
@@ -246,7 +253,7 @@ implementation
 
 uses
   md5, fpjson, nyx.model, nyx.codec, nyx.studio.outputs,
-  nyx.studio.agents, nyx.studio.buildexecutor, nyx.editing,
+  nyx.studio.agents, nyx.editing,
   nyx.studio.sourcebuilds;
 
 type
@@ -295,6 +302,7 @@ type
     Workspace: TNyxWorkspaceRef;
     Directories: TNyxStudioDirectories;
     Profile: TNyxText;
+    CompilerLimits: TNyxCompilerLimits;
     Pair: TNyxProjectPair;
     { Detached accepted bytes only; no workspace, editor, document or producer
       lifetime crosses into the compiler worker. }
@@ -774,6 +782,7 @@ begin
   try
     try
       LExecutor := TNyxBuildExecutor.Create(FJob.Directories, FJob.Profile);
+      LExecutor.ConfigureLimits(FJob.CompilerLimits);
       LExecutor.ConfigureProgress(TBuildProgress.Create(FJob));
 
       if FJob.Purpose in [cjpSourceProjection, cjpTransaction] then
@@ -946,9 +955,17 @@ end;
 constructor TNyxBuildJobs.Create(const ADirectories: TNyxStudioDirectories;
   const AProfile: TNyxText);
 begin
+  Create(ADirectories, AProfile, TNyxCompilerLimits.Default);
+end;
+
+constructor TNyxBuildJobs.Create(const ADirectories: TNyxStudioDirectories;
+  const AProfile: TNyxText; const ALimits: TNyxCompilerLimits);
+begin
   inherited Create;
   ADirectories.Validate;
+  ALimits.Validate;
   FDirectories := ADirectories;
+  FCompilerLimits := ALimits;
   FJobs := TList.Create;
   FSourceLeaseMS := 120000;
   Configure(AProfile);
@@ -1103,6 +1120,12 @@ begin
     end;
     Result := NyxObject([NyxField('outputID', NyxData(NyxBuildFingerprint(FProfile))),
       NyxField('outputs', NyxArray([LItems[btBrowser], LItems[btNativeLCL]])),
+      { Readonly host policy explains an invocation's limit without granting
+        requests permission to change it or exposing machine paths. }
+      NyxField('compilerLimits', NyxObject([
+        NyxField('compilationMilliseconds', NyxData(Int64(FCompilerLimits.CompilationTimeMilliseconds))),
+        NyxField('executionMilliseconds', NyxData(Int64(FCompilerLimits.ExecutionTimeMilliseconds))),
+        NyxField('logBytes', NyxData(FCompilerLimits.MaximumLogBytes))])),
       { These bounded service choices explain runtime availability to agents
         without exposing the private compiler paths or enabling any service. }
       NyxField('runtimeServices', NyxObject([
@@ -1552,6 +1575,7 @@ begin
     LJob.Review := AReview;
     LJob.Workspace := AWorkspace;
     LJob.Directories := FDirectories;
+    LJob.CompilerLimits := FCompilerLimits;
     LJob.Profile := FProfile;
     LJob.Arguments := AArguments.Copy;
     LJob.Pair := APair;

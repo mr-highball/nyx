@@ -5,6 +5,15 @@
 
 **Copy and recovery return — 2026-10-30:**
 
+The subsequent wait investigation retains the earlier failures and confirms
+actual compiler/storage latency. Trusted host policy is now wired independently
+of request authority, defaults stay unchanged and lifecycle checks pass174 with
+a clean heap. The new current-source cold MCP build succeeds in33.7 compiler
+seconds with fresh units. Its actual admitted EXE visibly retains Service through
+repeated1280/390 returns. All nine original logical states and27 protected files
+remain exact. Return to original W2 preference/reset/output usability; this
+checkpoint assigns no full criterion, task or milestone credit.
+
 The native viewport return repairs handle-initialization callbacks that invent
 row selection and replace the remembered logical field with a pinned pane's
 physical column zero. The Service monitor passes296 checks at1280/390; full

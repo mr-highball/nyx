@@ -35,7 +35,8 @@ uses
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
   nyx.studio.recovery, nyx.studio.resourceruns, nyx.studio.buildlaunches,
-  nyx.studio.sourcepublications, nyx.studio.editorbuild, nyx.studio.completion;
+  nyx.studio.sourcepublications, nyx.studio.editorbuild, nyx.studio.completion,
+  nyx.studio.buildexecutor;
 
 type
   { Opaque transient native-host publication ticket. Capture precedes compilation;
@@ -177,6 +178,13 @@ type
       AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
       const ARecoveryVerifier: INyxRuntimeSourceVerifier = nil;
       ARecoveryMode: TNyxRuntimeRecoveryMode = rrmAutomatic); overload;
+    { Trusted immutable limits reach the worker owner before startup recovery
+      or listeners. No incoming MCP request can supply this host policy. }
+    constructor Create(const ADirectories: TNyxStudioDirectories;
+      AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
+      const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+      ARecoveryMode: TNyxRuntimeRecoveryMode;
+      const ALimits: TNyxCompilerLimits); overload;
     { Explicit same-origin startup connection. Supplies a separate private
       recovery capability and small progress only, never a substitute project.
       Deferred startup permits the shell/profile routes while ordinary shared
@@ -428,6 +436,16 @@ constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
   AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
   const ARecoveryVerifier: INyxRuntimeSourceVerifier;
   ARecoveryMode: TNyxRuntimeRecoveryMode);
+begin
+  Create(ADirectories, AStudioPort, AMCPPort, AOutputProfile,
+    ARecoveryVerifier, ARecoveryMode, TNyxCompilerLimits.Default);
+end;
+
+constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
+  AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText;
+  const ARecoveryVerifier: INyxRuntimeSourceVerifier;
+  ARecoveryMode: TNyxRuntimeRecoveryMode;
+  const ALimits: TNyxCompilerLimits);
 var
   LRestoredCore: TNyxAgentSession;
   LRestoredWorkspaces: TNyxStudioWorkspaces;
@@ -444,6 +462,7 @@ var
   end;
 begin
   inherited Create(True);
+  ALimits.Validate;
   FreeOnTerminate := False;
 
   if (AMCPPort < 1024) or (AMCPPort > 65535) or (AMCPPort = AStudioPort) then
@@ -459,7 +478,7 @@ begin
   FEditorToken := NewCapability + NewCapability;
   FGuard := SyncObjs.TCriticalSection.Create;
   FCore := TNyxAgentSession.Create;
-  FBuilds := TNyxBuildJobs.Create(FDirectories, AOutputProfile);
+  FBuilds := TNyxBuildJobs.Create(FDirectories, AOutputProfile, ALimits);
   FWorkspaces := TNyxStudioWorkspaces.Create(FCore, FID);
   FRecovery := TNyxStudioRuntimeStore.Create(FDirectories);
 

@@ -6,12 +6,14 @@
 The current native cursor repair passes296 Service monitor checks per width and
 the retained1904/1893 full native table-input checks, with clean heaps. Showing
 lazy handles no longer invents selection or adopts the wrong pinned field.
-The same saved application visibly retains initial and deliberately chosen
-fields, using checked units. Its fresh cold MCP build instead reaches the
-five-minute limit before the changed adapter; investigate actual waits under
-[compile service01](NS-5_compile-service_01.md) before another cold rerun, then
-continue [W2](NS-3_control-usefulness_03.md). That private application is not an
-MCP-admitted artifact. Original task criteria and completion credit stay intact.
+The new cold MCP build now succeeds with fresh units and its actual admitted EXE
+retains Service through repeated1280/390 returns. The earlier timeout is traced
+to actual compiler/storage waits; it is not erased. Trusted host policy reaches
+workers, defaults stay unchanged and lifecycle checks pass174 with a clean heap.
+Nine projects and27 protected files remain exact. Return to original
+[W2](NS-3_control-usefulness_03.md) preference/reset/output usability; full
+[compile service01](NS-5_compile-service_01.md), task criteria and completion
+credit stay open. No cache or general build-time guarantee is claimed.
 
 The scoped [visible Copy feedback](DONE/NS-3_collection-copy-feedback_01.md),
 [typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md),

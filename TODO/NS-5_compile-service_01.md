@@ -13,6 +13,24 @@ journey works, but that is not a current MCP build success. Preserve the earlier
 scoped cold-build evidence below and original service criteria. WORK.md retains
 the failed receipt, joined processes, stable inputs and27 exact protected files.
 
+The isolated production-executor observation now reproduces that wait without
+MCP/editor/job publication. Nearly the entire invocation waits for the compiler;
+independent owned-file measurements confirm long close/rename latency on the
+scratch storage. Its deeper cause remains unproven. Trusted host limits now reach
+server/MCP workers through copied constructor policy and strict startup settings,
+with readonly output metadata and unchanged defaults/request authority. Current
+and unchanged prior lifecycle binaries initially fail existing short timing gates
+under these conditions. The final isolated lifecycle run passes174 with a clean
+heap, without relaxing deadlines or assertions. Fixed-slot QA uses an explicit
+fifteen-minute compiler allowance and unchanged execution/log defaults. All nine
+projects/20 saved units recover. A fresh cold MCP build of the unchanged Service
+actions project succeeds in33.7 compiler seconds; its actual admitted EXE retains
+Service through repeated1280/390 returns. This run also fits the old default and
+does not establish consistently fast storage or a cache speedup. Nine original
+logical states and27 protected files remain exact. Return to original W2; full
+service/codegen/quality criteria stay open. The semantic outputs query's unnecessary
+recovery gate is retained as an existing service usability gap. See WORK.md.
+
 Cold native-build return, 2026-10-30: [native cold-build01](DONE/NS-5_native-cold-build_01.md)
 is accepted. The actual authenticated MCP native application build succeeds
 with fresh job units; its admitted EXE performs the useful authored action and

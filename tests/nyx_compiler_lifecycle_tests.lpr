@@ -350,6 +350,7 @@ var
   LRefused: Boolean;
   LIndex: Integer;
   LField: TNyxText;
+  LFields: array of TNyxDataField;
 
   function Observe: TNyxDataValue;
   begin
@@ -407,6 +408,24 @@ begin
       NyxField('report', NyxData(LReport.Encode))]));
     LBefore := Observe;
     LArguments := BuildRequest;
+    SetLength(LFields, LArguments.Count + 1);
+    for LIndex := 0 to LArguments.Count - 1 do
+    begin
+      LField := LArguments.Key(LIndex);
+      LFields[LIndex] := NyxField(LField, LArguments.Field(LField));
+    end;
+    LFields[High(LFields)] := NyxField('compilerLimits', NyxObject([
+      NyxField('compilationMilliseconds', NyxData(900000))]));
+    LRefused := False;
+    try
+      LEngine.InvokeBuild('connection-one', CVisibleActor, NyxObject(LFields));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'A semantic build request cannot supply trusted compiler limits');
     LFirst := LEngine.InvokeBuild('connection-one', CVisibleActor, LArguments);
     LSecond := LEngine.InvokeBuild('connection-two', CVisibleActor, LArguments);
     Check(LFirst.Field('job').AsText <> LSecond.Field('job').AsText,
@@ -767,6 +786,112 @@ begin
   Check(LRejected, 'The existing transport/evidence log ceiling still refuses overflow');
 end;
 
+{ The standalone boundary accepts only bounded plain decimal values. The queue
+  takes an independent host policy before admission and applies it to a real
+  compiler; neither a changed local copy nor an output profile can replace it. }
+procedure HostPolicy;
+const
+  CInvalid: array[0..8] of TNyxText =
+    ('0', '-1', '+1', '1 ', ' 1', '1e3', '$FF', '4294967296', '١');
+var
+  LLimits: TNyxCompilerLimits;
+  LJobs: TNyxBuildJobs;
+  LValue: TNyxDataValue;
+  LPair: TNyxProjectPair;
+  LCurrent: Boolean;
+  LRoot: TNyxText;
+  LJob: TNyxText;
+  LIndex: Integer;
+  LRefused: Boolean;
+  LStarted: QWord;
+begin
+  LLimits := NyxCompilerHostLimits('', '', '');
+  Check((LLimits.CompilationTimeMilliseconds = 300000) and
+    (LLimits.ExecutionTimeMilliseconds = 60000) and
+    (LLimits.MaximumLogBytes = 1048576), 'Missing host settings retain all defaults');
+  LLimits := NyxCompilerHostLimits('900000', '1500', '131072');
+  Check((LLimits.CompilationTimeMilliseconds = 900000) and
+    (LLimits.ExecutionTimeMilliseconds = 1500) and
+    (LLimits.MaximumLogBytes = 131072), 'Host settings configure three independent exact axes');
+  LLimits := NyxCompilerHostLimits('4294967295', '', '');
+  Check(LLimits.CompilationTimeMilliseconds = High(Cardinal),
+    'The positive Cardinal host boundary does not narrow its maximum');
+  for LIndex := Low(CInvalid) to High(CInvalid) do
+  begin
+    LRefused := False;
+    try
+      LLimits := NyxCompilerHostLimits(CInvalid[LIndex], '', '');
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Malformed, zero or overflowing host compilation values refuse');
+  end;
+  LRefused := False;
+  try
+    LLimits := NyxCompilerHostLimits('', '0', '');
+  except
+    on ENyxModel do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'An explicit zero constructor limit refuses');
+  LRefused := False;
+  try
+    LLimits := NyxCompilerHostLimits('', '', '1048577');
+  except
+    on ENyxModel do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'Host parsing cannot exceed the existing log ceiling');
+  LRoot := GRoot + 'host-policy/';
+  Policy(LRoot + 'build/studio/jobs/', 'hold');
+  LLimits := TNyxCompilerLimits.Default.CompilationMilliseconds(300)
+    .ExecutionMilliseconds(700).LogBytes(32768);
+  LJobs := TNyxBuildJobs.Create(TNyxStudioDirectories.ForRepository(LRoot),
+    GProfile.Encode, LLimits);
+  try
+    LLimits := LLimits.CompilationMilliseconds(5000);
+    LValue := LJobs.Outputs.Field('compilerLimits');
+    Check((LValue.Field('compilationMilliseconds').AsInteger = 300) and
+      (LValue.Field('executionMilliseconds').AsInteger = 700) and
+      (LValue.Field('logBytes').AsInteger = 32768),
+      'Readonly queue metadata retains the original copied host policy');
+    LJobs.Configure(GProfile.Encode);
+    Check(LJobs.Outputs.Field('compilerLimits').ToJSON = LValue.ToJSON,
+      'Reconfiguring outputs does not replace trusted host budgets');
+    LValue := LJobs.Submit('Host policy fixture', Request('host-policy-worker'),
+      GPair, NyxActiveWorkspace, 'host-policy-owner');
+    LJob := LValue.Field('job').AsText;
+    LStarted := GetTickCount64;
+    repeat
+      LValue := LJobs.Status(NyxObject([NyxField('mode', NyxData('status')),
+        NyxField('job', NyxData(LJob))]), LPair, LCurrent);
+
+      if LValue.Field('state').AsText = 'failed' then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 15000 then
+      begin
+        raise Exception.Create('The worker did not enforce its captured host deadline');
+      end;
+      Sleep(10);
+    until False;
+    Check((LValue.Field('failure').AsText = 'time-budget') and
+      (LValue.Field('artifact').AsText = ''),
+      'The actual worker uses its host compilation limit and admits no artifact on exhaustion');
+  finally
+    LJobs.Free;
+  end;
+end;
+
 procedure BudgetRetirement(const AName, AMode: TNyxText; const ALimits: TNyxCompilerLimits);
 var
   LExecutor: TNyxBuildExecutor;
@@ -1006,6 +1131,7 @@ begin
     GSession := TNyxAgentSession.Create;
     GPair := GSession.BuildPair(GSession.Revision, bsView, 'home');
     PolicyAxes;
+    HostPolicy;
     QueueAndShutdown;
     SemanticAuthority;
     DiscoveryContexts;

@@ -33,6 +33,13 @@ uses
   nyx.studio.sourceprojection, nyx.studio.projectionstorage, nyx.studio.compiler,
   nyx.pascal.project, nyx.studio.projectinputs;
 
+const
+  { Trusted process configuration only. Designs and build requests do not read
+    these names; the standalone host converts them once before constructing jobs. }
+  NyxCompilationBudgetEnvironment = 'NYX_STUDIO_COMPILATION_MS';
+  NyxExecutionBudgetEnvironment = 'NYX_STUDIO_EXECUTION_MS';
+  NyxCompilerLogBudgetEnvironment = 'NYX_STUDIO_COMPILER_LOG_BYTES';
+
 type
   { Synchronous worker-thread receiver of independent immutable report snapshots.
     It must not touch UI or borrow a mutable source tree. The executor retains
@@ -65,7 +72,8 @@ type
     a saved constructor retains its separate one-minute default. Positive
     Cardinal durations are finite host choices, not authority from a request.
     Log admission retains the one-MiB transport/evidence ceiling. A zero-filled
-    record is invalid: start with Default and override the desired axis. }
+    record is invalid: start with Default and override the desired axis. A host
+    copies its policy into admitted jobs before either recovery or compilation. }
   TNyxCompilerLimits = record
   private
     FCompilationMilliseconds: Cardinal;
@@ -189,6 +197,13 @@ type
   It owns only its native event, never the caller's job or editor. }
 function NewNyxBuildCancellation: INyxBuildCancellation;
 
+{ Explicit host-configuration boundary. Empty values retain defaults; nonempty
+  values must contain at most ten ASCII decimal digits and fit the relevant
+  positive limit. Signs, whitespace, hex and exponent syntax refuse. No global
+  environment is read here, and failures never echo the submitted value. }
+function NyxCompilerHostLimits(const ACompilation, AExecution,
+  ALogBytes: TNyxText): TNyxCompilerLimits;
+
 implementation
 
 uses
@@ -292,6 +307,66 @@ begin
     (FLogBytes < 1) or (FLogBytes > 1024 * 1024) then
   begin
     raise ENyxModel.Create('Compilation/execution budgets require positive milliseconds and 1..1048576 log bytes');
+  end;
+end;
+
+function NyxCompilerHostLimits(const ACompilation, AExecution,
+  ALogBytes: TNyxText): TNyxCompilerLimits;
+
+  function PositiveDecimal(const AText, AName: TNyxText;
+    AMaximum: Cardinal): Cardinal;
+  var
+    LIndex: Integer;
+    LDigit: Cardinal;
+  begin
+    Result := 0;
+
+    if (Length(AText) = 0) or (Length(AText) > 10) then
+    begin
+      raise ENyxModel.Create(AName + ' requires positive decimal milliseconds/bytes');
+    end;
+    for LIndex := 1 to Length(AText) do
+    begin
+
+      if not (AText[LIndex] in ['0'..'9']) then
+      begin
+        raise ENyxModel.Create(AName + ' requires ASCII decimal digits');
+      end;
+      LDigit := Ord(AText[LIndex]) - Ord('0');
+
+      if (Result > AMaximum div 10) or
+        ((Result = AMaximum div 10) and (LDigit > AMaximum mod 10)) then
+      begin
+        raise ENyxModel.Create(AName + ' exceeds the host policy limit');
+      end;
+      Result := Result * 10 + LDigit;
+    end;
+
+    if Result = 0 then
+    begin
+      raise ENyxModel.Create(AName + ' must be positive');
+    end;
+  end;
+
+begin
+  Result := TNyxCompilerLimits.Default;
+
+  if ACompilation <> '' then
+  begin
+    Result := Result.CompilationMilliseconds(PositiveDecimal(ACompilation,
+      NyxCompilationBudgetEnvironment, High(Cardinal)));
+  end;
+
+  if AExecution <> '' then
+  begin
+    Result := Result.ExecutionMilliseconds(PositiveDecimal(AExecution,
+      NyxExecutionBudgetEnvironment, High(Cardinal)));
+  end;
+
+  if ALogBytes <> '' then
+  begin
+    Result := Result.LogBytes(Integer(PositiveDecimal(ALogBytes,
+      NyxCompilerLogBudgetEnvironment, 1024 * 1024)));
   end;
 end;
 

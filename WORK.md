@@ -9,7 +9,72 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Native Table viewport return — 2026-10-30
+## Current work — Compiler wait investigation — 2026-10-30
+
+Previous goal turn: verified PROGRESS, pushed8aed6e14 with exact remote match.
+Root remains SOLO. The wait investigation and current-source cold MCP build now
+have evidence. Return to original W2 preference/reset/output usability, preserving
+its complete criteria and the wider compile-service requirements.
+
+The private phase-instrumented executor reproduces the cold timeout without MCP,
+an editor or a job guard. Its301437-ms invocation accumulates300000 ms in idle
+waits,47 ms in input acquisition and1375 ms joining; parser/publication work is
+below the coarse tick measurement. The compiler consumes about6 CPU seconds.
+All258342 heap blocks are freed. A separate Pascal filesystem observation finds
+roughly0.4–1.1 seconds closing small owned files and one3.6-second rename. This
+establishes actual storage latency, not its hardware/security cause. The missing
+initial include path and all failed receipts remain retained; no security,
+filesystem, dependency or compiler configuration is weakened.
+
+Existing typed limits now flow through trusted server/MCP/job constructors and
+are copied into every worker. The standalone process accepts strict bounded
+decimal startup settings; defaults remain five-minute compilation, one-minute
+constructor and one-MiB logs. Output metadata explains the copied values;
+requests cannot override them. Source-projection leases and other clocks stay
+independent. No unit reuse or compilation speedup is claimed.
+
+Current lifecycle and standalone backend compile with zero warnings. The first
+two new lifecycle runs reach past host-policy/real-worker and semantic override
+checks, then fail different existing short timing gates, freeing3677466/2890412
+blocks. The previously accepted unchanged binary independently fails fixture
+startup, freeing292016 blocks. The final isolated run passes all174 checks and
+frees3263833 blocks. No test deadline/assertion is relaxed. Invalid standalone
+configuration refuses before creating runtime storage, opening a listener or
+echoing its supplied value. Earlier failures remain retained.
+
+All27 protected files match before replacing the stopped/joined QA62352 owner at
+its fixed path. Candidate65824 uses an explicit900000-ms compilation policy and
+unchanged execution/log defaults. HTTP is200; authenticated MCP connects and
+correctly refuses design operations while browser recovery executes the20 saved
+units across nine projects. Recovery completes with all original logical states
+and history availability exact. Browser DOM tooling times out during execution;
+accessibility observation confirms progress without repeating Start. The initial
+pre-listener browser error is resolved in a fresh tab. The semantic outputs query
+also refuses while recovery is pending, despite reporting only host metadata;
+that existing compile-service usability gap remains open.
+
+An18-operation retained MCP client imports the unchanged23314-byte Service actions
+project into its own temporary review. Job0C6BF2D0 succeeds with fresh per-job
+units and -B:303707 lines/33.7 compiler seconds, source6d5d6959/design027ac3d7,
+profileda83d63c and admitted executable MD5ED654F59. Current source/output remain
+true. This run also fits the old five-minute default; the larger explicit policy
+is not its speedup or proof of consistently fast storage. No cache is introduced.
+The actual admitted EXE visibly retains Service through repeated1280/390 native
+returns. These owned Win32-message/capture checks add no physical/assistive or
+forced-process clean-heap claim. The preceding296-check control consumers retain
+the exact native cursor/state assertions and heap evidence.
+
+The native probe and all compiler/test jobs are stopped/joined. The semantic
+transport closes its review and frees117304 blocks. All nine original logical
+states and27 protected files remain exact after the build. LAN46632 is unchanged;
+no phone delivery is claimed. Both user-saved TSV exports recompare byte-for-byte
+with their452/175-byte expected files. Evidence: compiler-waits-return-01
+(host-03, io-04, lifecycle-05/run-03, qa-server-06, baseline-09, invalid-start-10,
+qa-replacement-11, transport-12, recovered-studio-14 and application-view-18).
+Continue original W2 preference/reset/output usability; no parent criterion,
+task completion or percentage is assigned from this checkpoint.
+
+## Previous work — Native Table viewport return — 2026-10-30
 
 Previous goal turn: verified PROGRESS, pushedf3431a07 with exact remote match.
 Root remains SOLO. Continue original Table workbench03 W2, without another
