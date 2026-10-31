@@ -40,6 +40,8 @@ const
   ProcessClearSelectionID = 'clear-process-selection';
   ProcessCountsID = 'process-counts';
   ProcessMessageID = 'process-message';
+  ProcessRecoveryName = 'process-recovery';
+  ProcessIncomingID = 'process-incoming-label';
 
 type
   { Own beside the mounted application and close before navigation/disposal.
@@ -62,14 +64,15 @@ type
   disclosure, focus and selection do not change the saved design or row defaults. }
 { Labels are readonly by default. Opt into ordinary typed label editing for a
   local alias/organizer workflow; the shared source remains application-owned. }
-function BuildProcessTreeDocument(AEditableLabels: Boolean = False): TNyxDocument;
+function BuildProcessTreeDocument(AEditableLabels: Boolean = False;
+  ARecoveryPanel: Boolean = False): TNyxDocument;
 
 implementation
 
 uses SysUtils, nyx.controls, nyx.types, nyx.state, nyx.behavior, nyx.responsive,
   nyx.scheduler, nyx.collections, nyx.collections.view.types, nyx.collections.selection,
   nyx.collections.tree.inspection, nyx.collections.query, nyx.collections.query.session,
-  nyx.publication;
+  nyx.publication, nyx.collections.recovery.panel;
 
 type
   { Router registrations retain this managed receiver; its view token is weak.
@@ -86,6 +89,7 @@ type
     FToken: INyxCollectionViewSubscription;
     FClosed: Boolean;
     FPublishing: Boolean;
+    FIncomingStep: Integer;
     function Active: Boolean;
     procedure Changed(const AView: INyxCollectionView; const AChanges: INyxCollectionChanges);
     procedure Publish;
@@ -98,7 +102,7 @@ type
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
 
-function BuildProcessTreeDocument(AEditableLabels: Boolean): TNyxDocument;
+function BuildProcessTreeDocument(AEditableLabels, ARecoveryPanel: Boolean): TNyxDocument;
 var
   LPage: INyxPage;
   LSearch: INyxInput;
@@ -170,6 +174,14 @@ begin
     LCommands.Add(NewNyxButton(ProcessRevealID).WithText('Reveal first selected'));
     LCommands.Add(NewNyxButton(ProcessRelaxID).WithText('Clear my search and reveal'));
     LCommands.Add(NewNyxButton(ProcessClearSelectionID).WithText('Clear selection'));
+
+    if ARecoveryPanel then
+    begin
+      LCommands.Add(NewNyxButton(ProcessIncomingID).WithText('Replay incoming label change'));
+      LPage.Add(NewNyxLabel('process-edit-help').WithText(
+        'Press F2 on Request gateway to edit a local label. Moving to another row keeps its unfinished text. ' +
+        'Replay changes that source label so you can review the retained edit below.'));
+    end;
     LPage.Add(NewNyxLabel(ProcessCountsID).Binds.Text(NyxTextState(ProcessCountsID)).Done);
     LPage.Add(NewNyxLabel(ProcessMessageID).Binds.Text(NyxTextState(ProcessMessageID)).Done);
     LLabelMode := cmReadOnly;
@@ -184,6 +196,12 @@ begin
     LPage.Add(LTree);
     LTree.Configure.Height(320).AccessibleName('Searchable process hierarchy').Done;
     LTree.Binds.Collection(LSpec).Done;
+
+    if ARecoveryPanel then
+    begin
+      NyxCollectionRecoveryParts(ProcessRecoveryName).Define(Result.State);
+      LPage.Add(NewNyxCollectionRecoveryPanel(NyxCollectionRecoveryParts(ProcessRecoveryName)));
+    end;
     LPage.Add(NewNyxLabel('process-peer-heading').WithText('Independent view of the same processes'));
     LPeer := NewNyxTree(ProcessPeerID);
     LPage.Add(LPeer);
@@ -400,6 +418,17 @@ begin
   begin
     FView.ClearSelection;
   end
+  else if AEvent.OriginID = ProcessIncomingID then
+  begin
+
+    if FIncomingStep = High(Integer) then
+    begin
+      raise ENyxCollection.Create('The replay step is exhausted');
+    end;
+    Inc(FIncomingStep);
+    FView.Store.Update(NyxCollectionItem(NyxItem(NyxCollection(ProcessCollectionName), 'gateway'))
+      .WithValue(NyxTextField('name'), 'Request gateway update ' + TNyxText(IntToStr(FIncomingStep))));
+  end
   else if AEvent.OriginID = ProcessNextID then
   begin
     LCapture := CaptureNyxTreeInspection(FView);
@@ -428,8 +457,8 @@ end;
 constructor TNyxProcessTreeDemo.Create(const AContext: INyxApplicationContext;
   const AEvents: INyxEvents; const AView: INyxCollectionView);
 const
-  CIDs: array[0..5] of TNyxText = (ProcessFindID, ProcessNextID, ProcessClearSearchID,
-    ProcessRevealID, ProcessRelaxID, ProcessClearSelectionID);
+  CIDs: array[0..6] of TNyxText = (ProcessFindID, ProcessNextID, ProcessClearSearchID,
+    ProcessRevealID, ProcessRelaxID, ProcessClearSelectionID, ProcessIncomingID);
 var
   LCallback: TProcessCallback;
   LIndex: Integer;

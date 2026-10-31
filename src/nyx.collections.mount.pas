@@ -36,6 +36,7 @@ uses
   nyx.collections.view, nyx.collections.inspection,
   nyx.collections.position,
   nyx.collections.recovery,
+  nyx.collections.recovery.status,
   nyx.collections.recovery.policy,
   nyx.collections.selection,
   nyx.collections.refresh,
@@ -317,13 +318,17 @@ type
     INyxCollectionCellRangeKeyInput, INyxCollectionCellRangePointerInput,
     INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation,
     INyxCollectionDraftRecoveryMount, INyxCollectionDraftRecoveryStatus,
-    INyxCollectionPendingDraftMount, INyxCollectionRecoveryReviewMount)
+    INyxCollectionPendingDraftMount, INyxCollectionRecoveryReviewMount,
+    INyxCollectionRecoveryNotifications)
   private
     FToken: INyxCollectionViewSubscription;
     FPositionState: INyxCollectionPositionState;
     FPositionStateObject: TObject; { Borrowed while FPositionState retains it. }
     FRecoveryWriter: INyxCollectionDraftRecoveryWriter;
     FRecoverySubscription: INyxCollectionSubscription;
+    { Independent flags/count channel owns no mount or presentation callback.
+      Lazily allocated only when a caller subscribes; retired before teardown. }
+    FRecoveryStatus: INyxCollectionRecoveryStatusWriter;
     { Captured authored defaults apply only when this mount creates its own
       journal. Later runtime overrides are never reset by source refreshes. }
     FRecoveryPolicy: TNyxCollectionDraftRecoveryPolicy;
@@ -409,6 +414,8 @@ type
     function SearchLabel(AIndex: Integer): TNyxText;
     procedure DisconnectInternal;
     procedure CaptureRecoveryContinuity(const AChanges: INyxCollectionChanges);
+    procedure PublishRecoveryStatus;
+    procedure RecoveryJournalChanged(const AObservation: TNyxDraftRecoveryObservation);
     procedure Changed(const AView: INyxCollectionView;
       const AChanges: INyxCollectionChanges);
   protected
@@ -631,6 +638,9 @@ type
     function GetPositionRecovery: TNyxCollectionPositionRecovery;
     function GetDraftRecovery: INyxCollectionDraftRecovery;
     function GetDraftRecoveryHeld: Boolean;
+    function CaptureRecoveryStatus: TNyxCollectionRecoveryStatus;
+    function SubscribeRecoveryStatus(AObserver: TNyxCollectionRecoveryObserver):
+      INyxCollectionSubscription;
     function CapturePendingDraft: INyxPendingCollectionDraft;
     function DiscardPendingDraft(const AExpected: INyxPendingCollectionDraft): Boolean;
     function CapturePositionState: INyxCollectionPositionState;
@@ -3855,6 +3865,12 @@ begin
   FConnected := False;
   FCellFocusValid := False;
 
+  if FRecoveryStatus <> nil then
+  begin
+    FRecoveryStatus.Retire;
+    FRecoveryStatus := nil;
+  end;
+
   if FRecoverySubscription <> nil then
   begin
     FRecoverySubscription.Disconnect;
@@ -4631,7 +4647,11 @@ begin
     end;
     { Last target call, with this call frame still retained. No borrowed target
       or Self read follows a wake that could retire the renderer. }
-    RefreshTargetIdle;
+    try
+      PublishRecoveryStatus;
+    finally
+      RefreshTargetIdle;
+    end;
   end;
 end;
 

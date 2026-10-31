@@ -27,6 +27,7 @@ uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   nyx.binding.types, nyx.clipboard,
   nyx.collections.arrangement, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.mount, nyx.collections.recovery, nyx.collections.inspection,
+  nyx.collections.recovery.status,
   nyx.collections.selection,
   nyx.collections.query, nyx.collections.position, nyx.collections.recovery.policy,
   nyx.collections.recovery.controls, nyx.collections.representation, nyx.controls, nyx.types,
@@ -38,6 +39,20 @@ uses SysUtils, nyx.text, nyx.editing, nyx.state, nyx.collections,
   {$ifdef PAS2JS}, Web{$endif};
 
 type
+  { A managed receiver records bounded status. Optional controlled reentry and
+    failure exercise delivery ordering; it owns no mount, widget or context. }
+  TRecoveryStatusProbe = class(TInterfacedObject)
+  public
+    Writer: INyxCollectionRecoveryStatusWriter;
+    Calls: Integer;
+    Depth: Integer;
+    MaximumDepth: Integer;
+    Advance: Boolean;
+    FailOnce: Boolean;
+    Value: TNyxCollectionRecoveryStatus;
+    procedure Changed(const AStatus: TNyxCollectionRecoveryStatus);
+  end;
+
   { One controlled target callout proves feedback admission/retirement ordering
     without pretending to exercise a native or browser presentation surface. }
   TFeedbackReentry = (frNone, frRetire, frThrow);
@@ -102,6 +117,39 @@ type
 
 var
   GChecks: Integer;
+
+procedure TRecoveryStatusProbe.Changed(const AStatus: TNyxCollectionRecoveryStatus);
+var
+  LNext: TNyxCollectionRecoveryStatus;
+begin
+  Inc(Calls);
+  Inc(Depth);
+
+  if Depth > MaximumDepth then
+  begin
+    MaximumDepth := Depth;
+  end;
+  try
+    Value := AStatus;
+
+    if Advance then
+    begin
+      Advance := False;
+      LNext := AStatus;
+      LNext.Held := True;
+      LNext.InputReady := False;
+      Writer.Publish(LNext);
+    end;
+
+    if FailOnce then
+    begin
+      FailOnce := False;
+      raise ENyxCollection.Create('Expected recovery-status receiver failure');
+    end;
+  finally
+    Dec(Depth);
+  end;
+end;
 
 function TAdoptionFactory.CreateMenu(ADocument: TNyxDocument;
   const ARoot: TNyxRootRef; const AItems: TNyxMenuItems): INyxMenu;
@@ -578,6 +626,69 @@ begin
   end;
 end;
 
+{ Reentrant status changes are not recursive UI notifications. A failing
+  receiver cannot skip independent listeners or roll back a committed status. }
+procedure RecoveryStatusChecks;
+var
+  LWriter: INyxCollectionRecoveryStatusWriter;
+  LFirst: TRecoveryStatusProbe;
+  LSecond: TRecoveryStatusProbe;
+  LFirstLease: IInterface;
+  LSecondLease: IInterface;
+  LFirstToken: INyxCollectionSubscription;
+  LSecondToken: INyxCollectionSubscription;
+  LStatus: TNyxCollectionRecoveryStatus;
+  LFailed: Boolean;
+begin
+  LWriter := NewNyxCollectionRecoveryStatus;
+  LFirst := TRecoveryStatusProbe.Create;
+  LFirstLease := LFirst;
+  LSecond := TRecoveryStatusProbe.Create;
+  LSecondLease := LSecond;
+  try
+    LFirst.Writer := LWriter;
+    LFirst.Advance := True;
+    LSecond.FailOnce := True;
+    LFirstToken := LWriter.SubscribeRecoveryStatus({$ifdef PAS2JS}@{$endif}LFirst.Changed);
+    LSecondToken := LWriter.SubscribeRecoveryStatus({$ifdef PAS2JS}@{$endif}LSecond.Changed);
+    LStatus := Default(TNyxCollectionRecoveryStatus);
+    LStatus.Active := True;
+    LStatus.InputReady := True;
+    LFailed := False;
+    try
+      LWriter.Publish(LStatus);
+    except
+      on LError: ENyxCollectionNotification do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (LFirst.Calls = 2) and (LSecond.Calls = 2) and
+      (LFirst.MaximumDepth = 1) and LSecond.Value.Held and LWriter.CaptureRecoveryStatus.Held,
+      'recovery status coalesces reentry without recursion and joins independent receivers before raising');
+    LFirstToken.Disconnect;
+    LWriter.Retire;
+    Check(not LSecondToken.Connected and not LWriter.CaptureRecoveryStatus.Active,
+      'status retirement revokes every borrowed token and keeps inactive copied facts readable');
+    LWriter.Publish(LStatus);
+    Check((LSecond.Calls = 2) and not LWriter.CaptureRecoveryStatus.Active,
+      'an already retired status publisher cannot revive its former mount');
+  finally
+
+    if LFirstToken <> nil then
+    begin
+      LFirstToken.Disconnect;
+    end;
+
+    if LSecondToken <> nil then
+    begin
+      LSecondToken.Disconnect;
+    end;
+    LFirstLease := nil;
+    LSecondLease := nil;
+  end;
+end;
+
 procedure SavedPolicy;
 var
   LKey: TNyxCollectionRef;
@@ -964,6 +1075,7 @@ begin
     SavedPolicy;
     PressureChecks;
     DeferredContinuity;
+    RecoveryStatusChecks;
     ActionAdoption;
     FeedbackAdmission;
     {$ifdef PAS2JS}

@@ -43,7 +43,7 @@ begin
       { The writer borrows this receiver only while its mount-owned token is
         connected. Disconnect revokes it before any target/receiver teardown. }
       FRecoverySubscription := LChanges.Subscribe(
-        {$ifdef PAS2JS}@{$endif}RecoveryMembershipChanged);
+        {$ifdef PAS2JS}@{$endif}RecoveryJournalChanged);
     end;
   end;
   Result := FRecoveryWriter.Recovery;
@@ -227,6 +227,97 @@ end;
 function TNyxCollectionMountBase.GetDraftRecoveryHeld: Boolean;
 begin
   Result := InputLifetimeCurrent and FDraftRecoveryHeld;
+end;
+
+procedure TNyxCollectionMountBase.RecoveryJournalChanged(
+  const AObservation: TNyxDraftRecoveryObservation);
+var
+  LLease: INyxCollectionMount;
+begin
+  LLease := Self as INyxCollectionMount;
+  try
+    RecoveryMembershipChanged(AObservation);
+  finally
+    { A capture inside Refresh is followed by its completed tail. Explicit
+      journal discards outside that tail still update an observing panel now. }
+
+    if not FUpdating then
+    begin
+      PublishRecoveryStatus;
+    end;
+  end;
+end;
+
+function TNyxCollectionMountBase.CaptureRecoveryStatus: TNyxCollectionRecoveryStatus;
+var
+  LLease: INyxCollectionMount;
+  LJournal: INyxCollectionDraftRecovery;
+begin
+  LLease := Self as INyxCollectionMount;
+  Result := Default(TNyxCollectionRecoveryStatus);
+
+  if FRecoveryWriter <> nil then
+  begin
+    LJournal := FRecoveryWriter.Recovery;
+    Result.Journal := LJournal.Capture;
+  end;
+  { A foreign journal reader can retire the mount. Flags are sampled AFTER
+    that callout; no borrowed target or outward reader follows these facts. }
+  Result.Active := InputLifetimeCurrent;
+  Result.Held := Result.Active and FDraftRecoveryHeld;
+  Result.InputReady := GetInputReady;
+
+  if not Result.Active then
+  begin
+    Result.Journal.Active := False;
+  end;
+end;
+
+function TNyxCollectionMountBase.SubscribeRecoveryStatus(
+  AObserver: TNyxCollectionRecoveryObserver): INyxCollectionSubscription;
+var
+  LLease: INyxCollectionMount;
+  LStatus: INyxCollectionRecoveryStatusWriter;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if not InputLifetimeCurrent then
+  begin
+    raise ENyxCollection.Create('Recovery status requires a current mount');
+  end;
+
+  if FRecoveryStatus = nil then
+  begin
+    LStatus := NewNyxCollectionRecoveryStatus;
+    LStatus.Publish(CaptureRecoveryStatus);
+
+    if not InputLifetimeCurrent then
+    begin
+      LStatus.Retire;
+      raise ENyxCollection.Create('Recovery status mount retired while connecting');
+    end;
+    FRecoveryStatus := LStatus;
+  end;
+  Result := FRecoveryStatus.SubscribeRecoveryStatus(AObserver);
+end;
+
+procedure TNyxCollectionMountBase.PublishRecoveryStatus;
+var
+  LStatus: INyxCollectionRecoveryStatusWriter;
+  LObservation: TNyxCollectionRecoveryStatus;
+begin
+  LStatus := FRecoveryStatus;
+
+  if (LStatus = nil) or not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+  LObservation := CaptureRecoveryStatus;
+
+  if InputLifetimeCurrent and (FRecoveryStatus = LStatus) then
+  begin
+    LStatus.Publish(LObservation);
+  end;
 end;
 
 function TNyxCollectionMountBase.ReadRecoveryDraft(const AItem: TNyxItemRef;

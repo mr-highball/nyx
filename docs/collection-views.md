@@ -2744,9 +2744,70 @@ the proof. After resolving a pending discard, explicitly call `LMount.Refresh`;
 discard alone does not claim that the physical map has caught up.
 
 The extended native editor journey and exact target evidence are recorded in WORK.md.
-This contract description does not accept full navigation/context, native Tree
-recovery presentation, widgetset, assistive-technology or scale requirements of
+This contract description does not accept full navigation/context,
+widgetset, assistive-technology or scale requirements of
 the [live-inspection task](../TODO/NS-3_control-usefulness_04.md).
+
+### Composable recovery panel and runtime binding
+
+`nyx.collections.recovery.panel` supplies a specialized, reference-counted Card
+made from ordinary Nyx labels, readonly Memos and buttons. Define its typed state
+addresses before mounting, then bind that application's original collection mount:
+
+```pascal
+LRecoveryParts := NyxCollectionRecoveryParts('process-recovery');
+LRecoveryParts.Define(LDocument.State);
+LPage.Add(NewNyxCollectionRecoveryPanel(LRecoveryParts));
+
+{ After mounting: retain beside the application; Close before disposing it.
+  LSaveHost is the application's explicitly supplied platform file-save host. }
+LRecovery := BindNyxCollectionRecoveryPanel(LApplication.Context,
+  LApplication.View.Events, LApplication.View.CollectionMount(ProcessTreeID),
+  LRecoveryParts, LSaveHost);
+```
+
+The panel occupies no space when its journal is empty and no edit is held. It
+shows the item/field, admitted loss reason, source revisions, unfinished text and
+accepted value separately. Preview escaping leaves raw text unchanged. Previous
+and Next navigate admitted entries. **Review held edit** captures an exact pending
+receipt without pretending it has entered the journal; **Review recovered edits**
+returns to that list so the user can free capacity. Export never consumes either
+kind of work. Discard requires a second confirmation, and a stale held receipt
+cannot discard newer typing. Retry explicitly refreshes the same display after
+capacity becomes available. These operations never restore drafts into source data.
+
+The binding consumes `INyxCollectionRecoveryNotifications` from
+`nyx.collections.recovery.status`, plus the mount's existing journal, input-lifetime
+and pending-receipt facets. The bounded observation contains copied flags/counts,
+not row vectors or editor objects. It updates after the physical refresh settles,
+including a capacity decision deferred until native composition ends; no polling
+timer is required. The factory refuses a mount lacking these capabilities. Tokens
+borrow their receiver and are revoked before mount teardown. The public binding
+owns event subscriptions separately from the router-retained callback to avoid
+reference cycles; `Close` revokes callbacks and cancels a pending export first.
+
+Use `ConfigureExport` with `TNyxFileSaveStreamOptions` to set the filename, media
+type and byte limit. A streaming host receives an immutable UTF-8 byte source;
+a byte-only host also obeys its smaller supported limit. Inline and pending
+completions are supported. A missing host disables Export with an explanation;
+review, discard and retry remain usable. Save outcomes distinguish a written file
+from a requested browser download. This panel does not confer filesystem authority.
+
+`TNyxCollectionRecoveryParts` exposes enum-based action, text and flag roles.
+The specialized panel exposes its parts, while its named descendants remain
+ordinary controls that an author can theme or rearrange. Only controls and state
+defaults are generated; runtime bindings, save hosts and receipts remain explicit
+application code. `NewNyxBoundRecoveredDraftReview` provides the state-bound review
+Card separately, sharing the frozen review's layout without claiming its immutable
+entry interface.
+
+The public `process_tree` application opts into this panel. Its same handwritten
+and generated consumers exercise actual native/browser inputs, confirmed discard,
+capacity/retry, exact export requests, independent peers and retirement at wide
+and compact sizes. Injected save-host checks prove request bytes and cancellation;
+they do not claim a new platform picker or disk-write qualification. Exact results,
+retained failures and screenshots are recorded in WORK.md. Physical-device,
+assistive-technology and measured L2 workload requirements remain open.
 
 Reproduce with the exact semantic export:
 

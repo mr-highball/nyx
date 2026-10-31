@@ -9,7 +9,116 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Native Tree unfinished edits — 2026-10-31
+## Current work — Visible Tree recovery — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushed daffe510 with exact remote match.
+Root remains SOLO. Continue04's original second criterion with its informative
+recovery path, rather than more cache/constructor variants. Deliver a reusable
+Nyx recovery panel/binding, consume it in the SAME public process Tree, and
+exercise visible review, exact export, confirmed discard and retry at both native
+and browser widths. Preserve independent peers, source authority and original
+assertions. Existing frozen review Card and pending receipts stay authoritative;
+no second journal or example-only controller. Full navigation/context, physical/
+AT and measured L2 remain open. Stop after two actual repair cycles and reassess.
+
+Initial inspection: the shared frozen Card is reusable, while table cell actions
+and the live Table demo own different controllers. Composition can cause a native
+capacity hold after the source notification has finished, so a view-only binding
+would miss it. Add a bounded mount recovery-status observation before wiring the
+panel; no polling timer or alternate source store. All owned TEMP/TMP/artifacts
+stay on E:. Preserve both listeners, the27 protected files and unrelated edits.
+
+Source now has the bounded recovery-status facet/channel, an ordinary compound
+panel with typed part/action identities, shared frozen/state-bound review layout
+and a separate runtime binding. Event subscriptions are owned outside the router-
+retained receiver; pending exports cancel before teardown. Review/export never
+consume text, confirmed pending discard checks its exact receipt and explicitly
+refreshes, and a separate Review recovered edits action returns from held text
+to the journal so capacity can be freed. The public Tree opts into these controls;
+its default readonly factory output stays unchanged. No polling or second store.
+
+build-01 compiles the public app on both targets; native reads remain live with
+advancing I/O before finishing62257 lines in785.6s, zero owned warnings. The first
+new consumer's controls-02 builds stop on a missing events import and an invalid
+CSSOM width property in the browser test bridge. Those are retained and corrected
+without changing expectations. controls-03 then runs native and fails6; diagnostic-04
+isolates visible=True/count=1/kind=journal/active=True/same-mount=True, with empty
+readback. The test cast ControlFor's outer frame as Memo. Both adapters already
+provide InputFor; readback now uses that real read-only field, preserving exact
+text equality. Both failed native runs have clean heaps. No library data-loss
+claim or completion credit is inferred from that harness failure.
+
+Ordinary browser input on public-02 already verifies F2, Unicode typing, moving
+to Archive, Replay, visible old text/provenance/reason, first-click confirmation
+and confirmed discard with the incoming label retained. Its same-tab navigation
+observation times out first, then completes; no server/tab restart. Saved evidence
+includes discard-confirmation-wide.png and after-discard.json. The new full UI
+journey also covers capacity freeing/retry, stale confirmation, export limits,
+inline/pending save callbacks and retirement. Readers96356/67987/52635/39193/
+46977/37269/94178/64099 are joined.
+
+controls-05 passes66/65 native UI checks with clean heaps; shared recovery passes64
+native/browser. Final source review adds explicit review-field captions, singular
+summary text, safe export-host reentry fences and actual independent-peer render
+assertions. The native journey also checks that composition defers capacity refusal
+and its later idle decision reaches the panel without caller polling. final-06
+passes74/73 handwritten and73/73 freshly generated native checks, shared64,
+existing Table recovery57/57 and Tree inspection116/116; every heap is clean.
+
+The first full browser UI journey then fails at Review held edit. Diagnostic
+readback retains kind=journal, held=True and the previously admitted draft; its
+source remains Capacity conflict. Browser ReadRecoveryDraft/DiscardRecoveryDraft
+resolve fields through optional Table layout metadata, which a Tree does not
+own. The adapter now uses the Tree's declared specification, retains the accepted
+physical frame/mutation fence across getters and performs exact receipt comparison
+before the final DOM write. No receipt check or expected draft is weakened. This
+is one actual product repair cycle; browser-repair-07 passes the unchanged journey.
+
+Final-08 handwritten and byte-identical generated browser applications each pass
+132 checks at measured1280x900 and390x844, with empty error logs. Existing Tree
+inspection118 and Table recovery42 pass per viewport; their asynchronous completion
+is joined without reloading. Shared recovery64 passes on both targets. Latest native
+handwritten74/73 and generated73/73 pass with clean heaps, including exact export
+requests, stale-confirmation refusal, peer rendering, native composition/idle and
+pending save cancellation. The unchanged saved Service monitor generated by
+job-1C46AA95-948C-48B2-A524-4BEF9C80EEDE retains20 native review checks per width,
+including its managed frozen Card and readonly actual Memo. The exact source SHA256
+is3BC80CA1E01114802C4298724F4DE41281668CCAFA49048DE5215CAA4A246C5C.
+
+Ordinary final public browser input at both widths enters F2, types supplementary
+Unicode, navigates to Archive, replays incoming data and reviews exact unfinished
+text beside its accepted original value. First discard visibly asks for confirmation;
+confirmed discard hides the empty panel and leaves Request gateway update1 and
+Archive selection intact. Reviewed desktop/compact screenshots show labelled
+readonly fields and responsive action stacking, with no horizontal overflow at390.
+These are viewport emulations, not physical phone or assistive tests. Injected
+hosts prove exact UTF-8 export requests/cancellation, not a new real picker/disk
+write. Earlier user-saved page.tsv/filtered.tsv remain retained and require no repeat.
+
+Final source review aligns a closed binding's no-entry index with its documented
+-1 contract. The existing retirement assertion now checks that value as well as
+revoked callbacks. final-09 repeats only the affected handwritten/generated UI
+applications: native74/73 and73/73, browser132 per actual viewport, all passing
+with clean native heaps and empty browser error logs. Its newly exported source
+is unchanged. Readers95257/45800 are joined; final-09 owns latest source identities.
+No additional presentation, constructor or model variant is introduced.
+
+Final native warnings are zero; seven installed RTL Classes browser case warnings
+remain separate from owned source. Readers19810/65817/71857/71260/16537 are joined.
+All27 protected files remain byte/hash exact and both fixed listener PIDs/ports
+remain unchanged. No Studio project, output configuration or LAN release is edited.
+Evidence: tree-recovery-ui-01 on external scratch, especially final-06 initial
+failure/source identities, browser-repair-07 and final-08 source/preservation/results,
+clean heap logs, generated source and recovery-wide/recovery-phone-confirmation PNGs.
+
+This supplies the previously missing visible native/browser Tree recovery path
+within original04 criterion2; it does not close the whole criterion/task. Stop
+equivalent panel/constructor variants. Return to the remaining navigation/context
+checklist and that same visible workload's measured L2 budgets. Physical/assistive
+quality and broader north-star acceptance remain open; no DONE move or percentage
+credit is assigned. Root remains SOLO.
+
+## Previous work — Native Tree unfinished edits — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushed fb49840f with exact remote match;
 both state-collections02/03 are accepted. Root remains SOLO. Return to the original

@@ -4733,6 +4733,7 @@ var
   LText: TNyxText;
   LAccepted: TNyxStateValue;
   LData: INyxCollectionSnapshot;
+  LSpec: TNyxCollectionViewSpec;
   LMutation: Integer;
   LSelection: TNyxTextSelection;
 begin
@@ -4746,9 +4747,19 @@ begin
   end;
   LData := FRendered;
   LMutation := FCellMutationSerial;
-  LColumn := FColumnLayout.Spec.ColumnIndex(AField);
+  { Trees own editable labels without the optional Table arrangement facet.
+    Use their declared fields, not an empty Table layout. Keep the copied
+    accepted frame and mutation fence across the view's outward Spec getter. }
+  LSpec := FColumnLayout.Spec;
 
-  if not InputLifetimeCurrent or (LColumn < 0) then
+  if FView.Projection = cpTree then
+  begin
+    LSpec := FView.Spec;
+  end;
+  LColumn := LSpec.ColumnIndex(AField);
+
+  if not InputLifetimeCurrent or (FRendered <> LData) or
+    (FCellMutationSerial <> LMutation) or (LColumn < 0) then
   begin
     Exit;
   end;
@@ -4779,7 +4790,7 @@ begin
       end;
     end;
     LSelection := CaptureNyxBrowserSelection(LInput);
-    LAccepted := FColumnLayout.Spec.ColumnAt(LColumn).Read(LData.Item(AItem));
+    LAccepted := LSpec.ColumnAt(LColumn).Read(LData.Item(AItem));
 
     if not InputLifetimeCurrent or (FRendered <> LData) or
       (FCellMutationSerial <> LMutation) then
@@ -4800,22 +4811,32 @@ var
   LWork: Integer;
   LRow: TBrowserRow;
   LInput: TJSHTMLInputElement;
+  LSpec: TNyxCollectionViewSpec;
+  LMutation: Integer;
 begin
   Result := False;
 
-  if not ReadRecoveryDraft(ACell.Item, ACell.Field, LCurrent) or
-    not NyxSameCollectionDraft(LCurrent, ACell) or not GetDraftRecoveryHeld then
+  if not InputLifetimeCurrent then
   begin
     Exit;
   end;
-  { Cached physical columns cannot reenter a user getter between the exact
-    comparison above and the final DOM write. }
-  LColumn := FColumnLayout.Spec.ColumnIndex(ACell.Field);
+  LMutation := FCellMutationSerial;
+  LSpec := FColumnLayout.Spec;
 
-  if not InputLifetimeCurrent or (LColumn < 0) then
+  if FView.Projection = cpTree then
+  begin
+    LSpec := FView.Spec;
+  end;
+  LColumn := LSpec.ColumnIndex(ACell.Field);
+
+  if not ReadRecoveryDraft(ACell.Item, ACell.Field, LCurrent) or
+    not NyxSameCollectionDraft(LCurrent, ACell) or not GetDraftRecoveryHeld or
+    not InputLifetimeCurrent or (FCellMutationSerial <> LMutation) or (LColumn < 0) then
   begin
     Exit;
   end;
+  { All outward field/receipt getters preceded the exact comparison. The
+    remaining cached row/input lookup cannot call user code before its DOM write. }
   for LWork := 0 to High(FResidentRows) do
   begin
     LRow := FRows[FResidentRows[LWork]];

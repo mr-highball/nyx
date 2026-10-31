@@ -5,6 +5,30 @@
 
 **Current evidence — 2026-10-31:**
 
+The same public process Tree now consumes a reusable Nyx recovery panel and
+runtime binding. Review distinguishes admitted journal entries from exact held
+receipts; export preserves raw UTF-8, discard requires confirmation and refuses
+stale typing, and explicit retry follows capacity release. A bounded mount status
+channel reports post-composition holds without polling. The browser adapter's
+Table-layout field lookup is repaired for Tree receipts. Independent peer data
+and actual rendered labels continue updating; saved designs stay unchanged.
+
+Final handwritten/generated browser applications each pass132 checks per measured
+1280x900/390x844 viewport. Native equivalents pass74/73 and73/73, with clean heaps.
+Shared recovery64, existing Tree118 browser/116 native and Table42 browser/57 native
+remain intact. The unchanged saved Service monitor retains20 native managed-review
+checks per width. Ordinary public F2/navigation/replay/review/confirmed-discard
+journeys and reviewed desktop/compact screenshots verify this presentation.
+Injected save hosts qualify exact requests and cancellation, not new disk writes.
+WORK records source identities, the original failure and preserved projects/services.
+
+This delivers the informative Tree recovery path inside criterion2. Full remaining
+navigation/context, physical/assistive quality and measured L2 budgets remain open;
+no full original criterion, task or north-star credit is accepted. Continue those
+outcomes, without further equivalent panel/caption/constructor variants.
+
+**Prior prerequisite evidence — 2026-10-31:**
+
 Both hard prerequisites are accepted: row replacement02 now retires following-
 view membership/focus/anchor, and query delivery03 retains its capabilities through
 reentrant closure on pas2js. Shared collection/inspection/delivery checks pass

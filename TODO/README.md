@@ -14,10 +14,14 @@ per native width; exact draft recovery passes42 browser/57 native. The complete
 89/88 handwritten,88/88 generated native checks. Full clipboard compatibility
 retains1755 browser and1904/1893 native, with clean heaps. Return to04's original
 context and measured scale outcomes. Native Tree draft continuity now passes116
-handwritten/generated checks per width; its informative recovery presentation
-remains the next unfinished user-facing deliverable. Stop prerequisite and
-caption/constructor variants. Physical/assistive quality and north-star acceptance
-remain open. WORK owns the exact evidence and next action.
+handwritten/generated checks per width. Its reusable recovery panel now supports
+visible review, exact export requests, confirmed discard and capacity/retry.
+The same handwritten/generated application passes132 browser checks per actual
+viewport and74/73,73/73 native checks with clean heaps; ordinary public input and
+desktop/compact rendering are reviewed. Return to04's remaining navigation/context
+and measured L2 requirements. Stop prerequisite/panel/caption/constructor variants.
+Physical/assistive quality and north-star acceptance remain open. WORK owns exact
+source identities, retained failures, preservation checks and the next action.
 The [splitter regression](NS-2_split-platform_02.md) retains its accepted
 criteria2/3/5/6 and original external/capture limits. WORK owns the return.
 

@@ -25,15 +25,17 @@ program process_tree;
 
 uses
   {$ifdef PAS2JS}
-  Web, nyx.application.browser,
+  Web, nyx.application.browser, nyx.files.save.browser,
   {$else}
-  Interfaces, Forms, nyx.application.lcl,
+  Interfaces, Forms, nyx.application.lcl, nyx.files.save.lcl,
   {$endif}
-  nyx.model, nyx.process.tree;
+  nyx.model, nyx.process.tree, nyx.collections.recovery.panel,
+  nyx.collections.recovery.binding;
 
 var
   GDocument: TNyxDocument;
   GBinding: TNyxProcessTreeDemo;
+  GRecovery: INyxCollectionRecoveryBinding;
   {$ifdef PAS2JS}
   GApplication: TNyxBrowserApplication;
   {$else}
@@ -45,7 +47,7 @@ begin
   { These are local display labels, so the example opts into the portable
     first-column editor. Production monitors can keep the factory's readonly
     default or supply their own authorization/domain rules. }
-  GDocument := BuildProcessTreeDocument(True);
+  GDocument := BuildProcessTreeDocument(True, True);
   try
     {$ifdef PAS2JS}
     GApplication := TNyxBrowserApplication.Create;
@@ -57,6 +59,9 @@ begin
     {$endif}
     GBinding := TNyxProcessTreeDemo.Create(GApplication.Context, GApplication.View.Events,
       GApplication.View.CollectionMount(ProcessTreeID).View);
+    GRecovery := BindNyxCollectionRecoveryPanel(GApplication.Context, GApplication.View.Events,
+      GApplication.View.CollectionMount(ProcessTreeID), NyxCollectionRecoveryParts(ProcessRecoveryName),
+      {$ifdef PAS2JS}NewNyxBrowserFileSaveHost{$else}NewNyxLCLFileSaveHost{$endif});
     {$ifdef PAS2JS}
     document.body.setAttribute('data-nyx-process-tree-ready', 'passed');
     { A browser page owns this example for its lifetime. Embedded hosts close
@@ -65,12 +70,14 @@ begin
       GApplication.Window.Show;
       Application.Run;
     finally
+      GRecovery := nil;
       GBinding.Free;
       GApplication.Free;
     end;
     {$endif}
   except
     {$ifdef PAS2JS}
+    GRecovery := nil;
     GBinding.Free;
     GApplication.Free;
     {$endif}
