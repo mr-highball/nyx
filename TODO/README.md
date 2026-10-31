@@ -3,13 +3,21 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+[Column events01](NS-1_column-events_01.md) now accepts criterion1's typed
+data/registration contract, with native/browser48 and an actual emitted
+application's native32/browser34. Both adapter bridges and ordinary schema/source
+handling are implemented. Continue owned live Studio/MCP authoring and actual
+native manager/resize/Fit input; criteria2–5 and the full task remain open. Do not
+repeat an equivalent payload/header/preference fixture or assign full parent
+credit. WORK retains failures, dimensions, heaps and exact supported boundaries.
+
 [Workbench03](NS-3_control-usefulness_03.md) now accepts original criteria2,3
 and5: presentation/inspection, typed copy/export and preference/lifecycle
 ownership. Full current browser workbench1576/1577, presentation159 per width
 and clipboard1755 per width complement unchanged clean native evidence and the
 same saved application's real OS effects. Original criteria1/4/6/7 remain open.
 Current native full runs retain Win32 cursor error5 and clean heaps; the prepared
-desktop runner awaits the user's result. Next implement the concrete
+desktop runner awaits the user's result. Continue the concrete
 [typed column-change callback](NS-1_column-events_01.md) prerequisite of criterion6,
 using existing publications, events, scheduler and Studio source handling.
 Do not repeat preference/header/latency variants or assign full parent credit.

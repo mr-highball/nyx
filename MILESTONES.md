@@ -9,7 +9,11 @@ lifecycle ownership. Current full browser journeys and retained unchanged native
 heaps/real saved-application effects support that assessment. Remaining criteria
 and native pointer/quality gates stay open. Its next concrete prerequisite is
 [typed column-change callbacks](TODO/NS-1_column-events_01.md) through ordinary
-Studio Events. This assigns no new percentage or full workbench/L2 credit.
+Studio Events. Its public typed data/registration criterion1 is now accepted;
+both adapter bridges and the Studio-produced application's native32/browser34
+execute. Continue live revision-aware Studio/MCP authoring and actual native
+manager/resize/Fit input. Criteria2–5 and the full callback task remain open.
+This assigns no new percentage or full workbench/L2 credit.
 
 Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)
 is accepted on2026-10-31. Complete admission and conservative target fallback

@@ -5590,12 +5590,14 @@ begin
   else
   begin
     { Recognize fluent spellings from the same closed registry as generation.
+      ColumnsChanged uses the existing generic On(typed trigger) contract;
+      its title does not invent a method on the older authored-event interface.
       Open named streams still have their separate typed-reference admission. }
     LFound := False;
     for LMatch := Low(TNyxTrigger) to High(TNyxTrigger) do
     begin
 
-      if NyxIsRuntimeTrigger(LMatch) and
+      if NyxIsRuntimeTrigger(LMatch) and (LMatch <> ntColumnsChanged) and
         (LowerCase(NyxTriggerTitle(LMatch)) = LMethod) then
       begin
         LTrigger := LMatch;

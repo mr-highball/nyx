@@ -39,6 +39,12 @@ begin
   begin
     Result := Result + 'OnNamed(' + PascalEventReference(AInfo.Name.Name) + ')';
   end
+  else if AInfo.Trigger = ntColumnsChanged then
+  begin
+    { Existing authored-event GUIDs/vtables stay unchanged. Their generic typed
+      On contract already admits new closed triggers without an ABI extension. }
+    Result := Result + 'On(ntColumnsChanged)';
+  end
   else
   begin
     Result := Result + NyxTriggerTitle(AInfo.Trigger);

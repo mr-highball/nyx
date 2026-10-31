@@ -46,7 +46,8 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.state, nyx.model, nyx.controls,
   nyx.root.types, nyx.behavior, nyx.scheduler, nyx.publication,
   nyx.popover.types, nyx.collections, nyx.collections.arrangement,
-  nyx.collections.arrangement.controls, nyx.collections.view.types;
+  nyx.collections.arrangement.controls, nyx.collections.view.types,
+  nyx.collections.column.events;
 
 const
   CPage = 'nyx-column-arrangement-page';
@@ -992,6 +993,7 @@ var
   LProof: INyxCancellationReadiness;
   LNotification: TNyxText;
   LInstalledWidth: Integer;
+  LOrigin: TNyxColumnChangeOrigin;
 begin
   LLease := Self;
   RequireWork(AWork);
@@ -1052,7 +1054,15 @@ begin
     end
     else
     begin
-      LStage := LColumns.PrepareColumns(AWork.Capture, AWork.Change.Preferences);
+      LOrigin := nccoManager;
+
+      if AWork.Change.Action in [ncaaDefaultWidth, ncaaResetColumn,
+        ncaaResetOrder, ncaaResetAll] then
+      begin
+        LOrigin := nccoReset;
+      end;
+      LStage := PrepareNyxColumnChange(LColumns, AWork.Capture,
+        AWork.Change.Preferences, LOrigin);
       RequireWork(AWork);
     end;
     LNotification := '';

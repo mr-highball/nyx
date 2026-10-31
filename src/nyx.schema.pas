@@ -125,9 +125,11 @@ type
   TNyxEventRoutes = array of TNyxEventRoute;
   { Snapshot families are independent of a declared scalar payload. A text
     event may carry both its admitted Before/After and physical editing context;
-    agents can inspect this bounded typed set without inferring help strings. }
+    agents can inspect this bounded typed set without inferring help strings.
+    Collection columns describe committed arrangement data, not a veto stage. }
   TNyxEventContextKind = (nctxKeyboard, nctxTextEdit, nctxPointer, nctxWheel,
-    nctxViewport, nctxCollectionSelection, nctxEditing, nctxDrag, nctxImage);
+    nctxViewport, nctxCollectionSelection, nctxEditing, nctxDrag, nctxImage,
+    nctxCollectionColumns);
   TNyxEventContexts = set of TNyxEventContextKind;
   TNyxEventSchema = record
     Trigger: TNyxTrigger;
@@ -2142,7 +2144,8 @@ end;
 function NyxEventContextsData(AContexts: TNyxEventContexts): TNyxDataValue;
 const
   CNames: array[TNyxEventContextKind] of TNyxText = ('keyboard', 'text-edit',
-    'pointer', 'wheel', 'viewport', 'collection-selection', 'editing', 'drag', 'image');
+    'pointer', 'wheel', 'viewport', 'collection-selection', 'editing', 'drag', 'image',
+    'collection-columns');
 var
   LKind: TNyxEventContextKind;
   LItems: array of TNyxDataValue;
@@ -2583,6 +2586,12 @@ var
     begin
       Include(LTriggers, ntSelectionChange);
       Include(LBridgedTriggers, ntSelectionChange);
+
+      if LKind = NyxKindName(nkTable) then
+      begin
+        Include(LTriggers, ntColumnsChanged);
+        Include(LBridgedTriggers, ntColumnsChanged);
+      end;
     end;
 
     if NyxSupportsTextInput(AControl) then
@@ -2812,6 +2821,16 @@ begin
           Result[LIndex].Description := 'Owned collection selection before/after; ' +
             'typed item membership, independent focus and range anchor; requires ' +
             'an admitted collection binding on this control or compound part';
+        end;
+
+        if LTrigger = ntColumnsChanged then
+        begin
+          Result[LIndex].Contexts := Result[LIndex].Contexts + [nctxCollectionColumns];
+          Result[LIndex].Description := 'Committed table arrangement; ' +
+            'CollectionColumns owns typed fields, changed width/order/visibility/pin, ' +
+            'before/after preferences and serials, opaque view identity and reported origin. ' +
+            'Requires the optional runtime column-events capability. Notifications ' +
+            'cannot veto; async callbacks read detached data and queue UI writes.';
         end;
 
         if not (LTrigger in LBridgedTriggers) then

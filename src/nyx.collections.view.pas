@@ -45,6 +45,7 @@ uses
   nyx.collections.registry,
   nyx.collections.view.types,
   nyx.collections.arrangement,
+  nyx.collections.column.events,
   nyx.collections.presentation,
   nyx.collections.alignment,
   nyx.collections.inspection,
@@ -234,6 +235,18 @@ type
     function GetConnected: Boolean;
     procedure Disconnect;
     property Connected: Boolean read GetConnected;
+  end;
+
+  { Optional managed arrangement notifications preserve the original Columns
+    and View GUIDs. Subscription tokens own their observer and borrow the view;
+    dropping/disconnecting a token revokes its receiver. Origin-aware preparation
+    changes diagnostic metadata only, never admission or command authority. }
+  INyxCollectionColumnEvents = interface(IInterface)
+    ['{CF5ED3C4-D861-4706-9D22-799C79F00003}']
+    function SubscribeColumns(const AObserver: INyxColumnChangeObserver): INyxCollectionViewSubscription;
+    function PrepareColumnChange(const ACapture: INyxCollectionColumnsCapture;
+      const APreferences: TNyxColumnPreferences;
+      AOrigin: TNyxColumnChangeOrigin): INyxPreparedPublication;
   end;
 
   { Optional UI-owner inspection preserves the original view interface. Pause
@@ -446,6 +459,11 @@ function NyxCollectionPages(const AView: INyxCollectionView): INyxCollectionPage
 { Unsupported alternatives/non-table views refuse explicitly. The optional
   facet never manufactures a toolkit-specific column engine or data copy. }
 function NyxCollectionColumns(const AView: INyxCollectionView): INyxCollectionColumns;
+{ New targets preserve the reported operation path; older optional Columns
+  implementations keep their normal preparation without fabricated events. }
+function PrepareNyxColumnChange(const AColumns: INyxCollectionColumns;
+  const ACapture: INyxCollectionColumnsCapture; const APreferences: TNyxColumnPreferences;
+  AOrigin: TNyxColumnChangeOrigin): INyxPreparedPublication;
 { True only for immutable built-in captures carrying the same private owner
   identity and accepted column serial. Equal public serials alone prove nothing.
   This compares configuration, not live authority; retained captures remain inert
@@ -540,15 +558,19 @@ type
       const AColumns: TNyxColumnPreferences;
       const APresentation: TNyxTablePresentationPreferences): INyxPreparedPublication;
   end;
-  { A caller-owned token borrows its view and exactly one receiver kind. The
-    view borrows token pointers; detachment clears both callbacks before either
-    receiver can be freed. Inspection-only changes do not invoke data observers. }
+  { A caller-owned token borrows its view and selects exactly one receiver kind.
+    Ordinary methods remain borrowed; the typed column observer is managed by
+    this token. The view borrows token pointers. Detach revokes ownership before
+    releasing a managed receiver, which can itself disconnect other tokens. }
   TViewSubscription = class(TInterfacedObject, INyxCollectionViewSubscription)
+  private
+    procedure Detach;
   public
     Owner: TView;
     Serial: Integer;
     Observer: TNyxCollectionViewObserver;
     InspectionObserver: TNyxCollectionInspectionObserver;
+    ColumnObserver: INyxColumnChangeObserver;
     destructor Destroy; override;
     function GetConnected: Boolean;
     procedure Disconnect;
@@ -595,7 +617,7 @@ type
     source revision, query intent and later Tree commands fence its lifetime. }
   TView = class(TNyxInterfacedObject, INyxCollectionView, INyxTreeHierarchy, INyxTreeReveal,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
-    INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
+    INyxCollectionQuerySession, INyxCollectionColumns, INyxCollectionColumnEvents, IColumnTransferTarget,
     INyxCollectionTablePresentation, IColumnPresentationTransferTarget,
     INyxCollectionColumnSampling, INyxCollectionExportView, INyxCollectionSelectedRowsView,
     INyxCollectionInspection, INyxCollectionPositionView, INyxCollectionFollowing)
@@ -612,6 +634,7 @@ type
       cannot form a cycle; preferences contain only independently owned values. }
     FColumnPreparation: TColumnPreparation;
     FColumnIdentity: IInterface;
+    FColumnEventScope: TNyxColumnViewRef;
     FColumnSerial: Integer;
     { Invalidates measured page text on every accepted view notification,
       including paging-policy ABA returning to the same unpaged snapshot.
@@ -684,7 +707,8 @@ type
       const AChanges: INyxCollectionChanges);
     procedure Notify(const AChanges: INyxCollectionChanges;
       AInspectionOnly: Boolean = False;
-      ACause: TNyxCollectionInspectionCause = ncicViewChanged);
+      ACause: TNyxCollectionInspectionCause = ncicViewChanged;
+      const AColumnChanges: INyxColumnChanges = nil);
     procedure Disconnect(AToken: TViewSubscription);
     function ReconcileSelection(const ASource, AResult,
       APrevious: INyxCollectionSnapshot;
@@ -737,6 +761,10 @@ type
     procedure CheckExportCurrent(const ACapture: INyxCollectionExportCapture);
     function PrepareColumns(const ACapture: INyxCollectionColumnsCapture;
       const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
+    function PrepareColumnChange(const ACapture: INyxCollectionColumnsCapture;
+      const APreferences: TNyxColumnPreferences;
+      AOrigin: TNyxColumnChangeOrigin): INyxPreparedPublication;
+    function SubscribeColumns(const AObserver: INyxColumnChangeObserver): INyxCollectionViewSubscription;
     function PrepareAutoSize(const ACapture: INyxCollectionColumnsCapture;
       const AField: TNyxColumnIdentity; AWidth: Integer): INyxPreparedPublication;
     function ConfigureColumns(const APreferences: TNyxColumnPreferences): INyxCollectionColumns;
@@ -970,15 +998,19 @@ type
   { A single-use participant in the existing atomic publication coordinator.
     Both former and candidate vectors remain leased through retirement, leaving
     Install with nonthrowing adoption only. No detached second data view or
-    second row/selection/query engine is needed for a presentation change. }
+    second row/selection/query engine is needed for a presentation change.
+    Immutable arrangement deltas are allocated during fallible validation and
+    retained locally through notification, including callback-driven retirement. }
   TColumnPreparation = class(TInterfacedObject, INyxPreparedPublication,
     INyxPublicationReadiness)
   private
     FOwner: TView;
     FLease: INyxCollectionView;
-    FSource, FSnapshot: INyxCollectionSnapshot;
+    FSource: INyxCollectionSnapshot;
+    FSnapshot: INyxCollectionSnapshot;
     FSelection: INyxCollectionSelection;
-    FBefore, FNext: TNyxColumnPreferences;
+    FBefore: TNyxColumnPreferences;
+    FNext: TNyxColumnPreferences;
     { Both presentation vectors stay retained through flags-only Install. One
       shared serial fences concurrent column plans and same-byte ABA changes. }
     FBeforePresentation: TNyxTablePresentationPreferences;
@@ -986,9 +1018,15 @@ type
     FApplyPresentation: Boolean;
     FOnlyPresentation: Boolean;
     FSerial: Integer;
-    FChanged, FValidated, FValidationStarted: Boolean;
-    FInstalled, FNotified, FRetired: Boolean;
+    FChanged: Boolean;
+    FValidated: Boolean;
+    FValidationStarted: Boolean;
+    FInstalled: Boolean;
+    FNotified: Boolean;
+    FRetired: Boolean;
     FImported: Boolean;
+    FOrigin: TNyxColumnChangeOrigin;
+    FColumnChanges: INyxColumnChanges;
     FAutoSize: TNyxColumnIdentity;
     FSample: TColumnSample;
     FSampleLease: INyxCollectionColumnSample;
@@ -996,7 +1034,8 @@ type
   public
     procedure Initialize(AOwner: TView; const ACapture: INyxCollectionColumnsCapture;
       const APreferences: TNyxColumnPreferences;
-      const AAutoSize: TNyxColumnIdentity; AImported: Boolean = False);
+      const AAutoSize: TNyxColumnIdentity; AImported: Boolean = False;
+      AOrigin: TNyxColumnChangeOrigin = nccoUnspecified);
     procedure InitializeSample(AOwner: TView; ASample: TColumnSample;
       AWidth: Integer);
     procedure InitializePresentation(AOwner: TView;
@@ -1798,7 +1837,7 @@ end;
 
 destructor TViewSubscription.Destroy;
 begin
-  Disconnect;
+  Detach;
   inherited Destroy;
 end;
 
@@ -1808,7 +1847,20 @@ begin
 end;
 
 procedure TViewSubscription.Disconnect;
+var
+  LLease: INyxCollectionViewSubscription;
 begin
+  { A managed receiver may drop the caller's last token during its destructor. }
+  LLease := Self;
+  Detach;
+end;
+
+procedure TViewSubscription.Detach;
+var
+  LObserver: INyxColumnChangeObserver;
+begin
+  LObserver := ColumnObserver;
+  ColumnObserver := nil;
   Observer := nil;
   InspectionObserver := nil;
 
@@ -1816,6 +1868,8 @@ begin
   begin
     Owner.Disconnect(Self);
   end;
+  { Last managed release occurs only after all borrowed owner fields revoke. }
+  LObserver := nil;
 end;
 
 constructor TRowCopyReadiness.Create;
@@ -1895,6 +1949,7 @@ begin
   { Captures retain only this inert token, never the live view or its source. }
   FQueryIdentity := TInterfacedObject.Create;
   FColumnIdentity := TInterfacedObject.Create;
+  FColumnEventScope := NewNyxColumnViewRef;
   FColumnPreferences := NyxColumnPreferences;
   FPresentationPreferences := NyxTablePresentationPreferences;
   ASpec.Validate;
@@ -2007,7 +2062,24 @@ end;
 destructor TView.Destroy;
 var
   LIndex: Integer;
+  LTokens: array of INyxCollectionViewSubscription;
 begin
+  { Retain token shells and revoke every borrowed owner before an external
+    store/callback destructor can run. One receiver may release another token. }
+  FNotifying := True;
+  SetLength(LTokens, Length(FTokens));
+  for LIndex := 0 to High(FTokens) do
+  begin
+    LTokens[LIndex] := FTokens[LIndex];
+    FTokens[LIndex].Owner := nil;
+    FTokens[LIndex].Observer := nil;
+    FTokens[LIndex].InspectionObserver := nil;
+  end;
+  FTokens := nil;
+  for LIndex := 0 to High(LTokens) do
+  begin
+    LTokens[LIndex].Disconnect;
+  end;
   { Lifetime ports retire before source disconnection or any model finalizer.
     Retained snapshots/leases can observe retirement without retaining Self. }
   RetireRowCopy;
@@ -2023,13 +2095,6 @@ begin
     FStoreToken.Disconnect;
     FStoreToken := nil;
   end;
-  for LIndex := 0 to Length(FTokens) - 1 do
-  begin
-    FTokens[LIndex].Owner := nil;
-    FTokens[LIndex].Observer := nil;
-    FTokens[LIndex].InspectionObserver := nil;
-  end;
-  FTokens := nil;
   FSnapshot := nil;
   FSource := nil;
   FAtomic := nil;
@@ -3564,8 +3629,36 @@ begin
   LToken.Owner := Self;
 end;
 
+function TView.SubscribeColumns(const AObserver: INyxColumnChangeObserver): INyxCollectionViewSubscription;
+var
+  LLease: INyxCollectionView;
+  LToken: TViewSubscription;
+  LObserver: INyxColumnChangeObserver;
+begin
+  LLease := Self;
+  { Alternate store Busy getters may call out. Retain the originally supplied
+    receiver before that boundary, independently of the caller's variable. }
+  LObserver := AObserver;
+  Writable;
+
+  if (FProjection <> cpTable) or (LObserver = nil) or
+    (Length(FTokens) >= NyxMaximumCollectionSubscriptions) or (FNextSerial = High(Integer)) then
+  begin
+    raise ENyxCollection.Create('Column subscription requires a table, receiver and available budget');
+  end;
+  LToken := TViewSubscription.Create;
+  Result := LToken;
+  Inc(FNextSerial);
+  LToken.Serial := FNextSerial;
+  LToken.ColumnObserver := LObserver;
+  SetLength(FTokens, Length(FTokens) + 1);
+  FTokens[High(FTokens)] := LToken;
+  LToken.Owner := Self;
+end;
+
 procedure TView.Notify(const AChanges: INyxCollectionChanges;
-  AInspectionOnly: Boolean; ACause: TNyxCollectionInspectionCause);
+  AInspectionOnly: Boolean; ACause: TNyxCollectionInspectionCause;
+  const AColumnChanges: INyxColumnChanges);
 var
   LKeepAlive: INyxCollectionView;
   LSerials: array of Integer;
@@ -3573,6 +3666,7 @@ var
   LCurrent: Integer;
   LObserver: TNyxCollectionViewObserver;
   LInspectionObserver: TNyxCollectionInspectionObserver;
+  LColumnObserver: INyxColumnChangeObserver;
   LInspection: TNyxCollectionInspectionObservation;
   LError: TNyxText;
   LHasError: Boolean;
@@ -3603,6 +3697,9 @@ begin
   try
     for LIndex := 0 to Length(LSerials) - 1 do
     begin
+      { Release the preceding managed receiver before capturing any borrowed
+        callback for the next token. Its destructor can disconnect siblings. }
+      LColumnObserver := nil;
       for LCurrent := 0 to Length(FTokens) - 1 do
       begin
 
@@ -3610,9 +3707,14 @@ begin
         begin
           LObserver := FTokens[LCurrent].Observer;
           LInspectionObserver := FTokens[LCurrent].InspectionObserver;
+          LColumnObserver := FTokens[LCurrent].ColumnObserver;
           try
 
-            if Assigned(LInspectionObserver) then
+            if (LColumnObserver <> nil) and (AColumnChanges <> nil) then
+            begin
+              LColumnObserver.ColumnsChanged(AColumnChanges);
+            end
+            else if Assigned(LInspectionObserver) then
             begin
               LInspectionObserver(LInspection, ACause);
             end
@@ -3636,7 +3738,13 @@ begin
       end;
     end;
   finally
-    FNotifying := False;
+    { Keep the mutation guard through the final managed receiver's release.
+      A receiver disconnected during its call can die at this exact boundary. }
+    try
+      LColumnObserver := nil;
+    finally
+      FNotifying := False;
+    end;
   end;
 
   if LHasError then

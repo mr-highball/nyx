@@ -1157,6 +1157,77 @@ ordering, paired history and its own saved/generated application at wide/compact
 widths. Both Studios and portable authoring consumers compile; actual browser
 interaction, physical input and visual/accessibility quality remain separate gates.
 
+## Committed column-change callbacks
+
+Bound Tables publish `ntColumnsChanged` through the ordinary multiple-callback
+router. Authored registrations use the existing typed interface:
+
+```pascal
+NyxCallbacks(LServiceTable).On(ntColumnsChanged)
+  .Policy(neUIQueue)
+  .Add(NyxHandler('TRememberServiceColumns'), NyxCallbackID('services.columns'));
+```
+
+The callback receives `AEvent.CollectionColumns`, a
+`TNyxColumnChangesSnapshot` from `nyx.collections.column.events`. Check `Defined`
+before reading it. `ChangeAt` returns the exact typed field, its changed
+`nccWidth`, `nccOrder`, `nccVisibility` and/or `nccPin` axes, before/after
+overrides and complete zero-based arrangement positions, including hidden fields.
+An explicit override equal to its authored default still represents an ownership
+change. Order includes changes to the explicit order prefix as well as movement.
+`Before` and `After` return copied preferences; `After.ToData` is the explicit
+persistence boundary for an application's remembered arrangement.
+
+`View` is an opaque per-view identity; `BeforeSerial` and `Serial` identify the
+committed transition. The payload retains no view, node, store, widget or callback
+and grants no authority to change a later view with the same control ID. Private
+snapshot storage remains immutable when copied into queued/worker callbacks.
+Existing application context and scheduler checks still govern UI access.
+
+`Origin` reports the known operation path: programmatic configuration, manager,
+resize, measured auto-size, compatible transfer or explicit manager reset.
+Old preparation callers report `nccoUnspecified`. These labels never prove a
+trusted user gesture or permission; origin is not inferred from the final value.
+
+One admitted grouped arrangement emits once. No-op, refused, abandoned or stale
+preparations emit no successful change. Presentation-only density, text and
+alignment changes keep their ordinary view notification without becoming column
+arrangement events. Callbacks observe installed preferences and cannot veto them.
+A failed receiver does not roll back the arrangement or suppress independent
+view observers. Runtime callback failures follow the router's execution status.
+
+Direct view consumers can query the optional `INyxCollectionColumnEvents` facet
+and call `SubscribeColumns` with an `INyxColumnChangeObserver`. Retain its token;
+dropping or disconnecting it revokes the receiver. The token owns the managed
+observer and borrows the view. A method bridge from
+`NewNyxColumnChangeObserver` borrows its method receiver, which must outlive the
+connected token and any entered callback. Avoid observer-to-token/view cycles.
+Subscriptions share the existing serial observer order. Earlier view, columns
+and authored-event GUIDs remain unchanged; older alternative implementations
+remain usable without fabricated column events.
+
+Both renderers bridge the optional capability for runtime bound Tables. Hidden
+candidates and retired/disconnected mounts do not dispatch application callbacks;
+queued work stays linked to its original generation. Compatible recomposition
+can transfer preferences before the candidate is mounted, without replaying that
+transfer as a user callback. Explicit observed transfers report their real path.
+
+Studio discovers the event through its normal **Events** inspector, with typed
+payload help, ordered registrations and the **Table columns** discovery family.
+Unbound Tables do not advertise a functioning built-in event. Generated Pascal
+uses `.On(ntColumnsChanged)`, preserving the existing interface ABI and paired
+source/history handling. Current qualification and remaining MCP/physical-input
+checks are recorded in [WORK.md](../WORK.md).
+
+Run `tools/qualify-column-events.ps1 -EvidenceDirectory <external-output>` with
+the private toolchain configured to build the portable checks, Studio-produced
+source and its generated browser/Win32 application. The directory must be fresh;
+compiler/test temporaries use configured `TEMP_ROOT`. Browser outputs need an
+existing Pascal HTTP host. The control program reports `data-column-controls`
+and `data-column-controls-checks`; `?capture=1` pauses that same application for
+visible interaction before **Continue column checks** resumes the regression.
+Staging or compilation alone does not count as a browser execution or MCP proof.
+
 ## Browser column resizing — source preview
 
 The current W1 browser source adds resize separators only for tables using the

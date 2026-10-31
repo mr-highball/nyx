@@ -78,7 +78,8 @@ type
     before the platform default; text hooks bracket accepted model admission.
     Design-only triggers never invoke application actions. ntNamed is an open
     transport selected by OnNamed with an exact name and declared payload; it
-    is never accepted as an anonymous closed physical registration. }
+    is never accepted as an anonymous closed physical registration. Committed
+    column changes are notifications; they cannot veto an installed arrangement. }
   TNyxTrigger = (ntClick, ntChange, ntDesignSelect, ntDesignValue,
     ntAfterEnter, ntAfterExit, ntKeyDown, ntKeyUp,
     ntBeforeKeyDown, ntAfterKeyDown, ntKeyPress, ntBeforeKeyPress,
@@ -90,7 +91,7 @@ type
     ntCompositionUpdate, ntCompositionEnd, ntTextSelectionChange,
     ntPointerCancel, ntPointerCapture, ntPointerCaptureLost,
     ntDragStart, ntDrag, ntDragEnter, ntDragOver, ntDragExit, ntDrop, ntDragEnd,
-    ntImageLoading, ntImageReady, ntImageError, ntImageCleared);
+    ntImageLoading, ntImageReady, ntImageError, ntImageCleared, ntColumnsChanged);
   TNyxOverrideMode = (noProperties, noAppend, noPrepend, noReplace, noRemove);
   TNyxInputType = (niText, niPassword, niEmail, niNumber, niSearch, niTel, niUrl);
 
@@ -348,7 +349,7 @@ const
     'composition-update', 'composition-end', 'text-selection-change',
     'pointer-cancel', 'pointer-capture', 'pointer-capture-lost',
     'drag-start', 'drag', 'drag-enter', 'drag-over', 'drag-exit', 'drop', 'drag-end',
-    'image-loading', 'image-ready', 'image-error', 'image-cleared');
+    'image-loading', 'image-ready', 'image-error', 'image-cleared', 'columns-changed');
   CTriggerTitles: array[TNyxTrigger] of TNyxText =
     ('OnClick', 'OnChange', '', '', 'OnAfterEnter', 'OnAfterExit',
     'OnKeyDown', 'OnKeyUp', 'OnBeforeKeyDown', 'OnAfterKeyDown', 'OnKeyPress',
@@ -360,7 +361,7 @@ const
     'OnCompositionStart', 'OnCompositionUpdate', 'OnCompositionEnd', 'OnTextSelectionChange',
     'OnPointerCancel', 'OnPointerCapture', 'OnPointerCaptureLost',
     'OnDragStart', 'OnDrag', 'OnDragEnter', 'OnDragOver', 'OnDragExit', 'OnDrop', 'OnDragEnd',
-    'OnImageLoading', 'OnImageReady', 'OnImageError', 'OnImageCleared');
+    'OnImageLoading', 'OnImageReady', 'OnImageError', 'OnImageCleared', 'OnColumnsChanged');
   COverrideNames: array[TNyxOverrideMode] of TNyxText =
     ('properties', 'append', 'prepend', 'replace', 'remove');
   CInputTypeNames: array[TNyxInputType] of TNyxText =

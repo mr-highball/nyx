@@ -107,6 +107,36 @@ begin
   Result := LColumns;
 end;
 
+function PrepareNyxColumnChange(const AColumns: INyxCollectionColumns;
+  const ACapture: INyxCollectionColumnsCapture; const APreferences: TNyxColumnPreferences;
+  AOrigin: TNyxColumnChangeOrigin): INyxPreparedPublication;
+var
+  LColumns: INyxCollectionColumns;
+  LEvents: INyxCollectionColumnEvents;
+begin
+  LColumns := AColumns;
+
+  if LColumns = nil then
+  begin
+    raise ENyxCollection.Create('Column preparation requires its original columns capability');
+  end;
+
+  if (Ord(AOrigin) < Ord(Low(TNyxColumnChangeOrigin))) or
+    (Ord(AOrigin) > Ord(High(TNyxColumnChangeOrigin))) then
+  begin
+    raise ENyxCollection.Create('Column preparation requires a valid reported origin');
+  end;
+
+  if Supports(LColumns, INyxCollectionColumnEvents, LEvents) then
+  begin
+    Result := LEvents.PrepareColumnChange(ACapture, APreferences, AOrigin);
+  end
+  else
+  begin
+    Result := LColumns.PrepareColumns(ACapture, APreferences);
+  end;
+end;
+
 function TView.CaptureColumns: INyxCollectionColumnsCapture;
 begin
 
@@ -428,6 +458,7 @@ var
   LProof: IColumnSampleProof;
   LData: TColumnSample;
   LPreparation: TColumnPreparation;
+  LResult: INyxPreparedPublication;
 begin
   LKeepAlive := Self as INyxCollectionView;
   LSample := ASample;
@@ -445,19 +476,39 @@ begin
   end;
   LData.RequireCurrent(Self);
   LPreparation := TColumnPreparation.Create;
-  Result := LPreparation;
+  LResult := LPreparation;
   LPreparation.InitializeSample(Self, LData, AWidth);
+  Result := LResult;
 end;
 
 function TView.PrepareColumns(const ACapture: INyxCollectionColumnsCapture;
   const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
 var
   LPreparation: TColumnPreparation;
+  LResult: INyxPreparedPublication;
 begin
   LPreparation := TColumnPreparation.Create;
-  Result := LPreparation;
+  { A failed initialization must release its reservation in THIS stack frame.
+    Assigning Result early lets FPC keep a failed return temporary until the
+    caller exits, incorrectly blocking an immediate valid recovery command. }
+  LResult := LPreparation;
   LPreparation.Initialize(Self, ACapture, APreferences,
     Default(TNyxColumnIdentity));
+  Result := LResult;
+end;
+
+function TView.PrepareColumnChange(const ACapture: INyxCollectionColumnsCapture;
+  const APreferences: TNyxColumnPreferences;
+  AOrigin: TNyxColumnChangeOrigin): INyxPreparedPublication;
+var
+  LPreparation: TColumnPreparation;
+  LResult: INyxPreparedPublication;
+begin
+  LPreparation := TColumnPreparation.Create;
+  LResult := LPreparation;
+  LPreparation.Initialize(Self, ACapture, APreferences,
+    Default(TNyxColumnIdentity), False, AOrigin);
+  Result := LResult;
 end;
 
 function TView.PrepareAutoSize(const ACapture: INyxCollectionColumnsCapture;
@@ -465,6 +516,7 @@ function TView.PrepareAutoSize(const ACapture: INyxCollectionColumnsCapture;
 var
   LPreparation: TColumnPreparation;
   LPreferences: TNyxColumnPreferences;
+  LResult: INyxPreparedPublication;
   LPreference: TNyxColumnPreference;
   LIndex: Integer;
 begin
@@ -483,8 +535,9 @@ begin
   end;
   LPreferences := LPreferences.WithColumn(LPreference.Width(AWidth));
   LPreparation := TColumnPreparation.Create;
-  Result := LPreparation;
-  LPreparation.Initialize(Self, ACapture, LPreferences, AField);
+  LResult := LPreparation;
+  LPreparation.Initialize(Self, ACapture, LPreferences, AField, False, nccoAutoSize);
+  Result := LResult;
 end;
 
 function TView.ConfigureColumns(
@@ -493,7 +546,7 @@ var
   LPrepared: INyxPreparedPublication;
 begin
   Result := Self as INyxCollectionColumns;
-  LPrepared := PrepareColumns(CaptureColumns, APreferences);
+  LPrepared := PrepareColumnChange(CaptureColumns, APreferences, nccoProgrammatic);
   PublishNyxGroup([LPrepared]);
 end;
 
@@ -501,17 +554,20 @@ function TView.PrepareColumnImport(const ACapture: INyxCollectionColumnsCapture;
   const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
 var
   LPreparation: TColumnPreparation;
+  LResult: INyxPreparedPublication;
 begin
   LPreparation := TColumnPreparation.Create;
-  Result := LPreparation;
+  LResult := LPreparation;
   LPreparation.Initialize(Self, ACapture, APreferences,
     Default(TNyxColumnIdentity), True);
+  Result := LResult;
 end;
 
 procedure TColumnPreparation.Initialize(AOwner: TView;
   const ACapture: INyxCollectionColumnsCapture;
   const APreferences: TNyxColumnPreferences;
-  const AAutoSize: TNyxColumnIdentity; AImported: Boolean);
+  const AAutoSize: TNyxColumnIdentity; AImported: Boolean;
+  AOrigin: TNyxColumnChangeOrigin);
 var
   LCapture: INyxCollectionColumnsCapture;
   LProof: IColumnCaptureProof;
@@ -522,6 +578,18 @@ begin
   FNext.Validate;
   FAutoSize := AAutoSize;
   FImported := AImported;
+  FOrigin := AOrigin;
+
+  if FImported then
+  begin
+    FOrigin := nccoTransfer;
+  end;
+
+  if (Ord(FOrigin) < Ord(Low(TNyxColumnChangeOrigin))) or
+    (Ord(FOrigin) > Ord(High(TNyxColumnChangeOrigin))) then
+  begin
+    raise ENyxCollection.Create('Column preparation requires a valid reported origin');
+  end;
   LCapture := ACapture;
   FOwner.Writable;
 
@@ -580,7 +648,8 @@ begin
     LPreference := LPreferences.ColumnAt(LIndex);
   end;
   LPreferences := LPreferences.WithColumn(LPreference.Width(AWidth));
-  Initialize(AOwner, FSample.FOriginal, LPreferences, FSample.FColumn.Identity);
+  Initialize(AOwner, FSample.FOriginal, LPreferences, FSample.FColumn.Identity,
+    False, nccoAutoSize);
 end;
 
 destructor TColumnPreparation.Destroy;
@@ -761,6 +830,15 @@ begin
     end;
   end;
   RequireCurrent;
+  { Freeze semantic data during fallible validation. Pure Install adopts only
+    already allocated values, and callbacks cannot consult a mutable successor. }
+
+  if FChanged and not FOnlyPresentation then
+  begin
+    FColumnChanges := NewNyxColumnChanges(FOwner.FColumnEventScope, LSpec,
+      FBefore, FNext, FSerial, FSerial + 1, FOrigin);
+    RequireCurrent;
+  end;
   FValidated := True;
 end;
 
@@ -802,7 +880,11 @@ begin
 end;
 
 procedure TColumnPreparation.Notify;
+var
+  LLease: INyxPreparedPublication;
+  LChanges: INyxColumnChanges;
 begin
+  LLease := Self;
 
   if not FInstalled or FRetired or FNotified then
   begin
@@ -812,7 +894,10 @@ begin
 
   if FChanged then
   begin
-    FOwner.Notify(nil);
+    { A receiver may retire the original preparation. Own the payload locally
+      instead of borrowing a field that Retire would clear during notification. }
+    LChanges := FColumnChanges;
+    FOwner.Notify(nil, False, ncicViewChanged, LChanges);
   end;
 end;
 
@@ -835,6 +920,7 @@ begin
   FSource := nil;
   FSnapshot := nil;
   FSelection := nil;
+  FColumnChanges := nil;
   FBefore := Default(TNyxColumnPreferences);
   FNext := Default(TNyxColumnPreferences);
   FBeforePresentation := Default(TNyxTablePresentationPreferences);

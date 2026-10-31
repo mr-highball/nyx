@@ -110,6 +110,7 @@ uses
   nyx.binding.types,
   nyx.binding.inputs,
   nyx.collections.view,
+  nyx.collections.column.events,
   nyx.collections.selection,
   nyx.collections.bindings,
   nyx.controls,
@@ -180,7 +181,9 @@ type
   TNyxLCLUpdater = procedure(ANode: TNyxNode; AControl: TControl);
 
   { Native bindings borrow model/control handles. LCL ownership remains rooted in
-    the renderer's host panel; model ownership remains in its realized view. }
+    the renderer's host panel; model ownership remains in its realized view.
+    Managed column subscriptions borrow this receiver and revoke before teardown;
+    entered callbacks retain the existing generation/physical-frame lease. }
   TNyxLCLBinding = class
   private
     FRenderer: TNyxLCLRenderer;
@@ -235,6 +238,7 @@ type
     FPreviousKeyDown: TKeyEvent;
     FPreviousKeyUp: TKeyEvent;
     FCollectionMount: INyxCollectionMount;
+    FColumnSubscription: INyxCollectionViewSubscription;
     { Readonly facts avoid retaining a mount through native capture hooks.
       Embedded local acceptance still observes its enclosing pending gate. }
     FCollectionInputLifetime: INyxCollectionInputLifetime;
@@ -304,6 +308,7 @@ type
     procedure WheelEvent(ASender: TObject; AShift: TShiftState; ADelta: Integer;
       AHorizontal: Boolean; var AHandled: Boolean);
     procedure CollectionSelectionChanged(const ABefore, AAfter: INyxCollectionSelection);
+    procedure CollectionColumnsChanged(const AChanges: INyxColumnChanges);
     procedure SplitLayout(ASender: TObject);
     procedure SplitChanged(ASender: TObject);
     procedure TabsChanged(const AChange: TNyxTabTransition);
@@ -2379,6 +2384,17 @@ begin
   try
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
+
+    try
+
+        if FBindings[LIndex].FColumnSubscription <> nil then
+        begin
+          FBindings[LIndex].FColumnSubscription.Disconnect;
+          FBindings[LIndex].FColumnSubscription := nil;
+        end;
+    except
+      on Exception do RememberFailure;
+    end;
 
     try
 
@@ -9215,6 +9231,7 @@ var
   LColumnsMount: INyxCollectionColumnArrangementMount;
   LInputAdmission: INyxCollectionInputAdmission;
   LWorkbenchSpec: TNyxCollectionViewSpec;
+  LColumnEvents: INyxCollectionColumnEvents;
 begin
 
   if AView = nil then
@@ -9242,6 +9259,12 @@ begin
   begin
     raise ENyxModel.Create('Control already has a live collection binding');
   end;
+
+  if LBinding.FColumnSubscription <> nil then
+  begin
+    LBinding.FColumnSubscription.Disconnect;
+    LBinding.FColumnSubscription := nil;
+  end;
   Result := MountNyxLCLCollectionWithTextLimits(LBinding.FControl, AView, FTableTextLimits,
     FCollectionInputPhase, FCollectionInputGate, FPhysicalFrame,
     FCollectionQueryEvents, LBinding.FNode.ID, LBinding.PerformClick,
@@ -9253,6 +9276,13 @@ begin
     LBinding.FCollectionInputLifetime := LInputAdmission.GetInputLifetime;
   end;
   Result.ObserveSelection(LBinding.CollectionSelectionChanged);
+
+  if not FDesignMode and (AView.Projection = cpTable) and
+    Supports(AView, INyxCollectionColumnEvents, LColumnEvents) then
+  begin
+    LBinding.FColumnSubscription := LColumnEvents.SubscribeColumns(
+      NewNyxColumnChangeObserver(LBinding.CollectionColumnsChanged));
+  end;
 
   if not FDesignMode and (AView.Projection = cpTable) and
     Supports(Result, INyxCollectionQueryMount, LQueryMount) then
@@ -12600,6 +12630,45 @@ begin
   end;
 end;
 
+
+procedure TNyxLCLBinding.CollectionColumnsChanged(const AChanges: INyxColumnChanges);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LEnteredFrame: INyxNativeGestureFrame;
+  LDispatch: TNyxDispatch;
+begin
+  LGeneration := GenerationLease;
+
+  if (AChanges = nil) or (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) or
+    (FCollectionMount = nil) or not FCollectionMount.Connected then
+  begin
+    Exit;
+  end;
+  LEnteredFrame := LGeneration.PhysicalFrame;
+  LEnteredFrame.Enter;
+  try
+    try
+
+      if FRenderer.FUpdating or FRenderer.FDesignMode or FRenderer.FPublishingContent then
+      begin
+        Exit;
+      end;
+      LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntColumnsChanged);
+      RequireNativeGeneration(LGeneration);
+      LDispatch.Info.CollectionColumns := AChanges.Snapshot;
+      RequireNativeGeneration(LGeneration);
+      FRenderer.Emit(FNode, LDispatch);
+      RequireNativeGeneration(LGeneration);
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        { Entered frames keep old controls alive only until local unwinding. }
+      end;
+    end;
+  finally
+    LEnteredFrame.Leave;
+  end;
+end;
 
 procedure TNyxLCLRenderer.Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
 var

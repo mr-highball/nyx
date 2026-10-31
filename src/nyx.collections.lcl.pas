@@ -35,6 +35,7 @@ uses
   nyx.collections.view,
   nyx.collections.viewport,
   nyx.collections.presentation,
+  nyx.collections.column.events,
   nyx.collections.alignment,
   nyx.collections.mount,
   nyx.collections.position,
@@ -6213,7 +6214,8 @@ begin
           LPreference := LPreferences.ColumnAt(LIndex);
         end;
         LPreferences := LPreferences.WithColumn(LPreference.Width(LRequest.Width));
-        LPrepared := LRequest.Columns.PrepareColumns(LRequest.Capture, LPreferences);
+        LPrepared := PrepareNyxColumnChange(LRequest.Columns,
+          LRequest.Capture, LPreferences, nccoResize);
         RequireCurrent;
         PublishNyxGroup([LPrepared, LFence]);
       end;

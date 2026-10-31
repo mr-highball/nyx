@@ -24,6 +24,15 @@ router, scheduler, publication and schema/generation owners. This is one useful
 event family, not a replacement event system or complete collection-event audit.
 The broader scheduler owner and original workbench criteria remain intact.
 
+Progress on2026-10-31: criterion1's typed data/registration foundation is accepted;
+native/browser48, Studio source15 and the emitted application's native32/browser34
+qualify the supported boundaries recorded in WORK. Both adapters and the ordinary
+router/schema bridge are implemented. Criteria2–5 and the complete task remain
+open: continue the owned live Studio/MCP authoring journey and actual native
+manager/resize/Fit input. The earlier refused-preparation recovery failure and
+browser harness failures remain in the column-events-01 packet. This is no full
+workbench03 criterion6, Studio or L2 acceptance.
+
 **Acceptance Criteria:**
 
 - Public typed registration exposes committed column-arrangement changes with

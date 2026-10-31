@@ -11,20 +11,24 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Typed column-change callbacks — 2026-10-31
 
-Outcome: PROGRESS from a18e5ec3. Root remains SOLO. Original workbench03 criteria
-2/3/5 are accepted by the assessment below;1/4/6/7 and the complete task remain
-open. No original criterion, full Nyx/Studio goal or latency threshold changes.
-No north-star percentage or duplicate credit is assigned.
+Outcome: PROGRESS from c000ed33. Root remains SOLO. Column-events01 criterion1
+is accepted for its public typed data/registration contract: current native and
+browser checks qualify detached snapshots, stable typed fields, serials and
+inert view identity. Reported origin paths are explicit, never permission or
+gesture proof. Criteria2–5 and the whole task remain open; supported runtime
+checks below do not substitute for their complete authored/MCP/input journeys.
+Original workbench03 criteria2/3/5 remain accepted;1/4/6/7 remain open. No full
+Nyx/Studio goal, percentage, duplicate credit or latency threshold changes.
 
-Next implement [column-events01](TODO/NS-1_column-events_01.md), the concrete
-workbench03 criterion6 prerequisite. Begin with detached typed committed-change
-data and an optional reference-counted view subscription through the existing
-publication path, then bridge the existing event router/schema/Studio workflow.
-Runtime currently issues a generic nil view notification; Studio advertises
-selection changes but no column-change event. Do not manufacture a custom named
-event workaround, another scheduler or another preference/header/latency fixture.
-Preserve old interfaces, observer/failure order, exact identities and generation
-retirement. The task owns the full authored application acceptance path.
+Next finish [column-events01](TODO/NS-1_column-events_01.md) through an owned
+Studio/MCP review and that saved application's actual manager/resize/Fit paths.
+Stage checked current server/browser artifacts into the fixed QA slot, preserving
+its runtime/configuration and joining its owner before replacement. Use bounded
+revision-aware tools for authoring and ordinary Events/Add/source navigation;
+qualify target input separately. Do not repeat another payload/preference/header/
+latency fixture or manufacture a custom event/scheduler workaround. Existing
+typed payload, router and generation owners now supply the necessary library
+bridge. This batch closes criterion1; consecutive batches without closure: zero.
 
 The current native full pointer gate remains at Win32 GetCursorPos error5.
 A hash-checked ordinary-desktop runner is prepared under the external
@@ -32,11 +36,82 @@ workbench-acceptance-return-01 packet; a concise async request awaits the user's
 execution/result. It opens only test windows and writes evidence on E:, with no
 administrator request or server/project change. Do not waive the original
 assertion or rerun the same denied call from this session. This does not block
-useful callback implementation. All owned readers are joined, temporary browser
-tabs are closed and temporary viewport sizing is reset.
+useful callback integration. Qualification below distinguishes real widget paths
+from software-driven and hardware/assistive checks.
 
 Keep new private artifacts/process TEMP/TMP on E:, preserve fixed listeners and
 exact projects/output choices, and leave unrelated AGENTS/WORK edits intact.
+
+## Qualified batch — Typed column events and generated application — 2026-10-31
+
+An optional managed column observer joins the existing serial view subscription
+list, preserving earlier GUIDs and mixed receiver order. Fallible validation
+freezes before/after preferences, canonical typed deltas and serials before pure
+installation. Tokens revoke borrowed owners before releasing managed receivers;
+entered notification retains its own payload even when its preparation retires.
+Alternative Columns implementations retain the old preparation path without a
+fabricated origin or required new interface. Existing generic notifications stay.
+
+The closed ntColumnsChanged family uses the existing router/scheduler. Both
+adapters bridge runtime bound Tables and revoke the method token before teardown.
+Hidden/disconnected/retired generations do not dispatch application callbacks.
+Studio metadata supplies typed help and the Table columns discovery category.
+Crafted source uses On(ntColumnsChanged), preserving the authored-event ABI.
+The matched pas2js rejects COM interface fields in records: application events
+therefore use the existing immutable value-snapshot pattern, with an inert GC
+identity in browser records and reference-counted native identity. Managed view
+observers retain their specialized interfaces. The original compiler failure stays.
+
+Native/public data48 and browser48 pass. They exercise exact supplementary field
+identity, all four delta axes, explicit-default/order ownership, copied getters,
+absent/wrong-family refusal, legacy fallback, serial/no-op/stale behavior, mixed
+order, throwing receivers, cancelled siblings and callback-driven plan/view
+retirement. Native frees all5596 allocated blocks. Studio source15 qualifies
+ordinary Add/TODO navigation, two registrations/policy, strict saved metadata,
+paired Undo/Redo and actual inspector composition. Its652435 blocks are freed.
+
+That Studio session produces the actual compiled Service monitor application,
+with handwritten callback bodies in its emitted source. One queued callback
+updates a bound label/count; another records exact preferences. Its Win32
+application passes32 at actual1280x820 and390x820 client sizes, freeing all213441/
+213449 blocks. Browser passes34 at verified1280x650 and390x650 child contexts,
+including real resizer keyboard dispatch/Enter and its resize origin. Both
+targets exercise router failures, ordered cancellation, detached asynchronous
+reads, peers, no-op/refusal, same-ID remount cancellation and entered retirement.
+Saved defaults/registration metadata remain exact. Full current native views12429
+and callback authoring106 also pass, with complete clean heaps.
+
+The first generated native run exposes an existing factory recovery bug: assigning
+the prepared interface Result before fallible Initialize lets FPC retain a failed
+return temporary and its reservation. Five factories now own a local preparation
+until successful initialization. The direct stale-request-then-valid-command
+regression passes after repair; its original failure/source/JS and clean heap
+remain. No test scope workaround conceals the refused-command recovery.
+
+At390x844, ordinary browser manager input hides Process ID, the generated callback
+changes the visible label to pid, and the independent peer retains that field.
+A representative image records it. Initial844-high capture pauses could not be
+continued through the outer720-high browser viewport; those timeouts are retained,
+not counted as full runs. A marked resizer was also incorrectly queried as if its
+attribute were an ordinal; only the harness selector/commit sequence is corrected.
+Complete final runs use the proven reachable650-high frames. The optional pause
+button is repositioned; its actual frame geometry and tooling limitation remain
+explicit. Logs retain the previously isolated tool-side MutationObserver error;
+the generated Nyx script contains no MutationObserver and no empty-console claim
+is made. Physical phone/IME/assistive and full native input remain unqualified.
+
+The packet is column-events-01: builds, failures, emitted Pascal/design, actual
+browser dimensions/results/images, heaps and final source identities. The new
+maintained tools/qualify-column-events.ps1 parses; its constituent checks execute
+through the packet runners, not a replay of the entire new orchestration. Current
+Studio/MCP delivery, revision-aware callback authoring, observing inspector
+interaction, actual native manager/resize/Fit and full task acceptance remain
+open. No listener executable, active design or LAN payload replacement occurred.
+All27 protected project/configuration files match their prior hashes. The existing
+authenticated MCP session still reports revision1/home, no draft and no Undo/Redo;
+this is preservation/connectivity evidence, not new callback MCP acceptance. All
+owned compiler/runtime readers are joined; owned browser tabs are closed without
+changing the user's tabs or viewport configuration.
 
 ## Accepted checkpoint — Workbench criteria2/3/5 — 2026-10-31
 

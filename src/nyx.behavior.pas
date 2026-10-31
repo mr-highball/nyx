@@ -38,6 +38,7 @@ uses
   nyx.model,
   nyx.collections.selection,
   nyx.collections.cell,
+  nyx.collections.column.events,
   nyx.editing,
   nyx.gestures,
   nyx.image.lifecycle, nyx.disclosure;
@@ -49,7 +50,9 @@ type
     borrowed for the callback only. HasValue distinguishes absent from empty.
     ValueKind retains the scalar contract, including integer versus number.
     Optional accepted cell data owns exact row/typed-field/value/revision and
-    grants no authority over a later source or physical target. }
+    grants no authority over a later source or physical target. Column changes
+    likewise retain only immutable data; their presence never authorizes a new
+    command on the originating view or a same-ID successor. }
   TNyxEventInfo = record
     Trigger: TNyxTrigger;
     Name: TNyxEventRef;
@@ -105,6 +108,10 @@ type
       at the same coordinate. Default/unsupported producers leave it absent. }
     HasCollectionCell: Boolean;
     CollectionCell: TNyxCollectionCellSnapshot;
+    { Present only for committed OnColumnsChanged. The immutable value is
+      safe to retain on scheduled workers; Defined=False means no payload.
+      SourceID/OriginID identify the control; View distinguishes live instances. }
+    CollectionColumns: TNyxColumnChangesSnapshot;
     { Read-only image request observation; owned after source/view retirement. }
     HasImage: Boolean;
     Image: TNyxImageSnapshot;
@@ -285,6 +292,12 @@ begin
     SelectionBefore.Defined and Selection.Defined;
   Result.SelectionBefore := SelectionBefore;
   Result.Selection := Selection;
+  Result.CollectionColumns := Default(TNyxColumnChangesSnapshot);
+
+  if Trigger = ntColumnsChanged then
+  begin
+    Result.CollectionColumns := CollectionColumns;
+  end;
   Result.HasCollectionCell := CollectionCell.Defined and HasCollectionCell;
   Result.CollectionCell := Default(TNyxCollectionCellSnapshot);
 
@@ -353,6 +366,7 @@ begin
   Result.HasViewport := False;
   Result.Viewport := Default(TNyxViewportSnapshot);
   Result.HasCollectionSelection := False;
+  Result.CollectionColumns := Default(TNyxColumnChangesSnapshot);
   Result.HasCollectionCell := False;
   Result.CollectionCell := Default(TNyxCollectionCellSnapshot);
   Result.HasImage := False;
@@ -506,6 +520,7 @@ begin
   Result.Info.HasViewport := False;
   Result.Info.Viewport := Default(TNyxViewportSnapshot);
   Result.Info.HasCollectionSelection := False;
+  Result.Info.CollectionColumns := Default(TNyxColumnChangesSnapshot);
   Result.Info.HasCollectionCell := False;
   Result.Info.CollectionCell := Default(TNyxCollectionCellSnapshot);
   Result.Info.HasImage := False;

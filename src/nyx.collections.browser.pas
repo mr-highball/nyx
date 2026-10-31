@@ -33,6 +33,7 @@ uses
   nyx.collections.view,
   nyx.collections.viewport,
   nyx.collections.presentation,
+  nyx.collections.column.events,
   nyx.collections.alignment,
   nyx.collections.mount, nyx.collections.draft, nyx.scheduler,
   nyx.collections.range.stroke, nyx.gestures;
@@ -3774,7 +3775,8 @@ begin
           LPreference := LPreferences.ColumnAt(LIndex);
         end;
         LPreferences := LPreferences.WithColumn(LPreference.Width(LProposal.Width));
-        LPrepared := LProposal.Columns.PrepareColumns(LProposal.Capture, LPreferences);
+        LPrepared := PrepareNyxColumnChange(LProposal.Columns,
+          LProposal.Capture, LPreferences, nccoResize);
         PublishNyxGroup([LPrepared, LFence]);
       end;
     except

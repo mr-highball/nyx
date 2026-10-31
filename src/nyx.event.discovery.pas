@@ -32,9 +32,10 @@ uses
 type
   { Discovery groups overlap: keyboard selection can appear in both families.
     All preserves the complete schema, including custom named component events.
+    Columns groups committed arrangement notifications independently of selection.
     These are presentation choices, never event dispatch or compiler directives. }
   TNyxEventCategory = (necAll, necActions, necKeyboard, necText, necFocus,
-    necPointer, necScroll, necDrag, necSelection, necImages);
+    necPointer, necScroll, necDrag, necSelection, necImages, necColumns);
   TNyxEventFilterPart = (nefpQuery, nefpCategory, nefpRegistered, nefpClear, nefpStatus);
   { Immutable copied query. ASCII letters compare case insensitively; other
     Unicode remains exact. Whitespace-separated terms must all occur somewhere
@@ -92,7 +93,7 @@ const
   CContextKey = 'nyx.event-discovery';
   CCaptions: array[TNyxEventCategory] of TNyxText = ('All events', 'Actions',
     'Keyboard', 'Text and editing', 'Focus', 'Pointer', 'Wheel and scrolling',
-    'Drag and drop', 'Selection', 'Images');
+    'Drag and drop', 'Selection', 'Images', 'Table columns');
   CSuffixes: array[TNyxEventFilterPart] of TNyxText =
     ('-query', '-category', '-registered', '-clear', '-status');
 
@@ -264,6 +265,7 @@ begin
   Include((nctxCollectionSelection in LContexts) or (ASchema.Trigger = ntTextSelectionChange),
     necSelection);
   Include(nctxImage in LContexts, necImages);
+  Include(nctxCollectionColumns in LContexts, necColumns);
   for LIndex := 0 to High(AEvent.Callbacks) do
   begin
     LText := LText + #10 + AEvent.Callbacks[LIndex].Handler.Name +

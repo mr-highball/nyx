@@ -93,6 +93,7 @@ uses
   nyx.binding.types,
   nyx.binding.inputs,
   nyx.collections.view,
+  nyx.collections.column.events,
   nyx.collections.range.stroke,
   nyx.collections.selection,
   nyx.collections.bindings,
@@ -210,6 +211,9 @@ type
     function EditingEvent(AEvent: TEventListenerEvent; ATrigger: TNyxTrigger;
       APhase: TNyxEditingPhase): Boolean;
     FCollectionMount: INyxCollectionMount;
+    { Token owns only the managed method bridge; its receiver is this binding.
+      Revoke before DOM/mount teardown. Entered callbacks lease the generation. }
+    FColumnSubscription: INyxCollectionViewSubscription;
     { This face owns its nested view. Candidate transfer rebinds FRenderer;
       Clear disconnects the nested view before releasing the borrowed host. }
     FCanvasView: INyxCanvasWorkspaceView;
@@ -286,6 +290,7 @@ type
     function ScrollEnd(AEvent: TEventListenerEvent): Boolean;
     function ViewportEvent(AEvent: TEventListenerEvent; ATrigger: TNyxTrigger): Boolean;
     procedure CollectionSelectionChanged(const ABefore, AAfter: INyxCollectionSelection);
+    procedure CollectionColumnsChanged(const AChanges: INyxColumnChanges);
   public
     destructor Destroy; override;
   end;
@@ -5678,6 +5683,7 @@ var
   LQueryMount: INyxCollectionQueryMount;
   LColumnsMount: INyxCollectionColumnArrangementMount;
   LColumnsInput: INyxCollectionInputAdmission;
+  LColumnEvents: INyxCollectionColumnEvents;
   LWorkbenchSpec: TNyxCollectionViewSpec;
 begin
 
@@ -5712,10 +5718,25 @@ begin
       begin
         raise ENyxModel.Create('Control already has a live collection binding');
       end;
+
+      if FBindings[LIndex].FColumnSubscription <> nil then
+      begin
+        FBindings[LIndex].FColumnSubscription.Disconnect;
+        FBindings[LIndex].FColumnSubscription := nil;
+      end;
       Result := MountNyxBrowserCollectionWithTextLimits(LElement, AView, FTableTextLimits,
         FCollectionInputPhase, FCollectionInputGate);
       FBindings[LIndex].FCollectionMount := Result;
       Result.ObserveSelection(FBindings[LIndex].CollectionSelectionChanged);
+
+      if not FDesignMode and (AView.Projection = cpTable) and
+        Supports(AView, INyxCollectionColumnEvents, LColumnEvents) then
+      begin
+        { The mount's existing observer settles layout first. This token shares
+          the same ordered publication and does not retain its receiver. }
+        FBindings[LIndex].FColumnSubscription := LColumnEvents.SubscribeColumns(
+          NewNyxColumnChangeObserver(FBindings[LIndex].CollectionColumnsChanged));
+      end;
 
       if not FDesignMode and (AView.Projection = cpTable) and
         Supports(Result, INyxCollectionQueryMount, LQueryMount) then
@@ -7767,6 +7788,47 @@ begin
   end;
 end;
 
+procedure TNyxBrowserBinding.CollectionColumnsChanged(const AChanges: INyxColumnChanges);
+var
+  LGeneration: TBrowserViewGeneration;
+  LGenerationLease: IInterface;
+  LDispatch: TNyxDispatch;
+  LEvents: INyxEvents;
+begin
+  try
+    LGeneration := TBrowserViewGeneration(FGenerationObject);
+    LGenerationLease := LGeneration;
+
+    if (AChanges = nil) or (LGeneration = nil) or not LGeneration.Current or FDisconnected or
+      (FCollectionMount = nil) or not FCollectionMount.Connected then
+    begin
+      Exit;
+    end;
+
+    if CurrentRenderer.FUpdating or CurrentRenderer.FDesignMode or
+      CurrentRenderer.FPublishingContent or CurrentRenderer.FDetachedCandidate then
+    begin
+      Exit;
+    end;
+    LEvents := CurrentRenderer.FEvents;
+
+    if LEvents.ViewRevision <> FViewRevision then
+    begin
+      Exit;
+    end;
+    LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ntColumnsChanged);
+    LDispatch.Info.CollectionColumns := AChanges.Snapshot;
+    { Last borrowed call. Router workers copy the immutable payload; a callback
+      may replace or destroy this generation without retargeting that data. }
+    CurrentRenderer.Emit(FNode, LDispatch);
+  except
+    on ENyxBrowserViewRetired do
+    begin
+      { Only retained locals unwind after the original generation retires. }
+    end;
+  end;
+end;
+
 procedure TNyxBrowserRenderer.Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
 var
   LGeneration: TBrowserViewGeneration;
@@ -9260,6 +9322,12 @@ begin
     Exit;
   end;
   FDisconnected := True;
+
+  if FColumnSubscription <> nil then
+  begin
+    FColumnSubscription.Disconnect;
+    FColumnSubscription := nil;
+  end;
 
   if FCodeBoundsObserver <> nil then
   begin

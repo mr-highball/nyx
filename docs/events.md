@@ -12,6 +12,10 @@ before callback entry, alongside view/subscription cancellation, and inherited
 by `PostUI`. See [image lifecycle delivery](images.md#typed-lifecycle-observations)
 for phase order, publication boundaries, host guarantees and recovery behavior.
 
+Bound Tables also expose [committed column changes](collection-views.md#committed-column-change-callbacks)
+through `On(ntColumnsChanged)`. `CollectionColumns` owns typed arrangement deltas
+and copied preferences, independently of selection or physical input authority.
+
 Both renderers expose the managed multiple-registration router described below,
 and retain the synchronous `TNyxEventHandler` bridge from `nyx.behavior`:
 

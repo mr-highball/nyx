@@ -32,6 +32,9 @@ LPage.Add(LFilterCard);
 
 The managed Card owns its fields. Closed category and part enums supply the
 public configuration; UI captions are decoded only at the explicit form boundary.
+`necColumns` groups bound Table arrangement notifications as **Table columns**.
+The event's help describes its immutable `CollectionColumns` payload; an unbound
+Table does not advertise a functioning built-in column-change event.
 Malformed choices, Boolean input or discovery contexts refuse. Additional
 application text remains ordinary TNyxText. Matching folds ASCII A..Z only;
 supplementary Unicode and other characters compare exactly without locale or
