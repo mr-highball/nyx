@@ -1331,7 +1331,7 @@ establish a completed Fit UI.
 Actual main/form cancellation, popup lifetime integration, host launchers and
 both-target wide/compact journeys remain required before this is ready to use.
 
-## Browser fit metrics — source preview
+## Browser Fit measurement
 
 `MeasureNyxBrowserColumnFit` in `nyx.collections.arrangement.browser` copies a
 bounded sample before observing the mounted table's styles. Supply its exact
@@ -1339,6 +1339,13 @@ header cell, label, sort/filter buttons and same-column body cell/navigation
 label through `TNyxBrowserColumnFitSurface`. An empty sample needs only the
 header. If the body cell also owns a standard editor, supply `BodyEditor` so the
 metric can recognize that child by identity. It never reads the editor value.
+For the standard compact header, supply `HeaderTools`, the exact single-row
+flex parent of the label and buttons. Its complete child order, horizontal
+direction, gap, insets and minimum width participate in the detached metric.
+`FilterGlyph` identifies the standard decorative fixed-size SVG; its admitted
+box is reproduced by a neutral element, without cloning vector/live content.
+Absent optional parts preserve the original direct-child composition. Unknown
+nested content still requires a custom metric.
 The host remains responsible for exact column identity, a current mounted target
 and uniform library body typography across the sampled rows.
 
@@ -1369,17 +1376,25 @@ unchanged CSS font string. It is a UI validation step, not the final callback-fr
 model/input/IME/generation/form fence. The shared `WithNaturalWidth` value update
 uses only previously copied bounds and performs no model/interface getter.
 
-This source is not wired into a mounted Fit command and has not been compiled
-or browser-tested. Host acquisition/publication, focused drafts, actual form
-lifetime integration and the complete native/browser wide/compact W1 journey
-remain required.
+The ordinary managed Columns command uses this metric. The 2026-10-31 full
+presentation journey passes 159 browser checks at each 1280x900/390x844 allocation
+and 167 native checks per width with clean heaps. It preserves the original
+full-value Fit and operational-limit assertions, and additionally rejects a
+changed tool-row gap, changed glyph allocation, wrong parent and custom child.
+Accepting that known glyph relaxes only the text-child check; an initially
+out-of-flow filter button still refuses measurement under the original guards.
+The metric retains no live DOM. Broader W1/W2, physical/assistive and performance
+acceptance remain separate; WORK.md retains the original failures and source
+identities. Unpinned arrangement headers also retain their sticky positioning,
+with normal headers above pinned body cells and pinned headers above both.
 
-## Mounted Fit preparation — source preview
+## Mounted Fit preparation
 
 The target mounts now provide an internal protected `PrepareColumnFit` seam.
 It accepts the original launch capture and full typed field, measures accepted
 current-page sample text, and returns an owned preparation with the model plan
-and final input fence. The seam itself exposes no public Pascal Fit command or Studio UI.
+and final input fence. The ordinary managed Columns form consumes this seam;
+applications retain the public typed arrangement contract.
 The managed output parameter uses `var` so a former metric is released only
 after the mount owns its entered call frame. A returned metric is a proposal,
 not evidence that its width was installed.
@@ -1403,8 +1418,9 @@ the nested Fit group, making metric validation the last known outward check.
 The resulting width does not promise atomic typography against unrelated later
 direct style changes. Ordinary model notifications own refresh and compatible
 draft restoration. A committed notification exception must not cause a retry or
-rollback. Actual management/form lifetime wiring and complete native/browser
-wide/compact input qualification remain ahead; these paths now compile on both targets.
+rollback. The full presentation consumer exercises actual form lifetime and
+publication at both widths, as qualified above. Complete W1/W2, physical and
+assistive input acceptance remain separate.
 
 ## Native column resizing — source preview
 

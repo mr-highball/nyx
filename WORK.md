@@ -9,7 +9,94 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Measured live inspection — 2026-10-31
+## Current work — Visible table navigation and Fit — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushed30f2b216 with exact remote match.
+Root remains SOLO. Current verified state: ordinary header/Fit repairs pass the
+full159 browser presentation and1755 clipboard checks per allocation, plus167
+native presentation checks per width with clean heaps. The same handwritten/
+generated large application retains correct data and sticky header faces; actual
+Home/End is visibly correct. The direct scroll bridge still exposes a missing
+portable explicit flat row/cell reveal contract. Return there under original03/
+04, preserving selection/reading independence and the authored160px allocation.
+The measured L2 targets remain unchanged/open; no full parent/task credit follows.
+All27 protected files and fixed listeners are unchanged. New TEMP/TMP/artifacts
+remain on E:. The initial two-cycle Fit scope and reassessment are retained below.
+
+Initial source evidence: ApplyColumnFace assigns unpinned headers `relative`,
+overriding the shared theme's sticky header rule. Pinned headers remain sticky.
+Inspect the retained full Fit consumer's manager result before changing its
+expected width/serial or adding another fixture. Flat selection and a target
+scroll bridge do not currently establish a completed visible reveal.
+
+Fit diagnostic-01 retains unchanged launch/accepted serial1/1 and the actual
+status `Browser column fit requires its exact mounted parts`. An initial private
+diagnostic incorrectly reads an unallocated Width and masks that status; its
+exception is retained, then the diagnostic reads HasWidth instead. The real
+failure is the standard header's new single tool-row parent, followed by its
+decorative SVG composition and the observed flow-root button display.
+
+First product cycle admits the exact optional HeaderTools/FilterGlyph bridge,
+with complete parent/known-child validation and copied flex direction/gap/box
+geometry. The detached metric reproduces ordinary parts and a neutral glyph
+box, never live SVG, IDs, events or editor contents. Unpinned header faces keep
+sticky positioning at z3, above pinned body cells and below pinned headers.
+The retained real Fit assertion still refuses flow-root in repair-02. The second
+cycle admits that observed blockified display only inside the known tool row.
+Fit then closes successfully; an added test diagnostic tries to read that retired
+popup and produces a JS null-GetRenderer error. The diagnostic is removed and
+all original assertions retained; this is not a library lifetime failure or a
+passing full-consumer receipt. Its raw error is preserved in repair-03.
+
+qualification-04 passes158 full browser presentation checks at each actual
+1280x900/390x844 allocation and167 native per width with complete clean heaps.
+New assertions cover every header's sticky style, exact nested-parent admission,
+stale gap/glyph box and unknown child refusal, plus exact restoration. Every
+original Fit-width/serial, full accepted path, incomplete numeric draft and
+operational-budget refusal remains intact. Clipboard compatibility remains1755
+per browser allocation with empty errors. The same handwritten/generated10000-
+service application completes147 behavior checks per width and explicitly
+retires. Desktop review shows all five header faces; compact review retains the
+visible header faces with ordinary horizontal overflow. Those timing budgets still fail:
+handwritten8/4 and generated4/5, respectively. No performance acceptance follows
+from this rendering repair. Native timing results retain their prior owner.
+
+The two-cycle reassessment separates navigation cases using actual browser keys.
+Ctrl+Home visibly reaches worker9999/Service and Ctrl+End reaches reports/Status
+under the active descending-PID query, at both widths. Recorded rectangles use
+a1-CSS-pixel rounding tolerance, including compact horizontal cell containment.
+This is bounded IAB input/render evidence, not all keyboard, physical or AT
+acceptance. The direct DOM scroll bridge still leaves worker5000 below the clip
+while its resident value is correct; selection itself is not viewport intent.
+Do not invent a selection-autoscroll fix from that bridge. The next original03/
+04 outcome needs a portable explicit stable-row/field reveal contract, including
+focus choice, measured correction, refusals and both adapters, while ordinary
+source updates preserve reading position. Keep the public160px allocation and
+same draft/filter/peer application; do not substitute a source-only fixture.
+
+Before acceptance, source review catches an original-guard regression in the new
+glyph path: reading the whole button as a non-text profile also bypasses its
+position/offset admission. A fresh-metric test demonstrably fails at32 for an
+absolute filter button. The saved before-initial-guard source and failure remain
+in qualification-04. The repair allows only the known child, preserving ALL
+original text-part position/offset/style checks. This necessary correction stays
+inside the same Fit acceptance scope, not a third performance/feature variant.
+final-05 native167/167 passes with complete clean heaps. Final browser159/159 and
+clipboard1755/1755 pass at the actual allocations with empty errors. Final typed
+metrics retain the initial-position refusal and all prior assertions.
+All compiler readers99398/67826/63128 are joined, including failed/diagnostic
+cohorts; no source reader is restarted because an observation expires. Owned
+browser tabs are closed and the viewport override is reset.
+
+Evidence root: table-visibility-return-01. Current screenshots and before/after
+receipts are retained externally. No Studio/LAN listener or active project is
+changed. Final preservation verifies all27 protected files by length/SHA-256 and
+the unchanged fixed listener owners46632/65824. Source identities are retained
+before committing this scoped PROGRESS checkpoint. Complete03/04, Studio delivery,
+L2 budgets, broader physical/assistive quality and north-star credit remain open.
+Root remains SOLO; the resolver and further performance variants stay deferred.
+
+## Previous work — Measured live inspection — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushed1b205778 with exact remote match.
 Root remains SOLO. The visible Tree recovery deliverable is supplied; return to

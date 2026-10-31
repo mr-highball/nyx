@@ -378,6 +378,84 @@ var
   end;
 
   {$endif}
+  {$ifdef PAS2JS}
+  { Exercise the detached metric against the actual mounted composition. These
+    temporary host changes never edit source/drafts; each exact style and custom
+    node is restored before returning to the original full UI journey. }
+  procedure HeaderMetricWitness;
+  var
+    LSampling: INyxCollectionColumnSampling;
+    LSample: INyxCollectionColumnSample;
+    LSurface: TNyxBrowserColumnFitSurface;
+    LForeign: TNyxBrowserColumnFitSurface;
+    LMetric: INyxBrowserColumnFitMeasurement;
+    LRejected: INyxBrowserColumnFitMeasurement;
+    LToolsStyle: String;
+    LGlyphStyle: String;
+    LFilterStyle: String;
+    LCustom: TJSHTMLElement;
+    LRefused: Boolean;
+  begin
+    Check(Supports(LView, INyxCollectionColumnSampling, LSampling),
+      'the ordinary view supplies the original typed current-page fit sample');
+    LSample := LSampling.CaptureColumnSample(LColumns.CaptureColumns,
+      NyxColumnIdentity(NyxTextField('Name')));
+    LSurface := Default(TNyxBrowserColumnFitSurface);
+    LSurface.HeaderCell := TJSHTMLElement(LTable.querySelector('thead th'));
+    LSurface.HeaderTools := TJSHTMLElement(LSurface.HeaderCell.firstElementChild);
+    LSurface.HeaderLabel := TJSHTMLElement(LSurface.HeaderTools.firstElementChild);
+    LSurface.SortButton := TJSHTMLElement(LSurface.HeaderTools.querySelector('[data-nyx-query-sort="0"]'));
+    LSurface.FilterButton := TJSHTMLElement(LSurface.HeaderTools.querySelector('[data-nyx-query-column="0"]'));
+    LSurface.FilterGlyph := LSurface.FilterButton.firstElementChild;
+    LSurface.BodyCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="one"] [data-nyx-column="0"]'));
+    LSurface.BodyLabel := TJSHTMLElement(LSurface.BodyCell.querySelector('.nyx-cell-value'));
+    LMetric := MeasureNyxBrowserColumnFit(LSample, LSurface);
+    Check(LMetric.Matches(LSurface), 'the detached metric matches the exact ordinary tool row and glyph');
+    LForeign := LSurface;
+    LForeign.HeaderTools := nil;
+    Check(not LMetric.Matches(LForeign), 'omitting the exact nested parent cannot admit a different header composition');
+    LToolsStyle := LSurface.HeaderTools.getAttribute('style');
+    try
+      LSurface.HeaderTools.style.setProperty('column-gap', '19px');
+      Check(not LMetric.Matches(LSurface), 'a changed header gap invalidates the detached fit metric');
+    finally
+      LSurface.HeaderTools.setAttribute('style', LToolsStyle);
+    end;
+    LGlyphStyle := LSurface.FilterGlyph.getAttribute('style');
+    try
+      TJSHTMLElement(LSurface.FilterGlyph).style.setProperty('width', '23px');
+      Check(not LMetric.Matches(LSurface), 'a changed decorative glyph box invalidates the detached fit metric');
+    finally
+      LSurface.FilterGlyph.setAttribute('style', LGlyphStyle);
+    end;
+    LFilterStyle := LSurface.FilterButton.getAttribute('style');
+    try
+      LSurface.FilterButton.style.setProperty('position', 'absolute');
+      LRefused := False;
+      try
+        LRejected := MeasureNyxBrowserColumnFit(LSample, LSurface);
+      except
+        on E: ENyxCollection do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (LRejected = nil),
+        'a glyph does not bypass initial rejection of out-of-flow filter layout');
+    finally
+      LRejected := nil;
+      LSurface.FilterButton.setAttribute('style', LFilterStyle);
+    end;
+    LCustom := TJSHTMLElement(document.createElement('span'));
+    LSurface.HeaderTools.appendChild(LCustom);
+    try
+      Check(not LMetric.Matches(LSurface), 'unknown nested header content requires its own metric');
+    finally
+      LCustom.remove;
+    end;
+    Check(LMetric.Matches(LSurface), 'exact restored composition is measurable without retaining live DOM in the metric');
+  end;
+  {$endif}
 begin
   LDocument := nil;
   LState := nil;
@@ -443,6 +521,12 @@ begin
     document.body.setAttribute('data-presentation-viewport-width', IntToStr(Round(window.innerWidth)));
     document.body.setAttribute('data-presentation-table-width-' + LowerCase(BoolToStr(AArranged, True)),
       IntToStr(Round(LTable.clientWidth)));
+    for LAt := 0 to LTable.querySelectorAll('thead th').length - 1 do
+    begin
+      Check(window.getComputedStyle(TJSHTMLElement(LTable.querySelectorAll('thead th')[LAt]))
+        .getPropertyValue('position') = 'sticky',
+        'each ordinary header remains sticky, including unpinned arrangement columns');
+    end;
     {$else}
     Check(LSurface.ClientWidth = GClientWidth, 'native host retains the exact requested client width');
     WriteLn('presentation client=', LSurface.ClientWidth, ' table=', LGrid.ClientWidth,
@@ -659,6 +743,7 @@ begin
       begin
         Check((LColumns.CaptureColumns.Serial = LSerial + 1) and
           (LManager.Observation.ColumnAt(0).Width > 120), 'real Fit measures the complete path rather than its three-line clipped label');
+        {$ifdef PAS2JS}HeaderMetricWitness;{$endif}
       end;
     end;
     Check((LView.Store.Snapshot.Revision = 0) and (TNyxCodec.Encode(LDocument) = LAuthored),

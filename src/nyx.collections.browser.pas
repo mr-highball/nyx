@@ -3061,8 +3061,12 @@ begin
   end;
   Result.HeaderCell := FHeaderCells[AColumn];
   Result.HeaderLabel := FHeaderLabels[AColumn];
+  { The exact library tool row is optional in the public browser metric bridge;
+    its parent/complete children are validated before any width is proposed. }
+  Result.HeaderTools := TJSHTMLElement(Result.HeaderLabel.parentElement);
   Result.SortButton := FHeaderSorts[AColumn];
   Result.FilterButton := FHeaderFilters[AColumn];
+  Result.FilterGlyph := Result.FilterButton.firstElementChild;
 
   if FHasTablePresentation then
   begin
@@ -6908,7 +6912,10 @@ begin
 
     if AHeader then
     begin
-      ACell.style.setProperty('position', 'relative');
+      { Sticky is already a containing block for the absolute resize grip.
+        Relative would override the theme and scroll ordinary headers away. }
+      ACell.style.setProperty('position', 'sticky');
+      ACell.style.setProperty('z-index', '3');
     end;
     Exit;
   end;

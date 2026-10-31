@@ -29,7 +29,13 @@ and exact-predecessor browser row-slot reuse remove repeated work. Native/browse
 timing targets still fail; distant browser values are correct in resident rows
 but the requested row remains clipped. After two product repair cycles, return
 to original workbench03's visible navigation/header/Fit defects and04's remaining
-costs. Do not assign full L2 acceptance or substitute more performance variants.
+costs. The header/Fit return now passes159 full browser presentation checks per
+allocation and167 native per width with clean heaps. Sticky normal headers and
+the standard nested/glyph composition are repaired without reducing the original
+Fit or refusal assertions. Ordinary Home/End is visibly correct in the same
+large table; the direct scroll bridge still exposes the missing portable flat
+row/cell reveal contract. Return there, preserving selection/reading independence.
+Do not assign full L2/workbench acceptance or substitute performance variants.
 The [splitter regression](NS-2_split-platform_02.md) retains its accepted
 criteria2/3/5/6 and original external/capture limits. WORK owns the return.
 

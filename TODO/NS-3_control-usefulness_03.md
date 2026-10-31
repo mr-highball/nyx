@@ -3,7 +3,30 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
-**Large-scroll/presentation gaps — 2026-10-31:**
+**Header/Fit repair and navigation reassessment — 2026-10-31:**
+
+The browser arrangement adapter now preserves sticky positioning for unpinned
+headers instead of overriding the theme with relative positioning. The mounted
+Fit metric admits the standard compact tool row, its observed blockified
+flow-root button and decorative fixed-size filter glyph. It still validates
+exact parents, complete known composition, typography, readiness and input
+authority. Captured gap/glyph/layout changes invalidate detached measurements.
+The full original presentation journey passes159 browser checks per actual
+desktop/compact allocation and167 native checks per width with clean heaps.
+Original Fit-width/serial and operational-budget assertions remain intact.
+A demonstrated glyph-path regression is also repaired: initial out-of-flow
+button layout still refuses, rather than bypassing the original text-part guards.
+
+The same10000-service application now shows all five header faces while scrolled
+at desktop width. Ordinary Ctrl+Home/Ctrl+End reaches visibly correct grid
+boundaries. Its direct DOM scroll bridge still leaves worker5000 outside the
+clip; selection itself is not explicit viewport intent. Next resolve the missing
+portable flat row/cell reveal contract and qualify the intended same-application
+navigation, rather than making source publications/selection steal reading
+position. Compact/generated/header/compatibility receipts and remaining quality
+limits are recorded in WORK. Full original workbench acceptance stays open.
+
+**Prior large-scroll/presentation gaps — 2026-10-31:**
 
 The same10000-service live-inspection application shows partially absent normal
 header faces after distant browser scrolling while pinned headings remain. Keep

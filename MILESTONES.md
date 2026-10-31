@@ -20,6 +20,14 @@ targets and actual visible distant navigation remain unmet. Return to existing
 workbench03's navigation/header/Fit outcomes after this two-repair audit; no full
 L2/task/north-star credit or performance guarantee is assigned.
 
+The header/Fit return repairs sticky ordinary headers and the mounted metric's
+standard nested tool-row/glyph composition. Full presentation checks pass159
+browser per allocation and167 native per width with clean heaps; original Fit
+and refusal assertions remain. Ordinary Home/End is visibly correct in the same
+large application. The remaining direct-scroll case calls for a portable explicit
+flat row/cell reveal contract; selection/publications must retain reading intent.
+Full workbench/L2/physical/assistive acceptance remains open without new credit.
+
 Current execution priority (2026-10-29): deliver observable everyday workflows
 from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-workflows--2026-10-26):
 table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a

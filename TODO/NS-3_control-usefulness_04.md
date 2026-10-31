@@ -24,10 +24,13 @@ software timing observations and physical/assistive quality.
 Actual browser geometry exposes an unmet original outcome: worker5000's realized
 field contains the final offscreen update, but the row remains below the table's
 visible clip after deliberate navigation. The row-count/value assertions do not
-accept visible reveal. Normal header clipping and the pre-existing full Fit
-consumer failure remain with workbench03. Stop after these two actual product
-repair cycles and reassess those concrete navigation/chrome failures and remaining
-cost; do not start another equivalent performance variant or lower the budgets.
+accept visible reveal. The subsequent workbench03 return repairs normal header
+clipping and the pre-existing full Fit failure, with159 browser presentation
+checks per viewport and167 native per width, preserving original assertions.
+Actual Home/End is visibly correct; the direct scroll bridge still lacks a
+portable explicit flat row/cell reveal contract. The measured batch's two-repair
+audit now returns to that navigation outcome and remaining cost; do not start
+another equivalent performance variant or lower the budgets.
 Full L2/context/physical/assistive acceptance, task closure and credit stay open.
 
 **Prior recovery evidence — 2026-10-31:**

@@ -40,12 +40,19 @@ type
     typography, not its draft/editor value, describes accepted table text. Supply
     BodyEditor when that cell also owns a dormant/active standard input; only its
     identity is inspected and its value is never read.
+    HeaderTools optionally identifies the library's single horizontal tool row;
+    absent preserves direct header children. Its complete composition, styles
+    and gap are witnessed rather than accepting arbitrary nested content.
+    FilterGlyph optionally identifies its decorative, fixed-size inline SVG.
+    Only its admitted box is reproduced; live vector content is never cloned.
     The caller owns target identity/lifetime and uniform library row styling. }
   TNyxBrowserColumnFitSurface = record
     HeaderCell: TJSHTMLElement;
+    HeaderTools: TJSHTMLElement;
     HeaderLabel: TJSHTMLElement;
     SortButton: TJSHTMLElement;
     FilterButton: TJSHTMLElement;
+    FilterGlyph: TJSElement;
     BodyCell: TJSHTMLElement;
     BodyLabel: TJSHTMLElement;
     BodyEditor: TJSHTMLElement;
@@ -437,18 +444,27 @@ type
     Minimum: Double;
   end;
   { Copied typography, chrome and accepted text for one exact mounted sample.
-    No DOM element or live model is retained across measurement validation. }
+    An optional standard flex tool row contributes its own insets/minimum/gap
+    and direction; all participate in stale-metric comparison. No DOM element
+    or live model is retained across measurement validation. }
   TFitScene = record
     HeaderCell: TFitProfile;
+    HeaderTools: TFitProfile;
     HeaderLabel: TFitProfile;
     SortButton: TFitProfile;
     FilterButton: TFitProfile;
+    FilterGlyph: TFitProfile;
     BodyCell: TFitProfile;
     BodyLabel: TFitProfile;
     HeaderText: TNyxText;
     SortText: TNyxText;
     FilterText: TNyxText;
     Order: TFitHeaderOrder;
+    HasHeaderTools: Boolean;
+    HeaderGap: Double;
+    HeaderFlow: String;
+    HasFilterGlyph: Boolean;
+    FilterGlyphWidth: Double;
     HasBody: Boolean;
   end;
   { Copied accepted sample strings are acquired before observing UI styles.
@@ -566,7 +582,11 @@ begin
   end;
 end;
 
-function ReadProfile(AElement: TJSHTMLElement; ATextPart: Boolean): TFitProfile;
+{ The known decorative vector relaxes only child-text admission. Button
+  positioning, offsets, typography and ordinary box guards still apply; exact
+  glyph structure is validated separately before the scene is accepted. }
+function ReadProfile(AElement: TJSHTMLElement; ATextPart: Boolean;
+  AKnownGlyph: Boolean = False): TFitProfile;
 var
   LStyle: TJSCSSStyleDeclaration;
   LProperty: TFitTextProperty;
@@ -625,7 +645,7 @@ begin
     raise ENyxCollection.Create('This column text style needs its own fit metric');
   end;
 
-  if ATextPart and (AElement.children.length <> 0) then
+  if ATextPart and not AKnownGlyph and (AElement.children.length <> 0) then
   begin
     raise ENyxCollection.Create('Custom column text children need their own fit metric');
   end;
@@ -670,12 +690,46 @@ var
   LResizeWidth, LEndPadding: Double;
   LTable: TJSElement;
   LPart: Integer;
+  LPartHost: TJSHTMLElement;
+  LToolsStyle: TJSCSSStyleDeclaration;
+  LGap: String;
+  LGlyphStyle: TJSCSSStyleDeclaration;
 begin
   Result := Default(TFitScene);
   RequirePart(ASurface.HeaderCell, nil, 'TH');
-  RequirePart(ASurface.HeaderLabel, ASurface.HeaderCell, 'SPAN');
-  RequirePart(ASurface.SortButton, ASurface.HeaderCell, 'BUTTON');
-  RequirePart(ASurface.FilterButton, ASurface.HeaderCell, 'BUTTON');
+  LPartHost := ASurface.HeaderCell;
+  Result.HasHeaderTools := ASurface.HeaderTools <> nil;
+
+  if Result.HasHeaderTools then
+  begin
+    RequirePart(ASurface.HeaderTools, ASurface.HeaderCell, 'SPAN');
+    Result.HeaderTools := ReadProfile(ASurface.HeaderTools, False);
+    LToolsStyle := window.getComputedStyle(ASurface.HeaderTools);
+    Result.HeaderFlow := LToolsStyle.getPropertyValue('flex-direction');
+
+    if (Result.HeaderTools.Display <> 'flex') or
+      (Result.HeaderTools.Position <> 'static') or
+      not ((Result.HeaderFlow = 'row') or (Result.HeaderFlow = 'row-reverse')) or
+      (LToolsStyle.getPropertyValue('flex-wrap') <> 'nowrap') then
+    begin
+      raise ENyxCollection.Create('Custom header tool layout needs its own fit metric');
+    end;
+    LGap := LToolsStyle.getPropertyValue('column-gap');
+
+    if LGap <> 'normal' then
+    begin
+      Result.HeaderGap := Pixels(LGap);
+    end;
+
+    if Result.HeaderGap < 0 then
+    begin
+      raise ENyxCollection.Create('Header tool gap must be nonnegative');
+    end;
+    LPartHost := ASurface.HeaderTools;
+  end;
+  RequirePart(ASurface.HeaderLabel, LPartHost, 'SPAN');
+  RequirePart(ASurface.SortButton, LPartHost, 'BUTTON');
+  RequirePart(ASurface.FilterButton, LPartHost, 'BUTTON');
 
   if ASurface.SortButton = ASurface.FilterButton then
   begin
@@ -688,28 +742,14 @@ begin
     raise ENyxCollection.Create('Browser column fit requires its actual mounted table');
   end;
   LResize := nil;
-  LPart := 0;
   for LIndex := 0 to ASurface.HeaderCell.childNodes.length - 1 do
   begin
     LChild := ASurface.HeaderCell.childNodes[LIndex];
 
-    if (LChild = ASurface.HeaderLabel) or (LChild = ASurface.SortButton) or
-      (LChild = ASurface.FilterButton) then
+    if (Result.HasHeaderTools and (LChild = LPartHost)) or
+      (not Result.HasHeaderTools and ((LChild = ASurface.HeaderLabel) or
+        (LChild = ASurface.SortButton) or (LChild = ASurface.FilterButton))) then
     begin
-
-      if LChild = ASurface.HeaderLabel then
-      begin
-        Result.Order[LPart] := fhpLabel;
-      end
-      else if LChild = ASurface.SortButton then
-      begin
-        Result.Order[LPart] := fhpSort;
-      end
-      else
-      begin
-        Result.Order[LPart] := fhpFilter;
-      end;
-      Inc(LPart);
       Continue;
     end;
 
@@ -725,6 +765,36 @@ begin
       Continue;
     end;
     raise ENyxCollection.Create('Custom header composition needs its own fit metric');
+  end;
+  { Inspect exactly the admitted parent, never a descendant query which could
+    borrow another field's label or silently ignore injected custom content. }
+  LPart := 0;
+  for LIndex := 0 to LPartHost.childNodes.length - 1 do
+  begin
+    LChild := LPartHost.childNodes[LIndex];
+
+    if LChild = LResize then
+    begin
+      Continue;
+    end;
+
+    if LChild = ASurface.HeaderLabel then
+    begin
+      Result.Order[LPart] := fhpLabel;
+    end
+    else if LChild = ASurface.SortButton then
+    begin
+      Result.Order[LPart] := fhpSort;
+    end
+    else if LChild = ASurface.FilterButton then
+    begin
+      Result.Order[LPart] := fhpFilter;
+    end
+    else
+    begin
+      raise ENyxCollection.Create('Custom header composition needs its own fit metric');
+    end;
+    Inc(LPart);
   end;
 
   if LPart <> Length(Result.Order) then
@@ -773,7 +843,52 @@ begin
   end;
   Result.HeaderLabel := ReadProfile(ASurface.HeaderLabel, True);
   Result.SortButton := ReadProfile(ASurface.SortButton, True);
-  Result.FilterButton := ReadProfile(ASurface.FilterButton, True);
+  Result.HasFilterGlyph := ASurface.FilterGlyph <> nil;
+  Result.FilterButton := ReadProfile(ASurface.FilterButton, True, Result.HasFilterGlyph);
+
+  if Result.HasFilterGlyph then
+  begin
+    { This is the standard fixed-box decorative vector, not arbitrary nested
+      browser content. Reading its box cannot execute or clone saved markup. }
+    RequirePart(TJSHTMLElement(ASurface.FilterGlyph), ASurface.FilterButton, 'svg');
+
+    if (ASurface.FilterButton.childNodes.length <> 1) or
+      (ASurface.FilterGlyph.getAttribute('aria-hidden') <> 'true') or
+      (ASurface.FilterGlyph.namespaceURI <> 'http://www.w3.org/2000/svg') or
+      (ASurface.FilterGlyph.children.length <> 1) or
+      (ASurface.FilterGlyph.firstElementChild.tagName <> 'path') or
+      (ASurface.FilterGlyph.firstElementChild.namespaceURI <>
+        'http://www.w3.org/2000/svg') or
+      (ASurface.FilterGlyph.firstElementChild.childNodes.length <> 0) then
+    begin
+      raise ENyxCollection.Create('Custom filter content needs its own fit metric');
+    end;
+    Result.FilterGlyph := ReadProfile(TJSHTMLElement(ASurface.FilterGlyph), False);
+    LGlyphStyle := window.getComputedStyle(ASurface.FilterGlyph);
+
+    if (Result.FilterGlyph.Display <> 'block') or
+      (Result.FilterGlyph.Position <> 'static') then
+    begin
+      raise ENyxCollection.Create('Custom filter glyph layout needs its own fit metric');
+    end;
+    Result.FilterGlyphWidth := Pixels(LGlyphStyle.getPropertyValue('width'));
+
+    if Result.FilterGlyphWidth < 0 then
+    begin
+      raise ENyxCollection.Create('Filter glyph width must be nonnegative');
+    end;
+
+    if Result.FilterGlyph.BoxSizing = 'border-box' then
+    begin
+      Result.FilterGlyphWidth := Max(Result.FilterGlyphWidth, Result.FilterGlyph.Minimum);
+    end
+    else
+    begin
+      Result.FilterGlyphWidth := Max(Result.FilterGlyphWidth, Result.FilterGlyph.Minimum) +
+        Result.FilterGlyph.Insets;
+    end;
+    Result.FilterGlyphWidth := Result.FilterGlyphWidth + Result.FilterGlyph.Margins;
+  end;
   Result.HeaderText := ASurface.HeaderLabel.textContent;
   Result.SortText := ASurface.SortButton.textContent;
   Result.FilterText := ASurface.FilterButton.textContent;
@@ -850,6 +965,20 @@ begin
     SameProfile(ALeft.FilterButton, ARight.FilterButton) and
     (ALeft.HeaderText = ARight.HeaderText) and (ALeft.SortText = ARight.SortText) and
     (ALeft.FilterText = ARight.FilterText) and (ALeft.HasBody = ARight.HasBody);
+  Result := Result and (ALeft.HasHeaderTools = ARight.HasHeaderTools);
+  Result := Result and (ALeft.HasFilterGlyph = ARight.HasFilterGlyph);
+
+  if Result and ALeft.HasFilterGlyph then
+  begin
+    Result := SameProfile(ALeft.FilterGlyph, ARight.FilterGlyph) and
+      (ALeft.FilterGlyphWidth = ARight.FilterGlyphWidth);
+  end;
+
+  if Result and ALeft.HasHeaderTools then
+  begin
+    Result := SameProfile(ALeft.HeaderTools, ARight.HeaderTools) and
+      (ALeft.HeaderGap = ARight.HeaderGap) and (ALeft.HeaderFlow = ARight.HeaderFlow);
+  end;
   for LIndex := Low(TFitHeaderOrder) to High(TFitHeaderOrder) do
   begin
     Result := Result and (ALeft.Order[LIndex] = ARight.Order[LIndex]);
@@ -967,9 +1096,12 @@ var
   begin
 
     if (AProfile.Display <> 'none') and (AProfile.Display <> 'inline') and
-      (AProfile.Display <> 'inline-block') and (AProfile.Display <> 'inline-flex') then
+      (AProfile.Display <> 'inline-block') and (AProfile.Display <> 'inline-flex') and
+      not (AScene.HasHeaderTools and
+        ((AProfile.Display = 'block') or (AProfile.Display = 'flex') or
+          (AProfile.Display = 'flow-root'))) then
     begin
-      raise ENyxCollection.Create('Header layout needs its own fit metric');
+      raise ENyxCollection.Create('Header layout needs its own fit metric: ' + AProfile.Display);
     end;
   end;
 
@@ -995,6 +1127,7 @@ var
   var
     LProfile: TFitProfile;
     LElement: TJSHTMLElement;
+    LGlyph: TJSHTMLElement;
     LText: TNyxText;
   begin
     LProfile := PartProfile(APart);
@@ -1038,6 +1171,15 @@ var
     LElement.style.setProperty('margin-left', CSSPixels(LProfile.MarginLeft), 'important');
     LElement.style.setProperty('margin-right', CSSPixels(LProfile.MarginRight), 'important');
     LElement.textContent := LText;
+
+    if (APart = fhpFilter) and AScene.HasFilterGlyph then
+    begin
+      LGlyph := TJSHTMLElement(document.createElement('span'));
+      LGlyph.style.cssText := 'all:initial!important;display:block!important;' +
+        'height:1px!important;padding:0!important;margin:0!important;border:0!important;';
+      LGlyph.style.setProperty('width', CSSPixels(AScene.FilterGlyphWidth), 'important');
+      LElement.appendChild(LGlyph);
+    end;
     LProbe.appendChild(LElement);
     LParts[APart] := LElement;
   end;
@@ -1072,6 +1214,19 @@ begin
   try
     document.body.appendChild(LProbe);
     ApplyTextProfile(LProbe, AScene.HeaderCell);
+
+    if AScene.HasHeaderTools then
+    begin
+      { Recreate the known natural flex composition without allocated widths,
+        live nodes, IDs, editors or callbacks. Blockified flex items, including
+        the observed flow-root button, remain valid here; legacy direct children
+        retain their inline-only admission. }
+      ApplyTextProfile(LProbe, AScene.HeaderTools);
+      LProbe.style.setProperty('display', 'inline-flex', 'important');
+      LProbe.style.setProperty('flex-direction', AScene.HeaderFlow, 'important');
+      LProbe.style.setProperty('flex-wrap', 'nowrap', 'important');
+      LProbe.style.setProperty('column-gap', CSSPixels(AScene.HeaderGap), 'important');
+    end;
     for LIndex := Low(TFitHeaderOrder) to High(TFitHeaderOrder) do
     begin
       AppendPart(AScene.Order[LIndex]);
@@ -1079,10 +1234,28 @@ begin
     RequireHeaderFonts;
     LHeader := Pixels(window.getComputedStyle(LProbe).getPropertyValue('width'));
     RequireHeaderFonts;
+
+    if AScene.HasHeaderTools then
+    begin
+
+      if AScene.HeaderTools.BoxSizing = 'border-box' then
+      begin
+        LHeader := Max(LHeader + AScene.HeaderTools.Insets, AScene.HeaderTools.Minimum);
+      end
+      else
+      begin
+        LHeader := Max(LHeader, AScene.HeaderTools.Minimum) + AScene.HeaderTools.Insets;
+      end;
+      LHeader := LHeader + AScene.HeaderTools.Margins;
+    end;
     Result := LHeader + AScene.HeaderCell.Insets;
     { Retire the complete header composition before reusing only its ordinary
       parent span for unwrapped accepted body strings. No editor is cloned. }
     LProbe.textContent := '';
+    LProbe.style.setProperty('display', 'inline-block', 'important');
+    LProbe.style.removeProperty('flex-direction');
+    LProbe.style.removeProperty('flex-wrap');
+    LProbe.style.removeProperty('column-gap');
     for LIndex := 0 to High(FTexts) do
     begin
 
