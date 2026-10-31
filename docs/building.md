@@ -13,6 +13,32 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+## Compiler and constructor budgets
+
+Studio allows five minutes for a compiler invocation and one minute for a saved
+Pascal constructor to execute. Cold native builds rebuild Nyx into isolated job
+directories; the Service actions example takes 137 seconds in an independent
+cold run and 71 seconds through Studio, both with fresh compiler units. These
+observations are not a general build-time guarantee or a cache speedup. Progress and
+cancellation stay available while the owning job runs.
+
+Trusted Pascal hosts can configure independent copied policies before delegation:
+
+```pascal
+LExecutor.ConfigureLimits(TNyxCompilerLimits.Default
+  .CompilationMilliseconds(8 * 60 * 1000)
+  .ExecutionMilliseconds(30 * 1000)
+  .LogBytes(1024 * 1024));
+```
+
+Durations are positive, finite Cardinal milliseconds. The existing
+`.TimeMilliseconds(...)` shorthand sets both time budgets; independent setters
+retain the other axis. A zero-filled record is invalid. The log limit remains
+1..1048576 bytes, preserving the existing bounded diagnostic/evidence packet.
+HTTP/MCP requests retain their fixed arguments and use the trusted host policy.
+Time/log exhaustion and cancellation join the owned process family before a
+result returns; they cannot admit an artifact or an executed design.
+
 The maintained `nyx_lcl_tests` program normally prints compact results. Set
 `NYX_NATIVE_TEST_TRACE=1` for flushed standard-error progress through binding and
 Studio authoring checks, including shell construction and native mounting. This

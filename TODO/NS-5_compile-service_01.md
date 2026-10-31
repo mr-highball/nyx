@@ -2,16 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Cold native-build return, 2026-10-30: [native cold-build01](NS-5_native-cold-build_01.md)
-owns the concrete return. The MCP-authored Service monitor's browser
-application builds and executes its useful custom action at both widths. Two
-native jobs stop at the existing60-second compiler deadline, including a solo
-rerun; neither supplies an accepted artifact. The exact generated unit separately
-compiles and passes43 native widget/peer/action/refusal checks per width with
-clean heaps. Preserve the service failure and bounded process retirement while
-qualifying a practical cold native-build path; do not infer service success from
-that independent consumer or silently relax quotas. WORK.md records job identities
-and the return to [typed Table actions](NS-3_collection-cell-context_01.md).
+Cold native-build return, 2026-10-30: [native cold-build01](DONE/NS-5_native-cold-build_01.md)
+is accepted. The actual authenticated MCP native application build succeeds
+with fresh job units; its admitted EXE performs the useful authored action and
+stale-context refusal at1280x900/390x900. Trusted copied policy now separates
+five-minute compilation and one-minute constructor defaults, retaining the
+existing log ceiling and fixed request authority. The156-check lifecycle suite
+qualifies independent phases, short-budget refusal, cancellation and family joins
+with a clean heap. Earlier60-second failures remain retained. Nine projects,
+27 local files and the output profile remain exact. This closes that scoped gate
+and [typed Table actions](DONE/NS-3_collection-cell-context_01.md), returning to W2;
+the original codegen blocker and full service/target/quality criteria stay open.
 
 Current-source operator completion now supplies revocable acknowledged contexts to
 ordinary Studio through a separate owned exchange. Exact local frame/source and

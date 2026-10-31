@@ -143,12 +143,23 @@ end;
 
 var
   LFile: TFileStream;
+  LInput: TFileStream;
   LText: UTF8String;
   LMode: TStringList;
   LStarted: QWord;
   LPolicy: String;
   LOutput: THandleStream;
 begin
+  { The native projection test compiles this same owned fixture into the
+    executor's expected output name. Its second invocation is an actual held
+    constructor process, with a separate marker and execution deadline. }
+
+  if (ParamCount = 0) and SameText(ExtractFileName(ParamStr(0)), 'nyx_projection.exe') then
+  begin
+    Ready(cfrConstructor);
+    Sleep(30000);
+    Exit;
+  end;
   { Descendants publish their own identity. The helper immediately creates a
     grandchild so checks cover nested ownership, not just one child PID. }
 
@@ -200,6 +211,23 @@ begin
     LMode.Free;
   end;
 
+  if LPolicy = 'execution-hold' then
+  begin
+    AwaitFamilyGate;
+    LInput := TFileStream.Create(ParamStr(0), fmOpenRead or fmShareDenyNone);
+    try
+      LFile := TFileStream.Create('nyx_projection.exe', fmCreate);
+      try
+        LFile.CopyFrom(LInput, LInput.Size);
+      finally
+        LFile.Free;
+      end;
+    finally
+      LInput.Free;
+    end;
+    Exit;
+  end;
+
   if LPolicy = 'messages' then
   begin
     EmitMessages;
@@ -226,8 +254,8 @@ begin
   else if LPolicy = 'editor-hold' then
   begin
     { The checked native editor can spend seconds in a layout/heap-trace paint.
-      Keep the actual compiler alive until its visible action retires it. The
-      production invocation deadline still owns the sixty-second upper bound. }
+      This finite fixture hold lets its visible action retire the compiler;
+      the production host's selected deadline/cancellation remains authoritative. }
     Sleep(60000);
   end
   else if (LPolicy = 'flood') or (LPolicy = 'unicode-flood') or

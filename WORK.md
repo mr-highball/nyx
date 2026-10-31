@@ -9,10 +9,73 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Authored Table actions return — 2026-10-30
+## Current work — Practical native cold builds — 2026-10-30
+
+Previous turn: verified PROGRESS, pushed8f0e7926 with exact remote verification.
+Root stays SOLO. [Native cold-build01](TODO/DONE/NS-5_native-cold-build_01.md) and
+[typed Table actions](TODO/DONE/NS-3_collection-cell-context_01.md) are now accepted.
+Return to the original [Table workbench W2](TODO/NS-3_control-usefulness_03.md)
+finish line; no full parent criterion or milestone credit is inferred.
+
+The genuine cold before build succeeds in137139 ms/303681 lines using exact
+source6d5d6959/design027ac3d7 and fresh units. The old60-second limit was too short
+for valid source. Trusted copied host policy now separates five-minute compiler
+and retained one-minute constructor defaults, with independent fluent setters
+and the existing one-MiB log ceiling. Legacy TimeMilliseconds still sets both.
+Positive finite Cardinal durations are host choices; wire requests gain no
+arbitrary budget, argument, path or environment override. No compiler-cache
+reuse is introduced; every real job still uses fresh per-job units and -B.
+
+The maintained lifecycle suite passes156 actual process/queue/cancellation/join
+checks, freeing all3178571 blocks. Separate living compiler and constructor
+identities prove independent clocks: compilation outlives the shorter execution
+budget, then the constructor exceeds its own limit and is joined before failed
+projection returns. Short compiler deadlines, log exhaustion, descendant joins,
+source/stale refusal and cancellation retain their assertions. The initial
+btLCL test typo and its corrected btNativeLCL build are retained. No warning
+suppression, compiler/dependency patch or weakened assertion is used.
+
+The checked backend replaces the stopped/joined QA owner47364 at the same fixed
+path/ports; new owner62352 has binary SHA256DFBD9E43. Browser startup recovery
+accepts all20 saved units across nine projects. A fresh retained Pascal MCP
+transport imports the unchanged23314-byte Service actions project into its own
+temporary review. JobABC50108 succeeds: actual compiler71 seconds/303681 lines,
+fresh units, source6d5d6959/design027ac3d7/profileda83d63c and artifact MD5
+8d23c05565f190351acadb29b491c77f. Final status retains currentSource/currentOutput.
+The two cold timings are observations, not a cache speedup or performance promise.
+
+That admitted EXE itself runs independently at1280x900 and390x900. Owned Win32
+widget messages capture gateway/notes or gateway/status, open the authored menu
+and mark only gateway for review. Capturing indexer then accepting an ordinary
+gateway-note edit produces visible stale-context refusal. Inspected PrintWindow
+captures retain the before/context/action/refusal sequence. These are external
+widget-message journeys, not physical/assistive input; preceding43-check native
+consumers own the exact runtime/peer assertions and clean heaps. Compact native
+initial horizontal position/pin fallback remains for W2's original narrow-overflow
+and preference/reset journey. No full arrangement/quality claim follows here.
+
+The private probe initially captures a zero-sized hidden application window and
+refuses before ready; capture admission now skips empty rectangles. A malformed
+private operation key, stale HWND and cached cross-process Edit caption are
+harness mistakes, retained separately from product failures. Observed current
+windows, actual pixels and accepted edits qualify the final journeys. Both probes
+are stopped/joined. The18-operation semantic transport closes its temporary
+review and frees all151577 blocks. All nine original session states, all27 local
+files and profileda83d63c remain exact. LAN owner46632 is unchanged; this backend
+repair is qualified in QA, not claimed delivered to the phone. Both user-saved
+TSV files also recompare exactly against their retained expected bytes.
+
+Evidence: native-cold-return-01 (acceptance-28, lifecycle-03, transport-11,
+native-wide-24, native-compact-26 and verified qa-preserve-05). Owned compiler,
+native and client readers are joined. All new artifacts and process TEMP/TMP use
+the external scratch volume. Next: original W2 everyday inspection/output and
+preference/reset behavior, starting with the observed compact horizontal return;
+stop equivalent compiler-budget/context fixtures.
+
+## Previous work — Authored Table actions return — 2026-10-30
 
 Verified PROGRESS, Root SOLO. Copy feedback01 is accepted at pushed1924ca1d.
-Current prerequisite is [typed custom-action cell context](TODO/NS-3_collection-cell-context_01.md),
+Current prerequisite is [typed custom-action cell context](TODO/DONE/NS-3_collection-cell-context_01.md),
 returning to [table workbench03 W2](TODO/NS-3_control-usefulness_03.md). Its full
 criteria remain intact; no task/milestone credit is assigned from partial work.
 
@@ -72,7 +135,7 @@ Browser MCP builds succeed. Two native MCP jobs, including a solo rerun, stop at
 the existing60-second compiler deadline without artifacts: C635AA8F is the earlier
 missing-import browser failure; 0C345C54 and6600A283 are native deadline failures.
 The independently compiled native consumer is not evidence of native service
-success. [Native cold-build01](TODO/NS-5_native-cold-build_01.md), under the existing
+success. [Native cold-build01](TODO/DONE/NS-5_native-cold-build_01.md), under the existing
 compile service01, owns that next gate.
 
 Final popup changes retain the complete browser regression:1755 at each measured

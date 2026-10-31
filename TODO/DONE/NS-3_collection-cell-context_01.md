@@ -1,9 +1,21 @@
 # NS-3_collection-cell-context_01 — Give custom Table actions exact cell context
 
-[North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Table workbench W2](NS-3_control-usefulness_03.md) · [Task flow](../TASKFLOW.MD)
+[North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
+[Table workbench W2](../NS-3_control-usefulness_03.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
+
+Accepted on2026-10-30 after native cold-build01 qualifies the actual Studio
+artifact at1280x900 and390x900. The same saved source/design/profile receives
+original cell context, performs the authored Mark for review action and visibly
+refuses a context made stale by an ordinary accepted edit. Native input uses
+owned Win32 widget messages; browser input uses the browser driver. Physical/
+assistive and broader workbench quality remain open under the parent criteria.
+All nine projects, history fields, output choices and27 exact local files are
+preserved. Evidence: native-cold-return-01 plus the shared/full controls and
+generated-application receipts in table-context-return-01. No separate credit.
+
+Starting implementation evidence, retained for the before/after record:
 
 Progress, 2026-10-30: the owned scalar contract and original-envelope delivery are
 implemented. Shared snapshot/event-copy/queued-sibling checks pass30 per target;
@@ -13,8 +25,8 @@ without pointer coordinates. Browser checks pass1755 at both measured widths.
 The MCP-authored custom action and stale-revision refusal pass actual browser
 input and43 native generated-application checks per width, with clean heaps.
 The first-menu discovery/source/presentation prerequisite is accepted.
-Final acceptance and native compiler-service qualification remain pending.
-The task remains OPEN with all criteria below intact and no completion credit.
+Native compiler-service qualification is accepted by the subsequent cold-build
+packet above. All criteria below remain intact; parent completion is separate.
 
 The before-producer tests fail on both targets at the new missing-cell assertion.
 The compiler's mixed-cache internal crash clears with a fresh checked Nyx-unit
@@ -63,10 +75,10 @@ original criteria; this task does not assert them from context-menu delivery.
 
 **Blockers**
 
-- [First-menu adoption](DONE/NS-3_menu-first-adoption_01.md) has accepted
+- [First-menu adoption](NS-3_menu-first-adoption_01.md) has accepted
   discovery, generated-source and actual managed-menu evidence. The native
-  Studio compiler's cold-build deadline is tracked by
-  [native cold-build01](NS-5_native-cold-build_01.md); do not hide it behind the
+  Studio compiler's cold-build deadline is resolved and qualified by accepted
+  [native cold-build01](NS-5_native-cold-build_01.md), independently of the
   separately successful native generated-application consumer.
-- [Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) preserves
+- [Explicit action adoption](NS-3_collection-action-adoption_01.md) preserves
   the existing original input/controller and replaceable managed presentation.

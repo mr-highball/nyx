@@ -5,13 +5,17 @@
 
 **Copy and recovery return — 2026-10-30:**
 
-Current prerequisite: [typed custom-action cell context](NS-3_collection-cell-context_01.md).
-Ordinary Shift+F10 opens the saved application's managed menu. Canonical callbacks
-now carry the original owned item/typed-field/value/revision through that same
-prepared envelope. A semantically authored Mark for review action and stale-context
-refusal pass actual browser input and43 native generated-application checks at
-both widths. First-menu adoption and the native compiler-service cold-build
-deadline remain with that scoped prerequisite before returning to W2.
+[Typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md) and
+[native cold builds](DONE/NS-5_native-cold-build_01.md) are accepted. Canonical
+callbacks carry the original owned item/typed-field/value/revision through the
+same prepared envelope. Actual browser input and the actual MCP-admitted native
+application at1280x900/390x900 perform Mark for review and visibly refuse stale
+context. Independent43-check native consumers retain exact runtime/peer assertions.
+The156-check lifecycle suite is clean; original projects/history/output choices
+remain exact. Return to the original W2 finish line and unmet criteria below.
+Compact native horizontal positioning/pin fallback still merits the existing
+narrow-overflow and preference/reset journey; these context/build checks do not
+establish full arrangement or physical/assistive quality.
 
 [Action adoption](DONE/NS-3_collection-action-adoption_01.md) and
 [browser semantic Copy](DONE/NS-2_browser-copy-input_01.md) are accepted;
@@ -898,7 +902,7 @@ needs qualification against the portable contract.
 
 **Blockers**
 
-- [Typed custom-action cell context](NS-3_collection-cell-context_01.md) supplies
+- [Typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md) supplies
   portable original cell identity/value to authored context callbacks.
 
 - [Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) restores the

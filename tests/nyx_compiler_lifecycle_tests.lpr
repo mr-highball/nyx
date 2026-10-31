@@ -28,7 +28,8 @@ uses
   nyx.studio.projects, nyx.studio.agents, nyx.studio.builds,
   nyx.studio.buildjobs, nyx.studio.buildexecutor, nyx.studio.directories,
   nyx.studio.outputs, nyx.studio.compiler, nyx.studio.editorbuild,
-  nyx.studio.mcp, nyx.studio.workspaces, nyx.studio.reviews,
+  nyx.studio.mcp, nyx.studio.workspaces, nyx.studio.reviews, nyx.source,
+  nyx.studio.sourceprojection,
   nyx.test.compiler.fixture;
 
 type
@@ -41,8 +42,9 @@ type
     Role: TNyxText;
   end;
 
-  { A real executor on a private thread lets this harness capture living family
-    members before releasing their fixture gate. Read results only after join. }
+  { A real application/projection executor on a private thread lets this harness
+    capture living compiler/constructor family members before their fixture
+    gate is released. Read copied results only after actual thread join. }
   TExecutorWorker = class(TThread)
   private
     FRoot: TNyxText;
@@ -50,6 +52,7 @@ type
     FPair: TNyxProjectPair;
     FLimits: TNyxCompilerLimits;
     FCancellation: INyxBuildCancellation;
+    FProjection: Boolean;
   protected
     procedure Execute; override;
   public
@@ -57,7 +60,8 @@ type
     Error: TNyxText;
     Cancelled: Boolean;
     constructor Create(const ARoot, AProfile: TNyxText;
-      const APair: TNyxProjectPair; const ALimits: TNyxCompilerLimits);
+      const APair: TNyxProjectPair; const ALimits: TNyxCompilerLimits;
+      AProjection: Boolean = False);
     destructor Destroy; override;
     procedure RequestCancel;
   end;
@@ -82,13 +86,15 @@ begin
 end;
 
 constructor TExecutorWorker.Create(const ARoot, AProfile: TNyxText;
-  const APair: TNyxProjectPair; const ALimits: TNyxCompilerLimits);
+  const APair: TNyxProjectPair; const ALimits: TNyxCompilerLimits;
+  AProjection: Boolean);
 begin
   inherited Create(True);
   FRoot := ARoot;
   FProfile := AProfile;
   FPair := APair;
   FLimits := ALimits;
+  FProjection := AProjection;
   Output := NyxNull;
   FCancellation := NewNyxBuildCancellation;
   Start;
@@ -99,6 +105,7 @@ var
   LExecutor: TNyxBuildExecutor;
   LDocument: TNyxDocument;
   LResult: TJSONObject;
+  LProjection: INyxSourceProjectionBuild;
 begin
   LExecutor := nil;
   LDocument := nil;
@@ -107,10 +114,22 @@ begin
     try
       LExecutor := TNyxBuildExecutor.Create(FRoot, FProfile);
       LExecutor.ConfigureLimits(FLimits);
-      LDocument := TNyxCodec.Decode(FPair.Design);
-      LResult := LExecutor.Build(LDocument, 'browser', 'view', 'home', FPair.Source,
-        FCancellation);
-      Output := TNyxDataValue.ParseJSON(TNyxText(LResult.AsJSON));
+
+      if FProjection then
+      begin
+        LProjection := LExecutor.ProjectSource(FPair.Source,
+          NyxPascalUnit(NyxCompanionUnitName(FPair.Source)), btNativeLCL, spcDefault, FCancellation);
+        Output := NyxObject([
+          NyxField('executionFailed', NyxData(LProjection.Projection.State = spsExecutionFailed)),
+          NyxField('log', NyxData(LProjection.RuntimeLog))]);
+      end
+      else
+      begin
+        LDocument := TNyxCodec.Decode(FPair.Design);
+        LResult := LExecutor.Build(LDocument, 'browser', 'view', 'home', FPair.Source,
+          FCancellation);
+        Output := TNyxDataValue.ParseJSON(TNyxText(LResult.AsJSON));
+      end;
     except
       on ENyxBuildCancelled do
       begin
@@ -122,6 +141,7 @@ begin
       end;
     end;
   finally
+    LProjection := nil;
     LResult.Free;
     LDocument.Free;
     LExecutor.Free;
@@ -689,6 +709,64 @@ begin
   end;
 end;
 
+{ Hosts can tune the two finite time budgets independently. Legacy shorthand
+  still configures both; log bounds remain the wire/evidence allocation limit. }
+procedure PolicyAxes;
+var
+  LDefault: TNyxCompilerLimits;
+  LCustom: TNyxCompilerLimits;
+  LRejected: Boolean;
+begin
+  LDefault := TNyxCompilerLimits.Default;
+  Check((LDefault.CompilationTimeMilliseconds = 300000) and
+    (LDefault.ExecutionTimeMilliseconds = 60000) and
+    (LDefault.MaximumLogBytes = 1048576),
+    'Cold compilation gets five minutes while execution and log defaults retain their bounds');
+  LCustom := LDefault.CompilationMilliseconds(High(Cardinal));
+  Check((LCustom.CompilationTimeMilliseconds = High(Cardinal)) and
+    (LCustom.ExecutionTimeMilliseconds = 60000),
+    'Explicit trusted compilation duration is a finite Cardinal without truncation or execution promotion');
+  LCustom := LCustom.ExecutionMilliseconds(2000).LogBytes(8194);
+  Check((LCustom.CompilationTimeMilliseconds = High(Cardinal)) and
+    (LCustom.ExecutionTimeMilliseconds = 2000) and (LCustom.MaximumLogBytes = 8194),
+    'Independent fluent setters retain the other time axis and log limit');
+  LCustom := LCustom.TimeMilliseconds(200);
+  Check((LCustom.CompilationTimeMilliseconds = 200) and
+    (LCustom.ExecutionTimeMilliseconds = 200) and (LCustom.MaximumLogBytes = 8194) and
+    (LDefault.CompilationTimeMilliseconds = 300000),
+    'Legacy shorthand still sets both copied time budgets without changing its source policy');
+  LRejected := False;
+  try
+    LCustom := LDefault.CompilationMilliseconds(0);
+  except
+    on ENyxModel do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'Zero compilation duration refuses before delegation');
+  LRejected := False;
+  try
+    LCustom := LDefault.ExecutionMilliseconds(0);
+  except
+    on ENyxModel do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'Zero execution duration refuses before delegation');
+  LRejected := False;
+  try
+    LCustom := LDefault.LogBytes(1048577);
+  except
+    on ENyxModel do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'The existing transport/evidence log ceiling still refuses overflow');
+end;
+
 procedure BudgetRetirement(const AName, AMode: TNyxText; const ALimits: TNyxCompilerLimits);
 var
   LExecutor: TNyxBuildExecutor;
@@ -851,6 +929,63 @@ begin
   end;
 end;
 
+{ Real separate compiler/constructor processes prove axis selection. Hold the
+  compiler beyond the execution limit, then observe the constructor alive and
+  require its shorter deadline to join it before returning unusable projection. }
+procedure ConstructorBudget;
+var
+  LProfile: TNyxOutputConfiguration;
+  LWorker: TExecutorWorker;
+  LRoot: TNyxText;
+  LFirst: Integer;
+  LIndex: Integer;
+  LGate: TFileStream;
+  LStarted: QWord;
+begin
+  LRoot := GRoot + 'constructor-budget/';
+  Policy(LRoot + 'build/studio/jobs/', 'execution-hold');
+  LProfile := TNyxOutputConfiguration.Decode(GProfile.Encode);
+  LWorker := nil;
+  try
+    LProfile.SetField('fpc', LProfile.Field('pas2js'));
+    LFirst := Length(GChildren);
+    LWorker := TExecutorWorker.Create(LRoot, LProfile.Encode, GPair,
+      TNyxCompilerLimits.Default.CompilationMilliseconds(5000).ExecutionMilliseconds(1000), True);
+    WaitChildren(LRoot + 'build/studio/jobs/', LFirst + 1);
+    Sleep(1250);
+    Check(not LWorker.Finished, 'The shorter execution budget cannot stop an admitted compilation phase');
+    LGate := TFileStream.Create(GChildren[LFirst].Directory + 'family.continue', fmCreate);
+    LGate.Free;
+    WaitChildren(LRoot + 'build/studio/jobs/', LFirst + 2);
+    Check(GChildren[LFirst + 1].Role = NyxCompilerFixtureMarkerName(cfrConstructor),
+      'The executed constructor has its own actual living process identity');
+    LStarted := GetTickCount64;
+    while not LWorker.Finished do
+    begin
+
+      if GetTickCount64 - LStarted > 5000 then
+      begin
+        raise Exception.Create('Constructor deadline did not join its owned process');
+      end;
+      Sleep(10);
+    end;
+    LWorker.WaitFor;
+    Check((LWorker.Error = '') and not LWorker.Cancelled and
+      LWorker.Output.Field('executionFailed').AsBoolean and
+      (Pos('Constructor execution time budget exceeded (1000 ms)',
+        LWorker.Output.Field('log').AsText) > 0),
+      'Constructor execution uses its own deadline and returns an unusable projection with precise diagnostics');
+    for LIndex := LFirst to High(GChildren) do
+    begin
+      Check(WaitForSingleObject(GChildren[LIndex].Handle, 0) = WAIT_OBJECT_0,
+        'Both actual phase processes are retired before the failed projection is returned');
+    end;
+  finally
+    LWorker.Free;
+    LProfile.Free;
+  end;
+end;
+
 var
   LIndex: Integer;
 begin
@@ -870,12 +1005,14 @@ begin
     GProfile.SetField('runtime', ExpandFileName(ParamStr(3)));
     GSession := TNyxAgentSession.Create;
     GPair := GSession.BuildPair(GSession.Revision, bsView, 'home');
+    PolicyAxes;
     QueueAndShutdown;
     SemanticAuthority;
     DiscoveryContexts;
     EarlierOutputReport;
     FamilyCompletion('family-cancel', 'family-root-exit', 'cancelled', TNyxCompilerLimits.Default);
-    FamilyCompletion('family-success', 'family-success', 'none', TNyxCompilerLimits.Default);
+    FamilyCompletion('family-success', 'family-success', 'none',
+      TNyxCompilerLimits.Default.CompilationMilliseconds(5000).ExecutionMilliseconds(1));
     FamilyCompletion('family-error', 'family-error', 'compiler', TNyxCompilerLimits.Default);
     FamilyCompletion('family-deadline', 'family-root-exit', 'time-budget',
       TNyxCompilerLimits.Default.TimeMilliseconds(2000));
@@ -886,6 +1023,7 @@ begin
     { Each Windows fixture line is 4093 ASCII bytes, one four-byte moon, CR/LF.
       8194 ends halfway through the second moon. The prefix must stay valid. }
     BudgetRetirement('unicode-log-budget', 'unicode-flood', TNyxCompilerLimits.Default.LogBytes(8194));
+    ConstructorBudget;
     FreeAndNil(GSession);
     FreeAndNil(GProfile);
     WriteLn('PASS ', GChecks, ' actual compiler family/queue/cancellation/join checks');

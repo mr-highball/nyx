@@ -30,8 +30,9 @@ uses nyx.text;
 
 type
   { Closed physical-process roles in the maintained compiler family fixture.
+    Constructor identity distinguishes execution from its compiler invocation.
     A published PID marker proves entry in that actual child, not job admission. }
-  TNyxCompilerFixtureRole = (cfrCompiler, cfrHelper, cfrGrandchild);
+  TNyxCompilerFixtureRole = (cfrCompiler, cfrHelper, cfrGrandchild, cfrConstructor);
 
 { Stable marker filename used for diagnostic role identity. Invalid ordinals
   refuse; the caller owns the returned text and no process/file is retained. }
@@ -63,6 +64,10 @@ begin
     Ord(cfrGrandchild):
     begin
       Result := 'grandchild.ready';
+    end;
+    Ord(cfrConstructor):
+    begin
+      Result := 'constructor.ready';
     end;
   else
     raise EArgumentException.Create('Unknown compiler fixture process role');

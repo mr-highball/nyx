@@ -166,9 +166,11 @@ keyboard context and existing nested/consumed/default behavior. The
 uses this original context in a real managed menu command. Expected-revision
 admission refuses an intervening runtime edit visibly, keeping other application
 instances and saved defaults independent. Browser input and the same generated
-native consumer pass at both widths. The native Studio compiler-service deadline
-remains with the open [cell-context task](../TODO/NS-3_collection-cell-context_01.md);
-this does not establish full workbench or physical/assistive acceptance.
+native consumer pass at both widths. The actual MCP-admitted native application
+also performs the action and stale refusal at1280x900/390x900 after the separate
+compiler/constructor budget repair. The scoped
+[cell-context task](../TODO/DONE/NS-3_collection-cell-context_01.md) is accepted;
+full workbench and physical/assistive acceptance remain separate.
 
 ## Admission and target bridges
 

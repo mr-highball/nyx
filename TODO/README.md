@@ -3,16 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-The scoped [visible Copy feedback](DONE/NS-3_collection-copy-feedback_01.md) is
-accepted. Current prerequisite is [typed custom-action cell context](NS-3_collection-cell-context_01.md),
-discovered in the same [table workbench W2](NS-3_control-usefulness_03.md)
-keyboard/context-action and output/preference lifecycle criteria. It includes
-[accepted first-menu adoption](DONE/NS-3_menu-first-adoption_01.md) and the existing
-[native cold-build return](NS-5_native-cold-build_01.md). Full controls pass
-1755 at measured desktop/compact browser widths and1904/1893 native, with clean
-heaps. The MCP-authored useful action and stale-context refusal pass actual
-browser input and43 native generated-application checks per width. Preserve the
-remaining service gate and original broader acceptance; stop equivalent fixtures.
+The scoped [visible Copy feedback](DONE/NS-3_collection-copy-feedback_01.md),
+[typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md),
+[first-menu adoption](DONE/NS-3_menu-first-adoption_01.md) and
+[native cold builds](DONE/NS-5_native-cold-build_01.md) are accepted. Return to
+[table workbench W2](NS-3_control-usefulness_03.md): its original keyboard,
+output/preference/lifecycle and target-quality criteria remain open. The actual
+MCP cold build now supplies the exact native application exercised at1280/390,
+including its useful action and stale refusal. Lifecycle checks pass156 with a
+clean heap; nine projects and27 exact local files are preserved. Full prior
+controls retain1755 browser and1904/1893 native checks. Stop equivalent context,
+menu and compiler-budget fixtures; no additional parent credit is assigned.
 
 [Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) and
 [browser Copy input](DONE/NS-2_browser-copy-input_01.md) are accepted, restoring

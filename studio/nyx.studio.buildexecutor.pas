@@ -61,18 +61,30 @@ type
   ENyxBuildCancelled = class(ENyxModel);
 
   { Trusted host policy, copied by value. Wire requests cannot change budgets.
-    Defaults preserve the existing 60-second / 1-MiB compiler limits. }
+    A cold library build has a five-minute compilation default; execution of
+    a saved constructor retains its separate one-minute default. Positive
+    Cardinal durations are finite host choices, not authority from a request.
+    Log admission retains the one-MiB transport/evidence ceiling. A zero-filled
+    record is invalid: start with Default and override the desired axis. }
   TNyxCompilerLimits = record
   private
-    FTimeMilliseconds: Cardinal;
+    FCompilationMilliseconds: Cardinal;
+    FExecutionMilliseconds: Cardinal;
     FLogBytes: Integer;
   public
     class function Default: TNyxCompilerLimits; static;
-    { Return copied policies, retaining the other axis. Admission rejects zero
-      and values above 60000 milliseconds / 1048576 bytes with ENyxModel. }
+    { Compatibility shorthand: set both time budgets in the returned copy.
+      Independent setters retain the other time budget and the log budget.
+      Zero durations and invalid log limits refuse with ENyxModel. Cancellation
+      and process-family retirement remain active under every admitted budget. }
     function TimeMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
+    function CompilationMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
+    function ExecutionMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
     function LogBytes(AValue: Integer): TNyxCompilerLimits;
     procedure Validate;
+    property CompilationTimeMilliseconds: Cardinal read FCompilationMilliseconds;
+    property ExecutionTimeMilliseconds: Cardinal read FExecutionMilliseconds;
+    property MaximumLogBytes: Integer read FLogBytes;
   end;
 
   { One independent compiler invocation. Owns an immutable machine profile and
@@ -239,14 +251,30 @@ end;
 
 class function TNyxCompilerLimits.Default: TNyxCompilerLimits;
 begin
-  Result.FTimeMilliseconds := 60000;
+  Result.FCompilationMilliseconds := 5 * 60 * 1000;
+  Result.FExecutionMilliseconds := 60 * 1000;
   Result.FLogBytes := 1024 * 1024;
 end;
 
 function TNyxCompilerLimits.TimeMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
 begin
   Result := Self;
-  Result.FTimeMilliseconds := AValue;
+  Result.FCompilationMilliseconds := AValue;
+  Result.FExecutionMilliseconds := AValue;
+  Result.Validate;
+end;
+
+function TNyxCompilerLimits.CompilationMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
+begin
+  Result := Self;
+  Result.FCompilationMilliseconds := AValue;
+  Result.Validate;
+end;
+
+function TNyxCompilerLimits.ExecutionMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
+begin
+  Result := Self;
+  Result.FExecutionMilliseconds := AValue;
   Result.Validate;
 end;
 
@@ -260,10 +288,10 @@ end;
 procedure TNyxCompilerLimits.Validate;
 begin
 
-  if (FTimeMilliseconds < 1) or (FTimeMilliseconds > 60000) or
+  if (FCompilationMilliseconds = 0) or (FExecutionMilliseconds = 0) or
     (FLogBytes < 1) or (FLogBytes > 1024 * 1024) then
   begin
-    raise ENyxModel.Create('Compiler budgets are 1..60000 ms and 1..1048576 log bytes');
+    raise ENyxModel.Create('Compilation/execution budgets require positive milliseconds and 1..1048576 log bytes');
   end;
 end;
 
@@ -456,6 +484,7 @@ var
   LRead: Integer;
   LChunk: TNyxText;
   LStarted: QWord;
+  LTimeLimit: Cardinal;
 
   function LogPrefix: TNyxText;
   var
@@ -504,12 +533,20 @@ var
 
   function InTime: Boolean;
   begin
-    Result := GetTickCount64 - LStarted < FLimits.FTimeMilliseconds;
+    Result := GetTickCount64 - LStarted < LTimeLimit;
 
     if not Result then
     begin
       FFailure := bcfTimeBudget;
-      ALog := ALog + #10 + 'Compiler time budget exceeded.';
+
+      if ACompiler then
+      begin
+        ALog := ALog + #10 + 'Compiler time budget exceeded (' + UIntToStr(QWord(LTimeLimit)) + ' ms).';
+      end
+      else
+      begin
+        ALog := ALog + #10 + 'Constructor execution time budget exceeded (' + UIntToStr(QWord(LTimeLimit)) + ' ms).';
+      end;
     end;
   end;
 begin
@@ -520,6 +557,12 @@ begin
   {$endif}
   CheckRequest;
   FLimits.Validate;
+  LTimeLimit := FLimits.CompilationTimeMilliseconds;
+
+  if not ACompiler then
+  begin
+    LTimeLimit := FLimits.ExecutionTimeMilliseconds;
+  end;
 
   if (AExecutable = '') or not FileExists(AExecutable) then
   begin
@@ -832,8 +875,9 @@ begin
             {$IFDEF MSWINDOWS}
             LExecutable := LExecutable + '.exe';
             {$ENDIF}
-            { The same process-family owner and per-invocation time/log budgets
-              apply to execution. Compiler diagnostics stay in their own report. }
+            { The same process-family owner/log ceiling applies to execution,
+              with its independently captured execution time budget. Compiler
+              diagnostics stay in their own report. }
 
             if not RunCompiler(LExecutable, LDirectory, LArguments, LRuntimeLog,
               ACancellation, False) then

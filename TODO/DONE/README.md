@@ -3,6 +3,16 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Native cold builds](NS-5_native-cold-build_01.md) and
+[typed Table action context](NS-3_collection-cell-context_01.md) are accepted
+on2026-10-30. The actual authenticated MCP build succeeds with fresh job units
+and unchanged source/design/profile. Its admitted EXE performs the useful action
+and stale-context refusal at1280x900/390x900 through owned Win32 widget messages.
+Independent compiler/constructor policies retain cancellation, log limits and
+joined process families;156 lifecycle checks have a clean heap. Nine projects,
+27 local files and output choices remain exact. Return to original W2; physical/
+assistive input, broader quality and parent milestone credit remain separate.
+
 [First-menu adoption](NS-3_menu-first-adoption_01.md) is accepted on 2026-10-30.
 Discovery matches typed persistence, older handwritten frames receive required
 imports, and standalone browser menus survive body mounting and remounting.
@@ -10,7 +20,7 @@ Declaration/source checks pass 73 per target, the exact promoted companion runs
 on both, and the actual refreshed MCP backend passes 12 first-menu/history
 operations. Useful authored actions pass both browser widths and 43 native
 checks per width. All nine projects and output choices survive fixed-slot QA
-replacement. Native cold-build service qualification remains open; no full
+replacement. Native cold-build service qualification is now accepted; no full
 Table workbench or additional milestone credit is assigned.
 
 [Ordinary Table Copy feedback](NS-3_collection-copy-feedback_01.md) is accepted

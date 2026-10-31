@@ -1,7 +1,7 @@
 # NS-3_menu-first-adoption_01 — Make the first authored menu work end to end
 
 [North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
-[Typed Table actions](../NS-3_collection-cell-context_01.md) · [Task flow](../../TASKFLOW.MD)
+[Typed Table actions](NS-3_collection-cell-context_01.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
