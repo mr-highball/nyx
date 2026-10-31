@@ -444,6 +444,87 @@ begin
   end;
 end;
 
+{ Adding the first saved menu to an older handwritten frame must carry all
+  generated namespaces with it. Keep authored text and the paired design exact;
+  ordinary source reconstruction alone cannot establish compiler resolution. }
+procedure SourcePromotion;
+const
+  CComment: TNyxText = '{ Keep this authored application comment. }';
+  CImports: array[0..5] of TNyxText = ('nyx.menu.declarations',
+    'nyx.menu.bar.declarations', 'nyx.menu.types', 'nyx.popover.types',
+    'nyx.typeahead', 'nyx.root.types');
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LCopy: TNyxDocument;
+  LPage: INyxPage;
+  LContent: INyxColumn;
+  LSource: TNyxText;
+  LImports: TNyxImportClause;
+  LExpected: Integer;
+  LIndex: Integer;
+  LMatches: Integer;
+  {$IFNDEF PAS2JS}
+  LStream: TFileStream;
+  {$ENDIF}
+begin
+  LDocument := TNyxDocument.Create;
+  LWorkspace := TNyxSourceWorkspace.Create;
+  LCopy := nil;
+  try
+    LPage := NewNyxPage('home');
+    LPage.Add(NewNyxButton('open-actions').WithText('Service actions'));
+    LDocument.AddPage(LPage);
+    LContent := NewNyxColumn('actions-content');
+    LContent.Add(NewNyxButton('mark-review').WithText('Mark for review')
+      .Configure.PartName(NyxPart('mark')).Done);
+    LDocument.AddComponent(LContent);
+    LSource := CComment + TNyxText(#10) + TNyxCodegen.Generate(LDocument, 'nyx.generated.menu');
+    LWorkspace.Accept(LDocument, LSource);
+    LDocument.Menus.Define(NyxMenuRef('actions'),
+      NewNyxMenuDefinition(NyxReusableRoot('actions-content'), NyxMenu('Service actions'))
+        .Action(NyxPart('mark'), NyxMenuCommand('mark-review')));
+    LDocument.Find('open-actions').Configure.Menu(NyxMenuRef('actions')).Done;
+    LSource := LWorkspace.Render(LDocument);
+    Check(Pos(CComment, LSource) > 0, 'First menu keeps authored source frame text');
+    LImports := ReadNyxImports(LSource, nisInterface);
+    for LExpected := 0 to High(CImports) do
+    begin
+      LMatches := 0;
+      for LIndex := 0 to LImports.Count - 1 do
+      begin
+
+        if LImports.UnitAt(LIndex).Name = CImports[LExpected] then
+        begin
+          Inc(LMatches);
+        end;
+      end;
+      Check(LMatches = 1, 'First menu carries exactly one required namespace: ' + CImports[LExpected]);
+    end;
+    LCopy := LWorkspace.Candidate(LDocument, LSource);
+    Check(TNyxCodec.Encode(LCopy) = TNyxCodec.Encode(LDocument),
+      'Promoted source reconstructs the exact saved menu and content');
+    LWorkspace.Accept(LDocument, LSource);
+    Check(LWorkspace.Render(LDocument) = LSource, 'Accepted promoted menu source stays byte exact');
+    {$IFNDEF PAS2JS}
+
+    if ParamCount > 1 then
+    begin
+      LStream := TFileStream.Create(ParamStr(2), fmCreate);
+      try
+        LStream.WriteBuffer(Pointer(LSource)^, Length(LSource));
+      finally
+        LStream.Free;
+      end;
+    end;
+    {$ENDIF}
+  finally
+    LCopy.Free;
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+
 procedure SemanticJourney;
 var
   LDocument: TNyxDocument;
@@ -575,6 +656,7 @@ begin
   try
     Journey;
     ViewJourney;
+    SourcePromotion;
     SemanticJourney;
     WriteLn('PASS ', GChecks, ' menu declaration checks');
     {$IFDEF PAS2JS}

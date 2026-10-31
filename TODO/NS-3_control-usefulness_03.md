@@ -5,6 +5,14 @@
 
 **Copy and recovery return — 2026-10-30:**
 
+Current prerequisite: [typed custom-action cell context](NS-3_collection-cell-context_01.md).
+Ordinary Shift+F10 opens the saved application's managed menu. Canonical callbacks
+now carry the original owned item/typed-field/value/revision through that same
+prepared envelope. A semantically authored Mark for review action and stale-context
+refusal pass actual browser input and43 native generated-application checks at
+both widths. First-menu adoption and the native compiler-service cold-build
+deadline remain with that scoped prerequisite before returning to W2.
+
 [Action adoption](DONE/NS-3_collection-action-adoption_01.md) and
 [browser semantic Copy](DONE/NS-2_browser-copy-input_01.md) are accepted;
 [recovery review](DONE/NS-3_collection-recovery_01.md) acceptance is restored after
@@ -889,6 +897,9 @@ needs qualification against the portable contract.
   heaps, and state widgetset/clipboard/assistive-input limits honestly.
 
 **Blockers**
+
+- [Typed custom-action cell context](NS-3_collection-cell-context_01.md) supplies
+  portable original cell identity/value to authored context callbacks.
 
 - [Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) restores the
   older public runtime setup alongside automatic recovery defaults.

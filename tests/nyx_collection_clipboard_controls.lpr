@@ -27,7 +27,7 @@ program nyx_collection_clipboard_controls;
 uses
   Classes, SysUtils, nyx.text, nyx.types, nyx.state, nyx.model, nyx.controls,
   nyx.codec, nyx.behavior, nyx.events, nyx.scheduler, nyx.clipboard, nyx.editing,
-  nyx.collections, nyx.collections.view, nyx.collections.view.types,
+  nyx.collections, nyx.collections.cell, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query, nyx.collections.arrangement,
   nyx.collections.mount, nyx.collections.clipboard, nyx.collections.clipboard.actions
   , nyx.collections.recovery
@@ -278,6 +278,9 @@ type
     FPointerCallbackColumn: Integer;
     FConsumed: Integer;
     FContexts: Integer;
+    { Copied canonical data survives callback mutation and target retirement. }
+    FContextCell: TNyxCollectionCellSnapshot;
+    FContextHasPosition: Boolean;
     FInspectorLegacyClicks: Integer;
     FReplies: Integer;
     FLastPayload: INyxCollectionClipboardText;
@@ -322,13 +325,14 @@ type
       AControl: Boolean = False);
     procedure EditValue(const AText: TNyxText);
     procedure Filter(AEnabled: Boolean);
-    procedure Context(AWait: Boolean = True);
+    procedure Context(AWait: Boolean = True; AKeyboard: Boolean = False);
     procedure MenuAction(const AID: TNyxText);
     function HasMenuAction(const AID: TNyxText): Boolean;
     function HasInspectorAction(const AID: TNyxText): Boolean;
     procedure InspectorAction(const AID: TNyxText);
     procedure RunDefaultRecovery; {$ifdef PAS2JS}async;{$endif}
     procedure RunFeedback; {$ifdef PAS2JS}async;{$endif}
+    procedure RunContextSnapshot; {$ifdef PAS2JS}async;{$endif}
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
     procedure RunAuthoredExport(AChoice: TAuthoredExportChoice); {$ifdef PAS2JS}async;{$endif}
@@ -1432,6 +1436,13 @@ begin
   if AEvent.Trigger = ntContextMenu then
   begin
     Inc(FContexts);
+    FContextHasPosition := AEvent.HasPointer and AEvent.Pointer.HasPosition;
+    FContextCell := Default(TNyxCollectionCellSnapshot);
+
+    if AEvent.HasCollectionCell then
+    begin
+      FContextCell := AEvent.Copy.CollectionCell;
+    end;
     Check((AEvent.OriginID = CTable) and (AEvent.SourceID = CTable),
       'actual context callback preserves its original table identity');
 
@@ -1573,7 +1584,7 @@ begin
   end;
 end;
 
-procedure TCopyReview.Context(AWait: Boolean);
+procedure TCopyReview.Context(AWait: Boolean; AKeyboard: Boolean);
 {$ifdef PAS2JS}
 var
   LOptions: TJSObject;
@@ -1589,14 +1600,29 @@ begin
   LOptions := TJSObject.new;
   LOptions['bubbles'] := True;
   LOptions['cancelable'] := True;
-  LOptions['clientX'] := LBounds.left + 4;
-  LOptions['clientY'] := LBounds.top + 4;
+  LOptions['clientX'] := 0;
+  LOptions['clientY'] := 0;
+
+  if not AKeyboard then
+  begin
+    LOptions['clientX'] := LBounds.left + 4;
+    LOptions['clientY'] := LBounds.top + 4;
+  end;
   LOptions['button'] := 2;
   Cell.dispatchEvent(TCellContextEvent.new('contextmenu', LOptions));
   {$else}
-  LBounds := FGrid.CellRect(FContextColumn, 1);
-  LPoint := FGrid.ClientToScreen(Types.Point(LBounds.Left + 4, LBounds.Top + 4));
-  SendMessage(FGrid.Handle, WM_CONTEXTMENU, FGrid.Handle, MakeLParam(LPoint.X, LPoint.Y));
+  if AKeyboard then
+  begin
+    { Windows' ordinary keyboard context message uses (-1,-1), not a cursor
+      hit. The adapter must retain the actual focused row/typed field. }
+    SendMessage(FGrid.Handle, WM_CONTEXTMENU, FGrid.Handle, LPARAM(-1));
+  end
+  else
+  begin
+    LBounds := FGrid.CellRect(FContextColumn, 1);
+    LPoint := FGrid.ClientToScreen(Types.Point(LBounds.Left + 4, LBounds.Top + 4));
+    SendMessage(FGrid.Handle, WM_CONTEXTMENU, FGrid.Handle, MakeLParam(LPoint.X, LPoint.Y));
+  end;
 
   if AWait then
   begin
@@ -2183,6 +2209,60 @@ end;
   through the optional typed mount contract; paired real key routes then copy
   that exact range. This slice proves mounted paint/copy, not a hardware range
   drag or OS clipboard effect. Gesture navigation is a separate next input. }
+procedure TCopyReview.RunContextSnapshot; {$ifdef PAS2JS}async;{$endif}
+var
+  LSource: INyxCollectionSnapshot;
+  LCaptured: TNyxCollectionCellSnapshot;
+  LIndex: Integer;
+  LBefore: Integer;
+begin
+  FMode := kmObserve;
+  LSource := FView.Store.Snapshot;
+  LBefore := FHost.Writes;
+  try
+    for LIndex := 0 to 4 do
+    begin
+      FContextColumn := LIndex;
+      FocusCell;
+      Context;
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      Check(FContextCell.Defined,
+        'canonical context callback exposes its exact accepted cell snapshot');
+      Check((FContextCell.Item.ID = ItemA.ID) and
+        (FContextCell.Item.Collection.Name = ItemA.Collection.Name) and
+        (FContextCell.Field.Name = FView.Spec.ColumnAt(LIndex).FieldName) and
+        (FContextCell.Value.Kind = FContextCell.Field.Kind) and
+        FContextCell.Value.SameValue(LSource.Item(ItemA).FieldValue(LIndex)) and
+        (FContextCell.Revision = LSource.Revision),
+        'context owns raw typed data rather than formatting, coordinates or selected membership');
+
+      if LIndex = 0 then
+      begin
+        LCaptured := FContextCell.Copy;
+      end;
+      FCellActions.Close;
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    end;
+    FContextColumn := 0;
+    FocusCell;
+    Context(True, True);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check(FContextCell.Defined and not FContextHasPosition and
+      (FContextCell.Item.ID = LCaptured.Item.ID) and
+      FContextCell.Field.Same(LCaptured.Field) and
+      FContextCell.Value.SameValue(LCaptured.Value) and
+      (FContextCell.Revision = LCaptured.Revision),
+      'keyboard context owns the same accepted cell without inventing pointer coordinates');
+    FCellActions.Close;
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((FHost.Writes = LBefore) and (FView.Store.Snapshot = LSource) and
+      (LCaptured.Value.TextValue = CText) and (TNyxCodec.Encode(FDocument) = FAuthored),
+      'retained context has no host effect or source/design mutation');
+  finally
+    FContextColumn := 0;
+  end;
+end;
+
 procedure TCopyReview.RunFeedback; {$ifdef PAS2JS}async;{$endif}
 const
   CDiagnostic: TNyxText = 'Provider detail 🌙' + #0 + ' Copy needs attention.';
@@ -5449,12 +5529,14 @@ begin
   try
     LReview := TCopyReview.Create(False);
     try
+      {$ifdef PAS2JS}await(LReview.RunContextSnapshot);{$else}LReview.RunContextSnapshot;{$endif}
       {$ifdef PAS2JS}await(LReview.RunFeedback);{$else}LReview.RunFeedback;{$endif}
     finally
       LReview.Free;
     end;
     LReview := TCopyReview.Create(True);
     try
+      {$ifdef PAS2JS}await(LReview.RunContextSnapshot);{$else}LReview.RunContextSnapshot;{$endif}
       {$ifdef PAS2JS}await(LReview.RunFeedback);{$else}LReview.RunFeedback;{$endif}
     finally
       LReview.Free;

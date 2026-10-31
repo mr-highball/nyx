@@ -26,6 +26,7 @@ unit nyx.collections.clipboard;
 interface
 
 uses nyx.text, nyx.state, nyx.collections, nyx.collections.selection,
+  nyx.collections.cell,
   nyx.collections.arrangement, nyx.collections.arrangement.controls,
   nyx.scheduler, nyx.clipboard;
 
@@ -122,6 +123,14 @@ type
     property FieldCount: Integer read GetFieldCount;
   end;
 
+{ Convert only an already captured single accepted cell to owned event data.
+  Nil/multi-cell payloads are absent; invalid provider metadata refuses. This
+  retains the payload while reading its immutable getters, never recaptures a
+  source, and reads no formatted/TSV text. The input owner must still check its
+  original dispatch witness after alternative-provider getters return. }
+function NyxCollectionClipboardCellSnapshot(
+  const APayload: INyxCollectionClipboardText): TNyxCollectionCellSnapshot;
+
 { Pure arrangement-to-fields choice. No capture/getter of a live view occurs;
   the caller supplies its already admitted complete immutable observation. }
 function NyxCollectionClipboardFields(const AObservation: TNyxColumnLayoutObservation;
@@ -201,6 +210,34 @@ type
     function FieldAt(AIndex: Integer): TNyxColumnIdentity;
     function CellValue(ARow: Integer; AField: Integer): TNyxStateValue;
   end;
+
+function NyxCollectionClipboardCellSnapshot(
+  const APayload: INyxCollectionClipboardText): TNyxCollectionCellSnapshot;
+var
+  LPayload: INyxCollectionClipboardText;
+  LItem: TNyxItemRef;
+  LField: TNyxColumnIdentity;
+  LValue: TNyxStateValue;
+  LRevision: Integer;
+begin
+  Result := Default(TNyxCollectionCellSnapshot);
+  LPayload := APayload;
+
+  if (LPayload = nil) or (LPayload.RowCount <> 1) or (LPayload.FieldCount <> 1) then
+  begin
+    Exit;
+  end;
+  LItem := LPayload.ItemAt(0);
+  LField := LPayload.FieldAt(0);
+  LValue := LPayload.CellValue(0, 0);
+  LRevision := LPayload.Revision;
+
+  if LItem.Collection.Name <> LPayload.Key.Name then
+  begin
+    raise ENyxCollectionClipboard.Create('Captured context cell belongs to another collection');
+  end;
+  Result := NyxCollectionCellSnapshot(LItem, LField, LValue, LRevision);
+end;
 
 class function TNyxCollectionClipboardLimits.Defaults: TNyxCollectionClipboardLimits;
 begin

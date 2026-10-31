@@ -40,7 +40,11 @@ type
     procedure Invoke(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution); override;
   end;
-  {$IFNDEF PAS2JS}TControlAccess = class(TWinControl);{$ENDIF}
+  {$IFNDEF PAS2JS}
+  { Exposes protected native control input for this widget-message harness;
+    it owns no control and does not establish physical input qualification. }
+  TControlAccess = class(TWinControl);
+  {$ENDIF}
 
 var
   GApplication: {$IFDEF PAS2JS}TNyxBrowserApplication{$ELSE}TNyxLCLApplication{$ENDIF};
@@ -307,8 +311,14 @@ begin
   GWire := TNyxCodec.Encode(GDocument);
   {$IFDEF PAS2JS}
   GApplication := TNyxBrowserApplication.Create;
+  {$IFDEF NYX_BODY_HOST}
+  { Standalone compiled applications use the document body as their mount.
+    Prepared menu hosts must survive that initial render and later remounts. }
+  LHost := TJSHTMLElement(document.body);
+  {$ELSE}
   LHost := TJSHTMLElement(document.createElement('main'));
   document.body.appendChild(LHost);
+  {$ENDIF}
   GApplication.Run(GDocument, LHost);
   {$ELSE}
   GApplication := TNyxLCLApplication.Create;
@@ -342,8 +352,15 @@ begin
   Check(GDensity.Checked(NyxPart('roomy')) and not GDensity.Checked(NyxPart('compact')),
     'Saved nested radio defaults reach actual controls');
   {$IFDEF PAS2JS}
+  {$IFDEF NYX_BODY_HOST}
+  { This additional standalone-host run executes the same nested/remount
+    assertions immediately. The ordinary visual-capture checkpoint is retained
+    for the default host run. No behavior assertion is skipped. }
+  Finish;
+  {$ELSE}
   document.body.setAttribute('data-capture-checkpoint', 'declared-menu-family');
   GResume := window.setInterval(@AwaitCapture, 30);
+  {$ENDIF}
   {$ELSE}
   Finish;
   {$ENDIF}

@@ -118,6 +118,7 @@ router and shares its ordered registrations, policies and cancellation lifetime.
 | `Keyboard` | Immutable `TNyxKeyStroke`: key enum, exact modifiers and repeat flag |
 | `HasWheel` / `Wheel` | Owned device request with explicit units, modifiers and physical cancelability |
 | `HasViewport` / `Viewport` | Owned control-local offsets, ranges, page sizes and explicit axis units |
+| `HasCollectionCell` / `CollectionCell` | Original accepted context cell: scoped item, typed field, raw scalar and source revision |
 
 For a stepper increment, `SourceID` identifies the stepper, `OriginID` identifies
 its increment button, and `TargetID` identifies its numeric part. The callback's
@@ -133,6 +134,41 @@ leave it intact. Replacing fields in a caller's copy cannot mutate runtime data.
 Do not retain `ANode`, `TNyxDispatch.Source` or `Target` beyond their borrowed
 view/callback lifetime. Default, uninitialized event records are not admitted
 events and must not be read as payloads.
+
+### Table context cells
+
+Ordinary renderer-managed Tables enrich `OnContextMenu` with
+`TNyxCollectionCellSnapshot` from `nyx.collections.cell`. Check
+`AEvent.HasCollectionCell` before reading it. `Item` owns the logical collection
+and item identity; `Field` owns its exact name and `TNyxStateKind`; `Value` is the
+accepted `TNyxStateValue`; `Revision` identifies the captured source revision.
+Text, Boolean, signed integer and finite number values retain their own checked
+accessors. A default snapshot is absent and its data getters refuse.
+
+The renderer copies the cell already captured by the original prepared context
+envelope. Pointer and keyboard context invocation resolve the same accepted data.
+Keyboard context has no pointer position. Selected rows, display formatting and
+unfinished editor text remain separate. Default-off editor context and alternative
+envelopes without the optional facet leave `HasCollectionCell=False`.
+
+`AEvent.Copy` retains that data for delayed or worker callbacks. Reordering,
+source publication, view replacement and retirement cannot redirect the copied
+identity or value. The record retains no collection store, renderer, control,
+callback or command token. An application action still needs its own admission
+against its owning application, original identity and expected revision; retaining
+this observation grants no later mutation or clipboard capability.
+
+The shared fixture passes 30 checks per target, including two ordinary queued
+registrations after source publication/release and event replacement. Actual
+ordinary/arranged Table checks cover accepted text, integer and number cells,
+keyboard context and existing nested/consumed/default behavior. The
+[authored Service actions example](../examples/service-monitor/README.md#authored-service-actions)
+uses this original context in a real managed menu command. Expected-revision
+admission refuses an intervening runtime edit visibly, keeping other application
+instances and saved defaults independent. Browser input and the same generated
+native consumer pass at both widths. The native Studio compiler-service deadline
+remains with the open [cell-context task](../TODO/NS-3_collection-cell-context_01.md);
+this does not establish full workbench or physical/assistive acceptance.
 
 ## Admission and target bridges
 

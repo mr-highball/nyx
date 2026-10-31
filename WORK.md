@@ -9,6 +9,99 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
+## Current work — Authored Table actions return — 2026-10-30
+
+Verified PROGRESS, Root SOLO. Copy feedback01 is accepted at pushed1924ca1d.
+Current prerequisite is [typed custom-action cell context](TODO/NS-3_collection-cell-context_01.md),
+returning to [table workbench03 W2](TODO/NS-3_control-usefulness_03.md). Its full
+criteria remain intact; no task/milestone credit is assigned from partial work.
+
+The original Service monitor remains revision9, service-table/services, with no
+draft and both Undo/Redo available. Exact exported project SHA256 starts55B8676F;
+source/design MD5 remain10ad4480/ba30a14c and the original output profile remains
+da83d63c with all four optional services disabled. The nine ordinary workspaces
+retain their previous revisions/selection/view/history. All semantic authoring
+uses an owned temporary review imported from that exact project, never the seed.
+
+The new immutable CollectionCell snapshot owns its scoped item, typed field,
+raw scalar and original revision. Optional prepared-command facets preserve the
+existing interfaces and canonical envelope; no target/store/token is retained.
+Pointer and keyboard context use original accepted data without a second source
+read or selected-row substitution. Event copies and two queued registrations
+retain values after source publication/release. Shared checks pass30 per target;
+unchanged event-publication checks pass58. Full controls pass1755 at measured
+1280x900/390x900 browser sizes and1904/1893 native, with clean native heaps.
+Both before-producer consumers fail the new missing-cell assertion as expected.
+The mixed-cache compiler crash clears with a fresh checked Nyx-unit build; no
+compiler/dependency source or test tolerance is changed. Initial invalid fixture
+scalar records and corrected undefined-field refusal retain their evidence.
+
+Direct Nyx connector tools are absent from this session. One-shot Pascal MCP
+calls close their transport, so an owned review cannot cross those calls. A
+bounded private Pascal retained client supplies the existing authenticated
+transport without opening a listener or printing credentials. It admits60
+semantic requests, then stops/joins with all410001 blocks freed. Immutable file
+packets use complete publication markers; a later reader sharing violation is
+handled by rereading its exact completed reply, never replaying the request.
+
+MCP creates a context callback, bound summary, typed captured-ID/revision/ready
+state and a saved Service actions menu. Mark for review updates only the captured
+runtime service to Attention, then disables itself. An intervening ordinary edit
+refuses visibly against the captured revision. Actual browser keyboard/menu/edit
+input passes at both widths; independent instances retain their own defaults.
+The same exact generated source passes43 native range/peer/action/refusal checks
+per width, freeing2547032/2546842 blocks. Its original range/clipboard assertions
+remain. No OS clipboard write occurs in this turn's input journeys.
+
+The first menu exposes [first-menu adoption01](TODO/DONE/NS-3_menu-first-adoption_01.md):
+MCP advertises reusable where persisted roots require component; a pre-menu
+handwritten frame drops required imports; and a prepared browser popup is removed
+by the initial body render. The first id/name refusal was a caller mistake, not
+a discovery bug. Schema now matches the ordinary typed reader. Source promotion
+retains authored text and six exact namespaces; menu checks pass73 per target,
+and the exact exported promoted unit compiles/executes on both compilers. Native
+promotion frees1169 blocks. Actual body-host nested/open/remount checks pass14 at
+each browser width. The generated Table menu works after the host fix. Native
+semantic schema/transaction checks pass80 with all12744123 blocks freed.
+
+The paired authored project is retained as examples/service-monitor/service-actions.nyx
+(23314 bytes, SHA2564EE24FBC…69BDDD). One semantic Undo restores owned-review
+revision9's source fingerprint f22da22a; Redo restores the entire project byte for byte at
+review revision12. All original handwritten comments/callbacks remain editable.
+Browser MCP builds succeed. Two native MCP jobs, including a solo rerun, stop at
+the existing60-second compiler deadline without artifacts: C635AA8F is the earlier
+missing-import browser failure; 0C345C54 and6600A283 are native deadline failures.
+The independently compiled native consumer is not evidence of native service
+success. [Native cold-build01](TODO/NS-5_native-cold-build_01.md), under the existing
+compile service01, owns that next gate.
+
+Final popup changes retain the complete browser regression:1755 at each measured
+width. The fixed QA slot now runs the checked replacement (binary SHA256E3F93F28).
+Actual discovery advertises page/component; 12 live MCP import/first-menu/source/
+Undo/Redo operations pass with all30363 client blocks freed. Original nine
+workspaces retain revisions, selection, view, pending-draft and Undo/Redo fields;
+output da83d63c remains browser/native-ready with all four services disabled.
+The verified27-file/2988817-byte preservation copy remains on external storage.
+
+Startup recovery first exposes an internal pas2js EAccessViolation. Its exact
+failed worker source compiles unchanged independently; no compiler/RTL source or
+guard is modified. Retry initially uses an expired capability. Check status
+acquires a fresh context, then all20 saved Pascal units across nine projects
+recover successfully. Read-only document MCP calls are unavailable during that
+recovery, requiring the ordinary browser operator controls. A first private live
+check also discovers that workspace-routed nyx_reviews is unsupported, then
+misreads the nested review revision. Explicit verified import into a primary-owned
+review corrects the harness. Raw failures remain; broader semantic recovery and
+workspace-review gaps are recorded in agent-workflows01.
+
+[First-menu adoption01](TODO/DONE/NS-3_menu-first-adoption_01.md) is accepted.
+Typed cell context remains OPEN for its native build-service gate. Evidence:
+table-context-return-01. All owned compiler/native/client readers are joined.
+Fixed QA owner47364 replaces67840 on the same approved executable/ports; LAN
+owner46632 and its assets/runtime remain unchanged. New files, build/test outputs
+and owned TEMP/TMP use the external scratch volume. Next: native cold-build01,
+then original W2. Avoid equivalent geometry/profile variants.
+
 ## Current work — Table Copy feedback return — 2026-10-30
 
 Scoped [visible Copy feedback01](TODO/DONE/NS-3_collection-copy-feedback_01.md) is

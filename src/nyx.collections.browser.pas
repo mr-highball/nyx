@@ -216,6 +216,7 @@ uses
   nyx.collections.edits,
   nyx.collections.selection,
   nyx.collections.clipboard.actions,
+  nyx.collections.cell, nyx.collections.clipboard,
   nyx.collections.range.actions,
   nyx.collections.range,
   nyx.collections.range.commands,
@@ -292,8 +293,11 @@ type
   TBrowserRow = class;
   { Adapt a portable original-copy proof to the already-owned renderer key
     dispatcher. No button activation, synthesized Click or second key route
-    belongs here. Retire only withdraws this synchronous envelope. }
-  TBrowserCopyCommand = class(TInterfacedObject, INyxBrowserColumnCommand)
+    belongs here. Its optional context facet copies only the already prepared
+    accepted cell, with no extra source capture or target lease. Retire only
+    withdraws this synchronous envelope. }
+  TBrowserCopyCommand = class(TInterfacedObject, INyxBrowserColumnCommand,
+    INyxCollectionCellContextSnapshot)
   private
     FCommand: INyxCollectionClipboardCommand;
   public
@@ -302,6 +306,7 @@ type
     procedure Prepare;
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
+    function GetCellSnapshot: TNyxCollectionCellSnapshot;
     function Complete(AAllowDefault: Boolean): Boolean;
     procedure Retire;
   end;
@@ -1509,6 +1514,25 @@ end;
 function TBrowserCopyCommand.GetDispatchCurrent: Boolean;
 begin
   Result := FCommand.DispatchCurrent;
+end;
+
+function TBrowserCopyCommand.GetCellSnapshot: TNyxCollectionCellSnapshot;
+var
+  LCommand: INyxCollectionClipboardCommand;
+begin
+  Result := Default(TNyxCollectionCellSnapshot);
+  LCommand := FCommand;
+
+  if (LCommand = nil) or not LCommand.DispatchCurrent then
+  begin
+    Exit;
+  end;
+  Result := NyxCollectionClipboardCellSnapshot(LCommand.Payload);
+
+  if not LCommand.DispatchCurrent then
+  begin
+    Result := Default(TNyxCollectionCellSnapshot);
+  end;
 end;
 
 function TBrowserCopyCommand.Complete(AAllowDefault: Boolean): Boolean;

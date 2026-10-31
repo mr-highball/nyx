@@ -23,7 +23,9 @@ program nyx_table_workbench_application_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-{ Compile beside Studio's unchanged generated Service monitor. Two applications
+{ Compile beside Studio's generated Service monitor. Explicit optional journeys
+  require its MCP-authored context callback and custom menu action respectively.
+  Two applications
   borrow that one document and own separate runtime stores and table controllers.
   The real LCL clipboard adapter executes against an explicit recording target;
   this test writes no OS clipboard. Widget messages exercise native routing but
@@ -31,6 +33,7 @@ program nyx_table_workbench_application_controls;
 uses
   Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Windows, Types,
   nyx.text, nyx.bytes, nyx.model, nyx.codec, nyx.scheduler, nyx.application.lcl,
+  nyx.state, nyx.types, nyx.menu,
   nyx.editing.lcl, nyx.collections.clipboard.actions,
   nyx.clipboard, nyx.clipboard.lcl, nyx.collections, nyx.collections.query,
   nyx.collections.mount, nyx.collections.arrangement,
@@ -40,6 +43,11 @@ uses
   nyx.collections.workbench.runtime, nyx.menu.lcl, nyx.generated.view;
 
 type
+  { Explicit fixture admission distinguishes the original saved application
+    from its semantically authored context-label/callback and menu extensions. Missing
+    extension content refuses that journey instead of silently testing the seed. }
+  TServiceJourney = (sjOriginal, sjAuthoredContext, sjAuthoredActions);
+
   { Only the final OS publication boundary is replaced. Exact framed bytes are
     decoded through the real adapter's codec before inline completion. This
     target owns copied text/counters only, with no callback, mount or document. }
@@ -158,7 +166,7 @@ begin
   Result := nil;
 end;
 
-procedure Journey(AWidth: Integer);
+procedure Journey(AWidth: Integer; AJourney: TServiceJourney);
 var
   LDocument: TNyxDocument;
   LApp: TNyxLCLApplication;
@@ -175,6 +183,8 @@ var
   LFeedback: INyxCollectionClipboardFeedbackMount;
   LActions: INyxCollectionCellActions;
   LMenu: INyxLCLMenu;
+  LCustomMenu: INyxMenu;
+  LCustomNative: INyxLCLMenu;
   LSource: INyxCollectionSnapshot;
   LPeerSource: INyxCollectionSnapshot;
   LRows: TNyxCollectionSelectionSnapshot;
@@ -213,6 +223,22 @@ var
     Check((LActions.Menu <> nil) and LActions.Menu.IsOpen and
       Supports(LActions.Menu, INyxLCLMenu, LMenu),
       'The actual saved table opens its native managed cell menu');
+  end;
+
+  procedure MarkCapturedService;
+  begin
+    TButton(LApp.View.FocusFor('service-actions-button')).Click;
+    Pump;
+    LCustomMenu := LApp.Menus.Menu(NyxControl('service-actions-button'));
+    Check((LCustomMenu <> nil) and LCustomMenu.IsOpen and
+      Supports(LCustomMenu, INyxLCLMenu, LCustomNative),
+      'The real authored application button opens its saved custom menu');
+    TButton(LCustomNative.Presentation.Renderer.FocusFor(
+      LCustomMenu.Content.Part(NyxPart('mark-review')).ID)).Click;
+    Pump;
+    Check(not LCustomMenu.IsOpen, 'The ordinary managed menu closes before its authored command completes');
+    LCustomNative := nil;
+    LCustomMenu := nil;
   end;
 
 begin
@@ -272,6 +298,35 @@ begin
     LFace.Row := 1;
     LFace.SetFocus;
     Pump;
+
+    if AJourney in [sjAuthoredContext, sjAuthoredActions] then
+    begin
+      Check((LDocument.Find('service-context-summary') <> nil) and
+        (LApp.State.GetValue(NyxTextState('service-context-summary')) =
+          'Choose a service cell to inspect its context.'),
+        'The explicit authored journey requires the MCP-created default and bound control');
+      SendMessage(LFace.Handle, WM_CONTEXTMENU, LFace.Handle, LPARAM(-1));
+      AwaitAction(LActions);
+      Check((LApp.State.GetValue(NyxTextState('service-context-summary')) =
+        'Service gateway / notes') and
+        (TLabel(LApp.View.ControlFor('service-context-summary')).Caption =
+          'Service gateway / notes'),
+        'The authored application callback uses its exact keyboard cell to update a real bound label');
+      Check((LPeerApp.State.GetValue(NyxTextState('service-context-summary')) =
+        'Choose a service cell to inspect its context.') and
+        (LMount.View.Store.Snapshot = LSource) and
+        (LPeer.View.Store.Snapshot = LPeerSource) and
+        (LRanges.CellRange = LIntent) and LIntent.Current,
+        'Callback state delivery preserves independent peers, source values and original range input');
+      Check((LActions.Menu <> nil) and LActions.Menu.IsOpen and
+        (LActions.Snapshot.ItemAt(0).ID = 'gateway') and
+        LActions.Snapshot.FieldAt(0).Same(NyxColumnIdentity(NyxTextField('notes'))),
+        'Authored state synchronization retains the same original managed context menu');
+      LActions.Close;
+      Pump;
+      LFace.SetFocus;
+      Pump;
+    end;
     Check(GetKeyboardState(LSavedKeys), 'Capture caller thread keyboard state before native Copy');
     LCopyKeys := LSavedKeys;
     LCopyKeys[VK_SHIFT] := 0;
@@ -338,12 +393,61 @@ begin
       'Selection, filtering and transfers preserve independent peer input, exact stores and authored source');
     LActions.Close;
     LMenu := nil;
+
+    if AJourney = sjAuthoredActions then
+    begin
+      Check((LDocument.Find('service-actions-button') <> nil) and
+        LApp.State.GetValue(NyxBooleanState('service-context-ready')) and
+        (LApp.State.GetValue(NyxTextState('service-context-id')) = 'indexer'),
+        'The custom journey requires the exact last captured filtered service');
+      MarkCapturedService;
+      Check((LMount.View.Store.Snapshot.Revision = LSource.Revision + 1) and
+        (LMount.View.Store.Snapshot.Item(NyxItem(NyxCollection('services'), 'indexer'))
+          .GetValue(NyxTextField('status')) = 'Attention') and
+        (LApp.State.GetValue(NyxTextState('service-context-summary')) =
+          'Marked indexer for review.') and
+        not LApp.State.GetValue(NyxBooleanState('service-context-ready')),
+        'The authored menu changes only its captured service through one expected-revision runtime edit');
+      Check((LPeer.View.Store.Snapshot = LPeerSource) and
+        (LPeerApp.State.GetValue(NyxTextState('service-context-summary')) =
+          'Choose a service cell to inspect its context.') and
+        (TNyxCodec.Encode(LDocument) = LAuthored),
+        'A useful custom action preserves the peer application and saved source defaults');
+      LMount.View.ConfigureQuery(NyxCollectionQuery);
+      Pump;
+      LFace := FieldGrid(LGrid, 'Notes', LColumn);
+      LFace.Col := LColumn;
+      LFace.Row := 1;
+      LFace.SetFocus;
+      SendMessage(LFace.Handle, WM_CONTEXTMENU, LFace.Handle, LPARAM(-1));
+      AwaitAction(LActions);
+      Check(LApp.State.GetValue(NyxTextState('service-context-id')) = 'gateway',
+        'A fresh keyboard context captures gateway independently of the previous action');
+      LActions.Close;
+      LMount.View.Store.Apply([NyxUpdate(NyxCollectionItem(
+        NyxItem(NyxCollection('services'), 'reports'))
+          .WithValue(NyxTextField('notes'), 'Another runtime edit arrived.'))],
+        LMount.View.Store.Snapshot.Revision);
+      Pump;
+      MarkCapturedService;
+      Check((LApp.State.GetValue(NyxTextState('service-context-summary')) =
+        'Services changed. Choose a cell again before marking it for review.') and
+        not LApp.State.GetValue(NyxBooleanState('service-context-ready')) and
+        (LMount.View.Store.Snapshot.Revision = LSource.Revision + 2) and
+        (LMount.View.Store.Snapshot.Item(NyxItem(NyxCollection('services'), 'gateway'))
+          .GetValue(NyxTextField('status')) = 'Running') and
+        (LPeer.View.Store.Snapshot = LPeerSource) and
+        (TNyxCodec.Encode(LDocument) = LAuthored),
+        'A stale captured revision refuses visibly without retargeting or a second runtime mutation');
+    end;
     FreeAndNil(LApp);
     Pump;
     Check(not LMount.Connected and not LIntent.Current and LPeer.Connected and
       LPeerIntent.Current and (LPeerRanges.CellRange = LPeerIntent),
       'Retiring one application cannot retire its peer range or redirect old input');
   finally
+    LCustomNative := nil;
+    LCustomMenu := nil;
     LMenu := nil;
     FreeAndNil(LApp);
     FreeAndNil(LPeerApp);
@@ -363,17 +467,34 @@ end;
 
 var
   LWidth: Integer;
+  LJourney: TServiceJourney;
 begin
   try
 
-    if (ParamCount <> 1) or not TryStrToInt(ParamStr(1), LWidth) or
+    if (ParamCount < 1) or (ParamCount > 2) or not TryStrToInt(ParamStr(1), LWidth) or
       ((LWidth <> 390) and (LWidth <> 1280)) then
     begin
       raise Exception.Create('Expected native width 1280 or 390');
     end;
+    LJourney := sjOriginal;
+
+    if ParamCount = 2 then
+    begin
+
+      if (ParamStr(2) <> '--context') and (ParamStr(2) <> '--actions') then
+      begin
+        raise Exception.Create('Expected the explicit --context or --actions authored journey');
+      end;
+      LJourney := sjAuthoredContext;
+
+      if ParamStr(2) = '--actions' then
+      begin
+        LJourney := sjAuthoredActions;
+      end;
+    end;
     Application.Initialize;
     Application.ShowMainForm := False;
-    Journey(LWidth);
+    Journey(LWidth, LJourney);
     WriteLn('PASS ', GChecks, ' saved Service monitor range/peer checks at ', LWidth,
       '; native widget messages, recording publication target, no OS clipboard write');
   except

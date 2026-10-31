@@ -862,6 +862,7 @@ uses
   nyx.collections.query.workbench,
   nyx.collections.arrangement.browser,
   nyx.collections.cell.browser,
+  nyx.collections.cell,
   nyx.application.resources, nyx.projection.context, nyx.coordinators.internal;
 
 type
@@ -8243,7 +8244,7 @@ begin
 
       if LGeneration.Current and LCommand.DispatchCurrent then
       begin
-        LAllowed := PointerEvent(AEvent, ntContextMenu);
+        LAllowed := PointerEvent(AEvent, ntContextMenu, LCommand);
       end;
       Result := LCommand.Complete(LAllowed and not AEvent.defaultPrevented and
         LCommand.DispatchCurrent);
@@ -8379,6 +8380,8 @@ var
   LInput: TNyxGestureElement;
   LOriginID: TNyxText;
   LRangeDecision: INyxBrowserRangeCaptureDecision;
+  LCellInput: INyxCollectionCellContextSnapshot;
+  LCell: TNyxCollectionCellSnapshot;
 begin
   try
     LGeneration := TBrowserViewGeneration(FGenerationObject);
@@ -8408,7 +8411,29 @@ begin
     begin
       Exit;
     end;
+    LCell := Default(TNyxCollectionCellSnapshot);
+
+    if (ATrigger = ntContextMenu) and (AManagedInput <> nil) then
+    begin
+
+      if not AManagedInput.DispatchCurrent then
+      begin
+        Exit;
+      end;
+
+      if Supports(AManagedInput, INyxCollectionCellContextSnapshot, LCellInput) then
+      begin
+        LCell := LCellInput.CellSnapshot;
+      end;
+
+      if not AManagedInput.DispatchCurrent then
+      begin
+        Exit;
+      end;
+    end;
     LDispatch := CurrentRenderer.FLiveBindings.Signal(FNode, ATrigger);
+    LDispatch.Info.HasCollectionCell := LCell.Defined;
+    LDispatch.Info.CollectionCell := LCell;
     LPointer := LDispatch.Info.Pointer;
     LPointer.Kind := npiMouse;
 
@@ -8512,6 +8537,11 @@ begin
 
     if ATrigger = ntContextMenu then
     begin
+
+      if (AManagedInput <> nil) and not AManagedInput.DispatchCurrent then
+      begin
+        Exit;
+      end;
       LConsumed := DispatchNyxInput(LEvents, FNode, LDispatch);
     end
     else if ATrigger in [ntPointerDown, ntPointerMove, ntPointerUp] then

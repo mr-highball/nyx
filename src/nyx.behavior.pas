@@ -37,6 +37,7 @@ uses
   SysUtils,
   nyx.model,
   nyx.collections.selection,
+  nyx.collections.cell,
   nyx.editing,
   nyx.gestures,
   nyx.image.lifecycle, nyx.disclosure;
@@ -46,7 +47,9 @@ type
     triggers are closed enums. SourceID/OriginID/TargetID and Value are owned snapshots
     that may be retained after the callback/view ends. ANode in the handler is
     borrowed for the callback only. HasValue distinguishes absent from empty.
-    ValueKind retains the scalar contract, including integer versus number. }
+    ValueKind retains the scalar contract, including integer versus number.
+    Optional accepted cell data owns exact row/typed-field/value/revision and
+    grants no authority over a later source or physical target. }
   TNyxEventInfo = record
     Trigger: TNyxTrigger;
     Name: TNyxEventRef;
@@ -97,6 +100,11 @@ type
     HasCollectionSelection: Boolean;
     SelectionBefore: TNyxCollectionSelectionSnapshot;
     Selection: TNyxCollectionSelectionSnapshot;
+    { Context cell is independent of selected membership or a physical editor.
+      Retained callbacks observe the original accepted scalar, never a new row
+      at the same coordinate. Default/unsupported producers leave it absent. }
+    HasCollectionCell: Boolean;
+    CollectionCell: TNyxCollectionCellSnapshot;
     { Read-only image request observation; owned after source/view retirement. }
     HasImage: Boolean;
     Image: TNyxImageSnapshot;
@@ -277,6 +285,13 @@ begin
     SelectionBefore.Defined and Selection.Defined;
   Result.SelectionBefore := SelectionBefore;
   Result.Selection := Selection;
+  Result.HasCollectionCell := CollectionCell.Defined and HasCollectionCell;
+  Result.CollectionCell := Default(TNyxCollectionCellSnapshot);
+
+  if Result.HasCollectionCell then
+  begin
+    Result.CollectionCell := CollectionCell.Copy;
+  end;
   Result.HasImage := (Trigger in [ntImageLoading, ntImageReady, ntImageError, ntImageCleared]) and
     Image.Defined and HasImage;
   Result.Image := Image;
@@ -338,6 +353,8 @@ begin
   Result.HasViewport := False;
   Result.Viewport := Default(TNyxViewportSnapshot);
   Result.HasCollectionSelection := False;
+  Result.HasCollectionCell := False;
+  Result.CollectionCell := Default(TNyxCollectionCellSnapshot);
   Result.HasImage := False;
   Result.Image := Default(TNyxImageSnapshot);
   Result.SelectionBefore := Default(TNyxCollectionSelectionSnapshot);
@@ -489,6 +506,8 @@ begin
   Result.Info.HasViewport := False;
   Result.Info.Viewport := Default(TNyxViewportSnapshot);
   Result.Info.HasCollectionSelection := False;
+  Result.Info.HasCollectionCell := False;
+  Result.Info.CollectionCell := Default(TNyxCollectionCellSnapshot);
   Result.Info.HasImage := False;
   Result.Info.Image := Default(TNyxImageSnapshot);
   Result.Info.SelectionBefore := Default(TNyxCollectionSelectionSnapshot);

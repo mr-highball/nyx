@@ -2,6 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Observed semantic gaps — 2026-10-30: passing workspace on nyx_reviews routes to
+an ordinary document session and refuses with Unknown Nyx tool, despite generic
+context discovery. A primary-owned review with an exact verified import works
+and remains isolated. Also provide bounded recovery status/diagnostics while
+saved projects await recovery: document tools currently refuse until the browser
+operator workflow completes. Preserve constructor-execution policy and project
+ownership; do not infer permission from a status query. WORK.md retains the
+failed route, successful 12-operation workflow and recovery evidence.
+
 Connection restored — 2026-10-27: the maintained Pascal service now serves the
 complete editor/source-worker/preview payload from external storage, with a LAN
 editor and loopback-only MCP. Initialized authenticated discovery advertises24

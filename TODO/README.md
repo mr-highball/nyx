@@ -4,13 +4,15 @@
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
 The scoped [visible Copy feedback](DONE/NS-3_collection-copy-feedback_01.md) is
-accepted. Return to the same [table workbench W2](NS-3_control-usefulness_03.md)
-keyboard/context-action and output/preference lifecycle criteria. Current full
-clipboard controls pass1683 at measured1280/390 browser widths and1868/1857
-native, with clean heaps; saved native feedback/input checks pass28 per width.
-The MCP-built observing application shows Unavailable and its unchanged generated
-browser consumer confirms exact real writes. Preserve the retained failures and
-original broader acceptance; stop equivalent geometry/profile fixtures.
+accepted. Current prerequisite is [typed custom-action cell context](NS-3_collection-cell-context_01.md),
+discovered in the same [table workbench W2](NS-3_control-usefulness_03.md)
+keyboard/context-action and output/preference lifecycle criteria. It includes
+[accepted first-menu adoption](DONE/NS-3_menu-first-adoption_01.md) and the existing
+[native cold-build return](NS-5_native-cold-build_01.md). Full controls pass
+1755 at measured desktop/compact browser widths and1904/1893 native, with clean
+heaps. The MCP-authored useful action and stale-context refusal pass actual
+browser input and43 native generated-application checks per width. Preserve the
+remaining service gate and original broader acceptance; stop equivalent fixtures.
 
 [Explicit action adoption](DONE/NS-3_collection-action-adoption_01.md) and
 [browser Copy input](DONE/NS-2_browser-copy-input_01.md) are accepted, restoring

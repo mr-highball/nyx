@@ -135,7 +135,6 @@ begin
     'box-sizing:border-box;overflow:auto;border:1px solid #dddce8;' +
     'border-radius:16px;background:white;color:#202331;' +
     'box-shadow:0 14px 44px rgba(24,24,46,.18);';
-  Web.document.body.appendChild(FElement);
   FRenderer := TNyxBrowserRenderer.Create(ATheme);
   FRenderer.OnEvent := Semantic;
 end;
@@ -217,6 +216,15 @@ begin
   FOptions := AOptions;
   FInvoker := TJSHTMLElement(Web.document.activeElement);
   FElement.setAttribute('aria-label', AOptions.Title);
+
+  if not Web.document.body.contains(FElement) then
+  begin
+    { Application bindings may prepare a menu before mounting their root into
+      document.body. Attach this owned host only when presenting it, after that
+      initial render has cleared its target. A detached host retains its own
+      content; this never reconstructs a caller's tree or revives a retired menu. }
+    Web.document.body.appendChild(FElement);
+  end;
 
   if not Mounted then
   begin

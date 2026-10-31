@@ -6941,6 +6941,19 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.data.rows');
     LPrefix := WithNyxImport(LPrefix, 'nyx.design.tokens');
 
+    if ADocument.HasMenuDeclarations then
+    begin
+      { The first saved menu can arrive in a pre-menu handwritten frame. Its
+        generated builder uses these typed namespaces even when the former
+        prefix did not. Preserve authored text/order and retain imports after
+        a later reset, because handwritten helpers may still depend on them. }
+      LPrefix := WithNyxImport(LPrefix, 'nyx.menu.declarations');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.menu.bar.declarations');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.menu.types');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.popover.types');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.root.types');
+    end;
+
     if LNeedsTypeAhead then
     begin
       { An existing accepted unit may predate its first saved search choice.

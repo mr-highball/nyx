@@ -2070,6 +2070,13 @@ and native widget-message evidence, without physical/assistive-input claims.
 
 ## Saving table workbench action choices
 
+Canonical Table context callbacks also expose an optional owned
+[`CollectionCell` snapshot](events.md#table-context-cells), independent of selected
+membership, display text and drafts. Use its scoped item, typed field, accepted
+scalar and original revision when deciding which application action to offer.
+The snapshot retains no live view or future command authority. Existing managed
+cell actions and clipboard policy continue through their original envelope.
+
 `nyx.collections.workbench.policy` supplies a pure authored policy. Apply it to
 the existing typed table binding; clipboard services and live input state belong
 to the application, separately from this saved value.

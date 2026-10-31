@@ -265,7 +265,8 @@ type
     function PointerEvent(ASender: TObject; ATrigger: TNyxTrigger;
       const APosition: TPoint; AHasPosition: Boolean; AButton: TNyxPointerButton;
       AShift: TShiftState;
-      const AManagedInput: INyxCollectionCellRangePointerEntry = nil): Boolean;
+      const AManagedInput: INyxCollectionCellRangePointerEntry = nil;
+      const ACellInput: INyxCollectionClipboardCommand = nil): Boolean;
     procedure PreparedRangePointer(ASender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer;
       const ACommand: INyxCollectionCellRangePointerEntry);
@@ -1045,6 +1046,7 @@ uses
   nyx.collections.query.workbench,
   nyx.collections.arrangement.lcl,
   nyx.collections.cell.lcl,
+  nyx.collections.cell, nyx.collections.clipboard,
   nyx.application.resources, nyx.projection.context, nyx.layout.panel.lcl,
   nyx.scroll.chrome.lcl, nyx.scroll.presentation, nyx.coordinators.internal;
 
@@ -10689,7 +10691,8 @@ end;
 function TNyxLCLBinding.PointerEvent(ASender: TObject; ATrigger: TNyxTrigger;
   const APosition: TPoint; AHasPosition: Boolean; AButton: TNyxPointerButton;
   AShift: TShiftState;
-  const AManagedInput: INyxCollectionCellRangePointerEntry): Boolean;
+  const AManagedInput: INyxCollectionCellRangePointerEntry;
+  const ACellInput: INyxCollectionClipboardCommand): Boolean;
 var
   LGeneration: INyxLCLBindingGeneration;
   LEnteredFrame: INyxNativeGestureFrame;
@@ -10707,6 +10710,7 @@ var
   LRenderer: TNyxLCLRenderer;
   LOriginID: TNyxText;
   LRangeDecision: INyxLCLRangeCaptureDecision;
+  LCell: TNyxCollectionCellSnapshot;
 begin
   LGeneration := GenerationLease;
   Result := False;
@@ -10731,8 +10735,27 @@ begin
         Exit;
       end;
       RequireNativeGeneration(LGeneration);
+      LCell := Default(TNyxCollectionCellSnapshot);
+
+      if (ATrigger = ntContextMenu) and (ACellInput <> nil) then
+      begin
+
+        if not ACellInput.DispatchCurrent then
+        begin
+          Exit(True);
+        end;
+        LCell := NyxCollectionClipboardCellSnapshot(ACellInput.Payload);
+        RequireNativeGeneration(LGeneration);
+
+        if not ACellInput.DispatchCurrent then
+        begin
+          Exit(True);
+        end;
+      end;
       LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
       RequireNativeGeneration(LGeneration);
+      LDispatch.Info.HasCollectionCell := LCell.Defined;
+      LDispatch.Info.CollectionCell := LCell;
       LDispatch.Info.HasPointer := True;
       LDispatch.Info.Pointer.Kind := npiMouse;
       LDispatch.Info.Pointer.Button := AButton;
@@ -10802,6 +10825,11 @@ begin
 
       if ATrigger = ntContextMenu then
       begin
+
+        if (ACellInput <> nil) and not ACellInput.DispatchCurrent then
+        begin
+          Exit(True);
+        end;
         Result := DispatchNyxInput(LEvents, FNode, LDispatch);
         RequireNativeGeneration(LGeneration);
       end
@@ -11646,7 +11674,7 @@ begin
       if not AHandled then
       begin
         AHandled := PointerEvent(ASender, ntContextMenu, APosition,
-          (APosition.X >= 0) and (APosition.Y >= 0), npbNone, []);
+          (APosition.X >= 0) and (APosition.Y >= 0), npbNone, [], nil, LCommand);
           RequireNativeGeneration(LGeneration);
       end;
 

@@ -33,6 +33,27 @@ remain separate. Unavailable, cancelled and download-requested outcomes retain
 their existing typed meaning. A requested browser download is not a confirmed
 disk write. No clipboard or save operation runs merely by opening the example.
 
+## Authored service actions
+
+Open `service-actions.nyx` in Studio for the paired, MCP-authored version of this
+example. Invoke a cell's context menu (right-click or Shift+F10), close it, then
+choose **Service actions → Mark for review**. The bound summary identifies the
+captured service and field. The action changes that service's sample Status to
+Attention and disables itself until another cell context is captured.
+
+The callback uses the event's owned `CollectionCell` snapshot and its original
+collection revision. An intervening accepted edit makes the action refuse with
+a visible explanation; it never substitutes the currently selected row. Each
+application owns its runtime state and collection, so another running instance
+and the saved project defaults remain unchanged. This is sample data only.
+
+The saved companion contains the editable callback bodies, typed state bindings
+and ordinary Nyx menu declaration. Browser input and native widget-message
+journeys exercise the same exported source at desktop and compact widths.
+Native compiler-service cold builds currently hit their60-second budget; the
+separate generated native consumer passes. See WORK.md and compile service01
+for that remaining delivery gate.
+
 ## Live inspection
 
 `live_inspection.lpr` uses the same public table and four English service records

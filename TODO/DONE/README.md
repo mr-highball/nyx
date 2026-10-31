@@ -3,6 +3,16 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[First-menu adoption](NS-3_menu-first-adoption_01.md) is accepted on 2026-10-30.
+Discovery matches typed persistence, older handwritten frames receive required
+imports, and standalone browser menus survive body mounting and remounting.
+Declaration/source checks pass 73 per target, the exact promoted companion runs
+on both, and the actual refreshed MCP backend passes 12 first-menu/history
+operations. Useful authored actions pass both browser widths and 43 native
+checks per width. All nine projects and output choices survive fixed-slot QA
+replacement. Native cold-build service qualification remains open; no full
+Table workbench or additional milestone credit is assigned.
+
 [Ordinary Table Copy feedback](NS-3_collection-copy-feedback_01.md) is accepted
 on2026-10-30. Shared checks pass318 and model-mounted ownership checks55 per
 target. Full controls pass1683 in measured1280/390 browser viewports and1868/1857

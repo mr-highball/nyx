@@ -31,7 +31,7 @@ uses
   nyx.collections.query, nyx.studio.projects, nyx.studio.agents, nyx.studio.edits,
   nyx.studio.stateedits, nyx.studio.collectionedits, nyx.studio.collectionintent,
   nyx.studio.transactions, nyx.studio.session, nyx.resources, nyx.studio.resourceedits,
-  nyx.root.types;
+  nyx.root.types, nyx.menu.types, nyx.menu.declarations;
 
 type
   { An external ordinary command can keep the original candidate-only contract.
@@ -140,6 +140,60 @@ begin
 end;
 
 {$ifndef PAS2JS}
+{ MCP must advertise the persisted menu-root vocabulary, which differs from
+  the editor's root-move vocabulary. Exercise each advertised choice against
+  the ordinary definition reader instead of accepting a schema-only spelling. }
+procedure CheckMenuDiscovery(const ATool: TNyxDataValue);
+var
+  LBranches: TNyxDataValue;
+  LBranch: TNyxDataValue;
+  LChoices: TNyxDataValue;
+  LDefinition: TNyxDataValue;
+  LRoot: TNyxDataValue;
+  LPlan: INyxMenuDefinition;
+  LIndex: Integer;
+  LChoice: Integer;
+  LFound: Boolean;
+begin
+  LBranches := ATool.Field('properties').Field('operations').Field('items').Field('oneOf');
+  LFound := False;
+  for LIndex := 0 to LBranches.Count - 1 do
+  begin
+
+    if not NyxAgentHas(LBranches.Item(LIndex), 'properties') then
+    begin
+      Continue;
+    end;
+    LBranch := LBranches.Item(LIndex).Field('properties');
+
+    if NyxAgentHas(LBranch.Field('op'), 'const') and
+      (LBranch.Field('op').Field('const').AsText = 'menu-define') then
+    begin
+      LChoices := LBranch.Field('definition').Field('properties').Field('root')
+        .Field('properties').Field('kind').Field('enum');
+      Check((LChoices.Count = 2) and (LChoices.Item(0).AsText = 'page') and
+        (LChoices.Item(1).AsText = 'component'),
+        'menu discovery uses the exact persisted page/component root choices');
+      for LChoice := 0 to LChoices.Count - 1 do
+      begin
+        LRoot := NyxObject([NyxField('kind', LChoices.Item(LChoice)),
+          NyxField('name', NyxData('actions-content'))]);
+        LPlan := NewNyxMenuDefinition(NyxReusableRoot('actions-content'), NyxMenu('Actions'))
+          .Action(NyxPart('inspect'), NyxMenuCommand('inspect'));
+        LDefinition := LPlan.ToData;
+        LDefinition := NyxObject([NyxField('root', LRoot),
+          NyxField('options', LDefinition.Field('options')),
+          NyxField('items', LDefinition.Field('items'))]);
+        LPlan := NyxMenuDefinitionFromData(LDefinition);
+        Check((Ord(LPlan.Root.Kind) = LChoice) and (LPlan.Root.Name = 'actions-content'),
+          'each advertised menu-root choice admits through the ordinary typed reader');
+      end;
+      LFound := True;
+    end;
+  end;
+  Check(LFound, 'actual transaction discovery includes menu definition admission');
+end;
+
 procedure ExportPair;
 var
   LDirectory: TNyxText;
@@ -491,6 +545,7 @@ begin
         Check(Pos('"collections"', LTool.ToJSON) > 0, 'actual tool advertises collection groups');
         Check(Pos('"root-move"', LTool.ToJSON) > 0,
           'actual tool advertises exact partition-safe root movements');
+        CheckMenuDiscovery(LTool);
         Break;
       end;
     end;

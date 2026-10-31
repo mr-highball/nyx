@@ -3499,7 +3499,7 @@ const
   CDefinition: TNyxText =
     '{"type":"object","additionalProperties":false,"required":["root","options","items"],' +
     '"properties":{"root":{"type":"object","additionalProperties":false,' +
-    '"required":["kind","name"],"properties":{"kind":{"enum":["page","reusable"]},' +
+    '"required":["kind","name"],"properties":{"kind":{"enum":["page","component"]},' +
     '"name":{"type":"string","minLength":1}}},' +
     '"options":{"type":"object","additionalProperties":false,' +
     '"required":["title","side","alignment","sizing","width","height","gap","margin",' +
