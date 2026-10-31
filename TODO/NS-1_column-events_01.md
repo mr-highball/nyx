@@ -67,4 +67,3 @@ The broader scheduler owner and original workbench criteria remain intact.
   typed view/publication and independent-runtime foundation.
 - [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) supplies
   accepted notification/recovery behavior for the callback's bound status output.
-
