@@ -434,6 +434,9 @@ type
     { Read actual untransformed CSS content boxes synchronously for a connected
       hidden candidate. Missing/disconnected boxes remain missing. }
     function MeasureAllocatedContainers: INyxContainerSnapshot;
+    { Attached synchronization reads current layout; detached preparation keeps
+      its explicitly staged snapshot rather than sampling the predecessor. }
+    function MeasureSynchronousContainers: INyxContainerSnapshot;
     procedure ViewportChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
     FDesignMode: Boolean;
@@ -3690,12 +3693,33 @@ var
   end;
 
   procedure ReleaseCandidate;
+  var
+    LProbeParent: TJSNode;
   begin
+    LProbeParent := nil;
+
+    if LProbeHost <> nil then
+    begin
+      LProbeParent := LProbeHost.parentNode;
+    end;
     try
       ReleaseNyxNode(LMeasuredRoot);
     finally
       try
-        LCandidate.Free;
+        try
+          LCandidate.Free;
+        finally
+          { Successful adoption transfers the candidate's generation, so its
+            destructor has no retiring view left to remove the empty probe.
+            This local owns only the originally created staging host. Cleanup
+            callbacks that refill or relocate it take precedence over removal. }
+
+          if (LProbeHost <> nil) and (LProbeHost.parentNode = LProbeParent) and
+            (LProbeHost.childNodes.length = 0) then
+          begin
+            LProbeHost.remove;
+          end;
+        end;
       finally
         try
           LSettlement.Free;
@@ -3799,6 +3823,7 @@ begin
     raise ENyxModel.Create('A browser view cannot replace itself inside its own descendant');
   end;
   LCandidate := nil;
+  LProbeHost := nil;
   LMeasuredRoot := nil;
   LSettlement := nil;
   LBlueprint := nil;
@@ -4044,6 +4069,7 @@ begin
       LCandidate.FLiveBindings.OnInputCapture := @LCandidate.CaptureInputTargets;
       LCandidate.FLiveBindings.OnInputSync := @LCandidate.SyncInputTargets;
       LCandidate.FHost := Element('div', '');
+      LProbeHost := LCandidate.FHost;
       LCandidate.FHost.className := AHost.className;
       LCandidate.FHost.style.cssText := AHost.style.cssText;
       LCandidate.FHost.classList.add('nyx-root');
@@ -5978,6 +6004,19 @@ begin
     end;
   end;
   Result := NewNyxContainerSnapshot(LMeasurements);
+end;
+
+function TNyxBrowserRenderer.MeasureSynchronousContainers: INyxContainerSnapshot;
+begin
+
+  if FDetachedCandidate then
+  begin
+    Result := FStagingMeasurements;
+  end
+  else
+  begin
+    Result := MeasureAllocatedContainers;
+  end;
 end;
 
 function TNyxBrowserRenderer.InputFor(const AID: TNyxText;
@@ -10517,7 +10556,7 @@ var
     FViewportBinding.Observe;
     CheckCurrent;
     Result := FRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight,
-      npfBrowser, FPresentationSelection, MeasureContainers);
+      npfBrowser, FPresentationSelection, MeasureSynchronousContainers);
     CheckCurrent;
   end;
 
@@ -10938,6 +10977,8 @@ var
   LFocusScheduler: INyxScheduler;
   LFocusExecution: INyxExecution;
   LObservation: INyxBindingProjectionCapture;
+  LProjectionPass: Integer;
+  LMaximumPasses: Integer;
 
   procedure AttributeFlag(AElement: TJSHTMLElement; const AName: TNyxText; ASet: Boolean);
   begin
@@ -10990,11 +11031,6 @@ begin
     end;
     FObservedProjection := nil;
 
-    if (FRoot <> nil) and not FDesignMode and
-      (FLiveBindings <> nil) and FLiveBindings.HasBindings then
-    begin
-      LObservation := CaptureNyxBindingProjection(FRoot);
-    end;
     { Capture physical focus before hiding any body. A state-driven close has no
       header click to move focus for it; do not leave the retained editor focused
       inside invisible content. Unrelated focus is never claimed. }
@@ -11024,965 +11060,57 @@ begin
     end;
     FUpdating := True;
     try
-
-      if FRoot <> nil then
+      { Text and scoped metrics can change a publisher's actual allocation in
+        this UI turn. ResizeObserver is a later notification, not a settlement
+        barrier. Containment bounds propagation by the publisher count, with
+        two extra rounds for client-area/scrollbar changes, as in the LCL host. }
+      LMaximumPasses := 2;
+      for LIndex := 0 to High(FBindings) do
       begin
-        { A first rule can arrive after an unobserved ordinary host was resized.
-          Read current space before projecting; observer callbacks are subsequent
-          automatic notifications, not the authority for initial dimensions. }
 
-        if not FDetachedCandidate then
+        if FBindings[LIndex].FNode.QueryContainer.Defined then
         begin
-          FViewportWidth := FHost.clientWidth;
-          FViewportHeight := FHost.clientHeight;
+          Inc(LMaximumPasses);
         end;
-        LViewportFrame := FViewportBinding.Frame(FViewportWidth, FViewportHeight);
-        FViewportBinding.Observe;
-        CheckCurrent;
-        FRoot.ApplyViewport(LViewportFrame.ViewportWidth, LViewportFrame.ViewportHeight, npfBrowser,
-          FPresentationSelection, MeasureContainers);
-        CheckCurrent;
       end;
-      ValidateScrollPresentations(FContentChromeScale);
-      ProjectScrollPresentations(FContentChromeScale);
-      for LIndex := 0 to Length(FBindings) - 1 do
+      for LProjectionPass := 0 to LMaximumPasses do
       begin
-        CheckCurrent;
-        LBinding := FBindings[LIndex];
-        LNode := LBinding.FNode;
-        LControl := LBinding.FElement;
-        LControl.setAttribute('data-variant', LNode.Prop('variant'));
 
-        if LBinding.FCustom then
+        if (FRoot <> nil) and not FDesignMode and
+          (FLiveBindings <> nil) and FLiveBindings.HasBindings then
         begin
+          { Only this pass's copied pre-write model can become its successful
+            observation. A failing setter leaves the published field invalid. }
+          LObservation := CaptureNyxBindingProjection(FRoot);
+        end;
+
+        if FRoot <> nil then
+        begin
+          { A first rule can arrive after an unobserved ordinary host was resized.
+            Read current space before projecting; observer callbacks are subsequent
+            automatic notifications, not the authority for initial dimensions. }
+
+          if not FDetachedCandidate then
+          begin
+            FViewportWidth := FHost.clientWidth;
+            FViewportHeight := FHost.clientHeight;
+          end;
+          LViewportFrame := FViewportBinding.Frame(FViewportWidth, FViewportHeight);
+          FViewportBinding.Observe;
+          CheckCurrent;
+          FRoot.ApplyViewport(LViewportFrame.ViewportWidth, LViewportFrame.ViewportHeight, npfBrowser,
+            FPresentationSelection, MeasureSynchronousContainers);
           CheckCurrent;
         end;
-        LControl.title := LNode.Prop('hint');
-
-        if LBinding.FCustom then
+        ValidateScrollPresentations(FContentChromeScale);
+        ProjectScrollPresentations(FContentChromeScale);
+        for LIndex := 0 to Length(FBindings) - 1 do
         begin
           CheckCurrent;
-        end;
-        LControl.style.removeProperty('container-type');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-
-        if LNode.QueryContainer.Defined then
-        begin
-
-          if LNode.ContainerContainment = nccSize then
-          begin
-            LControl.style.setProperty('container-type', 'size');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end
-          else
-          begin
-            LControl.style.setProperty('container-type', 'inline-size');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end;
-        LControl.draggable := not FDesignMode and (LNode.Prop('drag-source') = 'true');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.setProperty('touch-action', LNode.Prop('touch-behavior', 'auto'));
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-
-        if LNode.Prop('pressed') <> '' then
-        begin
-          LControl.setAttribute('aria-pressed', LowerCase(LNode.Prop('pressed')));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else
-        begin
-          LControl.removeAttribute('aria-pressed');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        LControl.style.removeProperty('display');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.removeProperty('flex-direction');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.removeProperty('position');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.removeProperty('flex-wrap');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.removeProperty('align-items');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.removeProperty('justify-content');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.removeProperty('align-content');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.classList.remove('nyx-flow-row');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.classList.remove('nyx-flow-column');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.classList.remove('nyx-aligned');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LLayout := LNode.Prop('layout');
-
-        if (LLayout = '') and not LBinding.FCustom and
-          FindNyxPrimitive(LNode.ProjectionKind, LInfo) and LInfo.Container and
-          (LNode.ProjectionKind <> 'split-view') then
-        begin
-          LLayout := NyxLayout(LNode);
-        end;
-
-        if LLayout = 'grid' then
-        begin
-          LControl.style.setProperty('display', 'grid');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else if (LLayout = 'row') or (LLayout = 'column') then
-        begin
-          LControl.style.setProperty('display', 'flex');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LControl.style.setProperty('flex-direction', LLayout);
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LControl.classList.add('nyx-flow-' + LLayout);
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          { Wrapped rows pack natural lines at the leading cross edge. A definite
-            height does not stretch every line's height behind the author's back. }
-          LControl.style.setProperty('align-content', 'flex-start');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LValue := LNode.Prop('flow-wrap', 'auto');
-
-          if (LLayout = 'row') and (LValue <> '') and (LValue <> 'auto') then
-          begin
-            LControl.style.setProperty('flex-wrap', LValue);
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-          LValue := LNode.Prop('cross-alignment', 'auto');
-
-          if (LValue <> '') and (LValue <> 'auto') then
-          begin
-            LControl.classList.add('nyx-aligned');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-
-            if (LValue = 'start') or (LValue = 'end') then
-            begin
-              LValue := 'flex-' + LValue;
-            end;
-
-            if (LValue = 'center') or (LValue = 'flex-end') then
-            begin
-              LValue := 'safe ' + LValue;
-            end;
-            LControl.style.setProperty('align-items', LValue);
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-          LValue := LNode.Prop('justification', 'start');
-
-          if LValue <> '' then
-          begin
-
-            if (LValue = 'start') or (LValue = 'end') then
-            begin
-              LValue := 'flex-' + LValue;
-            end;
-
-            if (LValue = 'center') or (LValue = 'flex-end') then
-            begin
-              LValue := 'safe ' + LValue;
-            end;
-            LControl.style.setProperty('justify-content', LValue);
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end
-        else if LLayout = 'absolute' then
-        begin
-          LControl.style.setProperty('display', 'block');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          { Coordinates belong to this host's content box, not the page body. }
-          LControl.style.setProperty('position', 'relative');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-
-        if (LNode.Parent <> nil) and (NyxLayout(LNode.Parent) = 'absolute') then
-        begin
-          LControl.style.setProperty('position', 'absolute');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-
-        if not LBinding.FCustom and (LNode.ProjectionKind <> 'card') then
-        begin
-
-          if LNode.Prop('surface') = 'true' then
-          begin
-            LControl.classList.add('nyx-card');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end
-          else
-          begin
-            LControl.classList.remove('nyx-card');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end;
-
-        if NyxSupportsViewport(LNode) and (LBinding.FInput = nil) then
-        begin
-          { Sync must retain the same scroll face as initial projection. A table
-            otherwise reverts to intrinsic height and silently loses its viewport. }
-          LControl.style.removeProperty('overflow');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-
-          if (LNode.Prop('height') <> '') or (LNode.ProjectionKind = 'scroll') then
-          begin
-            LControl.style.setProperty('overflow', 'auto');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-
-          if (LNode.ProjectionKind = 'table') and (LNode.Prop('height') <> '') then
-          begin
-            LControl.style.setProperty('display', 'block');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end;
-
-        if not NyxInteractionPolicy(LNode).Visible then
-        begin
-          LControl.style.setProperty('display', 'none');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        for LMetricIndex := 0 to High(CMetricKeys) do
-        begin
-          LValue := LNode.Prop(CMetricKeys[LMetricIndex]);
-          { Match native allocation and initial mounting: only an absolute parent
-            consumes its child's origin. Removing stale inline offsets is necessary
-            because ordinary Nyx faces remain relatively positioned CSS elements. }
-
-          if ((CMetricKeys[LMetricIndex] = 'left') or
-            (CMetricKeys[LMetricIndex] = 'top')) and
-            ((LNode.Parent = nil) or (NyxLayout(LNode.Parent) <> 'absolute')) then
-          begin
-            LValue := '';
-          end;
-
-          if LValue = '' then
-          begin
-            LControl.style.removeProperty(CMetricKeys[LMetricIndex]);
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end
-          else
-          begin
-            LControl.style.setProperty(CMetricKeys[LMetricIndex], LValue + 'px');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end;
-        { Sizing policies are translated only here. Retained pixel metrics become
-          effective again after Automatic/Clear; Sync never changes descriptor data. }
-        LValue := LNode.Prop('width-sizing');
-
-        if LValue = 'content' then
-        begin
-          LControl.style.setProperty('width', 'fit-content');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else if LValue = 'fill' then
-        begin
-          LControl.style.setProperty('width', '100%');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        LValue := LNode.Prop('height-sizing');
-        LControl.style.removeProperty('min-height');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-
-        if LValue = 'content' then
-        begin
-          LControl.style.setProperty('height', 'max-content');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LControl.style.setProperty('min-height', '0');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else if LValue = 'fill' then
-        begin
-          LControl.style.setProperty('height', '100%');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LControl.style.setProperty('min-height', '0');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        { Apply admitted pixel bounds after sizing defaults. Unsetting a bound
-          removes stale inline CSS, restoring the theme's containing-width cap.
-          An explicit minimum can still exceed that cap under CSS sizing rules.
-          Flexbox itself redistributes capped weights; no parallel browser layout
-          engine is maintained. These are adapter wire keys, not authoring API. }
-        LValue := LNode.Prop('min-width');
-
-        if LValue = '' then
-        begin
-          LControl.style.removeProperty('min-width');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else
-        begin
-          LControl.style.setProperty('min-width', LValue + 'px');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        LValue := LNode.Prop('max-width');
-
-        if LValue = '' then
-        begin
-          LControl.style.removeProperty('max-width');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else
-        begin
-          LControl.style.setProperty('max-width', 'min(100%, ' + LValue + 'px)');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        LValue := LNode.Prop('min-height');
-
-        if LValue <> '' then
-        begin
-          LControl.style.setProperty('min-height', LValue + 'px');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        LValue := LNode.Prop('max-height');
-
-        if LValue = '' then
-        begin
-          LControl.style.removeProperty('max-height');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else
-        begin
-          LControl.style.setProperty('max-height', LValue + 'px');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        LControl.style.removeProperty('flex');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.classList.remove('nyx-flex');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-        LControl.style.removeProperty('grid-template-columns');
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-
-        if (LNode.Prop('flex') <> '') or (NyxFlexWeight(LNode) > 0) then
-        begin
-
-          if NyxFlexWeight(LNode) > 0 then
-          begin
-            LControl.style.setProperty('flex', IntToStr(NyxFlexWeight(LNode)));
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.classList.add('nyx-flex');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end
-          else
-          begin
-            LControl.style.setProperty('flex', '0 0 auto');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end;
-
-        if LNode.Prop('columns') <> '' then
-        begin
-          LControl.style.setProperty('grid-template-columns',
-            'repeat(' + LNode.Prop('columns') + ',minmax(0,1fr))');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-        LPolicy := NyxInteractionPolicy(LNode);
-        { The header is an ordinary button; its linked retained body and desired
-          state come from the portable compound contract. Authored visibility
-          remains independent of that expansion gate. }
-
-        if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
-        begin
-          LBinding.FElement.setAttribute('aria-expanded',
-            BoolToStr(NyxInteractionPolicy(LDisclosureBody).Visible, 'true', 'false'));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LBinding.FElement.setAttribute('aria-controls', LDisclosureBody.ID);
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LBinding.FElement.classList.add('nyx-disclosure-header');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          ElementFor(LDisclosureBody.ID).id := LDisclosureBody.ID;
-        end;
-        LEnabled := LPolicy.Enabled;
-        LReadOnly := LPolicy.ReadOnly;
-
-        if LBinding.FCanvasView <> nil then
-        begin
-          { Name the retained keyboard-focusable region, including effective
-            state/resource/computed authoring, rather than only its outer panel. }
-          LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
-          LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
-
-          if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
-          begin
-            CheckCurrent;
-            LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
-            CheckCurrent;
-          end;
-          CheckCurrent;
-          LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
-          CheckCurrent;
-        end;
-        AttributeFlag(LControl, 'disabled', not LEnabled);
-        LControl.setAttribute('aria-disabled', LowerCase(BoolToStr(not LEnabled, True)));
-
-        if LBinding.FCustom then
-        begin
-          CheckCurrent;
-        end;
-
-        if (LNode.ProjectionKind = 'memo') and (LNode.Prop('height') <> '') then
-        begin
-          LControl.classList.add('nyx-sized-field');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else
-        begin
-          LControl.classList.remove('nyx-sized-field');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-
-        if LBinding.FTabs <> nil then
-        begin
-          LBinding.FTabs.Enabled(LEnabled);
-
-          LBinding.FTabs.SynchronizeDescriptor(LNode);
-        end;
-
-        if not LBinding.FCustom and (LBinding.FInput = nil) and
-          NyxSupportsKeyboard(LNode) and TryNyxKind(LNode.ProjectionKind, LKeyboardKind) then
-        begin
-          case LKeyboardKind of
-            nkCode, nkList, nkTable, nkTree:
-              begin
-                { These standard faces have no intrinsic HTML Tab entry. A
-                  disabled static face loses tabindex altogether; a negative
-                  tabindex would still allow programmatic/click focus. Read-only
-                  retains inspection. The managed collection owns its own entry. }
-
-                if LBinding.FCollectionMount = nil then
-                begin
-
-                  if LEnabled then
-                  begin
-                    LControl.setAttribute('tabindex', '0');
-
-                    if LBinding.FCustom then
-                    begin
-                      CheckCurrent;
-                    end;
-                  end
-                  else
-                  begin
-                    LControl.removeAttribute('tabindex');
-
-                    if LBinding.FCustom then
-                    begin
-                      CheckCurrent;
-                    end;
-                  end;
-                end;
-              end;
-            nkLink:
-              begin
-                { An anchor ignores HTML disabled. Retain its accessible link
-                  identity while withdrawing navigation/focus, then restore the
-                  authored URL on re-enable. Do not hide disabled content with
-                  inert or manufacture a positive focus order. }
-                LControl.setAttribute('role', 'link');
-
-                if LBinding.FCustom then
-                begin
-                  CheckCurrent;
-                end;
-
-                if LEnabled then
-                begin
-                  LValue := LNode.Prop('href', '#');
-
-                  if not SafeURL(LValue, False) then
-                  begin
-                    raise ENyxModel.Create('Unsupported link URL');
-                  end;
-                  LControl.setAttribute('href', LValue);
-
-                  if LBinding.FCustom then
-                  begin
-                    CheckCurrent;
-                  end;
-                end
-                else
-                begin
-                  LControl.removeAttribute('href');
-
-                  if LBinding.FCustom then
-                  begin
-                    CheckCurrent;
-                  end;
-                end;
-              end;
-            else
-              begin
-                { Other standard faces already supply their intrinsic focus and
-                  accessibility behavior; this branch makes no additional change. }
-              end;
-          end;
-        end;
-
-        if LBinding.FCollectionMount <> nil then
-        begin
-          LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
-            LReadOnly or FDesignMode);
-          CheckCurrent;
-        end;
-        LBinding.SyncLiteralItems;
-        CheckCurrent;
-
-        if not LBinding.FCustom and (LBinding.FNode.ProjectionKind = 'drawing') then
-        begin
-
-          if LBinding.FDrawingView = nil then
-          begin
-            LBinding.FDrawingView := TNyxBrowserDrawing.Create(LBinding.FElement,
-              @LBinding.RetainView);
-          end;
-
-          if LBinding.FDrawingSource = nil then
-          begin
-            LBinding.FDrawingSource := NewNyxDrawingSource;
-          end;
-          LDrawingTheme := FTheme;
-          LDrawingProvider := DrawingProvider(LBinding.FNode);
-          LDrawingPlan := LBinding.FDrawingSource.Read(LBinding.FNode);
-          CheckCurrent;
-          LBinding.FDrawingView.Configure(LDrawingPlan, LDrawingProvider,
-            LDrawingTheme, LBinding.FNode.Prop('text'));
-          CheckCurrent;
-        end;
-
-        if LBinding.FCaption <> nil then
-        begin
-          LBinding.FCaption.textContent := LNode.Prop('text');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else if not LBinding.FCustom and (LNode.Count = 0) and
-          ((LNode.ProjectionKind = 'label') or (LNode.ProjectionKind = 'heading') or
-          ((LNode.ProjectionKind = 'button') and (LBinding.FButtonGlyphImage = nil)) or (LNode.ProjectionKind = 'link') or
-          (LNode.ProjectionKind = 'badge') or (LNode.ProjectionKind = 'alert') or
-          (LNode.ProjectionKind = 'avatar') or (LNode.ProjectionKind = 'code')) then
-        begin
-          LControl.textContent := LNode.Prop('text');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          { A default disclosure header inherits its root caption in place. }
-
-          if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
-          begin
-            LControl.textContent := LDisclosureCaption;
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end;
-
-        LBinding.SyncButtonFace;
-        CheckCurrent;
-
-        if LControl is TJSHTMLProgressElement then
-        begin
-          { HTML progress has an intrinsic minimum of zero. Project the declared
-            interval while retaining its actual scalar bounds in accessibility. }
-          LMinimum := StrToIntDef(LNode.Prop('min'), 0);
-          LMaximum := StrToIntDef(LNode.Prop('max'), 100);
-          TJSHTMLProgressElement(LControl).max := Max(1, LMaximum - LMinimum);
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LControl.setAttribute('aria-valuemin', IntToStr(LMinimum));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LControl.setAttribute('aria-valuemax', IntToStr(LMaximum));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-
-          if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
-          begin
-            { Removing the native HTML value selects genuine indeterminate
-              progress. Never announce a stale percentage during unknown work. }
-            LControl.removeAttribute('value');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.removeAttribute('aria-valuenow');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end
-          else
-          begin
-            { Unrelated refresh must not briefly create/remove a value while
-              activity is indeterminate; that can restart host animation. }
-            TJSHTMLProgressElement(LControl).value :=
-              StrToIntDef(LNode.Prop('value'), 0) - LMinimum;
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-
-            if LMaximum = LMinimum then
-            begin
-              TJSHTMLProgressElement(LControl).value := 1;
-
-              if LBinding.FCustom then
-              begin
-                CheckCurrent;
-              end;
-            end;
-            LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end;
-        end;
-
-        if not LBinding.FCustom and (LControl is TJSHTMLImageElement) then
-        begin
-          LValue := LNode.Prop('src');
-
-          if not SafeURL(LValue, True) then
-          begin
-            raise ENyxModel.Create('Unsupported image URL');
-          end;
-
-          LBinding.SyncImage;
-          CheckCurrent;
-          TJSHTMLImageElement(LControl).alt := LNode.Prop('alt', LNode.Prop('text'));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          ApplyNyxBrowserImage(LNode, TJSHTMLImageElement(LControl));
-        end;
-
-        if LNode.Prop('aria-label') <> '' then
-        begin
-          LControl.setAttribute('aria-label', LNode.Prop('aria-label'));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else if (LBinding.FButtonGlyphImage <> nil) and
-          (LBinding.FButtonPresentation.ContentMode = nbcGlyphOnly) then
-        begin
-          LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else if not LBinding.FCustom and (LBinding.FInput = nil) and
-          (LBinding.FCollectionMount = nil) and
-          TryNyxKind(LNode.ProjectionKind, LKeyboardKind) and
-          (LKeyboardKind in [nkCode, nkList, nkTable, nkTree, nkDrawing]) then
-        begin
-          { The same authored caption names native static inspection faces. }
-          LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end
-        else
-        begin
-          LControl.removeAttribute('aria-label');
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-        end;
-
-        if Assigned(LBinding.FUpdater) then
-        begin
-          LBinding.FUpdater(LNode, LBinding.FElement);
-          CheckCurrent;
-        end;
-
-        if LBinding.FInput <> nil then
-        begin
-          LControl := LBinding.FInput;
-          AttributeFlag(LControl, 'disabled', not LEnabled);
-          AttributeFlag(LControl, 'readonly', LReadOnly);
-          LControl.setAttribute('aria-readonly', LowerCase(BoolToStr(LReadOnly, True)));
+          LBinding := FBindings[LIndex];
+          LNode := LBinding.FNode;
+          LControl := LBinding.FElement;
+          LControl.setAttribute('data-variant', LNode.Prop('variant'));
 
           if LBinding.FCustom then
           begin
@@ -11994,50 +11122,19 @@ begin
           begin
             CheckCurrent;
           end;
-          LControl.setAttribute('placeholder', LNode.Prop('placeholder'));
-
-          if LBinding.FCustom then
-          begin
-            CheckCurrent;
-          end;
-          LControl.setAttribute('aria-label', LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+          LControl.style.removeProperty('container-type');
 
           if LBinding.FCustom then
           begin
             CheckCurrent;
           end;
 
-          if LBinding.FColorField <> nil then
+          if LNode.QueryContainer.Defined then
           begin
-            LBinding.FColorField.Sync(TNyxRGBColor.FromText(LNode.Prop('value')),
-              NyxNodeValueDomain(LNode), LEnabled, LReadOnly, LPolicy.Visible,
-              LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
-            CheckCurrent;
-          end;
 
-          if not LBinding.FCustom and not LBinding.FComposing and
-            (LNode.ProjectionKind = 'input') then
-          begin
-            LValue := LNode.Prop('input-type', 'text');
-
-            if LValue = '' then
+            if LNode.ContainerContainment = nccSize then
             begin
-              LValue := 'text';
-            end;
-
-            if TJSHTMLInputElement(LControl)._type <> LValue then
-            begin
-              TJSHTMLInputElement(LControl)._type := LValue;
-
-              if LBinding.FCustom then
-              begin
-                CheckCurrent;
-              end;
-            end;
-
-            if LValue = 'number' then
-            begin
-              LControl.setAttribute('step', 'any');
+              LControl.style.setProperty('container-type', 'size');
 
               if LBinding.FCustom then
               begin
@@ -12046,7 +11143,7 @@ begin
             end
             else
             begin
-              LControl.removeAttribute('step');
+              LControl.style.setProperty('container-type', 'inline-size');
 
               if LBinding.FCustom then
               begin
@@ -12054,72 +11151,22 @@ begin
               end;
             end;
           end;
+          LControl.draggable := not FDesignMode and (LNode.Prop('drag-source') = 'true');
 
-          if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+          if LBinding.FCustom then
           begin
-            LSliderScale := TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
-              StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
-              StrToIntDef(LNode.Prop('slider-intervals'), 1000));
-            LBinding.FSliderValue.Accept(LSliderScale, LNode.Prop('value', '0'));
-            LControl.setAttribute('min', '0');
+            CheckCurrent;
+          end;
+          LControl.style.setProperty('touch-action', LNode.Prop('touch-behavior', 'auto'));
 
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.setAttribute('max', IntToStr(LSliderScale.MaximumPosition));
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.setAttribute('step', '1');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            { Accessibility exposes numeric meaning, never internal ordinal ticks. }
-            LControl.setAttribute('aria-valuemin', TNyxStateValue.FromNumber(LSliderScale.Minimum).NumberText);
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.setAttribute('aria-valuemax', TNyxStateValue.FromNumber(LSliderScale.Maximum).NumberText);
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.setAttribute('aria-valuetext', LNode.Prop('value', '0'));
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            TJSHTMLInputElement(LControl).value := IntToStr(LBinding.FSliderValue.Position);
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end
-          else if (LNode.ProjectionKind = 'spin') or (LNode.ProjectionKind = 'slider') then
+          if LBinding.FCustom then
           begin
-            LControl.setAttribute('min', LNode.Prop('min', '0'));
+            CheckCurrent;
+          end;
 
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.setAttribute('max', LNode.Prop('max', '100'));
+          if LNode.Prop('pressed') <> '' then
+          begin
+            LControl.setAttribute('aria-pressed', LowerCase(LNode.Prop('pressed')));
 
             if LBinding.FCustom then
             begin
@@ -12128,32 +11175,221 @@ begin
           end
           else
           begin
-            LControl.removeAttribute('min');
+            LControl.removeAttribute('aria-pressed');
 
             if LBinding.FCustom then
             begin
               CheckCurrent;
             end;
-            LControl.removeAttribute('max');
+          end;
+          LControl.style.removeProperty('display');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.removeProperty('flex-direction');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.removeProperty('position');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.removeProperty('flex-wrap');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.removeProperty('align-items');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.removeProperty('justify-content');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.removeProperty('align-content');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.classList.remove('nyx-flow-row');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.classList.remove('nyx-flow-column');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.classList.remove('nyx-aligned');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LLayout := LNode.Prop('layout');
+
+          if (LLayout = '') and not LBinding.FCustom and
+            FindNyxPrimitive(LNode.ProjectionKind, LInfo) and LInfo.Container and
+            (LNode.ProjectionKind <> 'split-view') then
+          begin
+            LLayout := NyxLayout(LNode);
+          end;
+
+          if LLayout = 'grid' then
+          begin
+            LControl.style.setProperty('display', 'grid');
 
             if LBinding.FCustom then
             begin
               CheckCurrent;
             end;
+          end
+          else if (LLayout = 'row') or (LLayout = 'column') then
+          begin
+            LControl.style.setProperty('display', 'flex');
 
-            if LNode.Prop('min') <> '' then
+            if LBinding.FCustom then
             begin
-              LControl.setAttribute('min', LNode.Prop('min'));
+              CheckCurrent;
+            end;
+            LControl.style.setProperty('flex-direction', LLayout);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.classList.add('nyx-flow-' + LLayout);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            { Wrapped rows pack natural lines at the leading cross edge. A definite
+              height does not stretch every line's height behind the author's back. }
+            LControl.style.setProperty('align-content', 'flex-start');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LValue := LNode.Prop('flow-wrap', 'auto');
+
+            if (LLayout = 'row') and (LValue <> '') and (LValue <> 'auto') then
+            begin
+              LControl.style.setProperty('flex-wrap', LValue);
 
               if LBinding.FCustom then
               begin
                 CheckCurrent;
               end;
             end;
+            LValue := LNode.Prop('cross-alignment', 'auto');
 
-            if LNode.Prop('max') <> '' then
+            if (LValue <> '') and (LValue <> 'auto') then
             begin
-              LControl.setAttribute('max', LNode.Prop('max'));
+              LControl.classList.add('nyx-aligned');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+
+              if (LValue = 'start') or (LValue = 'end') then
+              begin
+                LValue := 'flex-' + LValue;
+              end;
+
+              if (LValue = 'center') or (LValue = 'flex-end') then
+              begin
+                LValue := 'safe ' + LValue;
+              end;
+              LControl.style.setProperty('align-items', LValue);
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+            LValue := LNode.Prop('justification', 'start');
+
+            if LValue <> '' then
+            begin
+
+              if (LValue = 'start') or (LValue = 'end') then
+              begin
+                LValue := 'flex-' + LValue;
+              end;
+
+              if (LValue = 'center') or (LValue = 'flex-end') then
+              begin
+                LValue := 'safe ' + LValue;
+              end;
+              LControl.style.setProperty('justify-content', LValue);
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end
+          else if LLayout = 'absolute' then
+          begin
+            LControl.style.setProperty('display', 'block');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            { Coordinates belong to this host's content box, not the page body. }
+            LControl.style.setProperty('position', 'relative');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+
+          if (LNode.Parent <> nil) and (NyxLayout(LNode.Parent) = 'absolute') then
+          begin
+            LControl.style.setProperty('position', 'absolute');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+
+          if not LBinding.FCustom and (LNode.ProjectionKind <> 'card') then
+          begin
+
+            if LNode.Prop('surface') = 'true' then
+            begin
+              LControl.classList.add('nyx-card');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end
+            else
+            begin
+              LControl.classList.remove('nyx-card');
 
               if LBinding.FCustom then
               begin
@@ -12162,86 +11398,932 @@ begin
             end;
           end;
 
-          if LNode.ProjectionKind = 'date' then
+          if NyxSupportsViewport(LNode) and (LBinding.FInput = nil) then
           begin
-            { Calendar bounds share the exact typed domain used by value admission;
-              a numeric min/max property never supplies a date interpretation. }
-            LValueDomain := NyxNodeValueDomain(LNode);
-            LControl.removeAttribute('min');
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-            LControl.removeAttribute('max');
+            { Sync must retain the same scroll face as initial projection. A table
+              otherwise reverts to intrinsic height and silently loses its viewport. }
+            LControl.style.removeProperty('overflow');
 
             if LBinding.FCustom then
             begin
               CheckCurrent;
             end;
 
-            if LValueDomain.CalendarDate then
+            if (LNode.Prop('height') <> '') or (LNode.ProjectionKind = 'scroll') then
             begin
-              LDateDomain := LValueDomain.ToData;
-              for LDateField := 0 to LDateDomain.Count - 1 do
+              LControl.style.setProperty('overflow', 'auto');
+
+              if LBinding.FCustom then
               begin
+                CheckCurrent;
+              end;
+            end;
 
-                if LDateDomain.Key(LDateField) = 'min' then
-                begin
-                  LControl.setAttribute('min', LDateDomain.Field('min').AsText);
+            if (LNode.ProjectionKind = 'table') and (LNode.Prop('height') <> '') then
+            begin
+              LControl.style.setProperty('display', 'block');
 
-                  if LBinding.FCustom then
-                  begin
-                    CheckCurrent;
-                  end;
-                  LControl.setAttribute('max', LDateDomain.Field('max').AsText);
-
-                  if LBinding.FCustom then
-                  begin
-                    CheckCurrent;
-                  end;
-                end;
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
               end;
             end;
           end;
 
-          if LNode.ProjectionKind = 'time' then
+          if not NyxInteractionPolicy(LNode).Visible then
           begin
-            { HTML time uses seconds for step; the portable contract owns exact
-              integer milliseconds and a midnight/minimum base. The default is
-              any exact reading, so never inherit the browser's minute default.
-              Raw numeric bounds do not supply clock semantics. }
-            LValueDomain := NyxNodeValueDomain(LNode);
-            LControl.removeAttribute('min');
+            LControl.style.setProperty('display', 'none');
 
             if LBinding.FCustom then
             begin
               CheckCurrent;
             end;
-            LControl.removeAttribute('max');
+          end;
+          for LMetricIndex := 0 to High(CMetricKeys) do
+          begin
+            LValue := LNode.Prop(CMetricKeys[LMetricIndex]);
+            { Match native allocation and initial mounting: only an absolute parent
+              consumes its child's origin. Removing stale inline offsets is necessary
+              because ordinary Nyx faces remain relatively positioned CSS elements. }
 
-            if LBinding.FCustom then
+            if ((CMetricKeys[LMetricIndex] = 'left') or
+              (CMetricKeys[LMetricIndex] = 'top')) and
+              ((LNode.Parent = nil) or (NyxLayout(LNode.Parent) <> 'absolute')) then
             begin
-              CheckCurrent;
+              LValue := '';
             end;
-            LControl.setAttribute('step', 'any');
 
-            if LBinding.FCustom then
+            if LValue = '' then
             begin
-              CheckCurrent;
-            end;
+              LControl.style.removeProperty(CMetricKeys[LMetricIndex]);
 
-            if LValueDomain.ClockTime then
-            begin
-              LTimeDomain := LValueDomain.ToData;
-              for LTimeField := 0 to LTimeDomain.Count - 1 do
+              if LBinding.FCustom then
               begin
+                CheckCurrent;
+              end;
+            end
+            else
+            begin
+              LControl.style.setProperty(CMetricKeys[LMetricIndex], LValue + 'px');
 
-                if (LTimeDomain.Key(LTimeField) = 'min') or
-                  (LTimeDomain.Key(LTimeField) = 'max') then
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end;
+          { Sizing policies are translated only here. Retained pixel metrics become
+            effective again after Automatic/Clear; Sync never changes descriptor data. }
+          LValue := LNode.Prop('width-sizing');
+
+          if LValue = 'content' then
+          begin
+            LControl.style.setProperty('width', 'fit-content');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else if LValue = 'fill' then
+          begin
+            LControl.style.setProperty('width', '100%');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LValue := LNode.Prop('height-sizing');
+          LControl.style.removeProperty('min-height');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+
+          if LValue = 'content' then
+          begin
+            LControl.style.setProperty('height', 'max-content');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.style.setProperty('min-height', '0');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else if LValue = 'fill' then
+          begin
+            LControl.style.setProperty('height', '100%');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.style.setProperty('min-height', '0');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          { Apply admitted pixel bounds after sizing defaults. Unsetting a bound
+            removes stale inline CSS, restoring the theme's containing-width cap.
+            An explicit minimum can still exceed that cap under CSS sizing rules.
+            Flexbox itself redistributes capped weights; no parallel browser layout
+            engine is maintained. These are adapter wire keys, not authoring API. }
+          LValue := LNode.Prop('min-width');
+
+          if LValue = '' then
+          begin
+            LControl.style.removeProperty('min-width');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.style.setProperty('min-width', LValue + 'px');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LValue := LNode.Prop('max-width');
+
+          if LValue = '' then
+          begin
+            LControl.style.removeProperty('max-width');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.style.setProperty('max-width', 'min(100%, ' + LValue + 'px)');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LValue := LNode.Prop('min-height');
+
+          if LValue <> '' then
+          begin
+            LControl.style.setProperty('min-height', LValue + 'px');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LValue := LNode.Prop('max-height');
+
+          if LValue = '' then
+          begin
+            LControl.style.removeProperty('max-height');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.style.setProperty('max-height', LValue + 'px');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LControl.style.removeProperty('flex');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.classList.remove('nyx-flex');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+          LControl.style.removeProperty('grid-template-columns');
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+
+          if (LNode.Prop('flex') <> '') or (NyxFlexWeight(LNode) > 0) then
+          begin
+
+            if NyxFlexWeight(LNode) > 0 then
+            begin
+              LControl.style.setProperty('flex', IntToStr(NyxFlexWeight(LNode)));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.classList.add('nyx-flex');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end
+            else
+            begin
+              LControl.style.setProperty('flex', '0 0 auto');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end;
+
+          if LNode.Prop('columns') <> '' then
+          begin
+            LControl.style.setProperty('grid-template-columns',
+              'repeat(' + LNode.Prop('columns') + ',minmax(0,1fr))');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+          LPolicy := NyxInteractionPolicy(LNode);
+          { The header is an ordinary button; its linked retained body and desired
+            state come from the portable compound contract. Authored visibility
+            remains independent of that expansion gate. }
+
+          if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+          begin
+            LBinding.FElement.setAttribute('aria-expanded',
+              BoolToStr(NyxInteractionPolicy(LDisclosureBody).Visible, 'true', 'false'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LBinding.FElement.setAttribute('aria-controls', LDisclosureBody.ID);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LBinding.FElement.classList.add('nyx-disclosure-header');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            ElementFor(LDisclosureBody.ID).id := LDisclosureBody.ID;
+          end;
+          LEnabled := LPolicy.Enabled;
+          LReadOnly := LPolicy.ReadOnly;
+
+          if LBinding.FCanvasView <> nil then
+          begin
+            { Name the retained keyboard-focusable region, including effective
+              state/resource/computed authoring, rather than only its outer panel. }
+            LCanvasName := LNode.Prop('aria-label', NyxDefaultCanvasAccessibleName);
+            LCanvasDescription := LNode.Prop('hint', NyxCanvasKeyboardHelp);
+
+            if Supports(LBinding.FCanvasView, INyxCanvasAccessibilityView, LCanvasAccessibility) then
+            begin
+              CheckCurrent;
+              LCanvasAccessibility.SetAccessibleMetadata(LCanvasName, LCanvasDescription);
+              CheckCurrent;
+            end;
+            CheckCurrent;
+            LBinding.FCanvasView.Constrain(LEnabled, LReadOnly);
+            CheckCurrent;
+          end;
+          AttributeFlag(LControl, 'disabled', not LEnabled);
+          LControl.setAttribute('aria-disabled', LowerCase(BoolToStr(not LEnabled, True)));
+
+          if LBinding.FCustom then
+          begin
+            CheckCurrent;
+          end;
+
+          if (LNode.ProjectionKind = 'memo') and (LNode.Prop('height') <> '') then
+          begin
+            LControl.classList.add('nyx-sized-field');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.classList.remove('nyx-sized-field');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+
+          if LBinding.FTabs <> nil then
+          begin
+            LBinding.FTabs.Enabled(LEnabled);
+
+            LBinding.FTabs.SynchronizeDescriptor(LNode);
+          end;
+
+          if not LBinding.FCustom and (LBinding.FInput = nil) and
+            NyxSupportsKeyboard(LNode) and TryNyxKind(LNode.ProjectionKind, LKeyboardKind) then
+          begin
+            case LKeyboardKind of
+              nkCode, nkList, nkTable, nkTree:
                 begin
-                  LControl.setAttribute(LTimeDomain.Key(LTimeField),
-                    LTimeDomain.Field(LTimeDomain.Key(LTimeField)).AsText);
+                  { These standard faces have no intrinsic HTML Tab entry. A
+                    disabled static face loses tabindex altogether; a negative
+                    tabindex would still allow programmatic/click focus. Read-only
+                    retains inspection. The managed collection owns its own entry. }
+
+                  if LBinding.FCollectionMount = nil then
+                  begin
+
+                    if LEnabled then
+                    begin
+                      LControl.setAttribute('tabindex', '0');
+
+                      if LBinding.FCustom then
+                      begin
+                        CheckCurrent;
+                      end;
+                    end
+                    else
+                    begin
+                      LControl.removeAttribute('tabindex');
+
+                      if LBinding.FCustom then
+                      begin
+                        CheckCurrent;
+                      end;
+                    end;
+                  end;
+                end;
+              nkLink:
+                begin
+                  { An anchor ignores HTML disabled. Retain its accessible link
+                    identity while withdrawing navigation/focus, then restore the
+                    authored URL on re-enable. Do not hide disabled content with
+                    inert or manufacture a positive focus order. }
+                  LControl.setAttribute('role', 'link');
+
+                  if LBinding.FCustom then
+                  begin
+                    CheckCurrent;
+                  end;
+
+                  if LEnabled then
+                  begin
+                    LValue := LNode.Prop('href', '#');
+
+                    if not SafeURL(LValue, False) then
+                    begin
+                      raise ENyxModel.Create('Unsupported link URL');
+                    end;
+                    LControl.setAttribute('href', LValue);
+
+                    if LBinding.FCustom then
+                    begin
+                      CheckCurrent;
+                    end;
+                  end
+                  else
+                  begin
+                    LControl.removeAttribute('href');
+
+                    if LBinding.FCustom then
+                    begin
+                      CheckCurrent;
+                    end;
+                  end;
+                end;
+              else
+                begin
+                  { Other standard faces already supply their intrinsic focus and
+                    accessibility behavior; this branch makes no additional change. }
+                end;
+            end;
+          end;
+
+          if LBinding.FCollectionMount <> nil then
+          begin
+            LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
+              LReadOnly or FDesignMode);
+            CheckCurrent;
+          end;
+          LBinding.SyncLiteralItems;
+          CheckCurrent;
+
+          if not LBinding.FCustom and (LBinding.FNode.ProjectionKind = 'drawing') then
+          begin
+
+            if LBinding.FDrawingView = nil then
+            begin
+              LBinding.FDrawingView := TNyxBrowserDrawing.Create(LBinding.FElement,
+                @LBinding.RetainView);
+            end;
+
+            if LBinding.FDrawingSource = nil then
+            begin
+              LBinding.FDrawingSource := NewNyxDrawingSource;
+            end;
+            LDrawingTheme := FTheme;
+            LDrawingProvider := DrawingProvider(LBinding.FNode);
+            LDrawingPlan := LBinding.FDrawingSource.Read(LBinding.FNode);
+            CheckCurrent;
+            LBinding.FDrawingView.Configure(LDrawingPlan, LDrawingProvider,
+              LDrawingTheme, LBinding.FNode.Prop('text'));
+            CheckCurrent;
+          end;
+
+          if LBinding.FCaption <> nil then
+          begin
+            LBinding.FCaption.textContent := LNode.Prop('text');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else if not LBinding.FCustom and (LNode.Count = 0) and
+            ((LNode.ProjectionKind = 'label') or (LNode.ProjectionKind = 'heading') or
+            ((LNode.ProjectionKind = 'button') and (LBinding.FButtonGlyphImage = nil)) or (LNode.ProjectionKind = 'link') or
+            (LNode.ProjectionKind = 'badge') or (LNode.ProjectionKind = 'alert') or
+            (LNode.ProjectionKind = 'avatar') or (LNode.ProjectionKind = 'code')) then
+          begin
+            LControl.textContent := LNode.Prop('text');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            { A default disclosure header inherits its root caption in place. }
+
+            if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
+            begin
+              LControl.textContent := LDisclosureCaption;
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end;
+
+          LBinding.SyncButtonFace;
+          CheckCurrent;
+
+          if LControl is TJSHTMLProgressElement then
+          begin
+            { HTML progress has an intrinsic minimum of zero. Project the declared
+              interval while retaining its actual scalar bounds in accessibility. }
+            LMinimum := StrToIntDef(LNode.Prop('min'), 0);
+            LMaximum := StrToIntDef(LNode.Prop('max'), 100);
+            TJSHTMLProgressElement(LControl).max := Max(1, LMaximum - LMinimum);
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('aria-valuemin', IntToStr(LMinimum));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('aria-valuemax', IntToStr(LMaximum));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+
+            if LNode.Prop(NyxAttributeName(atIndeterminate), 'false') = 'true' then
+            begin
+              { Removing the native HTML value selects genuine indeterminate
+                progress. Never announce a stale percentage during unknown work. }
+              LControl.removeAttribute('value');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.removeAttribute('aria-valuenow');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end
+            else
+            begin
+              { Unrelated refresh must not briefly create/remove a value while
+                activity is indeterminate; that can restart host animation. }
+              TJSHTMLProgressElement(LControl).value :=
+                StrToIntDef(LNode.Prop('value'), 0) - LMinimum;
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+
+              if LMaximum = LMinimum then
+              begin
+                TJSHTMLProgressElement(LControl).value := 1;
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end;
+              LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end;
+          end;
+
+          if not LBinding.FCustom and (LControl is TJSHTMLImageElement) then
+          begin
+            LValue := LNode.Prop('src');
+
+            if not SafeURL(LValue, True) then
+            begin
+              raise ENyxModel.Create('Unsupported image URL');
+            end;
+
+            LBinding.SyncImage;
+            CheckCurrent;
+            TJSHTMLImageElement(LControl).alt := LNode.Prop('alt', LNode.Prop('text'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            ApplyNyxBrowserImage(LNode, TJSHTMLImageElement(LControl));
+          end;
+
+          if LNode.Prop('aria-label') <> '' then
+          begin
+            LControl.setAttribute('aria-label', LNode.Prop('aria-label'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else if (LBinding.FButtonGlyphImage <> nil) and
+            (LBinding.FButtonPresentation.ContentMode = nbcGlyphOnly) then
+          begin
+            LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else if not LBinding.FCustom and (LBinding.FInput = nil) and
+            (LBinding.FCollectionMount = nil) and
+            TryNyxKind(LNode.ProjectionKind, LKeyboardKind) and
+            (LKeyboardKind in [nkCode, nkList, nkTable, nkTree, nkDrawing]) then
+          begin
+            { The same authored caption names native static inspection faces. }
+            LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end
+          else
+          begin
+            LControl.removeAttribute('aria-label');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+          end;
+
+          if Assigned(LBinding.FUpdater) then
+          begin
+            LBinding.FUpdater(LNode, LBinding.FElement);
+            CheckCurrent;
+          end;
+
+          if LBinding.FInput <> nil then
+          begin
+            LControl := LBinding.FInput;
+            AttributeFlag(LControl, 'disabled', not LEnabled);
+            AttributeFlag(LControl, 'readonly', LReadOnly);
+            LControl.setAttribute('aria-readonly', LowerCase(BoolToStr(LReadOnly, True)));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.title := LNode.Prop('hint');
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('placeholder', LNode.Prop('placeholder'));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+            LControl.setAttribute('aria-label', LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+
+            if LBinding.FCustom then
+            begin
+              CheckCurrent;
+            end;
+
+            if LBinding.FColorField <> nil then
+            begin
+              LBinding.FColorField.Sync(TNyxRGBColor.FromText(LNode.Prop('value')),
+                NyxNodeValueDomain(LNode), LEnabled, LReadOnly, LPolicy.Visible,
+                LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+              CheckCurrent;
+            end;
+
+            if not LBinding.FCustom and not LBinding.FComposing and
+              (LNode.ProjectionKind = 'input') then
+            begin
+              LValue := LNode.Prop('input-type', 'text');
+
+              if LValue = '' then
+              begin
+                LValue := 'text';
+              end;
+
+              if TJSHTMLInputElement(LControl)._type <> LValue then
+              begin
+                TJSHTMLInputElement(LControl)._type := LValue;
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end;
+
+              if LValue = 'number' then
+              begin
+                LControl.setAttribute('step', 'any');
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end
+              else
+              begin
+                LControl.removeAttribute('step');
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end;
+            end;
+
+            if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+            begin
+              LSliderScale := TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
+                StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
+                StrToIntDef(LNode.Prop('slider-intervals'), 1000));
+              LBinding.FSliderValue.Accept(LSliderScale, LNode.Prop('value', '0'));
+              LControl.setAttribute('min', '0');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.setAttribute('max', IntToStr(LSliderScale.MaximumPosition));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.setAttribute('step', '1');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              { Accessibility exposes numeric meaning, never internal ordinal ticks. }
+              LControl.setAttribute('aria-valuemin', TNyxStateValue.FromNumber(LSliderScale.Minimum).NumberText);
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.setAttribute('aria-valuemax', TNyxStateValue.FromNumber(LSliderScale.Maximum).NumberText);
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.setAttribute('aria-valuetext', LNode.Prop('value', '0'));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              TJSHTMLInputElement(LControl).value := IntToStr(LBinding.FSliderValue.Position);
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end
+            else if (LNode.ProjectionKind = 'spin') or (LNode.ProjectionKind = 'slider') then
+            begin
+              LControl.setAttribute('min', LNode.Prop('min', '0'));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.setAttribute('max', LNode.Prop('max', '100'));
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end
+            else
+            begin
+              LControl.removeAttribute('min');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.removeAttribute('max');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+
+              if LNode.Prop('min') <> '' then
+              begin
+                LControl.setAttribute('min', LNode.Prop('min'));
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end;
+
+              if LNode.Prop('max') <> '' then
+              begin
+                LControl.setAttribute('max', LNode.Prop('max'));
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end;
+            end;
+
+            if LNode.ProjectionKind = 'date' then
+            begin
+              { Calendar bounds share the exact typed domain used by value admission;
+                a numeric min/max property never supplies a date interpretation. }
+              LValueDomain := NyxNodeValueDomain(LNode);
+              LControl.removeAttribute('min');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.removeAttribute('max');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+
+              if LValueDomain.CalendarDate then
+              begin
+                LDateDomain := LValueDomain.ToData;
+                for LDateField := 0 to LDateDomain.Count - 1 do
+                begin
+
+                  if LDateDomain.Key(LDateField) = 'min' then
+                  begin
+                    LControl.setAttribute('min', LDateDomain.Field('min').AsText);
+
+                    if LBinding.FCustom then
+                    begin
+                      CheckCurrent;
+                    end;
+                    LControl.setAttribute('max', LDateDomain.Field('max').AsText);
+
+                    if LBinding.FCustom then
+                    begin
+                      CheckCurrent;
+                    end;
+                  end;
+                end;
+              end;
+            end;
+
+            if LNode.ProjectionKind = 'time' then
+            begin
+              { HTML time uses seconds for step; the portable contract owns exact
+                integer milliseconds and a midnight/minimum base. The default is
+                any exact reading, so never inherit the browser's minute default.
+                Raw numeric bounds do not supply clock semantics. }
+              LValueDomain := NyxNodeValueDomain(LNode);
+              LControl.removeAttribute('min');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.removeAttribute('max');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+              LControl.setAttribute('step', 'any');
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+
+              if LValueDomain.ClockTime then
+              begin
+                LTimeDomain := LValueDomain.ToData;
+                for LTimeField := 0 to LTimeDomain.Count - 1 do
+                begin
+
+                  if (LTimeDomain.Key(LTimeField) = 'min') or
+                    (LTimeDomain.Key(LTimeField) = 'max') then
+                  begin
+                    LControl.setAttribute(LTimeDomain.Key(LTimeField),
+                      LTimeDomain.Field(LTimeDomain.Key(LTimeField)).AsText);
+
+                    if LBinding.FCustom then
+                    begin
+                      CheckCurrent;
+                    end;
+                  end;
+                end;
+                LTimeStep := LValueDomain.TimeStepMilliseconds;
+
+                if LTimeStep > 0 then
+                begin
+                  LValue := IntToStr(LTimeStep div 1000);
+
+                  if LTimeStep mod 1000 <> 0 then
+                  begin
+                    LTimeFraction := Copy(TNyxText(IntToStr(LTimeStep mod 1000 + 1000)), 2, 3);
+                    while LTimeFraction[Length(LTimeFraction)] = '0' do
+                    begin
+                      SetLength(LTimeFraction, Length(LTimeFraction) - 1);
+                    end;
+                    LValue := LValue + '.' + LTimeFraction;
+                  end;
+                  LControl.setAttribute('step', LValue);
 
                   if LBinding.FCustom then
                   begin
@@ -12249,22 +12331,79 @@ begin
                   end;
                 end;
               end;
-              LTimeStep := LValueDomain.TimeStepMilliseconds;
+            end;
+            LValue := LNode.Prop('value');
+            { The ordinal range already consumed the complete numeric publication.
+              Writing numeric text again would narrow it through HTML sanitization. }
 
-              if LTimeStep > 0 then
+            if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+            begin
+              Continue;
+            end;
+            { Layout/state publications must not replace text owned by an IME. The
+              accepted baseline remains pending until the real composition end. }
+
+            if LBinding.FComposing then
+            begin
+              Continue;
+            end;
+            { A different key may update while this field holds an unfinished draft.
+              Only an accepted change to its own value replaces that physical draft;
+              failed commands explicitly force restoration above. }
+
+            if not (FForceValues and ((FForceValueNode = nil) or
+              (FForceValueNode = LNode))) and LBinding.FHasValueBaseline and
+              (LBinding.FLastValue = LValue) then
+            begin
+              Continue;
+            end;
+            LBinding.FHasValueBaseline := True;
+            LBinding.FLastValue := LValue;
+            { Setting the same value can reset selection/caret on mobile browsers.
+              Keep unchanged physical values, focus and unfinished native drafts. }
+
+            if LControl is TJSHTMLTextAreaElement then
+            begin
+
+              if TJSHTMLTextAreaElement(LControl).value <> LValue then
               begin
-                LValue := IntToStr(LTimeStep div 1000);
+                TJSHTMLTextAreaElement(LControl).value := LValue;
 
-                if LTimeStep mod 1000 <> 0 then
+                if LBinding.FCustom then
                 begin
-                  LTimeFraction := Copy(TNyxText(IntToStr(LTimeStep mod 1000 + 1000)), 2, 3);
-                  while LTimeFraction[Length(LTimeFraction)] = '0' do
-                  begin
-                    SetLength(LTimeFraction, Length(LTimeFraction) - 1);
-                  end;
-                  LValue := LValue + '.' + LTimeFraction;
+                  CheckCurrent;
                 end;
-                LControl.setAttribute('step', LValue);
+              end;
+            end
+            else if LControl is TJSHTMLSelectElement then
+            begin
+
+              if TJSHTMLSelectElement(LControl).value <> LValue then
+              begin
+                TJSHTMLSelectElement(LControl).value := LValue;
+
+                if LBinding.FCustom then
+                begin
+                  CheckCurrent;
+                end;
+              end;
+            end
+            else if (LNode.ProjectionKind = 'checkbox') or (LNode.ProjectionKind = 'switch') or
+              (LNode.ProjectionKind = 'radio') then
+            begin
+              TJSHTMLInputElement(LControl).checked := LValue = 'true';
+
+              if LBinding.FCustom then
+              begin
+                CheckCurrent;
+              end;
+            end
+            else
+            begin
+
+              if TJSHTMLInputElement(LControl).value <> LValue then
+              begin
+                TJSHTMLInputElement(LControl).value := LValue;
 
                 if LBinding.FCustom then
                 begin
@@ -12273,103 +12412,45 @@ begin
               end;
             end;
           end;
-          LValue := LNode.Prop('value');
-          { The ordinal range already consumed the complete numeric publication.
-            Writing numeric text again would narrow it through HTML sanitization. }
-
-          if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
-          begin
-            Continue;
-          end;
-          { Layout/state publications must not replace text owned by an IME. The
-            accepted baseline remains pending until the real composition end. }
-
-          if LBinding.FComposing then
-          begin
-            Continue;
-          end;
-          { A different key may update while this field holds an unfinished draft.
-            Only an accepted change to its own value replaces that physical draft;
-            failed commands explicitly force restoration above. }
-
-          if not (FForceValues and ((FForceValueNode = nil) or
-            (FForceValueNode = LNode))) and LBinding.FHasValueBaseline and
-            (LBinding.FLastValue = LValue) then
-          begin
-            Continue;
-          end;
-          LBinding.FHasValueBaseline := True;
-          LBinding.FLastValue := LValue;
-          { Setting the same value can reset selection/caret on mobile browsers.
-            Keep unchanged physical values, focus and unfinished native drafts. }
-
-          if LControl is TJSHTMLTextAreaElement then
-          begin
-
-            if TJSHTMLTextAreaElement(LControl).value <> LValue then
-            begin
-              TJSHTMLTextAreaElement(LControl).value := LValue;
-
-              if LBinding.FCustom then
-              begin
-                CheckCurrent;
-              end;
-            end;
-          end
-          else if LControl is TJSHTMLSelectElement then
-          begin
-
-            if TJSHTMLSelectElement(LControl).value <> LValue then
-            begin
-              TJSHTMLSelectElement(LControl).value := LValue;
-
-              if LBinding.FCustom then
-              begin
-                CheckCurrent;
-              end;
-            end;
-          end
-          else if (LNode.ProjectionKind = 'checkbox') or (LNode.ProjectionKind = 'switch') or
-            (LNode.ProjectionKind = 'radio') then
-          begin
-            TJSHTMLInputElement(LControl).checked := LValue = 'true';
-
-            if LBinding.FCustom then
-            begin
-              CheckCurrent;
-            end;
-          end
-          else
-          begin
-
-            if TJSHTMLInputElement(LControl).value <> LValue then
-            begin
-              TJSHTMLInputElement(LControl).value := LValue;
-
-              if LBinding.FCustom then
-              begin
-                CheckCurrent;
-              end;
-            end;
-          end;
         end;
-      end;
-      SyncRadioFocus;
-      { Generic metrics never override an adapter-owned split layout. Do this
-        after all child bindings so their ordinary root styles cannot undo it. }
-      for LIndex := 0 to Length(FBindings) - 1 do
-      begin
-
-        if FBindings[LIndex].FSplit <> nil then
+        SyncRadioFocus;
+        { Generic metrics never override an adapter-owned split layout. Do this
+          after all child bindings so their ordinary root styles cannot undo it. }
+        for LIndex := 0 to Length(FBindings) - 1 do
         begin
-          FBindings[LIndex].FSplit.Update;
+
+          if FBindings[LIndex].FSplit <> nil then
+          begin
+            FBindings[LIndex].FSplit.Update;
+            CheckCurrent;
+          end;
+        end;
+        UpdateResizePreview;
+        CheckCurrent;
+        UpdateCanvasResizeGrips;
+        CheckCurrent;
+        { Reading used content boxes forces the current CSS allocation before
+          returning to the state publisher. Replay only when an effective rule
+          changed; preserve the original focus intent until all passes finish. }
+
+        if FRoot = nil then
+        begin
+          Break;
+        end;
+
+        if not FRoot.ApplyViewport(LViewportFrame.ViewportWidth, LViewportFrame.ViewportHeight,
+          npfBrowser, FPresentationSelection, MeasureSynchronousContainers) then
+        begin
           CheckCurrent;
+          Break;
+        end;
+        CheckCurrent;
+
+        if LProjectionPass = LMaximumPasses then
+        begin
+          raise ENyxModel.Create('Container presentation allocation did not settle');
         end;
       end;
-      UpdateResizePreview;
-      CheckCurrent;
-      UpdateCanvasResizeGrips;
-      CheckCurrent;
     finally
 
       if LGeneration.Current then

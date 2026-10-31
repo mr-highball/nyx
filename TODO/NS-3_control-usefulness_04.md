@@ -10,7 +10,10 @@ retirement, view notification, mounted rendering and native pane geometry. The
 explicit retirement span is small; it does not measure all destructor/GC work.
 Native pane synchronization and non-mount view callbacks remain material costs.
 Source review identifies ordinary status-state publication invoking full target
-Sync, now owned by the [state projection prerequisite](NS-2_state-projection-sync_01.md).
+Sync, addressed by the accepted [state projection prerequisite](DONE/NS-2_state-projection-sync_01.md).
+Its final original-application return preserves167 browser checks per variant/
+width and four failed timing budgets per run. Return to this task's full outcomes;
+neither that scoped acceptance nor unrelated-setter isolation establishes L2.
 
 The native adapter groups a pane's exact current geometry and avoids resetting
 unchanged visible wrapped rows through default height. It retains full source
@@ -390,7 +393,7 @@ weakened, parent credit assigned or DONE move made by these checks.
 
 **Blockers**
 
-- [Changed state presentation](NS-2_state-projection-sync_01.md) addresses the
+- [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) addresses the
   full-target synchronization cost found in the original live application.
   This prerequisite preserves all original L2 thresholds and other criteria.
 - [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the ranked

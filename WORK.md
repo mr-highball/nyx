@@ -9,7 +9,84 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Changed state presentation — 2026-10-31
+## Current work — Return to original workbench outcomes — 2026-10-31
+
+Outcome: PROGRESS from b61e4c2a. Root continues SOLO; all owned compiler/runtime
+readers are joined and temporary browser tabs are closed. The six unchanged
+criteria of [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)
+are assessed and accepted. The full Nyx/Studio goal remains active. Neither
+original03/04 nor full L2/Studio is accepted; no percentage or duplicate credit.
+
+Next assess [workbench03](TODO/NS-3_control-usefulness_03.md)'s seven original
+criteria against the maintained saved/generated application, then qualify the
+first remaining useful W1/W2 user journey. Its compact named semantic move is
+already qualified: do not reopen that gap or start another equivalent projection,
+navigation or latency fixture. Retain04's original100ms p95/250ms maximum and
+all user-facing/physical/assistive/native-quality requirements. Two necessary
+browser product repair cycles are used; reassess the parent outcomes next.
+
+Preserve fixed listeners, projects and unrelated edits. New private artifacts
+and owned process TEMP/TMP stay on E:. The current packet is
+`state-projection-edge-01`, with frozen source/hash/build/runtime receipts.
+No Studio/LAN payload replacement or active-design mutation occurred.
+
+## Accepted batch — Container settlement and notification recovery — 2026-10-31
+
+Actual projection controls now interrupt a real browser setter/native resize
+reaction after complete state admission. Later application observers still receive
+committed state; a different-key hint write repairs the interrupted target in the
+same stack. A leading host-caption sentinel distinguishes selective failure from
+full replay. Exact computed outputs, Unicode memo draft/caret/focus, target faces,
+independent peer and entered-frame retirement remain. Native executes23 and
+browser24 per width. All four native edge consumers have complete clean heaps.
+
+The same fluent container fixture takes height from a size-contained fill region
+when status text wraps, then immediately changes its button caption/enabled state.
+It contracts and restores without replacing controls or changing authored bytes:
+nine checks per target/width. Native passes before any product repair. Browser
+first fails its synchronous assertion, then becomes correct only after queued
+resize work. Repair1 reads actual allocated CSS content boxes for attached Sync,
+retains staged snapshots for detached candidates and bounds repeated full passes
+by publisher count plus settling rounds. Original focus intent survives all
+passes; failed publication keeps its copied observation invalid.
+
+Compatibility exposes four empty connected staging hosts. A source-pinned original
+renderer reproduces that same failure. Repair2 retires the locally owned empty
+probe after adoption transfers its generation, respecting callback refill/moves.
+Final browser bindings170, nested-content29 and disclosure-focus27 pass per width.
+The unchanged native adapter's prior policy-04 compatibility remains applicable;
+new native edge execution above is independently heap checked. The maintained
+computed-bindings runner includes both fixtures; its syntax passes, while the
+entire orchestration target is not replayed.
+
+Final browser evidence is `framed-final`: actual browsing-context dimensions are
+verified1280x900/390x844. An ignored/delayed viewport override initially left runs
+at default geometry; their dimension-named receipts are excluded as requested-width
+evidence. Explicitly sized iframes rerun all affected checks. The capture pause's
+Continue button initially stole focus; its review-only pointer default is now
+suppressed, preserving the original draft/focus assertion. Both failures remain.
+Several framed console logs contain a MutationObserver target error. The same
+error reproduces in a static iframe with zero application scripts; no staged Nyx
+application references MutationObserver. Retain that external tool comparison;
+do not claim empty logs. Physical phone/IME/assistive quality is not established.
+
+The SAME10000-service/five-field/two160px-table handwritten and exact original
+generated constructor each pass167 browser checks at both actual dimensions,
+including active Table drafts, filtering, independent peers and explicit view
+retirement. Each of four runs retains four failed original timing budgets. Prior
+policy-04 native ordinary/heap applications each pass204 per variant/width with
+clean heaps; this browser-only adapter repair does not rerun unchanged native
+applications or infer a universal speedup. The scoped capability avoids proven
+unrelated setters, while whole-application latency remains open with04.
+
+All eight frozen source inputs remain exact, including the original generated
+constructor. All27 protected project/configuration files are byte-identical and
+both fixed serving owners/ports remain. Temporary browser sizing is reset. Earlier
+user-saved page.tsv/filtered.tsv are present and already qualified; no repeat
+dialog is needed. Acceptance, limits and return paths are reconciled in the task,
+catalogs and milestone scorecard without changing parent criteria.
+
+## Previous work — Changed state presentation — 2026-10-31
 
 Outcome: PROGRESS from c9e2c220; Root remains SOLO. The shared prerequisite is
 NS-2_state-projection-sync_01, with its accepted scalar-state foundation and

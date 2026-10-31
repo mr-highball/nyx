@@ -1,7 +1,7 @@
 # NS-2_state-projection-sync_01 — Update bound presentations without resynchronizing unrelated controls
 
-[North stars](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Live inspection consumer](NS-3_control-usefulness_04.md) · [Task flow](../TASKFLOW.MD)
+[North stars](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
+[Live inspection consumer](../NS-3_control-usefulness_04.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
@@ -54,11 +54,11 @@ this prerequisite does not replace or relax them.
 
 **Blockers**
 
-- [Scalar state admission](DONE/NS-1_persistence-state_01.md) supplies the existing
+- [Scalar state admission](NS-1_persistence-state_01.md) supplies the existing
   accepted atomic state/binding foundation. Build on its current retirement and
   prepared-publication consumers; do not reopen its historical task identity.
 
-**Implementation checkpoint:**
+**Acceptance — 2026-10-31:**
 
 The portable copied change contract and conservative browser/LCL target paths
 are implemented. The current WORK entry distinguishes model, real-control,
@@ -66,8 +66,30 @@ lifetime, compatibility and same-application timing evidence. Full candidate
 admission remains independent of every observation. Missing/changed contracts,
 opaque target receivers and unsupported faces retain complete synchronization.
 
-Keep this task open for explicit dynamic container-allocation and partial
-selective-setter failure/recovery journeys, followed by acceptance assessment.
-Those are remaining checks against the criteria above, not reduced replacement
-criteria. The original workbench04 application latency requirements remain open;
-isolated successful compact samples do not establish a general speedup.
+All six unchanged criteria are accepted for the scoped changed-presentation
+capability. The original application responsiveness requirement remains with
+workbench04; this prerequisite requires its unchanged measurement and honest cost
+assessment, not that parent's complete latency acceptance.
+
+| Criterion | Accepted evidence |
+| --- | --- |
+| 1 — Typed optional target path | Copied property/reference changes, conservative face preflight and an actual unrelated-caption sentinel on both targets; legacy callbacks retain complete Sync. |
+| 2 — Complete admission | 26 shared capture/coordinator checks execute under FPC/pas2js, including current computed output, refused candidates, changed contracts, runtime-policy mutation/removal and committed notification failure. Observations never grant admission. |
+| 3 — Actual presentation settlement | Nine real container-control checks per target/width prove wrapping reduces a contained fill area's allocated height, synchronously changes a button's caption/enabled state and restores them on contraction. The browser repair reads current CSS content boxes and bounds repeated full passes; detached preparation retains staged geometry. |
+| 4 — Continuity, observers and retirement | Actual projection controls execute 23 native/24 browser checks per width. A real setter/layout reaction fails partway, later observers still receive complete committed state and a different-key write repairs the whole target in the same stack. Exact Unicode draft/caret/focus, physical identities, independent peers and entered-frame retirement remain. Nested browser staging cleanup and disclosure focus execute 29/27 checks per width. |
+| 5 — Compatibility and native heaps | Current browser bindings execute 170 per width; earlier current native binding 85+79, clipboard 1964/1953, presentation 167 and logical viewport 4205 remain applicable to the unchanged native adapter. Both new native control consumers have complete clean heaps at 1280/390. All original assertions and useful failures remain. |
+| 6 — Original application return | The exact 10000-service/five-field/two-160px-table handwritten/generated consumers remain unchanged. Native ordinary and separately heap-traced runs execute 204 per variant/width with clean heaps in policy-04. Current browser runs execute 167 per variant/width and explicitly retire both views; each retains four failed original timing budgets. Unrelated setter replay is eliminated for supported changes, but whole-application latency and general speedup are not established. |
+
+Evidence packets are `state-projection-sync-01/policy-04` and
+`state-projection-edge-01`; [WORK](../../WORK.md) owns their source identities,
+receipts, baseline failures and final assessment. The latter's `framed-final`
+cohort verifies actual browsing contexts at 1280x900/390x844. Earlier ignored or
+delayed viewport overrides do not qualify those widths. An observer console
+error also reproduces in a static iframe with zero application scripts; retain
+that tool-side comparison rather than claiming empty logs.
+
+Qualification covers Win32 LCL and the current in-app browser, with emulated
+compact contexts. Physical phone/IME/assistive input, other widgetsets/OSes,
+complete L2 and Studio acceptance remain separate. No new north-star percentage
+or duplicate completion credit is assigned. Return to the original workbench
+criteria; stop equivalent projection/performance fixtures.

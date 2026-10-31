@@ -3,21 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-The original04 publication reassessment now distinguishes explicit retirement,
-mounted targets and status-driven whole-view synchronization. Native pane rows
-are grouped without resetting unchanged wrapped heights; WORK owns the actual
-same-application comparison, final compatibility and remaining budget failures.
-The next shared prerequisite is [changed state presentation](NS-2_state-projection-sync_01.md),
-which keeps complete admission, ordinary bindings and both-target fallback while
-avoiding unrelated target work. Two native repair cycles are used; return to that
-shared owner rather than extend equivalent pane/profile trials. No full L2 credit.
+[Changed state presentation](DONE/NS-2_state-projection-sync_01.md) is accepted
+on2026-10-31. Complete admission, copied typed changes and conservative target
+fallback retain ordinary bindings while avoiding unrelated setters. Actual
+container allocation and partial-setter recovery now pass both targets/widths;
+browser nested staging cleanup is also repaired. WORK owns exact source, native
+heap, browser-context and original-application receipts.
 
-That shared owner now supplies copied typed change observations and conservative
-browser/LCL target synchronization, with runtime-policy change, unrelated-setter
-isolation and real setter/resize retirement coverage.
-WORK owns the actual results and remaining dynamic-container/partial-setter
-recovery checks. The task remains open for those checks and acceptance assessment;
-the original application's latency limits are unchanged.
+Return to the original workbench03/04 criteria. The same handwritten/generated
+browser application passes167 per variant/width but still fails four original
+timing budgets in every run. The100ms p95/250ms maximum remain unchanged. No full
+L2/Studio credit or general speedup follows; stop equivalent projection/profile
+fixtures. Assess original W1/W2 evidence and qualify the first remaining useful
+user journey, preserving already-qualified named moves and other prerequisites.
 
 The original03 short-table readability return now shares native feedback/actions
 when width permits, retaining a second row for recovery controls when needed.
@@ -2464,7 +2462,6 @@ blockers rather than filename order.
 | NS-2 | [Browser renderer slice](NS-2_browser-renderer_01.md) | Incremental DOM projection for M1 | Pending assessment |
 | NS-2 | [LCL renderer slice](NS-2_lcl-renderer_01.md) | Incremental native projection for M1 | Pending assessment |
 | NS-2 | [Efficient native geometry](NS-2_lcl-renderer_02.md) | Bounded native window publication and real resize qualification | Prerequisite; no separate credit |
-| NS-2 | [Changed state presentation](NS-2_state-projection-sync_01.md) | Admitted binding changes update retained controls without unrelated target synchronization | Prerequisite; pending assessment |
 | NS-2 | [Section viewport meaning](NS-2_presentation-viewport_01.md) | Consistent viewport/container rules in independent hosts; native Project allocation gap | Prerequisite; no separate credit |
 | NS-2 | [Constrained button captions](NS-2_button-caption_01.md) | Typed caption flow with coherent glyph measurement and both adapter faces | Prerequisite; no separate credit |
 | NS-2 | [Staged view sections](DONE/NS-2_section-publication_01.md) | Accepted public grouped section ownership prerequisite; full Studio integration remains open | Pending assessment |

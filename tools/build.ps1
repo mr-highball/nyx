@@ -2871,7 +2871,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       $nyxFoundationPrograms = @('nyx_expression_tests', 'nyx_computed_binding_tests',
         'nyx_binding_projection_tests')
       $nyxFoundationHosts = @('expressions.html', 'computed-bindings.html', 'computed-controls.html',
-        'binding-projection.html', 'binding-projection-controls.html')
+        'binding-projection.html', 'binding-projection-controls.html', 'binding-container-controls.html')
     }
     $nyxFoundationCore = Join-Path $nyxFoundationRoot 'core'
     $nyxFoundationExport = Join-Path $nyxFoundationRoot 'export'
@@ -2916,13 +2916,15 @@ body[data-query-authoring="passed"] script#query-authoring-project {
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native computed controls failed' }
       $nyxFoundationPrograms += 'nyx_computed_binding_controls'
-      Invoke-NyxCompiler $nyxLclFpc ($nyxFoundationLclFlags + @('tests/nyx_binding_projection_controls.lpr'))
-      foreach ($nyxProjectionWidth in @('1280', '390')) {
-        & (Join-Path $nyxFoundationNative 'nyx_binding_projection_controls.exe') $nyxProjectionWidth
+      foreach ($nyxBoundControl in @('nyx_binding_projection_controls', 'nyx_binding_container_controls')) {
+        Invoke-NyxCompiler $nyxLclFpc ($nyxFoundationLclFlags + @("tests/$nyxBoundControl.lpr"))
+        foreach ($nyxProjectionWidth in @('1280', '390')) {
+          & (Join-Path $nyxFoundationNative "$nyxBoundControl.exe") $nyxProjectionWidth
 
-        if ($LASTEXITCODE -ne 0) { throw 'Actual native binding projection controls failed' }
+          if ($LASTEXITCODE -ne 0) { throw 'Actual native binding presentation controls failed' }
+        }
+        $nyxFoundationPrograms += $nyxBoundControl
       }
-      $nyxFoundationPrograms += 'nyx_binding_projection_controls'
     }
     foreach ($nyxFoundationProgram in $nyxFoundationPrograms) {
       Invoke-NyxCompiler $nyxPas2js ($nyxFoundationWebFlags + @("tests/$nyxFoundationProgram.lpr"))

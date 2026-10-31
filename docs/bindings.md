@@ -43,6 +43,20 @@ publication invalidates that observation and the next notification uses full
 synchronization. Native resize retains any consumed viewport-rule change until
 the caller requests the full settling pass.
 
+Browser synchronization reads the current allocated CSS content boxes after a
+text write; it does not wait for ResizeObserver's later notification. A changed
+container rule requests complete synchronization in that same call. Browser/LCL
+settlement bounds nested propagation by the query-publisher count plus client-area
+settling rounds, refusing an allocation that will not settle. Browser detached
+preparation keeps its independently staged measurements. Repeated passes retain
+the original focus-recovery intent and never acquire a successor's generation.
+
+A partial setter failure still delivers committed state to later application
+observers. Even a later write to a different bound key repairs the complete view
+before returning, rather than accepting the interrupted target as synchronized.
+Actual desktop/compact controls qualify this recovery with exact Unicode drafts,
+caret selection and physical face identity; native heaps remain independently checked.
+
 Observations also copy effective enabled/read-only Booleans through the runtime
 policies' pure UI-thread getter contract. A policy can change or be detached
 without rewriting stored properties; the resulting interaction change requests

@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)
+is accepted on2026-10-31. Complete admission and conservative target fallback
+remain, while supported status changes avoid unrelated setters. Both-target
+container settlement and partial-publication recovery now pass, with clean native
+heaps and verified browser allocations. The unchanged large application's
+behavior passes; its original timing budgets remain unmet. No full L2/Studio or
+additional north-star percentage follows. Return to original workbench outcomes.
+
 Scoped [equal-value row retirement](TODO/DONE/NS-1_state-collections_02.md) and
 [final query delivery](TODO/DONE/NS-1_state-collections_03.md) are accepted
 on2026-10-31. Real browser checks expose and repair selection inheritance and
@@ -3545,7 +3553,7 @@ broader product outcomes remain open.
 | Goal ID and north star | 100% acceptance | Current status | Remaining outcome |
 | --- | --- | --- | --- |
 | NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state, managed interfaces, exact clock-value/domain and portable resource prerequisites accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
-| NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated | Capability parity, responsive/theming depth, accessibility, visuals and [efficient changed-state presentation](TODO/NS-2_state-projection-sync_01.md) |
+| NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated; scoped changed-state presentation accepted | Capability parity, responsive/theming depth, accessibility, visuals and [whole-application responsiveness](TODO/NS-3_control-usefulness_04.md) |
 | NS-3 — Exhaustive extensible component system | A broad production catalog is coherent, virtualized where needed, composable, themeable, and extendable without forking Nyx internals | 41 primitive/layout/authoring kinds and 35 compound recipes defined | Advanced behavior, virtualization, extension SDK and performance |
 | NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration, deterministic generation and decorator-driven help/class reference; Studio itself is built with Nyx | Shared Nyx shell, ordinary Resources workspace/picker and semantic callback workflow criterion accepted; authenticated observing edits and exact both-target applications qualified | General compiler-backed source/project import, complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX, complete native controller and reflective Nyx-built API reference |
 | NS-5 — Pascal build and reload service | A hardened Pascal HTTP service builds views and complete apps, streams structured diagnostics and reloads admitted artifacts; optional browser-local WEB compilation supports a static client-only Studio edition while retaining host/native builds | Local HTTP builds and bounded immutable MCP jobs evaluated; browser-local compiler/static edition unqualified | Global scheduling, caching, cancellation, persistence, reload and diagnostics; qualified local WEB compiler, virtual inputs/toolchain caches, local projects, isolated preview and static browser QA |

@@ -3,6 +3,15 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Changed state presentation](NS-2_state-projection-sync_01.md) is accepted
+on2026-10-31 for its six unchanged criteria. Actual container wrapping and
+partial-setter failure/recovery retain drafts, focus, identities and committed
+observer delivery on both targets. Browser nested staging cleanup is repaired;
+full binding/content/disclosure checks and the exact original application pass
+their behavioral assertions. Native heaps are clean. Original application timing
+budgets still fail; broader L2/Studio/physical/assistive outcomes remain open.
+WORK retains exact source identities, verified browser dimensions and failures.
+
 [Equal-value row retirement](NS-1_state-collections_02.md) and
 [final query delivery](NS-1_state-collections_03.md) are accepted on2026-10-31.
 Shared checks execute on both targets, including alternative-capability refusal

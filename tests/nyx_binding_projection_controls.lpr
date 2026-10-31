@@ -40,24 +40,36 @@ type
   public
     function GetReadOnly: Boolean;
   end;
-  { A deterministic host reaction retires the actual view during selective
-    publication. Node is borrowed only inside that entered setter/layout frame.
-    Browser instrumentation restores the original borrowed DOM method afterward;
-    native instrumentation uses the real label's ordinary resize event. }
-  TProjectionRetirement = class
+  { Distinguish terminal retirement from a fallible, still-live host receiver. }
+  TProjectionReactionKind = (prkRetire, prkFail);
+  { An intentional host failure must surface as committed notification failure,
+    rather than be mistaken for rejected candidate state or view retirement. }
+  EProjectionHostFailure = class(Exception);
+  { A deterministic setter/layout reaction either fails or retires the view.
+    Node is borrowed while its view is current and inside the entered retired
+    frame. The helper owns its subscription, releasing it before its receiver.
+    Hooks borrow actual host faces and restore their original methods/events. }
+  TProjectionReaction = class
   public
     Node: TNyxNode;
+    Kind: TProjectionReactionKind;
     Armed: Boolean;
     Calls: Integer;
     SawEnteredNode: Boolean;
+    ObserverCalls: Integer;
+    SawCommittedState: Boolean;
+    Subscription: TNyxStateSubscription;
     {$ifdef PAS2JS}
     Element: TJSHTMLElement;
     OriginalSetter: TJSFunction;
     procedure SetAttribute(const AName, AValue: String);
     {$else}
+    OriginalResize: TNotifyEvent;
     procedure Resized(ASender: TObject);
     {$endif}
-    procedure RetireView;
+    destructor Destroy; override;
+    procedure React;
+    procedure Observe(AState: TNyxState; AChanges: TNyxStateChanges);
   end;
 
 var
@@ -66,7 +78,7 @@ var
   GHeight: Integer;
   GTop: Integer;
   GDocument: TNyxDocument;
-  GReaction: TProjectionRetirement;
+  GReaction: TProjectionReaction;
   {$ifdef PAS2JS}
   GApp: TNyxBrowserApplication;
   GPeer: TNyxBrowserApplication;
@@ -94,7 +106,20 @@ begin
   Result := True;
 end;
 
-procedure TProjectionRetirement.RetireView;
+destructor TProjectionReaction.Destroy;
+begin
+  Subscription.Free;
+  inherited Destroy;
+end;
+
+procedure TProjectionReaction.Observe(AState: TNyxState; AChanges: TNyxStateChanges);
+begin
+  Inc(ObserverCalls);
+  SawCommittedState := (AState.GetValue(NyxTextState('status')) = CLong) and
+    (Node.Prop('text') = CLong);
+end;
+
+procedure TProjectionReaction.React;
 begin
 
   if not Armed then
@@ -103,24 +128,35 @@ begin
   end;
   Armed := False;
   Inc(Calls);
+
+  if Kind = prkFail then
+  begin
+    SawEnteredNode := (Node.ID = 'status') and (Node.Prop('text') = CLong);
+    raise EProjectionHostFailure.Create('Intentional partial host publication failure');
+  end;
   GApp.View.Unmount;
   SawEnteredNode := (Node.ID = 'status') and (Node.Prop('text') = CLong);
 end;
 
 {$ifdef PAS2JS}
-procedure TProjectionRetirement.SetAttribute(const AName, AValue: String);
+procedure TProjectionReaction.SetAttribute(const AName, AValue: String);
 begin
   OriginalSetter.call(Element, AName, AValue);
 
   if AName = 'aria-label' then
   begin
-    RetireView;
+    React;
   end;
 end;
 {$else}
-procedure TProjectionRetirement.Resized(ASender: TObject);
+procedure TProjectionReaction.Resized(ASender: TObject);
 begin
-  RetireView;
+
+  if Assigned(OriginalResize) then
+  begin
+    OriginalResize(ASender);
+  end;
+  React;
 end;
 {$endif}
 
@@ -141,6 +177,9 @@ begin
     LPage := NewNyxPage('home');
     LPage.Configure.Layout(nlColumn).Padding(12).Gap(10).Done;
     Result.AddPage(LPage);
+    LLabel := NewNyxLabel('untouched');
+    LLabel.WithText('Unchanged control');
+    LPage.Add(LLabel);
     LLabel := NewNyxLabel('status');
     LLabel.Configure.Width(240).WhenViewport(TNyxViewportWidth.Below(600)).Width(160).Done;
     LLabel.Binds.Text(NyxTextState('status')).Hint(NyxTextState('hint')).Done;
@@ -149,9 +188,6 @@ begin
     LLabel.Configure.Width(260).Done;
     LLabel.Binds.Text(NyxTextExpression('Current: ').Append(
       NyxTextExpression(NyxTextState('status')))).Done;
-    LPage.Add(LLabel);
-    LLabel := NewNyxLabel('untouched');
-    LLabel.WithText('Unchanged control');
     LPage.Add(LLabel);
     LLabel := NewNyxLabel('conditional');
     LLabel.WithText('Optional details');
@@ -177,10 +213,53 @@ begin
   {$endif}
 end;
 
+procedure ArmReaction(AKind: TProjectionReactionKind);
+begin
+  GReaction := TProjectionReaction.Create;
+  GReaction.Kind := AKind;
+  GReaction.Node := GApp.View.Root.Find('status');
+  {$ifdef PAS2JS}
+  GReaction.Element := GLabel;
+  GReaction.OriginalSetter := TJSFunction(TJSObject(GLabel)['setAttribute']);
+  TJSObject(GLabel)['setAttribute'] := JSValue(@GReaction.SetAttribute);
+  {$else}
+  GReaction.OriginalResize := TLabel(GLabel).OnResize;
+  TLabel(GLabel).OnResize := GReaction.Resized;
+  {$endif}
+  GReaction.Armed := True;
+end;
+
+procedure ClearReaction(AViewRetired: Boolean);
+begin
+
+  if GReaction = nil then
+  begin
+    Exit;
+  end;
+  GReaction.Armed := False;
+  {$ifdef PAS2JS}
+
+  if GLabel <> nil then
+  begin
+    TJSObject(GLabel)['setAttribute'] := GReaction.OriginalSetter;
+  end;
+  {$else}
+
+  if not AViewRetired and (GLabel <> nil) then
+  begin
+    TLabel(GLabel).OnResize := GReaction.OriginalResize;
+  end;
+  {$endif}
+  GReaction.Node := nil;
+  FreeAndNil(GReaction);
+end;
+
 procedure Step;
 var
   LPolicy: INyxRuntimeReadOnlyPolicy;
   LNode: TNyxNode;
+  LRevision: Integer;
+  LFailed: Boolean;
 begin
   case GStage of
     0:
@@ -301,17 +380,68 @@ begin
       begin
         GApp.View.Root.Find('status').Binds.AccessibleName(NyxTextState('hint')).Done;
         GApp.View.Sync;
-        GReaction := TProjectionRetirement.Create;
+        ArmReaction(prkFail);
         try
-          GReaction.Node := GApp.View.Root.Find('status');
           {$ifdef PAS2JS}
-          GReaction.Element := GLabel;
-          GReaction.OriginalSetter := TJSFunction(TJSObject(GLabel)['setAttribute']);
-          TJSObject(GLabel)['setAttribute'] := JSValue(@GReaction.SetAttribute);
+          GReaction.Subscription := GApp.State.Subscribe(@GReaction.Observe);
+          GApp.View.ElementFor('untouched').textContent := 'Failure sentinel';
           {$else}
-          TLabel(GLabel).OnResize := GReaction.Resized;
+          GReaction.Subscription := GApp.State.Subscribe(GReaction.Observe);
+          TLabel(GApp.View.ControlFor('untouched')).Caption := 'Failure sentinel';
           {$endif}
-          GReaction.Armed := True;
+          LRevision := GApp.State.Revision;
+          LFailed := False;
+          try
+            GApp.State.Apply([NyxStateValue(NyxTextState('status'), CLong),
+              NyxStateValue(NyxTextState('hint'), 'Fallible publication')]);
+          except
+            on ENyxStateNotification do
+            begin
+              LFailed := True;
+            end;
+          end;
+          Check(LFailed and (GReaction.Calls = 1) and GReaction.SawEnteredNode,
+            'partial real host failure surfaces through committed notification semantics');
+          Check((GApp.State.Revision = LRevision + 1) and
+            (GApp.State.GetValue(NyxTextState('status')) = CLong) and
+            (GApp.View.Root.Find('computed').Prop('text') = 'Current: ' + CLong),
+            'failed target publication retains the complete accepted state/model projection');
+          Check((GReaction.ObserverCalls = 1) and GReaction.SawCommittedState,
+            'later application observer receives the admitted projection despite target failure');
+          Check(Caption('untouched') = 'Failure sentinel',
+            'failure occurs on selective publication before unrelated setters replay');
+          {$ifdef PAS2JS}
+          Check(Caption('computed') <> 'Current: ' + CLong,
+            'the browser reaction interrupts before the next selected caption setter');
+          {$endif}
+          { No event-loop turn can repair the view before this different-key
+            publication. Its text is already committed, so only full fallback
+            can repair a missed caption and reset the earlier host sentinel. }
+          GApp.State.SetValue(NyxTextState('hint'), 'Recovered publication');
+          Check((Caption('status') = CLong) and (Caption('computed') = 'Current: ' + CLong) and
+            (Caption('untouched') = 'Unchanged control') and (GReaction.Calls = 1) and
+            (GReaction.ObserverCalls = 2), 'hint-only publication fully recovers the interrupted target');
+          {$ifdef PAS2JS}
+          Check((document.activeElement = GMemo) and (GMemo.value = 'Unfinished 🌙') and
+            (GMemo.selectionStart = 3) and (GMemo.selectionEnd = 6) and
+            (GApp.View.ElementFor('computed').offsetTop >= GLabel.offsetTop + GLabel.offsetHeight),
+            'browser recovery settles layout while retaining editor draft, focus and selection');
+          {$else}
+          Check((Screen.ActiveControl = GMemo) and (TNyxText(GMemo.Text) = TNyxText('Unfinished 🌙')) and
+            (GMemo.SelStart = 3) and (GMemo.SelLength = 3) and
+            (GApp.View.ControlFor('computed').Top >= GLabel.Top + GLabel.Height),
+            'native recovery settles layout while retaining editor text, focus and selection');
+          {$endif}
+        finally
+          ClearReaction(False);
+        end;
+        GApp.State.SetValue(NyxTextState('status'), 'Ready to retire');
+      end;
+    5:
+      begin
+        GApp.View.Sync;
+        ArmReaction(prkRetire);
+        try
           GApp.State.Apply([NyxStateValue(NyxTextState('status'), CLong),
             NyxStateValue(NyxTextState('hint'), 'Retiring view')]);
           Check((GReaction.Calls = 1) and GReaction.SawEnteredNode and
@@ -320,12 +450,7 @@ begin
             (GPeer.State.GetValue(NyxTextState('status')) = 'Ready'),
             'retirement retains committed state without affecting independent peer');
         finally
-          GReaction.Armed := False;
-          {$ifdef PAS2JS}
-          TJSObject(GLabel)['setAttribute'] := GReaction.OriginalSetter;
-          {$endif}
-          GReaction.Node := nil;
-          FreeAndNil(GReaction);
+          ClearReaction(True);
           GLabel := nil;
         end;
       end;
@@ -335,6 +460,11 @@ end;
 
 procedure Retire;
 begin
+
+  if GReaction <> nil then
+  begin
+    ClearReaction((GApp = nil) or (GApp.View.Root = nil));
+  end;
   FreeAndNil(GApp);
   FreeAndNil(GPeer);
   FreeAndNil(GDocument);
@@ -346,7 +476,7 @@ begin
   try
     Step;
 
-    if GStage = 5 then
+    if GStage = 6 then
     begin
       document.body.setAttribute('data-projection-controls', 'passed');
       document.body.setAttribute('data-projection-checks', IntToStr(GChecks));
@@ -406,7 +536,7 @@ begin
     GApp.Window.ClientHeight := 844;
     GPeer.Window.Show;
     GApp.Window.Show;
-    while GStage < 5 do
+    while GStage < 6 do
     begin
       Application.ProcessMessages;
       Step;
