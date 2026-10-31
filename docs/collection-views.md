@@ -1022,6 +1022,13 @@ a window width alone does not establish that the pins fit. Widening the table
 automatically restores the requested pins. Neither transition changes authored
 widths, runtime preferences, row identities or accepted values.
 
+Showing a managed native table creates grid handles, including lazy pinned
+panes. Their local cursor initialization is not an application selection command:
+an empty row selection stays empty. The initial cursor belongs to the first
+visible logical field. Responsive pin transitions retain that field rather than
+adopting a newly created pane's physical column zero. Deliberate pointer and
+keyboard navigation still use the ordinary selection and callback contract.
+
 Browser tables explain temporary pin suspension in a visible caption status
 beside **Columns**. Both remain within the horizontal scrollport as middle
 columns scroll. The message clears when the requested pins fit again, without

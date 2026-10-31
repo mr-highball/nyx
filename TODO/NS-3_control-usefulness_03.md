@@ -5,6 +5,18 @@
 
 **Copy and recovery return — 2026-10-30:**
 
+The native viewport return repairs handle-initialization callbacks that invent
+row selection and replace the remembered logical field with a pinned pane's
+physical column zero. The Service monitor passes296 checks at1280/390; full
+native table-input controls retain1904/1893 with clean heaps. The same saved
+constructor's independently compiled application visibly preserves initial
+Service and deliberately chosen Status across responsive returns. A reproduced
+older one-row paging oracle is corrected without enlarging its short fixture.
+The current cold MCP rebuild times out before the changed adapter and admits
+no artifact; existing [compile service01](NS-5_compile-service_01.md) owns the
+wait investigation. No current-source MCP success, full W2 acceptance or new
+parent credit is inferred from that private compiled application.
+
 [Typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md) and
 [native cold builds](DONE/NS-5_native-cold-build_01.md) are accepted. Canonical
 callbacks carry the original owned item/typed-field/value/revision through the

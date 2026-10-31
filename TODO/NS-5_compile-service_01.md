@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source return, 2026-10-30: cold job8ABEA2D3 reaches the300000-ms budget
+before compiling the repaired native table adapter. It uses about6 CPU seconds
+during the observed interval, preserves current source/output identity and
+returns time-budget without an artifact. Private file packets also encounter
+sharing waits. The cause remains unproven; inspect actual file/pipe/input-check
+waits before a rerun, quota change or cache implementation. The same exact
+generated source separately builds with checked units and its native viewport
+journey works, but that is not a current MCP build success. Preserve the earlier
+scoped cold-build evidence below and original service criteria. WORK.md retains
+the failed receipt, joined processes, stable inputs and27 exact protected files.
+
 Cold native-build return, 2026-10-30: [native cold-build01](DONE/NS-5_native-cold-build_01.md)
 is accepted. The actual authenticated MCP native application build succeeds
 with fresh job units; its admitted EXE performs the useful authored action and

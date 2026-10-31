@@ -6796,6 +6796,16 @@ var
   LShift: TShiftState;
 begin
 
+  if (Sender is TNyxCollectionStringGrid) and
+    TNyxCollectionStringGrid(Sender).InitializingHandle then
+  begin
+    { LCL CheckPosition runs while a lazily shown/recreated grid acquires its
+      handle. Accept its local cursor adjustment without publishing a row
+      selection or replacing the remembered canonical column with a pane's
+      physical column zero. Ordinary later pointer/key selection stays intact. }
+    Exit;
+  end;
+
   if (FGrid is TNyxCollectionStringGrid) and
     TNyxCollectionStringGrid(FGrid).ContentProjectionChanging then
   begin

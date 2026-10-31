@@ -161,6 +161,25 @@ var
   LNameColumn: Integer;
   LStatusColumn: Integer;
   LProcessColumn: Integer;
+  LInitialSelection: TNyxCollectionSelectionSnapshot;
+  LInitialTitle: TNyxText;
+
+  { The first authored field owns the initial cursor across physical pin panes.
+    Inspect the actual focused grid and its painted header, independently of
+    the mount's remembered canonical field or its presentation algorithm. }
+  procedure CheckInitialCursor;
+  var
+    LControl: TWinControl;
+    LGrid: TStringGrid;
+  begin
+    LControl := Screen.ActiveControl;
+    Check((LControl is TStringGrid) and (GetParentForm(LControl) = LApplication.Window),
+      'initial table focus remains on an actual grid in this application');
+    LGrid := TStringGrid(LControl);
+    Check(Pos(LInitialTitle, TNyxText(LGrid.Cells[LGrid.Col, 0])) = 1,
+      'showing and resizing keep the initial cursor on the logical-start field');
+  end;
+
 begin
   {$ifdef NYX_SERVICE_GENERATED}
   LDocument := BuildNyxDocument;
@@ -187,6 +206,9 @@ begin
     LPeer := TNyxLCLApplication.Create;
     LApplication.Mount(LDocument);
     LPeer.Mount(LDocument);
+    LMount := LApplication.View.CollectionMount(ServiceTableID);
+    LInitialSelection := LMount.View.Selection.Snapshot;
+    LInitialTitle := LMount.View.Spec.ColumnAt(0).Title;
     LApplication.Window.ClientWidth := AWidth;
     LApplication.Window.ClientHeight := 760;
     LApplication.Window.Show;
@@ -194,6 +216,31 @@ begin
     LMount := LApplication.View.CollectionMount(ServiceTableID);
     Check((LMount <> nil) and LMount.Connected,
       'the public sample mounts its actual native collection adapter');
+    Check(LMount.View.Selection.Snapshot.SameState(LInitialSelection),
+      'creating visible native handles cannot invent an application row selection');
+    CheckInitialCursor;
+    { Native pin panes can acquire their handles only when the parent is shown.
+      A later responsive allocation must keep that same logical selection too. }
+
+    if AWidth = 1280 then
+    begin
+      LApplication.Window.ClientWidth := 390;
+    end
+    else
+    begin
+      LApplication.Window.ClientWidth := 1280;
+    end;
+    Application.ProcessMessages;
+    Application.Idle(False);
+    Check(LMount.View.Selection.Snapshot.SameState(LInitialSelection),
+      'a responsive width transition preserves the original application selection');
+    CheckInitialCursor;
+    LApplication.Window.ClientWidth := AWidth;
+    Application.ProcessMessages;
+    Application.Idle(False);
+    Check(LMount.View.Selection.Snapshot.SameState(LInitialSelection),
+      'returning to the original width cannot select the trailing pinned field');
+    CheckInitialCursor;
     { The designer may reorder its saved columns. Exact typed field identity,
       rather than the starter example's original position, owns every edit. }
     LNameColumn := LMount.View.Spec.ColumnIndex(NyxColumnIdentity(NyxTextField('name')));
@@ -581,6 +628,18 @@ begin
       LGrid.Perform(CM_MOUSELEAVE, 0, 0);
       LRows := LMount.View.Selection.Snapshot;
       LStep := LGrid.VisibleRowCount - 1;
+      { The visible-row count excludes fixed headers. With only one complete
+        body row there is no possible overlap: Page Down must still advance
+        one row. Keep the short-height case and verify its real cell allocation
+        instead of mistaking the overlap calculation's zero for no viewport. }
+
+      if LGrid.VisibleRowCount = 1 then
+      begin
+        Check((LBounds.Top >= 0) and (LBounds.Bottom <= LGrid.ClientHeight) and
+          (LBounds.Bottom > LBounds.Top),
+          'the one-row page contains a complete visible body cell');
+        LStep := 1;
+      end;
       WriteLn('page viewport field=', LTitle, ' width=', AWidth,
         ' authoredHeight=', ATableHeight, ' nativeHeight=', LGrid.Height,
         ' visibleRows=', LGrid.VisibleRowCount, ' pageRows=', LMount.View.Snapshot.Count);

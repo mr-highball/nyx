@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The current native cursor repair passes296 Service monitor checks per width and
+the retained1904/1893 full native table-input checks, with clean heaps. Showing
+lazy handles no longer invents selection or adopts the wrong pinned field.
+The same saved application visibly retains initial and deliberately chosen
+fields, using checked units. Its fresh cold MCP build instead reaches the
+five-minute limit before the changed adapter; investigate actual waits under
+[compile service01](NS-5_compile-service_01.md) before another cold rerun, then
+continue [W2](NS-3_control-usefulness_03.md). That private application is not an
+MCP-admitted artifact. Original task criteria and completion credit stay intact.
+
 The scoped [visible Copy feedback](DONE/NS-3_collection-copy-feedback_01.md),
 [typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md),
 [first-menu adoption](DONE/NS-3_menu-first-adoption_01.md) and

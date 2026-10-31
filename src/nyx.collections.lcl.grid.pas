@@ -244,7 +244,9 @@ type
     outside those transitions and raw grids without input retain LCL behavior.
     An optional managed projection port exposes logical update sections without
     owning a renderer. Its sparse row directory contains only explicit bounded
-    text-height overrides, never a second dataset-sized row array. }
+    text-height overrides, never a second dataset-sized row array. Handle
+    initialization exposes its local cursor checks as geometry only: they do
+    not represent application selection or a newly accepted user command. }
   TNyxCollectionStringGrid = class(TStringGrid)
   private
     FContentProjection: INyxLCLContentProjection;
@@ -293,6 +295,7 @@ type
     FColumnButtons: array of TControl;
     FColumnTransition: Integer;
     FColumnTransitionFocused: Boolean;
+    FInitializingHandle: Boolean;
     { A renderer-owned visibility transaction keeps native DoExit/ResetEditor
       from validating a draft while its presentation plane is being hidden. }
     FPresentationChanges: Integer;
@@ -412,6 +415,10 @@ type
     { Focus mapping also recognizes exact table-owned header buttons when no
       pinned pane exists. Legacy tables with neither keep their old path. }
     property HasColumnComposite: Boolean read GetHasColumnComposite;
+    { Readonly during inherited native handle creation, including lazy pinned
+      panes and handle recreation. Mounts allow LCL's local cursor normalization
+      while withholding synthetic application selection and previous callbacks. }
+    property InitializingHandle: Boolean read FInitializingHandle;
     procedure BeginColumnTransition;
     procedure EndColumnTransition;
     property ColumnTransitionActive: Boolean read GetColumnTransitionActive;
@@ -1903,20 +1910,29 @@ procedure TNyxCollectionStringGrid.CreateWnd;
 var
   LSurface: INyxGridInputSurface;
   LFrame: INyxNativeGestureFrame;
+  LInitializing: Boolean;
 begin
   LSurface := FInputSurface;
+  LFrame := nil;
 
-  if LSurface = nil then
+  if LSurface <> nil then
   begin
-    inherited CreateWnd;
-    Exit;
+    LFrame := LSurface.Frame;
+    LFrame.Enter;
   end;
-  LFrame := LSurface.Frame;
-  LFrame.Enter;
+  LInitializing := FInitializingHandle;
+  FInitializingHandle := True;
   try
     inherited CreateWnd;
   finally
-    LFrame.Leave;
+    { Restore the local marker before leaving the borrowed input frame: its
+      final observer can retire the widget. Nothing touches Self after Leave. }
+    FInitializingHandle := LInitializing;
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
   end;
 end;
 

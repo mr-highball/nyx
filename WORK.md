@@ -9,7 +9,80 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Practical native cold builds — 2026-10-30
+## Current work — Native Table viewport return — 2026-10-30
+
+Previous goal turn: verified PROGRESS, pushedf3431a07 with exact remote match.
+Root remains SOLO. Continue original Table workbench03 W2, without another
+budget/context fixture or parent credit. The native cursor repair is qualified;
+the current-source cold MCP rebuild is not. Broader original W2 and service
+acceptance remain open. No new task or completion counter closes in this packet.
+
+Before: the saved Service actions application mounts with no semantic selection,
+then showing lazy grid handles selects a row and eventually adopts Status as its
+remembered field. A wide/compact return scrolls away from Service without user
+intent. The public-host observation frees473801 blocks; the maintained consumer
+fails its new visible-handle assertion before repair, freeing568990 blocks.
+Trace identifies inherited TCustomGrid.CreateWnd/CheckPosition on pinned panes.
+
+The library now marks only inherited native handle initialization. Its cursor
+checks finish locally without issuing portable selection or previous callbacks.
+The marker restores before the input frame's final observer can retire the
+widget; ordinary later pointer/key selection keeps the original path. The same
+saved-source observation now retains an empty selection and logical-start cursor
+through show, state-only refresh and responsive returns, freeing473806 blocks.
+The temporary trace is removed from maintained source.
+
+The maintained Service monitor passes296 checks at each of1280/390, freeing
+2912248/2873107 blocks. New checks inspect the actual focused grid/header and
+unchanged selection through showing and both width transitions. Full native
+table-input controls retain1904/1893 checks and clean heaps, freeing
+27096288/27463029 blocks. There are zero compiler warnings. These are native
+widget/control checks; browser code is unchanged and no new browser/physical/
+assistive claim is made.
+
+The fuller Service consumer also exposes an older one-row paging oracle error.
+The unchanged archived consumer reproduces the same failure, freeing2674357
+blocks. The native visible-row count excludes fixed headers; one complete body
+row must still advance by one when overlap is impossible. The180-pixel fixture
+is retained, now checks that actual complete cell and the exact key-produced
+range. No application assertion is deleted, deadline raised or fixture enlarged.
+
+A fresh18-operation retained Pascal MCP transport imports the same23314-byte
+project into its own temporary review. Source6d5d6959/design027ac3d7 and profile
+da83d63c remain exact. Cold job8ABEA2D3 stops at300000 ms, returns time-budget,
+keeps currentSource/currentOutput true and admits no artifact. The compiler uses
+about6 CPU seconds over the observed five-minute interval and stops in
+nyx.viewport before compiling the changed adapter. File-sharing waits also occur
+in the private packet reader. This suggests an I/O/wait problem; its source is
+not yet established. Do not claim a current MCP build success or increase budgets
+merely to make this run pass. Earlier cold-build acceptance retains its scoped
+before/after evidence, not a general build-time guarantee.
+
+The exact same generated constructor is separately compiled using this packet's
+checked units, not an MCP-admitted artifact. Owned Win32 messages and inspected
+captures show the fresh compact application retaining Service through repeated
+wide/compact returns. Deliberately selecting Status then resizing keeps Status
+visible: the repair does not force every interaction back to the first column.
+The probe is stopped/joined; its forced process retirement is not a clean-heap
+claim. The maintained consumers above own that heap evidence.
+
+The initial private observation compile omitted one source search directory;
+adding it compiles the unchanged source. Packet sharing failures consume the
+same immutable accepted receipt after bounded retries, never replaying mutations.
+The attempted inventory of the active lock file is excluded from protected data;
+all27 actual local files and nine session states remain exact. The MCP transport
+closes its temporary review and frees all173054 blocks. Source hashes remain
+stable. All owned compiler/native/client readers are joined. QA62352 and LAN46632
+stay alive at the same paths/ports; no phone delivery is claimed.
+
+Evidence: table-viewport-return-01 (before-03, after-04, baseline-06, observe-07,
+after-08, clipboard-09, transport-10, application-21, application-view-23 and
+preservation-24). New artifacts and TEMP/TMP stay on the external volume. Next:
+trace actual file/pipe/source-check waits in existing compile-service01 before
+another current-source cold MCP rerun, then resume W2's remaining preference/
+reset and output workflows. Preserve the limits and original finish lines.
+
+## Previous work — Practical native cold builds — 2026-10-30
 
 Previous turn: verified PROGRESS, pushed8f0e7926 with exact remote verification.
 Root stays SOLO. [Native cold-build01](TODO/DONE/NS-5_native-cold-build_01.md) and
