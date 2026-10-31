@@ -237,6 +237,9 @@ construction reference retires when the most-derived constructor returns; it doe
 not replace a caller's owning interface. Descendants overriding
 `AfterConstruction` must call the inherited method. Raw class callers still own
 their returned object, and failed construction still unwinds normally.
+The underlying `TNyxInterfacedObject` in `nyx.objects` is also available to other
+Nyx interface implementations that need this construction lifetime. Collection
+views use it when applying their authored inspection defaults.
 
 When `NewNyxEvents` creates its default scheduler, that router owns the terminal
 scheduling boundary. `Close` shuts the private scheduler down even if queued work

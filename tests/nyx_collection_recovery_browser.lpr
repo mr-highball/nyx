@@ -26,7 +26,8 @@ program nyx_collection_recovery_browser;
 uses SysUtils, JS, Web, nyx.text, nyx.model, nyx.codec, nyx.state,
   nyx.application.browser, nyx.collections, nyx.collections.mount,
   nyx.collections.recovery, nyx.collections.position, nyx.live.inspection,
-  nyx.service.monitor, nyx.files.save, nyx.bytes, nyx.scheduler
+  nyx.service.monitor, nyx.files.save, nyx.bytes, nyx.scheduler,
+  nyx.types, nyx.test.keyboard.browser
   {$ifdef NYX_INSPECTION_GENERATED}, nyx.generated.view{$endif};
 
 type
@@ -86,6 +87,7 @@ var
   LApplication: TNyxBrowserApplication;
   LDemo: TNyxLiveInspectionDemo;
   LHost: TJSHTMLElement;
+  LCell: TJSHTMLElement;
   LInput: TJSHTMLInputElement;
   LFirst: INyxCollectionMount;
   LPeer: INyxCollectionMount;
@@ -134,9 +136,16 @@ begin
       LFirst.View, LPeer.View, NyxCollectionPositionState(LFirst), LJournal, LFirst, LSaveLease);
     LGateway := NyxItem(NyxCollection(ServiceCollectionName), 'gateway');
     LInput := TJSHTMLInputElement(LApplication.View.ElementFor(ServiceTableID)
-      .querySelector('[data-nyx-item="gateway"] input[type="text"]'));
-    Check(LInput <> nil, 'an actual mounted text input is available');
-    LInput.focus;
+      .querySelector('[data-nyx-item="gateway"] input[aria-label="Notes"]'));
+    Check(LInput <> nil, 'the actual mounted Notes input is available');
+    { Service is editable too. Enter the Notes cell through ordinary navigation
+      so the producer update conflicts with this exact field's active draft,
+      rather than writing into the first hidden editor in the row. }
+    LCell := TJSHTMLElement(LInput.closest('[role="gridcell"]'));
+    LCell.focus;
+    LCell.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'F2'));
+    Check((document.activeElement = LInput) and not LInput.hasAttribute('hidden'),
+      'ordinary F2 navigation enters the visible Notes editor before typing');
     LInput.value := CDraft;
     LInput.setSelectionRange(2, 6);
     LFirst.View.Store.Update(NyxCollectionItem(LGateway)
@@ -144,7 +153,13 @@ begin
     Check(NyxCollectionDraftRecoveryHeld(LFirst) and not LAdmission.InputReady and
       (LInput.value = CDraft) and (LJournal.Capture.Count = 0) and
       (LPeer.View.Snapshot.Revision = LFirst.View.Store.Snapshot.Revision),
-      'zero-capacity pressure holds the real DOM draft while source and peer remain live');
+      'zero-capacity pressure holds the real DOM draft while source and peer remain live' +
+      ' [held=' + BoolToStr(NyxCollectionDraftRecoveryHeld(LFirst), True) +
+      '; ready=' + BoolToStr(LAdmission.InputReady, True) +
+      '; text=' + BoolToStr(LInput.value = CDraft, True) +
+      '; journal=' + IntToStr(LJournal.Capture.Count) +
+      '; peer/source=' + IntToStr(LPeer.View.Snapshot.Revision) + '/' +
+      IntToStr(LFirst.View.Store.Snapshot.Revision) + ']');
     LReview := LPending.CapturePendingDraft;
     Check((LReview <> nil) and (LReview.Cell.Text = CDraft) and
       LReview.Cell.Selection.Defined and (LReview.Cell.Selection.Start = 2),

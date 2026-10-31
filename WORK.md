@@ -9,7 +9,97 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Tree Find callback lifetime — 2026-10-31
+## Current work — Authored live-inspection construction — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushede17fd127 with exact remote match.
+Root remains SOLO. Follow04's retained recovery cleanup failure in the existing
+full browser consumer, then qualify its complete native/browser handwritten and
+generated pending-draft journey at both widths. Preserve all original assertions
+and the full L1/L2 scope. Stop after two actual repair cycles and reassess rather
+than adding equivalent fixtures. One bounded batch since the splitter criterion
+closure has not closed a full original04 criterion.
+
+The unchanged authored-policy browser consumer reproduces the same undefined
+RetireRowCopy receiver, independently of mounting the full recovery application.
+TView.Create applies its saved inspection policy through a method taking a
+temporary Self interface lease before the factory owns the view. The view's old
+pas2js RTL base has no construction reference. Its first disposal finalizes the
+fields; a later owner release reaches them again. Preserve before-01 and the
+earlier pending-fixture-42/public-09 failures rather than guarding the destructor's
+already disposed receiver or removing the entered-call lease.
+
+New nyx.objects.TNyxInterfacedObject shares the existing qualified construction
+guard with callbacks and the private collection view. Native RTL behavior remains
+inherited. Raw validators remain privately owned, and constructor temporary leases
+retire before ordinary owners take over. Callback interfaces and constructor
+signatures stay unchanged. Public AfterConstruction visibility matches the browser
+RTL; documentation records the inherited lifecycle requirement. No dependency
+source or per-demo construction workaround is introduced.
+
+The authored-policy consumer now passes18 checks on both targets, including its
+real independent pause/update and policy reset behavior. Scheduler ownership
+checks pass104 native/74 browser. Full browser Tree checks pass94 at1280x900 and
+390x844 on the final base, preserving the previous repaired Find/Reveal journey.
+Native core heaps are clean; browser error logs are empty.
+
+The full recovery consumer then reaches its original pressure assertion. Its
+diagnostic shows held=False/ready=True/text=True/journal=0/peer/source=1/1.
+The driver selects the first text input, now editable Service, while the producer
+changes Notes. That does not conflict with the typed draft it intends to protect.
+The maintained driver now identifies Notes and enters it through the existing
+typed F2 keyboard driver before changing text. An added assertion requires the
+actual visible editor to own focus. Every original assertion remains, including
+exact supplementary/NUL text and caret, zero-capacity pressure, peer liveness,
+export cancellation, stale confirmation, source integrity and retired receipts.
+
+Handwritten and exact generated browser applications each pass24 recovery checks
+at measured1280x900 and390x844, with empty errors. Native handwritten/generated
+recovery applications each pass57 checks at1280/390. The full native live-feed
+consumer passes89/88 handwritten (including fresh source export) and88/88 generated.
+All ten native core/control runs free every heap block. The first mixed-cache
+native build reports incompatible resolver generic types and a compiler access
+violation; after-02 retains that failure. A new output directory without external
+owned-unit caches compiles220075 lines successfully and supplies the coherent
+cache for subsequent native checks. No compiler/dependency installation changes.
+An intermediate browser driver compile lacks nyx.types; fixture-05 preserves it,
+then fixture-final-06 imports the declared keyboard trigger owner and passes.
+
+The broader handwritten/generated live-inspection browser consumer reaches its
+original deleted-anchor/nearest-successor assertion and fails there. This is not
+accepted by the recovery pass. Ordinary public browser clicks at both viewports
+verify Pause/Next/Resume: the upper view stays at revision0 while the lower peer
+advances, then Resume adopts revision1. Reviewed screenshots also reveal a table
+with no useful visible rows. Wide DOM geometry measures76.75px of caption and83px
+of header inside the authored160px table, leaving0.25px before the first row.
+This supplies a concrete physical viewport defect and next candidate cause of
+the anchor failure, not yet proof of its complete cause. Preserve both consumer
+failures and the original expected successor. Compact rendering adds further
+caption pressure; passing source/model counts cannot accept this visible state.
+
+Reassessment after two actual repair cycles (portable construction and correct
+recovery input): stop constructor/recovery fixture expansion. Two consecutive
+bounded batches since splitter acceptance have not closed a full original04
+criterion. The next deliverable changes to the same task's physical context and
+visible-workload criteria: repair caption/header allocation in the actual table
+adapter, retain the authored160px workload, then run the same full handwritten/
+generated live-inspection journey. Do not conceal the viewport by increasing only
+the demo height or replacing the expected successor with a model-only check.
+Full L1/L2, native Tree editing, physical/assistive quality, scale and task/
+north-star acceptance remain open. No percentage or task credit changes.
+
+Evidence: inspection-construction-return-01, before-01, after-02, coherent-03,
+diagnostic-04, fixture-05, fixture-final-06, generated-07, public-final-08 and
+regression-final-09. identity-final.json and qualification.json record source/
+generated/runtime/artifact identities and outcomes. Native final builds have zero
+warnings; seven unchanged pas2js RTL case warnings remain upstream. Final owned
+AfterConstruction visibility introduces no new note. Native readers60744/26663
+and browser builds32127/53499/8850 are joined; failed native79300 is terminal.
+All owned process TEMP/TMP and new outputs remain on E:. Test tabs close, viewport
+resets and Service monitor is retained for return. All27 protected QA files remain
+byte-exact; fixed QA65824 and LAN46632 are unchanged. No Studio design/profile,
+active project, live LAN payload, firewall or unrelated work changes. Root SOLO.
+
+## Previous work — Tree Find callback lifetime — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushedfc268f2a with exact remote match.
 Root remains SOLO. Return to usefulness04's original full Tree inspection

@@ -3,14 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-The retained [Tree Find failure](NS-3_control-usefulness_04.md) now has a shared
-callback-construction repair and a guarded undefined-focus path. Handwritten and
-generated browser applications each pass94 checks per measured viewport; native
-checks pass49/48 and48/48 with clean heaps. Scheduler ownership checks pass104
-native/74 browser. Ordinary Find/Reveal/Clear clicks preserve selection, deliberate
-disclosure and the independent peer. Stop Tree fixture expansion and return to
-the same task's retained live-recovery cleanup failure, then its full L1/L2
-workload. Full original criteria, task acceptance and north-star credit stay open.
+The retained [live-recovery cleanup failure](NS-3_control-usefulness_04.md) is
+repaired through a shared portable construction base, preserving the Tree repair.
+Authored-policy checks pass18 on both targets; handwritten/generated recovery
+passes24 per browser viewport and57 per native width with clean heaps. Full
+native live-inspection checks pass89/88 and88/88. The full browser counterpart
+still fails its original deleted-anchor assertion. Public rendering exposes a
+160px table whose caption/header consume159.75px. Stop constructor/recovery fixture
+expansion and return to that concrete table-viewport defect within04's original
+context/visible-workload criteria. Keep the expected successor, actual authored
+height and full journey. Full criteria, task acceptance and north-star credit stay
+open. Tree94 per browser viewport and scheduler104/74 remain intact.
 The [splitter regression](NS-2_split-platform_02.md) retains its accepted
 criteria2/3/5/6 and original external/capture limits. WORK owns the return.
 

@@ -5,6 +5,36 @@
 
 **Parked checkpoint and reassessment — 2026-10-25:**
 
+The authored-inspection return on2026-10-31 repairs the retained browser
+RetireRowCopy cleanup failure. `nyx.objects.TNyxInterfacedObject` shares the
+qualified construction guard between callbacks and private collection views;
+the view can safely apply saved inspection defaults before the factory returns.
+The original authored-policy consumer first reproduces the same failure, then
+passes18 checks on both targets. The recovery driver now enters the actual Notes
+editor with F2: its former first-textbox selector writes Service while the producer
+changes Notes, so it does not exercise the intended conflicting draft. Every
+original recovery assertion remains. Handwritten/generated browser applications
+each pass24 checks at1280x900 and390x844 with empty errors. Native equivalents
+each pass57 checks per width with clean heaps; the full native live-inspection
+consumer passes89/88 handwritten (including source export) and88/88 generated.
+Scheduler104/74 and full browser Tree94 per viewport remain intact.
+
+The broader handwritten/generated live-inspection browser consumer now stops at
+its original deleted-anchor/surviving-successor assertion. Public browser clicks
+verify Pause/Next/Resume and an independently advancing peer. Reviewed rendering
+and measured DOM geometry show a160px table with76.75px caption plus83px header,
+leaving0.25px for its first row. That is a concrete physical-viewport defect and
+the next candidate cause of the anchor failure; causation is not yet qualified.
+Preserve the full consumers and their expected successor. Return to this same
+task's original context/visible-workload criteria, repair the actual caption/header
+allocation and recheck the same public workflow. Do not increase the demo height
+or substitute model-only assertions merely to conceal the unusable viewport.
+Evidence: inspection-construction-return-01; WORK records the exact cohorts and
+retained mixed-cache compiler crash. No full original criterion or task closes.
+This is the second consecutive bounded batch without full original04 criterion
+closure since the splitter acceptance; this geometry-backed return is the required
+reassessment, replacing further constructor/recovery fixture expansion.
+
 Tree search return on2026-10-31 repairs the retained Find failure in the shared
 callback base. A constructor's temporary Self interface lease no longer disposes
 the unfinished receiver under pas2js. Native RTL ownership remains unchanged.
@@ -23,8 +53,8 @@ native-tree-12, generated-13 and core-final-14; WORK owns exact identities.
 
 This accepts the repaired Tree search/reveal regression within the cross-family
 checklist. It does not close a full original L1/L2 criterion or this task. The
-separate recovery consumer still fails with the same undefined RetireRowCopy
-receiver; its current console is preserved in public-09/recovery-console.json.
+separate recovery consumer then fails with the same undefined RetireRowCopy
+receiver; that checkpoint's console is preserved in public-09/recovery-console.json.
 Stop Tree fixture expansion and return to that existing L1 cleanup failure,
 then the complete changing-feed interaction and measured L2 requirements.
 

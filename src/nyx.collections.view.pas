@@ -506,7 +506,7 @@ function PrepareNyxCollectionColumnTransfer(const AFormer,
 implementation
 
 uses
-  Math, nyx.text.index;
+  Math, nyx.text.index, nyx.objects;
 
 type
   { Private forward declarations join source projection and query preparation
@@ -579,6 +579,8 @@ type
   end;
 
   { Live projection owns accepted query/page/selection state and subscriptions.
+    The portable base protects temporary constructor Self leases while applying
+    authored inspection defaults, before the factory obtains an interface owner.
     Optional detached row-copy witnesses are retired before state installation
     and final release, and never retain this owner through a captured menu.
     Optional inspection retains the displayed frame and bounded removed-ID facts,
@@ -586,7 +588,7 @@ type
     reservation as normal projection, query and column publications. Explicit
     Tree reveal adds copied one-shot intent to ordinary selection admission;
     source revision, query intent and later Tree commands fence its lifetime. }
-  TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy, INyxTreeReveal,
+  TView = class(TNyxInterfacedObject, INyxCollectionView, INyxTreeHierarchy, INyxTreeReveal,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
     INyxCollectionTablePresentation, IColumnPresentationTransferTarget,

@@ -67,6 +67,10 @@ LServices.Binds.Collection(NyxCollectionView(NyxCollection('services'))
 ```
 
 Normal application construction copies this policy into each independent view.
+The policy is active when `NewNyxCollectionView` returns, including on the browser
+target; the returned interface owns a live view through its first inspection
+command. Temporary constructor interface leases use Nyx's portable construction
+lifetime and retire before ordinary caller ownership takes over.
 `ncfLastVisible` is supported by flat List/Table views; Tree supports pause and
 keep-position and refuses follow-last before mounting. Runtime configuration,
 follow commands and pause state never rewrite these saved defaults.
