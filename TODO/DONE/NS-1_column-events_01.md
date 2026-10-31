@@ -1,7 +1,7 @@
 # NS-1_column-events_01 — Author typed Table column-change callbacks
 
-[North stars](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Table workbench](NS-3_control-usefulness_03.md) · [Task flow](../TASKFLOW.MD)
+[North stars](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
+[Table workbench](../NS-3_control-usefulness_03.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
@@ -24,26 +24,30 @@ router, scheduler, publication and schema/generation owners. This is one useful
 event family, not a replacement event system or complete collection-event audit.
 The broader scheduler owner and original workbench criteria remain intact.
 
-Progress on2026-10-31: criteria1,2,4 and5 are accepted. The typed data/registration
-contract retains native/browser48 and Studio source15. Live Studio Events/Add
-focuses the generated implementation; bounded MCP authoring retains two ordered
-callbacks, UI-queue policy, exact paired Undo/Redo and stale-revision refusal.
-Both delegated application compilers accept the same saved source/design bytes.
-That exact exported unit passes native52 at1280x820/390x820 and browser54 at
-verified1280x650/390x650, including actual manager Hide/Fit/grouped Reset,
-no-op/refusal, callback failure/cancellation, async copied payloads, retired and
-same-ID mounts, independent peers and supplementary Unicode field identity.
-Native heaps are clean. An ordinary compact browser Hide also visibly changes
-the status to pid while the peer retains that column. These are owned widgets
-and browser automation, not hardware/assistive qualification.
+**Accepted — 2026-10-31:** All five original criteria are satisfied for the
+qualified pas2js browser and Win32 LCL implementations. This closes the scoped
+column-event prerequisite, without accepting the full parent workbench or its
+separate Win32 cursor/message and hardware/assistive requirements.
 
-Criterion3 and the complete task remain open for the actual native resize path.
-Keep the original native pointer gate and pending desktop result; no fabricated
-HeaderSized callback substitutes for it. WORK owns exact source identities,
-manifests and retained harness/timeout failures in column-events-integration02.
-Earlier column-events-01 failures remain. This is no full workbench03 criterion6,
-Studio or L2 acceptance. Do not replay another equivalent payload/manager/
-preference fixture; finish the native input gap and return to the parent task.
+| Original criterion | Accepted evidence |
+| --- | --- |
+| 1 — Typed contract | Native/browser48 qualify immutable copied deltas, exact typed fields, opaque view identity, serials, explicit origins, optional capability and prior interface compatibility. |
+| 2 — Publication semantics | The same48 and actual generated applications retain grouped admission, no-op/stale/refused/cancelled behavior, mixed observer order, notification failures and retired/hidden generation boundaries. |
+| 3 — Target bridges | Both actual managers/Fit/reset and programmatic paths execute. Native85 at1280x820/390x820 also drive the actual LCL sizing handlers and their normal HeaderSized/release path, including LTR/RTL, Escape and unchanged sizing. Browser54 at verified1280x650/390x650 retains actual resize-handle keyboard dispatch. Multiple policies, detached async payloads and successor refusal remain. |
+| 4 — Studio/MCP | Source15 plus the live revision-aware MCP/Inspector journey qualify typed help, ordinary Add/source focus, two ordered callbacks, UI-queue policy, guarded handwritten implementations, strict saved metadata, paired exact Undo/Redo and stale-revision refusal. Unbound Tables do not advertise this functioning event. |
+| 5 — Useful saved application | Both delegated compilers accept the same source/design bytes, verified against all downloaded manifest entries. That exact exported application reports the changed field and records preferences; native85/browser54 exercise callbacks, failures, cancellation, retirement and independent peers. The native caption and actual header width also agree after resizing. Native heaps are clean; ordinary compact browser Hide visibly changes status while its peer retains the column. |
+
+Evidence packets are column-events-01, column-events-integration02 and
+column-events-native-input03. Current product sources match the retained
+14-file product identity set; only the qualification consumer changes in the
+last packet. WORK retains hashes, dimensions, clean heaps and earlier failures.
+The new browser output is byte-identical to the already-executed54-check artifact.
+The first cancellation assertion sent only LCL's after-interface key remainder;
+entering the actual KeyDown/KeyUp handlers repairs that harness. No dependency
+or product source is patched, no internal grid state is assigned and no
+HeaderSized callback is fabricated. Software-driven widget input is reported
+as such. The parent's original cursor assertion and pending desktop runner
+remain unchanged and unwaived.
 
 **Acceptance Criteria:**
 
@@ -84,7 +88,7 @@ preference fixture; finish the native input gap and return to the parent task.
 
 **Blockers**
 
-- [Observable collections](DONE/NS-1_state-collections_01.md) supplies the accepted
+- [Observable collections](NS-1_state-collections_01.md) supplies the accepted
   typed view/publication and independent-runtime foundation.
-- [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) supplies
+- [Changed state presentation](NS-2_state-projection-sync_01.md) supplies
   accepted notification/recovery behavior for the callback's bound status output.

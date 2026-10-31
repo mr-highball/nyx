@@ -1248,6 +1248,14 @@ driver argument is an exact owned workspace for compilation-only continuation;
 it requests new builds and does not replay or claim the authoring checks. Inspect
 an existing retained job after an observation timeout before deciding to rebuild.
 
+The native control consumer also enters the actual LCL widget's mouse/key
+handlers using its observed header geometry. LCL itself performs sizing and
+emits its normal header-sized notification; the test never assigns private
+sizing state or invokes that notification directly. It checks committed width,
+LTR/RTL, Escape followed by the original release, unchanged sizing and the bound
+status caption. This is software-driven LCL input. The separate Win32 cursor/
+message and hardware/assistive qualification remains with the full workbench.
+
 ## Browser column resizing — source preview
 
 The current W1 browser source adds resize separators only for tables using the

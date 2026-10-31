@@ -3,14 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-[Column events01](NS-1_column-events_01.md) now accepts criteria1,2,4 and5.
-Live Studio Events/Add, bounded MCP authoring, paired source Undo/Redo and both
-delegated compilers agree on the same saved application. Its actual manager
-Hide/Fit/grouped Reset and callback lifetimes pass native52/browser54 per width,
-with clean native heaps and verified source/design manifests. Criterion3 and the
-full task remain open for actual native resize input. Keep the original pointer
-gate; do not repeat an equivalent payload/manager/preference fixture or assign
-full parent credit. WORK retains exact dimensions, failures and provenance.
+[Column events01](DONE/NS-1_column-events_01.md) is accepted on2026-10-31.
+The same MCP-authored application passes native85 per width, including actual
+LCL sizing handlers, LTR/RTL, Escape/no-op, native header width and bound status.
+Retained browser54, Studio source15 and native/browser48 supply the unchanged
+browser/authoring/data evidence. Return to original workbench03 authoring parity
+and remaining user journeys. Its Win32 cursor/message gate remains unwaived;
+do not repeat another callback/payload/manager fixture or infer parent acceptance.
 
 [Workbench03](NS-3_control-usefulness_03.md) now accepts original criteria2,3
 and5: presentation/inspection, typed copy/export and preference/lifecycle
@@ -18,9 +17,9 @@ ownership. Full current browser workbench1576/1577, presentation159 per width
 and clipboard1755 per width complement unchanged clean native evidence and the
 same saved application's real OS effects. Original criteria1/4/6/7 remain open.
 Current native full runs retain Win32 cursor error5 and clean heaps; the prepared
-desktop runner awaits the user's result. Continue the concrete
-[typed column-change callback](NS-1_column-events_01.md) prerequisite of criterion6,
-using existing publications, events, scheduler and Studio source handling.
+desktop runner awaits the user's result. The
+[typed column-change callback](DONE/NS-1_column-events_01.md) prerequisite is
+accepted; continue the complete original criterion6 capability/parity audit.
 Do not repeat preference/header/latency variants or assign full parent credit.
 
 [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) is accepted
@@ -2475,7 +2474,7 @@ blockers rather than filename order.
 | NS-1 | [Portable resources and bindings](DONE/NS-1_resources_01.md) | Accepted image/JSON/text/data resources, typed bindings, localization, hosted caches and ordinary Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
-| NS-1 | [Typed Table column-change callbacks](NS-1_column-events_01.md) | Committed arrangement payloads and first-class Studio Events authoring for workbench03 | Prerequisite; pending implementation |
+| NS-1 | [Typed Table column-change callbacks](DONE/NS-1_column-events_01.md) | Accepted committed arrangement payloads and first-class Studio Events/MCP authoring for workbench03 | Accepted prerequisite; no separate credit |
 | NS-1 | [LINQ and safe parallel queries](NS-1_linq-parallel_01.md) | Full generic operators, native helpers and safe worker/UI/collection publication; initial deferred core qualified | Pending assessment |
 | NS-1 | [Typed clock-time prerequisite](DONE/NS-1_time-values_01.md) | Accepted exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
 | NS-1 | [Pascal generation](NS-1_codegen_01.md) | Deterministic adjacent Delphi-dialect source | Pending assessment |

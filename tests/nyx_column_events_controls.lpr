@@ -26,7 +26,8 @@ program nyx_column_events_controls;
 uses
   {$ifdef PAS2JS}JS, Web, nyx.application.browser, nyx.test.keyboard.browser,
   nyx.collections.arrangement.browser,
-  {$else}Interfaces, Forms, Controls, StdCtrls, Classes, nyx.application.lcl,
+  {$else}Interfaces, Forms, Controls, StdCtrls, Classes, Grids, Types,
+  LCLType, nyx.application.lcl, nyx.collections.lcl.grid,
   nyx.collections.arrangement.lcl,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.state, nyx.codec,
   nyx.behavior, nyx.events, nyx.scheduler, nyx.publication,
@@ -39,6 +40,13 @@ uses
   nyx.generated.column.events{$endif};
 
 type
+  {$ifndef PAS2JS}
+  { Access only the real LCL widget's protected mouse/key entry points. No instance
+    of this access class is created, no native sizing state is assigned and no
+    HeaderSized notification is called. These are software-driven widget inputs,
+    independently of the retained Win32 cursor/message qualification gate. }
+  TColumnMouseAccess = class(TNyxCollectionStringGrid);
+  {$endif}
   { UI-owned callback probe borrows the application through this test's frame.
     Retained event data must survive cancellation and same-ID remounts. }
   TProbe = class(TNyxEventCallback)
@@ -334,6 +342,185 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+{ Drive the mounted application's actual LCL header sizing, including its
+  normal final HeaderSized and original release-stamp owner. Geometry is read
+  from that widget. No global cursor read/write or Win32 pointer is fabricated. }
+procedure NativeResizeCases(const AView, APeer: INyxCollectionView);
+var
+  LGrid: TNyxCollectionStringGrid;
+  LMount: INyxCollectionMount;
+  LProbe: TProbe;
+  LCallback: INyxEventCallback;
+  LToken: INyxEventSubscription;
+  LDirection: Integer;
+  LFormerDirection: TBiDiMode;
+  LBefore: INyxCollectionColumnsCapture;
+  LCalls: Integer;
+  LCount: Integer;
+  LExpected: Integer;
+
+  procedure Stroke(ACancel, AUnchanged: Boolean; out AExpected: Integer);
+  var
+    LBounds: TRect;
+    LHit: TPoint;
+    LMove: TPoint;
+    LScale: Double;
+    LDelta: Integer;
+    LKey: Word;
+    LDown: Boolean;
+    LRelease: Boolean;
+  begin
+    LBounds := LGrid.ColumnHeaderRect(0);
+    LScale := (LGrid.Font.PixelsPerInch / 96) * LGrid.ContentProjectionScale;
+    Check((LScale > 0) and (LBounds.Right > LBounds.Left) and
+      (LBounds.Bottom > LBounds.Top + 4), 'native resize uses actual positive header geometry');
+    LDelta := Round(40 * LScale);
+    LHit := Point(LBounds.Right - 1, LBounds.Top + 4);
+    LMove := Point(LHit.X + LDelta, LHit.Y);
+
+    if LGrid.UseRightToLeftAlignment then
+    begin
+      LHit.X := LBounds.Left;
+      LMove.X := LHit.X - LDelta;
+    end;
+
+    if AUnchanged then
+    begin
+      LMove.X := LBounds.Right;
+
+      if LGrid.UseRightToLeftAlignment then
+      begin
+        LMove.X := LBounds.Left;
+      end;
+    end;
+
+    if LGrid.UseRightToLeftAlignment then
+    begin
+      AExpected := Round((LBounds.Right - LMove.X) / LScale);
+    end
+    else
+    begin
+      AExpected := Round((LMove.X - LBounds.Left) / LScale);
+    end;
+    LDown := False;
+    LRelease := False;
+    try
+      { Hover establishes LCL's own border-hit cache. The following calls enter
+        ordinary virtual handlers and leave sizing to that widget's defaults. }
+      TColumnMouseAccess(LGrid).MouseMove([], LHit.X, LHit.Y);
+      TColumnMouseAccess(LGrid).MouseDown(mbLeft, [ssLeft], LHit.X, LHit.Y);
+      LDown := True;
+      TColumnMouseAccess(LGrid).MouseMove([ssLeft], LMove.X, LMove.Y);
+      Check((NyxCollectionColumns(AView).CaptureColumns.Serial = LBefore.Serial) and
+        (GApp.State.GetValue(NyxIntegerState('column-change-count')) = LCount),
+        'intermediate native sizing does not publish an application change');
+
+      if ACancel then
+      begin
+        { LM_KEYDOWN is LCL's after-interface remainder, which deliberately
+          skips KeyDown. Enter the same before-interface virtual handler as a
+          real key, including the adapter's original cancellation/frame owner. }
+        LKey := VK_ESCAPE;
+        TColumnMouseAccess(LGrid).KeyDown(LKey, []);
+        LKey := VK_ESCAPE;
+        TColumnMouseAccess(LGrid).KeyUp(LKey, []);
+      end;
+      { One original release, including after Escape. Never synthesize a later
+        HeaderSized callback or set the accepted column width directly. }
+      LRelease := True;
+      TColumnMouseAccess(LGrid).MouseUp(mbLeft, [], LMove.X, LMove.Y);
+    finally
+
+      if LDown and not LRelease then
+      begin
+        LKey := VK_ESCAPE;
+        TColumnMouseAccess(LGrid).KeyDown(LKey, []);
+        LKey := VK_ESCAPE;
+        TColumnMouseAccess(LGrid).KeyUp(LKey, []);
+        TColumnMouseAccess(LGrid).MouseUp(mbLeft, [], LMove.X, LMove.Y);
+      end;
+    end;
+    Drain;
+    LDelta := Round(AExpected * LScale);
+
+    if ACancel then
+    begin
+      LDelta := Round(LBefore.Preferences.ColumnAt(0).WidthValue * LScale);
+    end;
+    Check(Abs(LGrid.ColWidths[0] - LDelta) <= 1,
+      'the actual native header displays the accepted width after its input tail');
+  end;
+
+begin
+  Check(GApp.View.ControlFor('service-table') is TNyxCollectionStringGrid,
+    'the saved application exposes its actual native Table widget');
+  LGrid := TNyxCollectionStringGrid(GApp.View.ControlFor('service-table'));
+  LMount := GApp.View.CollectionMount('service-table');
+  LFormerDirection := LGrid.BiDiMode;
+  LProbe := TProbe.Create;
+  LCallback := LProbe;
+  LToken := GApp.View.Events.On(NyxControlEvents('service-table'), ntColumnsChanged)
+    .Subscribe(LCallback);
+  try
+    for LDirection := 0 to 1 do
+    begin
+      LGrid.BiDiMode := bdLeftToRight;
+
+      if LDirection = 1 then
+      begin
+        LGrid.BiDiMode := bdRightToLeft;
+      end;
+      LMount.Refresh;
+      Drain;
+      Check((LGrid.ColCount = 2) and (Pos('Service', TNyxText(LGrid.Cells[0, 0])) = 1),
+        'the resized native first field is the saved application service field');
+      GApp.State.SetValue(NyxTextState('column-status'), 'Waiting for native resize');
+      Drain;
+      LBefore := NyxCollectionColumns(AView).CaptureColumns;
+      LCount := GApp.State.GetValue(NyxIntegerState('column-change-count'));
+      LCalls := LProbe.Calls;
+      Stroke(False, False, LExpected);
+      Check((LProbe.Calls = LCalls + 1) and
+        (LProbe.Last.CollectionColumns.Origin = nccoResize) and
+        (LProbe.Last.CollectionColumns.BeforeSerial = LBefore.Serial) and
+        (LProbe.Last.CollectionColumns.Serial = LBefore.Serial + 1) and
+        (LProbe.Last.CollectionColumns.Count = 1) and
+        (LProbe.Last.CollectionColumns.ChangeAt(0).Field.Name = CField) and
+        (LProbe.Last.CollectionColumns.ChangeAt(0).Properties = [nccWidth]) and
+        (LProbe.Last.CollectionColumns.ChangeAt(0).After.WidthValue = LExpected),
+        'native widget sizing emits one exact typed width delta and resize origin');
+      Check((GApp.State.GetValue(NyxIntegerState('column-change-count')) = LCount + 1) and
+        (GApp.State.GetValue(NyxTextState('column-status')) = CField) and
+        (TNyxText(TLabel(GApp.View.ControlFor('column-status-label')).Caption) = CField) and
+        (GApp.State.GetValue(NyxTextState('column-preferences')) =
+          NyxCollectionColumns(AView).CaptureColumns.Preferences.ToData.ToJSON),
+        'both saved callbacks consume the committed native resize result');
+      LBefore := NyxCollectionColumns(AView).CaptureColumns;
+      LCount := GApp.State.GetValue(NyxIntegerState('column-change-count'));
+      LCalls := LProbe.Calls;
+      Stroke(True, False, LExpected);
+      Check((LProbe.Calls = LCalls) and
+        (NyxCollectionColumns(AView).CaptureColumns.Serial = LBefore.Serial) and
+        (GApp.State.GetValue(NyxIntegerState('column-change-count')) = LCount),
+        'Escape followed by the original native release publishes no change');
+      Stroke(False, True, LExpected);
+      Check((LProbe.Calls = LCalls) and
+        (NyxCollectionColumns(AView).CaptureColumns.Serial = LBefore.Serial) and
+        (GApp.State.GetValue(NyxIntegerState('column-change-count')) = LCount),
+        'unchanged native sizing publishes no success event');
+      Check(NyxCollectionColumns(APeer).CaptureColumns.Preferences.Count = 0,
+        'native resize input preserves the independent peer arrangement');
+    end;
+  finally
+    LToken.Cancel;
+    LGrid.BiDiMode := LFormerDirection;
+    LMount.Refresh;
+    Drain;
+  end;
+end;
+{$endif}
+
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LView: INyxCollectionView;
@@ -418,6 +605,7 @@ begin
       Check(GApp.State.GetValue(NyxIntegerState('column-change-count')) = 1,
         'refused operation has no success callback');
       {$ifdef PAS2JS}await(ManagerCases(LView, LPeer));{$else}ManagerCases(LView, LPeer);{$endif}
+      {$ifndef PAS2JS}NativeResizeCases(LView, LPeer);{$endif}
       {$ifdef PAS2JS}await(Capture);{$endif}
 
       LFirst := TProbe.Create;

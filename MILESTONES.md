@@ -7,13 +7,13 @@ The original [table workbench](TODO/NS-3_control-usefulness_03.md) now accepts
 criteria2/3/5 for presentation/inspection, typed output and separate preference/
 lifecycle ownership. Current full browser journeys and retained unchanged native
 heaps/real saved-application effects support that assessment. Remaining criteria
-and native pointer/quality gates stay open. Its next concrete prerequisite is
-[typed column-change callbacks](TODO/NS-1_column-events_01.md) through ordinary
-Studio Events. Criteria1,2,4 and5 are now accepted: live revision-aware Studio/MCP
-authoring and the exact saved application's native52/browser54 qualify actual
-manager/Fit/reset and callback lifetimes at both allocations. Both delegated
-compilers accept matching source/design manifests. Criterion3 and the full
-callback task remain open for actual native resize input.
+and native pointer/quality gates stay open. Its
+[typed column-change callbacks](TODO/DONE/NS-1_column-events_01.md) prerequisite
+is accepted. Live Studio/MCP authoring and the exact saved application's
+native85/browser54 qualify manager/Fit/reset, actual LCL sizing handlers and
+callback lifetimes at both allocations. Both delegated compilers accept matching
+source/design manifests. Return to original workbench authoring parity and
+remaining user journeys; its original Win32 cursor/message gate stays open.
 This assigns no new percentage or full workbench/L2 credit.
 
 Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)

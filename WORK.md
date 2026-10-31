@@ -9,30 +9,77 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Live column-event authoring and application — 2026-10-31
+## Current work — Return to complete workbench authoring parity — 2026-10-31
 
-Outcome: PROGRESS from779b103d. Root remains SOLO. Column-events01 criteria1,2,
-4 and5 are accepted; criterion3 and the full task remain open for actual native
-resize input. Live Studio Events/Add, MCP source/metadata/history and both
-application compilers agree on the same saved pair. Its actual manager/Fit/reset
-and callback lifetime checks pass native52/browser54 per width. No full parent
-workbench, Studio, L2 or Nyx goal credit/percentage follows. This batch closes
-criteria; consecutive batches without criterion closure: zero.
+Outcome: PROGRESS fromf00a8dc0. Root remains SOLO. All five original criteria of
+[column-events01](TODO/DONE/NS-1_column-events_01.md) are accepted. Actual LCL
+sizing handlers now deliver the saved application's typed resize payload through
+the normal HeaderSized/release owner: native85 per width with clean heaps.
+Retained browser54, source15, data48 and the live Studio/MCP/compiler evidence
+complete this scoped prerequisite. No full parent workbench, Studio, L2 or Nyx
+goal credit/percentage follows. Consecutive batches without criterion closure: zero.
 
-Next finish column-events01's native resize input through its existing mounted
-control, event router and input lifetime. Keep the original Win32 GetCursorPos
-error5 gate and the prepared ordinary-desktop runner's pending result; do not
-rerun that denied call from this session or fabricate HeaderSized authority.
-Manager/Fit, payload, preference and repeated latency variants are already
-qualified. Return to original workbench03 criteria1/4/6/7 after the prerequisite;
-criteria2/3/5 remain accepted. The whole broad goal stays active.
+Return to [workbench03](TODO/NS-3_control-usefulness_03.md) original criterion6:
+public specialized contracts, ordinary Studio properties/events/help, saved
+policies, local inheritance/masks, paired source/history and bounded semantic
+operations must agree. Audit existing qualification before adding another
+fixture. Source review locates the normal sizing/layout, formatting/alignment,
+workbench copy/export and inspection forms plus their typed session intents.
+A bounded read of the preserved Service monitor also exposes OnColumnsChanged
+at unchanged revision9. The next deliverable is the complete parity assessment
+and the first missing user-facing authoring capability, if one remains. Do not
+repeat a payload/manager/header/preference or latency variant for callback credit.
 
-The current packet is column-events-integration02. Private build/test outputs
-and process TEMP/TMP stay on E:. The fixed QA executable now contains the checked
-current Studio build. Ordinary browser recovery restores all nine original
-projects with exact revisions, source drafts, selection and Undo/Redo availability.
-All27 protected files retain their hashes after recovery; LAN is unchanged.
-Preserve unrelated AGENTS/WORK edits and all earlier failures/evidence.
+Original workbench criteria2/3/5 remain accepted;1/4/6/7 stay open. The original
+Win32 GetCursorPos error5 gate and prepared ordinary-desktop runner still await
+the user's result: the current check finds no desktop-* output or running test.
+Do not rerun that denied call or replace its assertion with this separate LCL
+widget qualification. Native pointer/message and hardware/assistive quality are
+not inferred. The broad goal remains active, with other meaningful work available.
+
+The current packet is column-events-native-input03. New artifacts/private runners
+and owned process TEMP/TMP stay on E:. No Studio/LAN payload, process, runtime or
+design changes occur in this batch. Preserve unrelated AGENTS/WORK edits and all
+previous qualification archives. Actual compiler/test readers are joined.
+
+## Accepted batch — Actual LCL column sizing callbacks — 2026-10-31
+
+The same accepted MCP-exported application enters the real native widget's
+protected mouse/key handlers using observed header geometry. LCL owns hover hit
+classification, StartColSizing, native width, HeaderSized and the original
+release stamp. The test assigns no internal grid state or column width and never
+calls HeaderSized. Its access class is only a borrowed view of the actual widget;
+no alternate widget is constructed. This is software-driven LCL input, separately
+from the unchanged full Win32 cursor/message gate.
+
+At actual1280x820/390x820, both logical directions resize and deliver one exact
+Unicode field/width delta with Resize origin and adjacent serials. Intermediate
+sizing does not publish. Escape followed by the one original release and unchanged
+sizing emit nothing. Actual header geometry, a deliberately changed status caption,
+both saved callback bodies and independent peers agree after settlement. The
+whole MCP consumer passes85 per width and frees all1118158/1118376 blocks. The
+default source-fixture consumer also passes85 per width with all1099683/1099907
+blocks freed. Earlier
+manager, router failure, ordered cancellation, async copied data, remount and
+entered retirement cases remain in this same execution.
+
+The first run reaches the real resize callback, then fails its cancellation
+assertion with a clean heap. The harness sent only LM_KEYDOWN, LCL's after-interface
+remainder which skips KeyDown. Entering the actual KeyDown/KeyUp handlers fixes
+that input; no product/dependency source is changed. Repaired79 is followed by
+final85 with native caption and final geometry assertions. Both failures and
+intermediate receipts remain. Browser compilation succeeds and its emitted JS
+SHA-256 exactly equals the already-executed54-check browser artifact, so that
+execution evidence remains applicable without another identical run.
+
+Fourteen retained product source identities match; the saved source MD5 is
+unchanged from the independently verified browser/native compiler manifests.
+Task acceptance audits all five original criteria against data48, Studio source15,
+live Events/Add/MCP/history and the same application's native85/browser54. The
+same task identity moves to TODO/DONE; original criteria remain unchanged. Parent
+criterion6 still needs its complete parity audit and no parent input/quality or
+L2 requirement is waived. The bounded semantic read of the parent's service-table
+returns only its height and one event, at unchanged project revision9.
 
 ## Qualified batch — Live Studio/MCP column callbacks — 2026-10-31
 

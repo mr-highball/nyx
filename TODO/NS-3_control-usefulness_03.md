@@ -17,7 +17,7 @@ seven criteria below are unchanged; no task move or north-star percentage follow
 | 3 — Copy/export | Accepted. Current browser controls pass1755 per width for exact cell/row/range payloads, raw/display/draft choices, hidden/paged/filtered membership, escaping/headers/endings, six host outcomes and lifecycle refusal. Prior current native1964/1953 has clean heaps and unchanged native/capability sources. Accepted output-hosts01 and browser-copy-input01 retain exact real OS clipboard writes, confirmed native/browser page/filtered TSV and real native save cancellation in the same generated Service monitor. Fresh injected-host regressions do not claim new OS effects. |
 | 4 — Keyboard/context | Open for complete integrated input assessment. Current browser workbench includes commit/cancel/refused numeric drafts and context handling; prior same-application trusted keys and native widget messages remain evidence. Preserve the remaining complete workflow and native input limits. |
 | 5 — Preferences/lifecycle | Accepted. Actual RebindCases qualify independent reusable stores, compatible typed-field transfer, removed-field pruning, stale/foreign/wrong-family refusal, exact Unicode draft/caret/focus through full replacement and source/query separation. Both current native runs execute this earlier section before the later cursor gate; source control flow and failure stacks establish that bounded result, not a full-suite pass. Complete current browser workbench passes, while table-preferences-return-01 retains the same saved application's ordinary filtered reset, order/per-column resets, exact draft and independent peer. Typed persistence remains separate from authored defaults. |
-| 6 — Authoring parity | Open. Typed column-change callbacks now use the ordinary Table Events/Add/source and revision-aware MCP paths. The owned saved application's manager/Fit/reset and callback lifetimes pass native52/browser54 per width. Complete column-events01 still requires the actual native resize path; full authoring parity remains separate from these qualified boundaries. |
+| 6 — Authoring parity | Open for the complete capability/parity audit. Accepted column-events01 now supplies ordinary Events/Add/source, revision-aware MCP and the exact saved application's native85/browser54 callback paths, including LCL sizing. Review the remaining public policies, local inheritance/masks and source/semantic exposure against this original criterion; the completed event prerequisite does not alone establish full authoring parity. |
 | 7 — Complete public workbench | Open. Saved/generated Service monitor journeys and real output effects remain applicable. Full native input, final integrated visual/quality assessment and all original criteria remain required. |
 
 The current packet is `workbench-acceptance-return-01`; WORK owns exact source
@@ -1056,7 +1056,7 @@ needs qualification against the portable contract.
 
 **Blockers**
 
-- [Typed column-change callbacks](NS-1_column-events_01.md) supplies the missing
+- [Typed column-change callbacks](DONE/NS-1_column-events_01.md) supplies the accepted
   first-class runtime/Studio event bridge required by criterion6.
 
 - [Typed custom-action cell context](DONE/NS-3_collection-cell-context_01.md) supplies

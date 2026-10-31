@@ -3,6 +3,15 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Typed Table column-change callbacks](NS-1_column-events_01.md) is accepted
+on2026-10-31 for all five original criteria. Actual LCL sizing handlers now
+qualify the same MCP-authored application's typed resize payload, native width,
+status binding, LTR/RTL, cancellation and no-op behavior:85 checks per width,
+with clean heaps. Retained browser54/source15/data48 and exact delegated compiler
+manifests supply the other boundaries. This is software-driven widget input;
+the parent workbench's original Win32 pointer gate remains unchanged. Return to
+its authoring-parity and complete user journeys without duplicate goal credit.
+
 [Changed state presentation](NS-2_state-projection-sync_01.md) is accepted
 on2026-10-31 for its six unchanged criteria. Actual container wrapping and
 partial-setter failure/recovery retain drafts, focus, identities and committed
