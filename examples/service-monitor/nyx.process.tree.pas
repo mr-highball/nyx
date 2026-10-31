@@ -399,7 +399,10 @@ begin
     for LIndex := 0 to LCapture.Observation.MatchedRows - 1 do
     begin
 
-      if LCapture.MatchAt(LIndex).ID = LFocus.ID then
+      { A first search may have no focused item. Checked identity access stays
+        guarded; absent focus simply starts at the first admitted match. }
+
+      if LFocus.Defined and (LCapture.MatchAt(LIndex).ID = LFocus.ID) then
       begin
         LNext := (LIndex + 1) mod LCapture.Observation.MatchedRows;
         Break;

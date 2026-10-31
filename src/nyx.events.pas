@@ -70,7 +70,20 @@ type
     ['{739BC309-7893-48E3-9600-001002000001}']
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
   end;
+  { Managed receiver base with Delphi construction lifetime on both targets.
+    pas2js needs one internal reference when a constructor first borrows Self
+    as an interface; it retires after the most-derived constructor completes.
+    This does not depend on descendants calling an inherited Create, and does
+    not retain the receiver once construction and ordinary callers are finished. }
   TNyxEventCallback = class(TInterfacedObject, INyxEventCallback)
+  {$ifdef PAS2JS}
+  private
+    FConstructed: Boolean;
+    FConstructionReference: Boolean;
+  protected
+    function _AddRef: Integer; override;
+    procedure AfterConstruction; override;
+  {$endif}
   public
     procedure Invoke(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution); virtual; abstract;
@@ -1173,6 +1186,35 @@ begin
   end;
   Result := LCapability.Generation;
 end;
+
+{$ifdef PAS2JS}
+function TNyxEventCallback._AddRef: Integer;
+begin
+
+  if not FConstructed and not FConstructionReference then
+  begin
+    { Pin only when construction actually acquires an interface. RTL virtual
+      interface entry reaches this guard even without an inherited constructor. }
+    FConstructionReference := True;
+    inherited _AddRef;
+  end;
+  Result := inherited _AddRef;
+end;
+
+procedure TNyxEventCallback.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FConstructed := True;
+
+  if FConstructionReference then
+  begin
+    FConstructionReference := False;
+    { Like the native RTL construction guard, decrement without _Release:
+      returning a live raw class with no external owner must not destroy it. }
+    Dec(fRefCount);
+  end;
+end;
+{$endif}
 
 function TNyxEvents.GetGeneration: INyxCancellationScope;
 begin

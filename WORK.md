@@ -9,7 +9,82 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Browser split axes — 2026-10-31
+## Current work — Tree Find callback lifetime — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushedfc268f2a with exact remote match.
+Root remains SOLO. Return to usefulness04's original full Tree inspection
+consumer: Find must retain one match/four context ancestors, with independent
+peer/selection/disclosure and real reveal/clear/lifecycle behavior. Preserve its
+existing expectations; repair the owning library rather than weakening the demo.
+
+The untouched browser consumer reproduces the original Find failure. A bounded
+failure message now records7/7/7/0/2 instead of7/5/1/4/1, with no binding error.
+One private Pascal trace observes the real callback receiving find-process but
+already inactive. The next observes a valid captured generation before its
+constructor's initial Publish, then a nil generation afterward. That status
+method takes an entered-call Self interface lease. The installed pas2js RTL has
+no constructor reference guard, so releasing its first temporary lease destroys
+the still-constructing callback before the caller acquires FCallback. The native
+RTL and Nyx control construction have their own construction guards already.
+
+The shared TNyxEventCallback now lazily pins its first construction interface
+lease under pas2js and retires only that pin after the most-derived constructor.
+It protects descendants omitting inherited Create without retaining raw returned
+classes or changing native RTL ownership. The existing scheduler suite proves
+ordinary/raw owners, repeated temporary leases, an owner published inside the
+constructor and exactly-once constructor-failure cleanup:104 native checks,
+all915 blocks freed, and74 actual browser checks with empty errors. The clean
+pre-repair scheduler assertion is preserved in before-scheduler-06. Documentation
+states the inherited AfterConstruction requirement for overriding descendants.
+
+The original complete Tree journey then exposes a separate first-use bug in the
+public example: Next reads the checked ID of an undefined optional focus. The
+new startup assertion fails before that guard is added (before-next-10), then
+passes without weakening the checked identity API. The example now starts at
+the first match when no focus exists. Its original selected-archive, source/query,
+reveal/clear, hidden-selection, peer and lifecycle assertions remain intact.
+
+Final handwritten and generated browser consumers each pass94 checks at measured
+1280x900 and390x844 with empty error logs. Native handwritten checks pass49 at1280
+(including fresh source export) and48 at390; generated source passes48/48. All
+four checked heap-traced native journeys free every block. Public browser clicks
+at both widths show one match/four context ancestors, deliberate reveal to five
+disclosed rows without selection, then Clear restoring seven rows while keeping
+the opened path. The peer retains its independent closed branches. Reviewed
+public-wide.png and public-compact.png preserve visible evidence. These direct
+control checks qualify runtime behavior; no Studio design mutation is needed.
+
+The second existing consumer, nyx_collection_recovery_browser, still fails during
+partial view cleanup with an undefined RetireRowCopy receiver. Preserve its
+current public-09/recovery-console.json and earlier pending-fixture-42 failure;
+neither scheduler nor Tree success accepts this separate live-inspection journey.
+This ends two actual repair cycles (construction lifetime, undefined startup
+focus). Stop Tree fixture expansion. Next deliverable: classify and repair that
+existing L1 cleanup failure in the same maintained recovery consumer, retaining
+its assertions and full workflow. Full original L1/L2 criteria, measured scale,
+physical/assistive quality and task/north-star credit remain open. One bounded
+batch since the splitter criterion closure has not closed a full original04
+criterion; preserve that count and reassess after the next such batch.
+
+Evidence: tree-find-return-01, before-01, diagnostic-02, private trace-03/04,
+before-scheduler-05/06, repaired-07, native-08, public-09, before-next-10,
+final-browser-11, native-tree-12, generated-13 and core-final-14. identity-final.json
+records current source/generated/runtime/artifact hashes and qualification.json
+records outcomes. Final native builds have zero warnings; seven unchanged pas2js
+RTL case warnings remain upstream. No dependency sources are edited.
+
+The previously truncated generated-13 command has completed: both native logs
+contain PASS48/clean heaps and its browser build completes333856 lines. No owned
+compiler/runtime reader remains. Final scheduler exec61619 is joined exit0;
+earlier native/core and handwritten Tree readers were already joined. All new
+outputs and owned process TEMP/TMP remain on E:. Browser test tabs close and the
+temporary viewport override resets; Service monitor remains available for return.
+All27 protected QA files are byte-exact; fixed QA65824 and LAN46632 are unchanged.
+Both user-saved TSV exports again match their expected452/175-byte packets.
+No Studio project/profile, listener, live LAN payload or unrelated work changes.
+Root remains SOLO.
+
+## Previous work — Browser split axes — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushed0c51e185 with exact remote match.
 Root remains SOLO. Continue split02 criteria2/3: repeated horizontal/vertical

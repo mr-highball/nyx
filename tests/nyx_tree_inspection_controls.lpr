@@ -349,6 +349,28 @@ begin
     LBinding := TNyxProcessTreeDemo.Create(LApplication.Context, LApplication.View.Events, LView);
     LSource := LView.Store.Snapshot;
     Check((LView.Store = LPeer.Store) and (LView <> LPeer), 'two views share one source and independent runtime intent');
+    Check(LView.Selection.Count = 0, 'the fresh Tree has no selected membership');
+    {$ifdef PAS2JS}
+    Check(not LView.Selection.Focus.Defined,
+      'the browser startup journey exercises an undefined optional focus');
+    {$endif}
+    EnterSearch('INDEX');
+    Click(ProcessFindID);
+    LCapture := CaptureNyxTreeInspection(LView);
+    Check((LCapture.Observation.MatchedRows = 1) and
+      (LCapture.Observation.ContextRows = 4),
+      'ordinary startup Find works before any process is selected');
+    Click(ProcessNextID);
+    LCapture := CaptureNyxTreeInspection(LView);
+    Check(LView.Selection.Focus.Defined and (LView.Selection.Focus.ID = 'indexer') and
+      (LView.Selection.Count = 0) and (LCapture.Observation.DisclosedRows = 5),
+      'next match reveals and focuses the first result without inventing selection');
+    Check((LPeer.Snapshot.Count = 7) and not NyxTreeHierarchy(LPeer).IsExpanded(Item('computer')),
+      'startup search and reveal leave the peer independent');
+    Click(ProcessClearSearchID);
+    Check((LView.Snapshot.Count = 7) and LTree.IsExpanded(Item('computer')) and
+      (LView.Selection.Count = 0),
+      'clearing startup search preserves deliberate disclosure and empty membership');
     LView.Select(Item('archive'));
     LTree.CollapseAll;
     LCapture := CaptureNyxTreeInspection(LView);
@@ -360,7 +382,11 @@ begin
     LFacts := LCapture.Observation;
     Check(LFacts.Defined and (LFacts.SourceRows = 7) and (LFacts.ResultRows = 5) and
       (LFacts.MatchedRows = 1) and (LFacts.ContextRows = 4) and (LFacts.DisclosedRows = 1),
-      'search reports one actual match, four context ancestors and one disclosed row');
+      'search reports one actual match, four context ancestors and one disclosed row' +
+      ' [source/result/match/context/disclosed=' + IntToStr(LFacts.SourceRows) + '/' +
+      IntToStr(LFacts.ResultRows) + '/' + IntToStr(LFacts.MatchedRows) + '/' +
+      IntToStr(LFacts.ContextRows) + '/' + IntToStr(LFacts.DisclosedRows) +
+      '; binding=' + LApplication.View.LastBindingError + ']');
     Check((LCapture.RoleOf(Item('computer')) = ntrContext) and
       (LCapture.RoleOf(Item('indexer')) = ntrMatch) and
       (LCapture.RoleOf(Item('archive')) = ntrAbsent), 'typed roles do not call an ancestor a match');

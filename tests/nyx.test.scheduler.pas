@@ -68,6 +68,32 @@ uses
   {$ENDIF}
 
 type
+  { Caller-owned facts outlive every tested receiver, including failed
+    construction. The callback borrows them without creating an ownership cycle. }
+  TConstructionLeaseFacts = class
+  public
+    Calls: Integer;
+    Constructed: Integer;
+    Destroyed: Integer;
+  end;
+
+  { A constructor deliberately exercises entered-call Self leases before any
+    external interface owner exists. It omits inherited Create, proving the
+    automatic construction boundary also protects existing descendant patterns.
+    A second constructor publishes a caller owner before that boundary returns. }
+  TConstructionLeaseCallback = class(TNyxEventCallback)
+  private
+    FFacts: TConstructionLeaseFacts;
+    procedure TemporaryLease;
+  public
+    constructor Create(AFacts: TConstructionLeaseFacts; AFail: Boolean);
+    constructor CreateRetained(AFacts: TConstructionLeaseFacts;
+      out AOwner: INyxEventCallback);
+    destructor Destroy; override;
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
+  end;
+
   { Independent fixture facts outlive the counted delivery scope and are never
     retained by a router, scheduler or callback after this isolated journey. }
   TScopeLeaseFacts = class
@@ -1025,6 +1051,134 @@ begin
   end;
 end;
 
+constructor TConstructionLeaseCallback.Create(AFacts: TConstructionLeaseFacts;
+  AFail: Boolean);
+begin
+  { No inherited constructor is required to reach TObject.AfterConstruction. }
+  FFacts := AFacts;
+  TemporaryLease;
+
+  if AFacts.Destroyed <> 0 then
+  begin
+    { Let the owning assertion report premature disposal without calling back
+      through the receiver that the broken implementation already retired. }
+    Exit;
+  end;
+  TemporaryLease;
+
+  if AFail then
+  begin
+    raise ENyxSchedule.Create('Intentional callback constructor failure');
+  end;
+  Inc(AFacts.Constructed);
+end;
+
+constructor TConstructionLeaseCallback.CreateRetained(AFacts: TConstructionLeaseFacts;
+  out AOwner: INyxEventCallback);
+begin
+  FFacts := AFacts;
+  TemporaryLease;
+  AOwner := Self;
+  TemporaryLease;
+  Inc(AFacts.Constructed);
+end;
+
+procedure TConstructionLeaseCallback.TemporaryLease;
+var
+  LLease: INyxEventCallback;
+begin
+  LLease := Self;
+  LLease.Invoke(EventInfo, nil);
+end;
+
+procedure TConstructionLeaseCallback.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Inc(FFacts.Calls);
+end;
+
+destructor TConstructionLeaseCallback.Destroy;
+begin
+  Inc(FFacts.Destroyed);
+  inherited Destroy;
+end;
+
+function RunCallbackConstructionTests: Integer;
+var
+  LFacts: TConstructionLeaseFacts;
+  LCallback: TConstructionLeaseCallback;
+  LOwner: INyxEventCallback;
+  LRefused: Boolean;
+begin
+  Result := 0;
+  LFacts := TConstructionLeaseFacts.Create;
+  LCallback := nil;
+  try
+    LCallback := TConstructionLeaseCallback.Create(LFacts, False);
+    Check((LFacts.Destroyed = 0) and (LFacts.Constructed = 1) and (LFacts.Calls = 2),
+      'temporary Self leases cannot destroy an unfinished callback', Result);
+    Check(LCallback.RefCount = 0,
+      'successful construction retires its internal reference without destruction', Result);
+    LOwner := LCallback;
+    Check(LCallback.RefCount = 1,
+      'the first real interface owner receives the ordinary reference count', Result);
+    LCallback := nil;
+    LOwner.Invoke(EventInfo, nil);
+    Check((LFacts.Calls = 3) and (LFacts.Destroyed = 0),
+      'a constructor-leased receiver remains callable through its real owner', Result);
+    LOwner := nil;
+    Check(LFacts.Destroyed = 1,
+      'the final real interface release destroys the callback exactly once', Result);
+    LFacts.Calls := 0;
+    LFacts.Constructed := 0;
+    LFacts.Destroyed := 0;
+    LCallback := TConstructionLeaseCallback.Create(LFacts, False);
+    Check((LFacts.Destroyed = 0) and (LCallback.RefCount = 0),
+      'a raw-class caller receives a live unowned callback without a leaked pin', Result);
+    LCallback.Free;
+    LCallback := nil;
+    Check(LFacts.Destroyed = 1,
+      'a raw-class caller can free its constructed receiver normally', Result);
+    LFacts.Calls := 0;
+    LFacts.Constructed := 0;
+    LFacts.Destroyed := 0;
+    LCallback := TConstructionLeaseCallback.CreateRetained(LFacts, LOwner);
+    Check((LFacts.Destroyed = 0) and (LFacts.Constructed = 1) and
+      (LFacts.Calls = 2) and (LCallback.RefCount = 1),
+      'construction retires only its pin when a real caller already owns the receiver', Result);
+    LCallback := nil;
+    LOwner.Invoke(EventInfo, nil);
+    Check((LFacts.Calls = 3) and (LFacts.Destroyed = 0),
+      'a constructor-published owner remains valid after the construction boundary', Result);
+    LOwner := nil;
+    Check(LFacts.Destroyed = 1,
+      'a constructor-published owner also destroys exactly once on final release', Result);
+    LFacts.Calls := 0;
+    LFacts.Constructed := 0;
+    LFacts.Destroyed := 0;
+    LRefused := False;
+    try
+      LCallback := TConstructionLeaseCallback.Create(LFacts, True);
+    except
+      on ENyxSchedule do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFacts.Calls = 2) and (LFacts.Constructed = 0) and
+      (LFacts.Destroyed = 1),
+      'constructor failure unwinds temporary leases and destroys exactly once', Result);
+  finally
+    LOwner := nil;
+
+    if (LCallback <> nil) and (LFacts.Destroyed = 0) then
+    begin
+      LCallback.Free;
+    end;
+    LFacts.Free;
+  end;
+end;
+
 constructor TScopeLeaseProbe.Create(AFacts: TScopeLeaseFacts);
 begin
   inherited Create;
@@ -1159,7 +1313,8 @@ var
   LEvent: TNyxEventInfo;
   LRejected: Boolean;
 begin
-  Result := RunNyxKeyboardResponseTests + RunEventScopeLeaseTests;
+  Result := RunCallbackConstructionTests + RunNyxKeyboardResponseTests +
+    RunEventScopeLeaseTests;
   LRouter := NewNyxEvents;
   try
     LFirst := TProbe.Create;

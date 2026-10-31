@@ -231,6 +231,13 @@ avoid a callback retaining its own router/view. Explicit Close also releases
 registrations when an application itself owns a router. Renderer disposal calls
 Close automatically.
 
+`TNyxEventCallback` protects temporary `Self` interface leases during construction
+on both targets, including constructors that omit `inherited Create`. Its internal
+construction reference retires when the most-derived constructor returns; it does
+not replace a caller's owning interface. Descendants overriding
+`AfterConstruction` must call the inherited method. Raw class callers still own
+their returned object, and failed construction still unwinds normally.
+
 When `NewNyxEvents` creates its default scheduler, that router owns the terminal
 scheduling boundary. `Close` shuts the private scheduler down even if queued work
 or a caller still holds an interface to it. Native queued work retires before

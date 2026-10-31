@@ -5,6 +5,29 @@
 
 **Parked checkpoint and reassessment — 2026-10-25:**
 
+Tree search return on2026-10-31 repairs the retained Find failure in the shared
+callback base. A constructor's temporary Self interface lease no longer disposes
+the unfinished receiver under pas2js. Native RTL ownership remains unchanged.
+The public example also guards undefined startup focus before reading its ID.
+Its existing full consumer retains every original assertion and adds first-use
+Find/Reveal/Clear without inventing selection. Handwritten and generated browser
+applications each pass94 checks at measured1280x900 and390x844 with empty error
+logs. Native handwritten checks pass49/48, including fresh source export, and
+generated checks pass48/48; every native run has a clean heap. The existing
+scheduler suite passes104 native and74 browser checks, covering raw/interface
+ownership, constructor-published owners and exactly-once failed construction.
+Ordinary browser clicks and reviewed desktop/compact screenshots show the
+one-match/four-context result, deliberate reveal, retained disclosure on Clear
+and an independent peer. Evidence: tree-find-return-01, final-browser-11,
+native-tree-12, generated-13 and core-final-14; WORK owns exact identities.
+
+This accepts the repaired Tree search/reveal regression within the cross-family
+checklist. It does not close a full original L1/L2 criterion or this task. The
+separate recovery consumer still fails with the same undefined RetireRowCopy
+receiver; its current console is preserved in public-09/recovery-console.json.
+Stop Tree fixture expansion and return to that existing L1 cleanup failure,
+then the complete changing-feed interaction and measured L2 requirements.
+
 Additional evidence on2026-10-30: the standalone handwritten
 nyx_collection_recovery_browser consumer stops during partial view cleanup with
 an undefined RetireRowCopy receiver. Preserve pending-fixture-42-error.json in
