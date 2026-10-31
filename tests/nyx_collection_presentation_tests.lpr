@@ -38,6 +38,15 @@ type
     procedure ViewChanged(const AView: INyxCollectionView; const AChanges: INyxCollectionChanges);
     procedure StoreChanged(const AStore: INyxCollection; const AChanges: INyxCollectionChanges);
   end;
+  { Public-only forwarding capture deliberately lacks the private canonical
+    proof. Matching serials, values or even the same wrapper cannot admit reuse. }
+  TForeignColumnCapture = class(TInterfacedObject, INyxCollectionColumnsCapture)
+  public
+    Original: INyxCollectionColumnsCapture;
+    function GetSpec: TNyxCollectionViewSpec;
+    function GetPreferences: TNyxColumnPreferences;
+    function GetSerial: Integer;
+  end;
 
 const
   CCommand: TNyxText = 'Command 🌙';
@@ -47,6 +56,21 @@ const
 
 var
   GChecks: Integer;
+
+function TForeignColumnCapture.GetSpec: TNyxCollectionViewSpec;
+begin
+  Result := Original.Spec;
+end;
+
+function TForeignColumnCapture.GetPreferences: TNyxColumnPreferences;
+begin
+  Result := Original.Preferences;
+end;
+
+function TForeignColumnCapture.GetSerial: Integer;
+begin
+  Result := Original.Serial;
+end;
 
 procedure Check(AValue: Boolean; const AMessage: TNyxText);
 begin
@@ -884,8 +908,64 @@ begin
   end;
 end;
 
+procedure ColumnCaptureContinuity;
+var
+  LStore: INyxCollection;
+  LView: INyxCollectionView;
+  LPeer: INyxCollectionView;
+  LFirst: INyxCollectionColumnsCapture;
+  LAgain: INyxCollectionColumnsCapture;
+  LChanged: INyxCollectionColumnsCapture;
+  LForeign: INyxCollectionColumnsCapture;
+  LWrapper: TForeignColumnCapture;
+  LKey: TNyxCollectionRef;
+  LSpec: TNyxCollectionViewSpec;
+begin
+  LKey := NyxCollection('capture-continuity');
+  LStore := NewNyxCollection(LKey, NyxCollectionSchema.Text(NyxTextField(CCommand), ''),
+    [NyxCollectionItem(NyxItem(LKey, 'one')).WithValue(NyxTextField(CCommand), CExactText)]);
+  LSpec := NyxCollectionView(LKey).Column(NyxTextField(CCommand), 'Command');
+  LView := NewNyxCollectionView(LStore, LSpec, cpTable);
+  LPeer := NewNyxCollectionView(LStore, LSpec, cpTable);
+  LFirst := NyxCollectionColumns(LView).CaptureColumns;
+  LAgain := NyxCollectionColumns(LView).CaptureColumns;
+  Check((LFirst <> LAgain) and SameNyxCollectionColumns(LFirst, LAgain),
+    'different built-in captures prove the same immutable owner/configuration');
+  Check(not SameNyxCollectionColumns(LFirst, nil) and not SameNyxCollectionColumns(nil, LAgain),
+    'missing configuration cannot reuse admitted observations');
+  Check(not SameNyxCollectionColumns(LFirst, NyxCollectionColumns(LPeer).CaptureColumns),
+    'a same-store peer with equal public serials does not inherit another owner cache');
+  LStore.Update(NyxCollectionItem(NyxItem(LKey, 'one')).WithValue(NyxTextField(CCommand), 'New text'));
+  LAgain := NyxCollectionColumns(LView).CaptureColumns;
+  Check(SameNyxCollectionColumns(LFirst, LAgain),
+    'an admitted data publication does not invent a column configuration change');
+  ConfigurePresentation(LView, NyxTablePresentationPreferences.Density(ntrdComfortable));
+  LChanged := NyxCollectionColumns(LView).CaptureColumns;
+  Check(not SameNyxCollectionColumns(LFirst, LChanged),
+    'runtime presentation invalidates the previous configuration proof');
+  ConfigurePresentation(LView, NyxTablePresentationPreferences);
+  LAgain := NyxCollectionColumns(LView).CaptureColumns;
+  Check(not SameNyxCollectionColumns(LFirst, LAgain) and
+    not SameNyxCollectionColumns(LChanged, LAgain),
+    'reset publishes a fresh configuration even when values return to the original defaults');
+  LWrapper := TForeignColumnCapture.Create;
+  LForeign := LWrapper;
+  LWrapper.Original := LAgain;
+  Check((LForeign.Serial = LAgain.Serial) and
+    not SameNyxCollectionColumns(LForeign, LAgain) and
+    not SameNyxCollectionColumns(LForeign, LForeign),
+    'foreign captures keep full admission even for identical public values/object identity');
+  LForeign := nil;
+  LPeer := nil;
+  LView := nil;
+  LStore := nil;
+  Check(SameNyxCollectionColumns(LFirst, LFirst) and SameNyxCollectionColumns(LAgain, LAgain),
+    'retained capture equality remains inert data after its views/store retire');
+end;
+
 begin
   try
+    ColumnCaptureContinuity;
     HeaderPolicies;
     AuthoredValues;
     WireRefusals;

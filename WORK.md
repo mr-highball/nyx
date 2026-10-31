@@ -9,7 +9,174 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Visible Tree recovery — 2026-10-31
+## Current work — Measured live inspection — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushed1b205778 with exact remote match.
+Root remains SOLO. The visible Tree recovery deliverable is supplied; return to
+original04's L2 requirement rather than another presentation/constructor variant.
+Measure the SAME public two-view Live service inspection application, preserving
+its authored160px tables, real controls, stable edit/selection, independent peer,
+pause/resume and query behavior. Keep original functional regressions and all
+protected Studio projects/listeners. New TEMP/TMP, runners and evidence stay on E:.
+
+Predeclared qualification profile, before execution:10000 services with five
+typed fields (within the existing16384-item/8MiB admission limits), two mounted
+views,1280x900 and390x844 allocations. Prepare immutable input separately; measure
+its construction, visible publication and subsequent real-target synchronization
+separately. Run20 ten-row update bursts with an active Unicode draft, ten while
+paused, then explicit Resume; exercise an active filter, sort and distant scroll.
+Target budgets are3000ms for visible population,100ms update p95/250ms maximum,
+100ms UI-turn/paint p95/250ms maximum, and250ms discrete input/query/scroll actions.
+Native managed-heap growth target is128MiB above the mounted small document;
+browser heap availability/precision and DOM residency are reported explicitly.
+These are qualification targets, not current promises. Do not lower the scale,
+increase deadlines or replace this mounted journey if a budget fails. Preserve
+phase samples and failures, attribute the concrete cost, repair at most two
+actual product cycles, then reassess the same original workload. Browser frame
+opportunities/native Update are distinct from physical display/input latency.
+
+The maintained Pascal workload now runs the real public application and exact
+runtime collection APIs. It preserves a real Unicode editor through20 ten-row
+bursts, then pauses through ten producer ticks, resumes, filters/sorts and reaches
+a distant row. Browser review precedes a real Finish/retire button; native retires
+normally. baseline-02 passes behavior80 native/79 browser (one native source
+export assertion), but fails two/seven timing budgets. Typical committed updates
+are125ms native/300ms browser. Population is286/878ms; heap samples are explicitly
+native managed heap versus optional whole-context browser estimates, not equivalent.
+
+attribution-03 adds a final borrowed prepared subscriber to the same store. It
+records only timestamps at completed admission/install, without source writes.
+Diagnostic reporting now happens after the timed target turn so file flushing
+does not masquerade as application latency. Admission takes roughly8ms native/
+30ms browser; target notification/retirement takes115/260ms. Behavior/retirement
+remain80 per target, with the same timing failures. probe-04 temporarily times
+Refresh stages; native logs and324 browser records identify recurring column
+layout/presentation admission before painting. Its initial browser clock/console
+bridge compile failures remain retained. All temporary mount instrumentation is
+saved externally and the original source hash is restored before product changes.
+
+First product repair: SameNyxCollectionColumns recognizes only immutable captures
+carrying the private owner/serial proof. Mounts reuse their last successfully
+rendered column observations; first/changed/foreign captures still take complete
+policy admission. No public serial alone grants reuse, and retained captures own
+no live view or target. Pure presentation tests add owner/data-change/reset/
+foreign/retirement assertions. capture-reuse-05 passes80 browser workload checks
+and retirement, reducing typical update samples to185ms and failures to two;
+the100ms p95 target remains unmet. Its reused native cache stops with FPC internal
+error200611011 in schema.pas; no native runtime credit is taken. capture-reuse-06
+uses a fresh E: unit directory; its actual compiler reader is still being joined.
+Root does not restart on observation timeout. Initial new-consumer compiler
+errors remain in baseline-01; public interfaces/source expectations are preserved.
+
+Evidence root is live-inspection-scale-01. Native/browser wide baseline and
+attribution receipts are retained. Actual compact, generated, full presentation
+compatibility, latest heap qualification and original L2 acceptance remain open.
+The large-scroll screenshot also reveals partially missing browser header faces;
+retain that visual gap with the existing workbench owner rather than counting
+the row-window assertion as full header/viewport quality. At most one further
+actual product repair cycle precedes reassessment of this same workload.
+
+The fresh native cache finishes315373 lines in468.9s, with zero warnings; its
+compiler I/O advances throughout. No compiler/dependency installation is changed.
+capture-reuse-06 completes native behavior80, still missing two timing budgets.
+Pure presentation116 passes on browser. The existing full browser presentation
+consumer fails its unchanged Fit assertion at21; an overlay of exact pre-repair
+1b205778 sources reproduces the same failure. Both verdicts are retained, and
+the existing workbench03 owns this prior gap and the distant-scroll header issue.
+An isolated same-root projection diagnostic measures0.6ms clone/12.8ms bindings;
+do not invent a Clone optimization for the larger notification cost.
+
+Second product repair: guarded scalar refresh already proves identities/order
+from an exact predecessor. A protected pure witness lets the browser reuse its
+own resident-row slots only from THAT physical snapshot; full, uncertain and
+structural transitions retain removal-aware remapping. Draft recovery, changed
+values, geometry and painting remain active. stable-order-09 passes101/100 native
+handwritten and100/100 generated behavior checks, with explicit scalar carets.
+Native compact has zero declared budget failures; desktop retains two p95 failures.
+The desktop browser passes80, with typical unfiltered updates near120ms versus
+the original300ms; two p95 targets still fail. Keep these as samples, not a general
+speedup/latency acceptance. Native116 policy,29 refresh plus29 prior controls,
+88 live-inspection per width and167 actual presentation per width pass, with
+checked heap tracing. Readers26655/44977 are joined; no third product repair is
+started without reassessing this same original workload.
+
+Qualification refinement declared BEFORE the next execution: original L2 also
+requires updates while filters are active and offscreen correctness. The earlier
+profile filters only after its update loop, so it does not supply that evidence.
+The maintained runner now adds a separately reported20 ten-row filtered burst
+series with its own real Unicode draft/caret and the SAME100/250ms targets. One
+distant row receives every burst; deliberate later navigation must show its last
+accepted note through actual browser DOM/native grid fields. No prior budget,
+scale or assertion is reduced, and unfiltered/filtered samples are not pooled.
+This refines the acceptance measurement, not a third library repair or full L2
+credit. Complete its handwritten/generated target runs, retain all failures and
+return to the concrete remaining cost/Workbench gap after this two-repair audit.
+
+### Qualified progress and reassessment — 2026-10-31
+
+criteria-10 completes the declared filtered refinement without another library
+repair. Native handwritten behavior188/187 and generated187/187 completes at
+1280x900/390x844. The four budget verdicts are4/1/4/0, respectively. Native
+unfiltered update p95 is126.81/78.51ms handwritten and121.83/79.42ms generated;
+filtered update p95 is117.44/86.31ms and104.88/79.53ms. Native filtered target-turn
+p95 is155.93/100.99ms and137.89/96.25ms. Retain the slight compact handwritten
+miss rather than generalizing the earlier compact pass. No declared threshold
+or workload size changes. The separate1280 heap-traced workload completes187
+behavior checks and a complete zero-unfreed-block heap; its timing is excluded.
+
+Browser handwritten behavior147 per actual allocation completes and explicitly
+retires, with6/8 failed budgets and empty error logs. Generated browser behavior147
+also completes/retires at each allocation, with4/4 failed budgets. Its wide run
+overlaps a separate baseline compiler and is functional/generated compatibility
+evidence only, not isolated performance evidence. The compact generated run has
+no concurrent owned compiler/native workload. Original budgets remain unaccepted.
+Native/browser resource estimates retain their distinct precision and scope.
+
+Reviewed screenshots/DOM geometry expose an unmet original visible-navigation
+outcome. The worker5000 row reads the final `Filtered update 19` value, but at
+desktop it begins481.375px while the table ends423px; at compact it begins813.375px
+while the table ends750px. It is resident and selected, not successfully revealed
+inside the physical clip. The retained data assertion is valid only for realized
+values. Normal header faces also remain partially absent. Both handwritten and
+generated consumers reproduce the clipping. The current generic flat contract
+has no explicit row-reveal facet corresponding to Tree reveal. Next diagnose
+navigation intent, the harness's platform scroll bridge, measured row correction
+and header clipping together under original workbench03/inspection04 outcomes.
+Do not conflate selection, resident DOM, a frame opportunity and visible paint.
+
+The full existing live-inspection and clipboard browser regressions pass138 and
+1755 per actual desktop/compact allocation, with empty errors. The incremental
+refresh consumer initially throws on a hidden Tree child's missing `summary`.
+The unchanged consumer against a COMPLETE exact1b205778 source archive reproduces
+the same failure. Earlier incomplete-overlay compiler failures are retained;
+they do not establish a product regression or a usable baseline. The fixture now
+explicitly expands its parent through NyxTreeHierarchy before mounting, adds the
+physical-child assertion and preserves ALL original identity/value checks.
+refresh-fixture-11 passes30 plus31 existing browser checks per allocation and29
+plus29 native checks, with a complete clean heap. No third product repair occurs.
+The separate full presentation Fit failure at21 remains open and unchanged.
+
+All owned compiler/runtime readers, including88628/20261/17854/32957, are joined;
+failed orchestration is retained, not represented as passing. Owned browser tabs
+are closed and the viewport override reset. No listeners, LAN payload, user
+project, clipboard or disk export are changed by this workload qualification.
+The earlier two browser save confirmations remain exact452/175-byte TSV files.
+Final preservation verifies all27 protected files by length/SHA-256, both fixed
+listener owners46632/65824 and the byte-identical public generated companion.
+The user-saved TSV files match their expected bytes exactly. Source identities
+and preservation receipts are retained in the same external evidence packet.
+Full04 context/L2,03 workbench/AT/physical quality, ordinary
+Studio delivery and north-star acceptance remain open, with no new credit.
+
+Reassessment after TWO actual product repair cycles: useful remaining work is
+the same application's visible distant navigation and normal header/Fit behavior,
+followed by attribution of remaining admission/target costs against unchanged
+budgets. Return directly to those original user outcomes. Do not create another
+constructor, caption, recovery-panel or equivalent performance variant. Preserve
+the public160px authored allocation, real draft/peer workflows and all current
+compatibility assertions. The resolver remains deferred and root remains SOLO.
+
+## Previous work — Visible Tree recovery — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushed daffe510 with exact remote match.
 Root remains SOLO. Continue04's original second criterion with its informative

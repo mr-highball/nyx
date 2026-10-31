@@ -479,6 +479,9 @@ type
       acquire the optional view facet. Targets never query it while painting. }
     FHasColumnLayout: Boolean;
     FColumnLayout: TNyxColumnLayoutObservation;
+    { Last successfully rendered immutable configuration, never a view/target
+      backlink. Only its private owner/serial proof permits observation reuse. }
+    FAdmittedColumns: INyxCollectionColumnsCapture;
     { A separate copied cache keeps text/density opt-in independent of width,
       pinning and arrangement controls. Runtime work limits never enter design. }
     FHasTablePresentation: Boolean;
@@ -593,6 +596,10 @@ type
       pass. A target may refuse unsupported direct mounts; failure does not
       claim activation or make an old physical surface authoritative. }
     procedure PrepareTablePresentation; virtual;
+    { Pure frame witness, usable only inside the current guarded Refresh.
+      Scalar/no-change admission proves exact identities/order from this SAME
+      physical predecessor. Foreign/equal-revision substitutes do not qualify. }
+    function CanReuseRefreshOrder(const ARendered: INyxCollectionSnapshot): Boolean;
     { Recovery-only physical access bypasses stale source input admission, never
       writes source, and must recheck exact data before the final target change.
       Alternatives without editors retain these refusing defaults. }
@@ -4162,6 +4169,7 @@ begin
     FQueryHeaders := nil;
     FQuerySummary := '';
     FColumnLayout := Default(TNyxColumnLayoutObservation);
+    FAdmittedColumns := nil;
     FTablePresentation := Default(TNyxTablePresentationObservation);
     FView := nil;
     FTreeReveal := nil;
@@ -4267,6 +4275,14 @@ procedure TNyxCollectionMountBase.PrepareTablePresentation;
 begin
   { Browser observation is attached before activation. Native targets override
     this boundary to admit their real frame/editor bridge and paint reader. }
+end;
+
+function TNyxCollectionMountBase.CanReuseRefreshOrder(
+  const ARendered: INyxCollectionSnapshot): Boolean;
+begin
+  Result := FUpdating and FRefreshPlan.Defined and
+    (FRefreshPlan.Kind in [ncrRows, ncrUnchanged]) and
+    (ARendered <> nil) and (ARendered = FLastSnapshot);
 end;
 
 procedure TNyxCollectionMountBase.RefreshTargetIdle;
@@ -4544,11 +4560,17 @@ begin
     begin
       LCapture := NyxCollectionColumns(LView).CaptureColumns;
 
-      LNextLayout := TNyxColumnLayoutObservation.Read(LCapture);
-
-      if FHasTablePresentation or FObservesTablePresentation then
+      if not SameNyxCollectionColumns(FAdmittedColumns, LCapture) then
       begin
-        LNextPresentation := TNyxTablePresentationObservation.Read(LCapture);
+        { Row publications do not change an immutable column configuration.
+          Re-admit on initial/changed/foreign captures; never trust a public
+          serial alone or bypass the first complete policy validation. }
+        LNextLayout := TNyxColumnLayoutObservation.Read(LCapture);
+
+        if FHasTablePresentation or FObservesTablePresentation then
+        begin
+          LNextPresentation := TNyxTablePresentationObservation.Read(LCapture);
+        end;
       end;
     end;
 
@@ -4610,6 +4632,7 @@ begin
     if InputLifetimeCurrent then
     begin
       FLastSnapshot := LSnapshot;
+      FAdmittedColumns := LCapture;
       FFollowRequestSerial := FPendingFollowRequestSerial;
       FTreeRevealSerial := FPendingTreeRevealSerial;
       FDraftRecoveryHeld := False;

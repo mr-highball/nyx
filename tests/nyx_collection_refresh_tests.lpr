@@ -233,6 +233,10 @@ begin
   LTableView := NewNyxCollectionView(LStore,
     LSpec.Column(NyxIntegerField('priority'), 'Priority', cmEditable), cpTable);
   LTreeView := NewNyxCollectionView(LStore, LSpec.Parent(NyxTextField('parent')), cpTree);
+  { This fixture inspects a child row's physical text identity. Disclosure is
+    explicit runtime intent: collapsed browser descendants are not resident.
+    Open the parent before mounting rather than dereferencing a hidden child. }
+  NyxTreeHierarchy(LTreeView).SetExpanded(Ref('root'), True);
   {$ifdef PAS2JS}
   LRenderer := TNyxBrowserRenderer.Create;
   LHost := TJSHTMLElement(document.createElement('main'));
@@ -253,6 +257,8 @@ begin
     LTable := LRenderer.ElementFor('review-table');
     LTree := LRenderer.ElementFor('review-tree');
     LListText := LList.querySelector('[data-nyx-item="notes"] span').firstChild;
+    Check(LTree.querySelector('[data-nyx-item="notes"] summary span') <> nil,
+      'explicit parent disclosure realizes the physical child under test');
     LTreeText := LTree.querySelector('[data-nyx-item="notes"] summary span').firstChild;
     LTableText := LTable.querySelector('[data-nyx-item="notes"] td span').firstChild;
     {$else}

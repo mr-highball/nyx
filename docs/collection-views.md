@@ -3046,6 +3046,20 @@ Selection and interaction policy continue to synchronize independently of values
 Rejected/no-op edits still normalize the exact widget cell; unchanged editor
 drafts retain their existing protection.
 
+Mounted tables reuse admitted column layout and presentation observations only
+when `SameNyxCollectionColumns` proves the same immutable built-in owner and
+configuration serial. An equal public serial, another view or a foreign capture
+does not qualify. First use and configuration changes still take complete
+validation. A capture owns copied configuration and an inert identity, with no
+backlink to a live view, store or widget. A held/failed refresh does not advance
+the last successfully rendered configuration.
+
+Within a guarded scalar refresh, the browser can also retain its own row slots
+when the refresh plan proves the exact physical predecessor's identities and
+order. Changed values, draft recovery, measurement and paint still run. Full,
+structural and uncertain transitions keep the removal-aware remapping path;
+matching revision numbers alone cannot authorize slot reuse.
+
 Native lists retain entry objects and update only affected captions. Table cells
 and tree captions skip unchanged row values. Browser labels retain unchanged text
 nodes and editors retain scalar comparison guards. The plan owns only Boolean
@@ -3070,6 +3084,37 @@ The same serial native 4096-row workload reduces twenty updates 3406→1391 ms;
 these hidden-control samples exclude paint and do not establish production budgets.
 Current browser execution and full observing/delivery remain separate gates.
 See [the exact evidence](../WORK.md#current-return-path-incremental-collection-values--2026-10-07).
+
+### Mounted live-inspection workload
+
+[`nyx_live_inspection_workload.lpr`](../tests/nyx_live_inspection_workload.lpr)
+measures the public two-table Live service inspection application with 10,000
+five-field services. Its authored 160px table height is unchanged. It separates
+immutable preparation, visible publication, prepared admission, target work and
+the next target turn. Twenty ten-row bursts retain a real Unicode input draft
+and scalar caret. A second twenty-burst series runs under an active filter;
+pause/resume, an independent peer, sorting and distant-row value readback remain
+part of the same journey. Freshly generated Pascal runs through the same driver.
+
+Qualification allocations are 1280x900 and 390x844. The declared targets remain
+3000ms visible population, 100ms update/target-turn p95 with a 250ms maximum,
+250ms discrete actions and 128MiB native managed-heap growth. Browser frame
+opportunities and native `Update` are software observations, not physical input
+or display latency. Optional browser heap estimates cover the whole context and
+do not establish equivalent memory acceptance. Exit code 2 means behavioral
+checks completed with failed timing/memory targets; it is not a passing result.
+
+The 2026-10-31 run completes 188/187 handwritten and 187/187 generated native
+behavior checks. Desktop p95 targets remain unmet; compact handwritten/generated
+runs retain one/zero failed budgets. Browser handwritten applications complete
+147 checks per width, with six/eight failed budgets. These samples qualify
+behavior and expose remaining cost; they do not accept the original L2 budgets.
+Browser distant-row readback proves the realized value, while reviewed geometry
+shows that row outside the table's visible clip. Missing normal header faces and
+the retained full presentation consumer's Fit failure also remain open under the
+existing workbench task. Do not substitute resident DOM contents for successful
+visible navigation. WORK.md retains exact cohorts, failures and the reassessment
+after two product repair cycles.
 
 ## On-demand native table values
 

@@ -7357,7 +7357,7 @@ var
   LWorkIndex: Integer;
   LListEntry: Integer;
   LSameOrder: Boolean;
-  LSameSnapshot: Boolean;
+  LReuseSlots: Boolean;
   LRealize: Boolean;
   LMeasured: Boolean;
   LTextWork: Integer;
@@ -7679,13 +7679,18 @@ begin
   begin
     LFocused := nil;
   end;
-  LSameSnapshot := FRendered = LData;
+  LReuseSlots := (FRendered = LData) or
+    (CanReuseRefreshOrder(FRendered) and (FRendered.Count = LData.Count) and
+      (Length(FRows) = LData.Count));
   LSameOrder := (FRendered <> nil) and (FRendered.Count = LData.Count);
 
-  if LSameSnapshot then
+  if LReuseSlots then
   begin
-    { The mount exclusively owns these mutable row slots. Same-source refresh
-      needs no copy/remapping; retained runtime views never borrow this array. }
+    { The mount exclusively owns these mutable slots. An exact same snapshot,
+      or the current admission's proven stable order from this physical frame,
+      needs no dataset-sized index remap. Resident rows still recover drafts,
+      synchronize changed values, measure and paint normally. Full/uncertain
+      plans retain the original identity/removal-aware remapping below. }
     LNext := FRows;
     LWork := Copy(FResidentRows, 0, Length(FResidentRows));
   end
@@ -7882,7 +7887,7 @@ begin
     end;
   end;
 
-  if not LSameSnapshot then
+  if not LReuseSlots then
   begin
     for LIndex := 0 to Length(FRows) - 1 do
     begin

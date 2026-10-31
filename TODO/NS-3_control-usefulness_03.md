@@ -3,6 +3,28 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Large-scroll/presentation gaps — 2026-10-31:**
+
+The same10000-service live-inspection application shows partially absent normal
+header faces after distant browser scrolling while pinned headings remain. Keep
+header visibility/readability in the original workbench quality criteria; a low
+resident-row count does not accept this layout. Screenshot evidence is retained
+in WORK's live-inspection-scale-01 packet. The complete presentation consumer
+also stops at its original real Fit assertion, check21. Both the current repair
+and an overlay of unchanged1b205778 source reproduce that identical failure.
+Preserve the full assertion and diagnose its actual command/outcome before
+claiming full presentation compatibility. This is existing-owner work, without
+a replacement fixture, new acceptance credit or reduced original scope.
+
+The final handwritten and generated browser workload also retains the last
+offscreen-updated value in worker5000's resident row, while measured geometry
+places that selected row below the160px table clip at both widths. The flat
+collection contract currently exposes no explicit reveal counterpart to the
+Tree reveal facet; selection need not imply a viewport request. Diagnose the
+public navigation and target geometry together, including the harness's platform
+scroll bridge. Resident value readback is not evidence that a user can see the
+requested row. Keep original navigation/header usability expectations intact.
+
 **Copy and recovery return — 2026-10-30:**
 
 The ordinary saved Service actions application now qualifies arrangement/reset

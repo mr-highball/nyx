@@ -67,6 +67,28 @@ begin
   Result := FSerial;
 end;
 
+function SameNyxCollectionColumns(const ALeft, ARight: INyxCollectionColumnsCapture): Boolean;
+var
+  LLeft: INyxCollectionColumnsCapture;
+  LRight: INyxCollectionColumnsCapture;
+  LLeftProof: IColumnCaptureProof;
+  LRightProof: IColumnCaptureProof;
+begin
+  { Capability queries can call foreign code. Retain both original captures
+    and each acquired proof independently before comparing inert scalar facts. }
+  LLeft := ALeft;
+  LRight := ARight;
+  Result := (LLeft <> nil) and (LRight <> nil) and
+    Supports(LLeft, IColumnCaptureProof, LLeftProof) and
+    Supports(LRight, IColumnCaptureProof, LRightProof);
+
+  if Result then
+  begin
+    Result := (LLeftProof.ColumnIdentity = LRightProof.ColumnIdentity) and
+      (LLeftProof.ColumnSerial = LRightProof.ColumnSerial);
+  end;
+end;
+
 function NyxCollectionColumns(const AView: INyxCollectionView): INyxCollectionColumns;
 var
   LColumns: INyxCollectionColumns;

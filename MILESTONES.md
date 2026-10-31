@@ -12,6 +12,14 @@ heaps. This closes those hard prerequisites of live-inspection04. Its broader
 context, native Tree editing, physical/assistive quality and L2 scale remain open;
 the scorecard stays Pending assessment without duplicate credit. WORK owns evidence.
 
+Measured live-inspection04 now exercises the same public two-table application
+with10000 services, active Unicode drafts and sustained filtered updates at both
+allocations. Two bounded repairs reuse proven immutable column observations and
+browser row slots. Behavioral and clean-heap evidence advances, while timing
+targets and actual visible distant navigation remain unmet. Return to existing
+workbench03's navigation/header/Fit outcomes after this two-repair audit; no full
+L2/task/north-star credit or performance guarantee is assigned.
+
 Current execution priority (2026-10-29): deliver observable everyday workflows
 from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-workflows--2026-10-26):
 table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a

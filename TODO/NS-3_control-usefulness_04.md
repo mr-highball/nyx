@@ -3,7 +3,34 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
-**Current evidence — 2026-10-31:**
+**Measured L2 checkpoint — 2026-10-31:**
+
+The maintained Pascal workload uses the same public two-table application with
+10000 five-field services and unchanged160px tables, at1280x900 and390x844.
+It separates immutable preparation/publication/target turns, retains a real
+Unicode draft and scalar caret through20 ten-row bursts and another20 filtered
+bursts, and exercises pause/independent-peer/resume, sort, distant value readback
+and teardown. Two product repairs reuse privately proven immutable column
+observations and exact-predecessor browser row slots. Foreign/configuration/
+structural changes retain full admission and removal-aware remapping.
+
+Native behavior completes188/187 handwritten and187/187 generated checks;
+desktop budget failures remain4/4, compact1/0. Browser handwritten behavior
+completes147 per actual viewport, with6/8 failed budgets. The original100ms p95,
+250ms maximum and other declared targets remain unchanged. A separate clean
+heap run and compatibility receipts are recorded in WORK, separately from
+software timing observations and physical/assistive quality.
+
+Actual browser geometry exposes an unmet original outcome: worker5000's realized
+field contains the final offscreen update, but the row remains below the table's
+visible clip after deliberate navigation. The row-count/value assertions do not
+accept visible reveal. Normal header clipping and the pre-existing full Fit
+consumer failure remain with workbench03. Stop after these two actual product
+repair cycles and reassess those concrete navigation/chrome failures and remaining
+cost; do not start another equivalent performance variant or lower the budgets.
+Full L2/context/physical/assistive acceptance, task closure and credit stay open.
+
+**Prior recovery evidence — 2026-10-31:**
 
 The same public process Tree now consumes a reusable Nyx recovery panel and
 runtime binding. Review distinguishes admitted journal entries from exact held

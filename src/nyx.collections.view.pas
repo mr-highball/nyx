@@ -446,6 +446,11 @@ function NyxCollectionPages(const AView: INyxCollectionView): INyxCollectionPage
 { Unsupported alternatives/non-table views refuse explicitly. The optional
   facet never manufactures a toolkit-specific column engine or data copy. }
 function NyxCollectionColumns(const AView: INyxCollectionView): INyxCollectionColumns;
+{ True only for immutable built-in captures carrying the same private owner
+  identity and accepted column serial. Equal public serials alone prove nothing.
+  This compares configuration, not live authority; retained captures remain inert
+  after retirement. Alternative implementations conservatively return False. }
+function SameNyxCollectionColumns(const ALeft, ARight: INyxCollectionColumnsCapture): Boolean;
 { Query the optional runtime owner without changing an existing view or source.
   Unsupported alternatives return nil; a captured source is immutable data only. }
 function NyxCollectionInspection(const AView: INyxCollectionView): INyxCollectionInspection;

@@ -22,6 +22,14 @@ desktop/compact rendering are reviewed. Return to04's remaining navigation/conte
 and measured L2 requirements. Stop prerequisite/panel/caption/constructor variants.
 Physical/assistive quality and north-star acceptance remain open. WORK owns exact
 source identities, retained failures, preservation checks and the next action.
+The same public two-table application now has a maintained10000-service measured
+workload, with active Unicode drafts, unfiltered/filtered updates, pause/resume,
+independent peers and generated consumers. Immutable column observation reuse
+and exact-predecessor browser row-slot reuse remove repeated work. Native/browser
+timing targets still fail; distant browser values are correct in resident rows
+but the requested row remains clipped. After two product repair cycles, return
+to original workbench03's visible navigation/header/Fit defects and04's remaining
+costs. Do not assign full L2 acceptance or substitute more performance variants.
 The [splitter regression](NS-2_split-platform_02.md) retains its accepted
 criteria2/3/5/6 and original external/capture limits. WORK owns the return.
 
