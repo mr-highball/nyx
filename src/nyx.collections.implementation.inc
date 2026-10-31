@@ -39,8 +39,23 @@ type
   TCollectionStore = class;
   TPreparedCollection = class;
 
-  TCollectionSnapshot = class(TInterfacedObject, INyxCollectionSnapshot)
+  { Canonical immutable snapshot forward is used only by the private ownership
+    bridge. Its borrowed object remains protected by the supplied interface. }
+  TCollectionSnapshot = class;
+  { Private canonical bridge is not a public extension promise. A forwarded
+    interface cannot qualify: the returned object's canonical snapshot interface
+    must be the original supplied receiver. No row getter or callback is used. }
+  ICollectionSnapshotProof = interface(IInterface)
+    ['{9563BC36-A0B1-4492-BAD3-98CC532F0D15}']
+    function SnapshotObject: TCollectionSnapshot;
+  end;
+  { Owned immutable rows retain an inert order identity without any store/view
+    backlink. Only the private admitted scalar preparation can share it with a
+    successor. Retained snapshots keep their original order/value observations. }
+  TCollectionSnapshot = class(TInterfacedObject, INyxCollectionSnapshot,
+    ICollectionSnapshotProof)
   private
+    FOrderIdentity: IInterface;
     FKey: TNyxCollectionRef;
     FSchema: TNyxCollectionSchema;
     FItems: TCollectionItems;
@@ -50,7 +65,9 @@ type
     function Bucket(const AID: TNyxText): Integer;
   public
     constructor Create(const AKey: TNyxCollectionRef; const ASchema: TNyxCollectionSchema;
-      const AItems: TCollectionItems; ARevision, ABytes: Integer);
+      const AItems: TCollectionItems; ARevision, ABytes: Integer;
+      const AOrderIdentity: IInterface = nil);
+    function SnapshotObject: TCollectionSnapshot;
     function GetKey: TNyxCollectionRef;
     function GetSchema: TNyxCollectionSchema;
     function GetCount: Integer;
@@ -169,6 +186,61 @@ type
     procedure Retire;
   end;
 
+
+function OwnedSnapshot(const ASnapshot: INyxCollectionSnapshot): TCollectionSnapshot;
+var
+  LLease: INyxCollectionSnapshot;
+  LProof: ICollectionSnapshotProof;
+  LCanonical: INyxCollectionSnapshot;
+begin
+  Result := nil;
+  LLease := ASnapshot;
+
+  if (LLease = nil) or not Supports(LLease, ICollectionSnapshotProof, LProof) then
+  begin
+    Exit;
+  end;
+  Result := LProof.SnapshotObject;
+
+  if (Result = nil) or (Result.ClassType <> TCollectionSnapshot) then
+  begin
+    Exit(nil);
+  end;
+  LCanonical := Result;
+
+  if LCanonical <> LLease then
+  begin
+    Result := nil;
+  end;
+end;
+
+function SameNyxCollectionItemOrder(const ALeft, ARight: INyxCollectionSnapshot): Boolean;
+var
+  LLeftLease: INyxCollectionSnapshot;
+  LRightLease: INyxCollectionSnapshot;
+  LLeft: TCollectionSnapshot;
+  LRight: TCollectionSnapshot;
+begin
+  LLeftLease := ALeft;
+  LRightLease := ARight;
+  Result := (LLeftLease <> nil) and (LLeftLease = LRightLease);
+
+  if Result then
+  begin
+    Exit;
+  end;
+  LLeft := OwnedSnapshot(LLeftLease);
+  LRight := OwnedSnapshot(LRightLease);
+  Result := (LLeft <> nil) and (LRight <> nil) and
+    (LLeft.FOrderIdentity = LRight.FOrderIdentity) and
+    (LLeft.FKey.FName = LRight.FKey.FName) and
+    (Length(LLeft.FItems) = Length(LRight.FItems));
+end;
+
+function TCollectionSnapshot.SnapshotObject: TCollectionSnapshot;
+begin
+  Result := Self;
+end;
 
 function NameBytes(const AName: TNyxText; AReference: Boolean): Integer;
 var
@@ -933,13 +1005,19 @@ end;
 
 constructor TCollectionSnapshot.Create(const AKey: TNyxCollectionRef;
   const ASchema: TNyxCollectionSchema; const AItems: TCollectionItems;
-  ARevision, ABytes: Integer);
+  ARevision, ABytes: Integer; const AOrderIdentity: IInterface);
 var
   LSize: Integer;
   LIndex: Integer;
   LBucket: Integer;
 begin
   inherited Create;
+  FOrderIdentity := AOrderIdentity;
+
+  if FOrderIdentity = nil then
+  begin
+    FOrderIdentity := TInterfacedObject.Create;
+  end;
   FKey := NyxCollection(AKey.Name);
   FSchema := ASchema.Copy;
   { Copy only the outer vector. Every shared item is private/immutable; getters
@@ -1486,6 +1564,8 @@ constructor TPreparedCollection.Create(AOwner: TCollectionStore;
   const AItems: TCollectionItems; const ASteps: TCollectionSteps);
 var
   LIndex: Integer;
+  LBefore: TCollectionSnapshot;
+  LOrderIdentity: IInterface;
 begin
   inherited Create;
   FOwner := AOwner;
@@ -1500,8 +1580,23 @@ begin
     begin
       raise ENyxCollection.Create('Collection revision budget is exhausted');
     end;
+    LBefore := OwnedSnapshot(FBefore);
+
+    if LBefore <> nil then
+    begin
+      LOrderIdentity := LBefore.FOrderIdentity;
+      for LIndex := 0 to High(ASteps) do
+      begin
+
+        if not (ASteps[LIndex].Kind in [nceUpdate, nceReplace]) then
+        begin
+          LOrderIdentity := nil;
+          Break;
+        end;
+      end;
+    end;
     FAfter := TCollectionSnapshot.Create(AOwner.FKey, AOwner.FSchema, FItems,
-      FBefore.Revision + 1, AOwner.DatasetBytes(FItems));
+      FBefore.Revision + 1, AOwner.DatasetBytes(FItems), LOrderIdentity);
     FChanges := TCollectionChanges.Create(FBefore, FAfter, ASteps);
   end
   else

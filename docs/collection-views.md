@@ -3127,6 +3127,16 @@ Selection and interaction policy continue to synchronize independently of values
 Rejected/no-op edits still normalize the exact widget cell; unchanged editor
 drafts retain their existing protection.
 
+Canonical scalar snapshots can establish unchanged order through
+`SameNyxCollectionItemOrder`, avoiding a complete row-ID walk. Completed owned
+query projections use `SameNyxQueryItemOrder` to compare their private numeric
+maps over independently known source order. This still evaluates the current
+predicate and sort normally; equal policy/count/revision does not establish
+order. Foreign, structural, paged or otherwise unproven contexts retain complete
+identity comparison. Operation, scope, revision, changed-row and hierarchy
+admission remain in the refresh plan. These hints retain no live owner and do
+not imply equal values, physical continuity or performance-budget acceptance.
+
 Mounted tables reuse admitted column layout and presentation observations only
 when `SameNyxCollectionColumns` proves the same immutable built-in owner and
 configuration serial. An equal public serial, another view or a foreign capture

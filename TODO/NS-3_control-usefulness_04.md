@@ -3,6 +3,24 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Update cost return — 2026-10-31:**
+
+Two bounded product repairs remove redundant row-ID materialization. Canonical
+scalar snapshots retain inert order identity; completed query results compare
+their numeric maps over independently known source order. Predicate/sort
+evaluation, atomic admission, structural/foreign fallbacks and changed-value/
+hierarchy/input guards remain intact. Shared collection checks pass173 and full
+view checks12429 on both targets; WORK owns the complete actual application,
+generated-source, refresh, viewport, clipboard and heap receipts.
+
+The original10000-service/five-field/160px workload remains unchanged. Timing
+budgets still fail, and the unisolated runs vary; no general speedup or full L2
+acceptance is claimed. Both repair cycles are used. Reassess the remaining
+publication/observer/retirement and physical target costs before further latency
+changes, alongside03's concrete compact data-area/layout problem. Do not add an
+equivalent performance fixture or lower the original thresholds. Full task/
+criterion/physical/assistive credit stays open.
+
 **Visible navigation return — 2026-10-31:**
 
 The explicit mounted viewport contract now replaces the same application's

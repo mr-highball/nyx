@@ -9,7 +9,101 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Explicit collection viewport reveal — 2026-10-31
+## Current work — Live table update cost return — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushed3fb30a45 with exact remote match.
+Root remains SOLO. Return to original04's same10000-service/five-field/160px
+application and its unchanged100ms p95/250ms maximum thresholds. Current samples
+put most elapsed time after admission, in publication/target synchronization.
+Use a private Pascal-instrumented copy of that same consumer and source cohort
+to locate the actual cost, then repair the owning library/adapters. Diagnostic
+instrumentation is not an acceptance workload or a new performance variant.
+Run the unchanged uninstrumented application afterward on both targets and
+widths, retaining its edit/caret/selection/viewport/peer/teardown assertions.
+At most two product repair cycles before reassessing the original outcome.
+Do not manufacture another cache/proof fixture or relax source/data/quality
+requirements to earn timing credit. Keep all27 protected files, both fixed
+listeners, unrelated edits and E:-only process TEMP/TMP/artifacts. Full original
+criteria, physical/assistive/parity and task credit remain open.
+
+`live-update-cost-return-01/profile-01` retains the private timing helper and
+first source overlays. Native diagnostic application completes203 checks with4
+budget failures. Inclusive aggregates across20 bursts put refresh-plan cost at
+about6.9ms per unfiltered burst and7.1ms filtered, while target rendering is about
+56.7/41.9ms. These scopes overlap; do not sum parent and child durations.
+The first browser overlay lacks adapter counters because a renderer resolves its
+same-directory source. Its167-check result is retained as partial instrumentation.
+The overbroad02 source copier is stopped after identifying the exact two renderer
+parents;03 uses those scoped copies and explicit early probe imports. Its full
+browser application also completes167 checks. Aggregate refresh-plan cost is
+about23.6/37.3ms per burst and target rendering34.5/39.4ms. Filtered query evaluation
+adds about26.4ms per burst. Diagnostic timing is not isolated L2 acceptance.
+
+Product repair1 adds an inert order identity to canonical immutable snapshots.
+Only admitted scalar Update/Replace steps share it; any structural step starts
+fresh, including same-final-ID remove/reinsert. A narrow helper qualifies exact
+canonical receivers without public row/metadata reads. Foreign/query contexts
+keep the complete original comparison. Refresh plans preserve all remaining
+revision/scope/operation/parent/changed-row admission. Eleven assertions join the
+existing collection suite, including foreign wrappers and retained values.
+Browser collections pass173 checks; the unchanged uninstrumented large
+application passes167 at actual1280x900/390x844 and explicitly retires. Observed
+budget failures remain5/4. Desktop publication p95 is about124ms and its UI turn
+136ms; filtered remains over200ms. No performance or full task credit follows.
+Both browser tabs are closed and viewport override reset. No service payload or
+protected project has been replaced.
+
+Native repair1 session38261 is joined, exit0. The new public helper invalidates
+consumer interface checksums; the full collection/registry consumer rebuilt its
+metadata/Studio dependencies in1057s. Its173 checks pass with a complete clean
+heap. The actual LCL application then passes203 per1280/390, retaining4/0 failed
+timing budgets. These are behavior results, not full L2 acceptance.
+
+Product repair2 compares completed canonical query row-index maps over known
+immutable source order. The original predicate/sort evaluation still runs in
+full. Only the redundant row-ID materialization is avoided; changed membership,
+sort maps, structural source operations and foreign contexts retain full checks.
+Ten assertions extend the existing query suite and three extend refresh plans.
+Native checks pass66 query,12429 full view,32 refresh plus29 prior actual controls,
+and37 viewport checks, all with complete clean heaps. Browser query66, full
+view12429 plus31 controls, refresh33 plus31 prior controls, and viewport37 pass
+with empty errors. Current handwritten native large application passes204/203,
+with3/0 observed timing-budget failures. The source-style blank line is repaired.
+
+Both repair cycles are now used. Native compatibility session41728 and generated
+browser compiler28599 are joined, exit0. Exact generated native applications
+complete203 per width, with4/2 observed failed budgets; full native clipboard
+1904/1893 passes with clean heaps. The full compact application also passes203
+with zero unfreed blocks; its heap-traced timing is not a speed qualification.
+Final handwritten/generated browser applications each complete167 at actual
+1280x900/390x844 with empty errors and explicit retirement. Failed budgets are
+4/4 handwritten and5/5 generated. Desktop handwritten filtered publication p95
+is about164ms, UI turn189ms; unfiltered publication146ms, UI turn162ms. Unisolated
+runs vary, so neither a general speedup nor full L2 acceptance is claimed.
+
+Fresh generated public document source remains byte-identical. Owned final
+compiler warnings are zero; existing upstream pas2js Classes warnings remain.
+Authenticated nyx_session succeeds through the configured Pascal client. All27
+protected files are byte-exact and both fixed listener owners/paths remain.
+The seven implementation/test inputs are recorded in `source-identity.json`.
+Browser clipboard checks pass1755 at both actual widths with empty errors. All
+owned compiler/runtime jobs are joined; regression tabs are closed and viewport
+override is reset. Final source review and all seven source hashes agree with
+the executed cohort. The current desktop browser image shows the retained live
+table, selected cell and independent peer; this is a visual spot check, not full
+physical/assistive or compact-layout acceptance. Earlier user-saved page.tsv and
+filtered.tsv exports remain present and require no repeat dialog.
+
+Reassessment: identity materialization is reduced without changing application
+semantics, but original100ms p95 is still unmet. Return to original publication/
+observer/retirement and physical target cost, measuring the unaccounted part of
+the same application before further latency changes. Also retain03's concrete
+compact39px-row/31px-data-area problem and physical/assistive quality. No third
+optimization belongs in this batch. Further work follows the original outcome
+and this reassessment; volume establishes no task closure or completion credit.
+The broad goal remains active.
+
+## Previous work — Explicit collection viewport reveal — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pusheda520d664 with exact remote match.
 Root remains SOLO. The original03/04 navigation return now has a portable mounted

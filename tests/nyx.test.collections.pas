@@ -57,6 +57,85 @@ type
     procedure Observe(const ACollection: INyxCollection;
       const AChanges: INyxCollectionChanges);
   end;
+  { Valid public snapshot extension forwards immutable values but has no private
+    canonical ownership proof. Read counts detect accidental row/metadata reads
+    while merely asking whether its order can be reused. It owns no live store. }
+  TForeignOrderSnapshot = class(TInterfacedObject, INyxCollectionSnapshot)
+  private
+    FInner: INyxCollectionSnapshot;
+  public
+    Reads: Integer;
+    constructor Create(const AInner: INyxCollectionSnapshot);
+    function GetKey: TNyxCollectionRef;
+    function GetSchema: TNyxCollectionSchema;
+    function GetCount: Integer;
+    function GetRevision: Integer;
+    function GetDataBytes: Integer;
+    function ItemAt(AIndex: Integer): TNyxCollectionItem;
+    function Item(const ARef: TNyxItemRef): TNyxCollectionItem;
+    function IndexOf(const ARef: TNyxItemRef): Integer;
+    function Has(const ARef: TNyxItemRef): Boolean;
+  end;
+
+constructor TForeignOrderSnapshot.Create(const AInner: INyxCollectionSnapshot);
+begin
+  inherited Create;
+  FInner := AInner;
+end;
+
+function TForeignOrderSnapshot.GetKey: TNyxCollectionRef;
+begin
+  Inc(Reads);
+  Result := FInner.Key;
+end;
+
+function TForeignOrderSnapshot.GetSchema: TNyxCollectionSchema;
+begin
+  Inc(Reads);
+  Result := FInner.Schema;
+end;
+
+function TForeignOrderSnapshot.GetCount: Integer;
+begin
+  Inc(Reads);
+  Result := FInner.Count;
+end;
+
+function TForeignOrderSnapshot.GetRevision: Integer;
+begin
+  Inc(Reads);
+  Result := FInner.Revision;
+end;
+
+function TForeignOrderSnapshot.GetDataBytes: Integer;
+begin
+  Inc(Reads);
+  Result := FInner.DataBytes;
+end;
+
+function TForeignOrderSnapshot.ItemAt(AIndex: Integer): TNyxCollectionItem;
+begin
+  Inc(Reads);
+  Result := FInner.ItemAt(AIndex);
+end;
+
+function TForeignOrderSnapshot.Item(const ARef: TNyxItemRef): TNyxCollectionItem;
+begin
+  Inc(Reads);
+  Result := FInner.Item(ARef);
+end;
+
+function TForeignOrderSnapshot.IndexOf(const ARef: TNyxItemRef): Integer;
+begin
+  Inc(Reads);
+  Result := FInner.IndexOf(ARef);
+end;
+
+function TForeignOrderSnapshot.Has(const ARef: TNyxItemRef): Boolean;
+begin
+  Inc(Reads);
+  Result := FInner.Has(ARef);
+end;
 
 procedure Check(ACondition: Boolean; const AMessage: TNyxText; var ACount: Integer);
 begin
@@ -243,6 +322,67 @@ begin
   AToken := AProbe.Store.Subscribe(AProbe.Observe);
 end;
 
+function OrderContinuityChecks: Integer;
+var
+  LStore: INyxCollection;
+  LOther: INyxCollection;
+  LBefore: INyxCollectionSnapshot;
+  LCurrent: INyxCollectionSnapshot;
+  LForeign: INyxCollectionSnapshot;
+  LProxy: TForeignOrderSnapshot;
+  LKey: TNyxCollectionRef;
+  LA: TNyxItemRef;
+  LB: TNyxItemRef;
+begin
+  Result := 0;
+  LKey := NyxCollection('order/🌙');
+  LA := NyxItem(LKey, 'one/🌙');
+  LB := NyxItem(LKey, 'two');
+  LStore := NewNyxCollection(LKey, FixtureSchema, [
+    NyxCollectionItem(LA).WithValue(CaptionField, 'Original / 🌙'),
+    NyxCollectionItem(LB)]);
+  LBefore := LStore.Snapshot;
+  Check(SameNyxCollectionItemOrder(LBefore, LBefore),
+    'the same immutable observation retains identical order', Result);
+  Check(not SameNyxCollectionItemOrder(nil, nil), 'absent snapshots establish no order', Result);
+  LStore.Update(NyxCollectionItem(LA).WithValue(CaptionField, 'Changed / 🌙'));
+  LCurrent := LStore.Snapshot;
+  Check(SameNyxCollectionItemOrder(LBefore, LCurrent) and
+    (LBefore.Revision <> LCurrent.Revision),
+    'an admitted scalar successor preserves order across revisions', Result);
+  Check((LBefore.Item(LA).GetValue(CaptionField) <> LCurrent.Item(LA).GetValue(CaptionField)) and
+    (LBefore.IndexOf(LA) = 0) and (LCurrent.IndexOf(LA) = 0),
+    'order continuity does not alias or equate retained scalar values', Result);
+  LBefore := LCurrent;
+  LStore.Replace(NyxCollectionItem(LA).WithValue(CountField, 7));
+  Check(SameNyxCollectionItemOrder(LBefore, LStore.Snapshot),
+    'whole-record replacement under the same live identity retains its position', Result);
+  LOther := NewNyxCollection(LKey, FixtureSchema,
+    [NyxCollectionItem(LB), NyxCollectionItem(LA)]);
+  Check(not SameNyxCollectionItemOrder(LStore.Snapshot, LOther.Snapshot),
+    'matching public scope/count cannot identify a different store order', Result);
+  LProxy := TForeignOrderSnapshot.Create(LBefore);
+  LForeign := LProxy;
+  Check(not SameNyxCollectionItemOrder(LForeign, LStore.Snapshot) and (LProxy.Reads = 0),
+    'foreign public snapshots remain unknown without reading their metadata or rows', Result);
+  LBefore := LStore.Snapshot;
+  LStore.Move(LB, 0);
+  Check(not SameNyxCollectionItemOrder(LBefore, LStore.Snapshot),
+    'a structural move cannot reuse scalar order identity', Result);
+  LBefore := LStore.Snapshot;
+  LStore.Apply([NyxRemove(LB), NyxInsert(0, LBefore.Item(LB))]);
+  Check((LStore.Snapshot.ItemAt(0).Ref.ID = LB.ID) and
+    not SameNyxCollectionItemOrder(LBefore, LStore.Snapshot),
+    'same final names after remove/reinsert do not erase structural evidence', Result);
+  LBefore := LStore.Snapshot;
+  LStore.Append(NyxCollectionItem(NyxItem(LKey, 'third')));
+  Check(not SameNyxCollectionItemOrder(LBefore, LStore.Snapshot),
+    'row insertion allocates independent order identity', Result);
+  LStore := nil;
+  Check(SameNyxCollectionItemOrder(LBefore, LBefore) and (LBefore.Count = 2),
+    'inert order observations stay safe after their source store is released', Result);
+end;
+
 function RunNyxCollectionTests: Integer;
 var
   LKey: TNyxCollectionRef;
@@ -282,7 +422,7 @@ var
   LBatch: Integer;
   LPayload: TNyxText;
 begin
-  Result := 0;
+  Result := OrderContinuityChecks;
   LRef := Default(TNyxCollectionRef);
   LDefaultEdit := Default(TNyxCollectionEdit);
   LDefaultSchema := Default(TNyxCollectionSchema);

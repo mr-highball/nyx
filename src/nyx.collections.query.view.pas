@@ -43,13 +43,31 @@ type
 function NyxQuerySnapshot(const ASource: INyxCollectionSnapshot;
   const AQuery: TNyxCollectionQuery; const AParents: TNyxQueryIndexes;
   out AResultParents: TNyxQueryIndexes): INyxCollectionSnapshot;
+{ Positive order evidence for canonical immutable query results. Their source
+  order must be independently known, and their completed numeric projection
+  vectors must match exactly. Predicates/sorts are still evaluated normally;
+  equal revisions/counts/policies alone never establish identity/order. Different
+  foreign projections return False. This retains no source, view or live cache. }
+function SameNyxQueryItemOrder(const ALeft, ARight: INyxCollectionSnapshot): Boolean;
 
 implementation
 
 uses nyx.state;
 
 type
-  TQuerySnapshot = class(TInterfacedObject, INyxCollectionSnapshot)
+  { Canonical projection forward is borrowed only beneath retained snapshot
+    interfaces during internal order comparison. }
+  TQuerySnapshot = class;
+  { Private canonical bridge rejects wrappers forwarding another object's
+    payload: its canonical snapshot interface must equal the supplied receiver. }
+  IQuerySnapshotProof = interface(IInterface)
+    ['{A17D0151-8F06-4867-A6C3-70650F12B0A8}']
+    function SnapshotObject: TQuerySnapshot;
+  end;
+  { Immutable source-index projection owns detached forward/inverse vectors and
+    its immutable source. Order evidence examines only those completed vectors;
+    it never substitutes a policy guess for evaluating the current query. }
+  TQuerySnapshot = class(TInterfacedObject, INyxCollectionSnapshot, IQuerySnapshotProof)
   private
     FSource: INyxCollectionSnapshot;
     FRows: TNyxQueryIndexes;
@@ -57,6 +75,7 @@ type
   public
     constructor Create(const ASource: INyxCollectionSnapshot;
       const ARows: TNyxQueryIndexes);
+    function SnapshotObject: TQuerySnapshot;
     function GetKey: TNyxCollectionRef;
     function GetSchema: TNyxCollectionSchema;
     function GetCount: Integer;
@@ -67,6 +86,81 @@ type
     function IndexOf(const ARef: TNyxItemRef): Integer;
     function Has(const ARef: TNyxItemRef): Boolean;
   end;
+
+function OwnedQuerySnapshot(const ASnapshot: INyxCollectionSnapshot): TQuerySnapshot;
+var
+  LLease: INyxCollectionSnapshot;
+  LProof: IQuerySnapshotProof;
+  LCanonical: INyxCollectionSnapshot;
+begin
+  Result := nil;
+  LLease := ASnapshot;
+
+  if (LLease = nil) or not Supports(LLease, IQuerySnapshotProof, LProof) then
+  begin
+    Exit;
+  end;
+  Result := LProof.SnapshotObject;
+
+  if (Result = nil) or (Result.ClassType <> TQuerySnapshot) then
+  begin
+    Exit(nil);
+  end;
+  LCanonical := Result;
+
+  if LCanonical <> LLease then
+  begin
+    Result := nil;
+  end;
+end;
+
+function SameNyxQueryItemOrder(const ALeft, ARight: INyxCollectionSnapshot): Boolean;
+var
+  LLeftLease: INyxCollectionSnapshot;
+  LRightLease: INyxCollectionSnapshot;
+  LLeft: TQuerySnapshot;
+  LRight: TQuerySnapshot;
+  LIndex: Integer;
+begin
+  { Capability queries may call foreign code. Both original immutable receivers
+    remain leased while their private canonical objects are compared. }
+  LLeftLease := ALeft;
+  LRightLease := ARight;
+  Result := (LLeftLease <> nil) and (LLeftLease = LRightLease);
+
+  if Result then
+  begin
+    Exit;
+  end;
+  LLeft := OwnedQuerySnapshot(LLeftLease);
+  LRight := OwnedQuerySnapshot(LRightLease);
+  Result := (LLeft <> nil) and (LRight <> nil);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  Result := (Length(LLeft.FRows) = Length(LRight.FRows)) and
+    SameNyxCollectionItemOrder(LLeft.FSource, LRight.FSource);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(LLeft.FRows) do
+  begin
+
+    if LLeft.FRows[LIndex] <> LRight.FRows[LIndex] then
+    begin
+      Exit(False);
+    end;
+  end;
+end;
+
+function TQuerySnapshot.SnapshotObject: TQuerySnapshot;
+begin
+  Result := Self;
+end;
 
 constructor TQuerySnapshot.Create(const ASource: INyxCollectionSnapshot;
   const ARows: TNyxQueryIndexes);

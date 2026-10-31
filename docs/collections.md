@@ -108,6 +108,15 @@ existing identity, `IndexOf` returns -1 for a missing identity in the correct
 scope, and `Has` tests existence. Wrong scopes are rejected in each operation.
 Visible indexes can change while item references remain stable.
 
+`SameNyxCollectionItemOrder` supplies a narrow positive ordering hint. Canonical
+scalar Update/Replace successors share an inert identity, so readers can establish
+equal item order without materializing every row. Structural operations receive
+a new identity, including remove/reinsert batches with the same final names.
+Different foreign snapshots remain unknown. False means unproven, rather than
+necessarily different order. The hint proves no value, revision, hierarchy,
+publication or input authority; retain those checks independently. Its identity
+owns no store, view or widget and remains safe with retained immutable snapshots.
+
 Item `Ref`, snapshot `Key` and change-log `ItemRef` return immutable typed record
 values. They keep defined/scope/bounds checks, while Unicode/control/scalar-length
 validation remains at the open-name constructors. Reading an already admitted

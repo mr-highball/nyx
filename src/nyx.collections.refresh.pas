@@ -69,6 +69,8 @@ function NyxCollectionRefreshPlan(const APrevious, ACurrent: INyxCollectionSnaps
 
 implementation
 
+uses nyx.collections.query.view;
+
 function TNyxCollectionRefreshPlan.ValuesChanged(AIndex: Integer): Boolean;
 begin
 
@@ -127,12 +129,20 @@ begin
   begin
     Exit;
   end;
-  for LIndex := 0 to ACurrent.Count - 1 do
-  begin
 
-    if APrevious.ItemAt(LIndex).Ref.ID <> ACurrent.ItemAt(LIndex).Ref.ID then
+  if not SameNyxCollectionItemOrder(APrevious, ACurrent) and
+    not SameNyxQueryItemOrder(APrevious, ACurrent) then
+  begin
+    { Foreign, structural or unproven projection contexts retain the original
+      complete identity comparison. Canonical queries qualify their numeric
+      vectors only after ordinary full predicate/sort evaluation. }
+    for LIndex := 0 to ACurrent.Count - 1 do
     begin
-      Exit;
+
+      if APrevious.ItemAt(LIndex).Ref.ID <> ACurrent.ItemAt(LIndex).Ref.ID then
+      begin
+        Exit;
+      end;
     end;
   end;
   for LIndex := 0 to AChanges.Count - 1 do

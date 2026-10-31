@@ -209,6 +209,59 @@ begin
     'depth overflow leaves the prior immutable predicate intact');
 end;
 
+procedure ProjectionOrder;
+var
+  LStore: INyxCollection;
+  LQuery: TNyxCollectionQuery;
+  LBefore: INyxCollectionSnapshot;
+  LCurrent: INyxCollectionSnapshot;
+  LRetained: INyxCollectionSnapshot;
+  LParents: TNyxQueryIndexes;
+begin
+  LStore := Store;
+  LQuery := NyxCollectionQuery.Where(NyxWhere(NyxBooleanField('complete')).EqualTo(False))
+    .OrderBy(NyxIntegerField('priority'), nsdDescending);
+  LBefore := NyxQuerySnapshot(LStore.Snapshot, LQuery, [], LParents);
+  Check(SameNyxQueryItemOrder(LBefore, LBefore), 'an identical immutable query observation retains order');
+  Check(not SameNyxQueryItemOrder(nil, nil), 'missing query observations establish no order');
+  Check(not SameNyxQueryItemOrder(LBefore, LStore.Snapshot),
+    'a public raw snapshot is not a canonical query-map proof');
+  LStore.Update(NyxCollectionItem(Item('plan')).WithValue(NyxTextField('task'), 'A new note / 🌙'));
+  LCurrent := NyxQuerySnapshot(LStore.Snapshot, LQuery, [], LParents);
+  Check(SameNyxQueryItemOrder(LBefore, LCurrent),
+    'completed numeric maps retain order across a non-query scalar update');
+  Check(LBefore.Item(Item('plan')).GetValue(NyxTextField('task')) <>
+    LCurrent.Item(Item('plan')).GetValue(NyxTextField('task')),
+    'known projection order does not equate or overwrite retained values');
+  LRetained := LBefore;
+  LBefore := LCurrent;
+  LStore.Update(NyxCollectionItem(Item('share')).WithValue(NyxTextField('task'), 'A hidden note'));
+  LCurrent := NyxQuerySnapshot(LStore.Snapshot, LQuery, [], LParents);
+  Check(SameNyxQueryItemOrder(LBefore, LCurrent),
+    'a hidden scalar update preserves the completed visible map');
+  LBefore := LCurrent;
+  LStore.Update(NyxCollectionItem(Item('plan')).WithValue(NyxIntegerField('priority'), 9));
+  LCurrent := NyxQuerySnapshot(LStore.Snapshot, LQuery, [], LParents);
+  Check((LBefore.Count = LCurrent.Count) and not SameNyxQueryItemOrder(LBefore, LCurrent),
+    'equal counts cannot hide a sort-changing numeric map');
+  LBefore := LCurrent;
+  LStore.Apply([
+    NyxUpdate(NyxCollectionItem(Item('build')).WithValue(NyxBooleanField('complete'), True)),
+    NyxUpdate(NyxCollectionItem(Item('share')).WithValue(NyxBooleanField('complete'), False))]);
+  LCurrent := NyxQuerySnapshot(LStore.Snapshot, LQuery, [], LParents);
+  Check((LBefore.Count = LCurrent.Count) and not SameNyxQueryItemOrder(LBefore, LCurrent),
+    'equal counts cannot hide changed query membership');
+  LBefore := LCurrent;
+  LStore.Apply([NyxRemove(Item('plan')), NyxInsert(0, LStore.Snapshot.Item(Item('plan')))]);
+  LCurrent := NyxQuerySnapshot(LStore.Snapshot, LQuery, [], LParents);
+  Check(not SameNyxQueryItemOrder(LBefore, LCurrent),
+    'equal final map positions after structural replacement need full admission');
+  LStore := nil;
+  Check(SameNyxQueryItemOrder(LRetained, LRetained) and
+    (LRetained.ItemAt(0).Ref.ID = 'design'),
+    'retained query observations and their inert source order survive store disposal');
+end;
+
 procedure Views;
 var
   LStore: INyxCollection;
@@ -407,6 +460,7 @@ end;
 begin
   try
     Predicates;
+    ProjectionOrder;
     Views;
     Trees;
     SourceAndPersistence;

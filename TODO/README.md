@@ -3,6 +3,16 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The original04 cost return has used two product repair cycles: canonical scalar
+order identity and completed numeric query-map comparison remove redundant ID
+materialization while retaining full query evaluation and admission. Collections
+173 and full views12429 pass on both targets; actual application/generated/
+clipboard/heap evidence and failures are recorded in WORK. Original timing
+budgets remain unmet and unisolated runs vary, so no general speedup or L2/task
+acceptance follows. Reassess original publication/observer/retirement/target costs
+and03's compact data-area quality before further latency changes. Preserve the
+same application and original thresholds; stop equivalent performance fixtures.
+
 The original03/04 navigation return now has explicit typed mounted row/field
 reveal, preserved or deliberate focus and detached terminal receipts. The same
 10000-service application's distant field is visible through that contract;

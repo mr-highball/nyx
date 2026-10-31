@@ -385,6 +385,13 @@ function NyxRemove(const ARef: TNyxItemRef): TNyxCollectionEdit;
 function NyxMove(const ARef: TNyxItemRef; AIndex: Integer): TNyxCollectionEdit;
 function NyxUpdate(const AItem: TNyxCollectionItem): TNyxCollectionEdit;
 function NyxReplace(const AItem: TNyxCollectionItem): TNyxCollectionEdit;
+{ A positive result proves identical stable item identities/order, not equal
+  values, schema, hierarchy or revision. Canonical scalar-only successors share
+  an inert identity; structural edits receive a fresh identity even if their
+  final IDs happen to match. Different foreign snapshots return False without
+  reading their rows. False means unknown, not necessarily different order.
+  This is a UI-owner optimization hint; callers retain all other admission. }
+function SameNyxCollectionItemOrder(const ALeft, ARight: INyxCollectionSnapshot): Boolean;
 
 implementation
 

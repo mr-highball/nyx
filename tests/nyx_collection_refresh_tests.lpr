@@ -28,7 +28,7 @@ uses
   {$else}Interfaces, Forms, StdCtrls, Grids, ComCtrls, nyx.render.lcl,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls,
   nyx.collections, nyx.collections.view, nyx.collections.view.types,
-  nyx.collections.query, nyx.collections.refresh, nyx.collections.mount,
+  nyx.collections.query, nyx.collections.query.view, nyx.collections.refresh, nyx.collections.mount,
   nyx.test.collections.controls;
 
 type
@@ -160,10 +160,14 @@ begin
       LSpec.Query(NyxCollectionQuery.Where(NyxWhere(NyxIntegerField('priority')).AtLeast(2))), cpList);
     LVisibleBefore := LView.Snapshot;
     LStore.Update(NyxCollectionItem(Ref('later')).WithValue(NyxTextField('caption'), 'Tomorrow'));
+    Check(SameNyxQueryItemOrder(LVisibleBefore, LView.Snapshot),
+      'a completed unchanged query map proves stable visible order');
     LPlan := NyxCollectionRefreshPlan(LVisibleBefore, LView.Snapshot, LView.Spec, LReceipt.Changes);
     Check((LPlan.Kind = ncrUnchanged) and (LPlan.ChangedCount = 0), 'hidden source edit touches no visible values');
     LVisibleBefore := LView.Snapshot;
     LStore.Update(NyxCollectionItem(Ref('later')).WithValue(NyxIntegerField('priority'), 3));
+    Check(not SameNyxQueryItemOrder(LVisibleBefore, LView.Snapshot),
+      'query membership change cannot borrow the previous numeric map');
     LPlan := NyxCollectionRefreshPlan(LVisibleBefore, LView.Snapshot, LView.Spec, LReceipt.Changes);
     Check(LPlan.Kind = ncrFull, 'query membership change requests a complete refresh');
     LVisibleBefore := LView.Snapshot;
@@ -172,6 +176,8 @@ begin
     Check(LPlan.Kind = ncrFull, 'query configuration has no scalar shortcut');
     LVisibleBefore := LView.Snapshot;
     LStore.Update(NyxCollectionItem(Ref('notes')).WithValue(NyxIntegerField('priority'), 4));
+    Check(not SameNyxQueryItemOrder(LVisibleBefore, LView.Snapshot),
+      'a changed completed sort map retains full placement admission');
     LPlan := NyxCollectionRefreshPlan(LVisibleBefore, LView.Snapshot, LView.Spec, LReceipt.Changes);
     Check(LPlan.Kind = ncrFull, 'sort-changing scalar edit requests complete placement');
     LPlan := NyxCollectionRefreshPlan(LBefore, LStore.Snapshot, LSpec, LReceipt.Changes);
