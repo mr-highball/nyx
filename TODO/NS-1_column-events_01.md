@@ -11,9 +11,9 @@ use is showing which field changed or saving a user's arrangement after resize,
 reorder, show/hide, pin/unpin, Fit or reset, without reverse-engineering a generic
 view notification or binding to DOM/LCL internals.
 
-Current source supplies the runtime operations, but `TColumnPreparation.Notify`
-calls the existing view observer with nil. `TNyxTrigger` has no column-change
-event, and the standard collection schema advertises selection changes rather
+At task opening, source supplied the runtime operations, but `TColumnPreparation.Notify`
+called the existing view observer with nil. `TNyxTrigger` had no column-change
+event, and the standard collection schema advertised selection changes rather
 than an arrangement callback. Custom named events do not supply that missing
 built-in bridge. Source evidence and the full current workbench regression are
 recorded in WORK's workbench criterion assessment.
@@ -24,14 +24,26 @@ router, scheduler, publication and schema/generation owners. This is one useful
 event family, not a replacement event system or complete collection-event audit.
 The broader scheduler owner and original workbench criteria remain intact.
 
-Progress on2026-10-31: criterion1's typed data/registration foundation is accepted;
-native/browser48, Studio source15 and the emitted application's native32/browser34
-qualify the supported boundaries recorded in WORK. Both adapters and the ordinary
-router/schema bridge are implemented. Criteria2–5 and the complete task remain
-open: continue the owned live Studio/MCP authoring journey and actual native
-manager/resize/Fit input. The earlier refused-preparation recovery failure and
-browser harness failures remain in the column-events-01 packet. This is no full
-workbench03 criterion6, Studio or L2 acceptance.
+Progress on2026-10-31: criteria1,2,4 and5 are accepted. The typed data/registration
+contract retains native/browser48 and Studio source15. Live Studio Events/Add
+focuses the generated implementation; bounded MCP authoring retains two ordered
+callbacks, UI-queue policy, exact paired Undo/Redo and stale-revision refusal.
+Both delegated application compilers accept the same saved source/design bytes.
+That exact exported unit passes native52 at1280x820/390x820 and browser54 at
+verified1280x650/390x650, including actual manager Hide/Fit/grouped Reset,
+no-op/refusal, callback failure/cancellation, async copied payloads, retired and
+same-ID mounts, independent peers and supplementary Unicode field identity.
+Native heaps are clean. An ordinary compact browser Hide also visibly changes
+the status to pid while the peer retains that column. These are owned widgets
+and browser automation, not hardware/assistive qualification.
+
+Criterion3 and the complete task remain open for the actual native resize path.
+Keep the original native pointer gate and pending desktop result; no fabricated
+HeaderSized callback substitutes for it. WORK owns exact source identities,
+manifests and retained harness/timeout failures in column-events-integration02.
+Earlier column-events-01 failures remain. This is no full workbench03 criterion6,
+Studio or L2 acceptance. Do not replay another equivalent payload/manager/
+preference fixture; finish the native input gap and return to the parent task.
 
 **Acceptance Criteria:**
 

@@ -9,38 +9,73 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Typed column-change callbacks — 2026-10-31
+## Current work — Live column-event authoring and application — 2026-10-31
 
-Outcome: PROGRESS from c000ed33. Root remains SOLO. Column-events01 criterion1
-is accepted for its public typed data/registration contract: current native and
-browser checks qualify detached snapshots, stable typed fields, serials and
-inert view identity. Reported origin paths are explicit, never permission or
-gesture proof. Criteria2–5 and the whole task remain open; supported runtime
-checks below do not substitute for their complete authored/MCP/input journeys.
-Original workbench03 criteria2/3/5 remain accepted;1/4/6/7 remain open. No full
-Nyx/Studio goal, percentage, duplicate credit or latency threshold changes.
+Outcome: PROGRESS from779b103d. Root remains SOLO. Column-events01 criteria1,2,
+4 and5 are accepted; criterion3 and the full task remain open for actual native
+resize input. Live Studio Events/Add, MCP source/metadata/history and both
+application compilers agree on the same saved pair. Its actual manager/Fit/reset
+and callback lifetime checks pass native52/browser54 per width. No full parent
+workbench, Studio, L2 or Nyx goal credit/percentage follows. This batch closes
+criteria; consecutive batches without criterion closure: zero.
 
-Next finish [column-events01](TODO/NS-1_column-events_01.md) through an owned
-Studio/MCP review and that saved application's actual manager/resize/Fit paths.
-Stage checked current server/browser artifacts into the fixed QA slot, preserving
-its runtime/configuration and joining its owner before replacement. Use bounded
-revision-aware tools for authoring and ordinary Events/Add/source navigation;
-qualify target input separately. Do not repeat another payload/preference/header/
-latency fixture or manufacture a custom event/scheduler workaround. Existing
-typed payload, router and generation owners now supply the necessary library
-bridge. This batch closes criterion1; consecutive batches without closure: zero.
+Next finish column-events01's native resize input through its existing mounted
+control, event router and input lifetime. Keep the original Win32 GetCursorPos
+error5 gate and the prepared ordinary-desktop runner's pending result; do not
+rerun that denied call from this session or fabricate HeaderSized authority.
+Manager/Fit, payload, preference and repeated latency variants are already
+qualified. Return to original workbench03 criteria1/4/6/7 after the prerequisite;
+criteria2/3/5 remain accepted. The whole broad goal stays active.
 
-The current native full pointer gate remains at Win32 GetCursorPos error5.
-A hash-checked ordinary-desktop runner is prepared under the external
-workbench-acceptance-return-01 packet; a concise async request awaits the user's
-execution/result. It opens only test windows and writes evidence on E:, with no
-administrator request or server/project change. Do not waive the original
-assertion or rerun the same denied call from this session. This does not block
-useful callback integration. Qualification below distinguishes real widget paths
-from software-driven and hardware/assistive checks.
+The current packet is column-events-integration02. Private build/test outputs
+and process TEMP/TMP stay on E:. The fixed QA executable now contains the checked
+current Studio build. Ordinary browser recovery restores all nine original
+projects with exact revisions, source drafts, selection and Undo/Redo availability.
+All27 protected files retain their hashes after recovery; LAN is unchanged.
+Preserve unrelated AGENTS/WORK edits and all earlier failures/evidence.
 
-Keep new private artifacts/process TEMP/TMP on E:, preserve fixed listeners and
-exact projects/output choices, and leave unrelated AGENTS/WORK edits intact.
+## Qualified batch — Live Studio/MCP column callbacks — 2026-10-31
+
+The maintained Pascal semantic driver creates an independent empty named project
+and composes two bound service tables, their typed collection/default state and
+status binding in one revision-aware transaction. A real Inspector Events/Add
+click creates the first callback and focuses its generated implementation at
+line196, including the ordinary TODO template. The visible table event has typed
+payload guidance and its discovery category. MCP adds a second callback and
+UI-queue policy in one publication. Bounded source windows, exact paired
+Undo/Redo and stale-revision refusal agree with the ordered saved metadata.
+One guarded source operation admits the two handwritten callback bodies.
+
+The exact exported unit reports a typed field through application state and
+records detached preferences. It passes native52 at actual1280x820/390x820,
+freeing all1064373/1064381 allocated blocks, and browser54 at verified1280x650/
+390x650. Actual retained manager buttons exercise Hide, Fit and grouped Reset;
+repeated unchanged Reset emits nothing. Existing refusal/no-op, router failure,
+ordered cancellation, asynchronous copied reads, peer independence, remount and
+entered retirement assertions remain. The default source-fixture consumer also
+passes52 per native width after the harness repair, with clean heaps. An ordinary
+compact browser Hide visibly updates status to pid while the peer retains its
+Process ID column. Both final
+browser console captures are empty. This does not revise earlier packets'
+externally reproduced iframe error or claim hardware/assistive input.
+
+Both delegated application jobs accept the same source/design MD5 identities.
+All five browser and three native downloaded manifest entries match lengths and
+hashes. Their exported source is byte-identical to the unit consumed above;
+saved metadata retains columns-changed, UI-queue and both exact handler IDs.
+The repaired driver also completes eight resumed compilation checks with all
+142611 blocks freed. This build-only continuation does not claim a fresh replay
+of the earlier authoring checks. Their original request/reply/UI receipts remain.
+
+Retained failures are harness defects: missing operationId, an unsupported view
+argument, the versioned registration-envelope shape and a strict optional
+revision read. A180s client observation ends before an otherwise successful
+retained native job; the final observer follows the existing300s compiler
+allowance plus delivery grace, without changing that quota. Failure cleanup now
+closes its transport. The first native manager check retains an access violation
+and clean heap after keeping a retired popup. Reacquiring the current public
+presenter before each command fixes the harness; no product workaround or
+manufactured input is introduced. Earlier column-events-01 evidence remains.
 
 ## Qualified batch — Typed column events and generated application — 2026-10-31
 

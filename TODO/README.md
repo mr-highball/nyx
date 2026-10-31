@@ -3,13 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-[Column events01](NS-1_column-events_01.md) now accepts criterion1's typed
-data/registration contract, with native/browser48 and an actual emitted
-application's native32/browser34. Both adapter bridges and ordinary schema/source
-handling are implemented. Continue owned live Studio/MCP authoring and actual
-native manager/resize/Fit input; criteria2–5 and the full task remain open. Do not
-repeat an equivalent payload/header/preference fixture or assign full parent
-credit. WORK retains failures, dimensions, heaps and exact supported boundaries.
+[Column events01](NS-1_column-events_01.md) now accepts criteria1,2,4 and5.
+Live Studio Events/Add, bounded MCP authoring, paired source Undo/Redo and both
+delegated compilers agree on the same saved application. Its actual manager
+Hide/Fit/grouped Reset and callback lifetimes pass native52/browser54 per width,
+with clean native heaps and verified source/design manifests. Criterion3 and the
+full task remain open for actual native resize input. Keep the original pointer
+gate; do not repeat an equivalent payload/manager/preference fixture or assign
+full parent credit. WORK retains exact dimensions, failures and provenance.
 
 [Workbench03](NS-3_control-usefulness_03.md) now accepts original criteria2,3
 and5: presentation/inspection, typed copy/export and preference/lifecycle

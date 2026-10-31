@@ -1216,7 +1216,7 @@ Studio discovers the event through its normal **Events** inspector, with typed
 payload help, ordered registrations and the **Table columns** discovery family.
 Unbound Tables do not advertise a functioning built-in event. Generated Pascal
 uses `.On(ntColumnsChanged)`, preserving the existing interface ABI and paired
-source/history handling. Current qualification and remaining MCP/physical-input
+source/history handling. Current qualification and remaining native/physical-input
 checks are recorded in [WORK.md](../WORK.md).
 
 Run `tools/qualify-column-events.ps1 -EvidenceDirectory <external-output>` with
@@ -1227,6 +1227,26 @@ existing Pascal HTTP host. The control program reports `data-column-controls`
 and `data-column-controls-checks`; `?capture=1` pauses that same application for
 visible interaction before **Continue column checks** resumes the regression.
 Staging or compilation alone does not count as a browser execution or MCP proof.
+
+The native `tests/nyx_column_events_mcp.lpr` driver exercises a retained semantic
+connection to a separately configured local QA Studio. Its two arguments are
+the private MCP configuration file and a fresh external evidence directory. It
+creates its own named project, leaving the primary project alone. `phase.json`
+reports the exact workspace and revision; observe that workspace in Studio before
+writing `observer-ready.continue`. At the composed phase, use the ordinary Table
+Events/Add action and inspect source navigation before writing `ui-added.continue`.
+The driver checks semantic edits/history and the two delegated application jobs.
+After inspecting their artifacts, `finished.continue` completes its final phase.
+These acknowledgment files coordinate browser observation; they contain no
+credentials and confer no editor permissions.
+
+Compile the control program with `NYX_MCP_COLUMN_EVENTS` and that evidence
+directory on its unit path to consume the exact exported `nyx.generated.view`
+unit. It exercises the application's real manager Hide/Fit/grouped Reset buttons
+as well as callback failure, cancellation and mount retirement. The optional third
+driver argument is an exact owned workspace for compilation-only continuation;
+it requests new builds and does not replay or claim the authoring checks. Inspect
+an existing retained job after an observation timeout before deciding to rebuild.
 
 ## Browser column resizing — source preview
 

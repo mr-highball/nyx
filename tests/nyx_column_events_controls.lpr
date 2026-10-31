@@ -25,12 +25,18 @@ program nyx_column_events_controls;
 
 uses
   {$ifdef PAS2JS}JS, Web, nyx.application.browser, nyx.test.keyboard.browser,
-  {$else}Interfaces, Forms, Controls, StdCtrls, Classes, nyx.application.lcl,{$endif}
+  nyx.collections.arrangement.browser,
+  {$else}Interfaces, Forms, Controls, StdCtrls, Classes, nyx.application.lcl,
+  nyx.collections.arrangement.lcl,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.state, nyx.codec,
   nyx.behavior, nyx.events, nyx.scheduler, nyx.publication,
   nyx.collections, nyx.collections.view, nyx.collections.mount,
   nyx.collections.arrangement, nyx.collections.column.events,
-  nyx.generated.column.events;
+  nyx.collections.arrangement.presenter, nyx.collections.arrangement.controls,
+  { The same runtime qualification consumes either the source-unit fixture or
+    the exact accepted unit exported from the live Studio/MCP project. }
+  {$ifdef NYX_MCP_COLUMN_EVENTS}nyx.generated.view{$else}
+  nyx.generated.column.events{$endif};
 
 type
   { UI-owned callback probe borrows the application through this test's frame.
@@ -206,6 +212,128 @@ begin
     NyxColumnPreference(NyxColumnIdentity(NyxTextField(CField))).Width(AWidth));
 end;
 
+{ Exercise the application's actual retained manager and its ordinary Nyx
+  buttons. Widget activation is software-driven; no physical pointer or global
+  cursor position is fabricated. The callback probe owns copied payloads only. }
+procedure ManagerCases(const AView, APeer: INyxCollectionView); {$ifdef PAS2JS}async;{$endif}
+var
+  LMount: INyxCollectionColumnArrangementMount;
+  LManager: INyxColumnArrangementManager;
+  LPresenter: INyxColumnArrangementPresenter;
+  LProbe: TProbe;
+  LCallback: INyxEventCallback;
+  LToken: INyxEventSubscription;
+  LCount: Integer;
+  LSerial: Integer;
+  LAction: TNyxText;
+  {$ifdef PAS2JS}
+  LTarget: INyxBrowserColumnArrangementPresenter;
+  {$else}
+  LTarget: INyxLCLColumnArrangementPresenter;
+  {$endif}
+
+  procedure Activate(const AAction: TNyxText);
+  begin
+    { A successful command may replace the popup generation. Its earlier
+      presenter is retired; obtain the current public presentation each time. }
+    LPresenter := LManager.Presenter;
+    {$ifdef PAS2JS}
+    Check(Supports(LPresenter, INyxBrowserColumnArrangementPresenter, LTarget),
+      'the current browser manager generation supplies its own action target');
+    {$else}
+    Check(Supports(LPresenter, INyxLCLColumnArrangementPresenter, LTarget),
+      'the current native manager generation supplies its own action target');
+    {$endif}
+    LTarget.Presentation.Renderer.Reveal(AAction, niRuntime);
+    {$ifdef PAS2JS}
+    Check(LTarget.Presentation.Renderer.ElementFor(AAction) <> nil,
+      'the actual manager action exists in its retained browser presentation');
+    TJSHTMLElement(LTarget.Presentation.Renderer.ElementFor(AAction)).click;
+    {$else}
+    Check(LTarget.Presentation.Renderer.ControlFor(AAction) <> nil,
+      'the actual manager action exists in its retained native presentation');
+    TButton(LTarget.Presentation.Renderer.ControlFor(AAction)).Click;
+    {$endif}
+  end;
+
+begin
+  Check(Supports(GApp.View.CollectionMount('service-table'),
+    INyxCollectionColumnArrangementMount, LMount),
+    'the generated application mounts the ordinary column manager');
+  LManager := LMount.ColumnArrangement;
+  LProbe := TProbe.Create;
+  LCallback := LProbe;
+  LToken := GApp.View.Events.On(NyxControlEvents('service-table'), ntColumnsChanged)
+    .Subscribe(LCallback);
+  try
+    LManager.Open;
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    LPresenter := LManager.Presenter;
+    {$ifdef PAS2JS}
+    Check(Supports(LPresenter, INyxBrowserColumnArrangementPresenter, LTarget),
+      'the browser exposes its actual manager presentation');
+    {$else}
+    Check(Supports(LPresenter, INyxLCLColumnArrangementPresenter, LTarget),
+      'the native application exposes its actual manager presentation');
+    {$endif}
+    LCount := GApp.State.GetValue(NyxIntegerState('column-change-count'));
+    LSerial := NyxCollectionColumns(AView).CaptureColumns.Serial;
+    LAction := NyxColumnArrangementActionID(NyxColumnArrangementEditorID,
+      LManager.Observation, NyxColumnIdentity(NyxIntegerField('pid')), ncaaHide);
+    Activate(LAction);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((LProbe.Calls = 1) and (LProbe.Last.CollectionColumns.Origin = nccoManager) and
+      (LProbe.Last.CollectionColumns.BeforeSerial = LSerial) and
+      (LProbe.Last.CollectionColumns.Serial = LSerial + 1) and
+      (LProbe.Last.CollectionColumns.Count = 1) and
+      (LProbe.Last.CollectionColumns.ChangeAt(0).Field.Name = 'pid') and
+      (LProbe.Last.CollectionColumns.ChangeAt(0).Properties = [nccVisibility]),
+      'actual Hide emits one exact visibility delta through the application router');
+    Check((GApp.State.GetValue(NyxIntegerState('column-change-count')) = LCount + 1) and
+      (GApp.State.GetValue(NyxTextState('column-status')) = 'pid'),
+      'the saved callback reports the manager operation through ordinary bound state');
+    LSerial := NyxCollectionColumns(AView).CaptureColumns.Serial;
+    LAction := NyxColumnArrangementActionID(NyxColumnArrangementEditorID,
+      LManager.Observation, NyxColumnIdentity(NyxTextField(CField)), ncaaFitWidth);
+    Activate(LAction);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((LProbe.Calls = 2) and (LProbe.Last.CollectionColumns.Origin = nccoAutoSize) and
+      (LProbe.Last.CollectionColumns.Serial = LSerial + 1) and
+      (LProbe.Last.CollectionColumns.Count = 1) and
+      (LProbe.Last.CollectionColumns.ChangeAt(0).Field.Name = CField) and
+      (LProbe.Last.CollectionColumns.ChangeAt(0).Properties = [nccWidth]),
+      'actual Fit measures the rendered field and reports the authoritative auto-size origin');
+    Check((GApp.State.GetValue(NyxIntegerState('column-change-count')) = LCount + 2) and
+      (GApp.State.GetValue(NyxTextState('column-status')) = CField) and
+      (GApp.State.GetValue(NyxTextState('column-preferences')) =
+        NyxCollectionColumns(AView).CaptureColumns.Preferences.ToData.ToJSON),
+      'both authored callbacks consume the manager Fit result with exact field identity');
+    LSerial := NyxCollectionColumns(AView).CaptureColumns.Serial;
+    LAction := NyxColumnArrangementActionID(NyxColumnArrangementEditorID, ncaaResetAll);
+    Activate(LAction);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((LProbe.Calls = 3) and (LProbe.Last.CollectionColumns.Origin = nccoReset) and
+      (LProbe.Last.CollectionColumns.Serial = LSerial + 1) and
+      (LProbe.Last.CollectionColumns.Count = 2) and
+      (NyxCollectionColumns(AView).CaptureColumns.Preferences.Count = 0),
+      'actual Reset groups both fields into one committed callback with the reset origin');
+    Activate(LAction);
+    {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+    Check((LProbe.Calls = 3) and
+      (GApp.State.GetValue(NyxIntegerState('column-change-count')) = LCount + 3),
+      'a repeated unchanged manager Reset emits no successful-change callback');
+    Check(NyxCollectionColumns(APeer).CaptureColumns.Preferences.Count = 0,
+      'the independent peer does not inherit any manager or Fit preference');
+  finally
+    LToken.Cancel;
+
+    if LPresenter <> nil then
+    begin
+      LPresenter.Close;
+    end;
+  end;
+end;
+
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LView: INyxCollectionView;
@@ -289,6 +417,7 @@ begin
       {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
       Check(GApp.State.GetValue(NyxIntegerState('column-change-count')) = 1,
         'refused operation has no success callback');
+      {$ifdef PAS2JS}await(ManagerCases(LView, LPeer));{$else}ManagerCases(LView, LPeer);{$endif}
       {$ifdef PAS2JS}await(Capture);{$endif}
 
       LFirst := TProbe.Create;
