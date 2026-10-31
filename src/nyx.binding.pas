@@ -42,10 +42,23 @@ uses
   nyx.binding.types,
   nyx.binding.inputs,
   nyx.model,
-  nyx.behavior;
+  nyx.behavior,
+  nyx.binding.projection;
 
 type
+  { Legacy complete target synchronization, invoked after accepted publication. }
   TNyxBindingSync = procedure of object;
+  { Optional synchronous target notification for a completely observed ordinary
+    state projection. The immutable hints carry no target authority. True means
+    this generation is synchronized; False requests ordinary OnSync, including
+    further layout/viewport settlement. Unsupported faces should refuse before
+    writes. A later fallback may normalize already admitted same-generation
+    writes; a retired receiver must never redirect it into a successor.
+    The receiver must also account for pending model/target edits preceding this
+    notification: these hints compare only the entered projection. True asserts
+    actual target synchronization, not merely consumption of the listed hints.
+    Exceptions retain committed state, just like OnSync. The receiver is borrowed. }
+  TNyxBindingProjectionSync = function(const AChanges: INyxBindingProjectionChanges): Boolean of object;
   { Optional target synchronization for an admitted, unbound value-only edit.
     The realized node is borrowed for this synchronous call. True means the
     target has synchronized that exact field; False requests ordinary OnSync.
@@ -93,6 +106,7 @@ type
     FSubscription: TNyxStateSubscription;
     FOnSync: TNyxBindingSync;
     FOnValueSync: TNyxBindingValueSync;
+    FOnProjectionSync: TNyxBindingProjectionSync;
     FOnInputCapture: TNyxBindingInputCapture;
     FOnInputSync: TNyxBindingInputSync;
     FCommandRoot: TNyxNode;
@@ -104,6 +118,7 @@ type
     function GetRetired: Boolean;
     procedure SetOnSync(AValue: TNyxBindingSync);
     procedure SetOnValueSync(AValue: TNyxBindingValueSync);
+    procedure SetOnProjectionSync(AValue: TNyxBindingProjectionSync);
     procedure SetOnInputCapture(AValue: TNyxBindingInputCapture);
     procedure SetOnInputSync(AValue: TNyxBindingInputSync);
     function GetRefreshReady: Boolean;
@@ -124,7 +139,7 @@ type
     destructor Destroy; override;
     procedure Activate;
     { Terminal, idempotent UI-thread authority retirement. Revoke prepared
-      resource receivers and both target callbacks before removing the exact
+      resource receivers and all target callbacks before removing the exact
       state subscription. An already-entered command may still finish or report
       committed notification failure; this method neither rolls it back nor
       owns/defer-frees its coordinator, root or store. Activate and reassignment
@@ -194,6 +209,11 @@ type
       callback contract. Other property effects, state bindings or unsupported
       target controls always use OnSync. Neither callback owns its receiver. }
     property OnValueSync: TNyxBindingValueSync read FOnValueSync write SetOnValueSync;
+    { Ordinary public state writes still validate and evaluate their complete
+      candidate. This optional receiver narrows only subsequent target work.
+      Commands and coordinated resource/input publication keep their existing
+      notification paths. Clearing or retirement revokes the borrowed receiver. }
+    property OnProjectionSync: TNyxBindingProjectionSync read FOnProjectionSync write SetOnProjectionSync;
     { Adapter-only physical admission and selective reset notification. Both
       borrow their receiver and revoke during Retire. Install these together
       before exposing Inputs; ordinary model-only consumers may leave them nil. }
@@ -1139,6 +1159,7 @@ begin
   end;
   FOnSync := nil;
   FOnValueSync := nil;
+  FOnProjectionSync := nil;
   FOnInputCapture := nil;
   FOnInputSync := nil;
   LSubscription := FSubscription;
@@ -1232,6 +1253,16 @@ begin
     raise ENyxState.Create('Retired live bindings cannot acquire a value callback');
   end;
   FOnValueSync := AValue;
+end;
+
+procedure TNyxLiveBindings.SetOnProjectionSync(AValue: TNyxBindingProjectionSync);
+begin
+
+  if Assigned(AValue) and GetRetired then
+  begin
+    raise ENyxState.Create('Retired live bindings cannot acquire a projection callback');
+  end;
+  FOnProjectionSync := AValue;
 end;
 
 procedure TNyxLiveBindings.SetOnInputCapture(AValue: TNyxBindingInputCapture);
@@ -1381,6 +1412,10 @@ end;
 
 procedure TNyxLiveBindings.StateChanged(AState: TNyxState;
   AChanges: TNyxStateChanges);
+var
+  LBefore: INyxBindingProjectionCapture;
+  LChanges: INyxBindingProjectionChanges;
+  LNotify: TNyxBindingProjectionSync;
 begin
   { The grouped input participant has already installed the complete admitted
     projection. Its own Notify synchronizes once, even if another state observer
@@ -1392,6 +1427,15 @@ begin
   begin
     Exit;
   end;
+  LBefore := nil;
+
+  if Assigned(FOnProjectionSync) and (FCommandRoot = nil) and
+    (FResourcePreparation = nil) then
+  begin
+    { Observe current property storage only. Candidate admission already ran
+      independently; this observation never substitutes for current evaluation. }
+    LBefore := CaptureNyxBindingProjection(FRoot);
+  end;
   Inc(FInputSerial);
 
   if FCommandRoot <> nil then
@@ -1400,6 +1444,24 @@ begin
     FCommandProjected := True;
   end;
   ApplyNyxBindings(FRoot, AState);
+
+  if (LBefore <> nil) and not GetRetired and Assigned(FOnProjectionSync) then
+  begin
+    LChanges := LBefore.Changes(FRoot);
+    LBefore := nil;
+
+    if LChanges <> nil then
+    begin
+      LNotify := FOnProjectionSync;
+
+      if LNotify(LChanges) then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+  { Synchronize rechecks terminal retirement after an outward selective call.
+    No borrowed node or old target callback survives into this fallback tail. }
   Synchronize;
 end;
 

@@ -17,6 +17,37 @@ leaves the admitted projection committed, matching the existing notification
 contract. Both callbacks borrow their receivers; the field node is borrowed only
 for the synchronous call and must not be retained or used to retire the view.
 
+Ordinary public state writes can also use the optional `OnProjectionSync`
+adapter callback. Complete candidate validation and current computed evaluation
+still precede target publication. `INyxBindingProjectionChanges` contains copied
+control references and typed property sets; it retains no model, state, widget or
+renderer. The receiver reads values from its current admitted tree synchronously.
+`True` accepts synchronization in that generation; `False` requests the existing
+complete `OnSync`. Unsupported faces refuse before target writes. Layout may
+request a complete settling pass after supported writes in the same generation.
+Retirement revokes every callback, and a refused old notification cannot continue
+into a successor. Callback failure leaves the accepted state committed.
+
+The browser and LCL adapters currently narrow leaf label, heading and badge text,
+hint and accessible-name changes. They retain ordinary wrapping, parent layout,
+viewport/container presentation and accessibility synchronization. Other changes,
+design mode, custom factories/updaters, drawing and canvas hosts retain full
+synchronization. Commands and prepared resource/input publication keep their
+existing paths. Authors keep the same fluent bindings; no application-side target
+hint or dependency declaration is required. The data-only capture helper refuses
+uncertain tree shape, changed binding contracts or changed extension properties;
+it never grants admission or proves physical control identity. Each adapter also
+compares its last successfully synchronized copied data with the current tree,
+so configuration edits preceding the state notification are included. Failed
+publication invalidates that observation and the next notification uses full
+synchronization. Native resize retains any consumed viewport-rule change until
+the caller requests the full settling pass.
+
+Observations also copy effective enabled/read-only Booleans through the runtime
+policies' pure UI-thread getter contract. A policy can change or be detached
+without rewriting stored properties; the resulting interaction change requests
+full synchronization. Snapshots retain neither the policy nor its owner.
+
 A node owns binding descriptors independently of controls and runtime stores.
 Named images use a distinct typed resource selector and read-only `Binds.Image`
 projection, documented in [image resources](resources.md#images-from-project-resources).

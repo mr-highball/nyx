@@ -2868,8 +2868,10 @@ body[data-query-authoring="passed"] script#query-authoring-project {
 
     if ($Target -eq 'computed-bindings') {
       $nyxFoundationRoot = [IO.Path]::GetFullPath($ComputedBindingEvidenceDirectory)
-      $nyxFoundationPrograms = @('nyx_expression_tests', 'nyx_computed_binding_tests')
-      $nyxFoundationHosts = @('expressions.html', 'computed-bindings.html', 'computed-controls.html')
+      $nyxFoundationPrograms = @('nyx_expression_tests', 'nyx_computed_binding_tests',
+        'nyx_binding_projection_tests')
+      $nyxFoundationHosts = @('expressions.html', 'computed-bindings.html', 'computed-controls.html',
+        'binding-projection.html', 'binding-projection-controls.html')
     }
     $nyxFoundationCore = Join-Path $nyxFoundationRoot 'core'
     $nyxFoundationExport = Join-Path $nyxFoundationRoot 'export'
@@ -2914,6 +2916,13 @@ body[data-query-authoring="passed"] script#query-authoring-project {
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native computed controls failed' }
       $nyxFoundationPrograms += 'nyx_computed_binding_controls'
+      Invoke-NyxCompiler $nyxLclFpc ($nyxFoundationLclFlags + @('tests/nyx_binding_projection_controls.lpr'))
+      foreach ($nyxProjectionWidth in @('1280', '390')) {
+        & (Join-Path $nyxFoundationNative 'nyx_binding_projection_controls.exe') $nyxProjectionWidth
+
+        if ($LASTEXITCODE -ne 0) { throw 'Actual native binding projection controls failed' }
+      }
+      $nyxFoundationPrograms += 'nyx_binding_projection_controls'
     }
     foreach ($nyxFoundationProgram in $nyxFoundationPrograms) {
       Invoke-NyxCompiler $nyxPas2js ($nyxFoundationWebFlags + @("tests/$nyxFoundationProgram.lpr"))

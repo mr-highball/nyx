@@ -12,6 +12,13 @@ which keeps complete admission, ordinary bindings and both-target fallback while
 avoiding unrelated target work. Two native repair cycles are used; return to that
 shared owner rather than extend equivalent pane/profile trials. No full L2 credit.
 
+That shared owner now supplies copied typed change observations and conservative
+browser/LCL target synchronization, with runtime-policy change, unrelated-setter
+isolation and real setter/resize retirement coverage.
+WORK owns the actual results and remaining dynamic-container/partial-setter
+recovery checks. The task remains open for those checks and acceptance assessment;
+the original application's latency limits are unchanged.
+
 The original03 short-table readability return now shares native feedback/actions
 when width permits, retaining a second row for recovery controls when needed.
 The same application's prior31px-for39px compact failure is retained; current

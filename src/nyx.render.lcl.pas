@@ -105,6 +105,7 @@ uses
   nyx.resources,
   nyx.resource.context,
   nyx.binding,
+  nyx.binding.projection,
   nyx.binding.lifetime,
   nyx.binding.types,
   nyx.binding.inputs,
@@ -405,6 +406,9 @@ type
     { Runtime enclosing viewport and independent output; neither changes local
       layout allocation nor owns a parent renderer, document or native host. }
     FViewportBinding: INyxViewportBinding;
+    { Resize may consume a rule change while FUpdating suppresses recursive
+      Sync. Keep that fact sticky until the selective pass requests settlement. }
+    FProjectionViewportChanged: Boolean;
     FPresentationView: INyxPresentationViewOwner;
     { Independently owned recipes outlive the source document. Queued work
       retains a revocable port, never the renderer or its native controls. }
@@ -524,6 +528,9 @@ type
     FState: TNyxState;
     FOwnState: Boolean;
     FLiveBindings: TNyxLiveBindings;
+    { Previously synchronized copied data catches edits preceding a state
+      notification. It owns no tree/widget and never replaces admission. }
+    FObservedProjection: INyxBindingProjectionCapture;
     FCollectionBindings: INyxCollectionBindings;
     { The accepted own gate and immutable inherited gate have distinct owners.
       Embedded local admission never releases an enclosing staged generation. }
@@ -680,6 +687,7 @@ type
     { Consumes the coordinator's fully admitted value-only synchronization plan.
       Unsupported/custom/content-sized fields retain ordinary complete Sync. }
     function SyncEditedValue(ANode: TNyxNode): Boolean;
+    function SyncProjection(const AChanges: INyxBindingProjectionChanges): Boolean;
     { Physical observations contain copied drafts and weak generation proof.
       Selective notification uses normal Sync, never a global forced restore. }
     function CaptureInputTargets(const AControls: array of TNyxControlRef): INyxPublicationReadiness;
@@ -1872,6 +1880,7 @@ begin
     FLiveBindings := nil;
     LOld.FRoot := FRoot;
     FRoot := nil;
+    FObservedProjection := nil;
     LOld.FState := FState;
     FState := nil;
     LOld.FOwnedState := FOwnedState;
@@ -5825,6 +5834,11 @@ begin
   Result := FRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight, npfNativeLCL,
     FPresentationSelection, LMeasurements);
     RequireNativeGeneration(LGeneration);
+
+  if Result then
+  begin
+    FProjectionViewportChanged := True;
+  end;
 end;
 
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
@@ -7591,6 +7605,7 @@ begin
       LCandidate.FLiveBindings.OnSync := LCandidate.Sync;
       RequireAttempt;
       LCandidate.FLiveBindings.OnValueSync := LCandidate.SyncEditedValue;
+      LCandidate.FLiveBindings.OnProjectionSync := LCandidate.SyncProjection;
       LCandidate.FLiveBindings.OnInputCapture := LCandidate.CaptureInputTargets;
       LCandidate.FLiveBindings.OnInputSync := LCandidate.SyncInputTargets;
       RequireAttempt;
@@ -8091,6 +8106,7 @@ begin
     RequireAttempt;
     FLiveBindings.OnSync := Sync;
     FLiveBindings.OnValueSync := SyncEditedValue;
+    FLiveBindings.OnProjectionSync := SyncProjection;
     FLiveBindings.OnInputCapture := CaptureInputTargets;
     FLiveBindings.OnInputSync := SyncInputTargets;
     FCollectionBindings := LCandidate.FCollectionBindings;
@@ -13980,6 +13996,163 @@ begin
   RequireNativeGeneration(LGeneration);
 end;
 
+function TNyxLCLRenderer.SyncProjection(const AChanges: INyxBindingProjectionChanges): Boolean;
+const
+  CProperties: TNyxBindingProjectionProperties = [bpText, bpHint, bpAccessibleName];
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LFrame: INyxNativeGestureFrame;
+  LTargets: array of TNyxLCLBinding;
+  LIndex: Integer;
+  LTarget: Integer;
+  LNode: TNyxNode;
+  LBinding: TNyxLCLBinding;
+  LProperties: TNyxBindingProjectionProperties;
+  LKind: TNyxKind;
+  LChanges: INyxBindingProjectionChanges;
+  LNextObservation: INyxBindingProjectionCapture;
+begin
+  Result := False;
+  LGeneration := FGeneration;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit(True);
+  end;
+  LFrame := FPhysicalFrame;
+  LFrame.Enter;
+  try
+    try
+
+      if FUpdating or FDesignMode or FForceValues or (AChanges = nil) or (FRoot = nil) then
+      begin
+        Exit;
+      end;
+      for LIndex := 0 to High(FBindings) do
+      begin
+
+        if FBindings[LIndex].FCustom or Assigned(FBindings[LIndex].FUpdater) or
+          (FBindings[LIndex].FDrawingSource <> nil) or (FBindings[LIndex].FCanvasView <> nil) then
+        begin
+          Exit;
+        end;
+      end;
+
+      if FObservedProjection = nil then
+      begin
+        Exit;
+      end;
+      LChanges := FObservedProjection.Changes(FRoot);
+
+      if LChanges = nil then
+      begin
+        Exit;
+      end;
+      SetLength(LTargets, LChanges.Count);
+      for LIndex := 0 to LChanges.Count - 1 do
+      begin
+
+        if (LChanges.PropertiesAt(LIndex) - CProperties) <> [] then
+        begin
+          Exit;
+        end;
+        LNode := FRoot.Find(LChanges.ControlAt(LIndex).ID);
+
+        if (LNode = nil) or (LNode.Count <> 0) or
+          not TryNyxKind(LNode.ProjectionKind, LKind) or
+          not (LKind in [nkLabel, nkHeading, nkBadge]) then
+        begin
+          Exit;
+        end;
+        for LTarget := 0 to High(FBindings) do
+        begin
+
+          if FBindings[LTarget].FNode = LNode then
+          begin
+            LTargets[LIndex] := FBindings[LTarget];
+            Break;
+          end;
+        end;
+
+        if (LTargets[LIndex] = nil) or not (LTargets[LIndex].FControl is TLabel) or
+          (LTargets[LIndex].FCaption <> nil) then
+        begin
+          Exit;
+        end;
+      end;
+      LNextObservation := CaptureNyxBindingProjection(FRoot);
+      FObservedProjection := nil;
+      FProjectionViewportChanged := False;
+      FUpdating := True;
+      try
+
+        if UpdateViewport then
+        begin
+          Exit;
+        end;
+        RequireNativeGeneration(LGeneration);
+        for LIndex := 0 to High(LTargets) do
+        begin
+          LBinding := LTargets[LIndex];
+          LNode := LBinding.FNode;
+          LProperties := LChanges.PropertiesAt(LIndex);
+
+          if bpText in LProperties then
+          begin
+            TLabel(LBinding.FControl).Caption := LNode.Prop('text');
+            RequireNativeGeneration(LGeneration);
+          end;
+
+          if bpHint in LProperties then
+          begin
+            LBinding.FControl.Hint := LNode.Prop('hint');
+            RequireNativeGeneration(LGeneration);
+            LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
+            RequireNativeGeneration(LGeneration);
+          end;
+
+          if (LProperties * [bpText, bpHint, bpAccessibleName]) <> [] then
+          begin
+            LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
+            RequireNativeGeneration(LGeneration);
+            SyncNyxLCLAccessibility(LBinding.FControl);
+            RequireNativeGeneration(LGeneration);
+          end;
+        end;
+        { Keep ordinary measured layout, clipping and parent allocation. A newly
+          matched container/viewport presentation asks complete Sync to settle
+          all its properties. This never applies an old candidate to the tree. }
+        Resize(FPanel);
+        RequireNativeGeneration(LGeneration);
+        Result := not UpdateViewport;
+        RequireNativeGeneration(LGeneration);
+        Result := Result and not FProjectionViewportChanged;
+      finally
+
+        if NativeGenerationCurrent(LGeneration) then
+        begin
+          FUpdating := False;
+        end;
+      end;
+
+      if Result then
+      begin
+        QueueContent;
+        RequireNativeGeneration(LGeneration);
+        FObservedProjection := LNextObservation;
+      end;
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        Result := True;
+      end;
+    end;
+  finally
+    { LAST: native setters/layout can retire both the receiver and its nodes. }
+    LFrame.Leave;
+  end;
+end;
+
 function TNyxLCLRenderer.SyncEditedValue(ANode: TNyxNode): Boolean;
 var
   LGeneration: INyxLCLBindingGeneration;
@@ -14110,6 +14283,7 @@ var
   LOriginBinding: TNyxLCLBinding;
   LOriginHadFocus: Boolean;
   LBeforeExit: TControl;
+  LObservation: INyxBindingProjectionCapture;
 begin
   LGeneration := FGeneration;
   RequireNativeGeneration(LGeneration);
@@ -14131,6 +14305,13 @@ begin
       begin
         DeferContentProjectionSync;
         Exit;
+      end;
+      FObservedProjection := nil;
+
+      if (FRoot <> nil) and not FDesignMode and
+        (FLiveBindings <> nil) and FLiveBindings.HasBindings then
+      begin
+        LObservation := CaptureNyxBindingProjection(FRoot);
       end;
       { Native visibility changes may transfer focus before the remaining controls
         synchronize. Capture the owned origin and available disclosure header first;
@@ -14702,6 +14883,7 @@ begin
       RequireNativeGeneration(LGeneration);
       QueueContent;
       RequireNativeGeneration(LGeneration);
+      FObservedProjection := LObservation;
 
       if (LDisclosureFocus <> nil) and (LFocusEvents.ViewRevision = LFocusRevision) and
         LDisclosureFocus.CanFocus then

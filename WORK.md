@@ -9,7 +9,92 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Publication and target cost reassessment — 2026-10-31
+## Current work — Changed state presentation — 2026-10-31
+
+Outcome: PROGRESS from c9e2c220; Root remains SOLO. The shared prerequisite is
+NS-2_state-projection-sync_01, with its accepted scalar-state foundation and
+unchanged criteria. Neither it nor original03/04 moves to DONE in this batch.
+
+Final audit correction is qualified: effective runtime enabled/read-only policies
+can change without stored property changes. Observation copies their pure
+UI-thread Boolean reads without retaining a policy owner; changed interaction
+flags request full synchronization. Portable mutation/removal and actual editor
+attach/release checks pass. A borrowed-host caption sentinel also proves ordinary
+text publication does not replay an unrelated setter on either target.
+
+Ordinary state publication now offers an optional synchronous typed projection
+callback. Complete candidate/domain/behavior validation and current computed
+evaluation still run independently. Copied property/shape/binding-contract
+observations own no node, state, widget or renderer; uncertain classification
+requests existing complete Sync. Commands and prepared input/resource publication
+retain their established paths. Legacy consumers may leave the new callback nil.
+
+Both adapters preflight leaf label/heading/badge text, hint and accessibility
+changes against exact current bindings. Custom/updater/drawing/canvas receivers,
+unsupported changes and design mode retain full synchronization. A copied last
+successful observation also catches model edits preceding the state notification;
+it never grants admission. It is invalidated before target writes. Static unbound
+and design views avoid retaining an unused observation. Native resize keeps a
+consumed viewport-rule change sticky so the caller requests full settlement.
+Normal measured layout, content observation and generation/frame fences remain.
+
+The implementation review addressed stale pre-notification edits, native resize
+consuming rule changes and effective runtime policies absent from stored props.
+The reassessment ends further performance tuning here. Remaining acceptance work
+is the dynamic container allocation and partial selective-setter failure/recovery
+journeys already recorded in the task,
+then criterion assessment. These are concrete remaining checks, not another
+equivalent profile, workload identity or reduced replacement requirement.
+
+The `state-projection-sync-01` packet preserves source/build/runtime receipts.
+Portable capture/coordinator tests execute 26 checks under FPC and pas2js: copied
+Unicode/NUL/property sets/references, changed contracts/shape/extensions, complete
+domain refusal, committed callback failure and terminal retirement/successor
+behavior, including pure runtime-policy changes/removal. Actual desktop/compact
+controls execute 17 per target/width: computed outputs, wrapping/parent allocation,
+hints/accessibility, editor text/focus/caret,
+Boolean/read-only and runtime-policy fallback, earlier model configuration,
+unrelated-setter isolation and retirement inside a real DOM setter/native resize
+reaction. All native heaps are complete and clean.
+
+Compatibility executes 85 portable plus 79 actual native binding checks, 170 browser
+binding checks per width, native clipboard 1964/1953 and presentation 167 per width.
+Current `policy-04` rebuilds the compatibility consumers, both control journeys
+and 4205 logical viewport/control checks against the final policy correction,
+all with clean heaps. The new fixtures are wired into the maintained
+computed-bindings target with matched browser hosts. That orchestration
+is syntax-checked; the complete computed-bindings target is not rerun here.
+
+Return uses the SAME public 10000-service/five-field/two 160px-table handwritten and
+exact previously generated constructor. `policy-04` executes 204 for each variant at
+1280/390, separately in ordinary and heap builds. Every full heap is clean and the
+84/67px data areas still contain a complete 39px row. Earlier concurrent samples
+and all original budget failures remain diagnostic, without speedup credit.
+Current native ordinary failed-budget counts are 4/0 handwritten and 2/2 generated
+(desktop/compact); browser counts are 4/4 and 4/6. Browser application timings run
+sequentially after native readers are joined. Each browser run executes 167 checks,
+explicitly retires both views and has empty error logs. Original 100ms p95/250ms
+maximum limits remain unchanged.
+These desktop runs do not establish universal speedup, physical-phone/IME/AT,
+other native widgetset/OS, complete L2 or Studio acceptance. Browser widths are
+actual 1280x900/390x844 allocations in the in-app browser.
+
+Retain setup failures: incremental FPC access violation (clean rebuild succeeds),
+unrealized model and busy-subscription fixtures, browser selection declaration,
+nullable ARIA and CSS-visibility assertions. Observation deadlines resume the
+same run; they are not fabricated product failures or reasons to reload it.
+The first browser pin selected neighboring current source and is excluded as a
+baseline. Forced private imports verify an earlier observation implementation's
+actual read-only omission; private Pascal trace confirms selective dispatch.
+That failure, copied sources and corrected 26/17 results remain distinct receipts.
+Pre-policy final02/sequential03 results are retained diagnostic history, not
+qualification of the current corrected source. No task moves or L2 credit follow.
+All 27 protected files remain byte-identical; both fixed listener owners/ports and
+operator projects are preserved. No observing Studio payload is replaced. New
+private scripts/artifacts and owned compiler/test TEMP/TMP stay on E:. Preserve
+unrelated AGENTS/operator WORK changes and untracked1280/390 directories.
+
+## Previous work — Publication and target cost reassessment — 2026-10-31
 
 Previous goal turn: PROGRESS, pushed6ce5c451 with exact remote match. Root remains
 SOLO; every owned compiler/runtime job is joined. Native short-table reading now

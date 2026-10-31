@@ -88,6 +88,7 @@ uses
   nyx.resources,
   nyx.resource.context,
   nyx.binding,
+  nyx.binding.projection,
   nyx.binding.lifetime,
   nyx.binding.types,
   nyx.binding.inputs,
@@ -474,6 +475,9 @@ type
     FState: TNyxState;
     FOwnState: Boolean;
     FLiveBindings: TNyxLiveBindings;
+    { Previously synchronized copied data catches edits made before a state
+      notification. It retains no tree/target and never grants admission. }
+    FObservedProjection: INyxBindingProjectionCapture;
     FCollectionBindings: INyxCollectionBindings;
     { Own and inherited gates remain distinct through embedded publication. }
     FCollectionInputGate: INyxCollectionInputGate;
@@ -537,6 +541,7 @@ type
     { Exact field synchronization after full coordinator admission. Ordinary
       Sync remains authoritative for custom, composing or content-sized fields. }
     function SyncEditedValue(ANode: TNyxNode): Boolean;
+    function SyncProjection(const AChanges: INyxBindingProjectionChanges): Boolean;
     { Physical observations contain copied drafts and weak generation proof.
       Selective notification uses normal Sync, never a global forced restore. }
     function CaptureInputTargets(const AControls: array of TNyxControlRef): INyxPublicationReadiness;
@@ -1713,6 +1718,7 @@ begin
   ATarget.FBaseThemeOwner := FBaseThemeOwner;
   ATarget.FRoot := FRoot;
   FRoot := nil;
+  FObservedProjection := nil;
   ATarget.FState := FState;
   FState := nil;
   ATarget.FStateOwner := FStateOwner;
@@ -4034,6 +4040,7 @@ begin
       TBrowserViewGeneration(LCandidate.FGenerationObject).LiveBindings := LCandidate.FLiveBindings;
       LCandidate.FLiveBindings.OnSync := @LCandidate.Sync;
       LCandidate.FLiveBindings.OnValueSync := @LCandidate.SyncEditedValue;
+      LCandidate.FLiveBindings.OnProjectionSync := @LCandidate.SyncProjection;
       LCandidate.FLiveBindings.OnInputCapture := @LCandidate.CaptureInputTargets;
       LCandidate.FLiveBindings.OnInputSync := @LCandidate.SyncInputTargets;
       LCandidate.FHost := Element('div', '');
@@ -4387,6 +4394,7 @@ begin
     LCandidate.FLiveBindings := nil;
     FLiveBindings.OnSync := @Sync;
     FLiveBindings.OnValueSync := @SyncEditedValue;
+    FLiveBindings.OnProjectionSync := @SyncProjection;
     FLiveBindings.OnInputCapture := @CaptureInputTargets;
     FLiveBindings.OnInputSync := @SyncInputTargets;
     FCollectionBindings := LCandidate.FCollectionBindings;
@@ -10471,6 +10479,186 @@ begin
   end;
 end;
 
+function TNyxBrowserRenderer.SyncProjection(const AChanges: INyxBindingProjectionChanges): Boolean;
+const
+  CProperties: TNyxBindingProjectionProperties = [bpText, bpHint, bpAccessibleName];
+var
+  LGeneration: TBrowserViewGeneration;
+  LLease: IInterface;
+  LTargets: array of TNyxBrowserBinding;
+  LIndex: Integer;
+  LTarget: Integer;
+  LNode: TNyxNode;
+  LBinding: TNyxBrowserBinding;
+  LProperties: TNyxBindingProjectionProperties;
+  LKind: TNyxKind;
+  LFrame: TNyxViewFrame;
+  LChanges: INyxBindingProjectionChanges;
+  LNextObservation: INyxBindingProjectionCapture;
+
+  procedure CheckCurrent;
+  begin
+
+    if not LGeneration.Current then
+    begin
+      raise ENyxBrowserViewRetired.Create('The browser view was retired');
+    end;
+  end;
+
+  function ProjectViewport: Boolean;
+  begin
+
+    if not FDetachedCandidate then
+    begin
+      FViewportWidth := FHost.clientWidth;
+      FViewportHeight := FHost.clientHeight;
+    end;
+    LFrame := FViewportBinding.Frame(FViewportWidth, FViewportHeight);
+    FViewportBinding.Observe;
+    CheckCurrent;
+    Result := FRoot.ApplyViewport(LFrame.ViewportWidth, LFrame.ViewportHeight,
+      npfBrowser, FPresentationSelection, MeasureContainers);
+    CheckCurrent;
+  end;
+
+begin
+  Result := False;
+  LGeneration := TBrowserViewGeneration(FGenerationObject);
+  LLease := FGeneration;
+
+  if (LGeneration = nil) or not LGeneration.Current then
+  begin
+    Exit(True);
+  end;
+  try
+
+    if FUpdating or FDesignMode or FForceValues or (AChanges = nil) or (FRoot = nil) then
+    begin
+      Exit;
+    end;
+    { Opaque updaters/drawing/canvas receivers may observe state outside normal
+      bindings. Keep their complete synchronization contract, even for an empty
+      property delta elsewhere. Preflight every changed face before any write. }
+    for LIndex := 0 to High(FBindings) do
+    begin
+
+      if FBindings[LIndex].FCustom or Assigned(FBindings[LIndex].FUpdater) or
+        (FBindings[LIndex].FDrawingSource <> nil) or (FBindings[LIndex].FCanvasView <> nil) then
+      begin
+        Exit;
+      end;
+    end;
+
+    if FObservedProjection = nil then
+    begin
+      Exit;
+    end;
+    LChanges := FObservedProjection.Changes(FRoot);
+
+    if LChanges = nil then
+    begin
+      Exit;
+    end;
+    SetLength(LTargets, LChanges.Count);
+    for LIndex := 0 to LChanges.Count - 1 do
+    begin
+
+      if (LChanges.PropertiesAt(LIndex) - CProperties) <> [] then
+      begin
+        Exit;
+      end;
+      LNode := FRoot.Find(LChanges.ControlAt(LIndex).ID);
+
+      if (LNode = nil) or (LNode.Count <> 0) or
+        not TryNyxKind(LNode.ProjectionKind, LKind) or
+        not (LKind in [nkLabel, nkHeading, nkBadge]) then
+      begin
+        Exit;
+      end;
+      for LTarget := 0 to High(FBindings) do
+      begin
+
+        if FBindings[LTarget].FNode = LNode then
+        begin
+          LTargets[LIndex] := FBindings[LTarget];
+          Break;
+        end;
+      end;
+
+      if (LTargets[LIndex] = nil) or (LTargets[LIndex].FInput <> nil) or
+        (LTargets[LIndex].FCaption <> nil) then
+      begin
+        Exit;
+      end;
+    end;
+    LNextObservation := CaptureNyxBindingProjection(FRoot);
+    FObservedProjection := nil;
+    FUpdating := True;
+    try
+
+      if ProjectViewport then
+      begin
+        Exit;
+      end;
+      for LIndex := 0 to High(LTargets) do
+      begin
+        LBinding := LTargets[LIndex];
+        LNode := LBinding.FNode;
+        LProperties := LChanges.PropertiesAt(LIndex);
+
+        if bpText in LProperties then
+        begin
+          LBinding.FElement.textContent := LNode.Prop('text');
+          CheckCurrent;
+        end;
+
+        if bpHint in LProperties then
+        begin
+          LBinding.FElement.title := LNode.Prop('hint');
+          CheckCurrent;
+        end;
+
+        if bpAccessibleName in LProperties then
+        begin
+
+          if LNode.Prop('aria-label') <> '' then
+          begin
+            LBinding.FElement.setAttribute('aria-label', LNode.Prop('aria-label'));
+          end
+          else
+          begin
+            LBinding.FElement.removeAttribute('aria-label');
+          end;
+          CheckCurrent;
+        end;
+      end;
+      { CSS settles wrapping and intrinsic dimensions. A changed container rule
+        requires ordinary complete Sync; the already accepted text is safe to
+        normalize again in this exact generation. Keep structural recipe wakeup. }
+      Result := not ProjectViewport;
+    finally
+
+      if LGeneration.Current then
+      begin
+        FUpdating := False;
+      end;
+    end;
+
+    if Result then
+    begin
+      QueueContent;
+      CheckCurrent;
+      FObservedProjection := LNextObservation;
+    end;
+  except
+    on ENyxBrowserViewRetired do
+    begin
+      { Terminal retirement consumes this old notification, never a successor. }
+      Result := True;
+    end;
+  end;
+end;
+
 function TNyxBrowserRenderer.SyncEditedValue(ANode: TNyxNode): Boolean;
 var
   LGeneration: TBrowserViewGeneration;
@@ -10749,6 +10937,7 @@ var
   LMaximum: Integer;
   LFocusScheduler: INyxScheduler;
   LFocusExecution: INyxExecution;
+  LObservation: INyxBindingProjectionCapture;
 
   procedure AttributeFlag(AElement: TJSHTMLElement; const AName: TNyxText; ASet: Boolean);
   begin
@@ -10798,6 +10987,13 @@ begin
     if FUpdating then
     begin
       Exit;
+    end;
+    FObservedProjection := nil;
+
+    if (FRoot <> nil) and not FDesignMode and
+      (FLiveBindings <> nil) and FLiveBindings.HasBindings then
+    begin
+      LObservation := CaptureNyxBindingProjection(FRoot);
     end;
     { Capture physical focus before hiding any body. A state-driven close has no
       header click to move focus for it; do not leave the retained editor focused
@@ -12185,6 +12381,7 @@ begin
     CheckCurrent;
     QueueContent;
     CheckCurrent;
+    FObservedProjection := LObservation;
 
     if (LDisclosureFocus <> nil) and ((LFocusEvents.ViewRevision = LFocusRevision) and LGeneration.Current) then
     begin

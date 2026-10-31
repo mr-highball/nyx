@@ -57,3 +57,17 @@ this prerequisite does not replace or relax them.
 - [Scalar state admission](DONE/NS-1_persistence-state_01.md) supplies the existing
   accepted atomic state/binding foundation. Build on its current retirement and
   prepared-publication consumers; do not reopen its historical task identity.
+
+**Implementation checkpoint:**
+
+The portable copied change contract and conservative browser/LCL target paths
+are implemented. The current WORK entry distinguishes model, real-control,
+lifetime, compatibility and same-application timing evidence. Full candidate
+admission remains independent of every observation. Missing/changed contracts,
+opaque target receivers and unsupported faces retain complete synchronization.
+
+Keep this task open for explicit dynamic container-allocation and partial
+selective-setter failure/recovery journeys, followed by acceptance assessment.
+Those are remaining checks against the criteria above, not reduced replacement
+criteria. The original workbench04 application latency requirements remain open;
+isolated successful compact samples do not establish a general speedup.
