@@ -2692,8 +2692,61 @@ eligible browser editor. Escape discards its unfinished value and returns focus
 to the row; ordinary Tab leaves the composite. Closing an edited branch revokes
 active editing while retaining an unfinished control, Unicode value and caret
 outside the physical tree. Reopening restores that independently owned control.
-Native preserves ordinary LCL editing. Keyboard reveal uses the destination's
+Native uses its ordinary LCL label editor; see the entered-edit contract below.
+Keyboard reveal uses the destination's
 summary, rather than scrolling its complete descendant box into view.
+
+### Native label editing and recovery
+
+The first Tree column opts into editing through the same typed contract on both
+targets. `Folders`, `FolderLabel` and `FolderParent` below are typed collection
+and text-field references; no target class appears in the document:
+
+```pascal
+LHierarchy.Binds.Collection(
+  NyxCollectionView(Folders)
+    .Column(FolderLabel, 'Label', cmEditable)
+    .Parent(FolderParent)).Done;
+```
+
+The Win32 LCL adapter retains the standard editor, Unicode scalar selection and
+accepted field provenance around live refresh. Completion keeps LCL's borrowed
+node alive until its native edit stack returns; physical remapping waits for UI
+idle. Ordinary validator refusal retains accepted source data and reopens the
+unfinished label for correction. An externally changed, removed, replaced or
+filtered label uses the shared recovery journal instead of overwriting newer data.
+Moving selection or closing an ancestor retains compatible text and caret as a
+keyed dormant draft. Returning through F2 restores that work; it does not reopen
+an old editor over a newly selected row. Escape explicitly discards the label.
+Later source changes also admit dormant drafts through the same recovery journal.
+Discarding one dormant pending receipt does not cancel a different active label.
+Native composition observation delays incompatible refresh until the platform's
+post-composition idle boundary. The application's ordinary UI loop supplies idle;
+an in-process control harness must pump it as well as pending messages.
+
+`NyxCollectionDraftRecovery(LMount)` supplies the same data-only journal used by
+Tables. `NewNyxRecoveredDraftReview` composes a captured entry into an independent
+Nyx Card; it grants no write authority. `INyxCollectionPendingDraftMount` exposes
+an exact pending receipt when journal capacity refuses admission. Review/export
+does not consume its text, and discard must match the current receipt. Ordinary
+capacity pressure keeps the original physical editor. If a host has already
+refused reopening, the pending receipt instead retains its detached draft.
+Runtime edits/recovery do not change saved document defaults.
+
+Deferred mounts keep revision scalars and bounded removed identities for the
+still-physical frame, so explicit retry can recognize unchanged rows across
+several producer updates. This uses the authored inspection identity limit, or
+its 4096-entry default when inspection is absent; it does not enable pause/follow
+or change the view's optional continuity capability. Change packets and producer
+snapshots are not retained by this proof. A gap or exceeded bound remains unknown
+and uses conservative recovery. Successful installation or retirement releases
+the proof. After resolving a pending discard, explicitly call `LMount.Refresh`;
+discard alone does not claim that the physical map has caught up.
+
+The extended native editor journey and exact target evidence are recorded in WORK.md.
+This contract description does not accept full navigation/context, native Tree
+recovery presentation, widgetset, assistive-technology or scale requirements of
+the [live-inspection task](../TODO/NS-3_control-usefulness_04.md).
 
 Reproduce with the exact semantic export:
 

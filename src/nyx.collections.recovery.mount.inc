@@ -115,6 +115,115 @@ begin
   end;
 end;
 
+procedure TNyxCollectionMountBase.CaptureRecoveryContinuity(
+  const AChanges: INyxCollectionChanges);
+var
+  LView: INyxCollectionView;
+  LBefore: INyxCollectionSnapshot;
+  LAfter: INyxCollectionSnapshot;
+  LFrame: INyxCollectionSnapshot;
+  LContinuity: INyxCollectionDisplayContinuity;
+  LNext: TNyxItemRefs;
+  LSeen: TNyxTextIndex;
+  LItem: TNyxItemRef;
+  LMutation: Integer;
+  LFrom: Integer;
+  LTo: Integer;
+  LCount: Integer;
+  LIndex: Integer;
+  LReset: Boolean;
+
+  function Current: Boolean;
+  begin
+    Result := InputLifetimeCurrent and (FView = LView) and
+      (FLastSnapshot = LFrame) and (FCellMutationSerial = LMutation);
+  end;
+
+begin
+  LView := FView;
+  LFrame := FLastSnapshot;
+  LMutation := FCellMutationSerial;
+
+  if (AChanges = nil) or (LFrame = nil) or not Current then
+  begin
+    Exit;
+  end;
+  LBefore := AChanges.Before;
+  LAfter := AChanges.After;
+
+  if not Current or (LBefore = nil) or (LAfter = nil) or
+    (LBefore.Key.Name <> LFrame.Key.Name) or (LAfter.Key.Name <> LFrame.Key.Name) then
+  begin
+    Exit;
+  end;
+  LFrom := LFrame.Revision;
+  LTo := LFrom;
+  LReset := False;
+  LNext := nil;
+  LContinuity := FRecoveryContinuity;
+
+  if (LContinuity <> nil) and (LContinuity.Collection.Name = LFrame.Key.Name) and
+    (LContinuity.FromRevision = LFrom) then
+  begin
+    LTo := LContinuity.ToRevision;
+    LReset := LContinuity.Reset;
+    LNext := Copy(FRecoveryRemoved, 0, Length(FRecoveryRemoved));
+  end;
+
+  if LAfter.Revision <= LTo then
+  begin
+    Exit;
+  end;
+  LReset := LReset or (LBefore.Revision <> LTo);
+  LTo := LAfter.Revision;
+  LSeen := TNyxTextIndex.Create;
+  try
+    for LIndex := 0 to High(LNext) do
+    begin
+      LSeen.AddFirst(LNext[LIndex].ID, LIndex);
+    end;
+
+    if not LReset then
+    begin
+      for LIndex := 0 to AChanges.Count - 1 do
+      begin
+
+        if AChanges.Kind(LIndex) <> nceRemove then
+        begin
+          Continue;
+        end;
+        LItem := AChanges.ItemRef(LIndex);
+
+        if not LFrame.Has(LItem) or (LSeen.IndexOf(LItem.ID) >= 0) then
+        begin
+          Continue;
+        end;
+        LCount := Length(LNext);
+
+        if LCount >= FRecoveryIdentityLimit then
+        begin
+          LReset := True;
+          LNext := nil;
+          Break;
+        end;
+        SetLength(LNext, LCount + 1);
+        LNext[LCount] := LItem;
+        LSeen.AddFirst(LItem.ID, LCount);
+      end;
+    end;
+    LContinuity := NewNyxCollectionDisplayContinuity(LFrame.Key,
+      LFrom, LTo, LNext, LReset);
+
+    if Current then
+    begin
+      FRecoveryContinuity := LContinuity;
+      FRecoveryRemoved := LNext;
+    end;
+  finally
+    LSeen.Free;
+  end;
+end;
+
 function TNyxCollectionMountBase.GetDraftRecoveryHeld: Boolean;
 begin
   Result := InputLifetimeCurrent and FDraftRecoveryHeld;
@@ -202,9 +311,6 @@ var
   LPosition: INyxCollectionPositionView;
   LContinuity: INyxCollectionDisplayContinuity;
   LSpec: TNyxCollectionViewSpec;
-  LJournal: INyxCollectionDraftRecovery;
-  LReceipt: INyxRecoveredCollectionDraft;
-  LScoped: INyxCollectionDraftRecoveryScopedWriter;
   LReason: TNyxCollectionDraftLoss;
   LMutation: Integer;
   LColumn: Integer;
@@ -303,6 +409,22 @@ begin
     end;
   end;
 
+  if not LKnown and (FRecoveryContinuity <> nil) then
+  begin
+    { View continuity remains an opt-in inspection capability. This private
+      proof covers only this mount's uninstalled physical frame and survives a
+      composition/pressure retry without retaining source change packets. }
+    LContinuity := FRecoveryContinuity;
+    LKnown := (LContinuity.Collection.Name = LSource.Key.Name) and
+      (LContinuity.FromRevision = ABefore.Revision) and
+      (LContinuity.ToRevision = LSource.Revision) and not LContinuity.Reset;
+
+    if LKnown then
+    begin
+      LRetired := not LContinuity.Retains(ACell.Item);
+    end;
+  end;
+
   if not LKnown and (FChanges <> nil) and
     (FChanges.Before.Revision = ABefore.Revision) and
     (FChanges.After.Revision = LSource.Revision) then
@@ -357,41 +479,52 @@ begin
 
   if AHasDraft then
   begin
-    LJournal := GetDraftRecovery;
-
-    if not FRecoveryFrame.Defined then
-    begin
-      FRecoveryFrame := NewNyxDraftRecoveryFrame;
-    end;
-
-    try
-
-      if Supports(FRecoveryWriter, INyxCollectionDraftRecoveryScopedWriter, LScoped) then
-      begin
-        LReceipt := LScoped.PreserveInFrame(ACell, LReason, ABefore.Revision,
-          LSource.Revision, FRecoveryFrame);
-      end
-      else
-      begin
-        LReceipt := FRecoveryWriter.Preserve(ACell, LReason, ABefore.Revision, LSource.Revision);
-      end;
-    except
-      on LPressure: ENyxDraftRecoveryPressure do
-      begin
-
-        if not FRecoveryPendingFrame.Defined or
-          (FRecoveryPendingItem.Collection.Name <> ACell.Item.Collection.Name) or
-          (FRecoveryPendingItem.ID <> ACell.Item.ID) or
-          not FRecoveryPendingField.Same(ACell.Field) then
-        begin
-          FRecoveryPendingFrame := NewNyxDraftRecoveryFrame;
-        end;
-        FRecoveryPendingItem := ACell.Item;
-        FRecoveryPendingField := ACell.Field;
-        raise;
-      end;
-    end;
+    PreserveCell(ACell, LReason, ABefore.Revision, LSource.Revision);
   end;
   ALoss := LReason;
   Result := True;
+end;
+
+procedure TNyxCollectionMountBase.PreserveCell(const ACell: TNyxCollectionCellEdit;
+  AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer);
+var
+  LJournal: INyxCollectionDraftRecovery;
+  LReceipt: INyxRecoveredCollectionDraft;
+  LScoped: INyxCollectionDraftRecoveryScopedWriter;
+begin
+  { Admission and scoped deduplication are shared with ordinary RecoverCell.
+    A refused target restoration must not invent a second recovery store. }
+  LJournal := GetDraftRecovery;
+
+  if not FRecoveryFrame.Defined then
+  begin
+    FRecoveryFrame := NewNyxDraftRecoveryFrame;
+  end;
+  try
+
+    if Supports(FRecoveryWriter, INyxCollectionDraftRecoveryScopedWriter, LScoped) then
+    begin
+      LReceipt := LScoped.PreserveInFrame(ACell, AReason, ABeforeRevision,
+        AAfterRevision, FRecoveryFrame);
+    end
+    else
+    begin
+      LReceipt := FRecoveryWriter.Preserve(ACell, AReason, ABeforeRevision, AAfterRevision);
+    end;
+  except
+    on LPressure: ENyxDraftRecoveryPressure do
+    begin
+
+      if not FRecoveryPendingFrame.Defined or
+        (FRecoveryPendingItem.Collection.Name <> ACell.Item.Collection.Name) or
+        (FRecoveryPendingItem.ID <> ACell.Item.ID) or
+        not FRecoveryPendingField.Same(ACell.Field) then
+      begin
+        FRecoveryPendingFrame := NewNyxDraftRecoveryFrame;
+      end;
+      FRecoveryPendingItem := ACell.Item;
+      FRecoveryPendingField := ACell.Field;
+      raise;
+    end;
+  end;
 end;

@@ -2692,7 +2692,7 @@ var
   LCount: Integer;
 begin
 
-  if FUpdating or not GetInputReady then
+  if FUpdating or FTreeCommitQueued or FTreeComposing or not GetInputReady then
   begin
     Exit;
   end;

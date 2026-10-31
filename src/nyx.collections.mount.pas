@@ -335,6 +335,13 @@ type
     FRecoveryPendingItem: TNyxItemRef;
     FRecoveryPendingField: TNyxColumnIdentity;
     FRecoveryPendingFrame: TNyxDraftRecoveryFrame;
+    { Evidence for the still-physical frame across deferred/held refreshes.
+      Only bounded removed IDs and revision scalars survive notifications; no
+      change log, producer snapshot, callback or second collection is retained.
+      Successful refresh/retirement releases it. Gaps/overflow stay unknown. }
+    FRecoveryContinuity: INyxCollectionDisplayContinuity;
+    FRecoveryRemoved: TNyxItemRefs;
+    FRecoveryIdentityLimit: Integer;
     FConnected: Boolean;
     FDisconnecting: Boolean;
     FQueryFactory: INyxQueryFormPresenterFactory;
@@ -401,6 +408,7 @@ type
     FInputTrackingPrepared: Boolean;
     function SearchLabel(AIndex: Integer): TNyxText;
     procedure DisconnectInternal;
+    procedure CaptureRecoveryContinuity(const AChanges: INyxCollectionChanges);
     procedure Changed(const AView: INyxCollectionView;
       const AChanges: INyxCollectionChanges);
   protected
@@ -593,6 +601,11 @@ type
     function RecoverCell(const ACell: TNyxCollectionCellEdit;
       const ABefore, AAfter: INyxCollectionSnapshot;
       out ALoss: TNyxCollectionDraftLoss; AHasDraft: Boolean = True): Boolean;
+    { One target-specific incompatibility may be known only after a host refuses
+      restoration. Reuse the SAME journal/frame/pressure admission; callers keep
+      the original draft until this method returns and recheck their lifetime. }
+    procedure PreserveCell(const ACell: TNyxCollectionCellEdit;
+      AReason: TNyxCollectionDraftLoss; ABeforeRevision, AAfterRevision: Integer);
     function ResolvePosition(const ABefore, AAfter: INyxCollectionSnapshot;
       AIndex: Integer): TNyxCollectionPositionRecovery;
     { Capture current intent with retained view/lifetime checks. Pending excludes
@@ -3534,6 +3547,7 @@ var
   LCapture: INyxCollectionColumnsCapture;
   LColumns: INyxCollectionColumns;
   LPresentation: INyxCollectionTablePresentation;
+  LInspectionPolicy: TNyxCollectionInspectionPolicy;
 begin
   inherited Create;
   FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
@@ -3553,6 +3567,13 @@ begin
   end;
   FView := AView;
   FRecoveryPolicy := AView.Spec.DraftRecoveryPolicy;
+  LInspectionPolicy := AView.Spec.InspectionPolicy;
+
+  if not LInspectionPolicy.Defined then
+  begin
+    LInspectionPolicy := NyxInspectionPolicy;
+  end;
+  FRecoveryIdentityLimit := LInspectionPolicy.IdentityLimit;
   FEnabled := True;
   FClipboardFeedbackEnabled := True;
   LTable := AView.Projection = cpTable;
@@ -3847,6 +3868,8 @@ begin
   FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
   FRecoveryPendingFrame := Default(TNyxDraftRecoveryFrame);
   FRecoveryPendingItem := Default(TNyxItemRef);
+  FRecoveryContinuity := nil;
+  FRecoveryRemoved := nil;
 
   if FPositionStateObject <> nil then
   begin
@@ -4176,6 +4199,19 @@ begin
   LObserver := FSelectionObserver;
   FChanges := AChanges;
   try
+    try
+      CaptureRecoveryContinuity(AChanges);
+    except
+      { An alternative change getter/allocation can fail before Refresh enters
+        its own shield. A committed source must never leave the older physical
+        map writable after that failure. Only a successful retry clears it. }
+
+      if (FInputStateObject <> nil) and InputLifetimeCurrent then
+      begin
+        TCollectionInputState(FInputStateObject).Refreshing(True);
+      end;
+      raise;
+    end;
     Refresh;
   finally
     { Do not retain before/after datasets beyond the notification frame. }
@@ -4564,6 +4600,8 @@ begin
       FRecoveryFrame := Default(TNyxDraftRecoveryFrame);
       FRecoveryPendingFrame := Default(TNyxDraftRecoveryFrame);
       FRecoveryPendingItem := Default(TNyxItemRef);
+      FRecoveryContinuity := nil;
+      FRecoveryRemoved := nil;
     end;
     Inc(FRefreshCount);
     LCompleted := True;

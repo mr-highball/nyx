@@ -78,10 +78,12 @@ type
     Draft: TNyxCollectionCellEdit;
     ExtraDraft: TNyxCollectionCellEdit;
     Fail: Boolean;
+    Deferred: Boolean;
     Loss: TNyxCollectionDraftLoss;
     Position: TNyxCollectionPositionRecovery;
     FeedbackReentry: TFeedbackReentry;
     procedure ClipboardFeedbackChanged; override;
+    function DeferTargetRefresh: Boolean; override;
     function ReadRecoveryDraft(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean; override;
     function DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean; override;
@@ -211,6 +213,12 @@ function TReceiptProbe.GetFrame: TNyxDraftRecoveryFrame;
 begin
   Inc(Reads);
   Result := Default(TNyxDraftRecoveryFrame);
+end;
+
+function TRecoveryTarget.DeferTargetRefresh: Boolean;
+begin
+  Result := Deferred;
+  FTargetRefreshDeferred := Deferred;
 end;
 
 procedure TRecoveryTarget.RenderDataset;
@@ -477,6 +485,97 @@ begin
   Check(not LJournal.Capture.Active and (LJournal.Capture.Count = 4) and
     (LJournal.EntryAt(0).Cell.Text = CDraft),
     'a retained journal survives physical target disposal without retaining its authority');
+end;
+
+{ One retained physical frame can outlive several producer publications. The
+  portable adapter must keep bounded identity evidence, not whole change logs;
+  removal/reinsertion and explicit overflow still refuse automatic restoration. }
+procedure DeferredContinuity;
+const
+  CDraft: TNyxText = 'Unfinished 🌙' + #0 + ' label';
+var
+  LKey: TNyxCollectionRef;
+  LReader: TNyxItemRef;
+  LPeer: TNyxItemRef;
+  LStore: INyxCollection;
+  LView: INyxCollectionView;
+  LMount: INyxCollectionMount;
+  LInput: INyxCollectionInputAdmission;
+  LTarget: TRecoveryTarget;
+  LJournal: INyxCollectionDraftRecovery;
+  LBefore: INyxCollectionSnapshot;
+  LPolicy: TNyxCollectionInspectionPolicy;
+  LSpec: TNyxCollectionViewSpec;
+  LVariant: Integer;
+begin
+  for LVariant := 0 to 1 do
+  begin
+    LKey := NyxCollection('deferred-continuity');
+    LReader := NyxItem(LKey, 'reader');
+    LPeer := NyxItem(LKey, 'peer');
+    LStore := NewNyxCollection(LKey, NyxCollectionSchema.Text(NyxTextField('name'), ''), [
+      NyxCollectionItem(LReader).WithValue(NyxTextField('name'), 'Reader'),
+      NyxCollectionItem(LPeer).WithValue(NyxTextField('name'), 'Peer')]);
+    LSpec := NyxCollectionView(LKey).Column(NyxTextField('name'), 'Name', cmEditable);
+
+    if LVariant = 1 then
+    begin
+      LPolicy := NyxInspectionPolicy.RemovedIdentities(0);
+      LSpec := LSpec.Inspection(LPolicy);
+    end;
+    LView := NewNyxCollectionView(LStore, LSpec, cpTree);
+    LTarget := TRecoveryTarget.Create(LView);
+    LMount := LTarget;
+    LTarget.Activate;
+    Supports(LMount, INyxCollectionInputAdmission, LInput);
+    LJournal := NyxCollectionDraftRecovery(LMount);
+    LTarget.Draft := NyxCollectionCellEdit(LReader, NyxColumnIdentity(NyxTextField('name')),
+      TNyxStateValue.FromText('Reader'), CDraft, NyxTextSelection(CDraft, 0, 3), True, True);
+    LBefore := LTarget.Frame;
+    LTarget.Deferred := True;
+    LStore.Update(NyxCollectionItem(LPeer).WithValue(NyxTextField('name'), 'Peer update one'));
+    LStore.Update(NyxCollectionItem(LPeer).WithValue(NyxTextField('name'), 'Peer update two'));
+    Check((LTarget.Frame = LBefore) and (LJournal.Capture.Count = 0),
+      'deferred producer publications leave the old physical draft and map intact');
+    LTarget.Deferred := False;
+    LMount.Refresh;
+    Check(LInput.InputReady and LTarget.Draft.Defined and
+      (LTarget.Draft.Text = CDraft) and (LJournal.Capture.Count = 0) and
+      (LTarget.Frame = LView.Snapshot),
+      'explicit retry retains an unchanged identity across several unrelated publications');
+    LTarget.Deferred := True;
+
+    if LVariant = 0 then
+    begin
+      LBefore := LStore.Snapshot;
+      LStore.Apply([NyxRemove(LReader), NyxInsert(0, LBefore.Item(LReader))]);
+    end
+    else
+    begin
+      LStore.Remove(LPeer);
+    end;
+    LStore.Update(NyxCollectionItem(LReader).WithValue(NyxTextField('name'), 'Reader'));
+    LTarget.Deferred := False;
+    LMount.Refresh;
+
+    if LVariant = 0 then
+    begin
+      Check(not LTarget.Draft.Defined and (LJournal.Capture.Count = 1) and
+        (LJournal.EntryAt(0).Reason = ncdlIdentityReplaced) and
+        (LJournal.EntryAt(0).Cell.Text = CDraft),
+        'deferred equal-value replacement cannot inherit a former native or browser draft');
+    end
+    else
+    begin
+      Check(not LTarget.Draft.Defined and (LJournal.Capture.Count = 1) and
+        (LJournal.EntryAt(0).Reason = ncdlUnknownIdentity) and
+        (LJournal.EntryAt(0).Cell.Text = CDraft),
+        'bounded identity overflow stays conservative and preserves exact unfinished work');
+    end;
+    LMount.Disconnect;
+    LInput := nil;
+    LMount := nil;
+  end;
 end;
 
 procedure SavedPolicy;
@@ -864,6 +963,7 @@ begin
     ReviewChecks;
     SavedPolicy;
     PressureChecks;
+    DeferredContinuity;
     ActionAdoption;
     FeedbackAdmission;
     {$ifdef PAS2JS}

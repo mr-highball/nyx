@@ -188,7 +188,8 @@ uses
   nyx.collections.range.actions,
   nyx.collections.range.commands,
   nyx.collections.range.navigation,
-  nyx.collections.tree.rows;
+  nyx.collections.tree.rows,
+  nyx.collections.lcl.tree;
 
 type
   { Forward mount is borrowed by native ports only while a local specialized
@@ -743,6 +744,25 @@ type
       AShift: TShiftState; AX, AY: Integer);
   private
     FTree: TTreeView;
+    { The Tree owns its cached editor. These observation/frame ports retain no
+      renderer; callbacks are disconnected before borrowed nodes/widgets retire. }
+    FTreeFrame: INyxNativeGestureFrame;
+    FTreeEvents: INyxEvents;
+    FTreeOrigin: TNyxText;
+    FTreeObserver: INyxLCLEditingObserver;
+    FTreeObservation: INyxObservationPublication;
+    FTreeComposing: Boolean;
+    FTreeCommitQueued: Boolean;
+    FTreeEditedDispatching: Boolean;
+    FTreeRefreshPending: Boolean;
+    FTreeIdleArmed: Boolean;
+    { At most one entered label draft survives a cancelled positional editor.
+      Its immutable baseline is released on restoration/recovery/disconnect. }
+    FTreeDraft: TNyxCollectionCellEdit;
+    FTreeDraftBefore: INyxCollectionSnapshot;
+    { One copied draft per touched row/field, independent of native node
+      pointers. Ordinary source refresh admits each against the shared journal. }
+    FTreeDormant: TNyxCollectionCellEdits;
     FNodes: array of TTreeNode;
     FRendered: INyxCollectionSnapshot;
     { Non-nil only during an admitted map build. Native readers use this
@@ -842,6 +862,21 @@ type
     procedure PrepareGrid(Sender: TObject; AColumn, ARow: Integer; AState: TGridDrawState);
     function VisibleOrder: TNyxItemRefs;
     procedure TreeEdited(Sender: TObject; ANode: TTreeNode; var AText: String);
+    procedure TreeEditorReady(Sender: TObject);
+    procedure TreeEditorEnded(Sender: TObject);
+    procedure TreeEditorEnding(Sender: TObject; ACancel: Boolean);
+    procedure TreeEditingObserved(const AOriginID: TNyxText;
+      const AEditing: TNyxEditingSnapshot);
+    procedure ArmTreeRefresh;
+    procedure TreeRefreshIdle(Sender: TObject; var ADone: Boolean);
+    function ReadTreeDraft(out ACell: TNyxCollectionCellEdit): Boolean;
+    function TreeEditReady: Boolean;
+    function TreeDormantIndex(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity): Integer;
+    procedure RememberTreeDraft(const ACell: TNyxCollectionCellEdit);
+    procedure ForgetTreeDraft(AIndex: Integer);
+    procedure RecoverTreeDormants(const AData: INyxCollectionSnapshot);
+    procedure RenderTree(const AData: INyxCollectionSnapshot; ASelected: Integer);
     function NodeIndex(ANode: TTreeNode): Integer;
     function DisplayText(const AValue: TNyxText): TNyxText;
     { Pure UI-thread read, clipped during native geometry/teardown transitions.
@@ -3861,6 +3896,27 @@ begin
   Result := False;
   ACell := Default(TNyxCollectionCellEdit);
 
+  if (FTree <> nil) and InputLifetimeCurrent and not FEditsSuspended and
+    not FTreeComposing then
+  begin
+    Result := ReadTreeDraft(ACell) and
+      (ACell.Item.Collection.Name = AItem.Collection.Name) and
+      (ACell.Item.ID = AItem.ID) and ACell.Field.Same(AField) and
+      (ACell.Text <> ColumnValueDisplay(ACell.Accepted));
+
+    if not Result then
+    begin
+      LIndex := TreeDormantIndex(AItem, AField);
+
+      if LIndex >= 0 then
+      begin
+        ACell := FTreeDormant[LIndex].Copy;
+        Result := ACell.Text <> ColumnValueDisplay(ACell.Accepted);
+      end;
+    end;
+    Exit;
+  end;
+
   if not InputLifetimeCurrent or FEditsSuspended or (FColumnEditing = nil) or
     FColumnEditing.Composing then
   begin
@@ -3905,6 +3961,8 @@ var
   LIndex: Integer;
   LMove: Integer;
   LUpdating: Boolean;
+  LEditor: TCustomEdit;
+  LFrame: INyxNativeGestureFrame;
 begin
   Result := False;
 
@@ -3912,6 +3970,46 @@ begin
     not NyxSameCollectionDraft(LCurrent, ACell) or not GetDraftRecoveryHeld then
   begin
     Exit;
+  end;
+
+  if FTree <> nil then
+  begin
+    { Exact receipt comparison preceded any host mutation. While held, native
+      commit input is shielded; revert only this reviewed physical draft. }
+    LUpdating := FUpdating;
+    LFrame := FTreeFrame;
+
+    if LFrame <> nil then
+    begin
+      LFrame.Enter;
+    end;
+    FUpdating := True;
+    try
+      LEditor := NyxLCLTreeEditor(FTree);
+
+      if (LEditor <> nil) and ReadTreeDraft(LCurrent) and
+        (LCurrent.Item.ID = ACell.Item.ID) and LCurrent.Field.Same(ACell.Field) then
+      begin
+        RestoreNyxLCLInputText(LEditor, ColumnValueDisplay(ACell.Accepted));
+        FinishNyxLCLTreeEditor(FTree, True);
+      end;
+
+      if FTreeDraft.Defined and (FTreeDraft.Item.ID = ACell.Item.ID) and
+        FTreeDraft.Field.Same(ACell.Field) then
+      begin
+        FTreeDraft := Default(TNyxCollectionCellEdit);
+        FTreeDraftBefore := nil;
+      end;
+      ForgetTreeDraft(TreeDormantIndex(ACell.Item, ACell.Field));
+      Exit(True);
+    finally
+      FUpdating := LUpdating;
+
+      if LFrame <> nil then
+      begin
+        LFrame.Leave;
+      end;
+    end;
   end;
 
   LLease := ReadColumnEditor;
@@ -4767,11 +4865,21 @@ end;
 function TNativeMount.GetEditingPublication: INyxObservationPublication;
 begin
   Result := FColumnEditing;
+
+  if FTree <> nil then
+  begin
+    Result := FTreeObservation;
+  end;
 end;
 
 function TNativeMount.EditingDispatching: Boolean;
 begin
   Result := (FColumnEditing <> nil) and FColumnEditing.Dispatching;
+
+  if FTreeObserver <> nil then
+  begin
+    Result := Result or FTreeObserver.Dispatching;
+  end;
 end;
 
 function TNativeMount.DeferTargetRefresh: Boolean;
@@ -4780,6 +4888,17 @@ var
   LReady: Boolean;
 begin
   Result := False;
+
+  if (FTree <> nil) and (FTreeCommitQueued or FTreeComposing or
+    ((FTreeObserver <> nil) and FTreeObserver.Dispatching) or
+    ((FTree is TNyxCollectionTreeView) and
+      TNyxCollectionTreeView(FTree).EditorDispatching)) then
+  begin
+    FTargetRefreshDeferred := True;
+    FTreeRefreshPending := True;
+    ArmTreeRefresh;
+    Exit(True);
+  end;
 
   if DeferComposingRefresh then
   begin
@@ -4809,6 +4928,13 @@ end;
 
 function TNativeMount.DeferComposingRefresh: Boolean;
 begin
+  if (FTree <> nil) and FTreeComposing then
+  begin
+    FTargetRefreshDeferred := True;
+    FTreeRefreshPending := True;
+    ArmTreeRefresh;
+    Exit(True);
+  end;
   { This first check runs before the base suppresses Ready. Never query the
     event router here: an existing composition must keep its END/text delivery. }
   Result := (FHasColumnLayout or FObservesTablePresentation) and (FColumnEditing <> nil) and
@@ -6650,6 +6776,15 @@ begin
           raise ENyxCollection.Create('Tree binding requires a native tree view');
         end;
         FTree := TTreeView(AControl);
+        FTreeFrame := AInputFrame;
+        FTreeEvents := AInputEvents;
+        FTreeOrigin := AOriginID;
+
+        if FTree is TNyxCollectionTreeView then
+        begin
+          TNyxCollectionTreeView(FTree).ConnectCollectionEditor(FTreeFrame,
+            GetInputLifetime, TreeEditorReady, TreeEditorEnded, TreeEditorEnding, TreeEditReady);
+        end;
         FPreviousTreeChange := FTree.OnChange;
         FPreviousTreeEdit := FTree.OnEdited;
         FPreviousTreeExpanded := FTree.OnExpanded;
@@ -7112,7 +7247,7 @@ var
   LKeepAlive: INyxCollectionMount;
 begin
 
-  if FUpdating or not GetConnected then
+  if FUpdating or FTreeCommitQueued or FTreeComposing or not GetInputReady then
   begin
     Exit;
   end;
@@ -7158,7 +7293,7 @@ var
   LKeepAlive: INyxCollectionMount;
 begin
 
-  if FUpdating or not GetConnected then
+  if FUpdating or FTreeCommitQueued or FTreeComposing or not GetInputReady then
   begin
     Exit;
   end;
@@ -7287,6 +7422,320 @@ begin
   end;
 end;
 
+function TNativeMount.TreeDormantIndex(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity): Integer;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FTreeDormant) do
+  begin
+
+    if (FTreeDormant[LIndex].Item.Collection.Name = AItem.Collection.Name) and
+      (FTreeDormant[LIndex].Item.ID = AItem.ID) and FTreeDormant[LIndex].Field.Same(AField) then
+    begin
+      Exit(LIndex);
+    end;
+  end;
+  Result := -1;
+end;
+
+procedure TNativeMount.ForgetTreeDraft(AIndex: Integer);
+var
+  LNext: TNyxCollectionCellEdits;
+  LIndex: Integer;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FTreeDormant)) then
+  begin
+    Exit;
+  end;
+  LNext := Copy(FTreeDormant, 0, Length(FTreeDormant));
+  for LIndex := AIndex to High(LNext) - 1 do
+  begin
+    LNext[LIndex] := LNext[LIndex + 1].Copy;
+  end;
+  SetLength(LNext, Length(LNext) - 1);
+  FTreeDormant := LNext;
+end;
+
+procedure TNativeMount.RememberTreeDraft(const ACell: TNyxCollectionCellEdit);
+var
+  LNext: TNyxCollectionCellEdits;
+  LIndex: Integer;
+begin
+  LIndex := TreeDormantIndex(ACell.Item, ACell.Field);
+
+  if ACell.Text = ColumnValueDisplay(ACell.Accepted) then
+  begin
+    ForgetTreeDraft(LIndex);
+    Exit;
+  end;
+  { Copy before replacing a managed record. No native node/editor enters this
+    cache, and later source publications use ordinary recovery admission. }
+  LNext := Copy(FTreeDormant, 0, Length(FTreeDormant));
+
+  if LIndex < 0 then
+  begin
+    LIndex := Length(LNext);
+    SetLength(LNext, LIndex + 1);
+  end;
+  LNext[LIndex] := ACell.Copy;
+  FTreeDormant := LNext;
+end;
+
+procedure TNativeMount.RecoverTreeDormants(const AData: INyxCollectionSnapshot);
+var
+  LFormer: TNyxCollectionCellEdits;
+  LNext: TNyxCollectionCellEdits;
+  LReason: TNyxCollectionDraftLoss;
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  LFormer := FTreeDormant;
+  SetLength(LNext, Length(LFormer));
+  LCount := 0;
+  for LIndex := 0 to High(LFormer) do
+  begin
+
+    if not RecoverCell(LFormer[LIndex], FRendered, AData, LReason) then
+    begin
+      LNext[LCount] := LFormer[LIndex].Copy;
+      Inc(LCount);
+    end;
+
+    if not InputLifetimeCurrent then
+    begin
+      Exit;
+    end;
+  end;
+  SetLength(LNext, LCount);
+  FTreeDormant := LNext;
+end;
+
+function TNativeMount.TreeEditReady: Boolean;
+begin
+  Result := GetInputReady and not FUpdating and not FTreeComposing and
+    not FTreeCommitQueued and not FTreeRefreshPending and not FTreeEditedDispatching;
+end;
+
+procedure TNativeMount.ArmTreeRefresh;
+begin
+
+  if not FTreeIdleArmed and InputLifetimeCurrent then
+  begin
+    FTreeIdleArmed := True;
+    Application.AddOnIdleHandler(TreeRefreshIdle);
+  end;
+end;
+
+procedure TNativeMount.TreeRefreshIdle(Sender: TObject; var ADone: Boolean);
+var
+  LLease: INyxCollectionMount;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if FUpdating or FTreeComposing or
+    ((FTreeFrame <> nil) and FTreeFrame.Dispatching) or
+    ((FTreeObserver <> nil) and FTreeObserver.Dispatching) then
+  begin
+    Exit;
+  end;
+  Application.RemoveOnIdleHandler(TreeRefreshIdle);
+  FTreeIdleArmed := False;
+  FTreeCommitQueued := False;
+
+  if FTreeRefreshPending and InputLifetimeCurrent then
+  begin
+    FTreeRefreshPending := False;
+    Refresh;
+  end;
+end;
+
+procedure TNativeMount.TreeEditorReady(Sender: TObject);
+var
+  LLease: INyxCollectionMount;
+  LObserver: INyxLCLEditingObserver;
+  LPublication: INyxObservationPublication;
+  LTree: TTreeView;
+  LEditor: TCustomEdit;
+  LIndex: Integer;
+  LDormant: Integer;
+  LCell: TNyxCollectionCellEdit;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if FUpdating or not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+  LTree := FTree;
+  LEditor := NyxLCLTreeEditor(LTree);
+
+  if LEditor = nil then
+  begin
+    Exit;
+  end;
+  LIndex := NodeIndex(NyxLCLTreeEditingItem(LTree));
+
+  if (LIndex >= 0) and (FRendered <> nil) then
+  begin
+    LDormant := TreeDormantIndex(FRendered.ItemAt(LIndex).Ref,
+      FView.Spec.ColumnAt(0).Identity);
+
+    if LDormant >= 0 then
+    begin
+      LCell := FTreeDormant[LDormant].Copy;
+      RestoreNyxLCLInputText(LEditor, LCell.Text);
+
+      if not InputLifetimeCurrent or (FTree <> LTree) then
+      begin
+        Exit;
+      end;
+      SelectNyxLCLText(LEditor, LCell.Selection);
+      ForgetTreeDraft(LDormant);
+    end;
+  end;
+
+  if (FTreeObserver <> nil) or (FTreeEvents = nil) or (FTreeOrigin = '') or
+    not NyxLCLTextHistorySupported then
+  begin
+    Exit;
+  end;
+  LObserver := NewNyxLCLEditingObserver;
+  try
+    LObserver.Add(FTreeOrigin, LEditor);
+    LObserver.Activate(FTreeEvents, TreeEditingObserved);
+
+    if not InputLifetimeCurrent or (FTree <> LTree) then
+    begin
+      Exit;
+    end;
+
+    if not Supports(LObserver, INyxObservationPublication, LPublication) or
+      not LPublication.Ready then
+    begin
+      raise ENyxCollection.Create('Native Tree editing observation is unavailable');
+    end;
+    FTreeObserver := LObserver;
+    FTreeObservation := LPublication;
+    LObserver := nil;
+  finally
+
+    if LObserver <> nil then
+    begin
+      LObserver.Disconnect;
+    end;
+  end;
+end;
+
+procedure TNativeMount.TreeEditorEnded(Sender: TObject);
+begin
+
+  if not FUpdating and InputLifetimeCurrent then
+  begin
+    FTreeRefreshPending := True;
+    ArmTreeRefresh;
+  end;
+end;
+
+procedure TNativeMount.TreeEditorEnding(Sender: TObject; ACancel: Boolean);
+var
+  LLease: INyxCollectionMount;
+  LCell: TNyxCollectionCellEdit;
+begin
+  { Reading the native editor/spec may enter host code. Retain the receiver
+    through this borrowed callback just as the ready/edited boundaries do. }
+  LLease := Self as INyxCollectionMount;
+
+  if FUpdating or not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+
+  if ACancel then
+  begin
+
+    if ReadTreeDraft(LCell) then
+    begin
+
+      if (FTree is TNyxCollectionTreeView) and
+        not TNyxCollectionTreeView(FTree).ExplicitCancellation then
+      begin
+        RememberTreeDraft(LCell);
+      end
+      else
+      begin
+        ForgetTreeDraft(TreeDormantIndex(LCell.Item, LCell.Field));
+      end;
+    end;
+    FTreeDraft := Default(TNyxCollectionCellEdit);
+    FTreeDraftBefore := nil;
+  end
+  else if ReadTreeDraft(LCell) then
+  begin
+    FTreeDraft := LCell;
+    FTreeDraftBefore := FRendered;
+    FTreeCommitQueued := True;
+  end;
+end;
+
+procedure TNativeMount.TreeEditingObserved(const AOriginID: TNyxText;
+  const AEditing: TNyxEditingSnapshot);
+var
+  LLease: INyxCollectionMount;
+begin
+  LLease := Self as INyxCollectionMount;
+
+  if not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+  case AEditing.Phase of
+    nepCompositionStart, nepCompositionUpdate:
+      FTreeComposing := True;
+    nepCompositionEnd:
+      begin
+        FTreeComposing := False;
+
+        if FTreeRefreshPending then
+        begin
+          ArmTreeRefresh;
+        end;
+      end;
+  else
+    begin
+      { Ordinary text/selection observations do not change composition state. }
+    end;
+  end;
+end;
+
+function TNativeMount.ReadTreeDraft(out ACell: TNyxCollectionCellEdit): Boolean;
+var
+  LEditor: TCustomEdit;
+  LIndex: Integer;
+  LColumn: TNyxCollectionColumn;
+begin
+  ACell := FTreeDraft.Copy;
+  Result := ACell.Defined;
+  LEditor := NyxLCLTreeEditor(FTree);
+
+  if (LEditor = nil) or (FRendered = nil) then
+  begin
+    Exit;
+  end;
+  LIndex := NodeIndex(NyxLCLTreeEditingItem(FTree));
+
+  if (LIndex < 0) or (LIndex >= FRendered.Count) then
+  begin
+    Exit;
+  end;
+  LColumn := FView.Spec.ColumnAt(0);
+  ACell := NyxCollectionCellEdit(FRendered.ItemAt(LIndex).Ref, LColumn.Identity,
+    LColumn.Read(FRendered.ItemAt(LIndex)), NyxLCLInputText(LEditor),
+    CaptureNyxLCLSelection(LEditor), True, LEditor.Focused);
+  Result := True;
+end;
+
 procedure TNativeMount.TreeEdited(Sender: TObject; ANode: TTreeNode;
   var AText: String);
 var
@@ -7294,9 +7743,14 @@ var
   LItem: TNyxItemRef;
   LKeepAlive: INyxCollectionMount;
   LView: INyxCollectionView;
+  LBefore: INyxCollectionSnapshot;
+  LAfter: INyxCollectionSnapshot;
+  LCell: TNyxCollectionCellEdit;
+  LColumn: TNyxCollectionColumn;
+  LFrame: INyxNativeGestureFrame;
 begin
 
-  if FUpdating or not GetConnected then
+  if FUpdating or FTreeEditedDispatching or not GetInputReady or (FRendered = nil) then
   begin
     Exit;
   end;
@@ -7307,35 +7761,85 @@ begin
   begin
     Exit;
   end;
-
-  if Assigned(FPreviousTreeEdit) then
-  begin
-    FPreviousTreeEdit(Sender, ANode, AText);
-  end;
-
-  if not GetConnected then
-  begin
-    Exit;
-  end;
-  LIndex := NodeIndex(ANode);
-
-  if LIndex < 0 then
-  begin
-    Exit;
-  end;
   LView := FView;
-  LItem := LView.Snapshot.ItemAt(LIndex).Ref;
+  LItem := FRendered.ItemAt(LIndex).Ref;
+  LColumn := LView.Spec.ColumnAt(0);
+  LBefore := LView.Store.Snapshot;
+  LCell := FTreeDraft;
+
+  if not LCell.Defined then
+  begin
+    LCell := NyxCollectionCellEdit(LItem, LColumn.Identity,
+      LColumn.Read(FRendered.ItemAt(LIndex)), TNyxText(AText),
+      Default(TNyxTextSelection), False, False);
+    FTreeDraft := LCell;
+    FTreeDraftBefore := FRendered;
+  end;
+  LFrame := FTreeFrame;
+
+  if LFrame <> nil then
+  begin
+    LFrame.Enter;
+  end;
+  FTreeEditedDispatching := True;
+  FTreeCommitQueued := True;
   try
-    EditCell(LItem, 0, EditText(LItem, 0, TNyxText(AText)));
-  except
-    on LException: Exception do
+
+    if Assigned(FPreviousTreeEdit) then
     begin
-      Failed(LException);
-      AText := DisplayText(LView.CellText(LItem, 0));
+      FPreviousTreeEdit(Sender, ANode, AText);
+    end;
+
+    if not InputLifetimeCurrent or (FView <> LView) then
+    begin
       Exit;
     end;
+    { The host callback may replace/remove/reorder source rows. Its original
+      borrowed node still belongs to FRendered; never reinterpret its ordinal
+      against the newer view or commit through revoked source authority. }
+    LAfter := LView.Store.Snapshot;
+
+    if LAfter = LBefore then
+    begin
+
+      try
+
+        if EditCell(LItem, 0, EditText(LItem, 0, TNyxText(AText))) then
+        begin
+          FTreeDraft := Default(TNyxCollectionCellEdit);
+          FTreeDraftBefore := nil;
+        end;
+      except
+        on LException: Exception do
+        begin
+          Failed(LException);
+        end;
+      end;
+      LAfter := LView.Store.Snapshot;
+    end;
+
+    if LAfter.Has(LItem) then
+    begin
+      AText := ColumnValueDisplay(LColumn.Read(LAfter.Item(LItem)));
+    end
+    else
+    begin
+      AText := ColumnValueDisplay(LCell.Accepted);
+    end;
+  finally
+    FTreeEditedDispatching := False;
+
+    if InputLifetimeCurrent then
+    begin
+      FTreeRefreshPending := True;
+      ArmTreeRefresh;
+    end;
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
   end;
-  AText := DisplayText(LView.CellText(LItem, 0));
 end;
 
 function TNativeMount.GridText(AColumn, ARow: Integer): TNyxText;
@@ -8023,20 +8527,318 @@ begin
   end;
 end;
 
+procedure TNativeMount.RenderTree(const AData: INyxCollectionSnapshot; ASelected: Integer);
+var
+  LFrame: INyxNativeGestureFrame;
+  LTree: TTreeView;
+  LView: INyxCollectionView;
+  LHierarchy: INyxTreeHierarchy;
+  LBefore: INyxCollectionSnapshot;
+  LCell: TNyxCollectionCellEdit;
+  LReason: TNyxCollectionDraftLoss;
+  LEditor: TCustomEdit;
+  LRestore: Boolean;
+  LDirty: Boolean;
+  LIndex: Integer;
+  LPrevious: Integer;
+  LParent: Integer;
+  LNext: array of TTreeNode;
+  LStructureChanged: Boolean;
+  LText: TNyxText;
+
+  function Current: Boolean;
+  begin
+    Result := InputLifetimeCurrent and (FTree = LTree) and (FView = LView);
+  end;
+
+  function Disclosed: Boolean;
+  var
+    LParentIndex: Integer;
+  begin
+    Result := AData.Has(LCell.Item);
+
+    if not Result then
+    begin
+      Exit;
+    end;
+    LParentIndex := LView.ParentIndex(AData.IndexOf(LCell.Item));
+    while LParentIndex >= 0 do
+    begin
+
+      if not LHierarchy.IsExpanded(AData.ItemAt(LParentIndex).Ref) then
+      begin
+        Exit(False);
+      end;
+      LParentIndex := LView.ParentIndex(LParentIndex);
+    end;
+  end;
+
+begin
+  LFrame := FTreeFrame;
+  LTree := FTree;
+  LView := FView;
+
+  if LFrame <> nil then
+  begin
+    LFrame.Enter;
+  end;
+  try
+    LHierarchy := NyxTreeHierarchy(LView);
+    RecoverTreeDormants(AData);
+
+    if not Current then
+    begin
+      Exit;
+    end;
+    LRestore := False;
+
+    if ReadTreeDraft(LCell) then
+    begin
+      LBefore := FTreeDraftBefore;
+
+      if NyxLCLTreeEditor(LTree) <> nil then
+      begin
+        LBefore := FRendered;
+      end;
+      FTreeDraft := LCell;
+      FTreeDraftBefore := LBefore;
+      LDirty := LCell.Text <> ColumnValueDisplay(LCell.Accepted);
+      LRestore := not RecoverCell(LCell, LBefore, AData, LReason, LDirty);
+
+      if not Current then
+      begin
+        Exit;
+      end;
+
+      if LRestore and (not FEnabled or FReadOnly or
+        (LView.Spec.ColumnAt(0).Mode <> cmEditable)) then
+      begin
+        LReason := ncdlFieldUnavailable;
+
+        if LDirty then
+        begin
+          PreserveCell(LCell, LReason, LBefore.Revision, AData.Revision);
+        end;
+        LRestore := False;
+      end;
+
+      if LRestore and (not Disclosed or (ASelected < 0) or
+        (AData.ItemAt(ASelected).Ref.ID <> LCell.Item.ID)) then
+      begin
+        { Selection and disclosure are independent from acceptance. Navigation
+          leaves inert keyed work, never reopens the old editor over new focus. }
+        RememberTreeDraft(LCell);
+        LRestore := False;
+      end;
+
+      if not Current then
+      begin
+        Exit;
+      end;
+      { Recovery/pressure admission precedes ending the REAL editor. A refused
+        journal leaves its original text/caret available to pending review. }
+      FinishNyxLCLTreeEditor(LTree, True);
+
+      if not Current then
+      begin
+        Exit;
+      end;
+
+      if not LRestore then
+      begin
+        FTreeDraft := Default(TNyxCollectionCellEdit);
+        FTreeDraftBefore := nil;
+      end;
+    end;
+
+    { Existing admitted node-map/disclosure synchronization is kept below. }
+    LHierarchy := NyxTreeHierarchy(LView);
+    LTree.Items.BeginUpdate;
+    try
+
+      if FRendered = nil then
+      begin
+        LTree.Items.Clear;
+      end;
+      SetLength(LNext, AData.Count);
+      LStructureChanged := (FRendered = nil);
+
+      if FRendered <> nil then
+      begin
+        LStructureChanged := FRendered.Count <> AData.Count;
+      end;
+      for LIndex := 0 to AData.Count - 1 do
+      begin
+        LPrevious := -1;
+
+        if FRendered <> nil then
+        begin
+          LPrevious := FRendered.IndexOf(AData.ItemAt(LIndex).Ref);
+        end;
+
+        if LPrevious >= 0 then
+        begin
+          LNext[LIndex] := FNodes[LPrevious];
+
+          if LPrevious <> LIndex then
+          begin
+            LStructureChanged := True;
+          end;
+
+          if (LView.Spec.ParentField <> '') and
+            (AData.ItemAt(LIndex).GetValue(NyxTextField(LView.Spec.ParentField)) <>
+            FRendered.ItemAt(LPrevious).GetValue(NyxTextField(LView.Spec.ParentField))) then
+          begin
+            LStructureChanged := True;
+          end;
+        end
+        else
+        begin
+          LNext[LIndex] := LTree.Items.Add(nil, '');
+          LStructureChanged := True;
+        end;
+        LNext[LIndex].Data := Pointer(PtrUInt(LIndex + 1));
+
+        if FRefreshPlan.ValuesChanged(LIndex) or
+          (FNormalizeValues and (FNormalizeItem.ID = AData.ItemAt(LIndex).Ref.ID)) then
+        begin
+          LText := DisplayText(LView.CellText(AData.ItemAt(LIndex).Ref, 0));
+
+          if TNyxText(LNext[LIndex].Text) <> LText then
+          begin
+            LNext[LIndex].Text := LText;
+          end;
+        end;
+      end;
+
+      if LStructureChanged and (FRendered <> nil) then
+      begin
+        { Scalar/selection changes preserve structure and expansion completely.
+          Flatten only for an admitted reorder/reparent/removal, before deleting
+          old ancestors or applying new links that could temporarily form cycles. }
+        for LIndex := 0 to Length(LNext) - 1 do
+        begin
+          LNext[LIndex].MoveTo(nil, naAdd);
+        end;
+      end;
+      for LIndex := 0 to Length(FNodes) - 1 do
+      begin
+
+        if not AData.Has(FRendered.ItemAt(LIndex).Ref) then
+        begin
+          FNodes[LIndex].Delete;
+        end;
+      end;
+      FNodes := LNext;
+
+      if LStructureChanged then
+      begin
+        for LIndex := 0 to Length(FNodes) - 1 do
+        begin
+          LParent := LView.ParentIndex(LIndex);
+
+          if LParent >= 0 then
+          begin
+            FNodes[LIndex].MoveTo(FNodes[LParent], naAddChild);
+          end;
+        end;
+      end;
+
+      if ASelected >= 0 then
+      begin
+        LTree.Selected := FNodes[ASelected];
+      end
+      else
+      begin
+        LTree.Selected := nil;
+      end;
+
+      if LTree.MultiSelect then
+      begin
+        for LIndex := 0 to Length(FNodes) - 1 do
+        begin
+          FNodes[LIndex].MultiSelected := LView.Selection.Contains(AData.ItemAt(LIndex).Ref);
+        end;
+      end;
+      { LCL may open ancestors while setting Selected or moving nodes. Restore
+        public disclosure after those host operations, under FUpdating so host
+        notifications cannot feed back into a view currently publishing. }
+      for LIndex := 0 to Length(FNodes) - 1 do
+      begin
+        FNodes[LIndex].Expanded := LHierarchy.IsExpanded(AData.ItemAt(LIndex).Ref);
+      end;
+    finally
+      LTree.Items.EndUpdate;
+    end;
+
+    if not Current then
+    begin
+      Exit;
+    end;
+    FRendered := AData;
+
+    if LRestore then
+    begin
+      LIndex := AData.IndexOf(LCell.Item);
+
+      if LTree is TNyxCollectionTreeView then
+      begin
+        TNyxCollectionTreeView(LTree).RestoreCollectionEditor(FNodes[LIndex]);
+      end
+      else
+      begin
+        FNodes[LIndex].EditText;
+      end;
+
+      if not Current then
+      begin
+        Exit;
+      end;
+      LEditor := NyxLCLTreeEditor(LTree);
+
+      if (LEditor <> nil) and (NyxLCLTreeEditingItem(LTree) = FNodes[LIndex]) then
+      begin
+        RestoreNyxLCLInputText(LEditor, LCell.Text);
+
+        if not Current then
+        begin
+          Exit;
+        end;
+        SelectNyxLCLText(LEditor, LCell.Selection);
+      end
+      else if LDirty then
+      begin
+        { A host OnEditing veto can refuse restoration after the new map was
+          installed. Keep FTreeDraft until this SAME journal admits it; pressure
+          review can read that data-only pending cell without a hidden writer. }
+        PreserveCell(LCell, ncdlFieldUnavailable, LBefore.Revision, AData.Revision);
+      end;
+
+      if Current then
+      begin
+        FTreeDraft := Default(TNyxCollectionCellEdit);
+        FTreeDraftBefore := nil;
+      end;
+    end;
+  finally
+
+    if LFrame <> nil then
+    begin
+      LFrame.Leave;
+    end;
+  end;
+end;
+
 procedure TNativeMount.RenderLogicalDataset;
 var
   LPosition: TNyxCollectionPositionRecovery;
   LReveal: TNyxTreeRevealRequest;
   LData: INyxCollectionSnapshot;
-  LHierarchy: INyxTreeHierarchy;
   LIndex: Integer;
   LColumn: Integer;
   LSelected: Integer;
   LPrevious: Integer;
-  LParent: Integer;
   LTop: Integer;
-  LNext: array of TTreeNode;
-  LStructureChanged: Boolean;
   LEditable: Boolean;
   LApplyValues: Boolean;
   LColumnSpec: TNyxCollectionColumn;
@@ -8426,124 +9228,7 @@ begin
   end
   else
   begin
-    LHierarchy := NyxTreeHierarchy(FView);
-    FTree.Items.BeginUpdate;
-    try
-
-      if FRendered = nil then
-      begin
-        FTree.Items.Clear;
-      end;
-      SetLength(LNext, LData.Count);
-      LStructureChanged := (FRendered = nil);
-
-      if FRendered <> nil then
-      begin
-        LStructureChanged := FRendered.Count <> LData.Count;
-      end;
-      for LIndex := 0 to LData.Count - 1 do
-      begin
-        LPrevious := -1;
-
-        if FRendered <> nil then
-        begin
-          LPrevious := FRendered.IndexOf(LData.ItemAt(LIndex).Ref);
-        end;
-
-        if LPrevious >= 0 then
-        begin
-          LNext[LIndex] := FNodes[LPrevious];
-
-          if LPrevious <> LIndex then
-          begin
-            LStructureChanged := True;
-          end;
-
-          if (FView.Spec.ParentField <> '') and
-            (LData.ItemAt(LIndex).GetValue(NyxTextField(FView.Spec.ParentField)) <>
-            FRendered.ItemAt(LPrevious).GetValue(NyxTextField(FView.Spec.ParentField))) then
-          begin
-            LStructureChanged := True;
-          end;
-        end
-        else
-        begin
-          LNext[LIndex] := FTree.Items.Add(nil, '');
-          LStructureChanged := True;
-        end;
-        LNext[LIndex].Data := Pointer(PtrUInt(LIndex + 1));
-
-        if FRefreshPlan.ValuesChanged(LIndex) or
-          (FNormalizeValues and (FNormalizeItem.ID = LData.ItemAt(LIndex).Ref.ID)) then
-        begin
-          LText := DisplayText(FView.CellText(LData.ItemAt(LIndex).Ref, 0));
-
-          if TNyxText(LNext[LIndex].Text) <> LText then
-          begin
-            LNext[LIndex].Text := LText;
-          end;
-        end;
-      end;
-
-      if LStructureChanged and (FRendered <> nil) then
-      begin
-        { Scalar/selection changes preserve structure and expansion completely.
-          Flatten only for an admitted reorder/reparent/removal, before deleting
-          old ancestors or applying new links that could temporarily form cycles. }
-        for LIndex := 0 to Length(LNext) - 1 do
-        begin
-          LNext[LIndex].MoveTo(nil, naAdd);
-        end;
-      end;
-      for LIndex := 0 to Length(FNodes) - 1 do
-      begin
-
-        if not LData.Has(FRendered.ItemAt(LIndex).Ref) then
-        begin
-          FNodes[LIndex].Delete;
-        end;
-      end;
-      FNodes := LNext;
-
-      if LStructureChanged then
-      begin
-        for LIndex := 0 to Length(FNodes) - 1 do
-        begin
-          LParent := FView.ParentIndex(LIndex);
-
-          if LParent >= 0 then
-          begin
-            FNodes[LIndex].MoveTo(FNodes[LParent], naAddChild);
-          end;
-        end;
-      end;
-
-      if LSelected >= 0 then
-      begin
-        FTree.Selected := FNodes[LSelected];
-      end
-      else
-      begin
-        FTree.Selected := nil;
-      end;
-
-      if FTree.MultiSelect then
-      begin
-        for LIndex := 0 to Length(FNodes) - 1 do
-        begin
-          FNodes[LIndex].MultiSelected := FView.Selection.Contains(LData.ItemAt(LIndex).Ref);
-        end;
-      end;
-      { LCL may open ancestors while setting Selected or moving nodes. Restore
-        public disclosure after those host operations, under FUpdating so host
-        notifications cannot feed back into a view currently publishing. }
-      for LIndex := 0 to Length(FNodes) - 1 do
-      begin
-        FNodes[LIndex].Expanded := LHierarchy.IsExpanded(LData.ItemAt(LIndex).Ref);
-      end;
-    finally
-      FTree.Items.EndUpdate;
-    end;
+    RenderTree(LData, LSelected);
   end;
   { Settling source geometry/selection must not steal a reader's stable row.
     This does not run for ordinary focus/selection-only notifications. }
@@ -8612,6 +9297,31 @@ begin
   FTextLayoutRows := nil;
   try
     Application.RemoveAsyncCalls(Self);
+
+    if FTreeIdleArmed then
+    begin
+      FTreeIdleArmed := False;
+      Application.RemoveOnIdleHandler(TreeRefreshIdle);
+    end;
+
+    if FTreeObserver <> nil then
+    begin
+      FTreeObserver.Disconnect;
+      FTreeObserver := nil;
+      FTreeObservation := nil;
+    end;
+
+    if FTree is TNyxCollectionTreeView then
+    begin
+      TNyxCollectionTreeView(FTree).DisconnectCollectionEditor;
+    end;
+    FTreeEvents := nil;
+    FTreeComposing := False;
+    FTreeCommitQueued := False;
+    FTreeRefreshPending := False;
+    FTreeDraft := Default(TNyxCollectionCellEdit);
+    FTreeDraftBefore := nil;
+    FTreeDormant := nil;
 
     if FCellIdleArmed then
     begin
@@ -8782,6 +9492,7 @@ begin
     FInputGrid := nil;
     FColumnFrame := nil;
     FColumnEditing := nil;
+    FTreeFrame := nil;
   end;
 end;
 

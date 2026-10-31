@@ -42,7 +42,10 @@ var
 
 begin
   {$ifndef PAS2JS}Application.Initialize;{$endif}
-  GDocument := BuildProcessTreeDocument;
+  { These are local display labels, so the example opts into the portable
+    first-column editor. Production monitors can keep the factory's readonly
+    default or supply their own authorization/domain rules. }
+  GDocument := BuildProcessTreeDocument(True);
   try
     {$ifdef PAS2JS}
     GApplication := TNyxBrowserApplication.Create;

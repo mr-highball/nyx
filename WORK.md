@@ -9,7 +9,111 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Collection safety acceptance — 2026-10-31
+## Current work — Native Tree unfinished edits — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushed fb49840f with exact remote match;
+both state-collections02/03 are accepted. Root remains SOLO. Return to the original
+live-inspection04 context/unfinished-edit criterion. Deliver actual native Tree
+draft continuity and shared recovery pressure handling, retaining existing typed
+contracts and the public handwritten/generated consumers at both widths. Qualify
+ordinary editing, unrelated updates, sort/filter/removal/replacement, journal
+pressure/review/discard/retry, composition and retirement. Preserve every original
+assertion. Stop after two actual repair cycles and reassess rather than multiplying
+fixtures. Full04 scale and physical/assistive quality remain open.
+
+Source inspection finds Tree refresh reads no active label editor. Native LCL's
+EndEditing calls OnEdited before writing its borrowed node; immediate source
+refresh can therefore delete/reorder that node inside the native stack. Use a
+small LCL Tree subclass for editor/frame observation, reuse the existing editing
+observer and recovery journal, and defer physical synchronization until the native
+commit finishes. No second store or recovery dialog. All new scratch and owned
+TEMP/TMP stay on E:. Preserve both listeners, protected data and unrelated changes.
+
+Current qualification uses tree-edit-return-01. build-01 compiles the new native
+Tree/frame adapter and retains60 readonly compact checks with a clean heap. The
+expanded active-02 cold rebuild takes1530.6s while its confirmed compiler makes
+I/O progress; disk free space and RAM are sufficient. Its first35 editor checks
+pass, then check36 fails because the new harness assumes pending discard also
+refreshes. The existing public contract explicitly separates those operations.
+The test now checks source/journal/hold preservation immediately after discard,
+then explicitly Refreshes before its original final readiness assertion. Two
+unnecessary UTF8Decode/Encode round trips are removed; native TNyxText is UTF8String.
+The failed executable/log/source identity remain retained; its heap is clean.
+
+repair-03 reuses the coherent owned active-02 cache and builds in24.8s. Handwritten
+native checks pass100/98, including readonly search/replacement assertions and the
+new real editor's Unicode/caret, veto, commit, value/replacement/filter, native IME,
+pressure, stale/current discard, design isolation and retirement cases. generated-04
+passes98 per width using both exact freshly exported readonly/editable units;
+existing native Table recovery retains57 per width. Every heap is clean and final
+native warnings are zero. Browser Tree118/recovery42 pass at measured1280x900 and
+390x844; shared inspection70 also passes, with empty errors. The public process-tree
+program now opts into editable local labels. Actual browser F2/Enter Unicode
+commits and subsequent searches for accepted text pass at both widths; reviewed
+captures and results are under public-05. No Studio design/project is edited.
+
+Source review identifies the next actual navigation gap: LCL cancels its editor
+when selection moves, conflating navigation with deliberate Escape. The native
+bridge now distinguishes explicit cancellation and retains copied per-row/field
+dormant edits. Returning restores scalar caret/text; programmatic displacement and
+closed ancestors do not steal new focus. Dormant source incompatibility uses the
+SAME shared recovery admission. The maintained editor journey adds real native
+selection, programmatic selection, collapse/reopen and dormant-source-change
+checks, leaving all original search/source assertions intact. navigation-06 passes
+109 checks per handwritten/generated variant at each native width, with clean
+heaps. An added cross-row pressure case then fails45 in final-07: after discarding
+Gateway's dormant draft, Archive's exact editor survives but remains blocked.
+diagnostic-08/09 isolate readiness=False and a new pending Archive receipt;
+trace-10 identifies ncdlUnknownIdentity. Ordinary views deliberately do not retain
+inspection continuity, while notification-only changes expire before a retry.
+The repair keeps bounded removed-ID/revision evidence for this mount's deferred
+physical frame, without retaining change packets or changing the view's opt-in
+inspection contract. Explicit gaps/overflow remain unknown. The existing shared
+mount test adds repeated unrelated updates, equal-value replacement and zero-bound
+overflow. Bridge flag-restoration wrappers also retain their complete native frame.
+Readers23493/74034/82843/72003 and the earlier55575/33064/15704/12642/36642/41668
+are joined. continuity-11 retains a declaration-order compiler failure; moving
+the private helper below fields fixes it. continuity-12 passes61 shared checks
+and116 real native Tree checks per width with clean heaps. final-13 adds the
+source-getter failure shield and complete wrapper-frame lifetime, then passes61
+shared checks on BOTH targets; handwritten/generated native Tree116 per width;
+native Table recovery57 per width; browser Tree118/recovery42/live-inspection138
+at measured1280x900 and390x844; shared browser inspection70. All seven final native
+runs free every heap block; native warnings/errors and owned browser warnings are
+zero. The browser keeps only the existing upstream RTL case warnings.
+
+Actual public browser F2/Enter commits supplementary labels and subsequent Find/
+Reveal searches for that accepted text pass at both measured sizes. Captures and
+exact completion/console results are in final-13. Early newly-created live tabs
+started with default geometry, and an older public compact tab had been resized
+by a later browser override. Those runs are explicitly excluded from geometry
+acceptance; create-then-set replacements469/470/471 have measured correct bounds.
+No original assertion or timeout is relaxed. All13 owned tabs close and the
+temporary viewport resets. Readers25388/26151/98496/64437/18406 are joined.
+Final source review retains the borrowed Tree ending callback's receiver lease
+through editor/spec reads. final-review-14 repeats the unchanged116-check journey
+for both handwritten/generated variants at both native widths, with four clean
+heaps and zero warnings/errors; reader76809 is joined. The portable/browser
+sources are unchanged from the accepted final-13 cohort.
+
+The27 protected files remain byte/hash-exact; QA65824 and LAN46632 retain their
+fixed paths. No Studio project/profile/draft, listener or LAN release is replaced.
+The user's saved table exports remain452/175 bytes. All new artifacts and owned
+TEMP/TMP stay on E:. Source identities, patch, original negatives and corrected
+results remain in tree-edit-return-01; the reused active-02 compiler cache is
+mutable and is not treated as an immutable old source snapshot.
+
+Reassessment: this is concrete progress on04's original second criterion, not a
+complete criterion or task. Stop additional cache/constructor/caption variants.
+The next deliverable is the informative native Tree recovery presentation in the
+same public application, consuming the existing Nyx recovery-review Card and exact
+pending receipt APIs. Review/export/discard/retry must be visible and preserve
+independent peers. Keep broader navigation/context and the original measured L2
+workload on this owner; do not substitute data-only journal checks. Full04 acceptance,
+native recovery presentation, broader navigation/context, widgetsets/physical/AT
+and L2 remain open; no full parent criterion or north-star credit closes here.
+
+## Previous work — Collection safety acceptance — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushedf4382811 with exact remote match.
 Root remains SOLO. This batch follows the two concrete hard prerequisites instead

@@ -29,12 +29,14 @@ uses
   JS, Web, nyx.application.browser,
   {$else}
   Interfaces, Classes, Forms, Controls, StdCtrls, ComCtrls, Windows, nyx.application.lcl,
+  nyx.collections.lcl.tree, nyx.editing.lcl,
   {$endif}
   SysUtils, nyx.text, nyx.model, nyx.controls, nyx.state, nyx.codec, nyx.codegen,
   nyx.collections, nyx.collections.view, nyx.collections.mount, nyx.collections.selection,
   nyx.collections.query, nyx.collections.query.session, nyx.collections.tree.inspection,
-  nyx.publication, nyx.process.tree
-  {$ifdef NYX_PROCESS_GENERATED}, nyx.generated.view{$endif};
+  nyx.publication, nyx.process.tree, nyx.editing, nyx.collections.recovery
+  {$ifdef NYX_PROCESS_GENERATED}, nyx.generated.view{$endif}
+  {$ifdef NYX_TREE_EDIT_GENERATED}, nyx.generated.tree.editing{$endif};
 
 {$ifdef PAS2JS}
 type
@@ -147,7 +149,7 @@ var
 
 begin
   {$ifdef NYX_PROCESS_GENERATED}
-  LDocument := BuildNyxDocument;
+  LDocument := nyx.generated.view.BuildNyxDocument;
   {$else}
   LDocument := BuildProcessTreeDocument;
   {$endif}
@@ -485,7 +487,7 @@ var
 begin
   {$ifdef PAS2JS}Result := Undefined;{$endif}
   {$ifdef NYX_PROCESS_GENERATED}
-  LDocument := BuildNyxDocument;
+  LDocument := nyx.generated.view.BuildNyxDocument;
   {$else}
   LDocument := BuildProcessTreeDocument;
   {$endif}
@@ -655,6 +657,326 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+{ This journey uses the actual LCL inline label editor, not a manual OnEdited
+  invocation. Its app/source are independent of the original search assertions. }
+procedure EditingJourney(AWidth: Integer);
+const
+  CDraft: TNyxText = 'Careful 🌙 unfinished label';
+var
+  LDocument: TNyxDocument;
+  LApplication: TNyxLCLApplication;
+  LMount: INyxCollectionMount;
+  LPeer: INyxCollectionMount;
+  LView: INyxCollectionView;
+  LStore: INyxCollection;
+  LTree: TTreeView;
+  LEditor: TCustomEdit;
+  LNode: TTreeNode;
+  LJournal: INyxCollectionDraftRecovery;
+  LBudget: INyxCollectionDraftRecoveryBudget;
+  LPending: INyxCollectionPendingDraftMount;
+  LAdmission: INyxCollectionInputAdmission;
+  LReview: INyxPendingCollectionDraft;
+  LBefore: INyxCollectionSnapshot;
+  LGateway: TNyxItemRef;
+  LWorkers: TNyxItemRef;
+  LSession: INyxCollectionQuerySession;
+  LOwner: INyxCollectionQueryOwner;
+  LPlan: INyxPreparedPublication;
+  LProbe: TReplacementProbe;
+  LToken: INyxCollectionSubscription;
+  LSelection: TNyxTextSelection;
+  LCount: Integer;
+  LSaved: TNyxText;
+  LBytes: UTF8String;
+  LStream: TFileStream;
+
+  procedure Settle;
+  var
+    LTurn: Integer;
+  begin
+    for LTurn := 1 to 4 do
+    begin
+      Application.ProcessMessages;
+      Application.Idle(False);
+      CheckSynchronize(0);
+    end;
+  end;
+
+  procedure BeginDraft(const AText: TNyxText);
+  var
+    LNode: TTreeNode;
+  begin
+    LView.Select(LGateway);
+    Settle;
+    LNode := LTree.Items.FindNodeWithText(UTF8Encode(LView.CellText(LGateway, 0)));
+    Check(LNode <> nil, 'editable Tree resolves its actual gateway node');
+    LNode.EditText;
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    Check((LEditor <> nil) and LEditor.Focused, 'the actual native Tree label editor accepts focus');
+    LBefore := LStore.Snapshot;
+    RestoreNyxLCLInputText(LEditor, AText);
+    SelectNyxLCLText(LEditor, NyxTextSelection(AText, 8, 9));
+    Check((NyxLCLInputText(LEditor) = AText) and (LStore.Snapshot = LBefore),
+      'typing supplementary text remains an unfinished draft without source writes');
+  end;
+
+  procedure FilterGateway(AHide: Boolean);
+  begin
+
+    if AHide then
+    begin
+      LPlan := LSession.PrepareSession(LSession.Capture, LOwner,
+        NyxQuerySessionEdits.Filter(NyxQueryChannel('editing-filter'),
+          NyxWhere(NyxTextField('name')).EqualTo('Archive worker')));
+    end
+    else
+    begin
+      LPlan := LSession.PrepareSession(LSession.Capture, LOwner, NyxQuerySessionEdits.ClearOwner);
+    end;
+    PublishNyxGroup([LPlan]);
+    LPlan := nil;
+    Settle;
+  end;
+
+begin
+  {$ifdef NYX_TREE_EDIT_GENERATED}
+  LDocument := nyx.generated.tree.editing.BuildNyxDocument;
+  {$else}
+  LDocument := BuildProcessTreeDocument(True);
+  {$endif}
+  LApplication := nil;
+  LProbe := TReplacementProbe.Create;
+  try
+    LSaved := TNyxCodec.Encode(LDocument);
+
+    if ParamCount > 2 then
+    begin
+      Check(not FileExists(ParamStr(3)), 'the editable Tree companion is freshly exported');
+      LBytes := UTF8Encode(TNyxCodegen.Generate(LDocument, 'nyx.generated.tree.editing'));
+      LStream := TFileStream.Create(ParamStr(3), fmCreate);
+      try
+        LStream.WriteBuffer(LBytes[1], Length(LBytes));
+      finally
+        LStream.Free;
+      end;
+    end;
+    LApplication := TNyxLCLApplication.Create;
+    LApplication.Mount(LDocument);
+    LApplication.Window.ClientWidth := AWidth;
+    LApplication.Window.ClientHeight := 900;
+    LApplication.Window.Show;
+    Settle;
+    LMount := LApplication.View.CollectionMount(ProcessTreeID);
+    LPeer := LApplication.View.CollectionMount(ProcessPeerID);
+    LView := LMount.View;
+    LStore := LView.Store;
+    LTree := TTreeView(LApplication.View.ControlFor(ProcessTreeID));
+    LGateway := NyxItem(NyxCollection(ProcessCollectionName), 'gateway');
+    LWorkers := NyxItem(LGateway.Collection, 'workers');
+    LJournal := NyxCollectionDraftRecovery(LMount);
+    LBudget := NyxCollectionDraftRecoveryBudget(LJournal);
+    Supports(LMount, INyxCollectionPendingDraftMount, LPending);
+    Supports(LMount, INyxCollectionInputAdmission, LAdmission);
+    LSession := NyxCollectionQuerySession(LView);
+    LOwner := LSession.AcquireOwner(NyxQueryOrigin('editing'), 'Temporary label inspection');
+    LToken := LStore.Subscribe(LProbe.Changed, LProbe.Validate);
+    BeginDraft(CDraft);
+    LStore.Update(NyxCollectionItem(NyxItem(LGateway.Collection, 'archive'))
+      .WithValue(NyxBooleanField('running'), True));
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    Check((LEditor <> nil) and (NyxLCLInputText(LEditor) = CDraft) and
+      (LJournal.Capture.Count = 0), 'an unrelated source update preserves the actual unfinished Tree editor');
+    LSelection := CaptureNyxLCLSelection(LEditor);
+    Check(LSelection.Defined and (LSelection.Start = 8) and (LSelection.Finish = 9),
+      'Tree refresh preserves the supplementary character selection in scalar positions');
+    LBefore := LStore.Snapshot;
+    LTree.Selected := LTree.Items.FindNodeWithText('Archive worker');
+    Settle;
+    Check(not LTree.IsEditing and LView.Selection.Focus.Defined and
+      (LView.Selection.Focus.ID = 'archive') and (LStore.Snapshot = LBefore),
+      'real native selection leaves the old label dormant without stealing new focus');
+    LTree.Selected := LTree.Items.FindNodeWithText(UTF8Encode(LView.CellText(LGateway, 0)));
+    Settle;
+    LNode := LTree.Selected;
+    LNode.EditText;
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    Check((LEditor <> nil) and (NyxLCLInputText(LEditor) = CDraft) and
+      (LJournal.Capture.Count = 0), 'returning through native F2 restores the dormant exact label');
+    LSelection := CaptureNyxLCLSelection(LEditor);
+    Check((LSelection.Start = 8) and (LSelection.Finish = 9), 'dormant native labels retain scalar caret provenance');
+    LView.Select(NyxItem(LGateway.Collection, 'archive'));
+    Settle;
+    Check(not LTree.IsEditing and (LView.Selection.Focus.ID = 'archive'),
+      'a programmatic selection likewise does not reopen an editor over new focus');
+    LView.Select(LGateway);
+    Settle;
+    LTree.Selected.EditText;
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    Check((LEditor <> nil) and (NyxLCLInputText(LEditor) = CDraft),
+      'explicitly returning to a programmatically displaced draft restores its value');
+    NyxTreeHierarchy(LView).SetExpanded(NyxItem(LGateway.Collection, 'services'), False);
+    Settle;
+    Check(not LTree.IsEditing and (LJournal.Capture.Count = 0) and (LStore.Snapshot = LBefore),
+      'closing an ancestor keeps a compatible draft dormant without inventing recovery or a source write');
+    NyxTreeHierarchy(LView).SetExpanded(NyxItem(LGateway.Collection, 'services'), True);
+    LView.Select(LGateway);
+    Settle;
+    LTree.Selected.EditText;
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    Check((LEditor <> nil) and (NyxLCLInputText(LEditor) = CDraft),
+      'reopening the path restores the same dormant label through normal editing');
+    FinishNyxLCLTreeEditor(LTree, False);
+    Settle;
+    Check((LStore.Snapshot.Item(LGateway).GetValue(NyxTextField('name')) = CDraft) and
+      (LJournal.Capture.Count = 0) and not LTree.IsEditing,
+      'ordinary native completion commits exact Unicode once without recovering its own accepted edit');
+    BeginDraft(CDraft + ' veto');
+    LBefore := LStore.Snapshot;
+    LProbe.Reject := True;
+    FinishNyxLCLTreeEditor(LTree, False);
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    Check((LStore.Snapshot = LBefore) and (LEditor <> nil) and
+      (NyxLCLInputText(LEditor) = CDraft + ' veto'), 'a validator veto reopens the exact unfinished editor');
+    LProbe.Reject := False;
+    FinishNyxLCLTreeEditor(LTree, True);
+    Settle;
+    BeginDraft(CDraft + ' changed');
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('name'), 'Gateway renamed'));
+    Settle;
+    Check((LJournal.Capture.Count = 1) and
+      (LJournal.EntryAt(0).Reason = ncdlValueChanged) and
+      (LJournal.EntryAt(0).Cell.Text = CDraft + ' changed') and not LTree.IsEditing,
+      'changed accepted labels recover old draft text instead of overwriting the producer');
+    BeginDraft(CDraft + ' dormant');
+    LTree.Selected := LTree.Items.FindNodeWithText('Archive worker');
+    Settle;
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('name'), 'Dormant gateway changed'));
+    Settle;
+    Check((LJournal.Capture.Count = 2) and
+      (LJournal.EntryAt(1).Reason = ncdlValueChanged) and
+      (LJournal.EntryAt(1).Cell.Text = CDraft + ' dormant') and not LTree.IsEditing,
+      'a displaced dormant label still uses ordinary recovery when accepted source changes');
+    BeginDraft(CDraft + ' replacement');
+    LBefore := LStore.Snapshot;
+    LStore.Apply([NyxRemove(LGateway), NyxInsert(LBefore.IndexOf(LGateway), LBefore.Item(LGateway))]);
+    Settle;
+    Check((LJournal.Capture.Count = 3) and
+      (LJournal.EntryAt(2).Reason = ncdlIdentityReplaced) and
+      (LJournal.EntryAt(2).Cell.Text = CDraft + ' replacement') and not LTree.IsEditing,
+      'same-value replacement cannot inherit the old native Tree editor');
+    BeginDraft(CDraft + ' hidden');
+    LBefore := LStore.Snapshot;
+    FilterGateway(True);
+    Check((LStore.Snapshot = LBefore) and (LJournal.Capture.Count = 4) and
+      (LJournal.EntryAt(3).Reason = ncdlHidden) and not LTree.IsEditing and
+      LPeer.View.Snapshot.Has(LGateway), 'filtering recovers the hidden draft while source and peer stay independent');
+    FilterGateway(False);
+    BeginDraft(CDraft + ' composing');
+    LCount := LJournal.Capture.Count;
+    SendMessage(LEditor.Handle, WM_IME_STARTCOMPOSITION, 0, 0);
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('name'), 'After composition'));
+    Check(LTree.IsEditing and (NyxLCLInputText(LEditor) = CDraft + ' composing') and
+      (LJournal.Capture.Count = LCount) and
+      (LPeer.View.Snapshot.Revision = LStore.Snapshot.Revision),
+      'native IME observation defers Tree destruction while committed source and peer advance');
+    SendMessage(LEditor.Handle, WM_IME_ENDCOMPOSITION, 0, 0);
+    Settle;
+    Check((LJournal.Capture.Count = LCount + 1) and
+      (LJournal.EntryAt(LCount).Cell.Text = CDraft + ' composing') and not LTree.IsEditing,
+      'post-composition idle admits recovery before closing its original native editor');
+    BeginDraft(CDraft + ' dormant pressure');
+    LTree.Selected := LTree.Items.FindNodeWithText('Archive worker');
+    Settle;
+    LTree.Selected.EditText;
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    Check(LEditor <> nil, 'a second row has its own active native label editor');
+    RestoreNyxLCLInputText(LEditor, CDraft + ' companion');
+    SelectNyxLCLText(LEditor, NyxTextSelection(CDraft + ' companion', 8, 9));
+    LCount := LJournal.Capture.Count;
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(LCount).PayloadBytes(8192));
+    LStore.Update(NyxCollectionItem(LGateway).WithValue(NyxTextField('name'), 'Dormant pressure changed'));
+    Settle;
+    LReview := LPending.CapturePendingDraft;
+    Check(NyxCollectionDraftRecoveryHeld(LMount) and (LReview <> nil) and
+      (LReview.Cell.Item.ID = 'gateway') and (LReview.Cell.Text = CDraft + ' dormant pressure') and
+      LTree.IsEditing and (NyxLCLInputText(LEditor) = CDraft + ' companion'),
+      'dormant journal pressure exposes the correct pending row without losing another active editor');
+    Check(LPending.DiscardPendingDraft(LReview) and LTree.IsEditing and
+      (NyxLCLInputText(LEditor) = CDraft + ' companion'),
+      'discarding a dormant receipt never cancels a different active native editor');
+    LMount.Refresh;
+    Settle;
+    LEditor := NyxLCLTreeEditor(LTree);
+    LReview := LPending.CapturePendingDraft;
+    LBytes := '';
+
+    if LReview <> nil then
+    begin
+      LBytes := LReview.Cell.Item.ID + ':' + LReview.Cell.Text;
+    end;
+    Check(LAdmission.InputReady and (LEditor <> nil) and
+      (NyxLCLInputText(LEditor) = CDraft + ' companion') and
+      (LJournal.Capture.Count = LCount), 'refresh after dormant discard preserves unrelated exact work' +
+      ' [ready=' + BoolToStr(LAdmission.InputReady, True) +
+      '; editor=' + BoolToStr(LEditor <> nil, True) +
+      '; text=' + BoolToStr((LEditor <> nil) and
+        (NyxLCLInputText(LEditor) = CDraft + ' companion'), True) +
+      '; journal=' + IntToStr(LJournal.Capture.Count) + '/' + IntToStr(LCount) +
+      '; held=' + BoolToStr(NyxCollectionDraftRecoveryHeld(LMount), True) +
+      '; pending=' + String(LBytes) +
+      '; error=' + LMount.ErrorText + ']');
+    FinishNyxLCLTreeEditor(LTree, True);
+    Settle;
+    BeginDraft(CDraft + ' pressure');
+    LCount := LJournal.Capture.Count;
+    LBudget.ConfigureLimits(NyxDraftRecoveryLimits.Entries(LCount).PayloadBytes(8192));
+    LStore.Apply([NyxUpdate(NyxCollectionItem(LWorkers).WithValue(NyxTextField('parent'), 'services')),
+      NyxRemove(LGateway)]);
+    Settle;
+    Check(NyxCollectionDraftRecoveryHeld(LMount) and not LAdmission.InputReady and
+      LTree.IsEditing and (NyxLCLInputText(LEditor) = CDraft + ' pressure') and
+      not LPeer.View.Snapshot.Has(LGateway), 'journal pressure holds the real Tree editor while the peer accepts removal');
+    LReview := LPending.CapturePendingDraft;
+    Check((LReview <> nil) and (LReview.Cell.Text = CDraft + ' pressure') and
+      LReview.Cell.Selection.Defined, 'pending Tree review exposes exact detached text and scalar selection');
+    RestoreNyxLCLInputText(LEditor, CDraft + ' newer');
+    Check(not LPending.DiscardPendingDraft(LReview) and LTree.IsEditing,
+      'a stale pending receipt cannot discard newer native Tree text');
+    LReview := LPending.CapturePendingDraft;
+    LBefore := LStore.Snapshot;
+    Check(LPending.DiscardPendingDraft(LReview), 'explicit current pending discard accepts its exact Tree receipt');
+    Check(NyxCollectionDraftRecoveryHeld(LMount) and not LAdmission.InputReady and
+      (LStore.Snapshot = LBefore) and (LJournal.Capture.Count = LCount),
+      'discard clears only reviewed text; explicit refresh owns subsequent map adoption');
+    LMount.Refresh;
+    Settle;
+    Check(not NyxCollectionDraftRecoveryHeld(LMount) and LAdmission.InputReady and
+      not LTree.IsEditing and (LStore.Snapshot = LBefore) and
+      (LJournal.Capture.Count = LCount), 'discard changes no source or journal and releases the held native map');
+    Check(TNyxCodec.Encode(LDocument) = LSaved, 'runtime Tree drafts never mutate saved defaults');
+    LToken := nil;
+    LApplication.Free;
+    LApplication := nil;
+    Check(not LJournal.Capture.Active and (LJournal.EntryAt(0).Cell.Text = CDraft + ' changed'),
+      'recovered Tree data stays readable after its native widget and app retire');
+  finally
+    LToken := nil;
+    LApplication.Free;
+    LProbe.Free;
+    LDocument.Free;
+  end;
+end;
+{$endif}
+
 {$ifdef PAS2JS}
 function BrowserChecks: JSValue; async;
 begin
@@ -680,6 +1002,8 @@ begin
     BrowserChecks;
     {$else}
     Application.Initialize;
+    Application.CaptureExceptions := False;
+    EditingJourney(StrToInt(ParamStr(1)));
     ReplacementJourney(StrToInt(ParamStr(1)));
     Journey(StrToInt(ParamStr(1)));
     WriteLn('PASS ', GChecks, ' Tree inspection control checks at ', ParamStr(1));

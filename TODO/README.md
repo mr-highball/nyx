@@ -13,7 +13,9 @@ per native width; exact draft recovery passes42 browser/57 native. The complete
 [live-inspection journey](NS-3_control-usefulness_04.md) retains138 browser and
 89/88 handwritten,88/88 generated native checks. Full clipboard compatibility
 retains1755 browser and1904/1893 native, with clean heaps. Return to04's original
-context, native Tree editing and measured scale outcomes; stop prerequisite and
+context and measured scale outcomes. Native Tree draft continuity now passes116
+handwritten/generated checks per width; its informative recovery presentation
+remains the next unfinished user-facing deliverable. Stop prerequisite and
 caption/constructor variants. Physical/assistive quality and north-star acceptance
 remain open. WORK owns the exact evidence and next action.
 The [splitter regression](NS-2_split-platform_02.md) retains its accepted

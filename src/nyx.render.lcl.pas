@@ -123,6 +123,7 @@ uses
   nyx.collections.range.actions,
   nyx.collections.lcl,
   nyx.collections.lcl.grid,
+  nyx.collections.lcl.tree,
   nyx.literal.items,
   nyx.composition,
   nyx.content.mount,
@@ -3109,7 +3110,7 @@ begin
   end
   else if LKind = 'tree' then
   begin
-    Result := TTreeView.Create(FPanel);
+    Result := TNyxCollectionTreeView.Create(FPanel);
   end
   else if LKind = 'table' then
   begin

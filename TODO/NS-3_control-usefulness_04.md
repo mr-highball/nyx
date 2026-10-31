@@ -214,6 +214,27 @@ L1 and the existing family-specific owners deliver these interactions; L2
 measures that same mounted workload. Existing lazy cell reads, row windows or
 query snapshots alone do not establish the user-facing result or performance.
 
+Native Tree editing checkpoint on2026-10-31 preserves exact Unicode/caret across
+unrelated refresh, ordinary/programmatic navigation and closed ancestors, with
+shared recovery for changed/hidden/removed/replaced labels, native composition
+and capacity holds. A cross-row pressure failure exposes lost notification-only
+identity evidence on retry; bounded per-physical-frame removed IDs/revisions now
+preserve compatible edits across deferred producer updates without retaining
+change packets or changing the view's opt-in inspection contract. Overflow/gaps
+remain conservative. Final handwritten/generated native Tree checks pass116 per
+width, shared recovery61 on both targets and native Table recovery57 per width,
+with clean heaps. Browser Tree118/recovery42/live138 pass at measured desktop and
+phone sizes, and shared inspection70 remains intact. Public browser F2/Enter and
+accepted-text Find/Reveal pass at both widths. Original failures, source identities
+and exact evidence are retained in tree-edit-return-01; WORK owns the return.
+
+This remains partial progress on the original second criterion. Next expose the
+informative native Tree recovery path in the same public application using the
+existing review Card and exact pending receipt; qualify visible review/export/
+discard/retry and independent peers. Broader navigation/context, physical/AT
+quality and the original measured L2 scale remain open. No original criterion is
+weakened, parent credit assigned or DONE move made by these checks.
+
 **Acceptance Criteria:**
 
 - Expose typed opt-in update/follow policies with clear defaults and caller

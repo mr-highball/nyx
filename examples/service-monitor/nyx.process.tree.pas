@@ -60,7 +60,9 @@ type
 
 { Portable English starter; caller owns the returned document. Runtime search,
   disclosure, focus and selection do not change the saved design or row defaults. }
-function BuildProcessTreeDocument: TNyxDocument;
+{ Labels are readonly by default. Opt into ordinary typed label editing for a
+  local alias/organizer workflow; the shared source remains application-owned. }
+function BuildProcessTreeDocument(AEditableLabels: Boolean = False): TNyxDocument;
 
 implementation
 
@@ -96,7 +98,7 @@ type
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
 
-function BuildProcessTreeDocument: TNyxDocument;
+function BuildProcessTreeDocument(AEditableLabels: Boolean): TNyxDocument;
 var
   LPage: INyxPage;
   LSearch: INyxInput;
@@ -110,6 +112,7 @@ var
   LParents: array[0..6] of TNyxText;
   LItems: array of TNyxCollectionItem;
   LIndex: Integer;
+  LLabelMode: TNyxCollectionCellMode;
 begin
   Result := TNyxDocument.Create;
   try
@@ -169,7 +172,13 @@ begin
     LCommands.Add(NewNyxButton(ProcessClearSelectionID).WithText('Clear selection'));
     LPage.Add(NewNyxLabel(ProcessCountsID).Binds.Text(NyxTextState(ProcessCountsID)).Done);
     LPage.Add(NewNyxLabel(ProcessMessageID).Binds.Text(NyxTextState(ProcessMessageID)).Done);
-    LSpec := NyxCollectionView(LKey).Column(NyxTextField('name'), 'Process')
+    LLabelMode := cmReadOnly;
+
+    if AEditableLabels then
+    begin
+      LLabelMode := cmEditable;
+    end;
+    LSpec := NyxCollectionView(LKey).Column(NyxTextField('name'), 'Process', LLabelMode)
       .Parent(NyxTextField('parent')).Selection(nsmMultiple);
     LTree := NewNyxTree(ProcessTreeID);
     LPage.Add(LTree);
