@@ -221,6 +221,36 @@ begin
       (LRecoveryButton.getBoundingClientRect.right <= LTable.getBoundingClientRect.right + 1) and
       (TNyxCodec.Encode(LDocument) = LSaved),
       'recovery access fits the table clip without changing the authored project');
+
+    { Identical data is still a new row incarnation after explicit retirement.
+      Re-enter the real editor rather than reusing a detached DOM input. }
+    LInput := TJSHTMLInputElement(LTable.querySelector(
+      '[data-nyx-item="gateway"] input[aria-label="Notes"]'));
+    LCell := TJSHTMLElement(LInput.closest('[role="gridcell"]'));
+    LCell.focus;
+    LCell.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'F2'));
+    Check(document.activeElement = LInput, 'replacement begins with an actual active Notes editor');
+    LInput.value := CDraft + ' replacement';
+    LInput.setSelectionRange(2, 6);
+    LBefore := LFirst.View.Store.Snapshot;
+    LFirst.View.Store.Apply([NyxRemove(LGateway),
+      NyxInsert(LBefore.IndexOf(LGateway), LBefore.Item(LGateway))]);
+    Check((LFirst.View.Store.Snapshot.Revision = LBefore.Revision + 1) and
+      (LFirst.View.Store.Snapshot.IndexOf(LGateway) = LBefore.IndexOf(LGateway)) and
+      LFirst.View.Store.Snapshot.Item(LGateway).SameItem(LBefore.Item(LGateway)),
+      'equal-value/order replacement publishes a new revision without changing accepted data');
+    Check((LJournal.Capture.Count = 2) and
+      (LJournal.EntryAt(1).Reason = ncdlIdentityReplaced) and
+      (LJournal.EntryAt(1).Cell.Text = CDraft + ' replacement') and
+      LJournal.EntryAt(1).Cell.Selection.Defined and
+      (LJournal.EntryAt(1).Cell.Selection.Start = 2),
+      'identity replacement recovers the exact old draft and caret independently');
+    LInput := TJSHTMLInputElement(LTable.querySelector(
+      '[data-nyx-item="gateway"] input[aria-label="Notes"]'));
+    Check((LInput <> nil) and (LInput.value = LBefore.Item(LGateway).GetValue(NyxTextField('notes'))) and
+      (LPeer.View.Snapshot.Revision = LFirst.View.Store.Snapshot.Revision) and
+      (TNyxCodec.Encode(LDocument) = LSaved),
+      'replacement editor starts with accepted data while the peer and saved project remain coherent');
     LDemo.Close;
     LApplication.Free;
     LApplication := nil;

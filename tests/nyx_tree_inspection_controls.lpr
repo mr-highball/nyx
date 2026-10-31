@@ -45,6 +45,19 @@ type
   end;
 {$endif}
 
+type
+  { A borrowed observer records the one ordered retirement publication. The
+    subscription is released before this probe; a veto never installs state. }
+  TReplacementProbe = class
+  public
+    Reject: Boolean;
+    Notifications: Integer;
+    Changes: INyxCollectionChanges;
+    procedure Validate(const ACandidate: INyxCollectionSnapshot;
+      const AChanges: INyxCollectionChanges);
+    procedure Changed(const AStore: INyxCollection; const AChanges: INyxCollectionChanges);
+  end;
+
 var
   GChecks: Integer;
 
@@ -55,6 +68,171 @@ begin
   if not AValue then
   begin
     raise Exception.Create('Tree inspection: ' + AReason);
+  end;
+end;
+
+procedure TReplacementProbe.Validate(const ACandidate: INyxCollectionSnapshot;
+  const AChanges: INyxCollectionChanges);
+begin
+
+  if Reject then
+  begin
+    raise ENyxCollection.Create('Expected mounted replacement veto');
+  end;
+end;
+
+procedure TReplacementProbe.Changed(const AStore: INyxCollection;
+  const AChanges: INyxCollectionChanges);
+begin
+  Inc(Notifications);
+  Changes := AChanges;
+end;
+
+{ Use a separate application so the original inspection journey's single
+  deliberate deletion and its source-revision assertion remain unchanged. }
+procedure ReplacementJourney(AWidth: Integer);
+var
+  LDocument: TNyxDocument;
+  LView: INyxCollectionView;
+  LPeer: INyxCollectionView;
+  LTree: INyxTreeHierarchy;
+  LBefore: INyxCollectionSnapshot;
+  LFirstSnapshot: INyxCollectionSnapshot;
+  LPeerSnapshot: INyxCollectionSnapshot;
+  LToken: INyxCollectionSubscription;
+  LProbe: TReplacementProbe;
+  LGateway: TNyxItemRef;
+  LComputer: TNyxItemRef;
+  LArchive: TNyxItemRef;
+  LRefused: Boolean;
+  LSaved: TNyxText;
+  LPhysicalSelected: Boolean;
+  {$ifdef PAS2JS}
+  LApplication: TNyxBrowserApplication;
+  LHost: TJSHTMLElement;
+  {$else}
+  LApplication: TNyxLCLApplication;
+  {$endif}
+
+  function GatewayExpanded: Boolean;
+  {$ifdef PAS2JS}
+  var
+    LRow: TJSHTMLElement;
+  {$else}
+  var
+    LFace: TTreeView;
+    LNode: TTreeNode;
+  {$endif}
+  begin
+    {$ifdef PAS2JS}
+    LRow := TJSHTMLElement(LApplication.View.ElementFor(ProcessTreeID)
+      .querySelector('[data-nyx-item="gateway"]'));
+    Check(LRow <> nil, 'replacement gateway has an actual browser Tree row');
+    LPhysicalSelected := LRow.getAttribute('aria-selected') = 'true';
+    Result := LRow.hasAttribute('open');
+    {$else}
+    Application.ProcessMessages;
+    LFace := TTreeView(LApplication.View.ControlFor(ProcessTreeID));
+    LNode := LFace.Items.GetFirstNode;
+
+    while (LNode <> nil) and (TNyxText(LNode.Text) <> 'Request gateway') do
+    begin
+      LNode := LNode.GetNext;
+    end;
+    Check(LNode <> nil, 'replacement gateway has an actual native Tree row');
+    LPhysicalSelected := LFace.Selected = LNode;
+    Result := LNode.Expanded;
+    {$endif}
+  end;
+
+begin
+  {$ifdef NYX_PROCESS_GENERATED}
+  LDocument := BuildNyxDocument;
+  {$else}
+  LDocument := BuildProcessTreeDocument;
+  {$endif}
+  LApplication := nil;
+  LProbe := TReplacementProbe.Create;
+  try
+    LSaved := TNyxCodec.Encode(LDocument);
+    {$ifdef PAS2JS}
+    LHost := TJSHTMLElement(document.createElement('div'));
+    LHost.style.setProperty('width', IntToStr(AWidth) + 'px');
+    document.body.appendChild(LHost);
+    LApplication := TNyxBrowserApplication.Create;
+    LApplication.Run(LDocument, LHost);
+    {$else}
+    LApplication := TNyxLCLApplication.Create;
+    LApplication.Mount(LDocument);
+    LApplication.Window.ClientWidth := AWidth;
+    LApplication.Window.ClientHeight := 900;
+    LApplication.Window.Show;
+    Application.ProcessMessages;
+    {$endif}
+    LView := LApplication.View.CollectionMount(ProcessTreeID).View;
+    LPeer := LApplication.View.CollectionMount(ProcessPeerID).View;
+    LTree := NyxTreeHierarchy(LView);
+    LGateway := NyxItem(NyxCollection(ProcessCollectionName), 'gateway');
+    LComputer := NyxItem(NyxCollection(ProcessCollectionName), 'computer');
+    LArchive := NyxItem(NyxCollection(ProcessCollectionName), 'archive');
+    LTree.SetExpanded(LComputer, True);
+    LTree.SetExpanded(NyxItem(NyxCollection(ProcessCollectionName), 'services'), True);
+    LTree.SetExpanded(LGateway, True);
+    LView.Select(LGateway);
+    LPeer.Select(LArchive);
+    NyxTreeHierarchy(LPeer).SetExpanded(LComputer, False);
+    Check(GatewayExpanded, 'the mounted gateway is expanded before replacement');
+    Check(LPhysicalSelected, 'the old gateway has actual widget selection before replacement');
+    LBefore := LView.Store.Snapshot;
+    LFirstSnapshot := LView.Snapshot;
+    LPeerSnapshot := LPeer.Snapshot;
+    LToken := LView.Store.Subscribe(LProbe.Changed, LProbe.Validate);
+    LProbe.Reject := True;
+    LRefused := False;
+    try
+      LView.Store.Apply([NyxRemove(LGateway),
+        NyxInsert(LBefore.IndexOf(LGateway), LBefore.Item(LGateway))]);
+    except
+      on E: ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LView.Store.Snapshot = LBefore) and
+      (LView.Snapshot = LFirstSnapshot) and (LPeer.Snapshot = LPeerSnapshot) and
+      (LProbe.Notifications = 0), 'veto retains source, independent views and observer state');
+    Check(LView.Selection.Contains(LGateway) and LPeer.Selection.Contains(LArchive) and
+      LTree.IsExpanded(LGateway) and GatewayExpanded,
+      'veto retains old selection and actual mounted disclosure');
+    LProbe.Reject := False;
+    LView.Store.Apply([NyxRemove(LGateway),
+      NyxInsert(LBefore.IndexOf(LGateway), LBefore.Item(LGateway))]);
+    Check((LView.Store.Snapshot.Revision = LBefore.Revision + 1) and
+      (LProbe.Notifications = 1) and (LProbe.Changes.Count = 2) and
+      (LProbe.Changes.Kind(0) = nceRemove) and (LProbe.Changes.Kind(1) = nceInsert) and
+      (LView.Store.Snapshot.IndexOf(LGateway) = LBefore.IndexOf(LGateway)) and
+      LView.Store.Snapshot.Item(LGateway).SameItem(LBefore.Item(LGateway)),
+      'equal data/order publishes the exact two-step retirement once');
+    Check(not LView.Selection.Contains(LGateway) and not LTree.IsExpanded(LGateway) and
+      not GatewayExpanded and LTree.IsExpanded(LComputer) and
+      LPeer.Selection.Contains(LArchive) and not NyxTreeHierarchy(LPeer).IsExpanded(LComputer),
+      'replacement inherits no old selection/disclosure while unrelated peer intent survives' +
+      ' [selected=' + BoolToStr(LView.Selection.Contains(LGateway), True) +
+      '; expanded=' + BoolToStr(LTree.IsExpanded(LGateway), True) +
+      '; physical=' + BoolToStr(GatewayExpanded, True) +
+      '; parent=' + BoolToStr(LTree.IsExpanded(LComputer), True) +
+      '; peer-selected=' + BoolToStr(LPeer.Selection.Contains(LArchive), True) +
+      '; peer-parent=' + BoolToStr(NyxTreeHierarchy(LPeer).IsExpanded(LComputer), True) + ']');
+    Check(not LPhysicalSelected and not LView.Selection.Focus.Defined and
+      not LView.Selection.Anchor.Defined,
+      'actual widget selection and logical focus/anchor are retired before returning to input');
+    Check(TNyxCodec.Encode(LDocument) = LSaved, 'replacement never changes saved Tree defaults');
+  finally
+    LToken := nil;
+    LProbe.Free;
+    LApplication.Free;
+    LDocument.Free;
+    {$ifdef PAS2JS}LHost.remove;{$endif}
   end;
 end;
 
@@ -482,6 +660,8 @@ function BrowserChecks: JSValue; async;
 begin
   Result := Undefined;
   try
+    ReplacementJourney(1280);
+    ReplacementJourney(390);
     await(Journey(1280));
     await(Journey(390));
     document.body.setAttribute('data-tree-inspection-checks', IntToStr(GChecks));
@@ -500,6 +680,7 @@ begin
     BrowserChecks;
     {$else}
     Application.Initialize;
+    ReplacementJourney(StrToInt(ParamStr(1)));
     Journey(StrToInt(ParamStr(1)));
     WriteLn('PASS ', GChecks, ' Tree inspection control checks at ', ParamStr(1));
     {$endif}

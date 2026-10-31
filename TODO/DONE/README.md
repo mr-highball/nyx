@@ -3,6 +3,16 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Equal-value row retirement](NS-1_state-collections_02.md) and
+[final query delivery](NS-1_state-collections_03.md) are accepted on2026-10-31.
+Shared checks execute on both targets, including alternative-capability refusal
+and reentrant closure/cancellation. Actual handwritten/generated native/browser
+Tree and Table consumers retire old selection/disclosure/drafts while preserving
+independent views. All native heaps are clean. Full view/clipboard compatibility
+and the complete live-feed journey remain passing. Return to04's broader context,
+Tree editing and scale requirements; these scoped corrections add no duplicate
+north-star credit. WORK retains initial failures and exact evidence cohorts.
+
 [Native cold builds](NS-5_native-cold-build_01.md) and
 [typed Table action context](NS-3_collection-cell-context_01.md) are accepted
 on2026-10-30. The actual authenticated MCP build succeeds with fresh job units

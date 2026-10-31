@@ -321,6 +321,49 @@ begin
   end;
 end;
 
+procedure FollowingReplacementCases(AProjection: TNyxCollectionProjection);
+var
+  LFixture: TFixture;
+  LBefore: INyxCollectionSnapshot;
+  LFirst: INyxCollectionSnapshot;
+  LPeer: INyxCollectionSnapshot;
+  LRefused: Boolean;
+begin
+  LFixture := TFixture.Create(AProjection);
+  try
+    LFixture.First.Select(Item('b'));
+    LFixture.Peer.Select(Item('a'));
+    LBefore := LFixture.Store.Snapshot;
+    LFirst := LFixture.First.Snapshot;
+    LPeer := LFixture.Peer.Snapshot;
+    LFixture.Probe.Reject := True;
+    LRefused := False;
+    try
+      LFixture.Store.Apply([NyxRemove(Item('b')),
+        NyxInsert(LBefore.IndexOf(Item('b')), LBefore.Item(Item('b')))]);
+    except
+      on E: ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFixture.Store.Snapshot = LBefore) and
+      (LFixture.First.Snapshot = LFirst) and (LFixture.Peer.Snapshot = LPeer) and
+      LFixture.First.Selection.Contains(Item('b')) and (LFixture.Probe.StoreCalls = 0),
+      'following replacement veto preserves both views, selection and source observers');
+    LFixture.Probe.Reject := False;
+    LFixture.Store.Apply([NyxRemove(Item('b')),
+      NyxInsert(LBefore.IndexOf(Item('b')), LBefore.Item(Item('b')))]);
+    Check((LFixture.Store.Snapshot.Revision = LBefore.Revision + 1) and
+      (LFixture.First.Selection.Count = 0) and not LFixture.First.Selection.Focus.Defined and
+      not LFixture.First.Selection.Anchor.Defined and
+      LFixture.Peer.Selection.Contains(Item('a')) and (LFixture.Probe.StoreCalls = 1),
+      'following replacement clears old membership/focus/anchor without changing peer intent');
+  finally
+    LFixture.Free;
+  end;
+end;
+
 procedure BudgetCases;
 var
   LFixture: TFixture;
@@ -609,6 +652,9 @@ begin
     PauseCases;
     FollowCases;
     PositionCases;
+    FollowingReplacementCases(cpList);
+    FollowingReplacementCases(cpTable);
+    FollowingReplacementCases(cpTree);
     RemovalCases(cpTable, False);
     RemovalCases(cpTable, True);
     RemovalCases(cpTree, False);

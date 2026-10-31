@@ -5,6 +5,26 @@
 
 **Current evidence — 2026-10-31:**
 
+Both hard prerequisites are accepted: row replacement02 now retires following-
+view membership/focus/anchor, and query delivery03 retains its capabilities through
+reentrant closure on pas2js. Shared collection/inspection/delivery checks pass
+162/70/11 per target, the full view suite12429 per target, and actual Tree
+handwritten/generated journeys118 per browser viewport/60 per native width.
+Exact Table draft recovery passes42 browser/57 native per variant and width.
+The complete live-feed journeys remain138 browser,89/88 handwritten native and
+88/88 generated native. Full clipboard compatibility passes1755 browser and
+1904/1893 native, with clean heaps. Initial failures remain in
+collection-safety-return-01; WORK records source identities and limits.
+
+This closes02/03 only. Return to the original remaining context and unfinished-
+edit coverage, especially actual native Tree editors, then the same workload's
+measured L2 scale. Physical/assistive quality remains open. Do not restart
+caption/constructor/receiver variants or count their closure as full04 acceptance.
+The prior three-batch no-full04-criterion checkpoint remains historical; this
+batch follows and accepts its concrete prerequisites instead of adding experiments.
+
+**Prior table-chrome evidence — 2026-10-31:**
+
 The same160px public table now leaves60.625px for data instead of0.25px: caption
 feedback/actions share one row and Sort/Filter share a header row. Full status
 text, keyboard access, authored column widths and header-line policy remain.
@@ -26,10 +46,9 @@ Resume through the feedback card. Evidence: table-chrome-return-01; WORK owns
 exact identities, initial failures and native build/runtime limitations.
 
 This supplies the previously failing representative demonstration's full runtime
-journey. Full criterion/task acceptance still requires the original open blockers:
-finish the browser and alternative-capability acceptance of
-[row replacement02](NS-1_state-collections_02.md) and
-[query delivery03](NS-1_state-collections_03.md), then reassess this task against
+journey. Its then-open blockers are now accepted in
+[row replacement02](DONE/NS-1_state-collections_02.md) and
+[query delivery03](DONE/NS-1_state-collections_03.md). Reassess this task against
 all original criteria. Stop caption/constructor variants here. Measured L2 scale,
 full context coverage, native Tree inline editing and physical/assistive quality
 remain open; no north-star credit or DONE move is assigned.
@@ -241,9 +260,9 @@ query snapshots alone do not establish the user-facing result or performance.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supply authoritative
   data, revision and selection publication. Existing scheduler/query/windowing
   owners remain the implementation foundation.
-- [Equal-value row replacement](NS-1_state-collections_02.md) closes a reproduced
+- [Equal-value row replacement](DONE/NS-1_state-collections_02.md) closes a reproduced
   no-op folding gap that otherwise transfers an old draft to a replacement ID.
-- [Final query-delivery admission](NS-1_state-collections_03.md) prevents a
+- [Final query-delivery admission](DONE/NS-1_state-collections_03.md) prevents a
   validator-revoked receiver from installing a late producer result.
 
 L1 now includes a data-only unfinished-draft recovery journal, native Table

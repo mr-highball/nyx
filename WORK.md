@@ -9,7 +9,83 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Usable browser table viewport — 2026-10-31
+## Current work — Collection safety acceptance — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pushedf4382811 with exact remote match.
+Root remains SOLO. This batch follows the two concrete hard prerequisites instead
+of extending the preceding three-batch no-full04-criterion investigation. All four
+original criteria of state-collections02 and all four of03 now close; both move to
+DONE. No overall percentage or duplicate north-star credit is assigned. Full04
+context, native Tree inline editing, physical/assistive quality and L2 scale remain
+open. Next deliverable returns to04's original unfinished-edit/context criterion:
+qualify and complete actual native Tree edit recovery through the existing public
+contracts, then measure the same mounted workload. Preserve the original scope;
+do not restart receiver/caption/constructor fixture variants. All readers are joined.
+
+Baseline shared native checks pass162 collections and7 query receiver checks,
+with clean heaps. Browser collections also pass162, but receiver closure returns
+discarded delivery while losing the caller's source snapshot. The diagnostic
+reports delivered=False, same=False, notifications=0. Generated-code review traces
+this to Supports out fields receiving temporary releases without a separate
+field lease. TCollectionPort now acquires capabilities into locals and explicitly
+retains its own fields. Existing final noncalling admission/install stays intact.
+Eleven receiver checks now pass on both targets: original close/cancel/veto/stale/
+exact text/committed-notification cases, malformed input, and three alternative-
+capability refusals. A scope without readiness never has its ordinary getter read;
+a legacy store refuses at capture; a legacy plan retires its reservation before
+Validate/Install/Notify. No second store, scheduler or late getter is introduced.
+
+The actual equal-value Tree replacement then exposes a shared view defect:
+disclosure retires but selected membership survives. Selection reconciliation now
+uses a temporary removal index during admission and clears replaced membership,
+focus and anchor. Ordinary deletion keeps its existing nearby-cursor fallback;
+query/page-only projection stays unchanged. No install callback or wire/API change
+is added. The initial peer setup also assumed selecting Archive left its ancestors
+closed; selection deliberately reveals them. The maintained test now explicitly
+collapses that peer before replacement to test independent retained intent.
+It retains the original full inspection journey and its single-deletion revision
+assertion. The added replacement/veto journey uses an independent application.
+
+Final shared inspection checks pass70 per target for List/Table/Tree, including
+atomic refusal and independent views. The full view suite passes12429 per target,
+plus31 browser control checks. Actual browser recovery now preserves the old exact
+supplementary/NUL draft and scalar caret separately from an equal-value/order
+replacement:42 checks per handwritten/generated variant at each measured1280x900
+and390x844 viewport. Native equivalents retain57 per variant/width with clean
+heaps. Final Tree checks explicitly inspect actual widget selection/disclosure:
+handwritten/generated native60 per width and browser118 per measured viewport.
+The final extra physical assertions change no product source or original test
+expectation. All browser error logs are empty.
+
+The complete live-inspection workflow retains138 browser checks per variant and
+viewport,89/88 handwritten native including fresh source export, and88/88 generated
+native. Producer/cancellation/supersession/stale/retirement and peer behavior remain
+covered. Generated Live source retains SHA25648448234; Tree source B4406562.
+Public Find/Reveal clicks and reviewed desktop/compact screenshots show a deeply
+nested match with an independent peer. Full clipboard compatibility passes1755 per
+browser viewport and1904 wide/1893 compact native. The first numeric390 native
+clipboard argument actually selected wide mode; retain that duplicate wide result
+and the corrected --compact run separately. No physical OS-pointer/AT claim is made.
+All checked native runs free every heap block. Native warnings remain zero;
+browser builds retain the existing upstream RTL case warnings, with no owned warning.
+
+Evidence: collection-safety-return-01. before-01 holds the initial core runs;
+after-02 the first mounted failures; repair-03 the receiver repair and Tree
+diagnostic; final-04/generated-05 the full target cohorts and fresh exports;
+tree-physical-07 the final actual selection assertions; compatibility-06 the full
+view/clipboard regressions. Initial browser failures and generated artifacts are
+retained. First browser staging used an output basename overriding -FE and briefly
+wrote three generated files in the checkout; their exact owned files were moved
+to E: and subsequent builds use absolute -o paths. All owned TEMP/TMP stayed on E:.
+The initial collections navigation and generated wide live navigation observation
+timed out; each same tab completed, without restarting a server or changing limits.
+Every owned exec job is joined, including6081/97707/46606/17572/45407/78506/94344/
+61085/76902/17956/21142/17119/99577/76415/19525. The27 protected files remain exact;
+QA65824 and LAN46632 keep their fixed paths and are unchanged. No active design,
+project/profile/draft or LAN release is replaced. User-confirmed table exports
+remain present. Preserve the unrelated AGENTS/operator edits and1280/390 folders.
+
+## Previous work — Usable browser table viewport — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushed9a407fa0 with exact remote match.
 Root remains SOLO. Follow04's original physical context/visible-workload criteria

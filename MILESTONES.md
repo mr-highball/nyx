@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Scoped [equal-value row retirement](TODO/DONE/NS-1_state-collections_02.md) and
+[final query delivery](TODO/DONE/NS-1_state-collections_03.md) are accepted
+on2026-10-31. Real browser checks expose and repair selection inheritance and
+capability-lease ownership; native/browser regressions, alternative-capability
+refusal and mounted handwritten/generated applications pass with clean native
+heaps. This closes those hard prerequisites of live-inspection04. Its broader
+context, native Tree editing, physical/assistive quality and L2 scale remain open;
+the scorecard stays Pending assessment without duplicate credit. WORK owns evidence.
+
 Current execution priority (2026-10-29): deliver observable everyday workflows
 from the [ranked task queue](TODO/README.md#current-priority--useful-everyday-workflows--2026-10-26):
 table workbench, Studio workspace usability, reusable Search/Sort/Clear, then a

@@ -3,17 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-The retained [live-inspection journey](NS-3_control-usefulness_04.md) now passes138
-checks per measured browser viewport in handwritten/generated applications, with
-89/88 and88/88 native checks and clean heaps. The same160px table has60.625px of
-data space; its bounded caption retains feedback and recovery actions. The full
-clipboard suite passes1755 per viewport, and recovery34 per variant/viewport
-qualifies a real journal entry's visible command. Stop caption/constructor variants.
-Follow the existing hard prerequisites' remaining browser/alternative-capability
-acceptance: [row replacement02](NS-1_state-collections_02.md), then
-[query delivery03](NS-1_state-collections_03.md). The authorized browser connection
-is available. Return to04's complete original criteria afterward; L2/quality and
-task/north-star acceptance remain open. WORK owns the exact results and next action.
+The hard prerequisites [row replacement02](DONE/NS-1_state-collections_02.md) and
+[query delivery03](DONE/NS-1_state-collections_03.md) are accepted on2026-10-31.
+Actual browser qualification exposes and repairs following-view selection
+inheritance and a receiver interface-lease defect. Shared collection/inspection/
+delivery checks pass162/70/11 per target, and the full view suite12429 per target.
+Mounted handwritten/generated Tree checks pass118 per browser viewport and60
+per native width; exact draft recovery passes42 browser/57 native. The complete
+[live-inspection journey](NS-3_control-usefulness_04.md) retains138 browser and
+89/88 handwritten,88/88 generated native checks. Full clipboard compatibility
+retains1755 browser and1904/1893 native, with clean heaps. Return to04's original
+context, native Tree editing and measured scale outcomes; stop prerequisite and
+caption/constructor variants. Physical/assistive quality and north-star acceptance
+remain open. WORK owns the exact evidence and next action.
 The [splitter regression](NS-2_split-platform_02.md) retains its accepted
 criteria2/3/5/6 and original external/capture limits. WORK owns the return.
 
@@ -446,7 +448,7 @@ unfinished Table drafts now have native handwritten/generated recovery review
 and exact-entry discard checks. Deliberate follow/keep-reading commands also have
 native generated/public and List/plain-grid evidence. Complete pressure UX and whole-workload memory,
 native Tree editors/physical anchors, producer/authoring behavior and browser execution stay
-open in WORK.md. [Equal-value replacement](NS-1_state-collections_02.md) records
+open in WORK.md. [Equal-value replacement](DONE/NS-1_state-collections_02.md) records
 the discovered identity-publication correction and its remaining browser gate.
 The accepted collection/review foundation remains the starting point; 04 does not
 require declaring03 complete. Existing03 gates remain intact. This is product
@@ -460,8 +462,8 @@ full original acceptance remain open in WORK.
 
 Its refresh action now submits immutable results through the existing LINQ/
 scheduler path, with cancel, supersession and stale-source refusal. Native
-handwritten/generated controls exercise these cases. [Final receiver admission](NS-1_state-collections_03.md)
-tracks the discovered validator-revocation defect and remaining browser gate;
+handwritten/generated controls exercise these cases. [Final receiver admission](DONE/NS-1_state-collections_03.md)
+accepts the validator-revocation and interface-lease corrections on both targets;
 it adds no separate store or scheduling engine.
 
 Tree inspection now has typed match/context/disclosure and hidden-selection
@@ -2386,8 +2388,6 @@ blockers rather than filename order.
 | NS-1 | [Portable runtime identity](DONE/NS-1_identity_01.md) | Accepted Unicode admission and qualified reusable identity | Pending assessment |
 | NS-1 | [Persistence and state](DONE/NS-1_persistence-state_01.md) | Accepted version-1 data, scalar bindings and commands | Pending assessment |
 | NS-1 | [Observable structured state](DONE/NS-1_state-collections_01.md) | Accepted typed stores, persisted/source bindings, runtime scopes and Studio/control consumers | Pending assessment |
-| NS-1 | [Equal-value row replacement](NS-1_state-collections_02.md) | Preserve explicit row retirement through net-value equality; discovered live-inspection prerequisite | Pending assessment |
-| NS-1 | [Final query-delivery admission](NS-1_state-collections_03.md) | Refuse validator-revoked producer delivery using prepared publication and captured readiness | Pending assessment |
 | NS-1 | [Portable resources and bindings](DONE/NS-1_resources_01.md) | Accepted image/JSON/text/data resources, typed bindings, localization, hosted caches and ordinary Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |

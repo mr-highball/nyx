@@ -98,6 +98,9 @@ type
 
 constructor TCollectionPort.Create(const AScheduler: INyxScheduler;
   const ACollection: INyxCollection; const AGeneration: INyxCancellationScope);
+var
+  LAtomic: INyxAtomicCollection;
+  LGenerationReady: INyxCancellationReadiness;
 begin
   inherited Create;
 
@@ -108,15 +111,20 @@ begin
   AScheduler.RequireUI;
   FScheduler := AScheduler;
 
-  if not Supports(ACollection, INyxAtomicCollection, FAtomic) then
+  if not Supports(ACollection, INyxAtomicCollection, LAtomic) then
   begin
     raise ENyxQuery.Create('Collection query delivery requires prepared collection publication');
   end;
 
-  if (AGeneration <> nil) and not Supports(AGeneration, INyxCancellationReadiness, FGenerationReady) then
+  if (AGeneration <> nil) and not Supports(AGeneration, INyxCancellationReadiness, LGenerationReady) then
   begin
     raise ENyxQuery.Create('Collection query generation requires noncalling cancellation readiness');
   end;
+  { Acquire facets into locals before retaining them in fields. pas2js releases
+    managed out arguments at method exit; writing directly into a field would
+    leave an unowned facet and let reentrant Close retire the caller's store. }
+  FAtomic := LAtomic;
+  FGenerationReady := LGenerationReady;
   FCollection := ACollection;
   FRevision := ACollection.Snapshot.Revision;
 end;

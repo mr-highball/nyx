@@ -277,7 +277,9 @@ type
   { Ordered operation log with retained before/after datasets. Positions and row
     values describe each step of the batch, allowing incremental consumers to
     replay it. Pure/no-op updates are omitted. A batch returning to its exact
-    baseline does not notify or advance revision. Accessors refuse absent rows. }
+    baseline does not notify or advance revision unless it explicitly removes
+    and reinserts an original identity: that retirement publishes both steps
+    even when values/order are equal. Accessors refuse absent rows. }
   INyxCollectionChanges = interface
     ['{A0D04F31-BCB8-4B38-A08C-0433B18AAD20}']
     function GetCount: Integer;

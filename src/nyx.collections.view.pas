@@ -682,7 +682,8 @@ type
       ACause: TNyxCollectionInspectionCause = ncicViewChanged);
     procedure Disconnect(AToken: TViewSubscription);
     function ReconcileSelection(const ASource, AResult,
-      APrevious: INyxCollectionSnapshot): INyxCollectionSelection;
+      APrevious: INyxCollectionSnapshot;
+      ARemoved: TNyxTextIndex = nil): INyxCollectionSelection;
     procedure BuildHierarchy;
     function TreeIndex(const AItem: TNyxItemRef): Integer;
     procedure ReconcileTreeFocus;
@@ -2411,6 +2412,7 @@ var
   LPrevious: Integer;
   LUnpaged: INyxCollectionSnapshot;
   LWindow: TNyxCollectionPageWindow;
+  LRemoved: TNyxTextIndex;
 begin
   ValidateDataset(AData, LParents);
   LResult := NyxQuerySnapshot(AData, FQuery, LParents, LResultParents);
@@ -2422,7 +2424,32 @@ begin
     LWindow := NyxCollectionPageWindow(LResult.Count, FPaging.ItemsPerPage, FPage);
     LResult := NyxPageSnapshot(LResult, LWindow);
   end;
-  LSelection := ReconcileSelection(AData, LResult, FSnapshot);
+  { Final IDs alone cannot distinguish a surviving row from a replacement.
+    Build a short-lived removal index during admission, never during install.
+    Query/page-only projections keep the ordinary no-removal reconciliation. }
+  LRemoved := nil;
+  try
+
+    if AChanges <> nil then
+    begin
+      for LIndex := 0 to AChanges.Count - 1 do
+      begin
+
+        if AChanges.Kind(LIndex) = nceRemove then
+        begin
+
+          if LRemoved = nil then
+          begin
+            LRemoved := TNyxTextIndex.Create;
+          end;
+          LRemoved.AddFirst(AChanges.ItemRef(LIndex).ID, LIndex);
+        end;
+      end;
+    end;
+    LSelection := ReconcileSelection(AData, LResult, FSnapshot, LRemoved);
+  finally
+    LRemoved.Free;
+  end;
   LExpanded := nil;
   { Disclosure follows exact surviving source identity, including rows currently
     filtered out. A new item with a previously removed ID starts closed. }
@@ -2475,12 +2502,16 @@ begin
 end;
 
 function TView.ReconcileSelection(const ASource, AResult,
-  APrevious: INyxCollectionSnapshot): INyxCollectionSelection;
+  APrevious: INyxCollectionSnapshot;
+  ARemoved: TNyxTextIndex): INyxCollectionSelection;
 type
+  { Detached source position keeps retained selected identities canonically
+    ordered without scanning every source row during scalar publications. }
   TSelectedRef = record
     Position: Integer;
     Item: TNyxItemRef;
   end;
+  { Merge-sort scratch belongs only to this candidate selection admission. }
   TSelectedRefs = array of TSelectedRef;
 var
   LItems: array of TNyxItemRef;
@@ -2502,6 +2533,13 @@ var
   LRight: Integer;
   LOutput: Integer;
   LOrdered: Boolean;
+
+  function Retired(const AItem: TNyxItemRef): Boolean;
+  begin
+    Result := AItem.Defined and (ARemoved <> nil) and
+      (ARemoved.IndexOf(AItem.ID) >= 0);
+  end;
+
 begin
   { Membership is validated against the complete source; only actual removals
     prune it. Look up the selected identities instead of reading every source
@@ -2517,7 +2555,7 @@ begin
     LItem := FSelection.ItemAt(LIndex);
     LPosition := ASource.IndexOf(LItem);
 
-    if LPosition >= 0 then
+    if (LPosition >= 0) and not Retired(LItem) then
     begin
 
       if (LCount > 0) and (LPosition < LSelected[LCount - 1].Position) then
@@ -2593,6 +2631,19 @@ begin
   end;
   LFocus := FSelection.Focus;
   LAnchor := FSelection.Anchor;
+  { A missing row retains the existing nearby-cursor fallback below. A reused
+    ID instead clears its old focus/anchor, matching paused-view retirement;
+    the replacement must acquire fresh explicit navigation authority. }
+
+  if Retired(LFocus) and ASource.Has(LFocus) then
+  begin
+    LFocus := Default(TNyxItemRef);
+  end;
+
+  if Retired(LAnchor) and ASource.Has(LAnchor) then
+  begin
+    LAnchor := Default(TNyxItemRef);
+  end;
 
   if LFocus.Defined and not AResult.Has(LFocus) then
   begin

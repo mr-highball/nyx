@@ -130,8 +130,12 @@ original row was explicitly removed. Removing an existing row and reinserting
 its ID retires the original identity: even equal values/order publish one revision
 and the ordered remove/insert log. Old selection, disclosure and editing context
 must not transfer to that replacement. Validation still admits or rejects the
-whole batch atomically. An unchanged update/assignment, moving a row away and
-back, or inserting/removing a previously absent transient ID remains a no-op.
+whole batch atomically. Following views clear the old selected membership,
+focus and range anchor for that ID, just as paused views do when resuming.
+Unrelated selected rows and independent peer-view choices survive. A veto keeps
+the old source, view selection and disclosure intact. An unchanged update/assignment,
+moving a row away and back, or inserting/removing a previously absent transient ID
+remains a no-op.
 Pass a nonnegative expected revision to reject stale writes; -1 disables that
 comparison, and lower values are invalid.
 
