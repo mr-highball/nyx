@@ -3146,6 +3146,14 @@ admission remain in the refresh plan. These hints retain no live owner and do
 not imply equal values, physical continuity or performance-budget acceptance.
 
 Mounted tables reuse admitted column layout and presentation observations only
+after the complete current column capture is admitted. Native pinned panes batch
+their bounded row-height window under the existing physical lifetime frame.
+Rows still visible keep their exact current height instead of resetting through
+the default; departed explicit rows return to the default. Unchanged geometry
+still repaints current values without forcing whole-grid size recalculation.
+This does not skip source/query evaluation, text measurement or input admission.
+
+Column observations qualify reuse only
 when `SameNyxCollectionColumns` proves the same immutable built-in owner and
 configuration serial. An equal public serial, another view or a foreign capture
 does not qualify. First use and configuration changes still take complete

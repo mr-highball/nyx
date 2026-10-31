@@ -3,6 +3,23 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Publication-stage reassessment — 2026-10-31:**
+
+The same application's current-source private trace separates explicit store
+retirement, view notification, mounted rendering and native pane geometry. The
+explicit retirement span is small; it does not measure all destructor/GC work.
+Native pane synchronization and non-mount view callbacks remain material costs.
+Source review identifies ordinary status-state publication invoking full target
+Sync, now owned by the [state projection prerequisite](NS-2_state-projection-sync_01.md).
+
+The native adapter groups a pane's exact current geometry and avoids resetting
+unchanged visible wrapped rows through default height. It retains full source
+measurement, row maps, input guards and repainting. WORK records the unchanged
+consumer, source-pinned before/after comparison, compatibility checks, failures
+and remaining budgets. Two repair cycles are used; the next action is the shared
+binding/target prerequisite, rather than another equivalent pane/profile trial.
+Original L2/application/physical/assistive criteria and task credit remain open.
+
 **Update cost return — 2026-10-31:**
 
 Two bounded product repairs remove redundant row-ID materialization. Canonical
@@ -373,6 +390,9 @@ weakened, parent credit assigned or DONE move made by these checks.
 
 **Blockers**
 
+- [Changed state presentation](NS-2_state-projection-sync_01.md) addresses the
+  full-target synchronization cost found in the original live application.
+  This prerequisite preserves all original L2 thresholds and other criteria.
 - [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the ranked
   operational-data gaps and concrete acceptance workload.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supply authoritative

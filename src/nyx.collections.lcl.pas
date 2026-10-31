@@ -5894,43 +5894,122 @@ var
     LIndex: Integer;
     LCount: Integer;
     LRows: array of Integer;
+    LGrid: TNyxCollectionStringGrid;
+    LSource: TStringGrid;
+    LFrame: INyxNativeGestureFrame;
+    LInput: INyxCollectionInputLifetime;
+    LHeight: Integer;
+    LGeometryChanged: Boolean;
   begin
 
     if (APane = nil) or not APane.Grid.Visible then
     begin
       Exit;
     end;
-    APane.Grid.DefaultRowHeight := FGrid.DefaultRowHeight;
-    APane.Grid.RowHeights[0] := FGrid.RowHeights[0];
-    { Retire only the previous explicit window. Default-height assignment may
-      be a no-op, so it cannot be relied on to erase old wrapped overrides. }
-    for LIndex := 0 to APane.Grid.ProjectionRowCount - 1 do
-    begin
-      LRow := APane.Grid.ProjectionRow(LIndex);
+    LGrid := APane.Grid;
+    LSource := FGrid;
+    LFrame := APane.Frame;
+    LInput := APane.InputLifetime;
+    LFrame.Enter;
+    LGrid.BeginUpdate;
+    LGeometryChanged := False;
+    try
+      { LCL can recalculate the complete grid geometry for each changed height.
+        Publish this exact pane's bounded window together, retaining the same
+        measured rows, header and TopRow. The frame keeps borrowed grids alive
+        through native callbacks; retirement never resumes old presentation. }
+      LHeight := LSource.DefaultRowHeight;
 
-      if (LRow > 0) and (LRow < APane.Grid.RowCount) then
+      if LGrid.DefaultRowHeight <> LHeight then
       begin
-        APane.Grid.RowHeights[LRow] := FGrid.DefaultRowHeight;
+        LGeometryChanged := True;
+        LGrid.DefaultRowHeight := LHeight;
+      end;
+
+      if not LInput.Current then
+      begin
+        Exit;
+      end;
+      LHeight := LSource.RowHeights[0];
+
+      if LGrid.RowHeights[0] <> LHeight then
+      begin
+        LGeometryChanged := True;
+        LGrid.RowHeights[0] := LHeight;
+      end;
+
+      if not LInput.Current then
+      begin
+        Exit;
+      end;
+      { Retire only old explicit rows outside the new window. Rows still in the
+        window receive their current source height below, without a temporary
+        reset/reapply of an unchanged wrapped height. No row map is cached. }
+      for LIndex := 0 to LGrid.ProjectionRowCount - 1 do
+      begin
+        LRow := LGrid.ProjectionRow(LIndex);
+
+        if (LRow > 0) and (LRow < LGrid.RowCount) and
+          ((LRow < LFirst) or (LRow > LLast)) and
+          (LGrid.RowHeights[LRow] <> LSource.DefaultRowHeight) then
+        begin
+          LGeometryChanged := True;
+          LGrid.RowHeights[LRow] := LSource.DefaultRowHeight;
+
+          if not LInput.Current then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+      { Only currently visible rows need exact nondefault heights. The outer
+        grid remains the source; panes never infer independent pages. }
+      SetLength(LRows, Max(0, LLast - LFirst + 1));
+      LCount := 0;
+      for LRow := LFirst to LLast do
+      begin
+        LHeight := LSource.RowHeights[LRow];
+
+        if LGrid.RowHeights[LRow] <> LHeight then
+        begin
+          LGeometryChanged := True;
+          LGrid.RowHeights[LRow] := LHeight;
+        end;
+
+        if not LInput.Current then
+        begin
+          Exit;
+        end;
+
+        if (LRow > 0) and (LHeight <> LSource.DefaultRowHeight) then
+        begin
+          LRows[LCount] := LRow;
+          Inc(LCount);
+        end;
+      end;
+      SetLength(LRows, LCount);
+      LGrid.ConfigureProjectionRows(LRows);
+
+      if LGrid.TopRow <> LSource.TopRow then
+      begin
+        LGeometryChanged := True;
+        LGrid.TopRow := LSource.TopRow;
+      end;
+    finally
+      try
+        LGrid.EndUpdate(LInput.Current and LGeometryChanged);
+
+        if LInput.Current then
+        begin
+          { Values can change while geometry stays exact. Repaint that pane,
+            but do not force an unnecessary whole-grid size calculation. }
+          LGrid.Invalidate;
+        end;
+      finally
+        { LAST: releasing this exact frame may destroy either borrowed grid. }
+        LFrame.Leave;
       end;
     end;
-    { Only currently visible rows need exact nondefault heights. The outer grid
-      remains the source of row geometry; panes never infer independent pages. }
-    SetLength(LRows, Max(0, LLast - LFirst + 1));
-    LCount := 0;
-    for LRow := LFirst to LLast do
-    begin
-      APane.Grid.RowHeights[LRow] := FGrid.RowHeights[LRow];
-
-      if (LRow > 0) and (FGrid.RowHeights[LRow] <> FGrid.DefaultRowHeight) then
-      begin
-        LRows[LCount] := LRow;
-        Inc(LCount);
-      end;
-    end;
-    SetLength(LRows, LCount);
-    APane.Grid.ConfigureProjectionRows(LRows);
-    APane.Grid.TopRow := FGrid.TopRow;
-    APane.Grid.Invalidate;
   end;
 
 begin

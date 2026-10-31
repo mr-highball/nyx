@@ -9,7 +9,93 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Native table reading area — 2026-10-31
+## Current work — Publication and target cost reassessment — 2026-10-31
+
+Previous goal turn: PROGRESS, pushed6ce5c451 with exact remote match. Root remains
+SOLO; every owned compiler/runtime job is joined. Native short-table reading now
+fits a complete39px row in67px compact data space, without changing160px height.
+Return to04's original10000-service/five-field two-table application and unchanged
+100ms p95/250ms maximum latency criteria. Previous order hints do not meet them.
+
+Use the existing private Pascal timing helper and the SAME consumer to separate
+store notification/retirement, viewport recovery and actual target sub-stages.
+One current-source native/browser diagnostic run should decide the next owning
+repair; this is not another benchmark/workload identity or acceptance fixture.
+Then at most two product repair/retest cycles against the uninstrumented original
+application, retaining all editing/caret/selection/query/viewport/peer/teardown and
+new full-row reading assertions. Reassess afterward rather than extend equivalent
+profiling. Useful library changes, actual results and failures remain distinct
+from full L2/03/04/physical/AT/platform acceptance. Preserve all27 protected files,
+fixed listener paths/owners and unrelated work. New TEMP/TMP/artifacts/scripts
+stay on E:. No live Studio payload or operator project change is required.
+
+The existing `live-update-cost-return-01/profile-04` packet extends the same
+private Pascal spans, not the public workload. Current native/browser consumers
+complete204/167 assertions and retain original timing failures. Explicit store
+retirement spans are small; they do not cover every automatic destructor or GC
+cost. Native pane synchronization totals613ms across20 unfiltered bursts, about
+31ms/burst. Browser view notifications total1823ms while mount refresh totals843ms;
+those inclusive spans overlap and include a queued frame, so subtraction is only
+an approximate locator. Source review ties ordinary inspection-status state writes
+to full live-binding target Sync. That shared cost now has the concrete
+`NS-2_state-projection-sync_01` prerequisite; its original04 consumer/thresholds
+remain required. Actual generic binding synchronization has not been optimized.
+
+Private setup failures are retained: helper-function scope, include-token matching
+and a PowerShell-interpolated compiler directive fail before a successful profile
+application. Corrected final spans are present on both targets. The first private
+before-build reselects current source from a renderer dependency; it is rejected
+as a baseline. The pinned source import's library file matches 6ce5c451's blob299f66c6
+exactly and its compile receipt shows no current-adapter reselection.
+
+Native product repair1 groups each pane's physical row-height publication through
+LCL BeginUpdate/EndUpdate, retaining exact borrowed grids/input/frame leases.
+The same uninstrumented1280 consumer's sequential pinned-before/first-repair run
+observes publication p95 132.4/97.4ms and UI-turn167.9/126.5ms; filtered113.9/94.5ms
+and147.5/125.4ms. These unisolated samples do not establish a universal speedup,
+complete latency acceptance or the final second repair's relative gain.
+
+Repair2 avoids resetting still-visible wrapped rows through their default height.
+It reads current source/target geometry, retires only departed explicit rows and
+repaints values even when no size recalculation is needed. No row-cache proof,
+query skip, authored-policy change or dependency-source modification is added.
+Both bounded product cycles are used. Final06 passes204 at1280/390 with the same
+84/67px reading areas and39px rows. Ordinary observed failed budgets remain4/1:
+desktop publication/UI-turn p95 is104.9/140.7ms, filtered114.6/152.3ms; compact is
+77.0/96.3ms and93.4/115.8ms. The original100ms p95 and250ms maximum stay unchanged.
+
+Compatibility07 passes native clipboard1964/1953, presentation167 per width,
+column activation243 per width and4205 actual logical viewport/control checks.
+The exact prior generated public constructor and handwritten application each
+pass204 at1280/390. All eleven heaps are complete and clean, retaining the real
+Unicode draft/caret, selection, independent peer, query, wrapped/pinned rows,
+viewport, command refusal and retirement assertions. Heap-traced application
+budgets remain5/4 handwritten and5/4 generated; they are not speed qualification.
+The eight actual source inputs are recorded in07's manifest. The final review
+adds only the required blank line above one if;07 retains the exact pre-style
+unit copy, and style08 rebuilds/runs the current compact consumer separately.
+
+Browser profile04 completes167 with empty errors and explicit retirement; its
+four observed failed budgets remain diagnostic. Browser-compatibility07 builds
+the current uninstrumented application and proves it byte-identical to the earlier
+executed desktop/compact browser input (C1949D71). This native-only adapter repair
+introduces no unexecuted browser behavior. The trace tab is closed and viewport
+override reset. Authenticated nyx_session works; all27 protected files are exact.
+Both fixed listeners and operator projects remain intact. No service payload is
+replaced. Final style08 consumer is joined:204 compact checks, complete clean heap and3
+heap-traced failed timing budgets. Source comparison proves its only additional
+change is the required blank line. All owned jobs are joined; native build
+warnings are zero. The broad goal remains active.
+
+Reassessment: two pane repairs advance actual native publication but still do
+not meet the original application/UI-turn budgets. Stop equivalent pane trials.
+Next implement the shared changed-state presentation prerequisite through the
+existing binding/publication and both target adapters, preserving full candidate
+admission, computed/layout effects and explicit fallback. Return afterward to
+this same original application and thresholds. No full03/04/L2/task/DONE credit
+or broad-goal completion follows from the partial cost reduction or check volume.
+
+## Previous work — Native table reading area — 2026-10-31
 
 Previous goal turn: PROGRESS. Pushed91613288 and verified exact remote match;
 all original cost-return jobs joined. Root remains SOLO. Return to03's original
