@@ -2,6 +2,18 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Observed runtime navigation gap — 2026-10-31: the library now has an independent
+mounted collection viewport port, but current semantic discovery exposes no
+client-scoped command for that physical instance. `nyx_select` changes editor
+selection and `nyx_preview` produces a revision-specific design render; neither
+proves that a running collection row/cell is visible. Extend the existing bounded
+runtime workflow with explicit observing client/mount generation, typed item/
+field/alignment/focus intent, expected context, cancellation and small terminal
+receipts, including partial visibility. Preserve the separation between design
+selection and runtime input authority. Do not drive a different observer or
+invent visible success from the model alone. This gap stays with the original
+workflow criteria; the library's input harness is not MCP runtime acceptance.
+
 Observed semantic gaps — 2026-10-30: passing workspace on nyx_reviews routes to
 an ordinary document session and refuses with Unknown Nyx tool, despite generic
 context discovery. A primary-owned review with an exact verified import works

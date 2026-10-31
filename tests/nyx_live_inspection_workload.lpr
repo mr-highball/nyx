@@ -35,6 +35,7 @@ uses
   nyx.state, nyx.codec, nyx.codegen, nyx.events, nyx.scheduler, nyx.editing,
   nyx.collections, nyx.collections.view, nyx.collections.mount,
   nyx.collections.inspection, nyx.collections.position, nyx.collections.query,
+  nyx.collections.viewport, nyx.collections.selection,
   nyx.collections.view.types, nyx.collections.workbench.runtime,
   nyx.service.monitor, nyx.live.inspection
   {$ifdef NYX_INSPECTION_WORKLOAD_GENERATED}, nyx.generated.workload{$endif};
@@ -365,12 +366,25 @@ var
   LSaved: TNyxText;
   LKey: TNyxCollectionRef;
   LAtomic: INyxAtomicCollection;
+  LViewport: INyxCollectionViewport;
+  LReveal: INyxCollectionReveal;
+  LSelectionBeforeReveal: INyxCollectionSelection;
+  LWait: Integer;
   {$ifdef PAS2JS}
   LHost: TJSHTMLElement;
   LTable: TJSHTMLElement;
   LEditor: TJSHTMLInputElement;
   LCell: TJSHTMLElement;
   LDistantCell: TJSHTMLElement;
+  LRevealBounds: TJSDOMRect;
+  LClipBounds: TJSDOMRect;
+  LHeaderBottom: Double;
+  LPreviousVisibility: String;
+  LClipParent: TJSHTMLElement;
+  LPreviousOverflow: String;
+  LPreviousHeight: String;
+  LPreviousMinHeight: String;
+  LPreviousMaxHeight: String;
   {$else}
   LTable: TStringGrid;
   LFace: TStringGrid;
@@ -380,6 +394,12 @@ var
   LEditor: TCustomEdit;
   LGenerated: TNyxText;
   LStream: TFileStream;
+  LFocusedControl: TWinControl;
+  LRevealBounds: TRect;
+  LClipBounds: TRect;
+  LPreviousVisibility: Boolean;
+  LClipParent: TWinControl;
+  LPreviousHeight: Integer;
   {$endif}
 
   {$ifdef PAS2JS}
@@ -716,14 +736,80 @@ begin
     .OrderBy(NyxIntegerField('pid'), nsdDescending));
   {$ifdef PAS2JS}await(PaintTurn);{$else}PaintTurn;{$endif}
   RecordSample(wpSort, 0, LStarted);
+  BeginDraft(NyxItem(LKey, 'worker-4'));
+  LSelectionBeforeReveal := GFirst.View.Selection;
+  LViewport := NyxCollectionViewport(GFirst);
+  Check((LViewport <> nil) and LViewport.Active, 'the real mounted table exposes an independent portable viewport');
+  {$ifdef PAS2JS}
+  Check(document.activeElement = LEditor, 'the reveal journey begins with the actual Unicode editor focused');
+  LReveal := LViewport.Reveal(NyxRevealItem(NyxItem(LKey, 'worker-2000'))
+    .InField(NyxTextField('notes')));
+  Check(LReveal.Pending, 'the distant browser request awaits a measured physical frame');
+  { An injected wheel qualifies capture/cancellation, not trusted hardware input.
+    The ordinary virtual measurement wake must never revive this withdrawn work. }
+  LTable.dispatchEvent(TJSEvent.new('wheel'));
+  Check((LReveal.Capture.Status = ncvsCancelled) and
+    (LReveal.Capture.Reason = ncvrViewportMoved),
+    'new wheel input cancels pending reveal before measurement can pull the user back');
+  await(PaintTurn);
+  Check(LReveal.Capture.Status = ncvsCancelled,
+    'a later measured frame cannot revive the interrupted receipt');
+  CheckDraft;
+  {$else}
+  LFocusedControl := Screen.ActiveControl;
+  Check(LFocusedControl <> nil, 'the native reveal journey has an actual active control');
+  {$endif}
+  LReveal := LViewport.Reveal(NyxRevealItem(LDistant).InField(NyxTextField('notes')));
+  for LWait := 0 to 31 do
+  begin
+
+    if not LReveal.Pending then
+    begin
+      Break;
+    end;
+    {$ifdef PAS2JS}await(PaintTurn);{$else}PaintTurn; Application.Idle(False);{$endif}
+  end;
+  Check(LReveal.Capture.Status = ncvsCompleted,
+    'portable reveal settles the actual distant field without direct target scroll');
+  Check(GFirst.View.Selection = LSelectionBeforeReveal,
+    'default reveal preserves exact row membership and canonical focus');
+  CheckDraft;
+  {$ifdef PAS2JS}
+  Check(document.activeElement = LEditor, 'default reveal never blurs the original unfinished input');
+  {$else}
+  Check(Screen.ActiveControl = LFocusedControl, 'default native reveal retains the original active control');
+  {$endif}
+  CancelDraft;
   LStarted := ClockMS;
   Check(GFirst.Select(LDistant), 'deliberate distant navigation selects the requested stable service');
+  LReveal := LViewport.Reveal(NyxRevealItem(LDistant).InField(NyxTextField('notes')).Focus(ncvfTake));
+  for LWait := 0 to 31 do
+  begin
+
+    if not LReveal.Pending then
+    begin
+      Break;
+    end;
+    {$ifdef PAS2JS}await(PaintTurn);{$else}PaintTurn; Application.Idle(False);{$endif}
+  end;
+  Check(LReveal.Capture.Status = ncvsCompleted, 'deliberate focus reveal completes through the same public contract');
   {$ifdef PAS2JS}
   LDistantCell := TJSHTMLElement(LTable.querySelector('[data-nyx-item="worker-5000"]'));
   Check(LDistantCell <> nil, 'the deliberate distant selection realizes its actual row');
-  LDistantCell.scrollIntoView(False);
-  LTable.dispatchEvent(TJSEvent.new('scroll'));
   await(PaintTurn);
+  LRevealBounds := LDistantCell.getBoundingClientRect;
+  LClipBounds := LTable.getBoundingClientRect;
+  LHeaderBottom := LClipBounds.top;
+  for LIndex := 0 to LTable.querySelectorAll('thead th').length - 1 do
+  begin
+    LHeaderBottom := Max(LHeaderBottom,
+      TJSHTMLElement(LTable.querySelectorAll('thead th')[LIndex]).getBoundingClientRect.bottom);
+  end;
+  Check((LRevealBounds.top >= LHeaderBottom - 1) and
+    (LRevealBounds.bottom <= LClipBounds.bottom + 1),
+    'the requested row is actually visible below sticky headers and inside the table clip');
+  Check(TJSHTMLElement(document.activeElement).closest('[data-nyx-item]') = LDistantCell,
+    'explicit focus belongs to the revealed stable row');
   Check(LTable.querySelectorAll('[data-nyx-item]').length <= 300,
     'the large visible browser table retains a bounded resident row window');
   LDistantCell := TJSHTMLElement(LTable.querySelector(
@@ -731,15 +817,102 @@ begin
   Check((LDistantCell <> nil) and (LDistantCell.textContent = 'Filtered update 19'),
     'newly realized browser cells show the final offscreen producer value');
   {$else}
-  LTable.TopRow := GFirst.View.Snapshot.IndexOf(LDistant) + 1;
   PaintTurn;
   Check(LTable.TopRow >= 4990, 'the real native grid reaches a distant service range');
   LReadFace := FieldFace(3, LReadColumn);
   Check((LReadFace <> nil) and (LReadColumn >= 0) and
     (LReadFace.Cells[LReadColumn, GFirst.View.Snapshot.IndexOf(LDistant) + 1] = 'Filtered update 19'),
     'the actual native field reader shows the final offscreen producer value');
+  LRevealBounds := LReadFace.CellRect(LReadColumn, GFirst.View.Snapshot.IndexOf(LDistant) + 1);
+  LClipBounds := LReadFace.ClientRect;
+  LClipBounds.Top := LReadFace.CellRect(LReadColumn, 0).Bottom;
+
+  if LRevealBounds.Bottom - LRevealBounds.Top <= LClipBounds.Bottom - LClipBounds.Top then
+  begin
+    Check((LRevealBounds.Top >= LClipBounds.Top) and (LRevealBounds.Bottom <= LClipBounds.Bottom),
+      'a native row which fits is wholly visible below the header and inside the data clip');
+  end
+  else
+  begin
+    { The unchanged compact160px allocation leaves31px below its native header,
+      while this row is39px. Useful placement must span that available area and
+      report partial visibility honestly; no scroll can make39px fit into31px. }
+    Check((LRevealBounds.Top <= LClipBounds.Top) and (LRevealBounds.Bottom >= LClipBounds.Bottom) and
+      not LReveal.Capture.FullyVisible,
+      'an oversized native row spans the available clip and honestly reports partial visibility');
+  end;
   {$endif}
   RecordSample(wpScroll, 0, LStarted);
+  {$ifdef PAS2JS}
+  LPreviousVisibility := LTable.style.getPropertyValue('visibility');
+  LTable.style.setProperty('visibility', 'hidden');
+  {$else}
+  LPreviousVisibility := LTable.Visible;
+  LTable.Visible := False;
+  {$endif}
+  try
+    LReveal := LViewport.Reveal(NyxRevealItem(LDistant).InField(NyxTextField('notes')));
+    Check((LReveal.Capture.Status = ncvsRefused) and
+      (LReveal.Capture.Reason = ncvrNoViewport),
+      'a hidden target refuses even when its retained layout geometry is nonempty');
+  finally
+    {$ifdef PAS2JS}
+    LTable.style.setProperty('visibility', LPreviousVisibility);
+    {$else}
+    LTable.Visible := LPreviousVisibility;
+    {$endif}
+  end;
+  {$ifdef PAS2JS}
+  LClipParent := TJSHTMLElement(LTable.parentElement);
+  LPreviousOverflow := LClipParent.style.getPropertyValue('overflow');
+  LPreviousHeight := LClipParent.style.getPropertyValue('height');
+  LPreviousMinHeight := LClipParent.style.getPropertyValue('min-height');
+  LPreviousMaxHeight := LClipParent.style.getPropertyValue('max-height');
+  LClipParent.style.setProperty('overflow', 'hidden');
+  LClipParent.style.setProperty('height', '1px');
+  LClipParent.style.setProperty('min-height', '0');
+  LClipParent.style.setProperty('max-height', '1px');
+  {$else}
+  { The page layout owns the table's immediate parent height. Clip the actual
+    containing form instead, then settle its ordinary layout before admission. }
+  LClipParent := GApplication.Window;
+  LPreviousHeight := LClipParent.Height;
+  LClipParent.Height := 1;
+  PaintTurn;
+  Application.Idle(False);
+  Check(LClipParent.ClientHeight < LTable.CellRect(0, 0).Bottom,
+    'the native fixture actually clips the data below its containing form');
+  {$endif}
+  try
+    LReveal := LViewport.Reveal(NyxRevealItem(LDistant).InField(NyxTextField('notes')));
+    for LWait := 0 to 31 do
+    begin
+
+      if not LReveal.Pending then
+      begin
+        Break;
+      end;
+      {$ifdef PAS2JS}await(PaintTurn);{$else}PaintTurn; Application.Idle(False);{$endif}
+    end;
+    Check((LReveal.Capture.Status = ncvsRefused) and
+      (LReveal.Capture.Reason = ncvrNoViewport),
+      {$ifdef PAS2JS}
+      'a wholly clipped parent refuses without scrolling or opening that parent'
+      {$else}
+      TNyxText(Format('a wholly clipped parent refuses without scrolling or opening that parent: status=%d reason=%d parent=%d grid=%d',
+        [Ord(LReveal.Capture.Status), Ord(LReveal.Capture.Reason),
+         LClipParent.ClientHeight, LTable.ClientHeight]))
+      {$endif});
+  finally
+    {$ifdef PAS2JS}
+    LClipParent.style.setProperty('overflow', LPreviousOverflow);
+    LClipParent.style.setProperty('height', LPreviousHeight);
+    LClipParent.style.setProperty('min-height', LPreviousMinHeight);
+    LClipParent.style.setProperty('max-height', LPreviousMaxHeight);
+    {$else}
+    LClipParent.Height := LPreviousHeight;
+    {$endif}
+  end;
   Check(TNyxCodec.Encode(GDocument) = LSaved, 'runtime scale, queries, edits and preferences preserve the public saved design');
   {$ifdef PAS2JS}
   GReadyToFinish := True;

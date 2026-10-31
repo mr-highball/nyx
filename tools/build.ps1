@@ -871,7 +871,8 @@ try {
     foreach ($nyxInspectionProgram in @('nyx_collection_inspection_authoring_tests',
         'nyx_collection_inspection_studio_tests', 'nyx_agent_collection_schema',
         'nyx_table_presentation_authoring_tests', 'nyx_collection_recovery_tests',
-        'nyx_collection_recovery_mount_tests', 'nyx_file_save_stream_tests',
+        'nyx_collection_recovery_mount_tests', 'nyx_collection_viewport_tests',
+        'nyx_file_save_stream_tests',
         'nyx_logic_file_save_tests')) {
       Invoke-NyxInspectionCheck $nyxInspectionFpc ($nyxInspectionFlags + $nyxInspectionCold + @(
         "-FU$nyxInspectionNative", "-FE$nyxInspectionNative", "tests/$nyxInspectionProgram.lpr")) ($nyxInspectionProgram + '-compiler')
@@ -1306,6 +1307,7 @@ try {
           'nyx_collection_inspection_tests',
           'nyx_collection_recovery_tests',
           'nyx_collection_recovery_mount_tests',
+          'nyx_collection_viewport_tests',
           'nyx_collection_feedback_tests',
           'nyx_collection_query_receiver_tests',
           'nyx_collection_range_pointer_tests',
@@ -1387,6 +1389,7 @@ try {
         'nyx_collection_inspection_tests',
         'nyx_collection_recovery_tests',
         'nyx_collection_recovery_mount_tests',
+        'nyx_collection_viewport_tests',
         'nyx_collection_feedback_tests',
         'nyx_collection_query_receiver_tests',
         'nyx_collection_range_pointer_tests',
@@ -1471,6 +1474,7 @@ try {
           'nyx_collection_inspection_tests',
           'nyx_collection_recovery_tests',
           'nyx_collection_recovery_mount_tests',
+          'nyx_collection_viewport_tests',
           'nyx_collection_feedback_tests',
           'nyx_collection_query_receiver_tests',
           'nyx_collection_range_pointer_tests',

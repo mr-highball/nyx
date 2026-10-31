@@ -3,6 +3,28 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Explicit mounted viewport navigation — 2026-10-31:**
+
+The same10000-service application now uses a typed mounted row/field reveal
+instead of a direct platform scroll bridge. Nearest/start/center/end alignment,
+preserved or deliberate focus, cancellation and detached immutable terminal
+receipts belong to a revocable port which cannot retain the renderer/mount.
+Requests never change query/page/selection membership or show a hidden field.
+Actual controls retain the unfinished Unicode editor, exact text/caret and
+physical focus under default reveal. The deliberate focus path reaches the
+requested field below its sticky header. Hidden or wholly clipped targets
+refuse; containing pages/forms are not scrolled or opened.
+
+Compact native geometry also establishes a limit: its39px row has31px of data
+space in the unchanged160px table. Useful placement spans that clip and reports
+partial visibility; it cannot prove whole-row containment. This remains a
+workbench layout/quality concern. WORK records the actual browser/native and
+generated consumers, admission/ownership checks, retained failures and remaining
+physical/assistive/List/RTL/transformed-container qualification. The semantic
+runtime bridge remains with [agent workflows01](NS-4_agent-workflows_01.md).
+Full original criteria and completion credit remain open. Return to04's measured
+costs and original workbench usefulness, not another equivalent navigation fixture.
+
 **Header/Fit repair and navigation reassessment — 2026-10-31:**
 
 The browser arrangement adapter now preserves sticky positioning for unpinned

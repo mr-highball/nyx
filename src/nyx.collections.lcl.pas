@@ -33,6 +33,7 @@ uses
   nyx.gestures.lcl,
   nyx.events, nyx.text, nyx.observation,
   nyx.collections.view,
+  nyx.collections.viewport,
   nyx.collections.presentation,
   nyx.collections.alignment,
   nyx.collections.mount,
@@ -889,6 +890,11 @@ type
       const AValue: TNyxText): TNyxText;
   protected
     procedure PrepareTablePresentation; override;
+    function SupportsViewportReveal: Boolean; override;
+    function RevealViewportTarget(const AOptions: TNyxCollectionRevealOptions;
+      ARow, AColumn: Integer; ATakeFocus: Boolean; out AFullyVisible: Boolean;
+      out AReason: TNyxCollectionRevealReason): TNyxCollectionRevealStatus; override;
+    procedure QueueViewportReveal; override;
     function ReadRecoveryDraft(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity; out ACell: TNyxCollectionCellEdit): Boolean; override;
     function DiscardRecoveryDraft(const ACell: TNyxCollectionCellEdit): Boolean; override;
@@ -5070,7 +5076,7 @@ begin
     Exit;
   end;
 
-  if not FRecoveryCountPending and not FClipboardStatusPending and
+  if not ViewportRevealPending and not FRecoveryCountPending and not FClipboardStatusPending and
     (FDraftRecoveryHeld or not (FCellRefreshPending or FColumnGeometryPending)) and ((FResizeRequest = nil) or
     FResizeRequest.Publishing or FResizeQueued or
     not (FResizeRequest.Retired or FResizeReleased)) then
@@ -5094,6 +5100,12 @@ begin
   begin
     Application.RemoveOnIdleHandler(CellRefreshIdle);
     FCellIdleArmed := False;
+    Exit;
+  end;
+  ProcessViewportReveal;
+
+  if not InputLifetimeCurrent then
+  begin
     Exit;
   end;
   LRequest := FResizeRequest;
@@ -5162,7 +5174,8 @@ begin
     { A count-only wake must survive composition/entered input without turning
       into a row refresh. One registration waits for the next ordinary idle. }
 
-    if (FRecoveryCountPending or FClipboardStatusPending) and not FDraftRecoveryHeld then
+    if ViewportRevealPending or
+      ((FRecoveryCountPending or FClipboardStatusPending) and not FDraftRecoveryHeld) then
     begin
       Exit;
     end;
@@ -6499,6 +6512,7 @@ begin
     Exit;
   end;
   LKeepAlive := Self as INyxCollectionMount;
+  CancelViewportReveal(ncvrViewportMoved);
   LGrid := InputGrid(Sender);
 
   if LGrid = nil then
@@ -9533,5 +9547,7 @@ begin
   WriteLn('native-mount,activate,', GetTickCount64 - LActivateStarted);
   {$endif}
 end;
+
+{$i nyx.collections.viewport.lcl.inc}
 
 end.

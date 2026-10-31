@@ -31,6 +31,7 @@ uses
   JS,
   Web,
   nyx.collections.view,
+  nyx.collections.viewport,
   nyx.collections.presentation,
   nyx.collections.alignment,
   nyx.collections.mount, nyx.collections.draft, nyx.scheduler,
@@ -191,6 +192,7 @@ implementation
 uses
   SysUtils,
   Math,
+  WebOrWorker,
   nyx.text,
   nyx.state,
   nyx.formatting,
@@ -797,14 +799,26 @@ type
     FTreeRevealCorrectionSerial: Integer;
     FWindowFrame: Integer;
     FWindowQueued: Boolean;
+    { Geometry from the last physical pass may still need new spacer heights.
+      Explicit reveal settles through that pass before publishing completion. }
+    FViewportMeasured: Boolean;
+    FViewportScrollRequest: INyxCollectionReveal;
+    FViewportExpectedTop: Double;
+    FViewportExpectedLeft: Double;
     FWindowObserver: TJSHTMLResizeObserver;
     FWindowAncestors: array of TJSHTMLElement;
     function ScrollChanged(AEvent: TEventListenerEvent): Boolean;
+    function ViewportInput(AEvent: TEventListenerEvent): Boolean;
     function WindowChanged(AEvent: TEventListenerEvent): Boolean;
     procedure RowBoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
     procedure QueueWindow;
     procedure WindowFrame(ATime: Double);
+    function SupportsViewportReveal: Boolean; override;
+    function RevealViewportTarget(const AOptions: TNyxCollectionRevealOptions;
+      ARow, AColumn: Integer; ATakeFocus: Boolean; out AFullyVisible: Boolean;
+      out AReason: TNyxCollectionRevealReason): TNyxCollectionRevealStatus; override;
+    procedure QueueViewportReveal; override;
     procedure ObserveWindowAncestors;
     procedure RowViewport(out AOffset, AExtent: Double);
     procedure RecoverRowDrafts(const AData: INyxCollectionSnapshot);
@@ -5430,6 +5444,7 @@ var
   LTools: TJSHTMLElement;
   LFilterIcon: TJSElement;
   LFilterPath: TJSElement;
+  LViewportInputOptions: TJSEventListenerOptions;
   LIndex: Integer;
 begin
   ALimits.Validate;
@@ -5656,6 +5671,15 @@ begin
   begin
     FGeometry := TNyxCollectionRowGeometry.Create(0, 32);
     document.addEventListener('scroll', @ScrollChanged, True);
+    { These capture observers only withdraw pending intent. Passive delivery
+      keeps ordinary scrolling eligible for the browser's fast path; the
+      independent canonical input handlers retain their own default authority. }
+    LViewportInputOptions := TJSEventListenerOptions.new;
+    LViewportInputOptions.capture := True;
+    LViewportInputOptions.passive := True;
+    FHost.addEventListener('wheel', @ViewportInput, LViewportInputOptions);
+    FHost.addEventListener('pointerdown', @ViewportInput, LViewportInputOptions);
+    FHost.addEventListener('keydown', @ViewportInput, LViewportInputOptions);
     window.addEventListener('resize', @WindowChanged);
     FHost.addEventListener('focusin', @WindowChanged);
 
@@ -6248,6 +6272,14 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   { Descendant editor scrolling and unrelated panes do not move this viewport. }
 
+  if ViewportRevealPending and (FViewportScrollRequest = CurrentViewportRequest) and
+    (AEvent.target = FHost) and not FViewportMeasured and
+    ((Abs(TScrollableElement(FHost).scrollTopPixels - FViewportExpectedTop) > 0.5) or
+     (Abs(TScrollableElement(FHost).scrollLeftPixels - FViewportExpectedLeft) > 0.5)) then
+  begin
+    CancelViewportReveal(ncvrViewportMoved);
+  end;
+
   if FRevealItem.Defined and (AEvent.target = FHost) and
     (Abs(TScrollableElement(FHost).scrollTopPixels - FRevealScrollTop) > 0.5) then
   begin
@@ -6256,6 +6288,22 @@ begin
   QueueWindow;
   { Geometry revokes Fit freshness, not an admitted button's later key phases. }
   CancelColumnResizes(False);
+end;
+
+function TBrowserMount.ViewportInput(AEvent: TEventListenerEvent): Boolean;
+var
+  LLease: INyxCollectionMount;
+begin
+  Result := True;
+
+  if ViewportRevealPending then
+  begin
+    LLease := Self as INyxCollectionMount;
+    { User intent wins even while virtual row measurement is correcting its
+      own scroll. Capture precedes ordinary keys, resizing and pointer handlers;
+      cancellation neither consumes this input nor rolls back existing pixels. }
+    CancelViewportReveal(ncvrViewportMoved);
+  end;
 end;
 
 function TBrowserMount.WindowChanged(AEvent: TEventListenerEvent): Boolean;
@@ -8026,6 +8074,8 @@ begin
     end;
   end;
 
+  FViewportMeasured := LMeasured;
+
   if LMeasured then
   begin
     QueueWindow;
@@ -9000,6 +9050,9 @@ begin
       end;
     FHost.removeEventListener('keydown', @Key);
     FHost.removeEventListener('contextmenu', @CellContext);
+    TCapturedElement(FHost).removeEventListener('wheel', @ViewportInput, True);
+    TCapturedElement(FHost).removeEventListener('pointerdown', @ViewportInput, True);
+    TCapturedElement(FHost).removeEventListener('keydown', @ViewportInput, True);
       FHost.removeEventListener('keydown', @QueryKey);
       FHost.removeEventListener('click', @QueryClick);
       FHost.removeEventListener('focusin', @WindowChanged);
@@ -9032,6 +9085,7 @@ begin
     FTreeGeometryRows := nil;
     FResidentRows := nil;
     FRevealItem := Default(TNyxItemRef);
+    FViewportScrollRequest := nil;
     for LIndex := 0 to Length(FSpacers) - 1 do
     begin
       FSpacers[LIndex].remove;
@@ -9069,5 +9123,7 @@ begin
   Result := LMount;
   LMount.Activate;
 end;
+
+{$i nyx.collections.viewport.browser.inc}
 
 end.

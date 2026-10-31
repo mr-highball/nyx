@@ -3,6 +3,31 @@
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
 [Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
+**Visible navigation return — 2026-10-31:**
+
+The explicit mounted viewport contract now replaces the same application's
+direct DOM/native scroll bridge. Stable row plus typed field intent reveals the
+offscreen final value, preserving selection/cursor and the exact unfinished
+Unicode edit by default. Deliberate focus remains a separate choice. Changed
+display/input, newer requests, retirement and cancellation cannot revive an old
+receipt. Browser input capture also withdraws pending measured navigation when
+wheel/pointer/key input takes over. Injected input proves dispatch/cancellation,
+not trusted hardware or assistive quality.
+
+The maintained10000-service/five-field/160px application and all original value,
+pause/peer/filter/sort/teardown assertions remain. Native handwritten behavior
+passes204/203 and generated203/203 at the original widths; desktop timing budgets
+still fail4 per variant and compact passes that observed run. The compact native
+row is honestly partial when39px cannot fit its31px data area. Browser cohorts,
+clean heaps, exact source identities and retained failures are in WORK.
+Final handwritten/generated browser applications each complete167 checks per
+actual viewport and explicitly retire; observed budget failures remain4/6 and
+4/8 respectively. Final presentation159 and clipboard1755 per viewport pass,
+with empty errors. This accepts the scoped behavior, not measured L2 performance.
+Original L2 thresholds stay unchanged, and full L2/context/target/physical/
+assistive criteria and task credit remain open. Return to the original measured
+publication/target cost and useful workbench layout; no new performance variant.
+
 **Measured L2 checkpoint — 2026-10-31:**
 
 The maintained Pascal workload uses the same public two-table application with

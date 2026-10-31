@@ -35,6 +35,7 @@ uses
   nyx.collections.arrangement,
   nyx.collections.view, nyx.collections.inspection,
   nyx.collections.position,
+  nyx.collections.viewport,
   nyx.collections.recovery,
   nyx.collections.recovery.status,
   nyx.collections.recovery.policy,
@@ -307,7 +308,9 @@ type
     Automatic presenters are replaceable defaults; the first explicit assignment
     retains its original one-time meaning and never replaces journal ownership.
     Clipboard feedback is copied presentation state with a separately borrowed
-    receiver, never the application's completion-observer slot. }
+    receiver, never the application's completion-observer slot. Viewport command
+    ports borrow this owner and retire before target disposal; pending receipts
+    own detached intent/status only and never retain this mount. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionInputPreparation, INyxCollectionClipboardFeedbackMount,
@@ -319,7 +322,20 @@ type
     INyxCollectionCellRangeStrokeInput, INyxCollectionPositionObservation,
     INyxCollectionDraftRecoveryMount, INyxCollectionDraftRecoveryStatus,
     INyxCollectionPendingDraftMount, INyxCollectionRecoveryReviewMount,
-    INyxCollectionRecoveryNotifications)
+    INyxCollectionRecoveryNotifications, INyxCollectionViewportAccess)
+  private
+    { Interfaces retain these canonical objects; the object pointers are
+      borrowed only while their matching interface fields remain assigned. }
+    FViewport: INyxCollectionViewport;
+    FViewportPort: TNyxCollectionViewportPort;
+    FViewportRequest: INyxCollectionReveal;
+    FViewportState: TNyxCollectionRevealState;
+    FViewportSnapshot: INyxCollectionSnapshot;
+    FViewportEpoch: Integer;
+    FViewportSelection: INyxCollectionSelection;
+    FViewportSerial: Integer;
+    FViewportProcessing: Boolean;
+    function RevealViewport(const AOptions: TNyxCollectionRevealOptions): INyxCollectionReveal;
   private
     FToken: INyxCollectionViewSubscription;
     FPositionState: INyxCollectionPositionState;
@@ -600,6 +616,20 @@ type
       Scalar/no-change admission proves exact identities/order from this SAME
       physical predecessor. Foreign/equal-revision substitutes do not qualify. }
     function CanReuseRefreshOrder(const ARendered: INyxCollectionSnapshot): Boolean;
+    { Optional target seam runs only for the admitted physical snapshot. No
+      source/query/configuration change is authorized. Pending geometry uses
+      the target's existing UI wake; a terminal refusal never retries itself. }
+    function SupportsViewportReveal: Boolean; virtual;
+    function RevealViewportTarget(const AOptions: TNyxCollectionRevealOptions;
+      ARow, AColumn: Integer; ATakeFocus: Boolean; out AFullyVisible: Boolean;
+      out AReason: TNyxCollectionRevealReason): TNyxCollectionRevealStatus; virtual;
+    procedure QueueViewportReveal; virtual;
+    procedure ProcessViewportReveal;
+    function ViewportRevealPending: Boolean;
+    function CurrentViewportRequest: INyxCollectionReveal;
+    function ViewportRequestCurrent(const ARequest: INyxCollectionReveal;
+      ACheckSelection: Boolean = True): Boolean;
+    procedure CancelViewportReveal(AReason: TNyxCollectionRevealReason);
     { Recovery-only physical access bypasses stale source input admission, never
       writes source, and must recheck exact data before the final target change.
       Alternatives without editors retain these refusing defaults. }
@@ -651,6 +681,7 @@ type
     function CapturePendingDraft: INyxPendingCollectionDraft;
     function DiscardPendingDraft(const AExpected: INyxPendingCollectionDraft): Boolean;
     function CapturePositionState: INyxCollectionPositionState;
+    function CaptureViewport: INyxCollectionViewport;
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
     procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
     procedure ConfigureQueries(const APresenters: INyxQueryFormPresenterFactory;
@@ -3872,6 +3903,14 @@ begin
   FConnected := False;
   FCellFocusValid := False;
 
+  if FViewportPort <> nil then
+  begin
+    FViewportPort.Retire;
+    FViewportPort := nil;
+    FViewport := nil;
+  end;
+  CancelViewportReveal(ncvrDisconnected);
+
   if FRecoveryStatus <> nil then
   begin
     FRecoveryStatus.Retire;
@@ -4673,7 +4712,11 @@ begin
     try
       PublishRecoveryStatus;
     finally
-      RefreshTargetIdle;
+      try
+        ProcessViewportReveal;
+      finally
+        RefreshTargetIdle;
+      end;
     end;
   end;
 end;
@@ -5148,5 +5191,6 @@ begin
 end;
 
 {$i nyx.collections.recovery.mount.inc}
+{$i nyx.collections.viewport.mount.inc}
 
 end.

@@ -268,6 +268,71 @@ visual/full live-inspection acceptance remain open. Native handwritten/generated
 applications exercise all seven feedback states and independent filter ownership
 at desktop/compact widths; browser consumers compile only.
 
+## Revealing a row or field deliberately
+
+Selection and scrolling are separate intentions. A source update should not
+move someone who is reading older records. Use the mounted control's optional
+viewport port when a command such as Find, Go to record or Show selected should
+bring a particular stable identity into view. Add `nyx.collections.viewport`:
+
+```pascal
+var
+  LViewport: INyxCollectionViewport;
+  LReveal: INyxCollectionReveal;
+begin
+  LViewport := NyxCollectionViewport(LTableMount);
+
+  if LViewport <> nil then
+  begin
+    LReveal := LViewport.Reveal(
+      NyxRevealItem(LService)
+        .InField(NyxTextField('notes'))
+        .Vertical(ncvaNearest)
+        .Focus(ncvfPreserve));
+  end;
+end;
+```
+
+The defaults are nearest alignment and preserved focus. Omitting `InField`
+requests vertical row reveal only. Field references retain their scalar family;
+an Integer field cannot impersonate a Text field with the same name. Both axes
+also accept `ncvaStart`, `ncvaCenter` and `ncvaEnd`. Targets may clamp at their
+physical row/column or scrolling boundaries. Oversized content can complete with
+`Capture.FullyVisible = False`; this is distinct from an unavailable viewport.
+
+The default keeps the exact row-selection membership, canonical cursor, active
+editor, unfinished text and caret. `.Focus(ncvfTake)` deliberately moves the
+cursor and keyboard focus to the revealed cell without replacing membership or
+entering edit mode. These are UI-owner operations, including receipt reads and
+cancellation. Marshal worker results to the UI scheduler before requesting a
+reveal; the port does not make native widgets or live views thread safe.
+
+`Reveal` returns a small independent receipt. `Pending` may remain true while a
+browser measures virtual rows or a native control finishes an existing guarded
+layout turn. Read `Capture` on a later UI turn to distinguish `ncvsCompleted`,
+`ncvsRefused`, `ncvsCancelled` and `ncvsFailed`, with a typed reason. `Cancel`
+withdraws a pending request. Terminal observations never change, including after
+late cancellation. A new request supersedes the previous pending receipt.
+Changed displayed data, input authority, selection or explicit viewport movement
+can invalidate unfinished work; it must never redirect an old request. A paused
+view may reveal its retained displayed frame while its producer continues.
+
+Only already displayed rows and visible fields qualify. Reveal never changes a
+filter, page, sort, hidden column or paused mode to manufacture a match. It
+scrolls this control's available data area, excluding headers and opaque pinned
+panes, and does not scroll containing pages or open hidden parents. Unavailable
+or wholly clipped targets refuse. Completion describes software geometry, not
+physical display timing, screen-reader quality or other-window occlusion.
+
+The owned browser and LCL flat List/Table mounts expose this optional facet.
+Alternative mounts can return nil; the original mount interface and GUID remain
+unchanged. Tree retains its hierarchy-aware reveal contract. A viewport port
+borrows its mount only during entry and is revoked before target disposal.
+Retaining the port or receipt cannot retain a renderer, widget, view or document.
+After retirement, an old port is inactive and returns a disconnected refusal.
+Do not retain `INyxCollectionViewportAccess` as a substitute for the independent
+port: that acquisition interface is still the mount owner.
+
 ## Following the last visible row
 
 Receiving source updates and following a viewport are separate choices.

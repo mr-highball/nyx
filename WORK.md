@@ -9,7 +9,99 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Visible table navigation and Fit — 2026-10-31
+## Current work — Explicit collection viewport reveal — 2026-10-31
+
+Previous goal turn: verified PROGRESS, pusheda520d664 with exact remote match.
+Root remains SOLO. The original03/04 navigation return now has a portable mounted
+row/field command and actual same-application qualification. Keep the authored
+160px tables, active Unicode draft/caret, independent peer, filters/order and
+all original assertions. Next return to04's original publication/target costs
+and workbench layout quality, without another equivalent navigation/performance
+variant or relaxed budget. Full original criteria/task credit remain open.
+
+The command belongs to a mounted viewport, not selection/query state. A retained
+command port must be revocable without owning its mount/renderer. Typed fluent
+item/field/alignment/focus options return an independent observable receipt with
+terminal refusal/cancellation/failure. Default reveal preserves keyboard focus
+and selection; deliberate focus changes only the cursor, never row membership.
+Only currently displayed rows/visible fields qualify; the command never changes
+query/page/column configuration to manufacture a match. It scrolls this control's
+available viewport without moving containing pages or enabling hidden ancestors.
+Changed snapshots/input, retirement, cancellation and superseding requests must
+not redirect an old request. Deferred measured geometry must settle before
+reporting completion. Run the same mounted/native/browser journey and relevant
+lifetime, projection/refusal and prior control regressions. Keep all27 protected
+files, fixed listeners and unrelated edits. All new TEMP/TMP/artifacts stay on E:.
+
+Implemented in `nyx.collections.viewport` with optional mount acquisition and
+separate borrowed/revocable ports. Receipts own only copied intent/status, never
+their mount, renderer or widget; first terminal transition wins. Mount admission
+retains the exact displayed snapshot, input epoch and selection through foreign
+reads and target callbacks. Reentrant replacement/retirement defeats an old
+success return. Browser row realization and measured spacer corrections reuse
+the existing frame; native layout reuses its existing guarded idle/frame. Both
+exclude sticky headers/pinned panes and containing client clips. Preserve keeps
+the real unfinished editor/text/caret/focus; Take moves cursor/focus without
+changing row membership. No query/page/column/source/document mutation follows.
+
+Evidence packet `collection-reveal-01` retains initial compiler and fixture
+failures. `adapters-02` wrongly assumes LCL's private TryScrollTo is protected;
+the repair uses public TopRow/LeftCol and measured row/column extents. Native
+leading insets account for covered/clipped first cells. `final-04` initially
+omits the explicit inspection policy in the pause fixture; corrected portable
+checks pass37 per target, with a complete clean native heap. Recovery compatibility
+passes64 per target, with a clean native heap. These are model/ownership checks,
+not pixel or hardware evidence. The maintained build orchestration includes the
+new fixture in inspection-authoring/query-workbench; its syntax parses cleanly.
+
+`qualification-08` passes204/203 actual native handwritten checks and203/203
+generated checks at1280/390; observed budget failures remain4/0 per variant.
+The full native presentation consumer passes167 per width with clean heaps.
+`input-09` rebuilds the final native application after browser-only additions:
+203 compact checks and zero unfreed blocks; its heap-traced timing is not a
+performance qualification. Fresh emitted public design source remains byte-
+identical across these cohorts. Original L2 deadlines/thresholds stay unchanged.
+
+Native compact geometry exposes39px rows in31px of available data area. The
+initial whole-row assertion cannot hold; `compact-diagnostic-06` preserves exact
+cell108..147/clip108..139 facts and FullyVisible=False. The regression now requires
+whole containment for rows which fit, or clip-spanning placement and honest
+partial visibility for oversized rows. It never enlarges the160px table. The
+immediate-parent resize also fails to establish a stable compact clipping fixture
+in07;08 clips the actual containing form, settles layout and asserts the clip
+before requesting. All previous value/draft/peer/retirement assertions remain.
+
+Browser input review additionally finds the pending-measurement takeover race.
+Passive wheel/pointer/key capture now withdraws old intent without consuming
+ordinary input or rolling back already applied pixels. The maintained actual
+application injects wheel input while pending and proves that the later frame
+cannot revive it. This is dispatch/geometry evidence, not trusted hardware.
+Final browser receipts belong to `passive-10`; earlier `adapters-03`, `final-04`,
+`final-05` and `input-09` remain predecessors, not substituted final results.
+
+Final handwritten/generated browser applications each complete167 checks at
+actual1280x900 and390x844, with empty errors and explicit view retirement.
+Observed budget failures are4/6 handwritten and4/8 generated; these are functional
+cohorts, not isolated performance acceptance. The complete final presentation
+consumer remains159 per viewport and full clipboard1755 per viewport, with empty
+errors. Reviewed desktop/compact captures show the requested offscreen-updated
+field and sticky header. Native physical/AT/visual acceptance is not inferred.
+`source-identity.json` records the ten maintained implementation/test/orchestration
+inputs. All owned compiler/runtime readers are joined; temporary browser tabs
+are closed and the viewport override is reset. No task moves to DONE.
+
+Physical/assistive/List/RTL/non-axis-aligned-container/non-Win32 qualification,
+the compact workbench layout and full L2 acceptance remain open. Current MCP
+discovery still lacks client/mount-scoped runtime reveal; record that gap in
+agent-workflows01 rather than treating model selection/preview as visible
+navigation. The configured Pascal client successfully performs authenticated
+nyx_session; all27 protected files and both fixed listener owners remain exact.
+Both manually saved browser exports are verified byte-identical to expected
+page452/filtered175-byte TSVs. No LAN payload or project replacement occurs.
+No owned warning remains in the checked compiler cohorts; existing upstream
+pas2js Classes case warnings remain, and dependency sources are untouched.
+
+## Previous work — Visible table navigation and Fit — 2026-10-31
 
 Previous goal turn: verified PROGRESS, pushed30f2b216 with exact remote match.
 Root remains SOLO. Current verified state: ordinary header/Fit repairs pass the

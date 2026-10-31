@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The original03/04 navigation return now has explicit typed mounted row/field
+reveal, preserved or deliberate focus and detached terminal receipts. The same
+10000-service application's distant field is visible through that contract;
+the default preserves its exact Unicode draft/caret and selection. Hidden or
+wholly clipped targets refuse. Native compact oversized rows report partial
+visibility honestly. WORK owns exact native/browser/generated receipts and
+retained failures. Full L2 timing, useful compact layout and physical/assistive/
+List/RTL/container qualification stay open. Runtime MCP navigation still needs
+explicit observing-client/mount scope in agent-workflows01. Return to04's original
+publication/target costs and workbench quality, without another equivalent
+navigation/performance fixture or assigning full task/criterion credit.
+
 The hard prerequisites [row replacement02](DONE/NS-1_state-collections_02.md) and
 [query delivery03](DONE/NS-1_state-collections_03.md) are accepted on2026-10-31.
 Actual browser qualification exposes and repairs following-view selection
