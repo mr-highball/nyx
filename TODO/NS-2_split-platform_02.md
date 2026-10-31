@@ -80,3 +80,23 @@ deferred implementation; the current WORK entry now owns active investigation.
   rendered browser behavior. The unchanged original acceptance criteria above
   remain the conditions for DONE; this bounded native repair adds no broad parity
   or completion credit.
+
+**Browser return — 2026-10-30:**
+
+- The unchanged public-control consumer executes38 checks at1280x900 and390x844.
+  Its actual DOM controls retain Unicode input/ranges through resizing, permission
+  cancellation and minima, and qualify keyboard hooks/default consumption and
+  callback disposal. These synthesized events do not obtain trusted capture.
+- The existing Studio consumer now waits for queued presentation publication and
+  recognizes hidden retained source controls. All original20 checks pass at both
+  measured widths, followed by the original nine compact/desktop return checks
+  requiring the child's full20-check pass. Draft/range/focus, independent scrolls
+  and the chosen position survive the relevant resize and shell changes.
+- Source98648722/artifact84bc5244, failures, routing/driver corrections and exact
+  receipts are retained under external splitter-browser-return-01. Standalone
+  error logs are empty; the iframe logs one unattributed MutationObserver error,
+  so a clean iframe-console claim is not made. No product splitter code changes
+  in this checkpoint. The native release source remains unchanged since2bbcf42f.
+- Original criteria remain open, including both browser axes/nested repeated Sync,
+  original external reproduction and trusted capture/device behavior. WORK owns
+  the reassessment and bounded return; no new task or completion credit is added.

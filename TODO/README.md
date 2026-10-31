@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The retained [splitter regression](NS-2_split-platform_02.md) now has actual
+browser control38/38 and ordinary Studio20/20 plus nine viewport-return checks.
+Its old driver now observes queued presentation instead of reading an unpublished
+source control. Original external reproduction and both-axis/nested/capture
+criteria remain open. WORK records preserved failures and the next bounded
+public-control outcome; stop equivalent Studio-driver variants.
+
 The ordinary saved workbench now preserves its active filter and exact Unicode
 draft/selection through runtime column changes and reset at both browser widths.
 Column commands/inputs identify their exact fields through the existing typed

@@ -30,9 +30,18 @@ uses
   nyx.test.keyboard.browser;
 
 type
+  { Synthetic touch events exercise the public DOM handlers without claiming
+    trusted pointer capture or physical-device coverage. No host object is owned. }
   TPointer = class external name 'PointerEvent' (TJSPointerEvent)
     constructor new(const AType: String; const AOptions: TJSObject); reintroduce;
   end;
+
+  { Ordinary Studio commands publish after their originating callback returns.
+    Observe each resulting presentation before the next input, within the same
+    bounded observation budget used by the compact host. Rendering time remains
+    part of the separate source-workspace wall-clock performance regression. }
+  TSplitStage = (ssOpenCode, ssHideCode, ssShowCode, ssOpenOutputs,
+    ssCloseOutputs, ssComplete);
 
 var
   GStudio: TNyxStudio;
@@ -41,6 +50,10 @@ var
   GPolls: Integer;
   GSource: TNyxText;
   GPercent: TNyxText;
+  GStage: TSplitStage;
+  GJourneyPolls: Integer;
+
+procedure ObserveJourney; forward;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -116,13 +129,13 @@ procedure Journey;
 var
   LCode: TJSHTMLTextAreaElement;
   LHeight: Double;
-  LX, LY: Double;
+  LX: Double;
+  LY: Double;
   LScroll: Integer;
   LCanvasScroll: Integer;
   LPercent: TNyxText;
 begin
   try
-    WorkspaceAction('action-code', 'view', 'code');
     LCode := TJSHTMLTextAreaElement(Find('studio-code'));
     Check(Grip.getBoundingClientRect.height = 44, 'visible touch-friendly grip');
     Check(Grip.getAttribute('role') = 'separator', 'semantic separator role');
@@ -170,27 +183,117 @@ begin
     Grip.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'ArrowDown', [nmShift]));
     Grip.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'ArrowDown', [nmShift]));
     GPercent := Grip.getAttribute('data-requested-position');
+    GStage := ssHideCode;
     WorkspaceAction('action-code', 'view', 'code');
-    Check(document.querySelector('.nyx-split-divider') = nil, 'hidden code releases divider');
-    WorkspaceAction('action-code', 'view', 'code');
-    Check(Grip.getAttribute('data-requested-position') = GPercent, 'show/hide retains chosen proportion');
-    Check(TJSHTMLTextAreaElement(Find('studio-code')).value = GSource,
-      'show/hide retains pending source draft');
-    WorkspaceAction('action-outputs', 'project', 'outputs');
-    Check(Grip.getAttribute('data-requested-position') = GPercent, 'output section retains requested proportion');
-    Check(TJSHTMLTextAreaElement(Find('studio-code')).getBoundingClientRect.height > 40,
-      'source remains readable beside optional output section');
-    WorkspaceAction('action-outputs', 'project', 'outputs');
-    document.body.setAttribute('data-studio-split', 'passed');
-    document.body.setAttribute('data-studio-split-checks', IntToStr(GChecks));
-    document.body.setAttribute('data-studio-split-width', IntToStr(window.innerWidth));
-    document.body.setAttribute('data-studio-split-position', GPercent);
   except
     on LException: Exception do
     begin
       Failure(LException.Message);
     end;
   end;
+end;
+
+{ Poll only observable control publication; never force a renderer refresh or
+  inspect Studio's private session. Original assertions and deadlines remain. }
+procedure ObserveJourney;
+var
+  LCode: TJSHTMLElement;
+  LOutputs: TJSHTMLElement;
+begin
+  try
+
+    Inc(GJourneyPolls);
+
+    if GJourneyPolls > 100 then
+    begin
+      raise Exception.Create('Studio split publication deadline at stage ' +
+        IntToStr(Ord(GStage)));
+    end;
+    LCode := TJSHTMLElement(document.querySelector('[data-node="studio-code"]'));
+    LOutputs := TJSHTMLElement(document.querySelector('[data-node="studio-outputs"]'));
+    case GStage of
+      ssOpenCode:
+        begin
+
+          if (LCode <> nil) and (LCode.getBoundingClientRect.height > 0) then
+          begin
+            Journey;
+          end;
+        end;
+      ssHideCode:
+        begin
+
+          if (LCode = nil) or (LCode.getBoundingClientRect.height = 0) then
+          begin
+            Check(document.querySelector('.nyx-split-divider') = nil,
+              'hidden code releases divider');
+            GStage := ssShowCode;
+            WorkspaceAction('action-code', 'view', 'code');
+          end;
+        end;
+      ssShowCode:
+        begin
+
+          if (LCode <> nil) and (LCode.getBoundingClientRect.height > 0) then
+          begin
+            Check(Grip.getAttribute('data-requested-position') = GPercent,
+              'show/hide retains chosen proportion');
+            Check(TJSHTMLTextAreaElement(LCode).value = GSource,
+              'show/hide retains pending source draft');
+            GStage := ssOpenOutputs;
+            WorkspaceAction('action-outputs', 'project', 'outputs');
+          end;
+        end;
+      ssOpenOutputs:
+        begin
+
+          if (LOutputs <> nil) and (LOutputs.getBoundingClientRect.height > 0) then
+          begin
+            Check(Grip.getAttribute('data-requested-position') = GPercent,
+              'output section retains requested proportion');
+            Check(TJSHTMLTextAreaElement(Find('studio-code')).getBoundingClientRect.height > 40,
+              'source remains readable beside optional output section');
+            GStage := ssCloseOutputs;
+            WorkspaceAction('action-outputs', 'project', 'outputs');
+          end;
+        end;
+      ssCloseOutputs:
+        begin
+
+          if (LOutputs = nil) or (LOutputs.getBoundingClientRect.height = 0) then
+          begin
+            GStage := ssComplete;
+            document.body.setAttribute('data-studio-split', 'passed');
+            document.body.setAttribute('data-studio-split-checks', IntToStr(GChecks));
+            document.body.setAttribute('data-studio-split-width', IntToStr(window.innerWidth));
+            document.body.setAttribute('data-studio-split-position', GPercent);
+          end;
+        end;
+      ssComplete:
+        begin
+          Exit;
+        end;
+    end;
+
+    if (GStage <> ssComplete) and
+      (document.body.getAttribute('data-studio-split') <> 'failed') then
+    begin
+      window.setTimeout(@ObserveJourney, 100);
+    end;
+  except
+    on LException: Exception do
+    begin
+      Failure(LException.Message);
+    end;
+  end;
+end;
+
+procedure StartJourney;
+begin
+  GJourneyPolls := 0;
+  GStage := ssOpenCode;
+  WorkspaceAction('action-code', 'view', 'code');
+  window.setTimeout(@ObserveJourney, 100);
 end;
 
 function FrameFind(const AID: TNyxText): TJSHTMLElement;
@@ -296,13 +399,15 @@ begin
     GFrame.style.cssText := 'width:390px;height:900px;border:0;display:block;';
     TJSHTMLElement(document.body).style.setProperty('margin', '0');
     document.body.appendChild(GFrame);
-    GFrame.src := 'studio-split.html';
+    { Keep the current host's deployment path while dropping only host mode.
+      Qualification hosts may use a distinct filename beside the real HTTP API. }
+    GFrame.src := window.location.pathname;
     window.setTimeout(@Observe, 100);
   end
   else
   begin
     GStudio := TNyxStudio.Create;
     GStudio.Run(False);
-    window.setTimeout(@Journey, 250);
+    window.setTimeout(@StartJourney, 250);
   end;
 end.

@@ -9,7 +9,63 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Table preference/reset journey — 2026-10-30
+## Current work — Browser splitter return — 2026-10-30
+
+Previous goal turn: verified PROGRESS, pushed416a286d with exact remote match.
+Root remains SOLO. This bounded return serves the retained splitter regression's
+release/reflow and browser/keyboard checks, consumed by Studio's shell workflow.
+The deliverable is the existing real-control and ordinary Studio journeys on
+the current source, preserving their assertions and compact-host polling bound.
+It does not identify the user's original external application or change runtime
+splitter behavior. All new outputs and owned process TEMP/TMP remain on E:.
+
+The unchanged browser control consumer passes38 at measured1280x900 and390x844,
+including cancellation, inherited read-only, consumed keyboard defaults, pane
+minima, retained Unicode input and callback disposal. The old Studio consumer
+fails before its first check: it reads studio-code synchronously after queuing
+the Pascal presentation. Its maintained driver now observes each published view
+before continuing. Hidden retained editors count as hidden, rather than requiring
+their destruction. It retains all20 assertions and the outer100-observation
+limit, and follows its current host path for the compact iframe.
+
+Final Studio source98648722/artifact84bc5244 passes all20 checks at measured
+1280x900 and390x844 with empty standalone error logs. Pointer release, cancellation,
+Home/End/coarse keyboard adjustment, code hide/show and Outputs open/close retain
+the requested proportion and pending Unicode draft. The same input, exact range,
+focus and independent source/canvas scroll survive the direct drag. The existing
+390-to1100-to390 iframe journey passes its original nine checks and requires the
+child's full20-check pass. This is synthetic DOM input in an actual browser,
+separate from the retained145 native window-message checks and physical capture.
+
+The first private subpath host misroutes relative API requests; final hosts sit
+beside the existing HTTP API with their scripts in unique qualification folders.
+An intermediate driver mistakenly adds a10000ms wall-clock guard and fails at
+Outputs; it is retained, then replaced by the original bounded polling policy.
+No existing performance deadline is changed. The performance task's newer91-check
+source-workspace result already clears its30000ms ordinary-workspace gate; that
+accepted result remains intact. Original full-Workshop latency/scale criteria
+remain open. Final owned compilation has zero warnings; seven upstream RTL
+warnings remain untouched. The iframe run logs one unattributed MutationObserver
+error; neither owned sources nor the generated fixture use that API. Its nine
+checks pass, but a clean iframe-console or tooling-cause claim is not assigned.
+
+Both user-saved browser TSV files again match their452/175-byte expected packets.
+All27 protected QA files remain exact. Fixed QA65824 and LAN46632 are unchanged;
+no new listener, project mutation, Studio build job or LAN delivery occurs. All owned
+compiler/staging processes are joined. Evidence: splitter-browser-return-01,
+before, after-02/03/04/05 and final-06, including preserved setup/driver failures,
+exact identities, viewport receipts and reviewed screenshots.
+
+No complete original criterion or task closes. This is at least the fifth
+successive checkpoint without full original criterion closure after f3431a07,
+8aed6e14,35fe6776 and416a286d; it does not reset earlier reassessment history.
+Stop this driver-repair sequence. The next bounded deliverable is the existing
+splitter criterion for both browser axes and nested/repeated in-drag/post-release
+Sync, using the maintained public-control consumer. Reuse the unchanged native
+release evidence; preserve original external reproduction, capture/device and
+broader Studio/quality conditions. No new fixture family, task or credit is added.
+
+## Previous work — Table preference/reset journey — 2026-10-30
 
 Previous goal turn: verified PROGRESS, pushed35fe6776 with exact remote match.
 Root remains SOLO. Return to workbench03's original W2/criterion5 ownership,
