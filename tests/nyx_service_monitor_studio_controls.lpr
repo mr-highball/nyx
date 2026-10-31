@@ -26,11 +26,12 @@ program nyx_service_monitor_studio_controls;
 uses Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Windows, Types,
   nyx.text, nyx.types, nyx.model, nyx.codec, nyx.codegen, nyx.files, nyx.files.lcl,
   nyx.disclosure, nyx.state, nyx.scheduler, nyx.clipboard, nyx.bytes,
-  nyx.files.save, nyx.editing.lcl, nyx.menu.lcl, nyx.popover.lcl,
+  nyx.files.save, nyx.editing, nyx.editing.lcl, nyx.menu.lcl, nyx.popover.lcl,
   nyx.collections, nyx.collections.codec, nyx.collections.view.types, nyx.collections.view,
   nyx.collections.mount, nyx.collections.arrangement,
   nyx.collections.arrangement.controls, nyx.collections.arrangement.presenter,
   nyx.collections.arrangement.lcl, nyx.collections.query, nyx.collections.paging,
+  nyx.collections.selection,
   nyx.collections.cell.actions, nyx.collections.clipboard.actions,
   nyx.collections.export, nyx.collections.export.actions, nyx.collections.workbench.runtime,
   nyx.application.lcl, nyx.service.monitor,
@@ -447,6 +448,49 @@ begin
   Pump;
 end;
 
+{ Column commands keep their compact visible captions, while the real native
+  accessible names identify the exact authored field. This checks the public
+  workbench independently of the full pointer-driven query consumer. }
+procedure ColumnNames(const AManager: INyxColumnArrangementManager);
+var
+  LTarget: INyxLCLColumnArrangementPresenter;
+  LObservation: TNyxColumnLayoutObservation;
+  LColumn: TNyxColumnLayoutEntry;
+  LField: TNyxColumnIdentity;
+  LCaption: TNyxText;
+  LContext: TNyxText;
+  LControl: TControl;
+  LIndex: Integer;
+begin
+  Check(Supports(AManager.Presenter, INyxLCLColumnArrangementPresenter, LTarget),
+    'public Columns names use the actual native presenter');
+  LObservation := AManager.Observation;
+  for LIndex := 0 to LObservation.Count - 1 do
+  begin
+    LColumn := LObservation.ColumnAt(LIndex);
+    LField := LColumn.Column.Identity;
+    LCaption := LColumn.Column.Title;
+
+    if LCaption = '' then
+    begin
+      LCaption := LField.Name;
+    end;
+    LContext := LCaption + TNyxText(' (') + LField.Name + TNyxText(')');
+    LControl := LTarget.Presentation.Renderer.ControlFor(
+      NyxColumnArrangementActionID(NyxColumnArrangementEditorID,
+        LObservation, LField, ncaaApplyWidth));
+    Check((LControl <> nil) and (TControlAccess(LControl).Caption = 'Set width') and
+      (TNyxText(LControl.AccessibleName) = 'Set width: ' + LContext),
+      'Set width retains its visible caption and names the exact native field');
+    LControl := LTarget.Presentation.Renderer.InputFor(
+      NyxColumnArrangementFieldID(NyxColumnArrangementEditorID,
+        LObservation, LField, ncafWidth));
+    Check((LControl <> nil) and
+      (TNyxText(LControl.AccessibleName) = 'Width in logical pixels: ' + LContext),
+      'the native width input names its column without depending on nearby labels');
+  end;
+end;
+
 { Continue the same public application through actual context menus and Nyx
   inspector controls. Only clipboard/file effects are substituted; captures,
   selection, query/paging, editor suspension and command results stay real. }
@@ -464,6 +508,8 @@ var
   LColumn: Integer;
   LExpected: TNyxText;
   LPayload: INyxCollectionExportText;
+  LDraft: TNyxText;
+  LDraftSelection: TNyxTextSelection;
   LRevision: Integer;
   LIndex: Integer;
 
@@ -530,6 +576,8 @@ var
   var
     LBounds: Types.TRect;
     LPoint: Types.TPoint;
+    LSelection: TNyxCollectionSelectionSnapshot;
+    LData: INyxCollectionSnapshot;
   begin
 
     if AFocus then
@@ -537,10 +585,31 @@ var
       Focus(ACaption);
     end;
     LGrid := GridFor(ACaption, LColumn);
+
+    if not AFocus then
+    begin
+      { Compact pin suspension puts Service and Command line in one scrollable
+        grid. Reveal the latter as an ordinary horizontal scroll, without
+        changing focus/cursor or accepting the former's unfinished editor. A
+        point 584 pixels into a 337-pixel client is not valid context input. }
+      LSelection := AMount.View.Selection.Snapshot;
+      LData := AMount.View.Store.Snapshot;
+      LGrid.LeftCol := LColumn;
+      DrainActions;
+      LGrid := GridFor(ACaption, LColumn);
+      Check(AMount.View.Selection.Snapshot.SameState(LSelection) and
+        (AMount.View.Store.Snapshot = LData),
+        'horizontal reveal preserves exact semantic selection and accepted data');
+    end;
     LBounds := LGrid.CellRect(LColumn, 1);
     Check((LBounds.Right > LBounds.Left) and (LBounds.Bottom > LBounds.Top) and
       PtInRect(LGrid.ClientRect, Types.Point(LBounds.Left + 4, LBounds.Top + 4)),
-      'context point is inside the actual visible cell: ' + ACaption);
+      'context point is inside the actual visible cell: ' + ACaption +
+      '; focus=' + TNyxText(BoolToStr(AFocus, True)) +
+      '; leftCol=' + TNyxText(IntToStr(LGrid.LeftCol)) +
+      '; column=' + TNyxText(IntToStr(LColumn)) +
+      '; cellLeft=' + TNyxText(IntToStr(LBounds.Left)) +
+      '; clientWidth=' + TNyxText(IntToStr(LGrid.ClientWidth)));
     LPoint := LGrid.ClientToScreen(Types.Point(LBounds.Left + 4, LBounds.Top + 4));
     SendMessage(LGrid.Handle, WM_CONTEXTMENU, LGrid.Handle, MakeLParam(LPoint.X, LPoint.Y));
     DrainActions;
@@ -627,7 +696,12 @@ begin
   SendMessage(LGrid.Handle, WM_KEYDOWN, VK_F2, 1);
   Pump;
   Check(LGrid.EditorMode, 'public pinned Service cell enters its ordinary editor');
-  RestoreNyxLCLInputText(TCustomEdit(LGrid.Editor), 'Unfinished service name');
+  LDraft := TNyxText('Unfinished 🌙 service name');
+  RestoreNyxLCLInputText(TCustomEdit(LGrid.Editor), LDraft);
+  SelectNyxLCLText(TCustomEdit(LGrid.Editor), NyxTextSelection(LDraft, 13, 20));
+  LDraftSelection := CaptureNyxLCLSelection(TCustomEdit(LGrid.Editor));
+  Check(LDraftSelection.Defined and (LDraftSelection.Start = 13) and
+    (LDraftSelection.Finish = 20), 'the public cell draft selects text after supplementary Unicode');
   { Default-off editor context deliberately keeps the platform text menu.
     Inspect a different readonly cell without focusing it or accepting the draft. }
   Context('Command line', False);
@@ -641,7 +715,8 @@ begin
   SendMessage(LGrid.Handle, WM_KEYDOWN, VK_F2, 1);
   Pump;
   Check(LGrid.EditorMode and
-    (NyxLCLInputText(TCustomEdit(LGrid.Editor)) = 'Unfinished service name'),
+    (NyxLCLInputText(TCustomEdit(LGrid.Editor)) = LDraft) and
+    CaptureNyxLCLSelection(TCustomEdit(LGrid.Editor)).SameRange(LDraftSelection),
     'the exact dormant draft resumes after inspection');
   SendMessage(LGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
   Pump;
@@ -780,6 +855,7 @@ begin
     Pump;
     Check((LManager.Presenter <> nil) and LManager.Presenter.IsOpen,
       'ordinary Columns popup opens');
+    ColumnNames(LManager);
     Check(not LManager.Observation.ColumnAt(3).IsVisible,
       'hidden authored field remains discoverable for reveal');
     ColumnClick(LManager, NyxColumnIdentity(NyxTextField('command')), ncaaShow);

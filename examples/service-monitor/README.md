@@ -50,9 +50,11 @@ and the saved project defaults remain unchanged. This is sample data only.
 The saved companion contains the editable callback bodies, typed state bindings
 and ordinary Nyx menu declaration. Browser input and native widget-message
 journeys exercise the same exported source at desktop and compact widths.
-Native compiler-service cold builds currently hit their60-second budget; the
-separate generated native consumer passes. See WORK.md and compile service01
-for that remaining delivery gate.
+The actual compiler-service native build and its admitted executable now pass
+desktop/compact checks. Compilation and saved-constructor execution have separate
+host budgets; defaults are five minutes and one minute respectively. Storage
+latency can still vary, and no compiler-cache speedup is claimed. See WORK.md and
+compile service01 for current evidence and remaining service/quality work.
 
 ## Live inspection
 

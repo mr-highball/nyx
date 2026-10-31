@@ -5,6 +5,18 @@
 
 **Copy and recovery return — 2026-10-30:**
 
+The ordinary saved Service actions application now qualifies arrangement/reset
+with an active filter and exact unfinished Unicode draft/selection at desktop
+and compact browser sizes. Its repeated Columns commands/inputs now identify
+their title and exact field through the existing AccessibleName contract, while
+keeping short captions. Original browser form/native saved consumers fail the
+new name assertions; current full browser controls pass1575/1574 and the public
+saved-source native application passes134 per width with clean heaps. An older
+compact context-driver coordinate is repaired by real non-focusing horizontal
+scroll, retaining all original assertions and adding selection/data guards.
+The separate full native pointer consumer still cannot read the Windows cursor;
+no pointer/AT/full original criterion is accepted. See current WORK.md evidence.
+
 The subsequent wait investigation retains the earlier failures and confirms
 actual compiler/storage latency. Trusted host policy is now wired independently
 of request authority, defaults stay unchanged and lifecycle checks pass174 with

@@ -9,7 +9,81 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Compiler wait investigation — 2026-10-30
+## Current work — Table preference/reset journey — 2026-10-30
+
+Previous goal turn: verified PROGRESS, pushed35fe6776 with exact remote match.
+Root remains SOLO. Return to workbench03's original W2/criterion5 ownership,
+reset and lifecycle outcome. Existing named move-column and native/browser
+rebind consumers already cover their scoped contracts; do not duplicate those
+APIs or fixtures. The next result is the ordinary saved Service actions
+application's arrangement/reset workflow with an active filter and unfinished
+Unicode edit, including peer independence and exact preserved source/defaults.
+
+A fresh retained Pascal MCP client imports the unchanged23314-byte project into
+its own temporary review and builds its actual browser application. Ordinary
+1280x900/390x844 input sets the Running filter, edits Pending/Unicode text without
+accepting it, reveals/moves/resizes/unpins columns and resets them. Global reset
+retains the filter, raw accepted data and exact draft/selection; order-only and
+per-column resets preserve the other axis. The actual selected text after the
+supplementary character stays at DOM UTF-16 offsets11..18. A fresh application
+retains all four rows while the addressed application still shows only two.
+
+That journey exposes generic repeated command/input names in the Columns form.
+The public Nyx compound now supplies short visible captions plus accessible names
+containing the title and exact field, including hidden fields and disabled
+commands. Global resets retain their ordinary names. No interface, saved policy,
+opaque command identity, capability or publication path changes. This uses the
+existing typed AccessibleName contract on both adapters.
+
+The unchanged browser form fails the added actual-platform naming assertion;
+the public native saved application independently fails its new naming assertion,
+freeing875779 blocks. Current full browser query/arrangement controls pass1575 at
+1280x900 and1574 at390x844 with empty error logs. The current public saved-source
+native consumer passes134 at each width, freeing8435910/8439651 blocks. Its
+actual native buttons keep their visible captions and receive field-qualified
+AccessibleName values. These are platform property/widget checks, not completed
+screen-reader or physical-device qualification.
+
+Native continuation finds an older compact consumer error: its non-focusing
+context command chooses x584 in a337-pixel client after pin suspension. The
+diagnostic rerun confirms focus=False, LeftCol0 and canonical column3, freeing
+4312574 blocks. The driver now performs an ordinary horizontal reveal without
+changing focus, and independently verifies exact selection/accepted data. All
+original visibility, context, copy and export assertions remain. Its draft now
+contains supplementary Unicode and checks the exact retained scalar selection.
+The full native pointer-driven query consumer separately stops at denied
+GetCursorPos access, freeing7425117 blocks; that original check is retained and
+no full native pointer pass is claimed. Owned native compiles have zero warnings.
+
+The updated MCP browser artifact is exercised at both widths using its unique
+semantic names, including active-filter reset with the exact unfinished draft.
+MCP also builds the current native application successfully. Accepted source
+6d5d6959/design027ac3d7 and outputda83d63c remain unchanged; no saved design is
+edited. The native job compiles303724 lines in41.6 seconds with fresh units; this
+is compiler success, not a newly executed native artifact/physical-input claim.
+The saved-source consumer above owns current native widget behavior evidence.
+The six-window semantic export matches all23314 original project bytes. All nine
+logical project states/history availability and27 protected files remain exact.
+The25-operation transport closes its temporary review and frees278899 blocks;
+all owned jobs/readers are joined. Temporary application tabs close and the
+browser viewport resets. QA65824 and LAN46632 remain at their fixed slots; no LAN
+payload update is claimed.
+Evidence: table-preferences-return-01 (transport-01, before-02/03/04, after-05/06,
+context-07, after-08 and current/independent browser captures). All new artifacts
+and TEMP/TMP stay on the external volume. Final screenshot review catches a
+viewport-driver mismatch: an attempted desktop return captured the still-compact
+application, and the earlier full desktop run measured1280x720. Those receipts
+remain unchanged. A fresh selected application measures1280x900 and repeats the
+exact filtered reset/draft/range journey; a separate measured1280x900 full browser
+run passes1575. Evidence: measured-wide-13 and browser-measured-wide-14. Original
+W1/W2 and target/quality
+criteria remain open; no task completion or percentage is assigned. Reassessment
+returns to the ranked Studio journey and its retained
+[splitter regression](TODO/NS-2_split-platform_02.md), rather than another column
+manager, timing or header variant. Preserve the native cursor-access failure and
+all original workbench finish lines.
+
+## Previous work — Compiler wait investigation — 2026-10-30
 
 Previous goal turn: verified PROGRESS, pushed8aed6e14 with exact remote match.
 Root remains SOLO. The wait investigation and current-source cold MCP build now

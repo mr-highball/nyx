@@ -1133,6 +1133,14 @@ renderer supplies the target factory and its original readonly input lifetime;
 the manager uses the existing view-owned preferences and prepared publications.
 No additional preferences, collection or query store is created.
 
+Each column's compact button and field captions have a contextual accessible
+name, for example `Set width: Service (name)` and
+`Pinned edge: Status (status)`. The exact field distinguishes duplicate authored
+titles; an empty title falls back to its field name. Browser focus controls and
+native `AccessibleName` receive the same text. Global reset actions keep their
+ordinary names. This changes presentation metadata only: command identities,
+capabilities, preference ownership and saved column defaults are unchanged.
+
 Retain the view's exact launch capture separately from the detached form:
 
 ```pascal

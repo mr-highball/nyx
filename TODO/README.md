@@ -3,6 +3,17 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The ordinary saved workbench now preserves its active filter and exact Unicode
+draft/selection through runtime column changes and reset at both browser widths.
+Column commands/inputs identify their exact fields through the existing typed
+accessible-name contract. Full browser controls pass1575/1574; the public saved
+native application passes134 per width with clean heaps. Both MCP target builds
+succeed and the complete saved project remains byte-identical. Nine projects and
+27 protected files remain exact. The separate native pointer consumer still hits
+denied cursor access; full W1/W2/AT/target criteria stay open. Return to the ranked
+[Studio journey](NS-4_studio-slice_01.md) and its retained
+[splitter regression](NS-2_split-platform_02.md); stop manager/header variants.
+
 The current native cursor repair passes296 Service monitor checks per width and
 the retained1904/1893 full native table-input checks, with clean heaps. Showing
 lazy handles no longer invents selection or adopts the wrong pinned field.

@@ -2889,6 +2889,74 @@ var
     LObservation := LManager.Observation;
   end;
 
+  { Read the actual focusable platform faces, independently of the descriptor.
+    Repeated short captions need their typed field context when reached by
+    keyboard, accessibility clients or a semantic browser caller. }
+  procedure CheckColumnNames;
+  var
+    LColumn: TNyxColumnLayoutEntry;
+    LIdentity: TNyxColumnIdentity;
+    LCaption: TNyxText;
+    LContext: TNyxText;
+    LIndex: Integer;
+
+    procedure Named(const AID, AExpected: TNyxText; AInput: Boolean);
+    {$ifdef PAS2JS}
+    var
+      LControl: TJSHTMLElement;
+    {$else}
+    var
+      LControl: TControl;
+    {$endif}
+    begin
+
+      if AInput then
+      begin
+        LControl := LFormRenderer.InputFor(AID);
+      end
+      else
+      begin
+        {$ifdef PAS2JS}
+        LControl := LFormRenderer.ElementFor(AID);
+        {$else}
+        LControl := LFormRenderer.ControlFor(AID);
+        {$endif}
+      end;
+      Check(LControl <> nil, 'column context reaches its real platform control');
+      {$ifdef PAS2JS}
+      Check(LControl.getAttribute('aria-label') = AExpected,
+        'browser column command/input names identify their exact field');
+      {$else}
+      Check(TNyxText(LControl.AccessibleName) = AExpected,
+        'native column command/input names identify their exact field');
+      {$endif}
+    end;
+
+  begin
+    for LIndex := 0 to LObservation.Count - 1 do
+    begin
+      LColumn := LObservation.ColumnAt(LIndex);
+      LIdentity := LColumn.Column.Identity;
+      LCaption := LColumn.Column.Title;
+
+      if LCaption = '' then
+      begin
+        LCaption := LIdentity.Name;
+      end;
+      LContext := LCaption + TNyxText(' (') + LIdentity.Name + TNyxText(')');
+      Named(NyxColumnArrangementActionID(NyxColumnArrangementEditorID,
+        LObservation, LIdentity, ncaaMoveEarlier), 'Move earlier: ' + LContext, False);
+      Named(NyxColumnArrangementActionID(NyxColumnArrangementEditorID,
+        LObservation, LIdentity, ncaaApplyWidth), 'Set width: ' + LContext, False);
+      Named(NyxColumnArrangementActionID(NyxColumnArrangementEditorID,
+        LObservation, LIdentity, ncaaApplyPin), 'Set pinned edge: ' + LContext, False);
+      Named(NyxColumnArrangementFieldID(NyxColumnArrangementEditorID,
+        LObservation, LIdentity, ncafWidth), 'Width in logical pixels: ' + LContext, True);
+      Named(NyxColumnArrangementFieldID(NyxColumnArrangementEditorID,
+        LObservation, LIdentity, ncafPin), 'Pinned edge: ' + LContext, True);
+    end;
+  end;
+
   procedure ClickAction(const AID: TNyxText);
   begin
     LFormRenderer.Reveal(AID, niRuntime);
@@ -3582,6 +3650,7 @@ begin
   Launch;
   {$ifdef PAS2JS}await(ArrangementFrame);{$endif}
   Resolve;
+  CheckColumnNames;
   Check(FViews[0].Store.Snapshot = LData,
     'physical manager launch does not commit unfinished cell text');
   {$ifdef PAS2JS}

@@ -237,7 +237,10 @@ function NyxColumnArrangementFieldID(const AEditorID: TNyxText;
   buttons. EVERY field remains listed, including hidden fields. Resets stay
   available when commands are disabled; authored policy governs new overrides.
   The list shows complete preference order, including hidden reorder barriers;
-  actual pin groups retain that order within each group. No data is changed. }
+  actual pin groups retain that order within each group. Compact visible
+  captions have accessible names containing both the column title and exact
+  field, so keyboard/semantic clients retain context even for duplicate titles.
+  No data is changed. }
 function NewNyxColumnArrangementEditor(const AID: TNyxText;
   const AObservation: TNyxColumnLayoutObservation): INyxCard; overload;
 { Reconstruct against the draft's EXACT current baseline. After accepting an
@@ -833,13 +836,20 @@ function NewNyxColumnArrangementEditor(const AID: TNyxText;
   const AObservation: TNyxColumnLayoutObservation;
   const ADraft: TNyxColumnArrangementDraft): INyxCard;
 var
-  LEditor, LFieldCard: INyxCard;
+  LEditor: INyxCard;
+  LFieldCard: INyxCard;
   LRow: INyxRow;
   LEntry: TNyxColumnLayoutEntry;
   LField: TNyxColumnIdentity;
   LPreferences: TNyxColumnPreferences;
-  LPosition, LCanonical: Integer;
-  LPrefix, LCaption, LWidth, LPinText, LBaseline: TNyxText;
+  LPosition: Integer;
+  LCanonical: Integer;
+  LPrefix: TNyxText;
+  LCaption: TNyxText;
+  LAccessibleColumn: TNyxText;
+  LWidth: TNyxText;
+  LPinText: TNyxText;
+  LBaseline: TNyxText;
   LCanShow: Boolean;
 
   procedure Button(const AParent: INyxControl;
@@ -856,7 +866,8 @@ var
     else
     begin
       LButton := NewNyxButton(NyxColumnArrangementActionID(AID, AObservation, LField, AAction));
-      LButton.Configure.Extension(CArrangementField, LField.ToData.ToJSON).Done;
+      LButton.Configure.Extension(CArrangementField, LField.ToData.ToJSON)
+        .AccessibleName(ACaption + TNyxText(': ') + LAccessibleColumn).Done;
     end;
     LButton.Configure.Text(ACaption).Enabled(AEnabled)
       .PartName(NyxPart(CArrangementActions[AAction]))
@@ -929,6 +940,10 @@ begin
     begin
       LCaption := LField.Name;
     end;
+    { Titles are user text and may repeat. The exact field disambiguates each
+      focusable command without exposing an opaque control ID or changing its
+      short visual caption. These copied strings retain no live schema/view. }
+    LAccessibleColumn := LCaption + TNyxText(' (') + LField.Name + TNyxText(')');
     LFieldCard := NewNyxCard(LPrefix);
     LFieldCard.Configure.Layout(nlColumn).Gap(6).Padding(8).Done;
     LFieldCard.Add(NewNyxLabel(LPrefix + '-title').Configure.Text(LCaption).Done);
@@ -957,6 +972,7 @@ begin
     end;
     LRow.Add(NewNyxSelect(NyxColumnArrangementFieldID(AID, AObservation, LField, ncafPin))
       .Configure.PartName(NyxPart('pin')).Text('Pinned edge')
+      .AccessibleName(TNyxText('Pinned edge: ') + LAccessibleColumn)
       .Items(CPinCaptions[ncpNone] + #10 + CPinCaptions[ncpStart] + #10 + CPinCaptions[ncpEnd])
       .Value(LPinText).Enabled(nclfPinning in LEntry.Features).Done);
     Button(LRow, ncaaApplyPin, 'Set pinned edge', nclfPinning in LEntry.Features);
@@ -969,6 +985,7 @@ begin
     end;
     LRow.Add(NewNyxInput(NyxColumnArrangementFieldID(AID, AObservation, LField, ncafWidth))
       .Configure.PartName(NyxPart('width')).Text('Width in logical pixels')
+      .AccessibleName(TNyxText('Width in logical pixels: ') + LAccessibleColumn)
       .Placeholder('Use authored sizing').Value(LWidth).Enabled(nclfResize in LEntry.Features).Done);
     Button(LRow, ncaaApplyWidth, 'Set width', nclfResize in LEntry.Features);
     Button(LRow, ncaaDefaultWidth, 'Restore default width', LEntry.HasWidth);
