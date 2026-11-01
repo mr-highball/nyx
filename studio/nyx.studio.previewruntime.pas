@@ -766,6 +766,8 @@ var
   LSlot: TNyxStudioPreviewSlot;
   LMount: TPreviewMount;
   LContext: TPreviewContext;
+  LViewFence: INyxPublicationReadiness;
+  LRouteFence: INyxPublicationReadiness;
 begin
   LSlot := Port.Owner;
 
@@ -793,10 +795,15 @@ begin
   Pending := LPlan;
   LSlot.FReservation := LPlan;
 
-  if not Supports(LPlan.FView, INyxPublicationReadiness, LPlan.FViewFence) then
+  { Publish each queried facet from an owning local. This keeps generated
+    out-parameter finalization local; the plan and mount retain their own
+    participant facets explicitly through preparation and retirement. }
+
+  if not Supports(LPlan.FView, INyxPublicationReadiness, LViewFence) then
   begin
     raise ENyxApplicationContext.Create('Preview source requires final event readiness');
   end;
+  LPlan.FViewFence := LViewFence;
   Scheduler.RequireUI;
   LPlan.CheckLocal;
 
@@ -825,10 +832,11 @@ begin
     LMount.Preparation := PrepareNyxViewFlowRoutes(ADocument, ARoot, Events,
       LPlan.FView, LMount.ContextLease, nil, LMount.Routes);
 
-    if not Supports(LMount.Preparation, INyxPublicationReadiness, LMount.Fence) then
+    if not Supports(LMount.Preparation, INyxPublicationReadiness, LRouteFence) then
     begin
       raise ENyxApplicationContext.Create('Preview routes require final readiness');
     end;
+    LMount.Fence := LRouteFence;
     LPlan.CheckLocal;
   end;
   Result := LLease;

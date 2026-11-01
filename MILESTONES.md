@@ -30,6 +30,17 @@ browser input/captures. Existing coordinator/parity and Studio/saved-application
 gates remain; no task or north-star percentage closes. WORK owns the evidence
 and the return to DataToolbar's ordinary authoring01 browser journey.
 
+That ordinary browser journey now executes configuration, protected-input
+settings, preview, paired history and controlled-file Save/Open at both widths.
+Each exact saved project independently compiles and executes on browser and
+native. A shared renderer fix installs future event scopes after an explicit
+Unmount, preserving live Interact controls and revoked predecessors. WORK owns
+native/browser166 regression, ordinary Studio271/283 and82/86, exact saved
+application79/85 and36/32 per-target evidence, clean heaps and qualified limits.
+Full parent/parity/quality gates remain. After two batches without complete
+criterion closure, the reassessed next outcome returns to connected Tool Canvas
+browser input through its existing flow/resource/HTTP owners. No credit increases.
+
 Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)
 is accepted on2026-10-31. Complete admission and conservative target fallback
 remain, while supported status changes avoid unrelated setters. Both-target

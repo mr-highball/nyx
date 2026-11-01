@@ -4,6 +4,28 @@
 
 **Description:**
 
+**Browser Studio return — 2026-10-31:** Actual ordinary Studio now passes271/283
+at1280/390 through configuration, all four protected-input examples, preview,
+paired history and controlled-file Save/Open. The journey's own identical-width
+saved project independently compiles and passes85 browser application checks per
+width. The existing public MCP example passes82/86 ordinary Studio checks and32
+per own compiled-application width, with identical saved bytes. WORK owns exact
+source/artifact identities and console limits. Those exact browser-saved sources
+also pass79 default/36 imported native application checks per width, with four
+clean heaps and unchanged compiler/runtime guards. Separate default/imported
+compiler workloads establish no general performance improvement.
+
+This execution exposed and repaired shared empty-renderer event installation:
+Studio's deliberate Unmount before Interact left the future coordinator scope
+uninstalled, so retirement immediately cancelled its controls. The original
+standalone two-remount assertion fails before the fix; complete native/browser
+base166 per width now passes, with clean native heaps. The maintained test now
+services both editor transports, waits for observing acknowledgement and retains
+the actual successful Save/Open packet. Its maintained build stages the required
+Pascal source worker. These replace compiled-only browser evidence; physical,
+assistive, production performance and full coordinator/parity/authoring gates
+remain. No whole criterion/task or north-star percentage is accepted here.
+
 The binding/refusal return now reaches actual ordinary Inspector authoring,
 preview, exact history and real Save/Open for projected Search, protected Search,
 shared Search/Sort state and protected Sort. The shared schema now exposes the

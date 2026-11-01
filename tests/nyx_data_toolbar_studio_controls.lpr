@@ -132,7 +132,9 @@ var
   GCaseAfter: TNyxText;
   {$ifdef PAS2JS}
   GCore: TNyxAgentSession;
-  GExchange: TNyxTestEditorExchange;
+  { Borrow both independently owned Studio transports. The Studio destroys
+    them before this vector and their shared agent-session owner are cleared. }
+  GExchanges: array of TNyxTestEditorExchange;
   GStarted: Double;
   GSelectionSerial: Integer;
   {$else}
@@ -268,9 +270,18 @@ end;
 
 {$ifdef PAS2JS}
 function TWorkshopStudio.CreateEditorExchange: TNyxStudioEditorExchange;
+var
+  LExchange: TNyxTestEditorExchange;
 begin
-  GExchange := TNyxTestEditorExchange.Create(GCore);
-  Result := GExchange;
+  LExchange := TNyxTestEditorExchange.Create(GCore);
+  try
+    SetLength(GExchanges, Length(GExchanges) + 1);
+    GExchanges[High(GExchanges)] := LExchange;
+    Result := LExchange;
+  except
+    LExchange.Free;
+    raise;
+  end;
 end;
 {$else}
 procedure TFailureObserver.Failed(ASender: TObject; AException: Exception);
@@ -651,15 +662,45 @@ var
   LTarget: TQueryPresenter;
   {$ifdef PAS2JS}
   LInput: TJSHTMLInputElement;
+  LBinding: INyxDataToolbarBinding;
+  LHasBinding: Boolean;
   {$else}
   LInput: TControl;
   {$endif}
 begin
+  {$ifdef PAS2JS}
+  Check(not AView.DesignMode, 'the ordinary preview admits interaction before typing');
+  {$endif}
   LRows := AView.CollectionView(ATarget);
   Check(LRows <> nil, 'ordinary bound table is mounted');
   LSource := LRows.Store.Snapshot;
   Check((LSource.Count >= 2) and (LRows.Snapshot.Count = LSource.Count),
     'ordinary bound table starts with the complete source collection');
+  {$ifdef PAS2JS}
+  LHasBinding := Supports(AView.CoordinatorBinding(AToolbar), INyxDataToolbarBinding, LBinding);
+  document.body.setAttribute('data-toolbar-mount', NyxObject([
+    NyxField('present', NyxData(LHasBinding)),
+    NyxField('connected', NyxData(LHasBinding and LBinding.Connected)),
+    NyxField('kind', NyxData(AView.Root.Find(AToolbar).Kind)),
+    NyxField('runtimeID', NyxData(AView.Root.Find(AToolbar).ID))]).ToJSON);
+  Check(LHasBinding, 'the interactive preview installs the authored coordinator');
+
+  if not LBinding.Connected and Supports(LBinding, INyxDataToolbarQueryBinding, LQuery) then
+  begin
+    { Read-only observation retains the public lifetime refusal before Studio
+      cleanup; it never injects a query command into the failed input journey. }
+    try
+      LID := LQuery.QueryStatus;
+      document.body.setAttribute('data-toolbar-mount-status', LID);
+    except
+      on E: Exception do
+      begin
+        document.body.setAttribute('data-toolbar-mount-error', E.Message);
+      end;
+    end;
+  end;
+  Check(LBinding.Connected, 'the preview coordinator is connected before row selection');
+  {$endif}
   LSelected := NyxItem(LSource.Key, 'grace');
   { Seed selection through the public typed view command; this journey qualifies
     query controls, not a physical row-selection gesture. Filtering hides Grace
@@ -670,15 +711,29 @@ begin
   AView.Reveal(LID, niRuntime);
   {$ifdef PAS2JS}
   LInput := TJSHTMLInputElement(AView.InputFor(LID));
+  { Copied diagnostics distinguish authoring, mounting and event admission when
+    this same preview assertion fails. They never edit the model or a query. }
+  document.body.setAttribute('data-toolbar-search-intent',
+    GetNyxDataToolbarIntent(AView.Root.Find(AToolbar)).ToData.ToJSON);
+  Check(Supports(AView.CoordinatorBinding(AToolbar), INyxDataToolbarBinding, LBinding) and
+    LBinding.Connected, 'the preview mounts its configured toolbar coordinator');
   LInput.value := 'Ada';
   LInput.dispatchEvent(TJSEvent.new('input'));
+  document.body.setAttribute('data-toolbar-search-result', NyxObject([
+    NyxField('toolbar', NyxData(AToolbar)),
+    NyxField('target', NyxData(ATarget)),
+    NyxField('value', NyxData(LInput.value)),
+    NyxField('sameView', NyxData(AView.CollectionView(ATarget) = LRows)),
+    NyxField('query', LRows.QueryPolicy.ToData),
+    NyxField('connected', NyxData(LBinding.Connected))]).ToJSON);
   {$else}
   LInput := AView.InputFor(LID);
   Check(LInput is TCustomEdit, 'ordinary preview search input is mounted');
   TCustomEdit(LInput).Text := 'Ada';
   Application.ProcessMessages;
   {$endif}
-  Check(LRows.Snapshot.Count = 1, 'actual typed Search filters the visible table');
+  Check(LRows.Snapshot.Count = 1, 'actual typed Search filters the visible table; rows=' +
+    IntToStr(LRows.Snapshot.Count));
   Check(LRows.Selection.Contains(LSelected), 'query filtering preserves hidden selected membership');
   Check(Supports(AView.CoordinatorBinding(AToolbar), INyxDataToolbarQueryBinding, LQuery),
     'Studio-configured application exposes its specialized query context');
@@ -1242,7 +1297,7 @@ begin
   GFileLease := nil;
   GFiles := nil;
   {$ifdef PAS2JS}
-  GExchange := nil;
+  GExchanges := nil;
   FreeAndNil(GCore);
   {$endif}
   LDocument := nil;
@@ -1260,16 +1315,34 @@ end;
 
 {$ifdef PAS2JS}
 procedure Drive;
+var
+  LIndex: Integer;
+  LExchange: TNyxTestEditorExchange;
+  LArtifact: TJSHTMLElement;
+  LRequestPending: Boolean;
 begin
   try
+    { Each independent transport owns its own reply and scheduled tick. Servicing
+      completion alone would leave the editor's initial observation undelivered. }
+    for LIndex := 0 to High(GExchanges) do
+    begin
+      LExchange := GExchanges[LIndex];
 
-    if GExchange.RequestPending then
+      if LExchange.RequestPending then
+      begin
+        LExchange.Deliver;
+      end
+      else if LExchange.TickPending then
+      begin
+        LExchange.FireTick;
+      end;
+    end;
+    document.body.setAttribute('data-toolbar-stage', IntToStr(Ord(GStage)));
+    document.body.setAttribute('data-toolbar-checks', IntToStr(GChecks));
+    LRequestPending := False;
+    for LIndex := 0 to High(GExchanges) do
     begin
-      GExchange.Deliver;
-    end
-    else if GExchange.TickPending then
-    begin
-      GExchange.FireTick;
+      LRequestPending := LRequestPending or GExchanges[LIndex].RequestPending;
     end;
 
     if TJSDate.now - GStarted > 720000 then
@@ -1277,7 +1350,11 @@ begin
       raise Exception.Create('DataToolbar Studio timed out');
     end;
 
-    if GStudio.SourceBusy or GStudio.PresentationPending or not GStudio.SharedSourceSynchronized then
+    { A clock tick may just have posted the observation of a semantic selection.
+      Source synchronization alone cannot acknowledge that undelivered frame. }
+
+    if LRequestPending or GStudio.SourceBusy or GStudio.PresentationPending or
+      not GStudio.SharedSourceSynchronized then
     begin
       window.setTimeout(@Drive, 20);
       Exit;
@@ -1287,6 +1364,14 @@ begin
     if GFinished then
     begin
       Finish;
+      { Retain the exact ordinary Save/Open packet as inert text. A later,
+        independent compiler consumes this artifact, never a reconstructed
+        fixture or an in-memory export taken before the actual file journey. }
+      LArtifact := TJSHTMLElement(document.createElement('script'));
+      LArtifact.id := 'saved-project';
+      LArtifact.setAttribute('type', 'application/json');
+      LArtifact.textContent := GSaved;
+      document.body.appendChild(LArtifact);
       document.body.setAttribute('data-toolbar-studio', 'passed');
       document.body.setAttribute('data-toolbar-checks', IntToStr(GChecks));
     end
@@ -1299,8 +1384,14 @@ begin
     begin
       document.body.setAttribute('data-toolbar-studio', 'failed');
       document.body.setAttribute('data-toolbar-error', E.Message);
+
+      if GStudio <> nil then
+      begin
+        document.body.setAttribute('data-toolbar-source-message', GStudio.SourceCommands.Message);
+        document.body.setAttribute('data-toolbar-source-state', IntToStr(Ord(GStudio.SourceCommands.State)));
+      end;
       FreeAndNil(GStudio);
-      GExchange := nil;
+      GExchanges := nil;
       FreeAndNil(GCore);
       GFileLease := nil;
       GFiles := nil;
@@ -1394,6 +1485,8 @@ begin
     GStarted := TJSDate.now;
     GCore := TNyxAgentSession.Create(LPair);
     GStudio := TWorkshopStudio.Create;
+    Check(Length(GExchanges) = 2,
+      'ordinary Studio owns separate editing and completion transports');
     GStudio.Run(False);
     GStudio.ConnectAgents;
     Drive;

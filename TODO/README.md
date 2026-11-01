@@ -35,6 +35,17 @@ browser Studio/saved-application journey through the existing prerequisites;
 no full coordinator/parity/DataToolbar acceptance or new percentage follows.
 Do not start another table policy, generic query or source variant.
 
+The following ordinary browser Studio return now passes271/283 default and82/86
+public-MCP-example checks at1280/390, including actual paired history and controlled
+Save/Open. Each journey's own saved application compiles and executes85/32 browser
+checks per width, with identical-width saved bytes. A shared event-installation
+repair keeps remounted Interact controls live; complete base166 passes both
+targets/widths with clean native heaps. The exact browser-saved sources also pass
+79/36 native application checks per width, with four clean heaps. WORK records
+the mandatory two-batch reassessment and return to the existing connected Tool
+Canvas browser-input outcome. Original parent/parity/quality gates stay open;
+this adds no task or percentage credit.
+
 [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) is accepted
 on2026-10-31. Complete admission, copied typed changes and conservative target
 fallback retain ordinary bindings while avoiding unrelated setters. Actual

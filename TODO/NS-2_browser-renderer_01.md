@@ -4,6 +4,15 @@
 
 **Description:**
 
+The 2026-10-31 DataToolbar browser Studio return repairs prepared event installation
+after an explicit Unmount. An empty renderer must still install its admitted next
+event scope; otherwise its newly mounted controls retire immediately. The original
+remount assertion fails before the repair. Complete base166 checks now pass on
+both targets/widths, with clean native heaps. Actual Studio Save/Open and its own
+compiled browser application execute as recorded in WORK. Existing visibility,
+admission, cancellation and stale-generation guards remain; no full renderer or
+parity criterion is inferred from this bounded lifecycle repair.
+
 Current source shares explicit pending-image readiness and prepared canvas
 resource publication with LCL, including automatic application-port forwarding
 through staged renderers. Matching consumers, source companions and products

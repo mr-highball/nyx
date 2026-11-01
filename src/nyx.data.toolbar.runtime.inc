@@ -394,11 +394,33 @@ end;
 
 procedure TToolbarBinding.CheckFlags(AInstalled: Boolean);
 begin
+  { Keep lifetime refusals actionable for callers observing a mounted toolbar.
+    Each branch retains the same cancellation type and pre-mutation admission;
+    it names the actual failed boundary instead of conflating every lifetime. }
 
-  if FRevoked or FCleaned or (FGeneration = nil) or FGeneration.Cancelled or
-    (AInstalled and not FInstalled) then
+  if FRevoked then
   begin
-    raise ENyxDataToolbarCancelled.Create('Toolbar is dormant or retired');
+    raise ENyxDataToolbarCancelled.Create('Toolbar lifetime was revoked');
+  end;
+
+  if FCleaned then
+  begin
+    raise ENyxDataToolbarCancelled.Create('Toolbar lifetime was disconnected');
+  end;
+
+  if FGeneration = nil then
+  begin
+    raise ENyxDataToolbarCancelled.Create('Toolbar has no event generation');
+  end;
+
+  if FGeneration.Cancelled then
+  begin
+    raise ENyxDataToolbarCancelled.Create('Toolbar event generation was cancelled');
+  end;
+
+  if AInstalled and not FInstalled then
+  begin
+    raise ENyxDataToolbarCancelled.Create('Toolbar preparation was not installed');
   end;
 end;
 

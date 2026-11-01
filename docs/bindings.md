@@ -150,6 +150,10 @@ retains that owned store across a full remount; a failed candidate preserves its
 ownership. Browser design mode projects defaults without subscribing or
 writing application state.
 
+`Unmount` leaves a reusable empty renderer. Its next admitted render installs
+a fresh event generation before activating controls; retained commands from the
+displaced view stay revoked. Studio uses this same path when entering Interact.
+
 Edits and portable compound actions stage an independent runtime view. Typed
 wire parsing, enabled/visible/read-only rules, property constraints and store
 validators run before accepted mutation. A rejected edit restores physical values

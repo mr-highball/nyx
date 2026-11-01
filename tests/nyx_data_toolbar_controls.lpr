@@ -646,6 +646,49 @@ begin
   end;
 end;
 
+{ An explicit unmount leaves an empty renderer, as Studio does before entering
+  Interact. Its next prepared event generation must still install. Exercise two
+  remounts through ordinary controls while every displaced binding stays inert. }
+procedure RunRemount;
+var
+  LJourney: TJourney;
+  LFormer: INyxDataToolbarBinding;
+  LCurrent: INyxDataToolbarBinding;
+  LBefore: TNyxText;
+  LCount: Integer;
+  LPass: Integer;
+begin
+  LJourney := TJourney.Create;
+  try
+    LBefore := TNyxCodec.Encode(LJourney.Document);
+    LCount := LJourney.Rows('people-table').Store.Snapshot.Count;
+    for LPass := 0 to 1 do
+    begin
+      LFormer := LJourney.Toolbar('table-tools');
+      LJourney.Renderer.Unmount;
+      Check(not LFormer.Connected, 'explicit unmount retires the former toolbar');
+      LJourney.Renderer.Render(LJourney.Document, LJourney.Document.Pages[0], LJourney.Host);
+      LCurrent := LJourney.Toolbar('table-tools');
+      Check((LCurrent <> LFormer) and LCurrent.Connected,
+        'remount into an empty renderer installs the next live coordinator generation');
+      LJourney.TypeSearch('table-tools', 'Ada');
+      Check((LJourney.Rows('people-table').Snapshot.Count = 1) and
+        (LJourney.VisibleFirst('people-table') = 'Ada'),
+        'ordinary search remains functional after explicit unmount and remount');
+      LJourney.ClickClear('table-tools');
+      Check((LJourney.Rows('people-table').Snapshot.Count = LCount) and
+        (LJourney.InputText('table-tools', 'search') = '') and not LFormer.Connected,
+        'remounted Clear restores its baseline without reviving the displaced binding');
+      Check(TNyxCodec.Encode(LJourney.Document) = LBefore,
+        'remount and runtime input preserve exact authored defaults');
+    end;
+  finally
+    LCurrent := nil;
+    LFormer := nil;
+    LJourney.Free;
+  end;
+end;
+
 { Summary-only composition has no registered details-button role. Existing
   programmatic callers still open the managed surface at the collection, without
   needing to introduce a visible launcher or change their accepted input/query. }
@@ -683,6 +726,7 @@ begin
     GFailures := TFailures.Create;
     try
       Application.OnException := GFailures.Failed;
+      RunRemount;
       RunSummaryDetails;
       Run;
       RunBindingCases;
@@ -693,6 +737,7 @@ begin
     end;
     WriteLn('PASS ', GChecks, ' DataToolbar application checks');
     {$else}
+    RunRemount;
     RunSummaryDetails;
     Run;
     RunBindingCases;

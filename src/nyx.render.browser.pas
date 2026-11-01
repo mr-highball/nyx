@@ -1717,6 +1717,14 @@ begin
 
   if LGeneration = nil then
   begin
+    { An explicit Unmount already retired the old controls. A later admitted
+      candidate still needs its prepared event scope installed: otherwise its
+      observers remain staged and retirement cancels the adopted generation. }
+
+    if AEventView <> nil then
+    begin
+      AEventView.Install;
+    end;
     Exit;
   end;
   LGeneration.Current := False;

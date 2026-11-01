@@ -8447,6 +8447,17 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       }
       Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $output 'rtl.js')
       if ($DataToolbarStudio) {
+        # The ordinary browser Inspector submits paired edits to its Pascal
+        # source worker. Keep that worker beside the Studio consumer, with its
+        # matched embedded RTL; the page alone cannot exercise Configure/history.
+        $nyxToolbarResult = RunOwned $nyxPas2js @('-Mdelphi','-Tmodule','-Jirtl.js',
+          '-Fusrc','-Fustudio','-Fisrc',"-FE$nyxToolbarBrowser",
+          'studio/nyx_source_worker.lpr') 'compile-nyx_source_worker' 600 $false
+        $nyxToolbarResult | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (
+          Join-Path $nyxToolbarBrowser 'compile-nyx_source_worker-result.json') -Encoding utf8
+        if ($nyxToolbarResult.exit -ne 0 -or $nyxToolbarResult.timedOut) {
+          throw 'DataToolbar browser Studio source worker failed compilation'
+        }
         $output = Join-Path $nyxToolbarBrowser 'studio-generated'
         New-Item -ItemType Directory -Path $output | Out-Null
         $nyxToolbarResult = RunOwned $nyxPas2js ($nyxToolbarStudioModeFlags + @('-Mdelphi','-Tbrowser','-Jirtl.js',

@@ -9,7 +9,122 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — DataToolbar ordinary browser authoring return — 2026-10-31
+## Current work — Return to connected Tool Canvas browser input — 2026-10-31
+
+Outcome: PROGRESS frome6a89bfb. Root remains SOLO. The original DataToolbar
+browser authoring and same-save application return is delivered below. A shared
+renderer repair keeps Interact controls live after explicit Unmount. Default
+and public-MCP-example Studio histories/Save/Open now execute on both browser
+allocations; their own exact saved Pascal executes on both application targets.
+No whole original authoring/coordinator/parity criterion or task is accepted.
+
+Two consecutive batches now close no complete original criterion. Reassessment:
+the previous batch fixed compact query-panel placement; this batch fixes cancelled
+Interact scopes and replaces compiled-only authoring/application evidence. The
+remaining full Configure/Disable/Inherit/refusal, physical/assistive, performance
+and hard coordinator/parity acceptance still own their original scope. Stop
+DataToolbar, generic source/query and launcher variants at this useful result.
+
+Next bounded deliverable returns to ranked priority4, existing logic-components01
+criteria3/4 and its Tool Canvas consumer: qualify useful connected browser input
+and outputs in the public JSON Workshop. First inspect its current flow/resource/
+HTTP prerequisites, retained native and real-host evidence, then use the existing
+MCP-authored Workshop and maintained input consumers. Choose a concrete remaining
+network/resource-to-control journey or its demonstrated failure, not another
+standalone JSON/script/source or metadata proof. Preserve all original host,
+parity, quality and performance requirements. Do not create a new ordinary QA
+workspace while its nine protected project slots are occupied.
+
+All actual compiler/runtime jobs are terminal and joined, including77520 and20996;
+all owned browser tabs/Apps are closed. There is no source freeze. Packet
+data-toolbar-studio-browser-return-01 retains exact sources, original failures,
+all current output/heap receipts, viewport captures and saved artifacts. Fixed
+QA/LAN listeners, nine projects and configuration remain unchanged. New private
+runners, artifacts and process TEMP/TMP remain on E:. Preserve unrelated
+AGENTS/WORK operator edits and untracked1280/390. The broad goal remains active.
+
+## Qualified repair — Browser Studio and exact saved applications — 2026-10-31
+
+Previous goal turn: PROGRESS; e6a89bfb is pushed and remote-verified. Root remains
+SOLO. Follow original authoring01 criteria4/5 through its existing coordinator/
+parity prerequisites; their complete hard gates remain open. Current deliverable
+is the maintained ordinary browser Studio configuration/history/preview/Save/Open
+journey at1280/390, followed by independent compilation and execution of that
+journey's own exact saved source/design pair. Reuse its imported public MCP demo
+and original fixture/protected-input assertions. Do not create another recipe,
+generic query/source variant or ordinary workspace in the full QA registry.
+
+First execute the previously compiled-only consumer, retain the first concrete
+failure, and repair its actual owning boundary. Evidence must distinguish the
+controlled asynchronous test exchange/file-delivery seam from authenticated MCP,
+browser input, exact saved bytes and independently compiled application behavior.
+Use bounded authenticated MCP reads for semantic context, with an owned review
+only if useful composition is needed; preserve all nine user projects/listeners.
+Stop this batch at the integrated outcome or a demonstrated missing prerequisite.
+If no original criterion closes, reassess before a third consecutive batch.
+All new private runners, output and child TEMP/TMP stay on E:. Current source has
+no active compiler readers at entry; preserve unrelated AGENTS/WORK/1280/390 work.
+
+Current qualification packet: data-toolbar-studio-browser-return-01. Its initial
+consumer serviced only the second of Studio's two transports and advanced past
+an undelivered semantic selection. The maintained consumer now services both,
+waits for pending observations, retains bounded failure diagnostics and preserves
+the exact successful browser Save/Open packet as inert text for a separate build.
+The maintained DataToolbar Studio build target also stages its required Pascal
+source worker; its prior absence is retained as HTTP404 and an unchanged-pair
+Configure failure. No source-generator or saved-format workaround is introduced.
+
+Actual ordinary browser preview then exposes a shared renderer bug: a correctly
+configured, mounted toolbar has a cancelled event generation before row selection
+or typing. Studio deliberately unmounts before a fresh Interact mount. Browser
+Clear skipped the prepared event-view Install when no displaced generation
+remained; retirement then cancelled that adopted future scope. The common empty
+Clear path now installs the admitted next event view. A meaningful two-remount
+regression fails on the original renderer and passes all166 base checks on the
+repaired browser at explicit1280/390 allocations and native at both widths, with
+4108488/4146692 allocated blocks completely freed. Displaced bindings stay inert;
+real Search/Clear work and authored defaults remain exact.
+
+Public toolbar cancellation messages now identify the failed lifetime boundary
+without changing their exception type or admission. The earlier native147 runs
+also pass both widths with clean heaps. Explicit local interface-facet ownership
+in the preview source passes the existing57 native/browser ownership checks,
+with2354978 native blocks completely freed. That local-facet experiment did NOT
+resolve the toolbar defect; the empty-renderer event installation is the actual
+repair. Original failed outputs and generated code remain retained separately.
+
+The repaired ordinary browser Studio journeys pass271/283 at1280/390, including
+all four protected-input examples, preview, paired history and controlled-file
+Save/Open. Both widths save identical59949-byte projects. Their own independently
+compiled browser application passes85 per width. The existing public MCP example
+also passes82/86 ordinary Studio checks and32 per compiled-application width;
+its15233-byte saves match exactly across widths and match the retained earlier
+native producer's project hash. These are exact artifacts from the file journey,
+not an earlier fixture export. Complete source, values, failures and console
+receipts remain in the packet. Current worker recompilation has exactly the same
+SHA256 as the worker used throughout; no mixed worker rollout or rerun is needed.
+
+All browser Apps/tabs are now closed. Initial compiler/native jobs and browser
+builders are terminal and joined, including9167,4098,66802,5941,69551,34560 and81104.
+The extra native builds of those exact browser-saved sources now pass79 default
+and36 imported checks per width, with four complete clean heaps. Default frees
+all1275326/1281814 blocks; imported frees411928/412049. The default compiler reports
+179965 lines/1153.2s inside its unchanged1200s guard. The imported compiler reuses
+that same source snapshot's closed SDK cache and reports2085 lines/23.0s. All
+compiler/runtime receipts are successful within their original guards. These
+different workloads establish neither a comparative speedup nor production
+performance quality. Jobs77520/20996 are terminal and joined; no freeze remains.
+The bounded
+authenticated MCP session read reports primary revision1 and zero owned reviews;
+no design/project/listener mutation occurred; final read remains revision1.
+The controlled test exchange/file-delivery seam does not establish authenticated
+observing delivery, a physical picker/download or hardware/assistive quality.
+The earlier independently reproduced iframe MutationObserver error remains in
+some aggregate browser consoles. Default and imported saved pairs are exact
+across widths on both targets. Full original prerequisites, production budgets,
+physical/assistive quality and preserving Studio deployment remain open.
+
+## Previous checkpoint — DataToolbar ordinary browser authoring return — 2026-10-31
 
 Outcome: PROGRESS from8a225a34. Root remains SOLO. The concrete compact
 DataToolbar filter-panel defect is repaired in the shared library and both
