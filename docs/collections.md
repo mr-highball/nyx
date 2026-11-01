@@ -174,6 +174,41 @@ their registry through navigation. Runtime registry Clone retains current values
 and revisions in fresh stores with no observers. Retained registries/stores have
 no borrowed application/document/renderer pointer and may outlive those owners.
 
+Embedded canvases also retain private instance stores through navigation and
+remounts. The optional `INyxCollectionFragments` facet identifies logical nesting
+independently from widgets: `NyxCollectionFragmentContext` selects one typed
+`NyxCollectionFragment` name at each boundary. Built-in canvas renderers use the
+runtime canvas control ID followed by its item name. Nested canvases extend that
+path, so identical reusable descendant IDs in sibling items remain independent.
+Names retain exact Unicode/case; length-framed paths cannot collide through
+separators. Each name permits up to256 KiB UTF-8 to accommodate qualified runtime
+control IDs, and nesting permits32 boundaries. All ordinary and namespaced private
+stores share the existing1024 instance/key allowance.
+
+```pascal
+LCanvasScopes := NyxCollectionFragmentContext(LApplicationScopes,
+  NyxCollectionFragment('workspace'));
+LCardScopes := NyxCollectionFragmentContext(LCanvasScopes,
+  NyxCollectionFragment('first-card'));
+LPrivateNotes := LCardScopes.Resolve(
+  LNotesView.Scoped(csInstance), 'notes-instance');
+```
+
+Capture the root through an active application context on UI. Child resolvers
+retain only independent data and copied names; the root owns no child handles,
+so neither side retains a document, application or renderer. Retiring a physical
+fragment still revokes its callbacks/context before remounting. Captured stores
+can outlive it without granting execution authority. The root's one coordinated
+resource plan includes all resolved namespaces, even while they are offscreen;
+child resource participants return no duplicate plan. Unchanged resources retain
+runtime edits, and changed mapped rows update the existing private stores once.
+
+Alternative contexts without this optional facet return nil from the fragment
+helper. Existing direct mounts and `NewNyxEmbeddedCollectionContext` then retain
+their independent local scopes/default behavior. Hosts that need persistence
+across physical mounts can supply a logical namespace explicitly. This adds no
+saved wire fields or browser/LCL types to the portable collection contract.
+
 Authored defaults admit up to 64 collections and 8 MiB aggregate logical payload,
 including empty datasets' schema/default metadata. Replace at the count limit is
 permitted when the complete new payload fits. Each runtime store can grow within

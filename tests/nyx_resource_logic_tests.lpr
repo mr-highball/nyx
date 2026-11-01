@@ -145,6 +145,11 @@ var
   LRootPlan: INyxPreparedPublication;
   LFirstPlan: INyxPreparedPublication;
   LSecondPlan: INyxPreparedPublication;
+  LNamed: INyxCollectionContext;
+  LRepeated: INyxCollectionContext;
+  LNested: INyxCollectionContext;
+  LAlias: INyxCollectionContext;
+  LNamedRows: INyxCollection;
 begin
   LDefaults := NewNyxCollectionDefaults;
   LDefaults.Define(NyxCollection('scopes'), NyxCollectionSchema.Text(NyxTextField('name'), ''), []);
@@ -193,6 +198,36 @@ begin
     begin
       LSecondPlan.Retire;
     end;
+  end;
+  LNamed := NyxCollectionFragmentContext(LApplication, NyxCollectionFragment('Card 🌙'));
+  LRepeated := NyxCollectionFragmentContext(LApplication, NyxCollectionFragment('Card 🌙'));
+  LNamedRows := LNamed.Resolve(LSpec, 'same-reusable-owner');
+  Check(LRepeated.Resolve(LSpec, 'same-reusable-owner') = LNamedRows,
+    'separately captured exact logical paths retain one private store');
+  LNested := NyxCollectionFragmentContext(LApplication, NyxCollectionFragment('Card'));
+  Check(LNested.Resolve(LSpec, 'same-reusable-owner') <> LNamedRows,
+    'exact Unicode fragment names do not collapse into an ASCII spelling');
+  LNested := NyxCollectionFragmentContext(LApplication, NyxCollectionFragment('a'));
+  LNested := NyxCollectionFragmentContext(LNested, NyxCollectionFragment('b'));
+  LAlias := NyxCollectionFragmentContext(LApplication, NyxCollectionFragment('a1:b'));
+  Check(LNested.Resolve(LSpec, 'same-reusable-owner') <>
+    LAlias.Resolve(LSpec, 'same-reusable-owner'),
+    'a delimiter-containing name cannot alias a path of two logical boundaries');
+  Check(LApplication.Resolve(LSpec, 'same-reusable-owner') <> LNamedRows,
+    'an ordinary owner never aliases a named fragment with the same local owner');
+  Check(NyxCollectionFragmentContext(LFirst, NyxCollectionFragment('legacy')) = nil,
+    'an alternative legacy fragment without the optional facet keeps its old contract');
+  LRootPlan := PrepareNyxCollectionContextResources(LApplication,
+    LResources.Snapshot, NyxDefaultLocale, NyxDefaultLocale);
+  try
+    LFirstPlan := PrepareNyxCollectionContextResources(LNamed,
+      LResources.Snapshot, NyxDefaultLocale, NyxDefaultLocale);
+    Check(LFirstPlan = nil, 'persistent child contributes no duplicate resource reservation');
+    PublishNyxGroup([LRootPlan]);
+    Check(LRepeated.Resolve(LSpec, 'same-reusable-owner') = LNamedRows,
+      'root resource publication preserves the repeated logical scope identity');
+  finally
+    LRootPlan.Retire;
   end;
 end;
 

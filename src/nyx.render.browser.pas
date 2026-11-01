@@ -12775,6 +12775,7 @@ var
   LWorkspace: INyxCanvasWorkspace;
   LBinding: TNyxBrowserBinding;
   LResources: INyxApplicationResources;
+  LCollectionScopes: INyxCollectionContext;
 begin
   { The application port owns no renderer. Forward its optional prepared broker
     capability so ordinary saved canvases receive the same loaded publication
@@ -12806,9 +12807,17 @@ begin
     begin
       LWorkspace := NewNyxCanvasWorkspace(LID, NewNyxCanvasScene);
     end;
+    LCollectionScopes := nil;
+
+    if not FDesignMode and (FEmbeddedContext <> nil) then
+    begin
+      LCollectionScopes := NyxCollectionFragmentContext(
+        NyxApplicationCollectionContext(FEmbeddedContext),
+        NyxCollectionFragment(LBinding.FNode.ID));
+    end;
     LBinding.FCanvasView := MountNyxBrowserCanvasWorkspace(LWorkspace, ADocument,
       LBinding.FElement, FState, FTheme, @LBinding.SetupCanvas, FDesignMode,
-      FEmbeddedContext, FEmbeddedResolver, LResources);
+      FEmbeddedContext, FEmbeddedResolver, LResources, nil, LCollectionScopes);
     LBinding.FCanvasView.Constrain(NyxInteractionPolicy(LBinding.FNode).Enabled,
       NyxInteractionPolicy(LBinding.FNode).ReadOnly);
   end;

@@ -3,6 +3,14 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Live canvas collections](NS-2_canvas-collections_01.md) is accepted on2026-11-01
+for all four unchanged criteria. Ordinary Studio and exact saved applications
+combine with actual private/shared Table editing, navigation/remount, resource
+publication and retirement on browser/LCL at desktop/compact widths. Current
+lifecycle34/connected47/core26/preview57 and six clean native heaps are scoped
+evidence; broader canvas/Logic, physical/assistive, performance and observing
+delivery outcomes remain with their original owners. No duplicate credit follows.
+
 [Typed Table column-change callbacks](NS-1_column-events_01.md) is accepted
 on2026-10-31 for all five original criteria. Actual LCL sizing handlers now
 qualify the same MCP-authored application's typed resize payload, native width,

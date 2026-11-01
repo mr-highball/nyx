@@ -310,9 +310,12 @@ the graph switch after actual mounting. Both adapters queue an initial check,
 including native views that finish mounting before observation attaches. This
 does not rebuild the form or change graph execution, selection or saved history.
 
-Embedded collection views use a split scope resolver: application scope reaches
-the running application's stores; instance scope stays private to the fragment.
-Resource preparation updates each owner once. The optional
+Embedded collection views reach the application's shared stores while typed
+logical fragment namespaces retain private instance data through physical
+remounts. Identical reusable descendant IDs in sibling items remain independent.
+The root resource plan updates mounted/offscreen scopes once; child participants
+make no duplicate reservation. See [collection scopes](collections.md#authored-registries-and-runtime-stores).
+The optional
 `INyxApplicationCollectionContext` capability is revocable and owns no application.
 Alternative/legacy contexts without it retain standalone authored defaults;
 explicit hosts pass their scope context to `NewNyxApplicationContext`.
@@ -325,7 +328,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | Collections | Scalar-path filter/sort/map/page, grouped rows, first-by-key distinct, inner/left/right/full joins and exact decimal/row-count aggregates | Richer mapping/group-join/windowing recipes, production budgets and observing delivery |
 | Text | Exact two-input join, strict UTF-8 decode/encode and shared typed regex match/replace/extract with a declared portable grammar | Broader regex/Unicode semantics, split, trim/case, formatting and remaining encoding operations |
 | Files | Typed open/save forms/source/history; independent application/Studio host configuration; bounded byte snapshots/metadata; actual generated Win32/browser opening applications and scoped saves/downloads/picker writes; UI-authored conditional read routes | Broader filesystem operations, focused-view execution, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
-| Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
+| Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing, actual native/Fetch local-HTTP inputs and their Table applications; authenticated observed composition and execution of its exact exported source | HTTPS/CORS and broader network origins, tunable retry/cache, complete current-schema observing delivery |
 | Data / Flow | Saved typed row routes, Boolean step conditions, typed optional-input branch joins and skip provenance, public Nyx forms, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation and broader resource kinds; timer/debounce, racing/recovery/feedback and observing delivery |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory

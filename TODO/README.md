@@ -3,21 +3,31 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+[Live canvas collections](DONE/NS-2_canvas-collections_01.md) is accepted
+on2026-11-01 for all four original criteria. Typed persistent fragment scopes fix
+lost private data after navigation while retaining independent siblings/apps,
+exact Unicode, mounted/offscreen resource publication and revoked-port refusal.
+Current native/browser lifecycle34 and connected Workshop47 pass per1280/390;
+core26/preview57 and earlier ordinary Studio/exact saved-application evidence
+complete the scoped acceptance. WORK owns six clean native heaps, source/failure
+receipts and limits. Return to Logic components01's remaining useful workflows;
+broader canvas, physical/assistive, performance and delivery goals remain open.
+
 The real-host Resource Workshop now connects hosted resources/direct HTTP to
 JSON/query/Table on both targets and desktop/compact allocations. Authenticated
 MCP authors one undoable revision-aware group; ordinary Studio observes its change
 without reload, and the exact exported Pascal independently executes on browser/
 LCL. Explicit native startup recovery restores the nine retained QA projects.
-WORK owns resource-http01, preview repairs and remaining full inventory, instance/
-remount, host/cache, input/quality and performance gates. This advances M2/M3/M4;
+WORK owns resource-http01, preview repairs and remaining full inventory, broader
+canvas/creator, host/cache, input/quality and performance gates. This advances M2/M3/M4;
 no whole parent criterion/task or completion percentage closes.
 
-[Canvas collections01](NS-2_canvas-collections_01.md) now accepts original
+[Canvas collections01](DONE/NS-2_canvas-collections_01.md) previously accepted original
 criterion4: ordinary Resource Workshop Studio authoring, paired history, actual
 Save/Open and independent execution of that exact saved Pascal on both targets
 at desktop/compact widths. Its application/private collection repair and earlier
-scope evidence remain. Full instance/remount/resource qualification stays open;
-no whole task or percentage closes. WORK.md owns resource-studio01 and the return
+scope evidence remain. Full instance/remount/resource qualification was still open;
+no whole task or percentage closed at that checkpoint. WORK.md owns resource-studio01 and the return
 to real hosted input, HTTP-to-query/Table and observing delivery under the existing
 [Logic collection](NS-3_logic-components_01.md) owner.
 

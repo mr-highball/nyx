@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The [live canvas collection prerequisite](DONE/NS-2_canvas-collections_01.md) is
+accepted on2026-11-01. Actual sibling private data, shared application rows,
+navigation/remount, mounted/offscreen resources and retirement pass native/browser34
+per width. Current connected Workshop47, core26 and Studio preview57 retain graph,
+scope, legacy and ownership coverage; native heaps are clean. Earlier exact saved
+application/ordinary Studio evidence remains applicable. WORK owns source identities,
+failures and unchanged quality/performance limits. Return to this task's remaining
+operation/host/creator, toolbox/wiring, observing and production outcomes; no whole
+Logic criterion/task or percentage follows from its prerequisite's acceptance.
+
 The real-host Resource Workshop return now executes declared hosted JSON and a
 separate direct HTTP/strict UTF-8/JSON input through the same query/Table recipe.
 Native61/browser60 pass at both widths; the existing controlled47 remains on both
@@ -292,7 +302,7 @@ Initial coverage is organized by intent, retaining creator tags/descriptions:
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
 - [Portable resources](DONE/NS-1_resources_01.md).
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
-- [Live canvas collection controls](NS-2_canvas-collections_01.md).
+- [Live canvas collection controls](DONE/NS-2_canvas-collections_01.md).
 
 Tool Canvas consumes this task; it is not a cyclic prerequisite for standalone
 typed logic components. Graph/toolbox/runtime evidence remains required. Record

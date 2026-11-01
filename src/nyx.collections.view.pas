@@ -29,6 +29,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.bytes,
   nyx.resources,
   nyx.resource.context,
   nyx.resources.rows,
@@ -55,6 +56,9 @@ uses
 
 const
   NyxMaximumCollectionViewInstances = 1024;
+  { Logical boundaries can contain an already qualified runtime control ID. }
+  NyxMaximumCollectionFragmentNameBytes = 256 * 1024;
+  NyxMaximumCollectionFragmentDepth = 32;
 
 type
   INyxCollectionView = interface;
@@ -423,6 +427,36 @@ type
     property Collections: INyxCollections read GetCollections;
   end;
 
+  { Exact open identity of one logical embedding boundary. It contains no widget
+    or document pointer. Default/empty names refuse; at most256 KiB UTF-8 bytes are
+    admitted, preserving Unicode without folding, trimming or separator rules. }
+  TNyxCollectionFragmentRef = record
+  private
+    FName: TNyxText;
+    function GetName: TNyxText;
+  public
+    property Name: TNyxText read GetName;
+  end;
+
+  { Optional application-lifetime namespace. Child handles own only the independent
+    root resolver and a copied path, never the application or one another. Equal
+    paths reuse instance stores across remounts; distinct paths cannot merge.
+    The root prepares all namespaced stores once during resource publication.
+    Every path shares the existing1024 instance/key allowance; depth is at most32.
+    Runtime hosts must capture through an active UI context before using this. }
+  INyxCollectionFragments = interface(IInterface)
+    ['{B63C6580-1A3F-4113-8893-00F34F581101}']
+    function InFragment(const AReference: TNyxCollectionFragmentRef): INyxCollectionContext;
+    function GetFragmentScoped: Boolean;
+    property FragmentScoped: Boolean read GetFragmentScoped;
+  end;
+
+function NyxCollectionFragment(const AName: TNyxText): TNyxCollectionFragmentRef;
+{ Nil preserves alternative/legacy context behavior when the optional namespace
+  contract is absent. A present implementation must return an actual resolver. }
+function NyxCollectionFragmentContext(const AContext: INyxCollectionContext;
+  const AReference: TNyxCollectionFragmentRef): INyxCollectionContext;
+
 type
   { Source-aware detached admission, preserving the original interface/GUID. }
   INyxResourceCollectionContext = interface
@@ -495,6 +529,8 @@ function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
   independent instance stores even when reusable descendant IDs are identical.
   The application owns its shared resource preparation. This context validates
   and prepares only its private scopes, avoiding duplicate parent reservations.
+  An explicit INyxCollectionFragments child instead uses its root's persistent
+  namespaced stores and resource preparation. Legacy hosts retain local scopes.
   Neither context retains a document, renderer, application or raw UI receiver. }
 function NewNyxEmbeddedCollectionContext(const ADefaults: INyxCollectionDefaults;
   const AResources: INyxResourceContext;
@@ -1172,26 +1208,60 @@ type
       const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
   end;
 
+  { Forward publication identity; plans retain their independent context owner. }
   TContextPreparation = class;
+  { Two exact dimensions prevent collisions between a normal reusable owner and
+    a same-spelled owner nested under a canvas/fragment. Path framing is private. }
+  TCollectionOwner = record
+    Namespace: TNyxText;
+    Instance: TNyxText;
+  end;
+  { Application-owned stores and immutable seeds outlive physical renderers.
+    Namespaced and ordinary instance pairs share one admission/prepare owner. }
   TContext = class(TInterfacedObject, INyxCollectionContext, INyxResourceCollectionContext,
-    INyxPreparedResourceCollectionContext)
+    INyxPreparedResourceCollectionContext, INyxCollectionFragments)
   private
     FDefaults: INyxCollectionDefaults;
     FCollections: INyxCollections;
-    FOwners: array of TNyxText;
+    FOwners: array of TCollectionOwner;
     FKeys: array of TNyxText;
     FStores: array of INyxCollection;
     FSourceKeys: array of TNyxCollectionRef;
     FSourceRows: array of TNyxResourceRows;
     FPreparation: TContextPreparation; { weak; stage retains this independent context }
+    function ResolveWithin(const ASpec: TNyxCollectionViewSpec;
+      const AInstanceID, ANamespace: TNyxText): INyxCollection;
   public
     constructor Create(const ADefaults: INyxCollectionDefaults;
       const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
     function Resolve(const ASpec: TNyxCollectionViewSpec;
       const AInstanceID: TNyxText): INyxCollection;
     function GetCollections: INyxCollections;
+    function InFragment(const AReference: TNyxCollectionFragmentRef): INyxCollectionContext;
+    function GetFragmentScoped: Boolean;
     procedure ValidateResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
+    function PrepareResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+  end;
+
+  { A child resolver pins the data-only root while borrowing its private class
+    through that lease. The root never retains children, so no ownership cycle
+    forms. Resource preparation belongs to the root, including offscreen scopes. }
+  TFragmentContext = class(TInterfacedObject, INyxCollectionContext,
+    INyxCollectionFragments, INyxPreparedResourceCollectionContext)
+  private
+    FRoot: TContext;
+    FLease: INyxCollectionContext;
+    FPath: TNyxText;
+    FDepth: Integer;
+  public
+    constructor Create(ARoot: TContext; const APath: TNyxText; ADepth: Integer);
+    function Resolve(const ASpec: TNyxCollectionViewSpec;
+      const AInstanceID: TNyxText): INyxCollection;
+    function GetCollections: INyxCollections;
+    function InFragment(const AReference: TNyxCollectionFragmentRef): INyxCollectionContext;
+    function GetFragmentScoped: Boolean;
     function PrepareResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
   end;
@@ -1789,8 +1859,114 @@ begin
   Result := FCollections;
 end;
 
+function TNyxCollectionFragmentRef.GetName: TNyxText;
+begin
+
+  if FName = '' then
+  begin
+    raise ENyxCollection.Create('A collection fragment requires an exact nonempty name');
+  end;
+  Result := FName;
+end;
+
+function NyxCollectionFragment(const AName: TNyxText): TNyxCollectionFragmentRef;
+begin
+
+  if (AName = '') or (NyxUTF8ByteCount(AName) > NyxMaximumCollectionFragmentNameBytes) then
+  begin
+    raise ENyxCollection.Create('A collection fragment name requires1..262144 UTF-8 bytes');
+  end;
+  Result.FName := AName;
+end;
+
+function NyxCollectionFragmentContext(const AContext: INyxCollectionContext;
+  const AReference: TNyxCollectionFragmentRef): INyxCollectionContext;
+var
+  LFragments: INyxCollectionFragments;
+begin
+  Result := nil;
+
+  if Supports(AContext, INyxCollectionFragments, LFragments) then
+  begin
+    Result := LFragments.InFragment(AReference);
+
+    if Result = nil then
+    begin
+      raise ENyxCollection.Create('A supported collection fragment must return its resolver');
+    end;
+  end;
+end;
+
+constructor TFragmentContext.Create(ARoot: TContext; const APath: TNyxText; ADepth: Integer);
+begin
+  inherited Create;
+  FLease := ARoot;
+  FRoot := ARoot;
+  FPath := APath;
+  FDepth := ADepth;
+end;
+
+function TFragmentContext.InFragment(const AReference: TNyxCollectionFragmentRef): INyxCollectionContext;
+var
+  LName: TNyxText;
+begin
+  LName := AReference.Name;
+
+  if FDepth >= NyxMaximumCollectionFragmentDepth then
+  begin
+    raise ENyxCollection.Create('Collection fragment nesting exceeds32 boundaries');
+  end;
+  { Length framing makes names containing colons, slashes or digits unambiguous.
+    This opaque runtime key is not persisted or exposed as a source identifier. }
+  Result := TFragmentContext.Create(FRoot,
+    FPath + TNyxText(IntToStr(Length(LName))) + ':' + LName, FDepth + 1);
+end;
+
+function TContext.InFragment(const AReference: TNyxCollectionFragmentRef): INyxCollectionContext;
+var
+  LName: TNyxText;
+begin
+  LName := AReference.Name;
+  Result := TFragmentContext.Create(Self, TNyxText(IntToStr(Length(LName))) + ':' + LName, 1);
+end;
+
+function TContext.GetFragmentScoped: Boolean;
+begin
+  Result := False;
+end;
+
+function TFragmentContext.GetFragmentScoped: Boolean;
+begin
+  Result := True;
+end;
+
+function TFragmentContext.Resolve(const ASpec: TNyxCollectionViewSpec;
+  const AInstanceID: TNyxText): INyxCollection;
+begin
+  Result := FRoot.ResolveWithin(ASpec, AInstanceID, FPath);
+end;
+
+function TFragmentContext.GetCollections: INyxCollections;
+begin
+  Result := FRoot.GetCollections;
+end;
+
+function TFragmentContext.PrepareResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+begin
+  { The application's root plan already admits every namespaced store. A mounted
+    child participates without reserving or publishing that same data twice. }
+  Result := nil;
+end;
+
 function TContext.Resolve(const ASpec: TNyxCollectionViewSpec;
   const AInstanceID: TNyxText): INyxCollection;
+begin
+  Result := ResolveWithin(ASpec, AInstanceID, '');
+end;
+
+function TContext.ResolveWithin(const ASpec: TNyxCollectionViewSpec;
+  const AInstanceID, ANamespace: TNyxText): INyxCollection;
 var
   LIndex: Integer;
   LStore: INyxCollection;
@@ -1814,7 +1990,8 @@ begin
   for LIndex := 0 to Length(FStores) - 1 do
   begin
 
-    if (FOwners[LIndex] = AInstanceID) and (FKeys[LIndex] = ASpec.Key.Name) then
+    if (FOwners[LIndex].Instance = AInstanceID) and
+      (FOwners[LIndex].Namespace = ANamespace) and (FKeys[LIndex] = ASpec.Key.Name) then
     begin
       Exit(FStores[LIndex]);
     end;
@@ -1834,7 +2011,8 @@ begin
   SetLength(FOwners, LIndex + 1);
   SetLength(FKeys, LIndex + 1);
   SetLength(FStores, LIndex + 1);
-  FOwners[LIndex] := AInstanceID;
+  FOwners[LIndex].Namespace := ANamespace;
+  FOwners[LIndex].Instance := AInstanceID;
   FKeys[LIndex] := ASpec.Key.Name;
   FStores[LIndex] := LStore;
   Result := LStore;
@@ -1870,12 +2048,18 @@ var
   LApplication: INyxCollectionContext;
   LLocal: INyxCollectionContext;
   LContext: TEmbeddedCollectionContext;
+  LFragments: INyxCollectionFragments;
 begin
   LApplication := AApplication;
 
   if LApplication = nil then
   begin
     raise ENyxCollection.Create('Embedded collection context requires application scopes');
+  end;
+
+  if Supports(LApplication, INyxCollectionFragments, LFragments) and LFragments.FragmentScoped then
+  begin
+    Exit(LApplication);
   end;
   LLocal := NewNyxCollectionContext(ADefaults, AResources);
   LContext := TEmbeddedCollectionContext.Create;

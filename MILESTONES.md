@@ -3,22 +3,31 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+[Live canvas collections](TODO/DONE/NS-2_canvas-collections_01.md) is accepted
+on2026-11-01. Typed logical fragment namespaces preserve private data through
+physical remounts without merging sibling scopes or retaining application/widget
+owners. Mounted and offscreen resource changes publish once; revoked contexts
+remain inert. Current native/browser34/47/26/57 and earlier Studio/exact saved
+applications qualify the four scoped criteria. WORK owns source, heap and failure
+evidence. This advances M2/M3/M4; full canvas/Logic breadth, physical/assistive
+quality, production budgets and observing rollout remain open. No percentage is added.
+
 The real-host Resource Workshop now connects hosted resources/direct HTTP to
 JSON/query/Table on both targets and desktop/compact allocations. Authenticated
 MCP authors one undoable revision-aware group; ordinary Studio observes its change
 without reload, and the exact exported Pascal independently executes on browser/
 LCL. Explicit native startup recovery restores the nine retained QA projects.
-WORK owns resource-http01, preview repairs and remaining full inventory, instance/
-remount, host/cache, input/quality and performance gates. This advances M2/M3/M4;
+WORK owns resource-http01, preview repairs and remaining full inventory, broader
+canvas/creator, host/cache, input/quality and performance gates. This advances M2/M3/M4;
 no whole parent criterion/task or completion percentage closes.
 
-The Resource Workshop Studio return accepts canvas-collections01's original
+The earlier Resource Workshop Studio return accepted canvas-collections01's original
 criterion4: ordinary typed editing, unfinished input, paired history, Save/Open
 and the exact saved application's native/browser embedded Table journey at both
 allocations. Shared configuration/attachment repairs improve ordinary Tool Canvas
 use. WORK owns resource-studio01 and its qualified limits. This advances M2/M4;
 full collection-instance/remount, real HTTP, observing, quality and performance
-requirements remain. No whole task or north-star percentage closes.
+requirements remained at that checkpoint. No whole task or percentage closed then.
 
 The declared-resource Tool Canvas checkpoint adds a typed JSON operation and
 the public Resource Workshop. Actual embedded Table controls and the exact

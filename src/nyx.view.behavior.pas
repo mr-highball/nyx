@@ -36,6 +36,7 @@ type
   { One independently mounted authored fragment. The attachment owns only its
     subscriptions, scheduler, weak parent capability and revocable context port;
     no document, tree, renderer, widget or parent application is retained.
+    Optional logical collection scopes pin only independent data through remounts.
     Close BEFORE its physical renderer/store retires. All methods/final release
     belong to UI. Retained callback contexts report inactive and safely refuse
     after Close or parent lease revocation, without owning either host.
@@ -83,10 +84,13 @@ type
   observation. Parent supplies the actual application state/collection authority.
   Generation links both the current parent view and this item's event router,
   so removal, replacement, failed staging and navigation cannot deliver stale
-  graph output. Creator resolution remains lazy and explicitly host-supplied. }
+  graph output. Creator resolution remains lazy and explicitly host-supplied.
+  Optional collection scopes identify this logical fragment independently from
+  its physical attachment; no retained context can bypass lifetime revocation. }
 function BindNyxViewBehavior(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AEvents: INyxEvents; const AParent: INyxApplicationContext;
-  const AResolver: INyxLogicResolver = nil): INyxViewBehavior;
+  const AResolver: INyxLogicResolver = nil;
+  const ACollectionScopes: INyxCollectionContext = nil): INyxViewBehavior;
 { Pure effective-tree query for hosts without runtime authority. It distinguishes
   an ordinary/static fragment from executable declarations that must refuse
   rather than silently render inactive behavior. No callback factory is entered. }
@@ -102,7 +106,9 @@ type
     Active and every accessor require both lifetimes; the independent scheduler
     refuses worker access even after either port retires. Local Close revokes
     Base without cancelling or extending the parent's authority. Collection
-    scope capture follows that same gate and delegates to the parent capability. }
+    scope capture follows that same gate. The base lease carries any explicit
+    logical fragment resolver and releases it on Close; retained callback ports
+    cannot pin all former application data after their attachment retires. }
   TEmbeddedContext = class(TInterfacedObject, INyxApplicationContext,
     INyxApplicationCollectionContext)
   private
@@ -182,7 +188,8 @@ type
   public
     constructor Create(ADocument: TNyxDocument; ARoot: TNyxNode;
       const AEvents: INyxEvents; const AParent: INyxApplicationContext;
-      const AResolver: INyxLogicResolver);
+      const AResolver: INyxLogicResolver;
+  const ACollectionScopes: INyxCollectionContext);
     destructor Destroy; override;
     procedure Close;
     function GetContext: INyxApplicationContext;
@@ -247,7 +254,12 @@ end;
 function TEmbeddedContext.CaptureCollectionContext: INyxCollectionContext;
 begin
   RequireActive;
-  Result := NyxApplicationCollectionContext(FParent);
+  Result := NyxApplicationCollectionContext(FBase);
+
+  if Result = nil then
+  begin
+    Result := NyxApplicationCollectionContext(FParent);
+  end;
 end;
 
 function TEmbeddedContext.GetScheduler: INyxScheduler;
@@ -352,7 +364,8 @@ end;
 
 constructor TViewBehavior.Create(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AEvents: INyxEvents; const AParent: INyxApplicationContext;
-  const AResolver: INyxLogicResolver);
+  const AResolver: INyxLogicResolver;
+  const ACollectionScopes: INyxCollectionContext);
 var
   LResolver: INyxLogicResolver;
 begin
@@ -368,7 +381,8 @@ begin
   end;
   FScheduler := FParent.Scheduler;
   FScheduler.RequireUI;
-  FLease := NewNyxApplicationContext(FScheduler, ResolveState, ResolveCollections, ResolveGeneration);
+  FLease := NewNyxApplicationContext(FScheduler, ResolveState, ResolveCollections,
+    ResolveGeneration, ACollectionScopes);
   FContext := TEmbeddedContext.Create(FLease.Context, FParent, FScheduler);
   FGraphPort := TGraphContext.Create;
   FGraphContext := FGraphPort;
@@ -570,9 +584,10 @@ end;
 
 function BindNyxViewBehavior(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AEvents: INyxEvents; const AParent: INyxApplicationContext;
-  const AResolver: INyxLogicResolver): INyxViewBehavior;
+  const AResolver: INyxLogicResolver;
+  const ACollectionScopes: INyxCollectionContext): INyxViewBehavior;
 begin
-  Result := TViewBehavior.Create(ADocument, ARoot, AEvents, AParent, AResolver);
+  Result := TViewBehavior.Create(ADocument, ARoot, AEvents, AParent, AResolver, ACollectionScopes);
 end;
 
 end.

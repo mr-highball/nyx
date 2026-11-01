@@ -1,22 +1,30 @@
 # NS-2_canvas-collections_01 — Live collection controls inside canvas content
 
-[North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
+[North stars](../../MILESTONES.md) · [Task catalog](../README.md) · [Task flow](../../TASKFLOW.MD)
 
-Original criterion4 is accepted on2026-11-01. Resource Workshop executes ordinary
-native/browser Studio configuration, exact unfinished Unicode input/refusal,
-paired Undo/Redo and actual project Save/Open at1280/390. All saved constructors
-are identical and independently compile/execute the embedded Table journey on
-both targets. The preceding resource-logic01 scope checks and documented legacy
-default behavior remain applicable. WORK.md owns source identities, failures and
-the resource-studio01 evidence. Criteria1–3 and complete instance/remount/resource
-qualification remain open; the task is not DONE and no percentage is assigned.
+Accepted on2026-11-01 for all four unchanged criteria. Resource-studio01 supplies
+ordinary native/browser Studio configuration, unfinished Unicode input/refusal,
+paired history, Save/Open and execution of its exact saved constructors: criterion4.
+Canvas-collection-lifecycle01 completes criteria1–3. Actual sibling fragments with
+identical reusable descendant IDs retain distinct private stores through navigation,
+remount, mounted/offscreen resource changes and disposal. Native/browser34 pass
+at1280/390, including wrong-row refusal, unchanged-reload retention, exact Unicode,
+independent applications and revoked-port refusal. Current connected Resource
+Workshop47 retains event-graph rows/state, cancellation and newer-edit refusal on
+both targets/widths. Core26 and Studio preview57 pass on both targets; six final
+native heaps are clean. Browser allocations are measured1280x900/390x900. The
+typed optional namespace preserves alternative/default contexts and the existing
+instance budget; no saved wire/generator contract changes. WORK owns exact source
+and failure evidence. These are widget/DOM checks, not physical/assistive, full
+canvas breadth, production performance or observing-service rollout acceptance.
+No independent north-star percentage or duplicate credit is assigned.
 
 **Description:**
 
 Resource Workshop reproduces a shared browser/LCL defect: an embedded Table
 paints an empty renderer-owned registry while its event graph updates the live
 application registry. Scalar controls already use application state. This required
-prerequisite of [Logic components](NS-3_logic-components_01.md) must share the
+prerequisite of [Logic components](../NS-3_logic-components_01.md) must share the
 application's collection scope resolver without retaining its raw owner, resetting
 live stores, merging sibling instance scopes or changing standalone preview data.
 Keep reusable definitions and saved projects independent of runtime ownership.
@@ -40,5 +48,5 @@ No separate completion weight is assigned.
 
 **Blockers**
 
-- [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
-- [Scoped collections](DONE/NS-1_state-collections_01.md).
+- [Managed component interfaces](NS-1_component-interfaces_01.md).
+- [Scoped collections](NS-1_state-collections_01.md).

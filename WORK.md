@@ -9,34 +9,89 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Real resource/HTTP hosts and observing Studio return — 2026-11-01
+## Current work — Logic collection return after canvas lifecycle acceptance — 2026-11-01
 
-Previous goal turn: NO PROGRESS (requested synopsis only). Root remains SOLO.
-Resource-http01 qualifies actual hosted-resource/direct-HTTP input, authenticated
-semantic composition, live observing Studio and execution of its exact exported
-application. This is one batch since resource-studio01 accepted canvas-collections01
-criterion4 and reset the count to0: consecutive batches without another full
-criterion closure are1. No whole parent or north-star percentage closes. Stop
-descriptor, constructor, save/schema and source variants of this useful
-HTTP → JSON → query/Table outcome.
+Previous goal turn: PROGRESS (Resource/HTTP reviewed, committed and remote-verified
+as3b80e272). Root remains SOLO. Current turn: PROGRESS. The full unchanged
+canvas-collections01 prerequisite is accepted and moved to TODO/DONE. Earlier
+resource-studio01 supplies criterion4; canvas-collection-lifecycle01 completes
+criteria1–3. Consecutive batches without full criterion closure reset to0.
+No whole Logic/canvas parent or north-star percentage closes.
 
-Next complete canvas-collections01's remaining application/private-instance,
-navigation/remount and resource-publication outcomes through actual controls.
-Preserve source/history, wrong-row, cancellation and newer-edit assertions.
-Return to logic-components01 criteria3/4/6/7 for remaining operation/creator,
-host/cache, input/quality and production-budget scope. Broader physical/assistive
-parity and runtime client/mount MCP navigation remain open. The resolver remains
-deferred; do not create a tenth ordinary QA workspace.
+Return to logic-components01's original coverage and user-facing toolbox/creator
+workflow criteria. Start with bounded semantic discovery and ordinary Nyx toolbox
+inspection to identify the first missing useful operation/configuration journey;
+preserve existing graph/source/history and actual host outcomes. Do not repeat
+scope, descriptor, constructor or save/schema variants after this accepted result.
+Full operation breadth, host/retry/cache coverage, wiring, observing delivery,
+physical/assistive quality and production budgets remain under their existing
+owners. The resolver remains deferred; helpers stay idle and no tenth ordinary
+QA workspace is created.
 
-The fixed QA slot is ready after actual twenty-input native recovery. Nine
-ordinary projects and their exact27 retained runtime/project files remain;
-owned reviews are retired. Browser preview/review assets are separately rebuilt
-and staged. Backend identity predates later packager-only/review-program changes;
-do not describe the entire working tree as one compiled server snapshot.
-The LAN listener remains unchanged. New scratch/runners/artifacts and child
-TEMP/TMP remain on E:.
+The fixed QA host retains its recorded Resource/HTTP backend source/binary hashes
+and separately staged browser preview/review assets; this lifecycle repair is not installed
+there or on LAN. Tests use isolated static paths on the existing QA listener,
+with no ordinary document mutation. All compiler/test readers are joined and
+owned browser tabs are closed. Existing projects, configuration and listener
+owners remain; new artifacts/runners/child TEMP/TMP stay on E:.
 Preserve unrelated AGENTS/WORK operator edits and untracked1280/390 directories.
 The broad goal remains active; no user input or external blocker is required.
+
+## Accepted checkpoint — Persistent canvas collection instance lifecycle — 2026-11-01
+
+The actual browser Table reproduction edits one private note and one shared row
+inside two canvas cards using the same nested reusable definition. Private/shared
+editing and sibling/application isolation succeed, but navigation remount replaces
+the first private store. The failure remains in canvas-collection-lifecycle01.
+The library now supplies typed INyxCollectionFragments/fragment references on the
+independent application resolver. Length-framed nesting and separate namespace/
+owner dimensions preserve logical identities without delimiter collisions.
+All private pairs share the original1024 limit; names accommodate qualified
+runtime IDs and nesting is bounded. No document, widget, application back-reference
+or new persistence/generation field is added. Legacy alternatives retain their
+explicit per-fragment/default behavior.
+
+Both renderers pass logical control/item namespaces through revocable behavior.
+The existing base lease owns the scoped resolver and clears it on retirement;
+disconnected canvases drop their extra lease too. Retained callback contexts
+cannot pin the former runtime data or bypass revocation. Explicitly captured
+stores/resolvers remain independent data objects and may outlive their owners.
+One root resource plan updates all resolved private scopes, including offscreen
+ones; child participants make no duplicate reservation.
+
+Final actual lifecycle34 passes native/browser at1280/390. Browser frames measure
+1280x900/390x900. Tests include real editor callbacks/DOM changes, exact Unicode,
+shared/private/peer isolation, navigation/remount, mounted/offscreen localization,
+wrong-row refusal, unchanged-reload retention, late editing, revoked application/
+fragment ports and post-disposal stores. Current connected Resource Workshop47
+passes each target/width with its event graph, rejected rows, cancellation/newer
+edits and locale/retirement assertions. Core26 adds exact paths, Unicode, delimiter
+collision, ordinary-owner separation, legacy fallback and single root preparation.
+Studio preview57 passes on both targets; its current source captures the same
+independent resolver behind Acquire/GetState UI/revocation checks. All six final
+native heaps are clean. Owned compiler warnings are zero; installed browser
+Classes retains its seven per compilation. The final lifecycle/connected/preview
+browser observation reports no new console errors since that cohort began.
+Earlier wrapper MutationObserver and initial harness errors remain separately;
+no blanket browser-console, physical input or visual/accessibility claim follows.
+
+The initial pas2js fixed-interface-array rejection, helper/DOM name collision,
+wrong sizing enum/allocation and missing native Classes import remain as harness
+failures. An older mixed native unit cohort fails in unchanged pager code; a
+fresh complete cohort compiles. Final test comparisons use typed UTF-8 constants
+and have no owned warnings. Requested browser viewport overrides left new tabs
+at1280x720, so sized frames supply actual allocation evidence. A final observer
+snapshot times out; the same tab then reports terminal passes without restarting
+or rerunning its application. Sources stay frozen while actual compiler readers
+run. Exact maintained-source hashes, build/run receipts and the inspected browser
+regression capture are retained with the packet.
+
+This accepts all four original canvas-collections01 criteria, retaining the
+resource-studio01 authoring/exact saved-application evidence. Broader canvas/Logic
+breadth, nested-canvas/creator journeys, physical/assistive quality, production
+budgets and observing-service delivery retain their original owners. The separate
+file-heavy release inventory check remains unfinished; no equivalent bulk rerun
+or cleanup workflow is started.
 
 ## Qualified checkpoint — Actual Resource/HTTP controls and observing recovery — 2026-11-01
 

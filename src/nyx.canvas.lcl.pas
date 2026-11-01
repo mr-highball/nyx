@@ -35,7 +35,7 @@ uses
   nyx.programs.declarations, nyx.programs.editing, nyx.logic.programs,
   nyx.canvas.navigation, nyx.canvas.navigation.sources,
   nyx.canvas.precision, nyx.canvas.precision.interaction,
-  nyx.resource.context, nyx.application.resources;
+  nyx.resource.context, nyx.application.resources, nyx.collections.view;
 
 type
   { Configure creator factories/events before each independent item renderer
@@ -75,7 +75,9 @@ type
   Nil preserves authored/default or explicit renderer-setup resource behavior.
   In design preview, optional AHostInput grants input only to explicitly selected
   host-owned item roots; application behavior stays paused. This managed policy
-  is retained until Disconnect and queried for each newly mounted lifetime. }
+  is retained until Disconnect and queried for each newly mounted lifetime.
+  Optional ACollectionScopes supplies the logical canvas namespace. Each named
+  item selects stable data independently from physical mount generations. }
 function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState = nil;
   ATheme: TNyxTheme = nil; ASetup: TNyxCanvasLCLRendererSetup = nil;
@@ -83,7 +85,8 @@ function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   const AContext: INyxApplicationContext = nil;
   const AResolver: INyxLogicResolver = nil;
   const AResources: INyxApplicationResources = nil;
-  const AHostInput: INyxCanvasHostInput = nil): INyxLCLCanvasWorkspaceView;
+  const AHostInput: INyxCanvasHostInput = nil;
+  const ACollectionScopes: INyxCollectionContext = nil): INyxLCLCanvasWorkspaceView;
 
 implementation
 
@@ -176,6 +179,7 @@ type
     FSetup: TNyxCanvasLCLRendererSetup;
     FHostInput: INyxCanvasHostInput;
     FParentContext: INyxApplicationContext;
+    FCollectionScopes: INyxCollectionContext;
     FResolver: INyxLogicResolver;
     { Retain the application's loader port, never its application. The caller
       owns Start/Stop; Disconnect revokes only this view's borrowed receiver. }
@@ -256,7 +260,8 @@ type
       ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
       ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-      const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput);
+      const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput;
+  const ACollectionScopes: INyxCollectionContext);
     destructor Destroy; override;
     function GetSurface: TWinControl;
     function RulerFor(AAxis: TNyxCanvasAxis): TWinControl;
@@ -420,7 +425,8 @@ constructor TCanvasView.Create(const AWorkspace: INyxCanvasWorkspace;
   ADocument: TNyxDocument; AHost: TWinControl; AState: TNyxState;
   ATheme: TNyxTheme; ASetup: TNyxCanvasLCLRendererSetup; ADesignMode: Boolean;
   const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-  const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput);
+  const AResources: INyxApplicationResources; const AHostInput: INyxCanvasHostInput;
+  const ACollectionScopes: INyxCollectionContext);
 var
   LHost: TControl;
   LRoot: TNyxNode;
@@ -439,6 +445,7 @@ begin
 
   FWorkspace := AWorkspace;
   FParentContext := AContext;
+  FCollectionScopes := ACollectionScopes;
   FResolver := AResolver;
   FResources := AResources;
   FDocument := NewNyxCanvasRenderContext(ADocument, AWorkspace.Node, LRoot);
@@ -538,10 +545,11 @@ function MountNyxLCLCanvasWorkspace(const AWorkspace: INyxCanvasWorkspace;
   ADesignMode: Boolean; const AContext: INyxApplicationContext;
   const AResolver: INyxLogicResolver;
   const AResources: INyxApplicationResources;
-  const AHostInput: INyxCanvasHostInput): INyxLCLCanvasWorkspaceView;
+  const AHostInput: INyxCanvasHostInput;
+  const ACollectionScopes: INyxCollectionContext): INyxLCLCanvasWorkspaceView;
 begin
   Result := TCanvasView.Create(AWorkspace, ADocument, AHost, AState, ATheme, ASetup,
-    ADesignMode, AContext, AResolver, AResources, AHostInput);
+    ADesignMode, AContext, AResolver, AResources, AHostInput, ACollectionScopes);
 end;
 
 procedure TCanvasView.RequireConnected;
@@ -584,6 +592,7 @@ var
   LRoot: TNyxNode;
   LSource: TNyxDocument;
   LDesignMode: Boolean;
+  LCollectionScopes: INyxCollectionContext;
 begin
   Result := TCanvasItemMount.Create;
   try
@@ -622,8 +631,15 @@ begin
 
     if not FDesignMode and (FParentContext <> nil) then
     begin
+      LCollectionScopes := nil;
+
+      if FCollectionScopes <> nil then
+      begin
+        LCollectionScopes := NyxCollectionFragmentContext(FCollectionScopes,
+          NyxCollectionFragment(AItem.Name));
+      end;
       Result.Behavior := BindNyxViewBehavior(Result.Document, LRoot,
-        Result.Renderer.Events, FParentContext, FResolver);
+        Result.Renderer.Events, FParentContext, FResolver, LCollectionScopes);
       Result.Renderer.ConfigureEmbeddedBehavior(Result.Behavior.Context, FResolver);
     end
     else if not FDesignMode and NyxViewRequiresBehavior(Result.Document, LRoot) then
@@ -1618,6 +1634,7 @@ begin
   FLeftRuler := nil;
   FreeAndNil(FChrome);
   FResources := nil;
+  FCollectionScopes := nil;
   FSnapshot := nil;
 end;
 
