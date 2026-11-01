@@ -65,7 +65,9 @@ type
     input port. No widget, renderer, raw node or application is retained.
     Preparation and runtime share identity; installed Retire drops only the
     prospective event-plan lease. Explicit Disconnect attempts every cleanup.
-    The last command receipt contains copied diagnostics, never execution rights. }
+    The last command receipt contains copied diagnostics, never execution rights.
+    Query-open requests supersede earlier work across launcher changes, including
+    reentry during focus restoration; old public calls keep their default anchor. }
   TToolbarBinding = class(TInterfacedObject, INyxDataToolbarBinding,
     INyxCoordinatorBinding, INyxDataToolbarQueryBinding,
     INyxPreparedCoordinator, INyxPublicationReadiness, INyxDataToolbarCommandFeedback)
@@ -83,6 +85,7 @@ type
     FTarget: TNyxControlRef;
     FRefresh: INyxCoordinatorRefresh;
     FQueryControls: INyxCollectionQueryWorkbench;
+    FQueryRequest: Integer;
     FLastCommand: TNyxToolbarCommandFeedback;
     FViewToken: INyxCollectionViewSubscription;
     FViews: INyxCollectionBindings;
@@ -108,6 +111,7 @@ type
     function SortEdits(const AReference: TNyxToolbarSortRef): TNyxQuerySessionEdits;
     procedure PublishQuery(const AEdits: TNyxQuerySessionEdits);
     procedure UpdateQueryStatus;
+    procedure OpenQueryDetailsAt(const AAnchor: TNyxControlRef);
     procedure RunCommand(ACommand: TNyxToolbarCommand; const AText: TNyxText;
       const ASort: TNyxToolbarSortRef; AAcceptedEvent: Boolean; out AInstalled: Boolean);
     procedure RecordCommandFailure(ACommand: TNyxToolbarCommand; AInstalled: Boolean;
@@ -765,32 +769,112 @@ begin
 end;
 
 procedure TToolbarBinding.OpenQueryDetails;
+begin
+  { Programmatic callers have no invoking button. Preserve their original
+    collection anchor even for summary-only, hidden or customized toolbars. }
+  OpenQueryDetailsAt(Default(TNyxControlRef));
+end;
+
+procedure TToolbarBinding.OpenQueryDetailsAt(const AAnchor: TNyxControlRef);
 var
   LLease: INyxDataToolbarBinding;
   LHost: INyxCoordinatorQueryControls;
+  LAnchoredHost: INyxCoordinatorQueryAnchors;
   LDetails: INyxCollectionQueryDetails;
+  LControl: INyxCollectionQueryWorkbench;
+  LPrevious: INyxCollectionQueryWorkbench;
+  LPresenter: INyxQueryFormPresenter;
+  LRequest: Integer;
+
+  { Outward factories and focus recovery may run caller code. One binding's
+    newest request wins even when it selects a different cached controller. }
+  procedure RequireCurrent;
+  begin
+    CheckActive;
+
+    if FQueryRequest <> LRequest then
+    begin
+      raise ENyxDataToolbarCancelled.Create('The query details request was superseded');
+    end;
+  end;
 begin
   LLease := Self;
   CheckActive;
 
-  if FQueryControls = nil then
+  if FQueryRequest = High(Integer) then
   begin
+    raise ENyxDataToolbarCancelled.Create('The query details request sequence is exhausted');
+  end;
+  Inc(FQueryRequest);
+  LRequest := FQueryRequest;
 
-    if not Supports(FProjection, INyxCoordinatorQueryControls, LHost) then
-    begin
-      raise ENyxDataToolbar.Create('This coordinator host does not provide query details');
-    end;
-    FQueryControls := LHost.QueryDetails(FTarget);
-    CheckActive;
+  if not Supports(FProjection, INyxCoordinatorQueryControls, LHost) then
+  begin
+    raise ENyxDataToolbar.Create('This coordinator host does not provide query details');
+  end;
+  LControl := nil;
+  { The visible launcher can be far from its collection on a compact page.
+    Keep target query authority but place the managed form at this discovered
+    button. Legacy creator hosts retain their existing collection anchor. }
+
+  if (AAnchor.ID <> '') and
+    Supports(FProjection, INyxCoordinatorQueryAnchors, LAnchoredHost) then
+  begin
+    LControl := LAnchoredHost.QueryDetailsAt(FTarget, AAnchor);
+    RequireCurrent;
   end;
 
-  if not Supports(FQueryControls, INyxCollectionQueryDetails, LDetails) then
+  if LControl = nil then
+  begin
+    LControl := LHost.QueryDetails(FTarget);
+    RequireCurrent;
+  end;
+
+  if not Supports(LControl, INyxCollectionQueryDetails, LDetails) then
   begin
     raise ENyxDataToolbar.Create('The managed query surface lacks its inspection purpose');
+  end;
+  RequireCurrent;
+  LPrevious := FQueryControls;
+  FQueryControls := LControl;
+
+  if (LPrevious <> nil) and (LPrevious <> LControl) then
+  begin
+    LPresenter := LPrevious.Presenter;
+    RequireCurrent;
+
+    if (LPresenter <> nil) and LPresenter.IsOpen then
+    begin
+      RequireCurrent;
+      LPresenter.Close;
+      RequireCurrent;
+    end;
   end;
   { The common scope owns cancellation and cleanup. This copied identity merely
     labels local contributions; no actor token is granted to the presenter. }
   LDetails.OpenDetailsFor(FActor.ID);
+
+  if (FQueryRequest <> LRequest) and (FQueryControls <> LControl) and LControl.Connected then
+  begin
+    { A different request may finish while this controller is building its form.
+      Close only this superseded surface, never a newer use of the same control.
+      Cancellation remains the primary result if focus cleanup also fails. }
+    try
+      LPresenter := LControl.Presenter;
+
+      if (FQueryControls <> LControl) and (LPresenter <> nil) and LPresenter.IsOpen then
+      begin
+
+        if FQueryControls <> LControl then
+        begin
+          LPresenter.Close;
+        end;
+      end;
+    except
+      { Scope retirement still owns complete controller cleanup. }
+    end;
+  end;
+  RequireCurrent;
 end;
 
 procedure TToolbarBinding.UpdateQueryStatus;
@@ -846,7 +930,7 @@ begin
   if (AEvent.Trigger = ntClick) and (FQueryDetails.ID <> '') and
     (AEvent.OriginID = FQueryDetails.ID) then
   begin
-    OpenQueryDetails;
+    OpenQueryDetailsAt(FQueryDetails);
     Exit;
   end;
 

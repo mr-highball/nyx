@@ -1147,15 +1147,19 @@ type
   end;
 
   { Final presentation receiver is weak. A scope retains this managed port,
-    never a renderer/controller; Sync is the last outward action in Request. }
+    never a renderer/controller; Sync is the last outward action in Request.
+    Query placement borrows a discovered launcher independently of its data view. }
   TNyxLCLCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget,
-    INyxCoordinatorInputHost, INyxCoordinatorQueryHost)
+    INyxCoordinatorInputHost, INyxCoordinatorQueryHost, INyxCoordinatorQueryAnchorHost)
   public
     Owner: TNyxLCLRenderer;
     constructor Create(AOwner: TNyxLCLRenderer);
     procedure Request;
     function InputsFor(ATree: TNyxNode): INyxInputCommands;
     function QueryDetailsFor(ATree: TNyxNode; const ATarget: TNyxControlRef;
+      const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
+      const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
+    function QueryDetailsAtFor(ATree: TNyxNode; const ATarget, AAnchor: TNyxControlRef;
       const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
       const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
   end;
@@ -1405,6 +1409,13 @@ end;
 function TNyxLCLCoordinatorRefresh.QueryDetailsFor(ATree: TNyxNode;
   const ATarget: TNyxControlRef; const AView: INyxCollectionView;
   const AEvents: TNyxEventTarget; const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
+begin
+  Result := QueryDetailsAtFor(ATree, ATarget, ATarget, AView, AEvents, ADesignID);
+end;
+
+function TNyxLCLCoordinatorRefresh.QueryDetailsAtFor(ATree: TNyxNode;
+  const ATarget, AAnchor: TNyxControlRef; const AView: INyxCollectionView;
+  const AEvents: TNyxEventTarget; const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
 var
   LLease: INyxCoordinatorRefreshTarget;
   LOwner: TNyxLCLRenderer;
@@ -1424,11 +1435,18 @@ begin
   begin
     Exit;
   end;
-  LAnchor := LOwner.ControlFor(ATarget.ID);
+  { Resolve the discovered launcher's native face in the same adopted tree.
+    The query view retains its original collection authority and retirement. }
+
+  if ATree.Find(AAnchor.ID) = nil then
+  begin
+    raise ENyxCoordinator.Create('Query details require their adopted launcher');
+  end;
+  LAnchor := LOwner.ControlFor(AAnchor.ID);
 
   if not (LAnchor is TWinControl) then
   begin
-    raise ENyxCoordinator.Create('Query details require a windowed collection control');
+    raise ENyxCoordinator.Create('Query details require a windowed launcher control');
   end;
   LFactory := NewNyxLCLQueryFormFactory(TWinControl(LAnchor), LOwner.FTheme);
   try

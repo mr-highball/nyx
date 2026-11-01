@@ -4,6 +4,18 @@
 
 **Description:**
 
+The 2026-10-31 browser return repairs compact panel placement through a typed
+discovered-launcher capability in the common coordinator and both adapters.
+The visible button no longer depends on its collection also being onscreen.
+Existing programmatic summary-only opens keep their collection anchor; actual
+button/programmatic transitions close the former surface without changing query
+ownership. Full current reusable checks pass151 native/148 browser per width,
+with clean native heaps, retained failures and exact viewport receipts in WORK.
+Ordinary compact input opens the complete readable panel, removes a filter while
+retaining entries/sorting, and uses local Clear to restore its own baseline.
+Peers remain independent. Broader Studio/saved-app, physical/assistive, parity
+and original prerequisite acceptance remain open; no complete task closes.
+
 The current binding/refusal return makes expected Clear conflicts visible in the
 configured query status and exposes copied typed action/outcome diagnostics.
 Read-only/one-way/conflicting bindings retain state, query and physical values;

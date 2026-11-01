@@ -119,6 +119,15 @@ type
     ['{CA1D50ED-C3DC-4B1C-991C-19384E2105DD}']
     function QueryDetails(const ATarget: TNyxControlRef): INyxCollectionQueryWorkbench;
   end;
+  { Optional launcher-aware query inspection preserves the original interface.
+    Target and anchor must already belong to this scope's discovered roles.
+    Controllers are cached by both exact identities and retire with the scope.
+    Nil means the host lacks anchor support, allowing explicit legacy fallback;
+    invalid/stale roles still refuse. No platform handle escapes to the caller. }
+  INyxCoordinatorQueryAnchors = interface(IInterface)
+    ['{91B5FCF6-87B3-4AD7-BD08-F3E3B0ED87DA}']
+    function QueryDetailsAt(const ATarget, AAnchor: TNyxControlRef): INyxCollectionQueryWorkbench;
+  end;
   { Optional owner retirement for a behavior whose public Disconnect releases
     its presentation immediately. Revoke changes local flags only; Disconnect
     then attempts this scope's existing cleanup. Neither cancels the enclosing
@@ -345,7 +354,7 @@ type
     function GetAllowed: Boolean;
   end;
   { Managed inspection surfaces are owned by one scope, never its renderer.
-    Detached arrays stage both cache vectors before admission can publish. }
+    Detached arrays stage every cache vector before admission can publish. }
   TCoordinatorQueryControls = array of INyxCollectionQueryWorkbench;
   { Canonical retained projection with sealed claims and a weak renderer port.
     Final readiness uses dirty flags, the retained generation and raw model
@@ -353,7 +362,7 @@ type
   TCoordinatorScope = class(TInterfacedObject, INyxCoordinatorProjection,
     INyxCoordinatorRoleFacts, INyxCoordinatorProjectionLifetime,
     INyxCoordinatorRefresh, INyxCoordinatorInputs, INyxCoordinatorTargets,
-    INyxCoordinatorBehaviorFacts, INyxCoordinatorQueryControls)
+    INyxCoordinatorBehaviorFacts, INyxCoordinatorQueryControls, INyxCoordinatorQueryAnchors)
   private
     FTree: INyxControl;
     FTreeNode: TNyxNode;
@@ -367,6 +376,7 @@ type
     FTarget: INyxCoordinatorRefreshTarget;
     FInputHost: IInterface; { exact trusted weak adapter facet, never a renderer }
     FQueryIDs: TNyxCoordinatorMountIDs;
+    FQueryAnchors: TNyxCoordinatorMountIDs;
     FQueryControls: TCoordinatorQueryControls;
     FPort: ICoordinatorPort;
     FCallback: TCoordinatorPort;
@@ -405,6 +415,7 @@ type
     function InputCommands: INyxInputCommands;
     function CollectionTarget(const AReference: TNyxControlRef): TNyxControlRef;
     function QueryDetails(const ATarget: TNyxControlRef): INyxCollectionQueryWorkbench;
+    function QueryDetailsAt(const ATarget, AAnchor: TNyxControlRef): INyxCollectionQueryWorkbench;
     function TryCollectionSpec(const ARole: TNyxControlRef;
       out ASpec: TNyxCollectionViewSpec): Boolean;
     procedure Text(const ARole: TNyxControlRef; const AValue: TNyxText);
@@ -1344,6 +1355,7 @@ begin
   LQueries := FQueryControls;
   FQueryControls := nil;
   FQueryIDs := nil;
+  FQueryAnchors := nil;
   for LIndex := 0 to High(LQueries) do
   begin
     try

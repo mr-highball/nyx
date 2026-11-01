@@ -25,10 +25,15 @@ targets. Local defaults, inheritance/masks and exact paired history agree with
 the ordinary Inspector and bounded live MCP reads. WORK retains the repaired
 test-input failures and target limits. No full parent credit follows.
 
-Return to the ranked everyday workflows. The next bounded browser interaction
-return follows DataToolbar's existing coordinator/parity prerequisites, reusing
-its public Search/Sort/Clear consumer and saved-application evidence. Repair a
-demonstrated user-facing gap; do not start another table policy or source variant.
+The DataToolbar browser return now repairs a concrete compact filter-panel
+failure through typed scoped launcher anchors. Current native147/151 and
+browser145/148 base/reusable checks pass per width; native heaps are clean.
+Original programmatic summary-only opens and context switching are preserved.
+Ordinary browser Search/Sort/Clear and visible filter removal retain independent
+peers. WORK owns exact qualification and limits. Continue authoring01's ordinary
+browser Studio/saved-application journey through the existing prerequisites;
+no full coordinator/parity/DataToolbar acceptance or new percentage follows.
+Do not start another table policy, generic query or source variant.
 
 [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) is accepted
 on2026-10-31. Complete admission, copied typed changes and conservative target

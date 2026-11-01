@@ -31,6 +31,24 @@ the exact saved/generated application under authoring01.
 
 **Work packets and handoff:**
 
+**Browser launcher return — 2026-10-31:** Current browser controls now execute
+at actual1280x650/390x650:145 base and148 reusable checks per allocation. The
+reusable compact run exposed a visible details button whose collection was below
+the viewport. Optional typed coordinator anchors now place that panel at its
+discovered launcher while retaining exact collection/event authority. Programmatic
+opens preserve their original collection anchor, including summary-only toolbars;
+switching contexts closes the earlier physical surface and reuses the correct
+scoped controller. The compatibility failure from the first repair is retained.
+
+Current native controls pass147 base/151 reusable per width with four clean heaps.
+Portable coordinator checks pass189 native/216 browser, including legacy-host,
+undiscovered-role and retirement guards. Ordinary browser input and wide/compact
+captures qualify the panel, Search/Sort/Clear, filter removal and independent
+peers. WORK owns source/asset identities, original failures, compiler observations
+and console limits. These are the same maintained consumers; no task move or
+full coordinator/parity/Studio/saved-application acceptance follows. Return through
+authoring01's ordinary browser and exact saved/generated application journey.
+
 The binding/refusal return now adds optional typed command receipts and structured
 shared-input refusals while preserving the original binding/GUID and options.
 Configured query status explains expected unchanged Clear failures; direct APIs

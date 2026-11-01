@@ -1775,6 +1775,70 @@ begin
 end;
 {$endif}
 
+{ A legacy renderer-free host has no query presentation adapter. The optional
+  anchor facet must report that absence without widening discovered roles or
+  allowing a retained projection to create surfaces after mount retirement. }
+procedure QueryAnchorCases;
+var
+  LFixture: TFixture;
+  LProjection: INyxCoordinatorProjection;
+  LAnchors: INyxCoordinatorQueryAnchors;
+  LLegacy: INyxCoordinatorQueryControls;
+  LTarget: TNyxControlRef;
+  LAnchor: TNyxControlRef;
+  LRejected: Boolean;
+begin
+  LFixture := TFixture.Create;
+  try
+    LFixture.Accept;
+    LProjection := LFixture.Factory.Projection;
+    LTarget := LProjection.Part(NyxPart('items'));
+    LAnchor := LProjection.Part(NyxPart('clear-selection'));
+    Check(Supports(LProjection, INyxCoordinatorQueryAnchors, LAnchors),
+      'canonical scope exposes optional typed launcher anchors');
+    Check(LAnchors.QueryDetailsAt(LTarget, LAnchor) = nil,
+      'legacy host lacks anchor presentation without inventing a controller');
+    LRejected := False;
+    try
+      LAnchors.QueryDetailsAt(LTarget, NyxControl('undiscovered-launcher'));
+    except
+      on ENyxCoordinator do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'unsupported host still rejects an undiscovered anchor first');
+    Check(Supports(LProjection, INyxCoordinatorQueryControls, LLegacy),
+      'original query projection interface remains available');
+    LRejected := False;
+    try
+      LLegacy.QueryDetails(LTarget);
+    except
+      on ENyxCoordinator do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'original query method retains its missing-host refusal');
+    DisconnectNyxCoordinatorMounts(LFixture.Mounts);
+    LRejected := False;
+    try
+      LAnchors.QueryDetailsAt(LTarget, LAnchor);
+    except
+      on ENyxCoordinatorCancelled do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'retained launcher facet refuses after its exact mount retires');
+  finally
+    LLegacy := nil;
+    LAnchors := nil;
+    LProjection := nil;
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     RegistryCases;
@@ -1786,6 +1850,7 @@ begin
     BusyAndAbandonCases;
     CommittedAndLifetimeCases;
     EmptyDiagnosticCleanupCases;
+    QueryAnchorCases;
     {$ifdef PAS2JS}PlatformCleanupCases;{$endif}
     {$ifdef PAS2JS}
     document.body.setAttribute('data-coordinators', 'passed');

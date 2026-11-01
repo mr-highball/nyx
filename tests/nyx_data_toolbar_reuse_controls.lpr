@@ -78,6 +78,7 @@ var
   GTable: Boolean;
   {$ifdef PAS2JS}
   GHosts: array[0..1] of TJSHTMLElement;
+  GQueryOpens: Integer;
   {$else}
   GFailures: TFailures;
   {$endif}
@@ -167,16 +168,46 @@ end;
 function OpenQuery(AApp: Integer; const AInstance: TNyxText): INyxCollectionQueryWorkbench;
 var
   LID: TNyxText;
+  {$ifdef PAS2JS}
+  LButtonRect: TJSDOMRect;
+  LTargetRect: TJSDOMRect;
+  LPresenter: INyxQueryFormPresenter;
+  {$endif}
 begin
   LID := RoleID(AApp, AInstance, NyxDataToolbarQueryDetailsPart);
   GApps[AApp].View.Reveal(LID, niRuntime);
   {$ifdef PAS2JS}
+  Inc(GQueryOpens);
+  LButtonRect := GApps[AApp].View.ElementFor(LID).getBoundingClientRect;
+  LTargetRect := GApps[AApp].View.ElementFor(
+    NyxQualifiedID(AInstance, 'people-list')).getBoundingClientRect;
   GApps[AApp].View.ElementFor(LID).click;
   {$else}
   TButton(GApps[AApp].View.ControlFor(LID)).Click;
   {$endif}
   Pump;
   Result := QueryBinding(AApp, AInstance).QueryControls;
+  {$ifdef PAS2JS}
+  LPresenter := nil;
+
+  if Result <> nil then
+  begin
+    LPresenter := Result.Presenter;
+  end;
+  { Retain the exact launcher/target allocation before fixture cleanup. A
+    terminal failure must identify which real open attempt lost its surface;
+    no geometry or presenter state is assigned to manufacture that result. }
+  Web.document.body.setAttribute('data-toolbar-query-open', NyxObject([
+    NyxField('attempt', NyxData(GQueryOpens)),
+    NyxField('table', NyxData(GTable)),
+    NyxField('buttonTop', NyxData(LButtonRect.top)),
+    NyxField('buttonBottom', NyxData(LButtonRect.bottom)),
+    NyxField('targetTop', NyxData(LTargetRect.top)),
+    NyxField('targetBottom', NyxData(LTargetRect.bottom)),
+    NyxField('viewportHeight', NyxData(window.innerHeight)),
+    NyxField('presenter', NyxData(LPresenter <> nil)),
+    NyxField('open', NyxData((LPresenter <> nil) and LPresenter.IsOpen))]).ToJSON);
+  {$endif}
   Check((Result <> nil) and (Result.Presenter <> nil) and Result.Presenter.IsOpen,
     'actual toolbar button opens its managed query detail surface');
 end;
@@ -385,6 +416,7 @@ var
   LSnapshot: INyxCollectionQuerySessionSnapshot;
   LControls: INyxCollectionQueryWorkbench;
   LOldControls: INyxCollectionQueryWorkbench;
+  LLauncherControls: INyxCollectionQueryWorkbench;
   LOldPresenter: INyxQueryFormPresenter;
   LPresenter: INyxQueryFormPresenter;
   LBefore: TNyxQueryWorkbenchObservation;
@@ -475,6 +507,18 @@ begin
       'the next accepted physical command replaces the committed-error receipt');
     CheckVisibleStatus(0, 'left');
     LOldControls := OpenQuery(0, 'left');
+    LLauncherControls := LOldControls;
+    GApps[0].View.Reveal(NyxQualifiedID('left', 'people-list'), niRuntime);
+    QueryBinding(0, 'left').OpenQueryDetails;
+    LOldControls := QueryBinding(0, 'left').QueryControls;
+    Check((LOldControls <> LLauncherControls) and (LOldControls.Presenter <> nil) and
+      LOldControls.Presenter.IsOpen,
+      'programmatic details retain their original collection-anchored controller');
+    Check(not LLauncherControls.Presenter.IsOpen,
+      'switching invocation context closes the preceding physical surface');
+    LOldControls := OpenQuery(0, 'left');
+    Check((LOldControls = LLauncherControls) and LOldControls.Presenter.IsOpen,
+      'ordinary launcher reuses its own scoped controller after a programmatic open');
     LOldPresenter := LOldControls.Presenter;
     LRoot := GApps[0].View.Root;
     LRefused := False;
@@ -598,6 +642,56 @@ begin
   end;
 end;
 
+{$ifdef PAS2JS}
+{ The optional review mode keeps fresh ordinary Apps available for real browser
+  input. It installs no fixture observers or query edits. Page retirement releases
+  each App before removing its host, then frees their shared authored document. }
+procedure ReviewClosed(AEvent: TJSEvent);
+var
+  LIndex: Integer;
+begin
+  window.removeEventListener('pagehide', @ReviewClosed);
+  for LIndex := 0 to High(GApps) do
+  begin
+    FreeAndNil(GApps[LIndex]);
+
+    if GHosts[LIndex] <> nil then
+    begin
+      GHosts[LIndex].remove;
+      GHosts[LIndex] := nil;
+    end;
+  end;
+  FreeAndNil(GDocument);
+end;
+
+{ Mount the same public reusable Table recipe without executing its scripted
+  assertions. Visible input and panel behavior can then be checked separately
+  from programmatically dispatched regression events. }
+procedure StartReview;
+var
+  LIndex: Integer;
+begin
+  GTable := True;
+  GDocument := Fixture;
+  try
+    for LIndex := 0 to High(GApps) do
+    begin
+      GApps[LIndex] := TReviewApplication.Create;
+      GHosts[LIndex] := TJSHTMLElement(Web.document.createElement('main'));
+      GHosts[LIndex].setAttribute('data-toolbar-review-app', IntToStr(LIndex));
+      GHosts[LIndex].setAttribute('aria-label', 'People workspace ' + IntToStr(LIndex + 1));
+      Web.document.body.appendChild(GHosts[LIndex]);
+      GApps[LIndex].Run(GDocument, GHosts[LIndex]);
+    end;
+    window.addEventListener('pagehide', @ReviewClosed);
+    Web.document.body.setAttribute('data-toolbar-review', 'ready');
+  except
+    ReviewClosed(nil);
+    raise;
+  end;
+end;
+{$endif}
+
 begin
   try
     {$ifndef PAS2JS}
@@ -620,10 +714,18 @@ begin
     end;
     WriteLn('PASS ', GChecks, ' DataToolbar reusable App checks');
     {$else}
-    Run;
-    GTable := True;
-    Run;
-    Web.document.body.setAttribute('data-toolbar-reuse-checks', IntToStr(GChecks));
+
+    if window.location.search = '?review' then
+    begin
+      StartReview;
+    end
+    else
+    begin
+      Run;
+      GTable := True;
+      Run;
+      Web.document.body.setAttribute('data-toolbar-reuse-checks', IntToStr(GChecks));
+    end;
     {$endif}
   except
     on LException: Exception do

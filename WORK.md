@@ -9,7 +9,105 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Return to useful DataToolbar browser interaction — 2026-10-31
+## Current work — DataToolbar ordinary browser authoring return — 2026-10-31
+
+Outcome: PROGRESS from8a225a34. Root remains SOLO. The concrete compact
+DataToolbar filter-panel defect is repaired in the shared library and both
+adapters, with executed native/browser compatibility and actual browser input.
+No whole DataToolbar/coordinator/parity task or north-star percentage closes.
+Consecutive batches without original criterion closure: one, after the previous
+workbench criterion6 acceptance. Original workbench1/4/7 and the native cursor
+assertion remain unwaived; do not repeat that denied probe.
+
+Next bounded deliverable: [DataToolbar authoring01](TODO/NS-3_data-toolbar_01.md)
+ordinary browser configuration/preview/history/Save/Open and its exact compiled
+application, following the existing coordinator/parity prerequisites and retained
+native evidence. First inspect the maintained Studio/generated consumers and
+semantic context; use bounded revision-aware MCP for any design composition.
+Keep all nine protected QA projects and the fixed listeners intact. Do not create
+another ordinary workspace while that registry is full. Repair a demonstrated
+user-facing gap, not a static recipe, generic query/source or launcher variant.
+If another batch closes no original criterion, reassess before a third.
+
+Current packet: data-toolbar-browser-return-01. All actual compiler/runtime jobs
+are terminal and joined, including13975,95479,63716 and10359. All temporary browser
+Apps/tabs are closed. Final source and staged asset identities are checked before
+commit. New private
+runners, artifacts and process TEMP/TMP stay on E:. Preserve unrelated AGENTS/WORK
+edits, the prior evidence and the still-active broad goal.
+
+## Qualified repair — Scoped DataToolbar query launchers — 2026-10-31
+
+The original browser base consumer passes137 at1280x650/390x650; reusable134
+passes wide but fails the unchanged compact managed-panel-open assertion.
+Diagnostic code retains button334..398 and collection750..846 in a650px viewport.
+The collection-anchored popover correctly refuses that offscreen anchor. The
+repair changes the requested anchor rather than weakening visibility admission.
+
+Optional `INyxCoordinatorQueryAnchors.QueryDetailsAt` and its weak internal host
+facet preserve existing GUIDs/methods. Both identities must already be discovered
+in the exact installed scope. Controllers are cached by target/launcher pair;
+all cache vectors stage off-owner before publication and share common retirement.
+Both target adapters borrow the chosen launcher while retaining original query
+and event authority. An old host can explicitly fall back to the original method.
+Native launchers require the existing windowed host face, which ordinary Buttons
+provide. No platform handle, saved descriptor or component-specific renderer
+lifecycle is added to the public creator contract.
+
+A compatibility review then finds that summary-only bindings have no details
+button role. The first repair wrongly sends their programmatic opens through
+that absent role. A new meaningful native regression fails at check6 with that
+exact scoped-identity error and a complete clean heap. The final binding keeps
+programmatic OpenQueryDetails collection-anchored and uses the launcher only for
+its actual button event. Switching closes the preceding physical surface while
+reusing each scoped controller. Request stamps preserve the newer operation
+across outward construction/focus recovery; superseded work cannot close a newer
+use of its controller. Existing query ownership and caller event policies remain.
+
+Final native base147 and reusable151 pass at1280/390. All3499686/3529449 base and
+5289192/5269844 reusable allocated blocks are freed. Final browser base145 and
+reusable148 pass at verified1280x650/390x650, including ten List/Table opens,
+summary-only compatibility and button/programmatic round trips. Portable
+coordinator189 native/216 browser passes with a clean native heap, including
+missing-host compatibility, undiscovered-anchor refusal and retained retirement.
+Those scope sources are unchanged by the later binding-only compatibility repair.
+
+The retained review mode mounts the same fresh public Apps without scripted
+input, then frees Apps/hosts/document on pagehide. Ordinary browser locator input
+qualifies Search/Sort, visible filter removal with retained search/sorting,
+local Clear, empty-result recovery and independent peers. The final compact
+client opens the complete readable panel within12..638 while its collection
+remains at750..846; exact row/entry readbacks and the final screenshot are retained.
+Wide input/capture has the complete panel at773..1253/12..638. The final compact
+input repeats filter removal and Clear on the final build. This is real browser
+input in measured desktop contexts, not phone hardware or assistive proof.
+
+The initial warm-cache native compiler raises an internal exception while reading
+nyx.kanban.intent. Its log is retained. A subsequent invocation omitting older Nyx
+cache search paths succeeds, using this packet's own partially populated units;
+the private native-cold filename does not establish a pristine empty cache.
+That source rebuild takes1264.7s, beyond the maintained1200s compiler guard; it
+proves compilation only and does not accept the original build/latency budget.
+The later current incremental build takes26.5s. No comparative speedup or cause
+for the compiler exception is inferred. All four final native runtime jobs pass.
+Native builds report no warnings. Each current browser consumer reports seven
+case-coverage warnings in the installed pas2js RTL Classes source, with none in
+owned Nyx source. Dependency files are unchanged; lifetime-retention notes stay.
+
+Browser receipts retain the previously independently reproduced iframe
+MutationObserver error; no empty aggregate console claim follows. Final visual,
+physical/assistive, other-widgetset and production performance criteria remain.
+The original failures, every successful/failing heap, initial/final JS, emitted
+viewport wrappers, rendered values, screenshots, runners and identity manifests
+remain in the packet. No equivalent query/source/profile fixture is a next task.
+
+Bounded authenticated MCP discovery/session reads retain Service monitor revision9,
+selection service-table/view services. No shared design, project pair, output
+profile, Studio payload or service process changes. Fixed QA serves only additional
+static assets; the LAN process is preserved. Complete Studio/saved/generated
+adoption returns to authoring01 rather than receiving completion credit here.
+
+## Previous checkpoint — Return to useful DataToolbar browser interaction — 2026-10-31
 
 Outcome: PROGRESS from8993ca9a. Root remains SOLO. Original
 [workbench03](TODO/NS-3_control-usefulness_03.md) criterion6 is accepted after

@@ -21,6 +21,15 @@ through DataToolbar's existing coordinator/parity prerequisites, preserving the
 table's complete remaining input and quality requirements.
 This assigns no new percentage or full workbench/L2 credit.
 
+The DataToolbar browser return repairs a compact details panel anchored to its
+offscreen collection. A typed optional coordinator capability now borrows the
+visible launcher on both adapters while preserving original programmatic opens,
+scoped ownership and retirement. Current native147/151 and browser145/148
+base/reusable journeys pass per allocation, with clean native heaps and ordinary
+browser input/captures. Existing coordinator/parity and Studio/saved-application
+gates remain; no task or north-star percentage closes. WORK owns the evidence
+and the return to DataToolbar's ordinary authoring01 browser journey.
+
 Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)
 is accepted on2026-10-31. Complete admission and conservative target fallback
 remain, while supported status changes avoid unrelated setters. Both-target

@@ -530,6 +530,21 @@ The optional `INyxDataToolbarQueryBinding` supplies copied `Observation` and
 `QueryStatus` values, plus `OpenQueryDetails`. Its `QueryControls` are created
 lazily and retire with the coordinator. No actor token is persisted or exposed.
 
+Details open at the invoking toolbar button, even when the collection lies below
+the current viewport. Other coordinator creators can request the same behavior
+through optional `INyxCoordinatorQueryAnchors.QueryDetailsAt(Target, Launcher)`.
+Both references must already be discovered in that exact scope. Each target/
+launcher pair has its own managed controller and shares the scope's retirement.
+An unsupported legacy host returns nil from the optional method; callers may
+explicitly use the original `INyxCoordinatorQueryControls.QueryDetails` instead.
+The original interfaces and default collection-anchored behavior remain supported.
+Platform anchor objects stay inside the adapters.
+Programmatic `OpenQueryDetails` retains its original collection anchor, including
+summary-only toolbars without a details button. Switching invocation contexts
+closes the preceding physical panel and exposes the requested controller through
+`QueryControls`. Native launchers require a windowed face, as ordinary Nyx buttons
+provide; an unavailable or incompatible launcher refuses before presentation.
+
 The Nyx-built detail popup works with List and Table targets. It identifies
 filters from this toolbar, active peers and earlier activity, and names shared
 sort ownership. Remove one captured contribution, clear all user filters or

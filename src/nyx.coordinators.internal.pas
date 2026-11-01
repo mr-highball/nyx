@@ -50,6 +50,16 @@ type
       const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
       const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
   end;
+  { Optional trusted adapter seam separates collection authority from the
+    discovered launcher used for placement. Both identities belong to the exact
+    adopted tree; adapters borrow their host controls only during construction.
+    Old host implementations keep their original query-host GUID and behavior. }
+  INyxCoordinatorQueryAnchorHost = interface(IInterface)
+    ['{E34F8457-35EB-45FC-9B71-30D3F83EE6C4}']
+    function QueryDetailsAtFor(ATree: TNyxNode; const ATarget, AAnchor: TNyxControlRef;
+      const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
+      const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
+  end;
 
   { Library integration seam for an existing built-in engine that returns real
     specialized control facades. The common driver supplies the SAME retained

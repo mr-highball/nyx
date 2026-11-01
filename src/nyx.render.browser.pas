@@ -964,15 +964,19 @@ type
   end;
 
   { Final presentation receiver is weak. A scope retains this managed port,
-    never a renderer/controller; Sync is the last outward action in Request. }
+    never a renderer/controller; Sync is the last outward action in Request.
+    Query placement borrows a discovered launcher independently of its data view. }
   TNyxBrowserCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget,
-    INyxCoordinatorInputHost, INyxCoordinatorQueryHost)
+    INyxCoordinatorInputHost, INyxCoordinatorQueryHost, INyxCoordinatorQueryAnchorHost)
   public
     Owner: TNyxBrowserRenderer;
     constructor Create(AOwner: TNyxBrowserRenderer);
     procedure Request;
     function InputsFor(ATree: TNyxNode): INyxInputCommands;
     function QueryDetailsFor(ATree: TNyxNode; const ATarget: TNyxControlRef;
+      const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
+      const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
+    function QueryDetailsAtFor(ATree: TNyxNode; const ATarget, AAnchor: TNyxControlRef;
       const AView: INyxCollectionView; const AEvents: TNyxEventTarget;
       const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
   end;
@@ -1410,6 +1414,13 @@ end;
 function TNyxBrowserCoordinatorRefresh.QueryDetailsFor(ATree: TNyxNode;
   const ATarget: TNyxControlRef; const AView: INyxCollectionView;
   const AEvents: TNyxEventTarget; const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
+begin
+  Result := QueryDetailsAtFor(ATree, ATarget, ATarget, AView, AEvents, ADesignID);
+end;
+
+function TNyxBrowserCoordinatorRefresh.QueryDetailsAtFor(ATree: TNyxNode;
+  const ATarget, AAnchor: TNyxControlRef; const AView: INyxCollectionView;
+  const AEvents: TNyxEventTarget; const ADesignID: TNyxText): INyxCollectionQueryWorkbench;
 var
   LLease: INyxCoordinatorRefreshTarget;
   LOwner: TNyxBrowserRenderer;
@@ -1428,7 +1439,15 @@ begin
   begin
     Exit;
   end;
-  LFactory := NewNyxBrowserQueryFormFactory(LOwner.ElementFor(ATarget.ID), LOwner.FTheme);
+  { The common scope already validates both discovered identities. Recheck
+    this adopted tree before borrowing its exact launcher; scrolling the data
+    collection into view must never be a prerequisite for a visible action. }
+
+  if ATree.Find(AAnchor.ID) = nil then
+  begin
+    raise ENyxCoordinator.Create('Query details require their adopted launcher');
+  end;
+  LFactory := NewNyxBrowserQueryFormFactory(LOwner.ElementFor(AAnchor.ID), LOwner.FTheme);
   try
 
     if (Owner <> LOwner) or (LOwner.FRoot <> ATree) then

@@ -646,6 +646,36 @@ begin
   end;
 end;
 
+{ Summary-only composition has no registered details-button role. Existing
+  programmatic callers still open the managed surface at the collection, without
+  needing to introduce a visible launcher or change their accepted input/query. }
+procedure RunSummaryDetails;
+var
+  LJourney: TJourney;
+  LDetails: INyxDataToolbarQueryBinding;
+  LBefore: TNyxText;
+begin
+  LJourney := TJourney.Create(False, tbfTwoWay);
+  try
+    LBefore := TNyxCodec.Encode(LJourney.Document);
+    LJourney.Renderer.Reveal('people-table', niRuntime);
+    Check(Supports(LJourney.Renderer.CoordinatorBinding('table-tools'),
+      INyxDataToolbarQueryBinding, LDetails),
+      'summary-only toolbar exposes its original programmatic query surface');
+    LDetails.OpenQueryDetails;
+    Check((LDetails.QueryControls <> nil) and (LDetails.QueryControls.Presenter <> nil) and
+      LDetails.QueryControls.Presenter.IsOpen,
+      'summary-only programmatic details preserve the legacy collection anchor');
+    Check((LJourney.Rows('people-table').Snapshot.Count = 1) and
+      (LJourney.InputText('table-tools', 'search') = 'Ada') and
+      (TNyxCodec.Encode(LJourney.Document) = LBefore),
+      'programmatic details preserve accepted query, physical input and authored defaults');
+  finally
+    LDetails := nil;
+    LJourney.Free;
+  end;
+end;
+
 begin
   try
     {$ifndef PAS2JS}
@@ -653,6 +683,7 @@ begin
     GFailures := TFailures.Create;
     try
       Application.OnException := GFailures.Failed;
+      RunSummaryDetails;
       Run;
       RunBindingCases;
       Check(GFailures.Message = '', 'native dispatch has no unhandled callback exception');
@@ -662,6 +693,7 @@ begin
     end;
     WriteLn('PASS ', GChecks, ' DataToolbar application checks');
     {$else}
+    RunSummaryDetails;
     Run;
     RunBindingCases;
     Web.document.body.setAttribute('data-toolbar-checks', IntToStr(GChecks));

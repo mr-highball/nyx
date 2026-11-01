@@ -21,13 +21,21 @@
 }
 
 function TCoordinatorScope.QueryDetails(const ATarget: TNyxControlRef): INyxCollectionQueryWorkbench;
+begin
+  Result := QueryDetailsAt(ATarget, ATarget);
+end;
+
+function TCoordinatorScope.QueryDetailsAt(const ATarget, AAnchor: TNyxControlRef):
+  INyxCollectionQueryWorkbench;
 var
   LLease: INyxCoordinatorProjection;
   LHost: INyxCoordinatorQueryHost;
+  LAnchoredHost: INyxCoordinatorQueryAnchorHost;
   LRole: TCoordinatorRole;
   LControl: INyxCollectionQueryWorkbench;
   LControls: TCoordinatorQueryControls;
   LIDs: TNyxCoordinatorMountIDs;
+  LAnchors: TNyxCoordinatorMountIDs;
   LIndex: Integer;
   LCount: Integer;
 begin
@@ -35,6 +43,7 @@ begin
   CheckLive(True);
   CheckNodes;
   LRole := FRoles[RoleIndex(ATarget)];
+  RoleIndex(AAnchor);
 
   if (LRole.View = nil) or (FViews = nil) or
     (FViews.ViewFor(ATarget.ID) <> LRole.View) then
@@ -44,20 +53,40 @@ begin
   for LIndex := 0 to High(FQueryControls) do
   begin
 
-    if FQueryIDs[LIndex] = ATarget.ID then
+    if (FQueryIDs[LIndex] = ATarget.ID) and (FQueryAnchors[LIndex] = AAnchor.ID) then
     begin
       Exit(FQueryControls[LIndex]);
     end;
   end;
 
-  if not Supports(FTarget, INyxCoordinatorQueryHost, LHost) then
+  Supports(FTarget, INyxCoordinatorQueryAnchorHost, LAnchoredHost);
+
+  if LAnchoredHost = nil then
   begin
-    raise ENyxCoordinator.Create('This host does not provide managed query detail forms');
+
+    if AAnchor.ID <> ATarget.ID then
+    begin
+      Exit(nil);
+    end;
+
+    if not Supports(FTarget, INyxCoordinatorQueryHost, LHost) then
+    begin
+      raise ENyxCoordinator.Create('This host does not provide managed query detail forms');
+    end;
   end;
   LControl := nil;
   try
-    LControl := LHost.QueryDetailsFor(FTreeNode, ATarget, LRole.View,
-      NyxControlEvents(FRootNode.ID, niRuntime), FRootNode.DesignID);
+
+    if LAnchoredHost <> nil then
+    begin
+      LControl := LAnchoredHost.QueryDetailsAtFor(FTreeNode, ATarget, AAnchor, LRole.View,
+        NyxControlEvents(FRootNode.ID, niRuntime), FRootNode.DesignID);
+    end
+    else
+    begin
+      LControl := LHost.QueryDetailsFor(FTreeNode, ATarget, LRole.View,
+        NyxControlEvents(FRootNode.ID, niRuntime), FRootNode.DesignID);
+    end;
     CheckLive(True);
     CheckNodes;
 
@@ -67,17 +96,21 @@ begin
     end;
     CheckLive(True);
     LCount := Length(FQueryControls);
-    { Allocate both vectors off-owner. Failure must not leave a nil cache slot
-      for Revoke/Cleanup or a mismatched target/controller ordinal. }
+    { Stage all vectors off-owner. Allocation or reentrant retirement cannot
+      publish a target/anchor without its corresponding managed controller. }
     LControls := Copy(FQueryControls, 0, LCount);
     LIDs := Copy(FQueryIDs, 0, LCount);
+    LAnchors := Copy(FQueryAnchors, 0, LCount);
     SetLength(LControls, LCount + 1);
     SetLength(LIDs, LCount + 1);
+    SetLength(LAnchors, LCount + 1);
     LIDs[LCount] := ATarget.ID;
+    LAnchors[LCount] := AAnchor.ID;
     LControls[LCount] := LControl;
     CheckLive(True);
     CheckNodes;
     FQueryIDs := LIDs;
+    FQueryAnchors := LAnchors;
     FQueryControls := LControls;
     Result := LControl;
   except
