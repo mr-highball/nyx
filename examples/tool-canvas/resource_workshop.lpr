@@ -25,10 +25,11 @@ program resource_workshop;
 
 uses
   SysUtils, nyx.model, nyx.resource.workshop, nyx.application.resources,
+  nyx.logic.http,
   {$ifdef PAS2JS}
-  Web, nyx.application.browser;
+  Web, nyx.application.browser, nyx.resources.http.browser;
   {$else}
-  Interfaces, Forms, nyx.application.lcl;
+  Interfaces, Forms, nyx.application.lcl, nyx.resources.http.lcl;
   {$endif}
 
 type
@@ -67,6 +68,7 @@ begin
   GApplication := TWorkshopApplication.Create;
   try
     GApplication.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand));
+    GApplication.ConfigureLogic(NewNyxHTTPLogicResolver(NewNyxBrowserHTTPTransport));
     GApplication.Run(GDocument, TJSHTMLElement(document.body));
   except
     FreeAndNil(GApplication);
@@ -87,6 +89,8 @@ begin
   GApplication := TWorkshopApplication.Create;
   try
     GApplication.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand));
+    GApplication.ConfigureLogic(NewNyxHTTPLogicResolver(
+      NewNyxNativeHTTPTransport(GApplication.View.Events.Scheduler)));
     GApplication.Mount(GDocument);
     GApplication.Window.ClientWidth := 1200;
     GApplication.Window.ClientHeight := 880;

@@ -61,6 +61,8 @@ type
     procedure Start;
     procedure Cancel; override;
   end;
+  { Stateless Fetch adapter. Requests own cancellation and the pending lease;
+    the factory retains no application, response or borrowed receiver. }
   TBrowserTransport = class(TInterfacedObject, INyxResourceTransport, INyxHTTPTransport)
     function Request(const AURL: TNyxResourceURL;
       const AOptions: TNyxResourceLoadOptions; AMaximumBytes: Integer;
@@ -68,6 +70,36 @@ type
     function Send(const ARequest: TNyxHTTPRequest;
       AReply: TNyxResourceHTTPReply): INyxResourceRequest;
   end;
+
+{ DOM/Promise rejections need not be Pascal exceptions. Copy their standard
+  diagnostic text without retaining an external error or application object. }
+function BrowserRequestFailure(AError: JSValue): TNyxText;
+var
+  LDetail: TNyxText;
+  LValue: JSValue;
+begin
+  Result := 'Browser resource request failed; check URL, CORS and network access';
+  LDetail := '';
+
+  if isObject(AError) then
+  begin
+    LValue := TJSObject(AError)['message'];
+
+    if isString(LValue) then
+    begin
+      LDetail := String(LValue);
+    end;
+  end
+  else if isString(AError) then
+  begin
+    LDetail := String(AError);
+  end;
+
+  if LDetail <> '' then
+  begin
+    Result := Result + ': ' + LDetail;
+  end;
+end;
 
 function Header(AResponse: TJSResponse; const AName: String): TNyxText;
 var
@@ -130,7 +162,7 @@ var
   LIndex: Integer;
   LResult: TNyxResourceHTTPResult;
   LCacheControl: TNyxText;
-  LHeaders: THeaderArray;
+  LHeaders: TJSHTMLHeaders;
   LInputBytes: TNyxBytes;
   LBody: TJSUint8Array;
   LIterator: TJSIterator;
@@ -155,13 +187,16 @@ begin
       if FGeneral then
       begin
         LOptions.Properties['method'] := FHTTP.RequestMethod.Name;
-        SetLength(LHeaders, FHTTP.Headers.Count);
-        for LIndex := 0 to High(LHeaders) do
+        { Populate the browser collection directly. An empty outer dimension
+          with fixed-size inner Pascal arrays can become nil in matched RTL;
+          Headers rejects that initializer before Fetch can send any request.
+          append preserves the platform's ordinary duplicate-header semantics. }
+        LHeaders := TJSHTMLHeaders.new([]);
+        for LIndex := 0 to FHTTP.Headers.Count - 1 do
         begin
-          LHeaders[LIndex][0] := FHTTP.Headers.Name(LIndex);
-          LHeaders[LIndex][1] := FHTTP.Headers.Value(LIndex);
+          LHeaders.append(FHTTP.Headers.Name(LIndex), FHTTP.Headers.Value(LIndex));
         end;
-        LOptions.Properties['headers'] := TJSHTMLHeaders.new(LHeaders);
+        LOptions.Properties['headers'] := LHeaders;
         LInputBytes := FHTTP.Body;
 
         if Length(LInputBytes) > 0 then
@@ -246,7 +281,8 @@ begin
     except
       on LException: Exception do
       begin
-        LResult.Error := 'Browser resource request failed; check URL, CORS and network access';
+        LResult.Error := 'Browser resource request failed; check URL, CORS and network access: ' +
+          LException.Message;
 
         if FTimedOut then
         begin
@@ -261,7 +297,7 @@ begin
       begin
         { Native DOM/Promise errors are not SysUtils.Exception instances in
           pas2js. They must still produce exactly one bounded loading result. }
-        LResult.Error := 'Browser resource request failed; check URL, CORS and network access';
+        LResult.Error := BrowserRequestFailure(JSExceptValue);
 
         if FTimedOut then
         begin

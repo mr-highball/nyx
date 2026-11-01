@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The real-host Resource Workshop now connects hosted resources/direct HTTP to
+JSON/query/Table on both targets and desktop/compact allocations. Authenticated
+MCP authors one undoable revision-aware group; ordinary Studio observes its change
+without reload, and the exact exported Pascal independently executes on browser/
+LCL. Explicit native startup recovery restores the nine retained QA projects.
+WORK owns resource-http01, preview repairs and remaining full inventory, instance/
+remount, host/cache, input/quality and performance gates. This advances M2/M3/M4;
+no whole parent criterion/task or completion percentage closes.
+
 The Resource Workshop Studio return accepts canvas-collections01's original
 criterion4: ordinary typed editing, unfinished input, paired history, Save/Open
 and the exact saved application's native/browser embedded Table journey at both

@@ -305,7 +305,8 @@ uses
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
   nyx.studio.sourcebuilds, nyx.studio.projectimport,
-  nyx.canvas.declarations, nyx.canvas.editing, nyx.pascal.project, nyx.pascal.definition;
+  nyx.canvas.declarations, nyx.canvas.editing, nyx.pascal.project, nyx.pascal.definition,
+  nyx.studio.recovery.native;
 
 function NewCapability: TNyxText;
 var
@@ -449,6 +450,7 @@ constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
 var
   LRestoredCore: TNyxAgentSession;
   LRestoredWorkspaces: TNyxStudioWorkspaces;
+  LRecoveryVerifier: INyxRuntimeSourceVerifier;
 
   procedure AdoptRecovery;
   begin
@@ -464,6 +466,11 @@ begin
   inherited Create(True);
   ALimits.Validate;
   FreeOnTerminate := False;
+
+  if (ARecoveryMode = rrmNative) and (ARecoveryVerifier <> nil) then
+  begin
+    raise ENyxModel.Create('Native startup recovery owns its verifier; omit the supplied strategy');
+  end;
 
   if (AMCPPort < 1024) or (AMCPPort > 65535) or (AMCPPort = AStudioPort) then
   begin
@@ -481,6 +488,16 @@ begin
   FBuilds := TNyxBuildJobs.Create(FDirectories, AOutputProfile, ALimits);
   FWorkspaces := TNyxStudioWorkspaces.Create(FCore, FID);
   FRecovery := TNyxStudioRuntimeStore.Create(FDirectories);
+  LRecoveryVerifier := ARecoveryVerifier;
+
+  if ARecoveryMode = rrmNative then
+  begin
+    { The trusted startup choice uses copied host settings and existing bounded,
+      joined compiler ownership. A retained file cannot select this authority.
+      Full checkpoint admission still precedes any constructor execution. }
+    LRecoveryVerifier := NewNyxNativeRuntimeSourceVerifier(FDirectories,
+      AOutputProfile, ALimits);
+  end;
 
   if (ARecoveryMode = rrmBrowserWorker) or
     ((ARecoveryMode = rrmAutomatic) and (ARecoveryVerifier = nil)) then
@@ -512,7 +529,7 @@ begin
       FRecoveryLastUnit := -1;
     end;
   end
-  else if FRecovery.Load(LRestoredCore, LRestoredWorkspaces, ARecoveryVerifier) then
+  else if FRecovery.Load(LRestoredCore, LRestoredWorkspaces, LRecoveryVerifier) then
   begin
     AdoptRecovery;
   end;

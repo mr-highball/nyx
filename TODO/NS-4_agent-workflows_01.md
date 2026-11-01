@@ -2,6 +2,22 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Recovery prerequisite — 2026-11-01: updating the fixed QA host reproduces the
+retained-source gate with nine projects and twenty unique accepted/history inputs.
+The existing MCP catalog still exposes no recovery status or operator recovery
+action. The native verifier already exists; an explicit typed host mode and
+launcher selection now qualify complete nine-session/history restoration in the
+maintained native suite. The fixed QA host separately compiles/executes all twenty
+inputs and restores the same nine projects and exact27 retained files. The
+Resource/HTTP return passes69 authenticated semantic assertions and executes its
+exact exported application on both targets/widths. Ordinary Agents → Watch
+observes revision2 →5 without reload; a real snapshot renders at390x900. Missing
+review assets, detached canvas staging and preview execution-authority assumptions
+are repaired; snapshots/reviews project authored defaults. WORK.md records source/
+delivery identities, failures and full scope limits. Keep the existing bounded recovery-tool gap
+with these original workflow criteria; do not infer execution authority from a
+status query or silently substitute an empty project.
+
 Observed runtime navigation gap — 2026-10-31: the library now has an independent
 mounted collection viewport port, but current semantic discovery exposes no
 client-scoped command for that physical instance. `nyx_select` changes editor

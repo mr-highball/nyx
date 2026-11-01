@@ -15,6 +15,13 @@ pass a public JSON URL to `BuildResourceWorkshopDocument` or edit the declared
 resource in Studio. Cache policy stays on that resource. The saved graph holds no
 transport authority and requires no handwritten result callback.
 
+Expand **Load a URL directly** to edit a typed URL-bound input and invoke the
+separate HTTP graph. Response bytes pass through strict UTF-8 decoding, JSON
+parsing and the same selection/filter/sort recipe. The HTTP status has its own
+integer state binding. Non-success responses retain the accepted rows and summary;
+invalid JSON or row families refuse the whole mixed publication. The launcher
+explicitly supplies the platform HTTP transport, independently of resource loading.
+
 The maintained Pascal consumers `nyx_resource_logic_tests`,
 `nyx_resource_logic_authoring_tests` and `nyx_resource_workshop_controls` separate
 scope/cache/lifetime checks, typed form/source/semantic history and actual
@@ -24,6 +31,14 @@ across tabs, reject invalid options, set its deadline, Apply, Save graphs, Undo/
 Redo and Save/Open the project. The resulting exact source is separately compiled
 with `NYX_COMPILED_RESOURCE_WORKSHOP`. Its native/browser Table journey uses the
 same actual controls. Controlled byte hosts do not prove a real HTTP origin.
+The additional `nyx_resource_http_controls` consumer uses the actual platform
+transports and the maintained `tests/fixtures/resource-workshop/` responses served
+by an explicitly configured Pascal host. Its native arguments are an evidence
+directory, viewport width and fixture base URL ending in `/`; the browser consumer
+uses its current origin's `/resource-http-01/data/` fixture prefix. Define
+`NYX_COMPILED_RESOURCE_HTTP` to execute an independently compiled saved constructor
+from `nyx.generated.view`. This journey also retains newer-edit, navigation and
+independent-application checks. Local HTTP is distinct from HTTPS/CORS coverage.
 WORK.md owns current results and remaining observing delivery, instance/remount,
 physical/assistive and performance acceptance. The desktop/narrow input assertions
 do not establish full aesthetics.

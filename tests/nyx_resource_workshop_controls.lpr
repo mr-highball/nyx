@@ -241,7 +241,7 @@ begin
         LRootID := LTools.Inspector.Root.ID;
         Check(LTarget.Renderer.Root.Find(LRootID + '-graphs').Prop(NyxAttributeName(atEnabled)) = 'true',
           'initial mounted attachment enables the actual graph switch without manual Refresh');
-        Check(Pos('2 routes', LTarget.Renderer.Root.Find(LRootID + '-status')
+        Check(Pos('3 routes', LTarget.Renderer.Root.Find(LRootID + '-status')
           .Prop(NyxAttributeName(atText))) = 1, 'initial inspector describes the mounted route binding');
         Check(Supports(GViews[0], INyxCanvasRuntimeView, LRuntime),
           'canvas exposes its optional runtime inspection capability');

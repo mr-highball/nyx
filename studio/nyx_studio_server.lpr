@@ -49,11 +49,6 @@ var
   LRecoveryMode: TNyxRuntimeRecoveryMode;
   LRecoveryChoice: TNyxText;
   LCompilerLimits: TNyxCompilerLimits;
-const
-  { Host CLI boundary only; portable designs never contain this execution choice. }
-  CImmediateRecovery = 'immediate';
-  CBrowserWorkerRecovery = 'browser-worker';
-  CAutomaticRecovery = 'automatic';
 begin
   { Environment is read once at this trusted process boundary. Invalid values
     refuse before constructor side effects; design/HTTP/MCP data cannot set it. }
@@ -95,25 +90,13 @@ begin
   begin
     LWebRoot := ParamStr(5);
   end;
-  LRecoveryMode := rrmAutomatic;
+  LRecoveryChoice := GetEnvironmentVariable(NyxStudioRecoveryModeEnvironment);
 
   if ParamCount > 7 then
   begin
     LRecoveryChoice := ParamStr(8);
-
-    if LRecoveryChoice = CBrowserWorkerRecovery then
-    begin
-      LRecoveryMode := rrmBrowserWorker;
-    end
-    else if LRecoveryChoice = CImmediateRecovery then
-    begin
-      LRecoveryMode := rrmImmediate;
-    end
-    else if LRecoveryChoice <> CAutomaticRecovery then
-    begin
-      raise Exception.Create('Recovery mode must be automatic, immediate or browser-worker');
-    end;
   end;
+  LRecoveryMode := NyxRuntimeRecoveryMode(LRecoveryChoice);
 
   if ParamCount > 8 then
   begin
@@ -155,7 +138,9 @@ begin
     saved sources privately while the shell/configuration load. Its visible
     operator action controls later execution; choosing a document output target
     alone cannot start recovery or supply execution authority. Explicit immediate
-    and browser-worker choices retain their trusted-host strategy contracts. }
+    and browser-worker choices retain their trusted-host strategy contracts.
+    Native explicitly executes saved constructors using configured host FPC,
+    including their unit initializers, before either listener is opened. }
   LServer := TNyxStudioServer.Create(LDirectories, LPort, LBindAddress, LMCPPort,
     LWebRoot, nil, LRecoveryMode, LCompilerLimits);
   try

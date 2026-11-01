@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The real-host Resource Workshop now connects hosted resources/direct HTTP to
+JSON/query/Table on both targets and desktop/compact allocations. Authenticated
+MCP authors one undoable revision-aware group; ordinary Studio observes its change
+without reload, and the exact exported Pascal independently executes on browser/
+LCL. Explicit native startup recovery restores the nine retained QA projects.
+WORK owns resource-http01, preview repairs and remaining full inventory, instance/
+remount, host/cache, input/quality and performance gates. This advances M2/M3/M4;
+no whole parent criterion/task or completion percentage closes.
+
 [Canvas collections01](NS-2_canvas-collections_01.md) now accepts original
 criterion4: ordinary Resource Workshop Studio authoring, paired history, actual
 Save/Open and independent execution of that exact saved Pascal on both targets

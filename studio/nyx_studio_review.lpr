@@ -60,6 +60,9 @@ var
   LRenderer: TNyxBrowserRenderer;
   LRoot: TNyxNode;
   LHost: TJSHTMLElement;
+  LPublished: Boolean;
+  LPreviousRenderer: TNyxBrowserRenderer;
+  LPreviousDocument: TNyxDocument;
 begin
 
   if GRequest.readyState <> 4 then
@@ -87,24 +90,54 @@ begin
       LDocument := TNyxCodec.Decode(LPacket.Field('design').AsText);
       LRenderer := TNyxBrowserRenderer.Create;
       LHost := TJSHTMLElement(document.createElement('div'));
+      LPublished := False;
       try
+        { A detached host measures zero. Embedded canvas mounts then admit no
+          visible items and cannot display the review. Stage in the same parent
+          with real width, hidden from input/accessibility and outside its flow.
+          The previous accepted view remains mounted until candidate success. }
+        LHost.style.setProperty('position', 'absolute');
+        LHost.style.setProperty('left', '0');
+        LHost.style.setProperty('top', '0');
+        LHost.style.setProperty('width', IntToStr(GHost.clientWidth) + 'px');
+        LHost.style.setProperty('min-height', IntToStr(window.innerHeight) + 'px');
+        LHost.style.setProperty('visibility', 'hidden');
+        LHost.setAttribute('aria-hidden', 'true');
+        GHost.parentNode.appendChild(LHost);
         LRoot := LDocument.Find(LPacket.Field('view').AsText);
 
         if LRoot <> nil then
         begin
-          LRenderer.Render(LDocument, LRoot, LHost, False);
+          { Observation projects authored defaults. It must not attach executable
+            event graphs or require an application's runtime/host authority. }
+          LRenderer.Render(LDocument, LRoot, LHost, True);
         end;
         { Publish only after complete candidate admission/rendering. Detach old
           host last so a failed candidate cannot clear the visible good view. }
         GHost.parentNode.replaceChild(LHost, GHost);
-        GRenderer.Free;
-        GDocument.Free;
+        LHost.style.removeProperty('position');
+        LHost.style.removeProperty('left');
+        LHost.style.removeProperty('top');
+        LHost.style.removeProperty('width');
+        LHost.style.removeProperty('min-height');
+        LHost.style.removeProperty('visibility');
+        LHost.removeAttribute('aria-hidden');
+        LPreviousRenderer := GRenderer;
+        LPreviousDocument := GDocument;
         GHost := LHost;
         GRenderer := LRenderer;
         GDocument := LDocument;
         LRenderer := nil;
         LDocument := nil;
+        LPublished := True;
         GRevision := LPacket.Field('revision').AsInteger;
+        { Publish ownership before retiring the previous renderer. A teardown
+          failure must not free the newly adopted document through local owners. }
+        try
+          LPreviousRenderer.Free;
+        finally
+          LPreviousDocument.Free;
+        end;
         document.body.setAttribute('data-nyx-review-revision', IntToStr(GRevision));
         document.body.setAttribute('data-nyx-review-id', LPacket.Field('review').AsText);
         document.body.setAttribute('data-nyx-review-ready', 'true');
@@ -118,8 +151,16 @@ begin
           Status('Live review / revision ' + IntToStr(GRevision));
         end;
       finally
-        LRenderer.Free;
-        LDocument.Free;
+
+        if not LPublished then
+        begin
+          LHost.remove;
+        end;
+        try
+          LRenderer.Free;
+        finally
+          LDocument.Free;
+        end;
       end;
     end;
   except

@@ -11,28 +11,105 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Current work — Real resource/HTTP hosts and observing Studio return — 2026-11-01
 
-Current goal turn: PROGRESS. The preceding synopsis turn was status-only/no
-progress; this turn changes the library and qualifies the next original outcome.
-Root remains SOLO. Resource-studio01 accepts canvas-collections01 criterion4:
-ordinary Studio authoring/Save/Open and independent execution of its own saved
-application on browser/LCL. Consecutive batches without full criterion closure
-reset to0. The task itself remains open, with no north-star percentage assigned.
+Previous goal turn: NO PROGRESS (requested synopsis only). Root remains SOLO.
+Resource-http01 qualifies actual hosted-resource/direct-HTTP input, authenticated
+semantic composition, live observing Studio and execution of its exact exported
+application. This is one batch since resource-studio01 accepted canvas-collections01
+criterion4 and reset the count to0: consecutive batches without another full
+criterion closure are1. No whole parent or north-star percentage closes. Stop
+descriptor, constructor, save/schema and source variants of this useful
+HTTP → JSON → query/Table outcome.
 
-Next deliver real hosted-resource input and the original HTTP → JSON → query/
-Table outcome through actual controls and explicit application hosts. Preserve
-the same useful Workshop, source/history and cancellation/stale-publication
-assertions. Follow logic-components01 criteria3/4/6/7 and canvas-collections01's
-remaining scope/resource/instance/remount outcomes. Matching authenticated MCP/
-observing delivery, physical/assistive quality and performance remain open.
-Stop further descriptor, constructor or save/schema-only variants. The resolver
-remains deferred; do not create a tenth ordinary QA workspace.
+Next complete canvas-collections01's remaining application/private-instance,
+navigation/remount and resource-publication outcomes through actual controls.
+Preserve source/history, wrong-row, cancellation and newer-edit assertions.
+Return to logic-components01 criteria3/4/6/7 for remaining operation/creator,
+host/cache, input/quality and production-budget scope. Broader physical/assistive
+parity and runtime client/mount MCP navigation remain open. The resolver remains
+deferred; do not create a tenth ordinary QA workspace.
 
-All current compilers and native journeys are terminal and joined. Nine owned
-browser tabs are closed. Fixed QA/LAN listeners and configuration are unchanged;
-only this packet's static QA assets were staged, with no model mutation to the
-existing projects. New scratch/runners/artifacts and child TEMP/TMP remain on E:.
+The fixed QA slot is ready after actual twenty-input native recovery. Nine
+ordinary projects and their exact27 retained runtime/project files remain;
+owned reviews are retired. Browser preview/review assets are separately rebuilt
+and staged. Backend identity predates later packager-only/review-program changes;
+do not describe the entire working tree as one compiled server snapshot.
+The LAN listener remains unchanged. New scratch/runners/artifacts and child
+TEMP/TMP remain on E:.
 Preserve unrelated AGENTS/WORK operator edits and untracked1280/390 directories.
 The broad goal remains active; no user input or external blocker is required.
+
+## Qualified checkpoint — Actual Resource/HTTP controls and observing recovery — 2026-11-01
+
+Resource-http01 extends the Resource Workshop with a retained direct-URL
+disclosure and a separate typed HTTP/UTF-8/JSON graph. Both inputs share the
+items/filter/exact-decimal-sort/Table/summary recipe. Actual production
+transports execute hosted resource loading, successful HTTP, invalid JSON, wrong
+row families, real404, supplementary Unicode, newer edits, independent Apps and
+navigation retirement. Native61/browser60 pass per1280/390; native heaps are clean.
+Controlled-host compatibility retains47 per target/allocation with clean heaps.
+These are actual widget/DOM input fixtures and local HTTP, not physical input or
+HTTPS/CORS proof. Immediate newer-edit/navigation cancellation does not prove a
+request reached the wire before retirement.
+
+A bounded Pascal browser reproduction proves that the matched RTL represents an
+empty dynamic outer/fixed-inner header array as nil, rejected before Fetch. The
+library creates Headers directly and appends admitted fields, preserving platform
+duplicate semantics and request policy. Standard platform diagnostic text is
+copied without retaining its external rejection object. No SDK source changes.
+Wide base console observation is empty; the compact base wrapper retains the
+known MutationObserver error. Final compiled-application, observing-review and
+snapshot consoles are empty; no blanket browser-quality claim follows.
+
+The launcher selects the existing native recovery verifier through an appended
+typed mode, closed host names, process-only environment and PowerShell parameter.
+Automatic/literal/browser defaults stay compiler-independent. The complete native
+recovery suite passes104 checks with a clean heap, including exact bytes, missing
+compiler, conflicting authority, cancellation, staged browser execution and late
+refusal. The fixed QA host separately compiles/executes its twenty unique saved
+accepted/history inputs before listeners reopen. Authenticated reads retain all
+nine project revisions; the original27 runtime/project files remain byte-identical.
+Complete backups precede replacement. LAN ownership/enrollment/delivery remain.
+The backend/browser shell/worker/preview build has zero owned warnings; installed
+browser Classes retains seven warnings per compilation.
+
+A maintained Pascal MCP client authors an isolated review using bounded catalog/
+port reads and one expected-revision mixed resource/state/binding/Logic command.
+It passes69 assertions including scalar accounting, idempotent retry, stale
+refusal and exact paired Undo/Redo. Ordinary Studio Agents → Watch observes the
+heading change from revision2 to5 without reload. The exact exported constructor,
+SHA-256 `9CEE2D097E634772273470458941A7CA928AFC8D476D0239792B11193FD23AE3`,
+independently compiles and passes native61/browser60 at each1280/390 allocation.
+It also supplies nonempty/repeated headers; final native heaps are clean. Explicit
+real application hosts supply execution: this is not backend build/launch or
+runtime-MCP navigation acceptance. Chat-native Nyx handles remain absent; the
+authenticated Pascal client is the primary semantic protocol path.
+
+Observation exposes missing review files in ordinary builds and zero-sized
+detached canvas staging. Standard build/launcher payloads now include eight root
+browser files. Review stages at measured width in an attached hidden host,
+publishes ownership and then retires the old renderer. Review/snapshot design
+mode projects authored defaults without executable application authority. A
+separate real nyx_preview request passes15 transfer/revision checks and renders
+the exact changed title at390x900. Live-review and compact-snapshot captures are
+inspected. All owned browser tabs and compiler/test readers are closed/joined.
+
+Release preparation carries the HTML/compiled-review pair together, preserving
+legacy bundles missing both and existing file/byte ceilings. Native checks
+execute retained-release integrity, inert faults and the additive-pair branch.
+The full source-inventory check is NOT accepted: file copying on E: is unusually
+slow (a separate20-file platform copy takes10.141s). The last bulk run is stopped/
+joined after828s without an assertion failure; logs and partial inert fixtures
+remain. This is unfinished validation, not success or an external blocker.
+Do not increase caps or launch equivalent bulk variants; reassess this file-heavy
+check under the delivery owner while useful component lifecycle work continues.
+A concurrent snapshot link timed out; its unchanged build completes after the
+bulk reader stops. No performance improvement is claimed.
+
+Initial header, observer-barrier and missing-review failures remain in the
+resource-http01 packet. Final live observation supersedes failed private barrier
+coordination. No ordinary QA workspace is added and owned reviews are retired.
+Original full Logic collection, instance/remount, HTTPS/CORS, cache breadth,
+physical/assistive quality and production budgets remain open.
 
 ## Qualified checkpoint — Resource Workshop ordinary Studio return — 2026-11-01
 

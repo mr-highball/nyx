@@ -153,7 +153,9 @@ begin
     LHost.style.setProperty('min-height', '100vh');
     document.body.appendChild(LHost);
     GRenderer := TNyxBrowserRenderer.Create;
-    GRenderer.Render(GDocument, LRoot, LHost, False);
+    { A snapshot is an authored-default projection, with no application execution
+      authority. Design mode also lets embedded event-bearing content render. }
+    GRenderer.Render(GDocument, LRoot, LHost, True);
     LPresentation := PresentationName(LPacket);
 
     if LPresentation <> '' then

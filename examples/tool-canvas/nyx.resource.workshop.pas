@@ -27,7 +27,7 @@ interface
 
 uses
   nyx.text, nyx.model, nyx.types, nyx.canvas.types, nyx.flow.types, nyx.flow.declarations,
-  nyx.resource.sources, nyx.data.rows;
+  nyx.resource.sources, nyx.data.rows, nyx.state;
 
 const
   ResourceWorkshopSample: TNyxText =
@@ -39,18 +39,25 @@ type
   { Closed public identities address controls inside the reusable canvas item,
     independently of their position or the renderer's physical widget names. }
   TResourceWorkshopControl = (rwcEmbedded, rwcHosted, rwcTable, rwcSummary,
-    rwcError, rwcCacheWarning);
+    rwcError, rwcCacheWarning, rwcHTTPSection, rwcURL, rwcHTTP, rwcHTTPStatus);
 
 function ResourceWorkshopControl(AControl: TResourceWorkshopControl): TNyxControlRef;
 function ResourceWorkshopCanvas: TNyxControlRef;
 function ResourceWorkshopItem: TNyxCanvasItemRef;
 function ResourceWorkshopFlow: TNyxFlowRef;
+{ Direct HTTP is a separate graph: response bytes require explicit strict UTF-8
+  decoding and JSON admission before entering the shared typed query pipeline. }
+function ResourceWorkshopHTTPFlow: TNyxFlowRef;
+function ResourceWorkshopURL: TNyxTextStateRef;
+function ResourceWorkshopHTTPStatus: TNyxIntegerStateRef;
 function ResourceWorkshopRows: TNyxDataRows;
 { One portable tool embeds ordinary controls in a Tool Canvas. Both buttons use
-  the same typed graph; their reference inputs choose admitted embedded/hosted
+  the same typed resource graph; their inputs choose admitted embedded/hosted
   declarations. Loading policy/authority stays with the running application.
   The default hosted URL is illustrative; pass a public JSON URL or edit the
-  resource in Studio. Failed loading retains accepted rows and exposes errors. }
+  resource in Studio. A retained disclosure adds direct URL loading through the
+  separate HTTP graph. Failed loading retains accepted rows and exposes errors;
+  both transports remain explicit application services, never saved authority. }
 function BuildResourceWorkshopDocument: TNyxDocument; overload;
 function BuildResourceWorkshopDocument(
   const AHostedURL: TNyxResourceURL): TNyxDocument; overload;
@@ -58,17 +65,19 @@ function BuildResourceWorkshopDocument(
 implementation
 
 uses
-  SysUtils, nyx.controls, nyx.root.types, nyx.state, nyx.collections,
+  SysUtils, nyx.controls, nyx.root.types, nyx.collections,
   nyx.collections.view.types, nyx.resources, nyx.data, nyx.flow,
   nyx.flow.routes, nyx.flow.route.model, nyx.logic,
-  nyx.logic.resources, nyx.logic.collections, nyx.tool.canvas,
+  nyx.logic.resources, nyx.logic.collections, nyx.logic.http, nyx.http.types,
+  nyx.tool.canvas,
   nyx.canvas.declarations, nyx.canvas.geometry;
 
 function ResourceWorkshopControl(AControl: TResourceWorkshopControl): TNyxControlRef;
 const
   CNames: array[TResourceWorkshopControl] of TNyxText =
     ('load-embedded-team', 'load-hosted-team', 'team-table', 'team-summary',
-     'team-error', 'team-cache-warning');
+     'team-error', 'team-cache-warning', 'team-http', 'team-url',
+     'load-team-url', 'team-http-status');
 begin
 
   if (Ord(AControl) < Ord(Low(TResourceWorkshopControl))) or
@@ -94,6 +103,21 @@ begin
   Result := NyxFlowRef('Load resource team');
 end;
 
+function ResourceWorkshopHTTPFlow: TNyxFlowRef;
+begin
+  Result := NyxFlowRef('Load team URL');
+end;
+
+function ResourceWorkshopURL: TNyxTextStateRef;
+begin
+  Result := NyxTextState('team-url');
+end;
+
+function ResourceWorkshopHTTPStatus: TNyxIntegerStateRef;
+begin
+  Result := NyxIntegerState('team-http-status');
+end;
+
 function ResourceWorkshopRows: TNyxDataRows;
 begin
   Result := NyxDataRows.Identity(NyxResourcePath.Field('id'))
@@ -110,14 +134,41 @@ begin
   Result := NyxFlowEndpoint(NyxFlowStep('resource'), NyxJSONResourcePort(APort));
 end;
 
+function HTTPPort(APort: TNyxHTTPPort): TNyxFlowEndpoint;
+begin
+  Result := NyxFlowEndpoint(NyxFlowStep('http'), NyxHTTPPort(APort));
+end;
+
+{ Both kinds of admitted JSON enter the same query recipe. No callback copies
+  values into controls; complete route publication owns row/state consistency. }
+function TeamQuery(const AGraph: INyxFlowBuilder;
+  const AJSON: TNyxFlowEndpoint): INyxFlowBuilder;
+begin
+  Result := AGraph
+    .WithStep(NyxFlowStep('items'), NewNyxJSONSelect(NyxDataPath.Field('items')))
+    .WithStep(NyxFlowStep('active'), NewNyxJSONFilter(
+      NyxDataPath.Field('active'), njcEqual, NyxData(True)))
+    .WithStep(NyxFlowStep('sort'), NewNyxJSONSort(NyxDataPath.Field('rank'), njkDecimal))
+    .WithStep(NyxFlowStep('format'), NewNyxJSONFormat)
+    .Connect(AJSON, LogicPort('items', nlpJSON))
+    .Connect(LogicPort('items', nlpValue), LogicPort('active', nlpJSON))
+    .Connect(LogicPort('active', nlpValue), LogicPort('sort', nlpJSON))
+    .Connect(LogicPort('sort', nlpValue), LogicPort('format', nlpJSON));
+end;
+
+function TeamResult(const ARoute: TNyxFlowRoute): TNyxFlowRoute;
+begin
+  Result := ARoute
+    .OutputRows(LogicPort('sort', nlpValue), NyxCollection('team'), ResourceWorkshopRows)
+    .OutputState(LogicPort('format', nlpText), NyxTextState('team-summary'));
+end;
+
 function TeamRoute(const AID: TNyxFlowRouteRef;
   const AReference: TNyxResourceRef): TNyxFlowRoute;
 begin
-  Result := NyxFlowRoute(AID, ResourceWorkshopFlow, ntClick, nfcmExclusive)
+  Result := TeamResult(NyxFlowRoute(AID, ResourceWorkshopFlow, ntClick, nfcmExclusive)
     .InputSignal(ReadPort(njrpTrigger))
-    .InputConstant(ReadPort(njrpReference), NyxFlowText(AReference.Name))
-    .OutputRows(LogicPort('sort', nlpValue), NyxCollection('team'), ResourceWorkshopRows)
-    .OutputState(LogicPort('format', nlpText), NyxTextState('team-summary'))
+    .InputConstant(ReadPort(njrpReference), NyxFlowText(AReference.Name)))
     .OutputState(ReadPort(njrpError), NyxTextState('team-error'))
     .OutputState(ReadPort(njrpCacheWarning), NyxTextState('team-cache-warning'));
 end;
@@ -134,6 +185,8 @@ var
   LPage: INyxPage;
   LCanvas: INyxToolCanvas;
   LGraph: INyxFlowGraph;
+  LNetwork: INyxDisclosure;
+  LURL: INyxInput;
 begin
   Result := TNyxDocument.Create;
   try
@@ -148,6 +201,8 @@ begin
     Result.State.SetValue(NyxTextState('team-summary'), 'Choose a resource to load your team.');
     Result.State.SetValue(NyxTextState('team-error'), '');
     Result.State.SetValue(NyxTextState('team-cache-warning'), '');
+    Result.State.SetValue(ResourceWorkshopURL, AHostedURL.Address);
+    Result.State.SetValue(ResourceWorkshopHTTPStatus, 0);
     Result.Collections.Define(NyxCollection('team'), ResourceWorkshopRows.Schema, []);
     LPanel := NewNyxPanel('resource-team');
     LPanel.Configure.Padding(20).Gap(12).Surface(True).Done;
@@ -156,6 +211,19 @@ begin
       'Load JSON, keep active people, sort exact ranks, then publish one complete Table.'));
     LPanel.Add(NewNyxButton(ResourceWorkshopControl(rwcEmbedded).ID).WithText('Load embedded sample'));
     LPanel.Add(NewNyxButton(ResourceWorkshopControl(rwcHosted).ID).WithText('Load hosted team'));
+    LNetwork := NewNyxDisclosure(ResourceWorkshopControl(rwcHTTPSection).ID)
+      .WithText('Load a URL directly');
+    LNetwork.Configure.Value(False).Done;
+    LURL := NewNyxInput(ResourceWorkshopControl(rwcURL).ID).WithText('Team JSON URL');
+    LURL.Configure.Placeholder('https://your-site.example/team.json').Done;
+    LURL.Binds.Value(ResourceWorkshopURL).Done;
+    LNetwork.BodyColumn.Add(LURL);
+    LNetwork.BodyColumn.Add(NewNyxButton(ResourceWorkshopControl(rwcHTTP).ID)
+      .WithText('Load team URL'));
+    LNetwork.BodyColumn.Add(NewNyxLabel('team-http-status-caption').WithText('Last HTTP status'));
+    LNetwork.BodyColumn.Add(NewNyxLabel(ResourceWorkshopControl(rwcHTTPStatus).ID)
+      .Binds.Text(ResourceWorkshopHTTPStatus).Done);
+    LPanel.Add(LNetwork);
     LTable := NewNyxTable(ResourceWorkshopControl(rwcTable).ID);
     LTable.Configure.Height(240).Done;
     LTable.Binds.Collection(NyxCollectionView(NyxCollection('team'))
@@ -168,18 +236,10 @@ begin
     LPanel.Add(NewNyxLabel(ResourceWorkshopControl(rwcCacheWarning).ID)
       .Binds.Text(NyxTextState('team-cache-warning')).Done);
     Result.AddComponent(LPanel);
-    LGraph := NewNyxFlowGraph
+    LGraph := TeamQuery(NewNyxFlowGraph
       .WithStep(NyxFlowStep('resource'), NewNyxJSONResource(
-        NyxJSONResourceOptions(NyxResourceRef('sample-team')).WholeRequest(15000)))
-      .WithStep(NyxFlowStep('items'), NewNyxJSONSelect(NyxDataPath.Field('items')))
-      .WithStep(NyxFlowStep('active'), NewNyxJSONFilter(
-        NyxDataPath.Field('active'), njcEqual, NyxData(True)))
-      .WithStep(NyxFlowStep('sort'), NewNyxJSONSort(NyxDataPath.Field('rank'), njkDecimal))
-      .WithStep(NyxFlowStep('format'), NewNyxJSONFormat)
-      .Connect(ReadPort(njrpJSON), LogicPort('items', nlpJSON))
-      .Connect(LogicPort('items', nlpValue), LogicPort('active', nlpJSON))
-      .Connect(LogicPort('active', nlpValue), LogicPort('sort', nlpJSON))
-      .Connect(LogicPort('sort', nlpValue), LogicPort('format', nlpJSON)).Build;
+        NyxJSONResourceOptions(NyxResourceRef('sample-team')).WholeRequest(15000))),
+      ReadPort(njrpJSON)).Build;
     LGraph := NyxFlowConditions(LGraph).When(NyxFlowStep('items'), ReadPort(njrpSucceeded)).Build;
     Result.Flows.Define(ResourceWorkshopFlow, LGraph);
     SetNyxFlowRoutes(Result.Find(ResourceWorkshopControl(rwcEmbedded).ID),
@@ -188,11 +248,27 @@ begin
     SetNyxFlowRoutes(Result.Find(ResourceWorkshopControl(rwcHosted).ID),
       NewNyxFlowRoutes.WithRoute(TeamRoute(NyxFlowRouteID('Load hosted team'),
         NyxResourceRef('hosted-team'))));
+    LGraph := TeamQuery(NewNyxFlowGraph
+      .WithStep(NyxFlowStep('http'), NewNyxHTTPCall(NyxHTTPRequest(AHostedURL)
+        .WholeRequest(15000).MaximumBytes(1024 * 1024)))
+      .WithStep(NyxFlowStep('decode'), NewNyxUTF8Decode)
+      .WithStep(NyxFlowStep('parse'), NewNyxJSONParse)
+      .Connect(HTTPPort(nhpBody), NyxFlowEndpoint(NyxFlowStep('decode'), NyxHTTPPort(nhpBody)))
+      .Connect(LogicPort('decode', nlpText), LogicPort('parse', nlpText)),
+      LogicPort('parse', nlpJSON)).Build;
+    LGraph := NyxFlowConditions(LGraph).When(NyxFlowStep('decode'), HTTPPort(nhpSucceeded)).Build;
+    Result.Flows.Define(ResourceWorkshopHTTPFlow, LGraph);
+    SetNyxFlowRoutes(Result.Find(ResourceWorkshopControl(rwcHTTP).ID),
+      NewNyxFlowRoutes.WithRoute(TeamResult(
+        NyxFlowRoute(NyxFlowRouteID('Load team URL'), ResourceWorkshopHTTPFlow, ntClick, nfcmExclusive)
+          .InputSignal(HTTPPort(nhpTrigger)).InputState(HTTPPort(nhpURL), ResourceWorkshopURL))
+        .OutputState(HTTPPort(nhpStatus), ResourceWorkshopHTTPStatus)
+        .OutputState(HTTPPort(nhpError), NyxTextState('team-error'))));
     Result.Canvases.Define(NyxCanvasRef('Resource workbench'), NewNyxCanvasDefinition
       .WithCamera(NyxCanvasCamera(600, 720, NyxCanvasPoint(160, 300), 1))
       .WithLayer(NyxCanvasLayer('Work'))
       .WithItem(ResourceWorkshopItem, NyxReusableRoot('resource-team'),
-        NyxCanvasPlacement(NyxCanvasLayer('Work'), NyxCanvasBounds(0, 0, 320, 1100))));
+        NyxCanvasPlacement(NyxCanvasLayer('Work'), NyxCanvasBounds(0, 0, 320, 1440))));
     LCanvas := NewNyxToolCanvas(ResourceWorkshopCanvas.ID).WithScene(NyxCanvasRef('Resource workbench'));
     LCanvas.WorkspaceCanvas.Configure.Height(720).MinimumHeight(360).Done;
     LPage := NewNyxPage('home');

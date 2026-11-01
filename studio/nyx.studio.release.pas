@@ -79,9 +79,9 @@ uses
 const
   CManifestName = 'release.nyx';
   CMaximumFiles = 1024;
-  { License, two HTML hosts, matched RTL, three compiled browser programs and
+  { License, three HTML hosts, matched RTL, four compiled browser programs and
     one backend must fit beside sources in the same unchanged manifest budget. }
-  CNonSourceFiles = 8;
+  CNonSourceFiles = 10;
   CMaximumFileBytes = 32 * 1024 * 1024;
   CMaximumTotalBytes = 128 * 1024 * 1024;
 
@@ -214,6 +214,7 @@ begin
 
   if (APath = 'bin/nyx_studio_server.exe') or (APath = 'bin/nyx_studio_server') or
     (APath = 'web/index.html') or (APath = 'web/agent-preview.html') or
+    (APath = 'web/agent-review.html') or (APath = 'web/nyx_studio_review.js') or
     (APath = 'web/rtl.js') or (APath = 'web/nyx_studio.js') or
     (APath = 'web/nyx_source_worker.js') or (APath = 'web/nyx_studio_preview.js') then
   begin
@@ -393,6 +394,8 @@ begin
     LDestination + 'web' + PathDelim + 'index.html');
   CopyNewFile(LRepository + 'studio' + PathDelim + 'web' + PathDelim + 'agent-preview.html',
     LDestination + 'web' + PathDelim + 'agent-preview.html');
+  CopyNewFile(LRepository + 'studio' + PathDelim + 'web' + PathDelim + 'agent-review.html',
+    LDestination + 'web' + PathDelim + 'agent-review.html');
   CopyNewFile(ARuntime, LDestination + 'web' + PathDelim + 'rtl.js');
 end;
 
@@ -513,6 +516,15 @@ const
 var
   LIndex: Integer;
 begin
+  { Legacy sealed bundles remain verifiable. New preparation stages the live
+    review host, so it cannot seal until its matching Pascal program is built.
+    Neither half alone is a usable observer; manifest hashing covers both. }
+
+  if (AFiles.IndexOf('web/agent-review.html') >= 0) <>
+    (AFiles.IndexOf('web/nyx_studio_review.js') >= 0) then
+  begin
+    raise ENyxStudioRelease.Create('Live review requires both its HTML host and compiled Pascal program');
+  end;
   for LIndex := Low(CRequired) to High(CRequired) do
   begin
 

@@ -47,7 +47,7 @@ Point both locations and the private `TEMP_ROOT` at the external scratch volume.
 With no configured scratch root, intermediates retain the repository's
 `build/studio-release` default. Keep machine-specific paths out of commits.
 The unchanged inventory limit is shared by both source folders, reserving room
-for the eight production host/compiler artifacts; an uneven source layout does
+for the production host/compiler artifacts; an uneven source layout does
 not reduce that total allowance.
 
 The Pascal packager first copies owned `src/` and
@@ -55,10 +55,13 @@ The Pascal packager first copies owned `src/` and
 includes retain their `studio/assets/glyphs/` compiler paths. The manifest admits
 those Pascal includes without bundling arbitrary working image/resource files.
 The backend,
-browser Studio, independent source worker and preview program are compiled from
-that snapshot. The two production HTML hosts, matched pas2js runtime and MIT
+browser Studio, independent source worker, snapshot preview and live review
+programs are compiled from that snapshot. The three production HTML hosts, matched pas2js runtime and MIT
 license complete the bundle. Compiler units, logs and qualification fixtures stay
 outside it. No listener, enrollment or project operation runs during preparation.
+Live review's HTML and compiled Pascal program form an additive manifest pair:
+either missing half refuses sealing/verification. Older sealed bundles without
+either member remain verifiable; prepare a current bundle to provide live review.
 
 `release.nyx` records the source checkpoint, compiler version labels and a sorted
 complete list of paths, byte lengths and MD5 fingerprints. The inventory owns
@@ -228,7 +231,11 @@ Transport failure leaves local designing available with Check status. An older
 host's 404 readiness endpoint preserves its ordinary immediate connection.
 
 The standalone launcher accepts an optional eighth host argument:
-`automatic` (current-source default), `immediate` or `browser-worker`.
+`automatic` (current-source default), `immediate`, `browser-worker` or `native`.
+Repository and release hosts can instead set `NYX_STUDIO_RECOVERY_MODE`; the
+eighth argument takes precedence. `tools/studio.ps1 -RecoveryMode native` sets
+that process-only choice and restores the caller's environment on exit. Its
+optional ignored configuration key is `STUDIO_RECOVERY_MODE`.
 Earlier arguments retain their order:
 source/release root, HTTP port, bind address, MCP port, web root, private runtime
 home and enrollment project. Explicit runtime/release locations must remain
@@ -239,7 +246,13 @@ source-parser refusal keeps the original complete checkpoint behind explicit
 browser recovery. Integrity, schema and meaning failures still refuse. No
 editable replacement primary is exposed while recovery waits. Compiler paths
 in the output profile do not authorize execution. A trusted host can explicitly
-supply a native constructor verifier instead. Browser mode always stages the
+supply a native constructor verifier instead. The explicit `native` mode creates
+that existing bounded verifier from the host's output profile and compiler limits.
+It compiles and executes all retained accepted constructors, including native unit
+initializers, before opening listeners. Missing FPC, target-dependent differences
+or any refused source retain the complete checkpoint and refuse startup; they do
+not authorize a literal replacement or a partially restored registry. Supplying a
+second verifier with this mode refuses ambiguous execution authority. Browser mode always stages the
 checkpoint and launches the shell/output configuration while the operator
 decides when to execute recovery. Missing application compilers do not prevent
 local design. Immediate mode retains strict compiler-independent literal

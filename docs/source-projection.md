@@ -962,7 +962,12 @@ The launcher's eighth host argument defaults to `automatic` in current source:
 complete literal history publishes without execution, while a typed source-parser
 refusal retains the whole registry behind explicit recovery. Configured compiler
 paths alone cannot grant execution. Explicit `browser-worker` always defers;
-`immediate` retains strict before-startup admission. See
+`immediate` retains strict before-startup admission. An explicit host `native`
+choice uses the existing configured FPC verifier before listeners start, including
+actual constructor/unit-initializer execution; it is never inferred from output
+selection. `NYX_STUDIO_RECOVERY_MODE` and the launcher's `-RecoveryMode` expose
+that same closed host contract without changing positional repository launches.
+See
 [runtime recovery](studio-releases.md#runtime-session-recovery) and
 [the current-source startup gate](../WORK.md#current-return-path-automatic-retained-source-startup--2026-10-11).
 Actual native control checks qualify panel input, numerical progress,

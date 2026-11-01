@@ -292,6 +292,28 @@ begin
       raise Exception.Create('Supply repository, toolchain JSON and a NEW owned runtime');
     end;
     ForceDirectories(ParamStr(3));
+    Check((Ord(rrmImmediate) = 0) and (Ord(rrmBrowserWorker) = 1) and
+      (Ord(rrmAutomatic) = 2) and (Ord(rrmNative) = 3),
+      'native recovery appends without changing existing host mode ordinals');
+    Check(NyxRuntimeRecoveryMode('') = rrmAutomatic,
+      'absent host mode keeps compiler-independent automatic startup');
+    for LIndex := Ord(Low(TNyxRuntimeRecoveryMode)) to
+      Ord(High(TNyxRuntimeRecoveryMode)) do
+    begin
+      Check(NyxRuntimeRecoveryMode(NyxRuntimeRecoveryModeName(
+        TNyxRuntimeRecoveryMode(LIndex))) = TNyxRuntimeRecoveryMode(LIndex),
+        'closed host-wire name round trips its exact typed startup mode');
+    end;
+    LRefused := False;
+    try
+      NyxRuntimeRecoveryMode('unknown');
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'unknown host mode refuses without interpreting project input');
     LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
       .RunningIn(ParamStr(3)).EnrollingProject(ParamStr(3));
     LTools := TNyxDataValue.ParseJSON(NyxDecodeUTF8(ReadBytes(ParamStr(2))));
@@ -603,6 +625,46 @@ begin
       EncodeNyxProject(LFrame.Session.Pair), 'ordinary backend observer sees the recovered exact pair');
     Check(SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
       'backend startup/connection retains complete recovery bytes');
+    FreeAndNil(LEngine);
+
+    { The ordinary host selects its existing native strategy directly. It must
+      execute handwritten history rather than silently use a literal fallback;
+      successful publication still preserves the exact committed checkpoint. }
+    LEngine := TNyxStudioMCP.Create(LDirectories, 8674, 8675, LProfile.Encode,
+      nil, rrmNative);
+    LObserved := LEngine.ConnectEditor(NyxObject([NyxField('op', NyxData('claim')),
+      NyxField('after', NyxData(0))]));
+    Check(LObserved.Field('state').Field('project').AsText =
+      EncodeNyxProject(LFrame.Session.Pair),
+      'explicit native host mode executes and publishes the exact recovered pair');
+    Check(SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'native host mode retains complete nine-project checkpoint bytes');
+    FreeAndNil(LEngine);
+    LRefused := False;
+    try
+      LEngine := TNyxStudioMCP.Create(LDirectories, 8674, 8675, EmptyProfile,
+        nil, rrmNative);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and SameBytes(LBefore, ReadBytes(LDirectories.SessionCheckpoint)),
+      'native mode without FPC refuses without publishing or changing saved work');
+    FreeAndNil(LEngine);
+    LRefused := False;
+    try
+      LEngine := TNyxStudioMCP.Create(LDirectories, 8674, 8675, LProfile.Encode,
+        LCounted, rrmNative);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LCounter.Calls = 2),
+      'native mode refuses conflicting strategy authority before execution');
     FreeAndNil(LEngine);
 
     { Ordinary startup must remain usable after a compiler-proven handwritten

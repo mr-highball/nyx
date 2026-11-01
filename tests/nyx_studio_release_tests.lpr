@@ -206,8 +206,9 @@ begin
   PutSource('LICENSE');
   PutSource('studio/web/index.html');
   PutSource('studio/web/agent-preview.html');
+  PutSource('studio/web/agent-review.html');
   PutSource('runtime.js');
-  for LIndex := 1 to 1011 do
+  for LIndex := 1 to 1009 do
   begin
     PutSource('src/nyx.budget' + TNyxText(IntToStr(LIndex)) + '.pas');
   end;
@@ -217,13 +218,14 @@ begin
   PutSource('studio/assets/glyphs/nyx.studio.movedownglyph.inc');
   PutSource('studio/assets/glyphs/nyx.studio.deleteglyph.inc');
   PrepareNyxStudioRelease(LRepository, LRepository + 'runtime.js', LPrepared);
-  Check(FileExists(LPrepared + PathDelim + 'src' + PathDelim + 'nyx.budget1011.pas') and
+  Check(FileExists(LPrepared + PathDelim + 'src' + PathDelim + 'nyx.budget1009.pas') and
     FileExists(LPrepared + PathDelim + 'studio' + PathDelim + 'nyx.studio.glyphs.pas'),
     'Uneven sources must share the unchanged total allowance');
   Check(FileExists(LPrepared + PathDelim + 'studio' + PathDelim + 'assets' + PathDelim +
     'glyphs' + PathDelim + 'nyx.studio.deleteglyph.inc'),
     'Preparation preserves the embedded glyph compiler includes');
   Check(FileExists(LPrepared + PathDelim + 'web' + PathDelim + 'rtl.js') and
+    FileExists(LPrepared + PathDelim + 'web' + PathDelim + 'agent-review.html') and
     not FileExists(LPrepared + PathDelim + 'release.nyx'),
     'Source preparation copies its host files without claiming compiled/sealed output');
 
@@ -244,6 +246,49 @@ begin
     'Over-budget preparation cannot publish a manifest');
 end;
 
+{ A new inert bundle qualifies the additive review pair independently of the
+  retained legacy fixture. No server or purported fixture executable runs. }
+procedure CheckReviewClosure;
+var
+  LOriginalFixture: TNyxText;
+  LIndex: Integer;
+  LRefused: Boolean;
+begin
+  LOriginalFixture := LFixture;
+  LFixture := ExcludeTrailingPathDelimiter(LFixture) + '-review' + PathDelim;
+  try
+    Check(not DirectoryExists(LFixture), 'Live-review fixture destination must be new');
+    ForceDirectories(LFixture + 'web');
+    ForceDirectories(LFixture + 'bin');
+    ForceDirectories(LFixture + 'src');
+    ForceDirectories(LFixture + 'studio' + PathDelim + 'assets' + PathDelim + 'glyphs');
+    for LIndex := Low(CFixtureFiles) to High(CFixtureFiles) do
+    begin
+      Put(CFixtureFiles[LIndex], 'fixture');
+    end;
+    Put('web/agent-review.html', 'fixture');
+    LRefused := False;
+    try
+      SealNyxStudioRelease(LFixture, CRevision, '3.2.0', '3.3.1');
+    except
+      on LError: ENyxStudioRelease do
+      begin
+        LRefused := Pos('Live review requires both', LError.Message) > 0;
+      end;
+    end;
+    Check(LRefused and not FileExists(LFixture + 'release.nyx'),
+      'a live-review host without its program cannot seal');
+    Put('web/nyx_studio_review.js', 'fixture');
+    SealNyxStudioRelease(LFixture, CRevision, '3.2.0', '3.3.1');
+    Check(VerifyNyxStudioRelease(LFixture).Field('files').Count = Length(CFixtureFiles) + 2,
+      'complete review assets enter the verified additive manifest');
+    Put('web/nyx_studio_review.js', 'changed');
+    RequireVerifyRefusal;
+  finally
+    LFixture := LOriginalFixture;
+  end;
+end;
+
 begin
   try
 
@@ -253,6 +298,8 @@ begin
     end;
     LPackage := ExpandFileName(ParamStr(1));
     LFixture := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
+    WriteLn('Checking retained release');
+    Flush(Output);
     LOriginal := VerifyNyxStudioRelease(LPackage);
     Check(LOriginal.Field('files').Count > Length(CFixtureFiles),
       'The real package must include its complete compiler-source snapshot');
@@ -272,6 +319,8 @@ begin
     Put('src/nyx.model.pas', '// Exact UTF-8 supplementary text: 🚀');
     SealNyxStudioRelease(LFixture, CRevision, '3.2.0', '3.3.1');
     LOriginal := VerifyNyxStudioRelease(LFixture);
+    WriteLn('Checking inert manifest faults');
+    Flush(Output);
     Check(LOriginal.Field('files').Count = Length(CFixtureFiles), 'Fixture closure differs');
 
     LRefused := False;
@@ -345,6 +394,11 @@ begin
       'Refusal must retain the original artifact bytes');
     Check(VerifyNyxStudioRelease(LPackage).Field('revision').AsText <> '',
       'The real release must remain independently verifiable');
+    WriteLn('Checking additive live-review closure');
+    Flush(Output);
+    CheckReviewClosure;
+    WriteLn('Checking source inventory budget');
+    Flush(Output);
     CheckSourceInventory;
     WriteLn('PASS ', LChecks, ' release preparation/integrity checks');
   except

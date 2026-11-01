@@ -2,6 +2,19 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The real-host Resource Workshop return now executes declared hosted JSON and a
+separate direct HTTP/strict UTF-8/JSON input through the same query/Table recipe.
+Native61/browser60 pass at both widths; the existing controlled47 remains on both
+targets. A reproduced empty-header browser adapter failure is repaired in the
+library. Authenticated MCP composition/history passes69 assertions; ordinary
+Studio observes the same review change without reload. Its exact exported source
+executes native61/browser60 per width with clean native heaps; a real MCP snapshot
+renders the changed title at390x900. The fixed QA host restores its nine projects
+through actual twenty-input native startup recovery. WORK.md separates this local
+HTTP evidence from HTTPS/CORS, cache breadth, full instance/remount, physical/
+assistive quality and performance. No whole original criterion/task closes;
+continue those outcomes rather than another source/save variant.
+
 Resource Workshop's ordinary Studio return now executes typed resource options,
 unfinished Unicode draft refusal/restoration, staged/live/saved distinctions,
 paired history and actual Save/Open on native/browser at both allocations. Exact

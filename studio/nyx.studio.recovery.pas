@@ -34,9 +34,11 @@ type
     admits complete literal history without a compiler and parks history that
     needs execution behind the ordinary operator-controlled browser recovery.
     Immediate requires its supplied strategy to admit everything before startup;
-    BrowserWorker always defers. Files cannot choose a verifier or make a compile
-    receipt executable evidence. Existing explicit mode ordinals remain stable. }
-  TNyxRuntimeRecoveryMode = (rrmImmediate, rrmBrowserWorker, rrmAutomatic);
+    BrowserWorker always defers. Native explicitly uses the host's configured FPC
+    to compile and execute all accepted constructors before listeners start.
+    Files cannot choose a verifier or make a compile receipt executable evidence.
+    Existing explicit mode ordinals remain stable. }
+  TNyxRuntimeRecoveryMode = (rrmImmediate, rrmBrowserWorker, rrmAutomatic, rrmNative);
   { A staged attempt publishes all owners together or remains retained. Cancel
     retires execution evidence without rewriting the saved checkpoint. }
   TNyxRuntimeRecoveryState = (rrsAwaitingExecution, rrsPublished, rrsCancelled);
@@ -166,6 +168,16 @@ type
     procedure Save(APrimary: TNyxAgentSession; AWorkspaces: TNyxStudioWorkspaces);
   end;
 
+const
+  { Trusted launcher input only. Neither a portable project nor an output target
+    grants authority to execute retained constructors during host startup. }
+  NyxStudioRecoveryModeEnvironment = 'NYX_STUDIO_RECOVERY_MODE';
+
+{ Closed host-wire spelling. Empty input retains the compiler-free automatic
+  default; an unknown value refuses before any retained source can execute. }
+function NyxRuntimeRecoveryMode(const AName: TNyxText): TNyxRuntimeRecoveryMode;
+function NyxRuntimeRecoveryModeName(AMode: TNyxRuntimeRecoveryMode): TNyxText;
+
 implementation
 
 uses
@@ -184,6 +196,45 @@ const
   CMaximumTextBytes = 4 * 1024 * 1024;
   { The older supported Windows unit omits the named write-through flag. }
   CMoveFileWriteThrough = $00000008;
+
+function NyxRuntimeRecoveryMode(const AName: TNyxText): TNyxRuntimeRecoveryMode;
+begin
+
+  if (AName = '') or (AName = 'automatic') then
+  begin
+    Exit(rrmAutomatic);
+  end;
+
+  if AName = 'immediate' then
+  begin
+    Exit(rrmImmediate);
+  end;
+
+  if AName = 'browser-worker' then
+  begin
+    Exit(rrmBrowserWorker);
+  end;
+
+  if AName = 'native' then
+  begin
+    Exit(rrmNative);
+  end;
+  raise ENyxModel.Create('Recovery mode must be automatic, immediate, browser-worker or native');
+end;
+
+function NyxRuntimeRecoveryModeName(AMode: TNyxRuntimeRecoveryMode): TNyxText;
+begin
+  case AMode of
+    rrmImmediate:
+      Result := 'immediate';
+    rrmBrowserWorker:
+      Result := 'browser-worker';
+    rrmAutomatic:
+      Result := 'automatic';
+    rrmNative:
+      Result := 'native';
+  end;
+end;
 
 type
   { Unadmitted file values. Neither serialized origins nor partially decoded

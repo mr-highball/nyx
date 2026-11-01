@@ -36,7 +36,11 @@ param(
   [string]$EnrollmentRoot,
   [int]$MCPPort = 0,
   # Appended so existing positional release/port invocations retain their shape.
-  [string]$WebRoot
+  [string]$WebRoot,
+  # Host startup strategy only. Native executes retained Pascal constructors;
+  # automatic remains usable without any application compiler installed.
+  [ValidateSet('automatic', 'immediate', 'browser-worker', 'native')]
+  [string]$RecoveryMode
 )
 
 $ErrorActionPreference = 'Stop'
@@ -77,7 +81,14 @@ $nyxPreviousTemp = $env:TEMP
 $nyxPreviousTmp = $env:TMP
 $nyxPreviousRuntime = $env:NYX_STUDIO_RUNTIME_ROOT
 $nyxPreviousEnrollment = $env:NYX_STUDIO_ENROLLMENT_ROOT
+$nyxPreviousRecoveryMode = $env:NYX_STUDIO_RECOVERY_MODE
 try {
+  if (-not $RecoveryMode) { $RecoveryMode = Get-NyxConfiguration 'STUDIO_RECOVERY_MODE' }
+  if (-not $RecoveryMode) { $RecoveryMode = 'automatic' }
+  if ($RecoveryMode -cnotin @('automatic', 'immediate', 'browser-worker', 'native')) {
+    throw 'Studio recovery mode must be automatic, immediate, browser-worker or native.'
+  }
+  $env:NYX_STUDIO_RECOVERY_MODE = $RecoveryMode
   # Installed defaults remain distinct from explicit repository/test hosts.
   # Supplying -Server or -WebRoot keeps the earlier repository invocation unless
   # the caller explicitly also selects -ReleaseRoot.
@@ -234,8 +245,8 @@ try {
       $env:NYX_STUDIO_ENROLLMENT_ROOT = [IO.Path]::GetFullPath($EnrollmentRoot)
     }
     $WebRoot = [IO.Path]::GetFullPath($WebRoot)
-    foreach ($nyxWebFile in @('index.html','agent-preview.html','rtl.js',
-        'nyx_studio.js','nyx_source_worker.js','nyx_studio_preview.js')) {
+    foreach ($nyxWebFile in @('index.html','agent-preview.html','agent-review.html','rtl.js',
+        'nyx_studio.js','nyx_source_worker.js','nyx_studio_preview.js','nyx_studio_review.js')) {
       $nyxWebPath = Join-Path $WebRoot $nyxWebFile
       if (-not (Test-Path -LiteralPath $nyxWebPath -PathType Leaf) -or
           (Get-Item -LiteralPath $nyxWebPath).Length -eq 0) {
@@ -253,5 +264,6 @@ try {
   $env:TMP = $nyxPreviousTmp
   $env:NYX_STUDIO_RUNTIME_ROOT = $nyxPreviousRuntime
   $env:NYX_STUDIO_ENROLLMENT_ROOT = $nyxPreviousEnrollment
+  $env:NYX_STUDIO_RECOVERY_MODE = $nyxPreviousRecoveryMode
   Pop-Location
 }

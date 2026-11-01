@@ -3479,6 +3479,8 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       # Invoke-NyxCompiler also builds the compiled independent module worker.
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Fusrc',
         '-Fustudio', '-Jirtl.js', '-FEweb', 'studio/nyx_studio_preview.lpr')
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Fusrc',
+        '-Fustudio', '-Jirtl.js', '-FEweb', 'studio/nyx_studio_review.lpr')
     } finally {
       Pop-Location
     }
@@ -11269,13 +11271,14 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       '-Fusrc', '-Fustudio', "-FE$nyxBrowserDir")
     Invoke-NyxCompiler $nyxPas2js ($nyxBrowserFlags + @('studio/nyx_studio.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxBrowserFlags + @('studio/nyx_studio_preview.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxBrowserFlags + @('studio/nyx_studio_review.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
-    foreach ($nyxHost in @('index.html', 'agent-preview.html')) {
+    foreach ($nyxHost in @('index.html', 'agent-preview.html', 'agent-review.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/'+$nyxHost)) -Destination $nyxBrowserDir
     }
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('studio/nyx_studio_server.lpr'))
-    foreach ($nyxPayload in @('index.html','agent-preview.html','rtl.js',
-        'nyx_studio.js','nyx_source_worker.js','nyx_studio_preview.js')) {
+    foreach ($nyxPayload in @('index.html','agent-preview.html','agent-review.html','rtl.js',
+        'nyx_studio.js','nyx_source_worker.js','nyx_studio_preview.js','nyx_studio_review.js')) {
       $nyxPayloadFile = Join-Path $nyxBrowserDir $nyxPayload
       if (-not (Test-Path -LiteralPath $nyxPayloadFile -PathType Leaf) -or
           (Get-Item -LiteralPath $nyxPayloadFile).Length -eq 0) {
