@@ -9,33 +9,92 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Logic collection return after canvas lifecycle acceptance — 2026-11-01
+## Current work — Typed choices and compact Studio menu return — 2026-11-01
 
-Previous goal turn: PROGRESS (Resource/HTTP reviewed, committed and remote-verified
-as3b80e272). Root remains SOLO. Current turn: PROGRESS. The full unchanged
-canvas-collections01 prerequisite is accepted and moved to TODO/DONE. Earlier
-resource-studio01 supplies criterion4; canvas-collection-lifecycle01 completes
-criteria1–3. Consecutive batches without full criterion closure reset to0.
-No whole Logic/canvas parent or north-star percentage closes.
+The synopsis-only preceding turn is NO PROGRESS. This continuation is PROGRESS:
+choice-items01 criterion1 is accepted from current native/browser data29 and
+model31 evidence; its complete six-criterion task remains open. Consecutive
+batches without full criterion closure reset to0. Root stays SOLO. The prior
+accepted canvas lifecycle checkpoint is pushed/remote-verified as3b42571b.
+No whole Logic/canvas goal, task weight or north-star percentage closes.
 
-Return to logic-components01's original coverage and user-facing toolbox/creator
-workflow criteria. Start with bounded semantic discovery and ordinary Nyx toolbox
-inspection to identify the first missing useful operation/configuration journey;
-preserve existing graph/source/history and actual host outcomes. Do not repeat
-scope, descriptor, constructor or save/schema variants after this accepted result.
-Full operation breadth, host/retry/cache coverage, wiring, observing delivery,
-physical/assistive quality and production budgets remain under their existing
-owners. The resolver remains deferred; helpers stay idle and no tenth ordinary
-QA workspace is created.
+logic-toolbox01 starts with the bounded authenticated installed-MCP catalog read.
+Read JSON resource already has useful group/help/labels/defaults; the actual
+missing workflow is the selector's raw kind captions. The library now supplies
+typed exact keys, immutable managed rows/collections and an additive managed
+select configuration. Foreign ToData is read once, normalized into our value and
+not retained. Same-node reentrant mutations refuse before publication. Explicit
+empty keys, unselected values, inherited absence and empty masks stay distinct.
+Count/text budgets and malformed/duplicate-key refusals preserve older branches.
 
-The fixed QA host retains its recorded Resource/HTTP backend source/binary hashes
-and separately staged browser preview/review assets; this lifecycle repair is not installed
-there or on LAN. Tests use isolated static paths on the existing QA listener,
-with no ordinary document mutation. All compiler/test readers are joined and
-owned browser tabs are closed. Existing projects, configuration and listener
-owners remain; new artifacts/runners/child TEMP/TMP stay on E:.
-Preserve unrelated AGENTS/WORK operator edits and untracked1280/390 directories.
-The broad goal remains active; no user input or external blocker is required.
+The model owns optional normalized sets. Clone shares immutable data; independent
+replacement remains private. Composition carries definitions, instance overrides
+and named-part metadata; current model checks execute inherited/replaced/empty
+instance roots and incompatible target refusal. Design version17 preserves
+earlier opaque choiceItems and refuses every promoted root-field collision.
+Legacy Items stays intact. Both adapters paint captions and publish keys, including
+duplicate captions and supplementary Unicode. Changed orders retain selected
+keys and the same input. Logical equality, rather than object identity, now
+avoids reconstructing equivalent option sets. Unknown values invent no first
+choice; explicit empty keys remain selectable. The browser's empty-string versus
+selectedIndex distinction is repaired without changing legacy clear dispatch.
+
+Crafted generated Pascal declares purpose-named INyxSelect locals and fluent
+choice blocks through the typed attachment. Strict source replay, caption edits,
+complete model-to-source reconciliation and removal preserve exact pairs.
+Literal NyxSelectConfigure facade replay and executed-companion choice
+customizations remain unqualified. Ordinary Inspector/MCP choice editing,
+paired choice history/drafts and complete focus/events/visual/assistive coverage
+remain under the original choice task; do not call the new field fully exposed.
+
+Logic discovery now displays operation titles with stable kind keys. Multiline
+creator titles project to single-line selector captions while original metadata,
+help and search remain exact. Duplicate creator captions stay distinct, and
+Configure actions expose operation-specific accessible names. The existing
+source/design semantic replacement, idempotent retry and Undo regression remains.
+Five native input helpers now choose actual rows by typed key when present;
+their legacy caption path remains. Four additional affected consumers compile
+on both targets, using the actual saved Resource Workshop companion where needed;
+that rebuild is compilation evidence, not execution of those four suites.
+
+Current qualification: native/browser data29, model31, source18 and creator/
+resource authoring19 pass. Handwritten and exact emitted applications each pass
+native18/browser15 per1280/390; browser frames measure1280x900/390x900. Ordinary
+Resource Workshop Studio passes native97/99 and browser76 at1280. Those journeys
+retain actual configuration/drafts, paired history and controlled Save/Open.
+Ten final native heaps are clean. Owned compiler warnings are zero; installed
+browser Classes retains seven warnings per build. Final pure/browser control
+console observations are retained separately from the wrapper's known earlier
+MutationObserver error. No blanket visual, physical-input, console or
+performance guarantee follows.
+
+The compact browser ordinary Studio journey does NOT pass: its Project branch
+leaves no mounted Open project item at stage20. The first direct click fails;
+waiting for actual publication reaches the unchanged deadline. Native and wide
+browser pass the complete original assertions. Both failures are retained, not
+waived by the selector's simpler passes. NS-2_menu-reveal_01 owns the immediate
+return. Inspect live menu/anchor geometry before fixing shared code: FocusFace
+currently focuses without scrolling and child popovers require visible anchors,
+but an offscreen item is only a hypothesis. Do not skip Save/Open, raise the
+deadline or replace the actual workflow with another menu schema fixture.
+
+Initial wrong test unit path, runtime-ID assumption, external element/TObject
+declaration, ANSI RTL source replacement and wrong accessible-name wire lookup
+remain as harness failures. Browser empty selection is a reproduced library
+failure. Navigation/observation timeouts were followed through the same tab;
+no server or application was restarted merely because observation expired.
+All owned compiler/test readers are joined and browser tabs closed. Source/
+artifact hashes, generated source and per-target logs remain in logic-toolbox01.
+
+Next: qualify/fix compact nested-menu reachability through its existing accepted
+menu prerequisite, rerun the same ordinary journey, then finish choice Inspector/
+MCP authoring and the remaining choice criteria before returning to wider Logic
+operations/creators/hosts. The resolver stays deferred and helpers idle. Tests
+use isolated static paths on the fixed QA listener. Its recorded Resource/HTTP
+backend and LAN release are unchanged; neither the new choices nor prior
+lifecycle repair is installed there. No ordinary server document is mutated.
+New runners/artifacts/child TEMP/TMP remain on E:. Preserve unrelated AGENTS/WORK
+operator edits and untracked1280/390 directories. No user input is required.
 
 ## Accepted checkpoint — Persistent canvas collection instance lifecycle — 2026-11-01
 

@@ -17,6 +17,11 @@ compilation to a Pascal HTTP service for live-ish reload.
 Studio itself is built with Nyx. Its UI and authoring controls exercise the
 public library contract and its reusable components as the proof of capability.
 
+[Typed choices](docs/choices.md) separate stable select values from human captions
+through managed immutable snapshots and fluent Pascal. The Logic editor consumes
+them; ordinary Inspector/MCP choice editing and the compact nested-menu return
+remain under their linked tasks.
+
 Current-source [Pascal declarations](docs/pascal-projects.md#general-declarations)
 share typed names/scopes and physical include positions between Studio's ordinary
 outline and bounded semantic reads. This is declared structure; compiler type/

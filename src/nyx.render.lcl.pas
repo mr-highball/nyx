@@ -96,6 +96,7 @@ uses
   nyx.kanban, nyx.kanban.intent,
   nyx.master.detail, nyx.data.toolbar,
   nyx.data,
+  nyx.choices,
   nyx.viewport,
   nyx.viewport.lcl,
   nyx.observation,
@@ -210,6 +211,9 @@ type
       during unrelated state/layout publications. Managed collections and
       creator updaters retain exclusive ownership of their own contents. }
     FLastItems: TNyxText;
+    { Mounted immutable key mapping, independent of duplicate display captions.
+      Data owns no provider, node or application and retires with this binding. }
+    FLastChoices: INyxChoiceItems;
     FHasItemsBaseline: Boolean;
     FLastSource: TNyxText;
     FHasSourceBaseline: Boolean;
@@ -12430,7 +12434,21 @@ begin
       end
       else if FInput is TComboBox then
       begin
-        LValue := TComboBox(FInput).Text;
+
+        if FLastChoices <> nil then
+        begin
+
+          if (TComboBox(FInput).ItemIndex < 0) or
+            (TComboBox(FInput).ItemIndex >= FLastChoices.Count) then
+          begin
+            Exit;
+          end;
+          LValue := FLastChoices.Item(TComboBox(FInput).ItemIndex).Key.Value;
+        end
+        else
+        begin
+          LValue := TComboBox(FInput).Text;
+        end;
         RequireNativeGeneration(LGeneration);
       end
       else if FInput is TCheckBox then
@@ -13537,6 +13555,9 @@ var
   LKind: TNyxKind;
   LText: TNyxText;
   LSelected: TNyxText;
+  LHasSelected: Boolean;
+  LChoices: INyxChoiceItems;
+  LSelectedIndex: Integer;
   LRows: TNyxStrings;
   LCells: TNyxStrings;
   LList: TListBox;
@@ -13563,8 +13584,15 @@ begin
   RequireNativeGeneration(LGeneration);
   LText := FNode.Prop('items');
   RequireNativeGeneration(LGeneration);
+  LChoices := nil;
 
-  if FHasItemsBaseline and (FLastItems = LText) then
+  if LKind = nkSelect then
+  begin
+    LChoices := FNode.ChoiceItems;
+  end;
+
+  if FHasItemsBaseline and NyxSameChoiceItems(FLastChoices, LChoices) and
+    ((LChoices <> nil) or (FLastItems = LText)) then
   begin
     Exit;
   end;
@@ -13572,18 +13600,43 @@ begin
   LRows := TNyxStrings.Create;
   RequireNativeGeneration(LGeneration);
   try
-    LRows.Text := LText;
+    if LChoices <> nil then
+    begin
+      for LIndex := 0 to LChoices.Count - 1 do
+      begin
+        LRows.Add(LChoices.Item(LIndex).Caption);
+      end;
+    end
+    else
+    begin
+      LRows.Text := LText;
+    end;
     case LKind of
       nkSelect:
         begin
           LChoice := TComboBox(FInput);
           RequireNativeGeneration(LGeneration);
           LSelected := FNode.Prop('value');
+          LHasSelected := True;
           RequireNativeGeneration(LGeneration);
 
           if FHasValueBaseline and (FLastValue = LSelected) then
           begin
-            LSelected := LChoice.Text;
+
+            if FLastChoices <> nil then
+            begin
+              LHasSelected := (LChoice.ItemIndex >= 0) and
+                (LChoice.ItemIndex < FLastChoices.Count);
+
+              if LHasSelected then
+              begin
+                LSelected := FLastChoices.Item(LChoice.ItemIndex).Key.Value;
+              end;
+            end
+            else
+            begin
+              LSelected := LChoice.Text;
+            end;
             RequireNativeGeneration(LGeneration);
           end;
           RequireNativeGeneration(LGeneration);
@@ -13599,10 +13652,24 @@ begin
               RequireNativeGeneration(LGeneration);
             end;
             RequireNativeGeneration(LGeneration);
-            LChoice.ItemIndex := LChoice.Items.IndexOf(LSelected);
+            LSelectedIndex := -1;
+
+            if LHasSelected then
+            begin
+
+              if LChoices <> nil then
+              begin
+                LSelectedIndex := LChoices.IndexOf(NyxChoice(LSelected));
+              end
+              else
+              begin
+                LSelectedIndex := LChoice.Items.IndexOf(LSelected);
+              end;
+            end;
+            LChoice.ItemIndex := LSelectedIndex;
             RequireNativeGeneration(LGeneration);
 
-            if (LChoice.ItemIndex < 0) and FHasValueBaseline and
+            if (LChoices = nil) and (LChoice.ItemIndex < 0) and FHasValueBaseline and
               (FLastValue = FNode.Prop('value')) and
               (LChoice.Style <> csDropDownList) then
             begin
@@ -13782,6 +13849,7 @@ begin
         end;
     end;
     FLastItems := LText;
+    FLastChoices := LChoices;
     FHasItemsBaseline := True;
   finally
     LRows.Free;
@@ -14376,6 +14444,7 @@ var
   LEnabled: Boolean;
   LReadOnly: Boolean;
   LValue: TNyxText;
+  LChoiceIndex: Integer;
   LMinimum: Integer;
   LMaximum: Integer;
   LWriteValue: Boolean;
@@ -14862,10 +14931,24 @@ begin
             else if LInput is TComboBox then
             begin
 
-              if LWriteValue and (TNyxText(TComboBox(LInput).Text) <> LValue) then
+              if LWriteValue then
               begin
+                LChoiceIndex := -1;
+
+                if LNode.HasChoiceItems then
+                begin
+                  LChoiceIndex := LNode.ChoiceItems.IndexOf(NyxChoice(LValue));
+                end
+                else
+                begin
+                  LChoiceIndex := TComboBox(LInput).Items.IndexOf(LValue);
+                end;
                 RequireNativeGeneration(LGeneration);
-                TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(LValue);
+
+                if TComboBox(LInput).ItemIndex <> LChoiceIndex then
+                begin
+                  TComboBox(LInput).ItemIndex := LChoiceIndex;
+                end;
                 RequireNativeGeneration(LGeneration);
               end;
               RequireNativeGeneration(LGeneration);

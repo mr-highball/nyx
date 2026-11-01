@@ -25,7 +25,7 @@ program nyx_http_logic_authoring_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Classes, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model, nyx.codec,
+  SysUtils, Classes, nyx.text, nyx.choices, nyx.bytes, nyx.data, nyx.types, nyx.model, nyx.codec,
   nyx.controls, nyx.root.types, nyx.state, nyx.codegen, nyx.logic, nyx.logic.http,
   nyx.logic.editor, nyx.http.types, nyx.http.editor, nyx.flow, nyx.flow.types,
   nyx.flow.declarations, nyx.scheduler, nyx.behavior, nyx.resources.loader, nyx.test.http.authoring,
@@ -146,7 +146,16 @@ begin
   {$else}
   if LInput is TComboBox then
   begin
-    TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+
+    if GRenderer.Root.Find('editor-' + AName).HasChoiceItems then
+    begin
+      TComboBox(LInput).ItemIndex :=
+        GRenderer.Root.Find('editor-' + AName).ChoiceItems.IndexOf(NyxChoice(AValue));
+    end
+    else
+    begin
+      TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+    end;
     TComboBox(LInput).OnChange(LInput);
   end
   else if LInput is TMemo then

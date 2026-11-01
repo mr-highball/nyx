@@ -24,10 +24,10 @@ program nyx_resource_logic_authoring_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Classes, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.controls,
+  SysUtils, Classes, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.controls, nyx.types,
   nyx.codec, nyx.codegen, nyx.source, nyx.logic.editor, nyx.logic.resources,
   nyx.resource.workshop, nyx.resources, nyx.flow.types, nyx.flow.declarations,
-  nyx.flow.editing, nyx.studio.agents, nyx.studio.projects
+  nyx.flow.editing, nyx.studio.agents, nyx.studio.projects, nyx.choices, nyx.logic, nyx.logic.catalog
   {$ifdef PAS2JS}, Web{$endif};
 
 var
@@ -51,6 +51,11 @@ var
   LSource: TNyxText;
   LBefore: TNyxText;
   LForm: INyxCard;
+  LDiscovery: INyxCard;
+  LCatalog: INyxLogicCatalog;
+  LChoices: INyxChoiceItems;
+  LFirst: Integer;
+  LSecond: Integer;
   LDraft: TNyxLogicEditorDraft;
   LRestored: TNyxLogicEditorDraft;
   LRejected: Boolean;
@@ -84,6 +89,34 @@ begin
     HandleNyxLogicEditor(LForm.Node.Find('resource-editor-defaults'), LForm.Node);
     Check(LForm.Node.Find('resource-editor-resource-name').Prop('value') = 'data',
       'ordinary resource configuration loads typed defaults');
+    LChoices := LForm.Node.Find('resource-editor-operation').ChoiceItems;
+    Check(LChoices.Item(LChoices.IndexOf(NyxChoice(NyxJSONResourceLogicKind))).Caption =
+      'Read JSON resource', 'ordinary operation discovery shows a friendly title for its stable kind');
+    LCatalog := NewNyxLogicCatalog
+      .WithOperation(NewNyxLogicDeclaration(NyxLogicDescriptor(NyxLogicKind('creator-one'),
+        TNyxText('Creator') + #10 + TNyxText('operation 🌙'), 'Creator one help', nlgData)
+        .Labelled('custom-data'), NyxObject([])))
+      .WithOperation(NewNyxLogicDeclaration(NyxLogicDescriptor(NyxLogicKind('creator-two'),
+        'Creator operation 🌙', 'Creator two help', nlgData), NyxObject([])));
+    LDiscovery := NewNyxLogicEditor('creator-editor', LDocument, ResourceWorkshopFlow, LCatalog);
+    LChoices := LDiscovery.Node.Find('creator-editor-operation').ChoiceItems;
+    LFirst := LChoices.IndexOf(NyxChoice('creator-one'));
+    LSecond := LChoices.IndexOf(NyxChoice('creator-two'));
+    Check((LFirst >= 0) and (LSecond >= 0) and (LFirst <> LSecond) and
+      (LChoices.Item(LFirst).Caption = TNyxText('Creator operation 🌙')) and
+      (LChoices.Item(LFirst).Caption = LChoices.Item(LSecond).Caption),
+      'creator duplicate/multiline titles display portable captions with independent stable keys');
+    Check(LCatalog.Descriptor(LFirst).Title = TNyxText('Creator') + #10 +
+      TNyxText('operation 🌙'), 'single-line caption projection preserves the exact creator descriptor');
+    Check(LDiscovery.Node.Find('creator-editor-tool-' + TNyxText(IntToStr(LFirst)) + '-use')
+      .Prop(NyxAttributeName(atAccessibleName)) =
+      TNyxText('Configure Creator') + #10 + TNyxText('operation 🌙'),
+      'each repeated Configure action identifies its operation through its accessible name');
+    LDiscovery.Node.Find('creator-editor-operation').Configure.Value('creator-two').Done;
+    Check(HandleNyxLogicEditor(LDiscovery.Node.Find('creator-editor-defaults'), LDiscovery.Node) and
+      (LDiscovery.Node.Find('creator-editor-operation').Prop('value') = 'creator-two'),
+      'friendly creator selection still loads configuration through its exact kind key');
+    LDiscovery := nil;
     LForm.Node.Find('resource-editor-resource-name').Configure.Value('hosted-team').Done;
     LForm.Node.Find('resource-editor-resource-deadline').Configure.Value('unfinished').Done;
     LDraft.Capture('resource-editor', LForm.Node);
@@ -157,6 +190,7 @@ begin
     {$endif}
   finally
     LForm := nil;
+    LDiscovery := nil;
     LAgent.Free;
     LWorkspace.Free;
     LParsed.Free;

@@ -303,6 +303,7 @@ Initial coverage is organized by intent, retaining creator tags/descriptions:
 - [Portable resources](DONE/NS-1_resources_01.md).
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
 - [Live canvas collection controls](DONE/NS-2_canvas-collections_01.md).
+- [Typed choice keys and captions](NS-1_choice-items_01.md).
 
 Tool Canvas consumes this task; it is not a cyclic prerequisite for standalone
 typed logic components. Graph/toolbox/runtime evidence remains required. Record

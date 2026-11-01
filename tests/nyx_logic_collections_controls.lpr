@@ -26,7 +26,7 @@ program nyx_logic_collections_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
+  SysUtils, nyx.text, nyx.choices, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.state, nyx.controls, nyx.events, nyx.behavior, nyx.callbacks, nyx.scheduler,
   nyx.canvas.types, nyx.canvas.workspace, nyx.view.behavior, nyx.logic.editor,
   nyx.studio.session, nyx.studio.projects, nyx.studio.edits,
@@ -152,7 +152,16 @@ begin
 
   if LInput is TComboBox then
   begin
-    TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+
+    if GRenderer.Root.Find(LID).HasChoiceItems then
+    begin
+      TComboBox(LInput).ItemIndex :=
+        GRenderer.Root.Find(LID).ChoiceItems.IndexOf(NyxChoice(AValue));
+    end
+    else
+    begin
+      TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+    end;
     TComboBox(LInput).OnChange(LInput);
   end
   else

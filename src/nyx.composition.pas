@@ -407,6 +407,11 @@ var
   LChild: Integer;
 begin
 
+  if ANode.HasChoiceItems and (ANode.ProjectionKind <> NyxKindName(nkSelect)) then
+  begin
+    raise ENyxModel.Create('Choice items require a realized select on ' + ANode.SourceID);
+  end;
+
   if ANode.HasCollectionView and ANode.CollectionView.Defined then
   begin
     ValidateNyxCollectionViewProjection(ANode.CollectionView, RealizedCollectionProjection(ANode));
@@ -431,7 +436,8 @@ var
     LChild: Integer;
   begin
 
-    if ANode.HasCollectionView and ANode.CollectionView.Defined and
+    if (ANode.HasChoiceItems or
+      (ANode.HasCollectionView and ANode.CollectionView.Defined)) and
       ((ANode.ProjectionKind = NyxKindName(nkComponent)) or
       (ANode.Kind = NyxKindName(nkSlotOverride))) then
     begin
@@ -453,6 +459,11 @@ var
   var
     LChild: Integer;
   begin
+
+    if ANode.HasChoiceItems and (ANode.ProjectionKind <> NyxKindName(nkSelect)) then
+    begin
+      raise ENyxModel.Create('Choice items require an effective select on ' + ANode.SourceID);
+    end;
 
     if ANode.HasCollectionView and ANode.CollectionView.Defined then
     begin
@@ -814,6 +825,11 @@ var
         LPart.SetCollectionView(LRule.CollectionView);
       end;
 
+      if LRule.HasChoiceItems then
+      begin
+        LPart.SetChoiceItems(LRule.ChoiceItems);
+      end;
+
       if LRule.HasMenu then
       begin
         LPart.SetMenu(LRule.MenuReference);
@@ -920,6 +936,11 @@ var
           Result.SetCollectionView(ANode.CollectionView);
         end;
 
+        if ANode.HasChoiceItems then
+        begin
+          Result.SetChoiceItems(ANode.ChoiceItems);
+        end;
+
         if ANode.HasMenu then
         begin
           Result.SetMenu(ANode.MenuReference);
@@ -987,6 +1008,11 @@ var
       if ANode.HasCollectionView then
       begin
         Result.SetCollectionView(ANode.CollectionView);
+      end;
+
+      if ANode.HasChoiceItems then
+      begin
+        Result.SetChoiceItems(ANode.ChoiceItems);
       end;
 
       if ANode.HasMenu then

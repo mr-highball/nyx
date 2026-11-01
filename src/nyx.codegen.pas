@@ -35,6 +35,7 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.choices,
   nyx.button.presentation,
   nyx.scroll.presentation,
   nyx.resources,
@@ -4011,6 +4012,8 @@ var
     LProjection: TNyxNode;
     LConfigureOpen: Boolean;
     LTypedPresentation: Boolean;
+    LChoiceIndex: Integer;
+    LChoice: TNyxChoiceItem;
 
     procedure OpenConfiguration;
     begin
@@ -4254,6 +4257,19 @@ var
     end;
 
     CloseConfiguration;
+
+    if ANode.HasChoiceItems then
+    begin
+      LLines.Add('    SetNyxChoiceItems(' + LVariable + ',');
+      LLines.Add('      NewNyxChoices');
+      for LChoiceIndex := 0 to ANode.ChoiceItems.Count - 1 do
+      begin
+        LChoice := ANode.ChoiceItems.Item(LChoiceIndex);
+        LLines.Add('        .WithChoice(NyxChoice(' + PascalString(LChoice.Key.Value) + '), ' +
+          PascalString(LChoice.Caption) + ')');
+      end;
+      LLines.Add('    );');
+    end;
 
     if ANode.HasContent then
     begin
@@ -4547,6 +4563,11 @@ begin
     end;
     LLines.Add('  nyx.data,');
     LLines.Add('  nyx.state,');
+
+    if ADocument.HasChoiceItems then
+    begin
+      LLines.Add('  nyx.choices, nyx.select.configuration,');
+    end;
 
     if ADocument.HasComputedBindings then
     begin

@@ -25,7 +25,7 @@ program nyx_tool_logic_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
+  SysUtils, nyx.text, nyx.choices, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
   nyx.events, nyx.behavior, nyx.scheduler, nyx.state, nyx.callbacks, nyx.application.context,
   nyx.canvas.types, nyx.canvas.scene,
   nyx.canvas.workspace, nyx.tool.canvas, nyx.canvas.adoption, nyx.canvas.routes,
@@ -144,9 +144,18 @@ begin
 
   if LInput is TComboBox then
   begin
-    Check(TComboBox(LInput).Items.IndexOf(AValue) >= 0, 'choice belongs to actual field');
-    TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+
+    if GFace.Renderer.Root.Find(ID(ASuffix)).HasChoiceItems then
+    begin
+      TComboBox(LInput).ItemIndex :=
+        GFace.Renderer.Root.Find(ID(ASuffix)).ChoiceItems.IndexOf(NyxChoice(AValue));
+    end
+    else
+    begin
+      TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+    end;
     TComboBox(LInput).OnChange(LInput);
+    Check(TComboBox(LInput).ItemIndex >= 0, 'choice belongs to actual field');
   end
   else
   begin

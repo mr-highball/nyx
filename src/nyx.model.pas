@@ -35,6 +35,7 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.choices,
   nyx.button.presentation,
   nyx.scroll.presentation,
   nyx.resources,
@@ -118,7 +119,8 @@ type
     Disposing an owner releases its token, while retained interfaces keep their
     descriptors alive. Raw Extract returns ownership to the caller; managed
     extraction transfers a retained interface. Clone makes an independent tree
-    with the same IDs, portable meaning and no shared implementation objects.
+    with the same IDs and portable meaning. Immutable admitted choices may be
+    shared; they own no external implementation, tree or application authority.
     Trees with cloned IDs may live in different documents, but Validate rejects
     duplicate identities inside one document. }
   TNyxNode = class
@@ -172,6 +174,8 @@ type
     FStateExpressions: array of INyxExpression;
     FHasCollectionView: Boolean;
     FCollectionView: TNyxCollectionViewSpec;
+    FChoiceItems: INyxChoiceItems;
+    FAdmittingChoices: Boolean;
     FInstanceScopeID: TNyxText;
     FRecipeOwner: TNyxControlRef;
     FReferences: Integer;
@@ -191,6 +195,7 @@ type
     function GetBindingCount: Integer;
     function GetStateBinding(AIndex: Integer): TNyxBindingSpec;
     function GetCollectionView: TNyxCollectionViewSpec;
+    function GetHasChoiceItems: Boolean;
     function GetCount: Integer;
     function GetChild(AIndex: Integer): TNyxNode;
     function GetProjectionKind: TNyxText;
@@ -428,6 +433,17 @@ type
     procedure RemoveCollectionView;
     property HasCollectionView: Boolean read FHasCollectionView;
     property CollectionView: TNyxCollectionViewSpec read GetCollectionView;
+    { Select values use stable keys independently from visible captions. Nil is
+      absence/inheritance; an admitted empty collection deliberately masks an
+      inherited set. Set normalizes an alternative's ToData exactly once before
+      publication and retains no foreign provider. Reentrant choice mutations
+      refuse while admission runs; failure preserves the previous set. Choices
+      override legacy Items only while present. The descriptor is caller-confined,
+      just like its other authoring mutations; this is not a thread-safe store. }
+    procedure SetChoiceItems(const AItems: INyxChoiceItems);
+    procedure RemoveChoiceItems;
+    property HasChoiceItems: Boolean read GetHasChoiceItems;
+    property ChoiceItems: INyxChoiceItems read FChoiceItems;
     { Realization-only nearest reusable/compound owner identity. This is runtime
       metadata, excluded from persistence and authored source. It is immutable
       design meaning's scope bridge; no owner object is retained. }
@@ -813,6 +829,7 @@ type
     function GetComponentCount: Integer;
     function GetComponent(AIndex: Integer): TNyxNode;
     function GetHasCollectionViews: Boolean;
+    function GetHasChoiceItems: Boolean;
     function GetHasColumnSizing: Boolean;
     function GetHasCollectionQueryControls: Boolean;
     function GetHasCollectionPaging: Boolean;
@@ -921,6 +938,9 @@ type
     property HasComputedBindings: Boolean read GetHasComputedBindings;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
     property HasCollectionViews: Boolean read GetHasCollectionViews;
+    { Includes empty inherited-set masks in pages and reusable definitions.
+      Presence selects design version seventeen; inspection realizes no controls. }
+    property HasChoiceItems: Boolean read GetHasChoiceItems;
     { Exact owned binding metadata, including reusable definitions. Used for
       stable conditional imports; no renderer/materialized tree is retained. }
     property HasColumnSizing: Boolean read GetHasColumnSizing;
@@ -1080,6 +1100,51 @@ procedure TNyxNode.RemoveCollectionView;
 begin
   FHasCollectionView := False;
   FCollectionView := Default(TNyxCollectionViewSpec);
+end;
+
+function TNyxNode.GetHasChoiceItems: Boolean;
+begin
+  Result := FChoiceItems <> nil;
+end;
+
+procedure TNyxNode.SetChoiceItems(const AItems: INyxChoiceItems);
+var
+  LCandidate: INyxChoiceItems;
+  LProvider: INyxChoiceItems;
+begin
+
+  if FAdmittingChoices then
+  begin
+    raise ENyxModel.Create('Choice admission cannot mutate the same receiver recursively');
+  end;
+
+  if AItems = nil then
+  begin
+    raise ENyxModel.Create('Use RemoveChoiceItems for inheritance or NewNyxChoices for an empty set');
+  end;
+  { ToData is an outward call. Pin both participants before it can release the
+    caller's last managed control/provider. The node stores only our normalized
+    immutable value; hostile Count/Item implementations are never consulted. }
+  AcquireReference;
+  FAdmittingChoices := True;
+  try
+    LProvider := AItems;
+    LCandidate := NyxChoicesFromData(LProvider.ToData);
+    FChoiceItems := LCandidate;
+  finally
+    FAdmittingChoices := False;
+    ReleaseReference;
+  end;
+end;
+
+procedure TNyxNode.RemoveChoiceItems;
+begin
+
+  if FAdmittingChoices then
+  begin
+    raise ENyxModel.Create('Choice admission cannot remove the same receiver recursively');
+  end;
+  FChoiceItems := nil;
 end;
 
 procedure TNyxNode.SetInstanceScope(const AID: TNyxText);
@@ -3905,6 +3970,9 @@ begin
     Result.FRecipeOwner := FRecipeOwner;
     Result.FCanvasScene := FCanvasScene;
     Result.FHasCanvasScene := FHasCanvasScene;
+    { This is already our admitted immutable implementation. Share data only,
+      without invoking a provider again or coupling future replacements. }
+    Result.FChoiceItems := FChoiceItems;
     Result.FPresentationSnapshot := FPresentationSnapshot;
     Result.FResourceSnapshot := FResourceSnapshot;
     Result.FResourceLocale := FResourceLocale;
@@ -4454,6 +4522,50 @@ begin
   Result := False;
 end;
 
+function TNyxDocument.GetHasChoiceItems: Boolean;
+var
+  LIndex: Integer;
+
+  function HasChoices(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+
+    if ANode.HasChoiceItems then
+    begin
+      Exit(True);
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if HasChoices(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+begin
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if HasChoices(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if HasChoices(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 function TNyxDocument.GetHasCollectionViews: Boolean;
 var
   LIndex: Integer;
@@ -4882,6 +4994,7 @@ var
   LHasContentRules: Boolean;
   LHasMenus: Boolean;
   LHasMenuBars: Boolean;
+  LHasChoices: Boolean;
   LCollections: INyxCollectionDefaults;
   LExpressionInputs: INyxExpressionInputs;
   LCanvasConnections: TNyxCanvasRouteChanges;
@@ -5030,6 +5143,19 @@ var
       begin
         raise ENyxModel.Create('Unknown presentation on ' + ANode.ID + ': ' + LPresentation.Name);
       end;
+    end;
+
+    if LHasChoices and ANode.Extensions.Has(NyxExtension(NyxChoiceItemsWireField)) then
+    begin
+      raise ENyxModel.Create('Typed choices conflict with retained opaque choiceItems on ' + ANode.ID);
+    end;
+
+    if ANode.HasChoiceItems and
+      (ANode.ProjectionKind <> NyxKindName(nkSelect)) and
+      (ANode.ProjectionKind <> NyxKindName(nkComponent)) and
+      (ANode.Kind <> NyxKindName(nkSlotOverride)) then
+    begin
+      raise ENyxModel.Create('Choice items require a select projection on ' + ANode.ID);
     end;
 
     if LHasCollectionViews and ANode.Extensions.Has(NyxExtension(NyxCollectionViewWireField)) then
@@ -5346,6 +5472,7 @@ var
   end;
 
 begin
+  LHasChoices := HasChoiceItems;
   FState.Validate;
   FCollections.Validate;
   FDiagrams.Validate;
@@ -5355,7 +5482,7 @@ begin
     ValidateDiagramContent(LDiagram);
   end;
 
-  if (FDiagrams.Count > 0) and
+  if ((FDiagrams.Count > 0) or LHasChoices) and
     FExtensions.Has(NyxExtension(NyxDiagramsWireField)) then
   begin
     raise ENyxModel.Create('Typed diagrams conflict with retained opaque diagram data');
@@ -5374,7 +5501,7 @@ begin
   end;
 
   if ((FResources.Count > 0) or (FCanvases.Count > 0) or HasCanvasDeclarations or
-    (FFlows.Count > 0) or (FPrograms.Count > 0) or (FDiagrams.Count > 0)) and
+    (FFlows.Count > 0) or (FPrograms.Count > 0) or (FDiagrams.Count > 0) or LHasChoices) and
     FExtensions.Has(NyxExtension(NyxResourcesWireField)) then
   begin
     raise ENyxModel.Create('Typed resources conflict with an older opaque resources extension');
@@ -5423,28 +5550,28 @@ begin
   end;
 
   if ((FCanvases.Count > 0) or HasCanvasDeclarations or (FFlows.Count > 0) or
-    (FPrograms.Count > 0) or (FDiagrams.Count > 0)) and
+    (FPrograms.Count > 0) or (FDiagrams.Count > 0) or LHasChoices) and
     FExtensions.Has(NyxExtension(NyxCanvasesWireField)) then
   begin
     raise ENyxModel.Create('Typed canvases conflict with retained canvas extension data');
   end;
 
-  if ((FFlows.Count > 0) or (FPrograms.Count > 0) or (FDiagrams.Count > 0)) and
+  if ((FFlows.Count > 0) or (FPrograms.Count > 0) or (FDiagrams.Count > 0) or LHasChoices) and
     FExtensions.Has(NyxExtension(NyxFlowsWireField)) then
   begin
     raise ENyxModel.Create('Typed graphs conflict with retained opaque flow extension data');
   end;
 
-  if ((FPrograms.Count > 0) or (FDiagrams.Count > 0)) and
+  if ((FPrograms.Count > 0) or (FDiagrams.Count > 0) or LHasChoices) and
     FExtensions.Has(NyxExtension(NyxProgramsWireField)) then
   begin
     raise ENyxModel.Create('Typed programs conflict with retained opaque program extension data');
   end;
   LHasMenus := HasMenuDeclarations or (FCanvases.Count > 0) or HasCanvasDeclarations or
-    (FFlows.Count > 0) or (FPrograms.Count > 0) or (FDiagrams.Count > 0);
+    (FFlows.Count > 0) or (FPrograms.Count > 0) or (FDiagrams.Count > 0) or LHasChoices;
   { Diagram version sixteen also promotes node menu-bar data when no bar is
     authored. Refuse an older opaque field before it can acquire typed meaning. }
-  LHasMenuBars := HasMenuBars or (FDiagrams.Count > 0);
+  LHasMenuBars := HasMenuBars or (FDiagrams.Count > 0) or LHasChoices;
 
   if LHasMenus and FExtensions.Has(NyxExtension(NyxMenusWireField)) then
   begin
@@ -5517,7 +5644,7 @@ begin
       end;
     end;
 
-    if LDeferredCollectionViews then
+    if LDeferredCollectionViews or LHasChoices then
     begin
       ValidateNyxCollectionDeclarations(Self, LCollections);
     end;

@@ -82,6 +82,7 @@ uses
   nyx.kanban, nyx.kanban.intent,
   nyx.master.detail, nyx.data.toolbar,
   nyx.data,
+  nyx.choices,
   nyx.viewport,
   nyx.event.emitter,
   nyx.state,
@@ -165,6 +166,9 @@ type
       not destroy option/row handles, selection or scroll. Bound collections and
       creator factories own their content independently of this fallback. }
     FLastItems: TNyxText;
+    { Exact immutable set mounted in this input. It retains no node/provider;
+      logical content changes refresh captions/order independently of Items. }
+    FLastChoices: INyxChoiceItems;
     FHasItemsBaseline: Boolean;
     FCustom: Boolean;
     FUpdater: TNyxBrowserUpdater;
@@ -7610,6 +7614,11 @@ begin
     end
     else if FInput is TJSHTMLSelectElement then
     begin
+
+      if (FLastChoices <> nil) and (TJSHTMLSelectElement(FInput).selectedIndex < 0) then
+      begin
+        Exit(True);
+      end;
       LValue := TJSHTMLSelectElement(FInput).value;
     end
     else if (FNode.ProjectionKind = 'checkbox') or (FNode.ProjectionKind = 'switch') or
@@ -10431,6 +10440,8 @@ var
   LKind: TNyxKind;
   LText: TNyxText;
   LSelected: TNyxText;
+  LHasSelected: Boolean;
+  LChoices: INyxChoiceItems;
   LRows: TNyxStrings;
   LCells: TNyxStrings;
   LHost: TJSHTMLElement;
@@ -10457,13 +10468,21 @@ begin
       Exit;
     end;
     LText := FNode.Prop('items');
+    LChoices := nil;
 
-    if FHasItemsBaseline and (FLastItems = LText) then
+    if LKind = nkSelect then
+    begin
+      LChoices := FNode.ChoiceItems;
+    end;
+
+    if FHasItemsBaseline and NyxSameChoiceItems(FLastChoices, LChoices) and
+      ((LChoices <> nil) or (FLastItems = LText)) then
     begin
       Exit;
     end;
     LHost := FElement;
     LSelected := '';
+    LHasSelected := True;
 
     if LKind = nkSelect then
     begin
@@ -10476,13 +10495,24 @@ begin
           value has not changed. Assigning a missing choice yields no selection;
           it never writes an invented first item back into the portable model. }
         LSelected := TJSHTMLSelectElement(LHost).value;
+        LHasSelected := TJSHTMLSelectElement(LHost).selectedIndex >= 0;
       end;
     end;
     LScrollTop := LHost.scrollTop;
     LScrollLeft := LHost.scrollLeft;
     LRows := TNyxStrings.Create;
     try
-      LRows.Text := LText;
+      if LChoices <> nil then
+      begin
+        for LIndex := 0 to LChoices.Count - 1 do
+        begin
+          LRows.Add(LChoices.Item(LIndex).Caption);
+        end;
+      end
+      else
+      begin
+        LRows.Text := LText;
+      end;
       { Only these fallback-owned children are replaced. The logical host, its
         focus, callbacks and viewport remain mounted; identical Items is a no-op. }
       LHost.textContent := '';
@@ -10524,7 +10554,15 @@ begin
 
           if LKind = nkSelect then
           begin
-            LRow.setAttribute('value', LRows[LIndex]);
+
+            if LChoices <> nil then
+            begin
+              LRow.setAttribute('value', LChoices.Item(LIndex).Key.Value);
+            end
+            else
+            begin
+              LRow.setAttribute('value', LRows[LIndex]);
+            end;
           end;
         end;
         LHost.appendChild(LRow);
@@ -10532,11 +10570,20 @@ begin
 
       if LKind = nkSelect then
       begin
-        TJSHTMLSelectElement(LHost).value := LSelected;
+
+        if LHasSelected then
+        begin
+          TJSHTMLSelectElement(LHost).value := LSelected;
+        end
+        else
+        begin
+          TJSHTMLSelectElement(LHost).selectedIndex := -1;
+        end;
       end;
       LHost.scrollTop := LScrollTop;
       LHost.scrollLeft := LScrollLeft;
       FLastItems := LText;
+      FLastChoices := LChoices;
       FHasItemsBaseline := True;
     finally
       LRows.Free;
@@ -12494,7 +12541,11 @@ begin
             else if LControl is TJSHTMLSelectElement then
             begin
 
-              if TJSHTMLSelectElement(LControl).value <> LValue then
+              { No selection also reads as an empty DOM value. Assigning an
+                explicit empty model key must still select its actual option. }
+
+              if (TJSHTMLSelectElement(LControl).value <> LValue) or
+                (TJSHTMLSelectElement(LControl).selectedIndex < 0) then
               begin
                 TJSHTMLSelectElement(LControl).value := LValue;
 

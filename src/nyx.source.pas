@@ -36,6 +36,7 @@ uses
   nyx.colors,
   nyx.images,
   nyx.button.presentation,
+  nyx.choices,
   nyx.scroll.presentation,
   nyx.bytes,
   nyx.resources,
@@ -929,7 +930,7 @@ type
     vkColumnVerticalAlignment, vkTableHeaderPolicy, vkInspectionPolicy, vkCollectionFollow,
     vkDraftRecoveryPolicy, vkToolbarOptions, vkToolbarIntent, vkToolbarSortRef,
     vkToolbarSearchMode, vkToolbarQueryOptions, vkToolbarQueryDisplay,
-    vkJSONResourceOptions, vkJSONResourcePort);
+    vkJSONResourceOptions, vkJSONResourcePort, vkChoiceRef, vkChoiceItems);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -1151,6 +1152,10 @@ type
     { Reads copied target/field/query choices; never configures/replaces nodes. }
     function DataToolbarConstructor(const AName: TNyxText): TValue;
     function ButtonPresentationConstructor(const AName: TNyxText): TValue;
+    { Replays owned immutable choices only. Interfaces remain local to the
+      reader method; its tagged result carries detached descriptor data. }
+    function ChoiceConstructor(const AName: TNyxText): TValue;
+    procedure ChoiceAttachment;
     function ScrollPresentationConstructor: TValue;
     procedure PresentationConfiguration(AAttribute: TNyxAttribute);
     function SelectionOptions: TValue;
@@ -2774,6 +2779,7 @@ end;
 {$I nyx.source.master.detail.inc}
 {$I nyx.source.data.toolbar.inc}
 {$I nyx.source.button.inc}
+{$I nyx.source.choices.inc}
 {$I nyx.source.selection.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
@@ -3122,6 +3128,11 @@ begin
             end;
           end;
           Exit;
+        end;
+
+        if (LName = 'nyxchoice') or (LName = 'newnyxchoices') then
+        begin
+          Exit(ChoiceConstructor(LName));
         end;
 
         if (LName = 'nyxbuttonpresentation') or (LName = 'nyxglyphcell') then
@@ -6841,6 +6852,12 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.images');
     LPrefix := WithNyxImport(LPrefix, 'nyx.button.presentation');
     LPrefix := WithNyxImport(LPrefix, 'nyx.button.configuration');
+
+    if ADocument.HasChoiceItems then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.choices');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.select.configuration');
+    end;
     if LNeedsScrollPresentation then
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.scroll.presentation');

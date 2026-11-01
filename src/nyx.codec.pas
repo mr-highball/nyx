@@ -31,6 +31,7 @@ uses
   nyx.text,
   nyx.types,
   nyx.data,
+  nyx.choices,
   SysUtils,
   fpjson,
   nyx.state,
@@ -51,7 +52,7 @@ uses
   nyx.model;
 
 type
-  { Version 1..16 design persistence. The format deliberately stores the portable
+  { Version 1..17 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -92,7 +93,11 @@ type
     Empty membership retains the earlier canonical version. Older opaque diagram
     fields remain extensions, and promotion refuses collisions with typed data.
     Definitions retain editable intent, independently of rendered Drawing plans.
-    Decode returns ownership to its caller and frees partial trees on failure. }
+    Version seventeen adds node-local immutable choices with independent keys
+    and captions. Absence inherits; an empty descriptor masks inherited choices.
+    Older opaque choiceItems remain extensions and promotion refuses collisions,
+    including all preceding fields promoted by this version. Decode never runs
+    a choice provider. It returns ownership and frees partial trees on failure. }
   TNyxCodec = class
   public
     class function Encode(ADocument: TNyxDocument): TNyxText; static;
@@ -151,7 +156,8 @@ procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   AContentRules: Boolean = False; AMenus: Boolean = False;
   AMenuBars: Boolean = False; AResources: Boolean = False;
   ACanvases: Boolean = False; ACanvasNodes: Boolean = False; AFlows: Boolean = False;
-  APrograms: Boolean = False; ADiagrams: Boolean = False);
+  APrograms: Boolean = False; ADiagrams: Boolean = False;
+  AChoiceItems: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -167,6 +173,8 @@ begin
         (not APresentations or (AObject.Names[LIndex] <> NyxPresentationsWireField)) and
         (not APresentationRules or (AObject.Names[LIndex] <> NyxPresentationRulesWireField)) and
         (not AContentRules or (AObject.Names[LIndex] <> NyxContentRulesWireField)) and
+        (not AChoiceItems or (AExtensions.Scope <> nesNode) or
+          (AObject.Names[LIndex] <> NyxChoiceItemsWireField)) and
         (not ACanvases or (AExtensions.Scope <> nesDocument) or
           (AObject.Names[LIndex] <> NyxCanvasesWireField)) and
         (not AFlows or (AExtensions.Scope <> nesDocument) or
@@ -377,6 +385,11 @@ begin
     begin
       Result.Add(NyxCollectionViewWireField,
         DecodeNyxJSON(ANode.CollectionView.ToData.ToJSON));
+    end;
+
+    if ANode.HasChoiceItems then
+    begin
+      Result.Add(NyxChoiceItemsWireField, DecodeNyxJSON(ANode.ChoiceItems.ToData.ToJSON));
     end;
     Result.Add('children', LChildren);
     for LIndex := 0 to ANode.Count - 1 do
@@ -629,10 +642,18 @@ begin
     if (ADocument.Diagrams.Count > 0) or (ADocument.Programs.Count > 0) or
       (ADocument.Flows.Count > 0) or ADocument.HasCanvasDeclarations or
       (ADocument.Canvases.Count > 0) or (ADocument.Resources.Count > 0) or
-      LImageBindings or LScalarDefaultPins or LExpressions then
+      LImageBindings or LScalarDefaultPins or LExpressions or ADocument.HasChoiceItems then
     begin
 
-      if ADocument.Diagrams.Count > 0 then
+      if ADocument.HasChoiceItems then
+      begin
+        LRoot.Add('version', 17);
+        LRoot.Add(NyxDiagramsWireField, DecodeNyxJSON(ADocument.Diagrams.ToData.ToJSON));
+        LRoot.Add(NyxProgramsWireField, DecodeNyxJSON(ADocument.Programs.ToData.ToJSON));
+        LRoot.Add(NyxFlowsWireField, DecodeNyxJSON(ADocument.Flows.ToData.ToJSON));
+        LRoot.Add(NyxCanvasesWireField, DecodeNyxJSON(ADocument.Canvases.ToData.ToJSON));
+      end
+      else if ADocument.Diagrams.Count > 0 then
       begin
         LRoot.Add('version', 16);
         LRoot.Add(NyxDiagramsWireField, DecodeNyxJSON(ADocument.Diagrams.ToData.ToJSON));
@@ -1018,7 +1039,7 @@ end;
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
   ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars,
   AResources, AImageResources, AScalarDefaultPins, AExpressions: Boolean;
-  ACanvasNodes: Boolean = False): TNyxNode;
+  ACanvasNodes: Boolean = False; AChoiceItems: Boolean = False): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -1166,6 +1187,12 @@ begin
     ReadBindings(LObject.Find('bindings'), Result, AResources, AImageResources,
       AScalarDefaultPins, AExpressions);
 
+    if AChoiceItems and (LObject.Find(NyxChoiceItemsWireField) <> nil) then
+    begin
+      Result.SetChoiceItems(NyxChoicesFromData(TNyxDataValue.ParseJSON(
+        LObject.Find(NyxChoiceItemsWireField).AsJSON)));
+    end;
+
     if ACollectionViews and (LObject.Find(NyxCollectionViewWireField) <> nil) then
     begin
       Result.SetCollectionView(TNyxCollectionViewSpec.FromData(
@@ -1205,12 +1232,13 @@ begin
       end;
     end;
     ReadExtensions(LObject, Result.Extensions, False, ACollectionViews, False,
-      APresentations, AContentRules, AMenus, AMenuBars, False, False, ACanvasNodes);
+      APresentations, AContentRules, AMenus, AMenuBars, False, False, ACanvasNodes,
+      False, False, False, AChoiceItems);
     for LIndex := 0 to LChildren.Count - 1 do
     begin
       Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount,
         ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars, AResources,
-        AImageResources, AScalarDefaultPins, AExpressions, ACanvasNodes));
+        AImageResources, AScalarDefaultPins, AExpressions, ACanvasNodes, AChoiceItems));
     end;
   except
     Result.Free;
@@ -1259,12 +1287,12 @@ begin
       (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') and
       (LVersion <> '10') and (LVersion <> '11') and (LVersion <> '12') and
       (LVersion <> '13') and (LVersion <> '14') and (LVersion <> '15') and
-      (LVersion <> '16') then
+      (LVersion <> '16') and (LVersion <> '17') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
     LHasCanvases := (LVersion = '13') or (LVersion = '14') or
-      (LVersion = '15') or (LVersion = '16');
+      (LVersion = '15') or (LVersion = '16') or (LVersion = '17');
     LHasResources := (LVersion = '8') or (LVersion = '9') or
       (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or LHasCanvases;
     LMenuBars := (LVersion = '7') or LHasResources;
@@ -1343,7 +1371,7 @@ begin
         end;
       end;
 
-      if (LVersion = '14') or (LVersion = '15') or (LVersion = '16') then
+      if (LVersion = '14') or (LVersion = '15') or (LVersion = '16') or (LVersion = '17') then
       begin
         LFlows := NyxFlowDeclarationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxFlowsWireField, jtArray).AsJSON));
@@ -1353,7 +1381,7 @@ begin
         end;
       end;
 
-      if (LVersion = '15') or (LVersion = '16') then
+      if (LVersion = '15') or (LVersion = '16') or (LVersion = '17') then
       begin
         LPrograms := NyxProgramDeclarationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxProgramsWireField, jtArray).AsJSON));
@@ -1364,7 +1392,7 @@ begin
         end;
       end;
 
-      if LVersion = '16' then
+      if (LVersion = '16') or (LVersion = '17') then
       begin
         LDiagrams := NyxDiagramDeclarationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxDiagramsWireField, jtArray).AsJSON));
@@ -1376,8 +1404,10 @@ begin
       end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False,
         LHasPresentations, False, False, LHasMenus, LMenuBars, LHasResources,
-        LHasCanvases, False, (LVersion = '14') or (LVersion = '15') or (LVersion = '16'),
-        (LVersion = '15') or (LVersion = '16'), LVersion = '16');
+        LHasCanvases, False, (LVersion = '14') or (LVersion = '15') or
+        (LVersion = '16') or (LVersion = '17'),
+        (LVersion = '15') or (LVersion = '16') or (LVersion = '17'),
+        (LVersion = '16') or (LVersion = '17'));
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
@@ -1385,7 +1415,7 @@ begin
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
           LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or LHasCanvases,
           (LVersion = '11') or (LVersion = '12') or LHasCanvases,
-          (LVersion = '12') or LHasCanvases, LHasCanvases));
+          (LVersion = '12') or LHasCanvases, LHasCanvases, LVersion = '17'));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
@@ -1393,7 +1423,7 @@ begin
           LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
           LHasResources, (LVersion = '10') or (LVersion = '11') or (LVersion = '12') or LHasCanvases,
           (LVersion = '11') or (LVersion = '12') or LHasCanvases,
-          (LVersion = '12') or LHasCanvases, LHasCanvases));
+          (LVersion = '12') or LHasCanvases, LHasCanvases, LVersion = '17'));
       end;
       Result.Validate;
     except

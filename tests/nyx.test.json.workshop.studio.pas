@@ -25,7 +25,7 @@ unit nyx.test.json.workshop.studio;
 
 interface
 
-uses nyx.text, nyx.studio.projects;
+uses nyx.text, nyx.choices, nyx.studio.projects;
 
 type
   { One finite ordinary Studio input journey. Tick yields while source/physical
@@ -533,7 +533,16 @@ begin
 
   if LControl is TComboBox then
   begin
-    TComboBox(LControl).ItemIndex := TComboBox(LControl).Items.IndexOf(AValue);
+
+    if FTarget.Renderer.Root.Find(ID(ASuffix)).HasChoiceItems then
+    begin
+      TComboBox(LControl).ItemIndex :=
+        FTarget.Renderer.Root.Find(ID(ASuffix)).ChoiceItems.IndexOf(NyxChoice(AValue));
+    end
+    else
+    begin
+      TComboBox(LControl).ItemIndex := TComboBox(LControl).Items.IndexOf(AValue);
+    end;
     Check(TComboBox(LControl).ItemIndex >= 0, 'typed graph/step choice is available: ' + AValue);
     TComboBox(LControl).OnChange(LControl);
   end
@@ -767,8 +776,31 @@ begin
         end;
       end;
     18: ClickShell(NyxStudioActionMenuID);
-    19: ClickProjectMenu(True);
-    20: ClickProjectMenu(False);
+    19:
+      begin
+        {$ifdef PAS2JS}
+        { Popup publication is queued independently from the toolbar command.
+          Logical source presence does not establish a clickable mounted menu.
+          Keep the original stage/deadline until the actual item is available. }
+
+        if document.querySelector('[data-node="studio-menu-project"]') = nil then
+        begin
+          Exit;
+        end;
+        {$endif}
+        ClickProjectMenu(True);
+      end;
+    20:
+      begin
+        {$ifdef PAS2JS}
+
+        if document.querySelector('[data-node="studio-menu-open"]') = nil then
+        begin
+          Exit;
+        end;
+        {$endif}
+        ClickProjectMenu(False);
+      end;
     21:
       begin
         FSaved := EncodedPair;

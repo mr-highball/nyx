@@ -25,7 +25,7 @@ program nyx_logic_editor_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec,
+  Classes, SysUtils, nyx.text, nyx.choices, nyx.types, nyx.data, nyx.model, nyx.codec,
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.logic, nyx.logic.editor, nyx.disclosure, nyx.behavior,
   nyx.generated.view, nyx.studio.projects, nyx.studio.session,
   nyx.studio.sourcejobs, nyx.studio.view, nyx.studio.inspector,
@@ -198,7 +198,16 @@ begin
   {$else}
   if LInput is TComboBox then
   begin
-    TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+
+    if FRenderer.Root.Find(LID).HasChoiceItems then
+    begin
+      TComboBox(LInput).ItemIndex :=
+        FRenderer.Root.Find(LID).ChoiceItems.IndexOf(NyxChoice(AValue));
+    end
+    else
+    begin
+      TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+    end;
     TComboBox(LInput).OnChange(LInput);
   end
   else

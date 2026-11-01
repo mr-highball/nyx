@@ -30,7 +30,8 @@ uses
   nyx.flow.types, nyx.flow, nyx.flow.declarations, nyx.flow.editing,
   nyx.logic, nyx.logic.catalog, nyx.http.editor, nyx.flow.rows.editor,
   nyx.files.save.editor, nyx.files.open.editor, nyx.flow.conditions.editor,
-  nyx.regex.editor, nyx.logic.programs.editor, nyx.flow.controls.editor;
+  nyx.regex.editor, nyx.logic.programs.editor, nyx.flow.controls.editor,
+  nyx.choices, nyx.select.configuration;
 
 type
   { Complete restoration also reapplies discovery filtering. CurrentPresentation
@@ -151,6 +152,44 @@ begin
     (AKind = 'json-sort') or (AKind = 'json-map') or
     (AKind = 'json-set') or (AKind = 'json-remove') or
     RelationOperation(AKind) or (AKind = 'json-aggregate');
+end;
+
+{ Creator titles remain exact multiline metadata on cards and in search. Native
+  combo captions need one line: project control/break scalars to spaces here,
+  without changing either the stored kind or the creator's original descriptor. }
+function OperationChoiceCaption(const ADescriptor: TNyxLogicDescriptor): TNyxText;
+var
+  LIndex: Integer;
+  LScalar: Integer;
+  LMeaningful: Boolean;
+begin
+  Result := '';
+  LIndex := 1;
+  LMeaningful := False;
+  while LIndex <= Length(ADescriptor.Title) do
+  begin
+
+    if not NyxNextScalar(ADescriptor.Title, LIndex, LScalar) then
+    begin
+      raise ENyxFlow.Create('Operation titles require valid Unicode');
+    end;
+
+    if (LScalar < 32) or ((LScalar >= $7f) and (LScalar <= $9f)) or
+      (LScalar = $2028) or (LScalar = $2029) then
+    begin
+      Result := Result + ' ';
+    end
+    else
+    begin
+      Result := Result + NyxScalarText(LScalar);
+      LMeaningful := LMeaningful or not NyxScalarWhitespace(LScalar);
+    end;
+  end;
+
+  if not LMeaningful then
+  begin
+    Result := ADescriptor.Kind.Name;
+  end;
 end;
 
 function FormFor(ANode, ARoot: TNyxNode): TNyxNode;
@@ -911,7 +950,8 @@ var
   LPart: Integer;
   LCount: Integer;
   LGraphNames: TNyxText;
-  LKinds: TNyxText;
+  LKindChoices: INyxChoiceItems;
+  LOperationSelect: INyxSelect;
   LStepNames: TNyxText;
   LSources: TNyxText;
   LTargets: TNyxText;
@@ -1036,17 +1076,14 @@ begin
     'Files' + #10 + 'Collections' + #10 + 'Network' + #10 + 'Data' + #10 + 'Flow', 'All groups');
   Choice('grouped', 'Toolbox view', 'List' + #10 + 'Grouped', 'List');
   SetLength(LEntries, LCatalog.Count);
-  LKinds := '';
+  LKindChoices := NewNyxChoices;
   for LIndex := 0 to LCatalog.Count - 1 do
   begin
     LDescriptor := LCatalog.Descriptor(LIndex);
     LEntries[LIndex] := OperationData(LDescriptor, LCatalog.Configuration(LIndex));
 
-    if LIndex > 0 then
-    begin
-      LKinds := LKinds + #10;
-    end;
-    LKinds := LKinds + LDescriptor.Kind.Name;
+    LKindChoices := LKindChoices.WithChoice(NyxChoice(LDescriptor.Kind.Name),
+      OperationChoiceCaption(LDescriptor));
   end;
   LColumn := NewNyxColumn(AID + '-collection');
   LColumn.Configure.Gap(10).Done;
@@ -1070,14 +1107,20 @@ begin
       LCard.Node.Extensions.SetValue(NyxExtension('nyx.logic-kind'), NyxData(LDescriptor.Kind.Name));
       LCard.Add(NewNyxLabel(LCard.Node.ID + '-title').WithText(LDescriptor.Title));
       LCard.Add(NewNyxLabel(LCard.Node.ID + '-help').WithText(LDescriptor.Description));
-      LCard.Add(NewNyxButton(LCard.Node.ID + '-use').WithText('Configure'));
+      LCard.Add(NewNyxButton(LCard.Node.ID + '-use').Configure.Text('Configure')
+        .AccessibleName('Configure ' + LDescriptor.Title).Done);
       LGroupColumn.Add(LCard);
     end;
     LGroupColumn.Configure.Visible(LGroupColumn.Node.Count > 1).Done;
     LColumn.Add(LGroupColumn);
   end;
   Input('step-name', 'New step name', 'step');
-  Choice('operation', 'Operation', LKinds, 'json-parse');
+  { Captions describe intent; the stable kind key still drives configuration,
+    drafts and saved graphs. Duplicate creator titles remain distinct choices. }
+  LOperationSelect := NewNyxSelect(AID + '-operation').WithText('Operation');
+  LOperationSelect.Configure.Value('json-parse').Done;
+  NyxSelectConfigure(LOperationSelect).Choices(LKindChoices);
+  Result.Add(LOperationSelect);
   Button('defaults', 'Load operation defaults');
   Choice('layout', 'JSON layout', 'Indented' + #10 + 'Compact', 'Indented');
   Input('indent', 'Indent width', '2');

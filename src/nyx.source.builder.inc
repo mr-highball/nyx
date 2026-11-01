@@ -629,6 +629,12 @@ var
   LTabs: INyxTabs;
 begin
 
+  if At('SetNyxChoiceItems') then
+  begin
+    ChoiceAttachment;
+    Exit;
+  end;
+
   if At('NyxButtonConfigure') then
   begin
     PresentationConfiguration(atButtonPresentation);
