@@ -9,7 +9,83 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Typed choices and compact Studio menu return — 2026-11-01
+## Current work — Choice authoring through shared commands — 2026-11-01
+
+The preceding requested synopsis is NO PROGRESS toward implementation. Revalidated
+current sources, installed authenticated MCP schema, live QA/LAN owners and the
+menu-reveal01 terminal evidence. The compact Studio journey passes all76 unchanged
+checks when its390x900 iframe starts at0,0 inside the1280x720 parent. The old
+wrapper put it below the desktop iframe; accepted popover clipping correctly
+refused its invisible anchor. The frame is not fully900px visible, and this is
+not physical phone evidence. No assertion/deadline or product code changed.
+The original failures remain. Broader menu quality criteria remain open, but the
+disproved product defect no longer blocks choice authoring.
+
+Choice-items01 criterion4 now has typed Set/Inherit design commands and strict
+existing transaction operations. They normalize immutable choice data before a
+worker, preserve legacy Items/defaults, and admit the whole candidate atomically.
+The existing node tool has opt-in local/effective reads with separate bounded
+row and Unicode key/caption windows. Empty masks differ from inheritance; a
+truncated key is explicitly not an identity. Existing revision/permission/retry,
+draft and paired-history guards remain. No new transport or shadow model exists.
+
+The reusable public Nyx choice editor now appears in ordinary Component options.
+Actual selects/inputs/checkbox/buttons edit exact keys, friendly captions, order,
+removal, empty sets and inheritance. Exceptional control-character keys have an
+explicit escaped-string mode; ordinary keys remain direct text. Drafts contain
+copied input under exact local/effective context, with no widget/document lease.
+A missing editor parks its identity too. Native/browser controllers copy, capture,
+restore and retire this draft through the existing load/context boundaries.
+Queued Inspector edits carry the complete design baseline; stale commands refuse.
+
+Independent execution of the Inspector's own emitted source finds a real shared
+admission gap: opaque select keys were treated as visible widget text. Both
+property validation and live binding now distinguish typed keys from displayed
+captions. CR/LF/NUL survive actual bound/unbound and programmatic selections;
+legacy single-line/widget text still refuses unsafe values atomically. No SDK
+source or global codepage changes. This is not a general relaxation of text.
+
+Final choice-authoring-01 evidence: native/browser semantic/forms34, actual bound
+select22/18 per1280/390, actual ordinary Inspector/source-worker28/23 per width,
+and independent execution of its own exact emitted application10/7 per width.
+Native Inspector sources agree byte-for-byte across widths. Nine real MCP
+discovery-schema assertions pass without constructing a listener. Both complete
+Studio controllers compile; this is not execution of the complete installed
+controllers. All eight final native heaps are clean; owned warnings are zero.
+Installed browser Classes retains seven warnings per relevant build. Desktop/
+compact form captures and a real Tab focus observation are retained. Frames are
+1280x900/390x900 inside a1280x720 parent; this is not physical phone or complete
+assistive/keyboard/visual/performance evidence. Known MutationObserver errors in
+some browser-wrapper observations remain separately recorded.
+
+Retained failures include the initial COM-interface record member rejected by
+pas2js (replaced with normalized immutable descriptor storage), incorrect form/
+callback declarations, schema-search harness assumptions, the actual opaque-key
+refusal and a fixture timing operator review before Run. The latter now starts
+the unchanged180-second journey budget on Run. A native build reaches its
+unchanged600-second compiler budget; its partial cohort is retained. A separate
+owned protocol build is deliberately stopped/joined after discovering its runner
+omitted its own unit cache; the corrected invocation completes. Navigation and
+observation timeouts are followed through their same handles. No service or app
+is restarted merely because observation expires.
+
+Two-batch reassessment: the corrected menu diagnosis and this authoring package
+advance the real workflow, but do not close all of criterion4. Full whole-project
+Save/Open with choices, authenticated observing-service use of the new fields,
+remaining focus/events/quality and facade/compiled-companion customization remain
+open under the unchanged six-criterion choice task. Next finish those ordinary
+authoring/delivery outcomes; do not start another equivalent constructor/form
+variant. Criterion1 remains accepted; no whole task, milestone or percentage
+closes. The resolver is deferred and helpers stay idle.
+
+All owned compiler/test readers are joined and test tabs closed. Exact source/
+artifact hashes, paired emitted source, failures, per-target logs and the final
+receipt are retained. Authenticated installed-MCP discovery/session reads pass,
+but its QA backend and LAN release still predate this field and the earlier
+canvas lifecycle repair. Neither service nor ordinary server document is changed.
+All new runners/artifacts/child TEMP/TMP remain on E:. No user input is required.
+
+## Prior checkpoint — Typed choices and compact Studio menu return — 2026-11-01
 
 The synopsis-only preceding turn is NO PROGRESS. This continuation is PROGRESS:
 choice-items01 criterion1 is accepted from current native/browser data29 and

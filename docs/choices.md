@@ -27,6 +27,11 @@ publication. An unknown value leaves the control unselected. It never adopts the
 first row or overwrites the model. An explicitly empty key is a real option and
 differs from having no physical selection.
 
+Keys are opaque identities. A typed select can retain CR/LF/NUL in a key because
+only its admitted caption enters native widget text. The same rule applies to
+bound state, unbound input and programmatic values. Legacy caption-valued selects
+and ordinary text inputs keep their existing single-line/widget restrictions.
+
 `INyxChoiceItems` is reference counted and immutable. `WithChoice` returns a new
 list without changing earlier lists. Nodes normalize alternative implementations
 through one `ToData` call and retain their own immutable value. They do not retain
@@ -60,9 +65,60 @@ when no later feature remains.
 
 Generated Pascal uses specialized, purpose-named control interfaces and fluent
 `NewNyxChoices.WithChoice` blocks. The strict source reader admits those public
-constructors and the typed attachment without running a provider. Full ordinary
-Inspector/MCP choice editing and executed-companion customization coverage remain
-under [the choice authoring task](../TODO/NS-1_choice-items_01.md).
+constructors and the typed attachment without running a provider. Literal facade
+replay and executed-companion customization coverage remain under
+[the choice authoring task](../TODO/NS-1_choice-items_01.md).
+
+Studio's Component options contains a **Choices** editor. Choose a row to edit
+its exact key and caption; Save, Add, Move and Remove each propose one complete
+undoable replacement. **No choices** declares an empty local set. **Use inherited
+choices** removes that declaration and restores inherited choices or legacy
+Items. Unfinished fields remain separate from the accepted Pascal/design pair.
+Changing the accepted choice context retires an older form draft. A pending
+Pascal draft must be resolved before a choice edit publishes.
+
+Special-character keys use an explicit **Escaped key** checkbox and quoted JSON
+string notation, such as `"line\r\n\u0000"`. Ordinary keys are entered directly.
+This keeps exceptional keys editable without sending control characters into
+a single-line native text widget. Display captions remain ordinary text.
+
+The reusable library form is `NewNyxChoiceEditor` in `nyx.choices.editor`.
+`CaptureNyxChoiceEditor` returns typed intent and its exact local/effective
+baseline; it never edits the document. Hosts recheck the baseline and use their
+ordinary atomic commands. `TNyxChoiceEditorDraft` parks copied unfinished input
+without retaining a document or widget. Studio consumes this same public form
+through its paired source-command queue. Typed command callers can prepare
+`NyxSetChoices(NyxControl('operation'), LChoices)` or `NyxInheritChoices(...)`
+from `nyx.studio.edits` and combine them with other project changes.
+
+The existing MCP tools expose choices without a whole-document response:
+
+```json
+{"id":"operation","choices":true,"choiceScope":"effective",
+ "choiceOffset":0,"choiceLimit":4,"textLimit":80,"expectedRevision":12}
+```
+
+`nyx_node` returns `choices.scope`, `localDeclared`, `defined`, `total`, `offset`
+and a row page. Each row has an index plus separate `key` and `caption` windows
+containing `value`, `offset`, `totalScalars` and `truncated`. Use `textOffset` to
+continue a window at the same revision; a truncated key is not a usable identity.
+The default row count is eight, maximum sixteen. `choiceScope: "local"` reads
+only the authored declaration; effective scope independently resolves reuse.
+An absent set is `defined: false`, distinct from an explicitly empty set.
+
+`nyx_transaction` accepts `choices-set` with `id` and the version-one `choices`
+descriptor, or `choices-inherit` with only `id`. These are explicit wire names;
+Pascal authors use the typed commands above. Related operations share the
+existing expected revision, operation ID, permission/draft guards and one paired
+Undo. Duplicate keys, unknown fields, incompatible owners and late group failures
+refuse atomically. Inherit requires an existing local set. When removing typed
+choices would make an opaque default invalid for the legacy widget, update that
+default in the same transaction.
+
+The shared semantic boundary and actual Inspector/source-worker controls have
+native/browser checks. Ordinary whole-project Save/Open with this new field and
+authenticated observing-service rollout remain separate qualification work;
+the broader authoring task is still open.
 
 The Logic editor consumes this contract: operation titles are captions, and kind
 references remain stable values. Multiline creator titles are projected to one

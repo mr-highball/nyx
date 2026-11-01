@@ -42,7 +42,7 @@ uses
   nyx.menu.bar.editor,
   nyx.tabs.editor,
   nyx.kanban.editor, nyx.master.detail.editor, nyx.data.toolbar.editor,
-  nyx.selection.editor,
+  nyx.selection.editor, nyx.choices.editor,
   nyx.event.discovery,
   nyx.reusable.editor,
   nyx.parts.editor,
@@ -116,7 +116,8 @@ type
     borrowed configuration, read only while the view is built; nil means empty
     profiles. Copying the record never transfers profile ownership. Preview is
     copied from the controller's current mode solely to present its toggle.
-    Import checking is presentation of a retained input, never a source verdict. }
+    Import checking is presentation of a retained input, never a source verdict.
+    Choice drafts contain only copied form values under exact context fences. }
   TNyxStudioViewState = record
     CodeVisible: Boolean;
     CodePresentation: TNyxStudioCodePresentation;
@@ -213,6 +214,7 @@ type
     KanbanEditorDraft: TNyxKanbanEditorDraft;
     MasterDetailEditorDraft: TNyxMasterDetailEditorDraft;
     DataToolbarEditorDraft: TNyxDataToolbarEditorDraft;
+    ChoicesEditorDraft: TNyxChoiceEditorDraft;
     SelectionEditorDraft: TNyxSelectionEditorDraft;
     ReusableEditorDraft: TNyxReusableEditorDraft;
     ExpressionEditorDraft: TNyxExpressionEditorDraft;
@@ -2127,6 +2129,7 @@ begin
         AddNyxDateRangeInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxMasterDetailInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxDataToolbarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxChoicesInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxCanvasInspector(LComponentGroup.BodyColumn.Node, ASession);
         LComponentGroup.BodyColumn.Add(NewNyxReusableEditor(NyxStudioReusableEditorID,
           ASession.Document, NyxControl(ASession.SelectedID)));

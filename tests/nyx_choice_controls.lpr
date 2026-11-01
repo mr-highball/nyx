@@ -157,6 +157,8 @@ var
   LInput: TObject;
   {$endif}
   LChoices: INyxChoiceItems;
+  LSpecial: TNyxText;
+  LRejected: Boolean;
 begin
   GDocument := BuildDocument;
   GFirst := TTestApplication.Create;
@@ -205,6 +207,19 @@ begin
   GFirst.State.SetValue(NyxTextState('operation'), '');
   GFirst.View.Sync;
   Check(Selected(GFirst) = 0, 'explicit programmatic empty keys select their own row');
+  LSpecial := TNyxText('opaque') + #13#10 + #0 + TNyxText('🌙');
+  LNode.SetChoiceItems(NewNyxChoices.WithChoice(NyxChoice(LSpecial), 'An opaque special key'));
+  GFirst.State.SetValue(NyxTextState('operation'), LSpecial);
+  GFirst.View.Sync;
+  Check((Selected(GFirst) = 0) and (GFirst.State.Value('operation').TextValue = LSpecial) and
+    (Caption(GFirst, 0) = 'An opaque special key'),
+    'bound opaque keys preserve CR/LF/NUL while the actual control displays only its caption');
+  GFirst.State.SetValue(NyxTextState('operation'), 'missing');
+  GFirst.View.Sync;
+  Pick(0);
+  Check(GFirst.State.Value('operation').TextValue = LSpecial,
+    'ordinary input publishes an exact opaque key through the two-way binding');
+  GFirst.State.SetValue(NyxTextState('operation'), '');
   LNode.SetChoiceItems(NewNyxChoices);
   GFirst.View.Sync;
   Check((Selected(GFirst) = -1) and (GFirst.State.Value('operation').TextValue = ''),
@@ -218,6 +233,19 @@ begin
   Pick(0);
   Check(GFirst.State.Value('operation').TextValue = 'Legacy first',
     'legacy caption-valued input remains compatible after typed removal');
+  LRejected := False;
+  LRevision := GFirst.State.Revision;
+  try
+    GFirst.State.SetValue(NyxTextState('operation'), LSpecial);
+  except
+    on ENyxState do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (GFirst.State.Revision = LRevision) and
+    (GFirst.State.Value('operation').TextValue = 'Legacy first'),
+    'legacy single-line binding still refuses an unsafe physical caption atomically');
   Check((Selected(GPeer) = 2) and (Caption(GPeer, 2) = CCaption) and
     (GPeer.State.Value('operation').TextValue = CSecond),
     'physical choices, values and replacements remain independent across applications');

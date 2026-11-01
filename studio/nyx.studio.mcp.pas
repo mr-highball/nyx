@@ -3444,6 +3444,29 @@ begin
     NyxField('options', LOptions)]), [NyxData('op'), NyxData('id'), NyxData('options')]);
 end;
 
+{ Descriptor admission checks Unicode, unique keys and aggregate UTF-8 bytes in
+  Pascal as well. JSON rows are transport data, never executable providers. }
+function ChoicesOperationSchema: TNyxDataValue;
+var
+  LRow: TNyxDataValue;
+  LItems: TNyxDataValue;
+  LChoices: TNyxDataValue;
+begin
+  LRow := Schema(NyxObject([
+    NyxField('value', TextSchema('Exact stable key; an explicit empty key is valid')),
+    NyxField('caption', TextSchema('Single-line Unicode display caption; duplicates are valid'))]),
+    [NyxData('value'), NyxData('caption')]);
+  LItems := NyxObject([NyxField('type', NyxData('array')),
+    NyxField('maxItems', NyxData(1024)), NyxField('items', LRow)]);
+  LChoices := Schema(NyxObject([
+    NyxField('version', NyxObject([NyxField('const', NyxData(1))])),
+    NyxField('items', LItems)]), [NyxData('version'), NyxData('items')]);
+  Result := Schema(NyxObject([
+    NyxField('op', NyxObject([NyxField('const', NyxData('choices-set'))])),
+    NyxField('id', TextSchema('Exact authored select, reusable root or named-part descriptor')),
+    NyxField('choices', LChoices)]), [NyxData('op'), NyxData('id'), NyxData('choices')]);
+end;
+
 function ValueDomainOperationSchema: TNyxDataValue;
 var
   LDomains: array of TNyxDataValue;
@@ -4340,6 +4363,8 @@ begin
     '{"type":"object","properties":{"op":{"const":"menu-remove"},"name":{"type":"string","minLength":1,"maxLength":128}},"required":["op","name"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"menu-attach"},"id":{"type":"string"},"menu":{"type":["string","null"]}},"required":["op","id","menu"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"menu-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
+    ChoicesOperationSchema.ToJSON + ',' +
+    '{"type":"object","properties":{"op":{"const":"choices-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     ValueDomainOperationSchema.ToJSON + ',' +
     '{"type":"object","properties":{"op":{"const":"value-domain-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"derive"},"source":{"type":"string"},"id":{"type":"string"},"identities":{"type":"object","additionalProperties":{"type":"string"}}},"required":["op","source","id","identities"],"additionalProperties":false},' +
@@ -4369,6 +4394,12 @@ begin
         NyxField('events', LBoolean),
         NyxField('parts', LBoolean),
         NyxField('content', LBoolean),
+        NyxField('choices', NyxObject([NyxField('type', NyxData('boolean')),
+          NyxField('description', NyxData('Inspect typed select key/caption choices. choiceScope defaults effective; local reads authored choices only. localDeclared distinguishes inheritance from an explicit empty set; defined=false uses legacy Items. choiceOffset/choiceLimit page rows (8 default, 16 maximum). Each key and caption has its own value/offset/totalScalars/truncated window using textOffset/textLimit (80 default). A truncated key is not an identity. Pin expectedRevision across pages. choices-set/choices-inherit use the existing grouped transaction and paired Undo. An empty set deliberately masks inheritance; inherit requires an existing local declaration.'))])),
+        NyxField('choiceScope', NyxObject([NyxField('enum', NyxArray([
+          NyxData('local'), NyxData('effective')]))])),
+        NyxField('choiceOffset', IntSchema(0, 1024)),
+        NyxField('choiceLimit', IntSchema(1, 16)),
         NyxField('tabs', LBoolean),
         NyxField('tabOffset', IntSchema(0, 100000)),
         NyxField('tabLimit', IntSchema(1, 50)),

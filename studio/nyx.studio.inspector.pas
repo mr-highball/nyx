@@ -73,6 +73,7 @@ const
   NyxStudioDateRangeEditorID = 'inspector-date-range';
   NyxStudioMasterDetailEditorID = 'inspector-master-detail';
   NyxStudioDataToolbarEditorID = 'inspector-data-toolbar';
+  NyxStudioChoicesEditorID = 'inspector-choices';
   NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
   NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
   NyxStudioViewportHeightMinimumID = 'inspector-viewport-height-minimum';
@@ -191,6 +192,12 @@ procedure AddNyxDataToolbarInspector(AParent: TNyxNode; ASession: TNyxStudioSess
   AProjection: TNyxNode);
 function CaptureNyxDataToolbarInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ The public choice editor proposes one immutable replacement. Exact form and
+  complete queued design baselines fence stale selection and paired publication. }
+procedure AddNyxChoicesInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+function CaptureNyxChoicesInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Public Nyx form captures one complete board configuration. Exact authored
   owner/descriptor and mounted baseline survive through the shared paired job. }
 procedure AddNyxKanbanInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
@@ -275,7 +282,7 @@ uses
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
   nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.canvas.palette, nyx.canvas.editing, nyx.codec,
-  nyx.parts.editor, nyx.source, nyx.studio.projects;
+  nyx.parts.editor, nyx.source, nyx.studio.projects, nyx.choices.editor;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -806,6 +813,65 @@ begin
   AEdit.View := ASession.ActiveViewID;
   AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
     NyxDesignStep(NyxMasterDetailPolicyPatch(LChange))]));
+  AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
+end;
+
+procedure AddNyxChoicesInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (AProjection = nil) or (AProjection.ProjectionKind <> NyxKindName(nkSelect)) then
+  begin
+    Exit;
+  end;
+  AParent.Add(NewNyxChoiceEditor(NyxStudioChoicesEditorID, ASession.Document,
+    NyxControl(ASession.SelectedID)));
+end;
+
+function CaptureNyxChoicesInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxChoiceEditorChange;
+  LPatch: INyxDesignPatch;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := False;
+
+  if ASession = nil then
+  begin
+    Exit;
+  end;
+  Result := CaptureNyxChoiceEditor(AButton, AShellRoot, ASession.Document, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if ASession.SelectedID <> LChange.Owner.ID then
+  begin
+    raise ENyxModel.Create('Select this control again before changing its choices');
+  end;
+
+  if ASession.ProjectSnapshot.Pending then
+  begin
+    raise ENyxModel.Create('Resolve the pending Pascal draft before changing choices');
+  end;
+
+  if LChange.Inherit then
+  begin
+    LPatch := NyxInheritChoices(LChange.Owner);
+  end
+  else
+  begin
+    LPatch := NyxSetChoices(LChange.Owner, LChange.Items);
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+    NyxDesignStep(LPatch)]));
   AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
 end;
 

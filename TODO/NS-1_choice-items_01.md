@@ -18,13 +18,25 @@ or claim all radio/segmented controls have the new capability.
 Criterion1 is accepted on2026-11-01 from native/browser choice data29 and model31,
 including bounded refusal, immutable branches, exact Unicode and normalized
 foreign-provider ownership/reentrancy. Source18, creator/resource authoring19 and
-actual handwritten/generated selects qualify further work: native18/browser15
-per desktop/compact allocation, with clean native heaps. Ordinary Studio passes
-native97/99 and browser76 at desktop width; compact browser project-menu opening
-still fails at stage20. WORK owns exact evidence and retained failures. No whole
-task or percentage closes. Full Inspector/MCP choice editing, event/focus/visual
-coverage, public facade literal replay and executed-companion customization
-remain. Complete the linked compact menu return before the full authoring claim.
+actual handwritten/generated selects qualify further work. The subsequent
+ordinary Studio journey passes native97/99 and browser76 at both widths, with
+the compact frame actually onscreen. The earlier stage20 failure belonged to
+the qualification wrapper's invisible iframe, not a demonstrated menu defect.
+menu-reveal01 retains that correction and its broader open quality criteria;
+it is no longer a hard choice-authoring prerequisite.
+
+Choice-authoring-01 now implements bounded local/effective semantic reads,
+typed grouped Set/Inherit and the public Nyx-built ordinary Inspector form.
+Semantic/forms34, actual bound selects22/18 and Inspector/source-worker28/23 pass
+native/browser at both widths. Its own exact emitted application passes10/7
+per width; native sources agree across widths. Nine discovery-schema checks and
+eight clean native heaps are retained. The real opaque-key refusal is repaired
+in shared property/binding admission while preserving legacy text restrictions.
+Complete controllers compile. WORK owns source identities, visible frame bounds,
+actual input scope and retained failures. No whole task or percentage closes.
+Next finish whole-project Save/Open with this field and authenticated observing
+delivery, then remaining event/focus/visual, facade literal replay and executed-
+companion customization criteria. Do not repeat equivalent constructor variants.
 
 **Acceptance Criteria:**
 
@@ -55,4 +67,3 @@ remain. Complete the linked compact menu return before the full authoring claim.
 
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
 - [Owned document model](DONE/NS-1_model_01.md).
-- [Compact nested menu reachability](NS-2_menu-reveal_01.md).

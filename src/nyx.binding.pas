@@ -547,6 +547,16 @@ function InputProjectionText(ANode: TNyxNode;
 begin
   Result := ScalarText(AValue);
 
+  if (AValue.Kind = nskText) and (ANode.ProjectionKind = 'select') and
+    ANode.HasChoiceItems then
+  begin
+    { Typed selects paint admitted captions, never the key. Both adapters map
+      opaque keys to option identity; CR/LF/NUL do not enter native text widgets.
+      Keep exact stored/default/unknown keys through bound and unbound admission.
+      Legacy caption-valued selects retain the single-line constraints below. }
+    Exit;
+  end;
+
   if Pos(#0, Result) > 0 then
   begin
     { State/persistence preserve NUL, but native text widgets use terminated

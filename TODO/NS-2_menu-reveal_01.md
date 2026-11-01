@@ -4,6 +4,19 @@
 
 **Description:**
 
+The original compact Studio failure is now traced to the qualification wrapper:
+its compact iframe began below the desktop iframe, outside the parent viewport.
+The existing popover adapter correctly refused an invisible anchor. Moving only
+the unchanged390-by-900 frame to the top produces all76 original Studio checks,
+including project actions and Save/Open. menu-reveal01 retains its actual
+390x900 frame/1280x720 parent geometry and terminal result; logic-toolbox01 keeps
+the original failures. No library repair or relaxed assertion/deadline was needed.
+This disproves the initial product-defect hypothesis and removes this task as a
+hard prerequisite of choice authoring. The broader short-popup/keyboard/reveal
+criteria below remain open; the passing Studio journey alone does not accept them.
+
+Original reproduction context, retained for evidence:
+
 The current ordinary Resource Workshop Studio journey passes native at desktop
 and compact allocations and browser at desktop width. In the 390-by-900 browser,
 opening the Project branch does not leave a mounted Open project item. The

@@ -2285,6 +2285,7 @@ begin
   FState.KanbanEditorDraft.Clear;
   FState.MasterDetailEditorDraft.Clear;
   FState.DataToolbarEditorDraft.Clear;
+  FState.ChoicesEditorDraft.Clear;
   FState.SelectionEditorDraft.Clear;
   FState.ReusableEditorDraft.Clear;
   FState.ExpressionEditorDraft.Clear;
@@ -2768,6 +2769,8 @@ begin
       FShellView.RootFor(NyxStudioMasterDetailEditorID));
     FState.DataToolbarEditorDraft.Capture(NyxStudioDataToolbarEditorID,
       FShellView.RootFor(NyxStudioDataToolbarEditorID));
+    FState.ChoicesEditorDraft.Capture(NyxStudioChoicesEditorID,
+      FShellView.RootFor(NyxStudioChoicesEditorID));
     FState.SelectionEditorDraft.Capture('inspector-selection-policy',
       FShellView.RootFor('inspector-selection-policy'));
     FState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
@@ -2882,6 +2885,7 @@ begin
   FState.KanbanEditorDraft.Restore(Result.Pages[0]);
   FState.MasterDetailEditorDraft.Restore(Result.Pages[0]);
   FState.DataToolbarEditorDraft.Restore(Result.Pages[0]);
+  FState.ChoicesEditorDraft.Restore(Result.Pages[0]);
   FState.SelectionEditorDraft.Restore(Result.Pages[0]);
   FState.ReusableEditorDraft.Restore(Result.Pages[0]);
   FState.ExpressionEditorDraft.Restore(Result.Pages[0]);

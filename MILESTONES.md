@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Typed choices now connect the public Nyx Inspector to grouped paired commands
+and bounded semantic reads. Actual native/browser controls, source workers and
+the Inspector's own emitted application qualify exact keys/captions and history
+at desktop/compact widths. Shared property/binding admission preserves opaque
+select keys without relaxing legacy widget text. WORK owns34/22-18/28-23/10-7,
+schema9 and eight clean native heaps. Whole-project saving, authenticated new-
+field observing delivery and remaining source/input/quality criteria stay open.
+This advances M2/M4; the complete choice task and overall assessment remain open.
+
 [Live canvas collections](TODO/DONE/NS-2_canvas-collections_01.md) is accepted
 on2026-11-01. Typed logical fragment namespaces preserve private data through
 physical remounts without merging sibling scopes or retaining application/widget

@@ -4018,9 +4018,9 @@ begin
     case LProperties[LIndex].ValueType of
       npText, npLines:
         begin
-          { Portable widget text must survive native terminated strings. State
-            and opaque extension data still retain exact NUL/Unicode values;
-            this check belongs only to recognized control properties. }
+          { Visible widget text must survive native terminated strings. Typed
+            select values are opaque identities: only their admitted captions
+            enter widget text. Other properties retain the original guard. }
           LValid := Pos(#0, LValue) = 0;
 
           if LValid and (LProperties[LIndex].Key = 'src') and
@@ -4033,6 +4033,11 @@ begin
           end;
 
           if (LProperties[LIndex].Key = 'value') and
+            (ANode.ProjectionKind = 'select') and ANode.HasChoiceItems then
+          begin
+            LValid := True;
+          end
+          else if (LProperties[LIndex].Key = 'value') and
             KindIn(ANode.ProjectionKind, 'input|select|date|time|color') then
           begin
             LValid := LValid and (Pos(#10, LValue) = 0) and (Pos(#13, LValue) = 0);

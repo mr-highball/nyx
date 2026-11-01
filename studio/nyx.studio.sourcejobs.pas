@@ -368,7 +368,7 @@ uses
   nyx.studio.sourceprojection, nyx.studio.projectionediting,
   nyx.studio.commands, nyx.codec, nyx.canvas.editing, nyx.canvas.route.types,
   nyx.studio.transactions, nyx.flow.editing, nyx.programs.editing, nyx.diagram.editing,
-  nyx.studio.callbackedits
+  nyx.studio.callbackedits, nyx.choices.editor
   {$ifndef PAS2JS}, Classes{$else}, nyx.studio.worker.transport{$endif};
 
 type
@@ -2647,6 +2647,7 @@ begin
         CaptureNyxDateRangeInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxMasterDetailInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxDataToolbarInspector(FSession, LOrigin, AShellRoot, LEdit) or
+        CaptureNyxChoicesInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxCanvasInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxLogicInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxPartsInspector(FSession, LOrigin, AShellRoot, LEdit) or
@@ -2708,6 +2709,12 @@ begin
   if FDetached then
   begin
     raise ENyxModel.Create('This source-command context has retired');
+  end;
+
+  if (ATrigger = ntChange) and RouteNyxChoiceEditorSelection(ANode, AShellRoot) then
+  begin
+    Notify(nssIdle, 'Choice fields loaded');
+    Exit(True);
   end;
 
   if (ATrigger = ntChange) and RouteNyxTabPageChoice(ANode, AShellRoot) then
@@ -2781,6 +2788,12 @@ begin
     end;
 
     if CaptureNyxMasterDetailInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
+    if CaptureNyxChoicesInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);
       Exit(True);

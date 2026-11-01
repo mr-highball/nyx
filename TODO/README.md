@@ -6,10 +6,16 @@
 [Typed choice keys/captions](NS-1_choice-items_01.md) now supplies managed stable
 values and friendly Logic operation titles. Criterion1 is accepted; source,
 actual controls and their own generated applications pass on both targets.
-The ordinary Studio return passes native97/99 and browser76 at desktop width;
-[compact nested menus](NS-2_menu-reveal_01.md) owns the retained stage20 failure.
-Return there, then finish ordinary Inspector/MCP choice editing and remaining
-focus/event/visual and companion-source coverage. WORK owns exact evidence;
+The ordinary Studio return passes native97/99 and browser76 at both widths.
+The compact correction moves its unchanged iframe onscreen: the old stacked
+wrapper correctly caused invisible-anchor refusal. [Menu reachability](NS-2_menu-reveal_01.md)
+retains the original failure and broader open quality criteria, without blocking
+choice authoring. The public Nyx Inspector and grouped semantic commands now have
+actual native/browser worker/control and own generated-application evidence.
+Opaque keys retain exact control characters while legacy widget restrictions
+remain. Finish whole-project Save/Open and authenticated observing delivery for
+this field, then remaining focus/event/visual and companion-source coverage.
+WORK owns exact34/22-18/28-23/10-7/schema9 evidence and eight clean native heaps;
 the complete choice/Logic tasks and percentage remain open.
 
 [Live canvas collections](DONE/NS-2_canvas-collections_01.md) is accepted

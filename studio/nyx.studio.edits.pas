@@ -35,14 +35,15 @@ uses
   nyx.master.detail, nyx.master.detail.editor, nyx.data.toolbar, nyx.data.toolbar.editor,
   nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations,
   nyx.programs.editing, nyx.diagram.editing,
-  nyx.flow.routes, nyx.flow.route.model;
+  nyx.flow.routes, nyx.flow.route.model, nyx.choices;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
     transport boundary; internal behavior never dispatches arbitrary properties
     or method names. A whole immutable patch builds one detached candidate.
     Compact toolbar operations capture the editor baseline at their ordered
-    candidate step, after preceding structural/collection operations. }
+    candidate step, after preceding structural/collection operations. Choice
+    replacements retain normalized immutable data, never external providers. }
   TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
     doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew,
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
@@ -51,7 +52,8 @@ type
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
     doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram, doDiagram, doKanban,
     doDateRange, doMasterDetail, doDataToolbar,
-    doDataToolbarSet, doDataToolbarDisable, doDataToolbarInherit);
+    doDataToolbarSet, doDataToolbarDisable, doDataToolbarInherit,
+    doChoicesSet, doChoicesInherit);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -256,6 +258,13 @@ function NyxDesignChanges(const APatch: INyxDesignPatch): INyxDesignChanges;
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+{ Set replaces the exact authored select's local set, including an empty mask.
+  Normalize alternative providers now; no provider executes on a paired worker.
+  Inherit requires an existing local declaration. Complete candidate validation
+  resolves reusable/part applicability; legacy Items and defaults stay intact. }
+function NyxSetChoices(const AOwner: TNyxControlRef;
+  const AItems: INyxChoiceItems): INyxDesignPatch;
+function NyxInheritChoices(const AOwner: TNyxControlRef): INyxDesignPatch;
 { Create one exact page/reusable root through the existing catalog and candidate
   owner. Kind is typed; custom names remain distinct references. Related scene
   attachment or item insertion belongs in the same project transaction. }
@@ -664,6 +673,8 @@ end;
 type
   { Detached closed operations retain copied typed values, including compact
     toolbar options without an executable owner or caller-supplied baseline.
+    Choice snapshots use admitted immutable descriptors so pas2js records carry
+    no COM-interface field; candidate execution recreates only owned values.
     Candidate dispatch never invokes arbitrary mutation callbacks. }
   TDesignOperation = record
     Operation: TNyxDesignOperation;
@@ -697,6 +708,7 @@ type
     DiagramChange: TNyxDiagramChange;
     FlowRoutesData: TNyxDataValue;
     TabPage: TNyxTabPageChange;
+    Choices: TNyxDataValue;
   end;
 
   { Own one immutable operation vector and one final detached candidate. }
@@ -1878,7 +1890,23 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if (LName = 'flow-routes-set') or (LName = 'flow-routes-inherit') then
+    if (LName = 'choices-set') or (LName = 'choices-inherit') then
+    begin
+      LOperation.ID := NyxControl(LWire.Field('id').AsText).ID;
+      LOperation.Operation := doChoicesInherit;
+
+      if LName = 'choices-set' then
+      begin
+        CheckFields(LWire, '|op|id|choices|');
+        LOperation.Operation := doChoicesSet;
+        LOperation.Choices := NyxChoicesFromData(LWire.Field('choices')).ToData;
+      end
+      else
+      begin
+        CheckFields(LWire, '|op|id|');
+      end;
+    end
+    else if (LName = 'flow-routes-set') or (LName = 'flow-routes-inherit') then
     begin
       LOperation.Operation := doFlowRoutes;
       LOperation.ID := NyxControl(LWire.Field('id').AsText).ID;
@@ -2286,6 +2314,30 @@ begin
   Result := ReadNyxDesignPatch(NyxArray([
     NyxObject([NyxField('op', NyxData('kanban-policy')),
       NyxField('change', AChange.ToData)])]));
+end;
+
+function NyxSetChoices(const AOwner: TNyxControlRef;
+  const AItems: INyxChoiceItems): INyxDesignPatch;
+var
+  LItems: INyxChoiceItems;
+begin
+  NyxControl(AOwner.ID);
+  LItems := AItems;
+
+  if LItems = nil then
+  begin
+    raise ENyxModel.Create('Set choices requires explicit items; use an empty set to mask inheritance');
+  end;
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('choices-set')), NyxField('id', NyxData(AOwner.ID)),
+    NyxField('choices', LItems.ToData)])]));
+end;
+
+function NyxInheritChoices(const AOwner: TNyxControlRef): INyxDesignPatch;
+begin
+  NyxControl(AOwner.ID);
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('choices-inherit')), NyxField('id', NyxData(AOwner.ID))])]));
 end;
 
 function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
@@ -3047,6 +3099,24 @@ begin
               raise ENyxModel.Create('This exact local menu declaration is absent');
             end;
             LNode.Configure.InheritMenu;
+          end;
+        doChoicesSet, doChoicesInherit:
+          begin
+            LNode := RequireNode(Result, LOperation.ID);
+
+            if LOperation.Operation = doChoicesInherit then
+            begin
+
+              if not LNode.HasChoiceItems then
+              begin
+                raise ENyxModel.Create('This exact local choice declaration is absent');
+              end;
+              LNode.RemoveChoiceItems;
+            end
+            else
+            begin
+              LNode.SetChoiceItems(NyxChoicesFromData(LOperation.Choices));
+            end;
           end;
         doValueDomainSet, doValueDomainInherit:
           begin

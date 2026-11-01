@@ -19,8 +19,11 @@ public library contract and its reusable components as the proof of capability.
 
 [Typed choices](docs/choices.md) separate stable select values from human captions
 through managed immutable snapshots and fluent Pascal. The Logic editor consumes
-them; ordinary Inspector/MCP choice editing and the compact nested-menu return
-remain under their linked tasks.
+them. A public Nyx-built Inspector form and bounded local/effective semantic
+commands now share paired authoring. Whole-project saving and authenticated
+observing rollout for this field remain under its linked task.
+The compact Studio journey passes with its frame onscreen; broader menu quality
+remains independently open.
 
 Current-source [Pascal declarations](docs/pascal-projects.md#general-declarations)
 share typed names/scopes and physical include positions between Studio's ordinary
