@@ -188,12 +188,25 @@ type
     procedure Localize(const ALocale, AFallback: TNyxLocaleRef);
   end;
 
+  { Optional UI-only read capability of an application resource owner. Capture
+    resolves the authored declaration against the currently accepted locale and
+    fallback, without I/O or runtime catalog mutation. The detached plan retains
+    no source owner. Its caller owns job cancellation; Stop refuses new captures
+    but does not revoke already detached plans. Ordinary flow retirement cancels
+    its own invocations before their receivers disappear. }
+  INyxResourceReadSource = interface
+    ['{E1BD59E3-4703-4136-812E-EA8A86611350}']
+    function CaptureRead(const AReference: TNyxResourceRef): INyxResourceReadPlan;
+  end;
+
 const
   { Complete status-only reports allow worst-case JSON diagnostic escaping for
     all 128 variants; semantic query pages retain their separate 40-KiB budget. }
   NyxMaximumRuntimeReportBytes = 2 * 1024 * 1024;
 
 function NyxApplicationResourceOptions: TNyxApplicationResourceOptions;
+function NyxApplicationResourceReads(
+  const AResources: INyxApplicationResources): INyxResourceReadSource;
 function NyxApplicationResourceDiagnostics(
   const AResources: INyxApplicationResources): INyxApplicationResourceDiagnostics;
 function NyxResourcePhaseName(AValue: TNyxApplicationResourcePhase): TNyxText;
@@ -281,9 +294,11 @@ type
     destructor Destroy; override;
   end;
 
+  { Owns private catalog, load/publication jobs and subscriptions. Read plans
+    detach immutable declarations/resolver authority without a back-reference. }
   TApplicationResources = class(TInterfacedObject, INyxResourceUpdateQueue,
     INyxApplicationResources, INyxPreparedApplicationResources,
-    INyxApplicationResourceDiagnostics)
+    INyxApplicationResourceDiagnostics, INyxResourceReadSource)
   private
     FDeclarations: INyxResources;
     FContext: INyxResourceContext;
@@ -318,6 +333,7 @@ type
       const AResolver: INyxResourceResolver);
     destructor Destroy; override;
     function GetContext: INyxResourceContext;
+    function CaptureRead(const AReference: TNyxResourceRef): INyxResourceReadPlan;
     function CaptureRuntime: INyxResourceRuntimeSnapshot;
     procedure Wake;
     function Declaration(const AReference: TNyxResourceRef;
@@ -582,6 +598,27 @@ function TApplicationResources.GetContext: INyxResourceContext;
 begin
   FScheduler.RequireUI;
   Result := FContext;
+end;
+
+function TApplicationResources.CaptureRead(
+  const AReference: TNyxResourceRef): INyxResourceReadPlan;
+begin
+  RequireOpen;
+  Result := NewNyxResourceReadPlan(FDeclarations.Resolve(AReference,
+    FContext.Locale, FContext.Fallback), FResolver);
+end;
+
+function NyxApplicationResourceReads(
+  const AResources: INyxApplicationResources): INyxResourceReadSource;
+var
+  LReads: INyxResourceReadSource;
+begin
+
+  if not Supports(AResources, INyxResourceReadSource, LReads) then
+  begin
+    raise ENyxResource.Create('Application resource owner has no read capability');
+  end;
+  Result := LReads;
 end;
 
 function TApplicationResources.IndexOf(const AReference: TNyxResourceRef;

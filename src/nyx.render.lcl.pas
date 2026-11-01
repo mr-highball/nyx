@@ -6823,6 +6823,7 @@ var
   LCandidateGeneration: TNativeBindingGeneration;
   LOwnRuntimeState: Boolean;
   LCollections: INyxCollectionBindings;
+  LSharedCollections: INyxCollectionContext;
   LCollectionInputGate: INyxCollectionInputGate;
   LCollectionAdmissions: array of INyxCollectionInputAdmission;
   LCollectionAdmission: INyxCollectionInputAdmission;
@@ -7573,9 +7574,32 @@ begin
       end
       else
       begin
-        LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
-          NewNyxCollectionContext(ADocument.Collections, LCandidate.FRoot.ResourceContext));
+        LSharedCollections := nil;
+
+        if not ADesignMode then
+        begin
+          LSharedCollections := NyxApplicationCollectionContext(LCandidate.FEmbeddedContext);
           RequireAttempt;
+        end;
+
+        { Share application data without merging independent canvas instances.
+          Resource publication prepares application and private scopes once. }
+
+        if LSharedCollections = nil then
+        begin
+          LSharedCollections := NewNyxCollectionContext(ADocument.Collections,
+            LCandidate.FRoot.ResourceContext);
+          RequireAttempt;
+          LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot, LSharedCollections);
+        end
+        else
+        begin
+          LSharedCollections := NewNyxEmbeddedCollectionContext(ADocument.Collections,
+            LCandidate.FRoot.ResourceContext, LSharedCollections);
+          RequireAttempt;
+          LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot, LSharedCollections);
+        end;
+        RequireAttempt;
       end;
 
       if ((not ADesignMode) and

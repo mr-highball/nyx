@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Resource Workshop now adds declared JSON input through the existing loader/cache
+and a typed kind25. Its useful embedded Table chain exposes and repairs the
+browser/LCL application-store binding gap. WORK.md owns core19, authoring14,
+actual44 and exact emitted-application44 per target/allocation, plus clean heaps.
+Controlled hosts and in-memory semantic calls remain distinct from real HTTP,
+ordinary Studio Save/Open, authenticated observing delivery and full instance/
+input/quality/performance acceptance. Full original criteria remain open; return
+to those outcomes rather than another descriptor or constructor variant.
+
 The 2026-11-01 browser return executes the complete JSON Workshop input journey
 at desktop and compact widths, including live Pascal, file/URL refusals, exact
 numbers, independent applications and retirement. Ordinary Studio graph editing,
@@ -259,6 +268,7 @@ Initial coverage is organized by intent, retaining creator tags/descriptions:
 - [Managed component interfaces](DONE/NS-1_component-interfaces_01.md).
 - [Portable resources](DONE/NS-1_resources_01.md).
 - [Typed behavior graphs](NS-1_canvas-flow_01.md).
+- [Live canvas collection controls](NS-2_canvas-collections_01.md).
 
 Tool Canvas consumes this task; it is not a cyclic prerequisite for standalone
 typed logic components. Graph/toolbox/runtime evidence remains required. Record

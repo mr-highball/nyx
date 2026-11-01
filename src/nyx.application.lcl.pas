@@ -164,7 +164,7 @@ type
 implementation
 
 uses
-  nyx.logic.files, nyx.logic.files.open,
+  nyx.logic.files, nyx.logic.files.open, nyx.logic.resources,
   nyx.callbacks,
   nyx.events,
   nyx.resources.http.lcl,
@@ -244,8 +244,10 @@ begin
   FDocument := ADocument;
   try
     FContextLease := NewNyxApplicationContext(FRenderer.Events.Scheduler,
-      GetState, GetCollections, GetGeneration);
-    LResolver := FFlowResolver;
+      GetState, GetCollections, GetGeneration, FRuntime.CollectionContext);
+    PrepareResources(ADocument);
+    LResolver := NewNyxResourceLogicResolver(NyxApplicationResourceReads(FResources),
+      FFlowResolver);
 
     if FFileSaveHost <> nil then
     begin
@@ -275,7 +277,6 @@ begin
       FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
         FContextLease.Context, LResolver);
     end;
-    PrepareResources(ADocument);
     Application.CreateForm(TNyxApplicationForm, FForm);
     FForm.Caption := ADocument.Title;
     FForm.SetBounds(100, 100, 840, 720);

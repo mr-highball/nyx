@@ -29,7 +29,7 @@ interface
 
 uses
   SysUtils, nyx.model, nyx.state, nyx.events, nyx.scheduler,
-  nyx.application.context, nyx.collections.registry, nyx.flow, nyx.flow.routing,
+  nyx.application.context, nyx.collections.registry, nyx.collections.view, nyx.flow, nyx.flow.routing,
   nyx.publication.types;
 
 type
@@ -101,8 +101,10 @@ type
     retain only revocable ports, never their application/view/store owners.
     Active and every accessor require both lifetimes; the independent scheduler
     refuses worker access even after either port retires. Local Close revokes
-    Base without cancelling or extending the parent's authority. }
-  TEmbeddedContext = class(TInterfacedObject, INyxApplicationContext)
+    Base without cancelling or extending the parent's authority. Collection
+    scope capture follows that same gate and delegates to the parent capability. }
+  TEmbeddedContext = class(TInterfacedObject, INyxApplicationContext,
+    INyxApplicationCollectionContext)
   private
     FBase: INyxApplicationContext;
     FParent: INyxApplicationContext;
@@ -114,6 +116,7 @@ type
     function GetActive: Boolean;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
+    function CaptureCollectionContext: INyxCollectionContext;
     function GetScheduler: INyxScheduler;
     function GetGeneration: INyxCancellationScope;
   end;
@@ -130,8 +133,10 @@ type
   end;
 
   { Gate owns a weak base port. Its lifetime cannot keep the raw receiver alive,
-    and graph pause does not affect the static callback context. }
-  TGraphContext = class(TInterfacedObject, INyxApplicationContext)
+    and graph pause does not affect the static callback context. Collection scope
+    capture cannot bypass that revocation or acquire a raw application owner. }
+  TGraphContext = class(TInterfacedObject, INyxApplicationContext,
+    INyxApplicationCollectionContext)
   public
     Base: INyxApplicationContext;
     Enabled: Boolean;
@@ -142,6 +147,7 @@ type
     function GetActive: Boolean;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
+    function CaptureCollectionContext: INyxCollectionContext;
     function GetScheduler: INyxScheduler;
     function GetGeneration: INyxCancellationScope;
     procedure Configure(AEnabled: Boolean);
@@ -238,6 +244,12 @@ begin
   Result := FBase.Collections;
 end;
 
+function TEmbeddedContext.CaptureCollectionContext: INyxCollectionContext;
+begin
+  RequireActive;
+  Result := NyxApplicationCollectionContext(FParent);
+end;
+
 function TEmbeddedContext.GetScheduler: INyxScheduler;
 begin
   RequireActive;
@@ -286,6 +298,12 @@ function TGraphContext.GetCollections: INyxCollections;
 begin
   RequireActive;
   Result := Base.Collections;
+end;
+
+function TGraphContext.CaptureCollectionContext: INyxCollectionContext;
+begin
+  RequireActive;
+  Result := NyxApplicationCollectionContext(Base);
 end;
 
 function TGraphContext.GetScheduler: INyxScheduler;

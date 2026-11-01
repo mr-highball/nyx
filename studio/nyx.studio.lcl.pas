@@ -3921,7 +3921,7 @@ begin
       Install adopts this managed owner before any notification can fail; local
       interface release can never free stores borrowed by accepted controls. }
     FCanvasView.RenderContext(FSession.Document, FSession.ActiveView, AHost,
-      False, LRuntime.State, LRuntime.Bindings, LRuntime.Context, nil,
+      False, LRuntime.State, LRuntime.Bindings, LRuntime.Context, LRuntime.LogicResolver,
       nrmAuthoredDefaults, NewNyxStudioPreviewSource(FPreviewSlot, LNext, FCanvasView.Events));
   end
   else

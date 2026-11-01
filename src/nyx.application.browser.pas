@@ -153,7 +153,7 @@ type
 implementation
 
 uses
-  nyx.logic.files, nyx.logic.files.open,
+  nyx.logic.files, nyx.logic.files.open, nyx.logic.resources,
   nyx.callbacks,
   nyx.events,
   nyx.resources.http.browser,
@@ -222,8 +222,10 @@ begin
   LContainer := TJSHTMLElement(document.createElement('div'));
   try
     FContextLease := NewNyxApplicationContext(FRenderer.Events.Scheduler,
-      GetState, GetCollections, GetGeneration);
-    LResolver := FFlowResolver;
+      GetState, GetCollections, GetGeneration, FRuntime.CollectionContext);
+    PrepareResources(ADocument);
+    LResolver := NewNyxResourceLogicResolver(NyxApplicationResourceReads(FResources),
+      FFlowResolver);
 
     if FFileSaveHost <> nil then
     begin
@@ -253,8 +255,6 @@ begin
       FFlowRoutes := BindNyxFlowRoutes(ADocument, FRenderer.Events,
         FContextLease.Context, LResolver);
     end;
-    PrepareResources(ADocument);
-
     if (ADocument.Count > 1) and not FViewOptions.IsFocused then
     begin
       FNavigation := NewNyxPageNavigation(ADocument);

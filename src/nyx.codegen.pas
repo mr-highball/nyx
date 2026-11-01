@@ -45,7 +45,7 @@ uses
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
   nyx.logic.regex, nyx.regex.types, nyx.regex.replacement, nyx.logic.programs,
-  nyx.logic.http, nyx.http.types,
+  nyx.logic.http, nyx.http.types, nyx.logic.resources,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.flow.routes, nyx.flow.route.model,
   nyx.canvas.types, nyx.canvas.route.types,
@@ -568,11 +568,15 @@ var
     COpenPorts: array[TNyxOpenFilePort] of TNyxText =
       ('nofpTrigger', 'nofpBytes', 'nofpMetadata', 'nofpName', 'nofpByteCount',
        'nofpRead', 'nofpCancelled', 'nofpOutcome', 'nofpError', 'nofpActivationRequired');
+    CResourcePorts: array[TNyxJSONResourcePort] of TNyxText =
+      ('njrpTrigger', 'njrpReference', 'njrpJSON', 'njrpSucceeded', 'njrpError',
+       'njrpOrigin', 'njrpCacheWarning', 'njrpCacheRead', 'njrpCacheWrite');
   var
     LPort: TNyxLogicPort;
     LHTTPPort: TNyxHTTPPort;
     LFilePort: TNyxFilePort;
     LOpenPort: TNyxOpenFilePort;
+    LResourcePort: TNyxJSONResourcePort;
     LStepIndex: Integer;
     LKind: TNyxText;
     LExpression: TNyxText;
@@ -630,6 +634,18 @@ var
         if AValue.Field('port').AsText = NyxOpenFilePort(LOpenPort).Name then
         begin
           LExpression := 'NyxOpenFilePort(' + COpenPorts[LOpenPort] + ')';
+          Break;
+        end;
+      end;
+    end;
+    if LKind = NyxJSONResourceLogicKind then
+    begin
+      for LResourcePort := Low(TNyxJSONResourcePort) to High(TNyxJSONResourcePort) do
+      begin
+
+        if AValue.Field('port').AsText = NyxJSONResourcePort(LResourcePort).Name then
+        begin
+          LExpression := 'NyxJSONResourcePort(' + CResourcePorts[LResourcePort] + ')';
           Break;
         end;
       end;
@@ -704,6 +720,13 @@ begin
         TNyxText(BoolToStr(LSave.IncludeAllTypes, True)) + ')' + #10 +
         '            .MaximumBytes(' + IntToStr(LSave.ByteLimit) + ')' + #10 +
         '            .DownloadActivation(' + CActivations[LSave.ActivationPolicy] + '))';
+    end
+    else if LDescriptor.Kind.Name = NyxJSONResourceLogicKind then
+    begin
+      LOperation := 'NewNyxJSONResource(' + #10 +
+        '          NyxJSONResourceOptions(NyxResourceRef(' +
+        PascalString(LConfig.Field('resource').AsText) + '))' + #10 +
+        '            .WholeRequest(' + LConfig.Field('deadline').ToJSON + '))';
     end
     else if LDescriptor.Kind.Name = 'http-call' then
     begin
@@ -4480,6 +4503,7 @@ begin
     LLines.Add('  nyx.logic.programs,');
     LLines.Add('  nyx.numbers.decimal,');
     LLines.Add('  nyx.logic.http, nyx.http.types,');
+    LLines.Add('  nyx.logic.resources,');
     LLines.Add('  nyx.logic.files, nyx.files.save,');
 
     if NeedsFileOpenUnits(ADocument) then

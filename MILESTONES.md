@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The declared-resource Tool Canvas checkpoint adds a typed JSON operation and
+the public Resource Workshop. Actual embedded Table controls and the exact
+emitted application pass native/browser44 at desktop/compact allocations.
+A shared renderer repair connects application stores without merging private
+fragment instances. WORK owns source/semantic/scope/heap evidence and limits.
+Ordinary Studio saving, real HTTP resources, full remount/input/quality and
+preserving delivery remain open under logic-components01/canvas-collections01.
+This advances M2/M3/M4 without closing a full criterion or adding percentage credit.
+
 The original [table workbench](TODO/NS-3_control-usefulness_03.md) now accepts
 criteria2/3/5/6 for presentation/inspection, typed output, separate preference/
 lifecycle ownership and authoring parity. Current full browser journeys and

@@ -1,4 +1,30 @@
-# JSON Workshop
+# Tool Canvas workshops
+
+## Resource Workshop
+
+[nyx.resource.workshop.pas](nyx.resource.workshop.pas) builds a reusable team panel
+inside the public Tool Canvas. **Load embedded sample** and **Load hosted team**
+invoke the same typed graph with different declared references: resource → items
+selection → active-person filtering → exact rank sorting → Table/summary.
+Failures keep accepted rows and expose loading/cache diagnostics. Numbers above
+the IEEE integer range retain their exact spelling in the Table.
+
+[resource_workshop.lpr](resource_workshop.lpr) hosts the identical document in LCL
+or pas2js, using on-demand resource loading. Its default hosted URL is illustrative;
+pass a public JSON URL to `BuildResourceWorkshopDocument` or edit the declared
+resource in Studio. Cache policy stays on that resource. The saved graph holds no
+transport authority and requires no handwritten result callback.
+
+The maintained Pascal consumers `nyx_resource_logic_tests`,
+`nyx_resource_logic_authoring_tests` and `nyx_resource_workshop_controls` separate
+scope/cache/lifetime checks, typed form/source/semantic history and actual
+embedded controls. The last consumer can compile against its exact emitted
+constructor with `NYX_COMPILED_RESOURCE_WORKSHOP`. Controlled byte hosts do not
+prove a real HTTP origin. WORK.md owns current results and remaining ordinary
+Studio, observing delivery, instance/remount, physical/assistive and performance
+acceptance. The desktop/narrow input assertions do not establish full aesthetics.
+
+## JSON Workshop
 
 A practical Tool Canvas made from ordinary Nyx controls and reusable logic.
 Choose **Open JSON** to load a file, enter an HTTP(S) **JSON URL** and choose

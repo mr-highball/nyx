@@ -9,33 +9,93 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Tool Canvas resources and useful data transformations — 2026-11-01
+## Current work — Resource Workshop Studio and real-host return — 2026-11-01
 
-Previous goal turn: PROGRESS. Root remains SOLO. The connected Workshop browser
-and exact saved-application return below is complete as a bounded deliverable.
-No full original criterion/task or north-star percentage closes. Three batches
-since the preceding workbench criterion closure close no complete original
-criterion. The mandatory reassessment already changed direction from DataToolbar
-into this Tool Canvas return. Stop same-save/source/fixture and metadata variants.
+Current goal turn: PROGRESS. Root remains SOLO. Packet resource-logic-01 adds the
+first typed declared-JSON resource operation and a useful public Tool Canvas
+resource → selection/filter/exact sort → Table workflow. Its required embedded
+collection repair is recorded under canvas-collections01. No full original
+criterion/task or north-star percentage closes. Four batches since the preceding
+workbench criterion closure close no full original criterion. This batch changes
+the product/operation coverage, rather than adding another save/schema variant.
 
-Next product delivery follows existing logic-components01 criteria3/4/7 and their
-flow/resource/host prerequisites: inspect the current operation coverage ledger,
-resource contracts and live graph ports, then address a concrete missing hosted/
-embedded resource input through typed data transformations into useful bound
-controls/Table. Preserve explicit host authority, cache choices, exact data,
-cancellation, atomic publication, independent Apps and revision/retirement.
-Reuse the existing public Tool Canvas, semantic tools and actual input consumers.
-A passing standalone codec, source or descriptor fixture cannot replace this
-integrated result. Keep every original host, port/graph, parity, quality and
-performance acceptance condition. Do not create another ordinary project in the
-full nine-project QA registry. Do not return to the deferred resolver.
+Next close the original user-facing authoring outcomes: ordinary Studio loads
+this Resource Workshop, edits the resource operation through its typed form,
+preserves unfinished fields, paired history and actual project Save/Open; its
+own saved source executes the embedded Table journey on both targets. Include
+the observed initial Tool inspector's stale “No runtime attachment” presentation
+in that review. The separate real HTTP resource → query/Table and instance/
+remount/resource-source/physical/assistive/quality/performance gates stay open.
+Follow existing logic-components01 criteria3/4/6/7, canvas-collections01 and their
+original prerequisites. Stop additional descriptor/constructor/scope-only variants.
+Do not return to the deferred resolver or create a tenth ordinary QA workspace.
 
-All actual readers, including runner28917, are terminal and joined. All owned
-browser tabs and native Apps are closed; there is no source freeze. The fixed
-QA/LAN owners, nine project identities/revisions/selections/history and local
-configuration remain unchanged. New scratch, runners, artifacts and owned child
-TEMP/TMP remain on E:. Preserve unrelated AGENTS/WORK operator changes and the
-untracked1280/390 directories. The broad goal remains active.
+The native/browser compilers and actual native journeys are terminal and joined.
+The fixed QA/LAN listeners/configuration are unchanged; this batch issues no
+model mutation to their existing projects. Current semantic checks use the same
+backend API in a private in-memory session, not authenticated observing delivery.
+New scratch/runners/artifacts and owned child TEMP/TMP stay on E:. Preserve the
+unrelated AGENTS/WORK operator edits and untracked1280/390 directories. The broad
+goal remains active. Browser cleanup/final artifact receipts accompany the packet.
+
+## Qualified checkpoint — Declared resource input and embedded collections — 2026-11-01
+
+The public resource-read plan owns an admitted immutable declaration and existing
+resolver/cache, with no document/application/view back-reference. An optional
+application read facet captures the authored current locale/fallback. A stopped
+source refuses new capture; the caller owns its detached load cancellation.
+NewNyxJSONResource adds typed options/ports, complete loading/error/origin/cache
+frames, schema/source admission, Data discovery and ordinary configuration fields.
+The default catalog appends kind25 without changing earlier positions or MCP tool
+count. Draft wrapper14 preserves unfinished reference/deadline text and legacy
+versions. Generated code uses specialized resource options/port enums. Append-only
+reader tags avoid overflowing an existing native set-constructor element.
+
+The integrated example reproduces a real browser/LCL defect: canvas renderers
+created independent collection registries while their graphs wrote application
+stores. The optional revocable application scope capability now reaches embedded
+and Studio contexts. Renderer admission uses split contexts: application stores
+are shared; identical reusable descendant IDs keep private instance stores.
+Resource preparation reserves application/private owners once each. Standalone
+and legacy alternative contexts retain authored/default binding behavior. No row
+copying, sample-only callback or new host transport/cache implements this repair.
+
+Native/browser core19 qualify embedded/hosted reading, exact number/Unicode,
+fresh/stale/fallback policy, missing authority, locale capture, cancellation,
+wrong-kind/stopped refusal, application/private isolation and grouped resource
+preparation. Native/browser authoring14 qualify the complete generated document,
+typed fields, unfinished draft refusal/restoration, bounded semantic discovery/
+ports, one expected-revision group, idempotent retry and exact paired Undo.
+Those semantic calls use an isolated in-memory backend, not the installed host.
+
+Actual native/browser embedded-control journeys pass44 per1280/390 allocation.
+The exact emitted constructor separately compiles and passes44 on each target/
+allocation. Visible Table cells, exact ranks above IEEE range, row-family refusal,
+newer edits, loading errors, independent Apps, localization and page retirement
+retain their assertions. Existing Studio preview ownership57 passes on both
+platforms; retained HTTP source/form/semantic36 passes native. Both complete
+Studio GUI consumers compile. Eight final native heaps are clean. Owned compiler
+warnings are zero; installed Classes browser warnings remain seven per build.
+The four aggregate iframe consoles retain the previously reproduced MutationObserver
+observation error. Core/authoring/preview consoles are empty. No completely clean
+aggregate-console or full browser-quality claim is made.
+
+Initial mount-readiness and stale-diagnostic test failures, the empty painted
+Table reproduction and native incremental compiler failure remain in the packet.
+A fresh native unit cohort compiles successfully. The current engine can report
+stale state admission as a failed run with its exact stale-revision diagnostic;
+tests accept that documented refusal or cancellation/discard, while requiring no
+partial row/state publication. Initial source/fixture repairs do not earn credit.
+
+Network exchanges are controlled. Native assertions invoke real widget methods;
+browser fixture assertions invoke actual DOM inputs, and the standalone compact
+example also receives an ordinary browser click. These do not prove physical
+mouse/touch/assistive quality, an external HTTP origin, complete instance/remount
+semantics, production budgets or preserving rollout. Native/browser narrow
+captures are inspected; the starter's centered readable card improves its initial
+allocation, without claiming full visual/accessibility acceptance. Remaining
+ordinary Studio/host/creator/operation/parity/delivery scope stays under its
+original owners; neither parent task moves to DONE.
 
 ## Qualified return — Connected JSON Workshop browser authoring — 2026-11-01
 

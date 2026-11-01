@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+[Canvas collections01](NS-2_canvas-collections_01.md) owns the newly reproduced
+browser/LCL gap where embedded Tables render private defaults instead of their
+graph's application stores. It is a required prerequisite of the current
+resource-to-Table Tool Canvas delivery. WORK.md retains failures and qualification;
+no acceptance credit is assigned from the new operation or source checks alone.
+
 [Column events01](DONE/NS-1_column-events_01.md) is accepted on2026-10-31.
 The same MCP-authored application passes native85 per width, including actual
 LCL sizing handlers, LTR/RTL, Escape/no-op, native header width and bound status.

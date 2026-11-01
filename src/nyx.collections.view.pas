@@ -489,6 +489,16 @@ function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
   Nil refuses; materialization retains no frame/document backreference. }
 function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
   const AContext: INyxResourceContext): INyxCollectionContext; overload;
+{ Embedded fragments share application scope with their owning runtime while
+  retaining private instance scopes initialized from authored defaults/current
+  resources. Recomposition keeps the returned context; another fragment gets
+  independent instance stores even when reusable descendant IDs are identical.
+  The application owns its shared resource preparation. This context validates
+  and prepares only its private scopes, avoiding duplicate parent reservations.
+  Neither context retains a document, renderer, application or raw UI receiver. }
+function NewNyxEmbeddedCollectionContext(const ADefaults: INyxCollectionDefaults;
+  const AResources: INyxResourceContext;
+  const AApplication: INyxCollectionContext): INyxCollectionContext;
 { Admit a saved/default projection without constructing a mutable store or
   attaching a subscription. The same dataset validator serves live views. }
 procedure ValidateNyxCollectionViewSnapshot(const ASnapshot: INyxCollectionSnapshot;
@@ -1142,6 +1152,24 @@ type
     function Identity: IInterface;
     function Intent: Integer;
     function Session: TQuerySessionState;
+  end;
+
+  { Split scope resolver delegates global data to the application's admitted
+    context and instance data/resource preparation to one owned private context.
+    It carries no namespace derived from physical widgets or user text. }
+  TEmbeddedCollectionContext = class(TInterfacedObject, INyxCollectionContext,
+    INyxResourceCollectionContext, INyxPreparedResourceCollectionContext)
+  private
+    FApplication: INyxCollectionContext;
+    FLocal: INyxCollectionContext;
+  public
+    function Resolve(const ASpec: TNyxCollectionViewSpec;
+      const AInstanceID: TNyxText): INyxCollection;
+    function GetCollections: INyxCollections;
+    procedure ValidateResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
+    function PrepareResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
   end;
 
   TContextPreparation = class;
@@ -1833,6 +1861,59 @@ begin
     raise ENyxCollection.Create('Collection materialization requires a resource frame');
   end;
   Result := TContext.Create(ADefaults, AContext.Snapshot, AContext.Locale, AContext.Fallback);
+end;
+
+function NewNyxEmbeddedCollectionContext(const ADefaults: INyxCollectionDefaults;
+  const AResources: INyxResourceContext;
+  const AApplication: INyxCollectionContext): INyxCollectionContext;
+var
+  LApplication: INyxCollectionContext;
+  LLocal: INyxCollectionContext;
+  LContext: TEmbeddedCollectionContext;
+begin
+  LApplication := AApplication;
+
+  if LApplication = nil then
+  begin
+    raise ENyxCollection.Create('Embedded collection context requires application scopes');
+  end;
+  LLocal := NewNyxCollectionContext(ADefaults, AResources);
+  LContext := TEmbeddedCollectionContext.Create;
+  Result := LContext;
+  LContext.FApplication := LApplication;
+  LContext.FLocal := LLocal;
+end;
+
+function TEmbeddedCollectionContext.Resolve(const ASpec: TNyxCollectionViewSpec;
+  const AInstanceID: TNyxText): INyxCollection;
+begin
+  ASpec.Validate;
+
+  if ASpec.Scope = csApplication then
+  begin
+    Result := FApplication.Resolve(ASpec, AInstanceID);
+  end
+  else
+  begin
+    Result := FLocal.Resolve(ASpec, AInstanceID);
+  end;
+end;
+
+function TEmbeddedCollectionContext.GetCollections: INyxCollections;
+begin
+  Result := FApplication.Collections;
+end;
+
+procedure TEmbeddedCollectionContext.ValidateResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+begin
+  ValidateNyxCollectionContextResources(FLocal, AResources, ALocale, AFallback);
+end;
+
+function TEmbeddedCollectionContext.PrepareResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+begin
+  Result := PrepareNyxCollectionContextResources(FLocal, AResources, ALocale, AFallback);
 end;
 
 destructor TViewSubscription.Destroy;

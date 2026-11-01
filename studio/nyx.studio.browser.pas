@@ -3102,7 +3102,7 @@ begin
       notification error leaves that owner in the slot; there is no post-return
       raw-pointer transfer or finally-Free against newly mounted controls. }
     FCanvasRenderer.RenderContext(FSession.Document, FSession.ActiveView, AHost,
-      False, LRuntime.State, LRuntime.Bindings, LRuntime.Context, nil,
+      False, LRuntime.State, LRuntime.Bindings, LRuntime.Context, LRuntime.LogicResolver,
       nrmAuthoredDefaults,
       NewNyxStudioPreviewSource(FPreviewSlot, LNext, FCanvasRenderer.Events));
   end

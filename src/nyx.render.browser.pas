@@ -3413,6 +3413,7 @@ var
   LThemeOwner: IInterface;
   LBaseThemeOwner: IInterface;
   LCollections: INyxCollectionBindings;
+  LSharedCollections: INyxCollectionContext;
   LCollectionInputGate: INyxCollectionInputGate;
   LCollectionAdmissions: array of INyxCollectionInputAdmission;
   LCollectionAdmission: INyxCollectionInputAdmission;
@@ -4048,8 +4049,28 @@ begin
       end
       else
       begin
-        LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
-          NewNyxCollectionContext(ADocument.Collections, LCandidate.FRoot.ResourceContext));
+        LSharedCollections := nil;
+
+        if not ADesignMode then
+        begin
+          LSharedCollections := NyxApplicationCollectionContext(LCandidate.FEmbeddedContext);
+        end;
+
+        { Application data follows its existing stores. Instance data stays
+          private to this fragment and keeps its existing resource preparation. }
+
+        if LSharedCollections = nil then
+        begin
+          LSharedCollections := NewNyxCollectionContext(ADocument.Collections,
+            LCandidate.FRoot.ResourceContext);
+          LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot, LSharedCollections);
+        end
+        else
+        begin
+          LSharedCollections := NewNyxEmbeddedCollectionContext(ADocument.Collections,
+            LCandidate.FRoot.ResourceContext, LSharedCollections);
+          LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot, LSharedCollections);
+        end;
       end;
 
       if ((not ADesignMode) and

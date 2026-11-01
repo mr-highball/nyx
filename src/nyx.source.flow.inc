@@ -92,7 +92,21 @@ begin
       LArgs := Arguments(5);
     end;
 
-    if AName = 'nyxfileopenoptions' then
+    if AName = 'nyxjsonresourceoptions' then
+    begin
+      Count(1, 1);
+      Kind(0, vkResourceRef);
+      Result.Kind := vkJSONResourceOptions;
+      Result.JSONResourceOptions := NyxJSONResourceOptions(NyxResourceRef(LArgs[0].Text));
+    end
+    else if AName = 'nyxjsonresourceport' then
+    begin
+      Count(1, 1);
+      Kind(0, vkJSONResourcePort);
+      Result.Kind := vkFlowPort;
+      Result.Text := NyxJSONResourcePort(TNyxJSONResourcePort(LArgs[0].Ordinal)).Name;
+    end
+    else if AName = 'nyxfileopenoptions' then
     begin
       Count(0, 0);
       Result.Kind := vkFileOpenOptions;
@@ -346,6 +360,12 @@ begin
       begin
         Count(0, 0);
         LOperation := NewNyxUTF8Decode;
+      end
+      else if AName = 'newnyxjsonresource' then
+      begin
+        Count(1, 1);
+        Kind(0, vkJSONResourceOptions);
+        LOperation := NewNyxJSONResource(LArgs[0].JSONResourceOptions);
       end
       else if AName = 'newnyxhttpcall' then
       begin
@@ -710,6 +730,18 @@ begin
               Fail('Unsupported typed file-save option');
             end;
           end;
+        end;
+      vkJSONResourceOptions:
+        begin
+          Count(1, 1);
+          Kind(0, vkInteger);
+
+          if LMethod <> 'wholerequest' then
+          begin
+            Fail('Unsupported typed JSON resource option');
+          end;
+          Result.JSONResourceOptions := Result.JSONResourceOptions
+            .WholeRequest(StrToInt(LArgs[0].Text));
         end;
       vkHTTPRequest:
         begin

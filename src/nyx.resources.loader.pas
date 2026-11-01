@@ -178,7 +178,24 @@ type
       AReply: TNyxResourceLoadReply): INyxResourceLoad;
   end;
 
+  { Detached read authority captures one admitted authored definition and its
+    resolver, never a document, application or view. Each Load owns a separate
+    cancellable job; replies may be inline on the UI thread. The caller must
+    cancel before retiring its borrowed reply receiver. A plan remains valid
+    after its source retires; it cannot capture a different resource or locale.
+    Embedded reads need no transport. Absent hosted authority is a failed result,
+    never an invented transport or an implicit use of fallback bytes. }
+  INyxResourceReadPlan = interface
+    ['{CE81E7FA-BC4C-42FE-9658-5DED93B8DF28}']
+    function GetDefinition: INyxResourceDefinition;
+    function Load(const AOptions: TNyxResourceLoadOptions;
+      AReply: TNyxResourceLoadReply): INyxResourceLoad;
+    property Definition: INyxResourceDefinition read GetDefinition;
+  end;
+
 function NyxResourceLoadOptions: TNyxResourceLoadOptions;
+function NewNyxResourceReadPlan(const ADefinition: INyxResourceDefinition;
+  const AResolver: INyxResourceResolver = nil): INyxResourceReadPlan;
 function NewNyxResourceClock: INyxResourceClock;
 function NewNyxResourceResolver(const ATransport: INyxResourceTransport;
   const AMemory: INyxResourceCacheStorage = nil;
@@ -191,6 +208,18 @@ uses
   {$ifdef PAS2JS}JS{$else}DateUtils{$endif};
 
 type
+  { Owns only admitted immutable content and the existing loader/cache service.
+    It retains no borrowed method receiver between individual Load calls. }
+  TResourceReadPlan = class(TInterfacedObject, INyxResourceReadPlan)
+  private
+    FDefinition: INyxResourceDefinition;
+    FResolver: INyxResourceResolver;
+  public
+    function GetDefinition: INyxResourceDefinition;
+    function Load(const AOptions: TNyxResourceLoadOptions;
+      AReply: TNyxResourceLoadReply): INyxResourceLoad;
+  end;
+
   TResourceClock = class(TInterfacedObject, INyxResourceClock)
     function UTCSeconds: Double;
   end;
@@ -745,6 +774,64 @@ function NewNyxResourceResolver(const ATransport: INyxResourceTransport;
   const AClock: INyxResourceClock): INyxResourceResolver;
 begin
   Result := TResourceResolver.Create(ATransport, AMemory, APersistent, AClock);
+end;
+
+function TResourceReadPlan.GetDefinition: INyxResourceDefinition;
+begin
+  Result := FDefinition;
+end;
+
+function TResourceReadPlan.Load(const AOptions: TNyxResourceLoadOptions;
+  AReply: TNyxResourceLoadReply): INyxResourceLoad;
+var
+  LLoad: TResourceLoad;
+begin
+  AOptions.Validate;
+
+  if FResolver <> nil then
+  begin
+    Exit(FResolver.Load(FDefinition, AOptions, AReply));
+  end;
+  LLoad := TResourceLoad.Create;
+  Result := LLoad;
+  LLoad.FDefinition := FDefinition;
+  LLoad.FOptions := AOptions;
+  LLoad.FReply := AReply;
+  try
+
+    if FDefinition.Source.Kind = rskEmbedded then
+    begin
+      LLoad.Start;
+    end
+    else
+    begin
+      LLoad.Finish(rloFailed, nil, 'Hosted resource requires an explicit resolver');
+    end;
+  except
+    LLoad.Cancel;
+    raise;
+  end;
+end;
+
+function NewNyxResourceReadPlan(const ADefinition: INyxResourceDefinition;
+  const AResolver: INyxResourceResolver): INyxResourceReadPlan;
+var
+  LPlan: TResourceReadPlan;
+  LDefinition: INyxResourceDefinition;
+  LResolver: INyxResourceResolver;
+begin
+  LDefinition := ADefinition;
+  LResolver := AResolver;
+
+  if LDefinition = nil then
+  begin
+    raise ENyxResource.Create('Resource read plan requires an immutable definition');
+  end;
+  LPlan := TResourceReadPlan.Create;
+  Result := LPlan;
+  { Normalize alternative implementations at the explicit capability boundary. }
+  LPlan.FDefinition := NyxResourceFromData(LDefinition.ToData);
+  LPlan.FResolver := LResolver;
 end;
 
 end.

@@ -28,7 +28,8 @@ interface
 uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.root.types, nyx.state,
   nyx.scheduler, nyx.application.state, nyx.application.context,
   nyx.collections.registry, nyx.collections.bindings, nyx.events,
-  nyx.publication.types, nyx.view.publication;
+  nyx.publication.types, nyx.view.publication, nyx.application.resources,
+  nyx.flow, nyx.logic.resources, nyx.collections.view;
 
 type
   { One Studio Interact mount owns independent application stores and a scoped
@@ -38,12 +39,17 @@ type
 
     The renderer borrows State/Bindings until unmount. Close revokes context and
     pending generations before widget teardown; Free follows renderer teardown.
-    Private source/prototypes outlive all raw state validators. All operations
+    Private source/prototypes outlive all raw state validators. An independent
+    resource-read owner supplies embedded data; hosted reads report unavailable
+    authority until a host supplies a resolver. No transport is inferred here.
+    All operations
     and final disposal belong to the renderer's application UI thread. }
   TNyxStudioPreviewRuntime = class
   private
     FDocument: TNyxDocument;
     FRuntime: TNyxApplicationState;
+    FResources: INyxApplicationResources;
+    FLogicResolver: INyxLogicResolver;
     FRoot: TNyxRootRef;
     FScheduler: INyxScheduler;
     FGeneration: INyxCancellationScope;
@@ -67,6 +73,8 @@ type
     property State: TNyxState read ResolveState;
     property Context: INyxApplicationContext read GetContext;
     property Bindings: INyxCollectionBindings read GetBindings;
+    { Independent read authority; it retains no preview owner or document. }
+    property LogicResolver: INyxLogicResolver read FLogicResolver;
   end;
 
   { UI-only managed wrapper preserves the raw runtime's Create/Close/Free API.
@@ -147,8 +155,10 @@ type
   end;
   { Exact fixed-generation context delegates existing stores, not another state
     engine. The embedded bridge is weak; route contexts also retain the store
-    owner until their detached executions and route bindings release it. }
-  TPreviewContext = class(TInterfacedObject, INyxApplicationContext)
+    owner until their detached executions and route bindings release it. Shared
+    collection scope capture uses that same revocation and UI authority. }
+  TPreviewContext = class(TInterfacedObject, INyxApplicationContext,
+    INyxApplicationCollectionContext)
   public
     Port: TPreviewOwnerPort;
     PortLease: IInterface;
@@ -159,6 +169,7 @@ type
     function GetActive: Boolean;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
+    function CaptureCollectionContext: INyxCollectionContext;
     function GetScheduler: INyxScheduler;
     function GetGeneration: INyxCancellationScope;
   end;
@@ -277,10 +288,13 @@ begin
   FRoot := ARoot;
   FDocument := ADocument.Clone;
   FRuntime := TNyxApplicationState.CreateForRoot(FDocument, FRoot, APlatform);
+  FResources := NewNyxApplicationResources(FDocument.Resources, FScheduler,
+    NyxApplicationResourceOptions.Loading(nrlOnDemand));
+  FLogicResolver := NewNyxResourceLogicResolver(NyxApplicationResourceReads(FResources));
   FGeneration := NewNyxCancellationScope;
   FLease := NewNyxApplicationContext(FScheduler,
     {$ifdef PAS2JS}@{$endif}ResolveState, {$ifdef PAS2JS}@{$endif}ResolveCollections,
-    {$ifdef PAS2JS}@{$endif}ResolveGeneration);
+    {$ifdef PAS2JS}@{$endif}ResolveGeneration, FRuntime.CollectionContext);
 end;
 
 destructor TNyxStudioPreviewRuntime.Destroy;
@@ -330,6 +344,16 @@ begin
     if FLease <> nil then
     begin
       FLease.Close;
+    end;
+  except
+    on E: Exception do RememberFailure(E, LFailure);
+  end;
+
+  try
+
+    if FResources <> nil then
+    begin
+      FResources.Stop;
     end;
   except
     on E: Exception do RememberFailure(E, LFailure);
@@ -443,6 +467,17 @@ begin
   LOwner := Acquire;
   GetState;
   Result := Port.Owner.FRuntime.FRuntime.Collections;
+end;
+
+function TPreviewContext.CaptureCollectionContext: INyxCollectionContext;
+var
+  LContext: INyxApplicationContext;
+  LOwner: INyxStudioPreviewOwner;
+begin
+  LContext := Self;
+  LOwner := Acquire;
+  GetState;
+  Result := Port.Owner.FRuntime.FRuntime.CollectionContext;
 end;
 
 function TPreviewContext.GetScheduler: INyxScheduler;
@@ -830,7 +865,7 @@ begin
     LContext.OwnerLease := NextLease;
     LContext.Generation := LMount.Generation;
     LMount.Preparation := PrepareNyxViewFlowRoutes(ADocument, ARoot, Events,
-      LPlan.FView, LMount.ContextLease, nil, LMount.Routes);
+      LPlan.FView, LMount.ContextLease, NextOwner.FRuntime.LogicResolver, LMount.Routes);
 
     if not Supports(LMount.Preparation, INyxPublicationReadiness, LRouteFence) then
     begin

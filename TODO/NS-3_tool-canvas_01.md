@@ -4,6 +4,15 @@
 
 **Description:**
 
+The public Resource Workshop now connects declared embedded/hosted JSON through
+selection/filter/exact sort into a reusable Table and summary, with usable errors.
+WORK.md owns both-target actual44 and exact emitted-application44 per allocation,
+source/semantic14 and core19 separately from remaining ordinary Studio, real-host,
+instance/remount, observing, physical/assistive, quality and performance outcomes.
+The required canvas-collections01 repair shares application data while preserving
+private fragment instance stores and coordinated resource ownership. No full
+original criterion/task or completion credit closes from this bounded delivery.
+
 The 2026-11-01 JSON Workshop browser return now executes the complete connected
 Open/Format/Save, live-Pascal and URL/status journey at desktop and compact widths.
 Ordinary Studio edits both useful graphs, preserves drafts and paired history,

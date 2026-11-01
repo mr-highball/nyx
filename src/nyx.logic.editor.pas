@@ -48,7 +48,8 @@ type
   { Independent unfinished controls, including malformed creator JSON/numbers,
     typed JSON/relational policies, independent join paths and Boolean choices.
     Restoration requires the exact graph baseline. Unused child forms retain
-    legacy draft bytes; no tree is retained. }
+    legacy draft bytes; resource reference/deadline drafts retain unfinished text
+    in an optional versioned wrapper. No tree is retained. }
   TNyxLogicEditorDraft = record
   private
     FContext: TNyxText;
@@ -65,6 +66,7 @@ type
     FRegex: TNyxRegexEditorDraft;
     FProgram: TNyxProgramLogicEditorDraft;
     FControlRoutes: TNyxControlRouteEditorDraft;
+    FResource: TNyxDataValue;
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; ARoot: TNyxNode);
@@ -100,6 +102,7 @@ function CaptureNyxLogicEditor(ANode, ARoot: TNyxNode;
 implementation
 
 uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.types, nyx.resource.sources,
+  nyx.logic.resources, nyx.resources,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
   nyx.logic.regex, nyx.regex.types,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
@@ -408,13 +411,15 @@ begin
   Field(AForm, 'branch-down').Configure.Visible(AKind = 'flow-join').Done;
   Field(AForm, 'branch-preview').Configure.Visible(AKind = 'flow-join').Done;
   Field(AForm, 'http').Configure.Visible(AKind = 'http-call').Done;
+  Field(AForm, 'resource-name').Configure.Visible(AKind = NyxJSONResourceLogicKind).Done;
+  Field(AForm, 'resource-deadline').Configure.Visible(AKind = NyxJSONResourceLogicKind).Done;
   Field(AForm, 'save').Configure.Visible(AKind = 'file-save').Done;
   Field(AForm, 'file-open').Configure.Visible(AKind = 'file-open').Done;
   Field(AForm, 'regex-host').Configure.Visible(RegexOperation(AKind)).Done;
   Field(AForm, 'program').Configure.Visible(AKind = NyxProgramLogicKind).Done;
   Field(AForm, 'creator-config').Configure.Visible((AKind <> 'json-parse') and
     not PathOperation(AKind) and (AKind <> 'json-slice') and (AKind <> 'json-merge') and
-    (AKind <> 'http-call') and (AKind <> 'utf8-decode') and
+    (AKind <> 'http-call') and (AKind <> NyxJSONResourceLogicKind) and (AKind <> 'utf8-decode') and
     (AKind <> 'file-save') and (AKind <> 'file-open') and (AKind <> 'utf8-encode') and (AKind <> 'flow-join') and
     (AKind <> 'json-format') and (AKind <> 'text-join') and
     (AKind <> NyxProgramLogicKind) and not RegexOperation(AKind)).Done;
@@ -571,6 +576,12 @@ begin
   begin
     LoadNyxHTTPRequestEditor(AForm.ID + '-http', AForm,
       TNyxHTTPRequest.FromData(LConfiguration));
+  end;
+
+  if LKind = NyxJSONResourceLogicKind then
+  begin
+    SetValue(AForm, 'resource-name', LConfiguration.Field('resource').AsText);
+    SetValue(AForm, 'resource-deadline', LConfiguration.Field('deadline').ToJSON);
   end;
 
   if LKind = 'file-save' then
@@ -835,6 +846,16 @@ begin
     end;
     Result := NewNyxJSONSlice(LOffset, LCount);
   end
+  else if LKind = NyxJSONResourceLogicKind then
+  begin
+
+    if not TryStrToInt(Value(AForm, 'resource-deadline'), LCount) then
+    begin
+      raise ENyxFlow.Create('Resource deadline requires whole milliseconds');
+    end;
+    Result := NewNyxJSONResource(NyxJSONResourceOptions(
+      NyxResourceRef(Value(AForm, 'resource-name'))).WholeRequest(LCount));
+  end
   else if LKind = 'http-call' then
   begin
     Result := NewNyxHTTPCall(CaptureNyxHTTPRequestEditor(AForm.ID + '-http', AForm));
@@ -1060,6 +1081,8 @@ begin
   Button('defaults', 'Load operation defaults');
   Choice('layout', 'JSON layout', 'Indented' + #10 + 'Compact', 'Indented');
   Input('indent', 'Indent width', '2');
+  Input('resource-name', 'Declared JSON resource', 'data');
+  Input('resource-deadline', 'Whole request deadline (milliseconds)', '15000');
   Input('separator', 'Join separator', '');
   Choice('comparison', 'Filter comparison', 'Equal' + #10 + 'Not equal' + #10 +
     'Less than' + #10 + 'At most' + #10 + 'Greater than' + #10 + 'At least' + #10 +
@@ -1208,7 +1231,8 @@ begin
     'merge-policy', 'join-kind', 'null-keys', 'aggregation', 'rounding', 'empty-aggregate',
     'branch-type', 'branch-selection', 'branch-empty', 'branch-name', 'branch-add',
     'branch-choice', 'branch-up', 'branch-down', 'branch-remove', 'branch-preview',
-    'http', 'save', 'file-open', 'regex-host', 'program', 'add', 'step', 'load', 'set']);
+    'resource-name', 'resource-deadline', 'http', 'save', 'file-open', 'regex-host',
+    'program', 'add', 'step', 'load', 'set']);
   Section('conditions', 'Run conditions', ['condition-editor']);
   Section('connections', 'Connect ports', ['source', 'target', 'connect']);
   Section('removal', 'Remove with confirmation', ['warning', 'confirm', 'disconnect',
@@ -1552,6 +1576,7 @@ begin
     SameData(LLeft.FRightPath, LRight.FRightPath) and
     SameData(LLeft.FBranches, LRight.FBranches) and
     SameData(LLeft.FDescriptor, LRight.FDescriptor) and
+    SameData(LLeft.FResource, LRight.FResource) and
     (LLeft.FHTTP.ToData.ToJSON = LRight.FHTTP.ToData.ToJSON) and
     (LLeft.FRows.ToData.ToJSON = LRight.FRows.ToData.ToJSON) and
     (LLeft.FSave.ToData.ToJSON = LRight.FSave.ToData.ToJSON) and
@@ -1583,6 +1608,14 @@ begin
 
   if Defined then
   begin
+
+    if FResource.Kind <> ndNull then
+    begin
+      LBase := Self;
+      LBase.FResource := NyxNull;
+      Exit(NyxObject([NyxField('version', NyxData(14)),
+        NyxField('base', LBase.ToData), NyxField('resource', FResource)]));
+    end;
 
     if FControlRoutes.Defined then
     begin
@@ -1708,6 +1741,23 @@ begin
 
   if AData.Kind = ndNull then
   begin
+    Exit;
+  end;
+
+  if AData.Field('version').AsInteger = 14 then
+  begin
+    ValidateNyxFlowFields(AData, ['version', 'base', 'resource']);
+
+    if not (AData.Field('base').Field('version').AsInteger in
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]) then
+    begin
+      raise ENyxFlow.Create('Resource draft requires one earlier Logic base');
+    end;
+    Result := TNyxLogicEditorDraft.FromData(AData.Field('base'));
+    Result.FResource := AData.Field('resource');
+    ValidateNyxFlowFields(Result.FResource, ['reference', 'deadline']);
+    Result.FResource.Field('reference').AsText;
+    Result.FResource.Field('deadline').AsText;
     Exit;
   end;
 
@@ -2003,6 +2053,15 @@ begin
   FRegex.Capture(AID + '-regex', ARoot, RegexOperation(Value(LForm, 'operation')));
   FProgram.Capture(AID + '-program', ARoot, Value(LForm, 'operation') = NyxProgramLogicKind);
   FControlRoutes.Capture(AID + '-control-routes', ARoot);
+  FResource := NyxNull;
+
+  if (Value(LForm, 'resource-name') <> 'data') or
+    (Value(LForm, 'resource-deadline') <> '15000') then
+  begin
+    FResource := NyxObject([
+      NyxField('reference', NyxData(Value(LForm, 'resource-name'))),
+      NyxField('deadline', NyxData(Value(LForm, 'resource-deadline')))]);
+  end;
 end;
 
 function TNyxLogicEditorDraft.Restore(const AID: TNyxText; ARoot: TNyxNode;
@@ -2085,6 +2144,12 @@ begin
   FConditions.Restore(AID + '-condition-editor', ARoot);
   FProgram.Restore(AID + '-program', ARoot);
   FControlRoutes.Restore(AID + '-control-routes', ARoot);
+
+  if FResource.Kind <> ndNull then
+  begin
+    SetValue(LForm, 'resource-name', FResource.Field('reference').AsText);
+    SetValue(LForm, 'resource-deadline', FResource.Field('deadline').AsText);
+  end;
 
   if FRegex.Defined then
   begin

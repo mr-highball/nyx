@@ -6,7 +6,7 @@
 
 Logic components perform work without normal UI chrome. They expose specialized,
 reference-counted interfaces and the same immutable operation contract used by
-graph runs. A future Tool Canvas represents these operations with discoverable
+graph runs. A Tool Canvas represents these operations with discoverable
 cards and ports; drawing a connector alone never executes behavior.
 
 The current standalone operations are:
@@ -23,6 +23,7 @@ The current standalone operations are:
 | INyxJSONSlice / NewNyxJSONSlice | JSON array → JSON array | Nonnegative skip/take pagination without changing source order |
 | INyxUTF8Decode / NewNyxUTF8Decode | Bytes → Text | Explicit strict UTF-8 decoding; malformed input refuses |
 | INyxHTTPCall / NewNyxHTTPCall | Trigger → Bytes, status, headers, error, success | Asynchronous host operation with explicit injected transport; toolbox/source and actual application contracts qualified with substituted transport |
+| INyxJSONResource / NewNyxJSONResource | Trigger, optional declared reference → JSON, success, error, origin and cache evidence | Embedded/hosted JSON uses the application's admitted declarations and existing resolver/cache |
 | INyxUTF8Encode / NewNyxUTF8Encode | Text → Bytes | Exact owned UTF-8 bytes, independent of native machine codepage |
 | INyxSaveFile / NewNyxSaveFile | Trigger + Bytes → outcome, name, count, written/delivered/cancelled/activation flags, error | UI-affine asynchronous operation with explicit runtime file host; native write and browser download request retain different meanings |
 | INyxOpenFile / NewNyxOpenFile | Trigger → bytes, metadata, name, count, read/cancelled/activation flags, outcome, error | Explicit runtime host returns one complete bounded snapshot; decoding and resource conversion remain separate typed operations |
@@ -262,6 +263,49 @@ consumers at desktop/CSS-390. No service is started/replaced and no installed
 project is edited. Local semantic fixture evidence does not imply installation
 of these newer kinds on the observing host.
 
+### Declared JSON resources
+
+`nyx.logic.resources` adds a managed operation configured with portable values:
+
+```pascal
+LRead := NewNyxJSONResource(
+  NyxJSONResourceOptions(NyxResourceRef('team')).WholeRequest(10000),
+  NyxApplicationResourceReads(LApplication.Resources));
+```
+
+`BeginInvoke` accepts the closed `NyxJSONResourcePort` vocabulary. A signal on
+`njrpTrigger` starts one independent load. Optional `njrpReference` text selects
+an existing declaration; it cannot manufacture a URL or transport. The read
+captures the authored declaration at the application's current accepted locale/
+fallback, including its cache policy. A previously resolved runtime entry never
+replaces the hosted declaration. Embedded reads need no host; hosted reads use
+the existing resolver/providers. Missing hosted authority produces a complete
+failed frame. Missing references, wrong kinds and invalid options refuse before
+I/O. Cancellation publishes no frame.
+
+Use `njrpSucceeded` to condition downstream selection/filter/sort steps. Loading
+failure outputs JSON null and false; error/origin/cache-warning/cache-read/
+cache-write remain separate. Allowed stale/fallback success retains its loading
+error. A cache warning does not turn admitted data into failure. Origin/cache
+evidence uses the existing public loader enums.
+
+Default applications inject resource authority into root and embedded graphs.
+Studio Interact supplies embedded read authority and does not infer a network
+host. Compiled application configuration retains existing hosted/cache behavior.
+Saving a graph grants no executable authority. The public
+[Resource Workshop](../examples/tool-canvas/nyx.resource.workshop.pas) connects
+this operation to an embedded Table through selection, filtering and exact
+decimal sorting, without a handwritten result handler. WORK.md distinguishes
+controlled input, source/semantic checks, runtime execution and remaining Studio/
+real-host/quality acceptance.
+
+Embedded collection views use a split scope resolver: application scope reaches
+the running application's stores; instance scope stays private to the fragment.
+Resource preparation updates each owner once. The optional
+`INyxApplicationCollectionContext` capability is revocable and owns no application.
+Alternative/legacy contexts without it retain standalone authored defaults;
+explicit hosts pass their scope context to `NewNyxApplicationContext`.
+
 The current coverage ledger is deliberately separate from the full collection:
 
 | Group | Executable coverage | Remaining requested coverage |
@@ -271,7 +315,7 @@ The current coverage ledger is deliberately separate from the full collection:
 | Text | Exact two-input join, strict UTF-8 decode/encode and shared typed regex match/replace/extract with a declared portable grammar | Broader regex/Unicode semantics, split, trim/case, formatting and remaining encoding operations |
 | Files | Typed open/save forms/source/history; independent application/Studio host configuration; bounded byte snapshots/metadata; actual generated Win32/browser opening applications and scoped saves/downloads/picker writes; UI-authored conditional read routes | Broader filesystem operations, focused-view execution, other browsers/widgetsets, authenticated observing Studio and preserving delivery |
 | Network | Typed HTTP/UTF-8 toolbox, crafted source, semantic editing and actual Table/application controls with substituted transport; native/Fetch adapters compile | Real network qualification, tunable retry/cache, authenticated current-schema observation and delivery |
-| Data / Flow | Saved typed row routes, Boolean step conditions, typed optional-input branch joins and skip provenance, public Nyx forms, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation/resource lookup; timer/debounce, racing/recovery/feedback and observing delivery |
+| Data / Flow | Saved typed row routes, Boolean step conditions, typed optional-input branch joins and skip provenance, public Nyx forms, crafted source/paired history, bounded semantic queries/edits and selected state/collection publication | General route/input creation and richer selection UX; conversion/mapping/validation and broader resource kinds; timer/debounce, racing/recovery/feedback and observing delivery |
 
 `tools/build.ps1 -Target logic-collections -LogicCollectionsEvidenceDirectory
 <fresh-directory>` runs shared/native/source/history and authenticated semantic
@@ -287,7 +331,9 @@ creator help, labels and intent participate in Unicode AND-term search.
 Creators implement INyxLogicOperation on their own reference-counted base, with
 immutable configuration and schema.
 
-The twenty-four-kind default collection includes open and save intent in **Files**.
+The twenty-five-kind default collection includes open/save intent in **Files**
+and declared JSON resource loading in **Data**. This changes operation discovery,
+not the MCP tool count.
 Opening has its own managed interface, portable options and closed port enum:
 
 ```pascal

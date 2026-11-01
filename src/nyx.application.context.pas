@@ -27,7 +27,7 @@ unit nyx.application.context;
 interface
 
 uses
-  SysUtils, nyx.state, nyx.collections.registry, nyx.scheduler;
+  SysUtils, nyx.state, nyx.collections.registry, nyx.collections.view, nyx.scheduler;
 
 type
   ENyxApplicationContext = class(Exception);
@@ -52,6 +52,16 @@ type
     property Generation: INyxCancellationScope read GetGeneration;
   end;
 
+  { Optional UI-only scope capability for embedded collection controls. Capture
+    checks context revocation first; a returned scope resolver owns only defaults,
+    stores and scope identities, never the application or raw state. Nil preserves
+    legacy standalone/default binding behavior. Explicit hosts supply their live
+    resolver to NewNyxApplicationContext; built-in applications always supply it. }
+  INyxApplicationCollectionContext = interface(IInterface)
+    ['{AE8F42CF-917C-4622-8781-9464E8866C17}']
+    function CaptureCollectionContext: INyxCollectionContext;
+  end;
+
   { A host owns this lease and closes it BEFORE teardown or a failed mount.
     Retained callback contexts own only its weak port; they cannot extend the
     borrowed host's lifetime. Last-lease release also closes, on the UI thread. }
@@ -70,18 +80,27 @@ type
   access and wrong-thread access raise before dereferencing the host's methods. }
 function NewNyxApplicationContext(const AScheduler: INyxScheduler;
   AState: TNyxContextState; ACollections: TNyxContextCollections;
-  AGeneration: TNyxContextGeneration): INyxApplicationContextLease;
+  AGeneration: TNyxContextGeneration;
+  const ACollectionContext: INyxCollectionContext = nil): INyxApplicationContextLease;
+{ Nil for alternative/legacy contexts without the optional scope capability.
+  A supported revoked context refuses rather than reviving its former stores. }
+function NyxApplicationCollectionContext(
+  const AContext: INyxApplicationContext): INyxCollectionContext;
 
 implementation
 
 type
-  TContextPort = class(TInterfacedObject, INyxApplicationContext)
+  { Revocable weak method port. The optional collection resolver is independently
+    owned and cleared at Close before borrowed host callbacks are discarded. }
+  TContextPort = class(TInterfacedObject, INyxApplicationContext,
+    INyxApplicationCollectionContext)
   private
     FScheduler: INyxScheduler;
     FState: TNyxContextState;
     FCollections: TNyxContextCollections;
     FGeneration: TNyxContextGeneration;
     FActive: Boolean;
+    FCollectionContext: INyxCollectionContext;
     procedure RequireActive;
   public
     constructor Create(const AScheduler: INyxScheduler; AState: TNyxContextState;
@@ -92,14 +111,17 @@ type
     function GetCollections: INyxCollections;
     function GetScheduler: INyxScheduler;
     function GetGeneration: INyxCancellationScope;
+    function CaptureCollectionContext: INyxCollectionContext;
   end;
+  { Last-lease retirement revokes the port before any borrowed host can die. }
   TContextLease = class(TInterfacedObject, INyxApplicationContextLease)
   private
     FPort: TContextPort;
     FContext: INyxApplicationContext;
   public
     constructor Create(const AScheduler: INyxScheduler; AState: TNyxContextState;
-      ACollections: TNyxContextCollections; AGeneration: TNyxContextGeneration);
+      ACollections: TNyxContextCollections; AGeneration: TNyxContextGeneration;
+      const ACollectionContext: INyxCollectionContext);
     destructor Destroy; override;
     procedure Close;
     function GetContext: INyxApplicationContext;
@@ -137,6 +159,7 @@ procedure TContextPort.Close;
 begin
   FScheduler.RequireUI;
   FActive := False;
+  FCollectionContext := nil;
   FState := nil;
   FCollections := nil;
   FGeneration := nil;
@@ -172,12 +195,36 @@ begin
   Result := FGeneration();
 end;
 
-constructor TContextLease.Create(const AScheduler: INyxScheduler; AState: TNyxContextState;
-  ACollections: TNyxContextCollections; AGeneration: TNyxContextGeneration);
+function TContextPort.CaptureCollectionContext: INyxCollectionContext;
 begin
+  RequireActive;
+  Result := FCollectionContext;
+end;
+
+function NyxApplicationCollectionContext(
+  const AContext: INyxApplicationContext): INyxCollectionContext;
+var
+  LSource: INyxApplicationCollectionContext;
+begin
+  Result := nil;
+
+  if Supports(AContext, INyxApplicationCollectionContext, LSource) then
+  begin
+    Result := LSource.CaptureCollectionContext;
+  end;
+end;
+
+constructor TContextLease.Create(const AScheduler: INyxScheduler; AState: TNyxContextState;
+  ACollections: TNyxContextCollections; AGeneration: TNyxContextGeneration;
+  const ACollectionContext: INyxCollectionContext);
+var
+  LCollectionContext: INyxCollectionContext;
+begin
+  LCollectionContext := ACollectionContext;
   inherited Create;
   FPort := TContextPort.Create(AScheduler, AState, ACollections, AGeneration);
   FContext := FPort;
+  FPort.FCollectionContext := LCollectionContext;
 end;
 
 destructor TContextLease.Destroy;
@@ -202,9 +249,10 @@ end;
 
 function NewNyxApplicationContext(const AScheduler: INyxScheduler;
   AState: TNyxContextState; ACollections: TNyxContextCollections;
-  AGeneration: TNyxContextGeneration): INyxApplicationContextLease;
+  AGeneration: TNyxContextGeneration;
+  const ACollectionContext: INyxCollectionContext): INyxApplicationContextLease;
 begin
-  Result := TContextLease.Create(AScheduler, AState, ACollections, AGeneration);
+  Result := TContextLease.Create(AScheduler, AState, ACollections, AGeneration, ACollectionContext);
 end;
 
 end.

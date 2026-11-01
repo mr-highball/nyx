@@ -108,6 +108,10 @@ type
       Unknown partitions/names refuse; the returned managed set owns no state
       owner or document and follows ordinary collection-view lifetime rules. }
     function RootCollections(const ARoot: TNyxRootRef): INyxCollectionBindings;
+    { Independent application/instance scope resolver for runtime content which
+      is realized later, including canvas items. Sharing it never resets stores
+      from authored defaults. It contains no state owner or renderer reference. }
+    property CollectionContext: INyxCollectionContext read FCollectionContext;
     { Install before rendering. All hidden-page validators then use accepted
       runtime resources/locales, never the document's original fallback data.
       Disconnects its borrowed receivers before prototype/store destruction. }

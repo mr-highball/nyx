@@ -55,7 +55,7 @@ uses
   nyx.logic.json.editing,
   nyx.logic.relations, nyx.numbers.decimal, nyx.logic.joins,
   nyx.logic.regex, nyx.regex.types, nyx.regex.replacement, nyx.logic.programs,
-  nyx.logic.http, nyx.http.types,
+  nyx.logic.http, nyx.http.types, nyx.logic.resources,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
   nyx.canvas.geometry,
   nyx.canvas.precision,
@@ -928,7 +928,8 @@ type
     vkTableRowDensity, vkColumnAlignmentPolicy, vkColumnHorizontalAlignment,
     vkColumnVerticalAlignment, vkTableHeaderPolicy, vkInspectionPolicy, vkCollectionFollow,
     vkDraftRecoveryPolicy, vkToolbarOptions, vkToolbarIntent, vkToolbarSortRef,
-    vkToolbarSearchMode, vkToolbarQueryOptions, vkToolbarQueryDisplay);
+    vkToolbarSearchMode, vkToolbarQueryOptions, vkToolbarQueryDisplay,
+    vkJSONResourceOptions, vkJSONResourcePort);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and service authority never enter these literal source values.
@@ -1039,6 +1040,7 @@ type
     LogicDescriptor: TNyxLogicDescriptor;
     FlowRoute: TNyxFlowRoute;
     HTTPRequest: TNyxHTTPRequest;
+    JSONResourceOptions: TNyxJSONResourceOptions;
     FileSaveOptions: TNyxFileSaveOptions;
     FileOpenOptions: TNyxFileOpenOptions;
   end;
@@ -1893,6 +1895,15 @@ begin
   RegisterEnum(vkHTTPPort, Ord(nhpSucceeded), 'nhpSucceeded');
   RegisterEnum(vkHTTPPort, Ord(nhpHeaderVisibility), 'nhpHeaderVisibility');
   RegisterEnum(vkHTTPPort, Ord(nhpURL), 'nhpURL');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpTrigger), 'njrpTrigger');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpReference), 'njrpReference');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpJSON), 'njrpJSON');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpSucceeded), 'njrpSucceeded');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpError), 'njrpError');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpOrigin), 'njrpOrigin');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpCacheWarning), 'njrpCacheWarning');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpCacheRead), 'njrpCacheRead');
+  RegisterEnum(vkJSONResourcePort, Ord(njrpCacheWrite), 'njrpCacheWrite');
   RegisterEnum(vkFileSaveMode, Ord(nfsmPreferPicker), 'nfsmPreferPicker');
   RegisterEnum(vkOpenFilePort, Ord(nofpTrigger), 'nofpTrigger');
   RegisterEnum(vkOpenFilePort, Ord(nofpBytes), 'nofpBytes');
@@ -3774,6 +3785,8 @@ begin
           (LName = 'tnyxdatavalue') or (LName = 'nyxhttprequest') or
           (LName = 'nyxhttpmethod') or (LName = 'nyxhttpport') or
           (LName = 'newnyxhttpcall') or (LName = 'newnyxutf8decode') or
+          (LName = 'newnyxjsonresource') or (LName = 'nyxjsonresourceoptions') or
+          (LName = 'nyxjsonresourceport') or
           (LName = 'newnyxutf8encode') or (LName = 'newnyxsavefile') or
           (LName = 'newnyxopenfile') or (LName = 'nyxfileopenoptions') or
           (LName = 'nyxflowconditions') or
@@ -6855,6 +6868,7 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.regex.replacement');
     LPrefix := WithNyxImport(LPrefix, 'nyx.numbers.decimal');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.http');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.logic.resources');
     LPrefix := WithNyxImport(LPrefix, 'nyx.http.types');
     LPrefix := WithNyxImport(LPrefix, 'nyx.logic.files');
     LPrefix := WithNyxImport(LPrefix, 'nyx.files.save');

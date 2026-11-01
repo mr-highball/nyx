@@ -60,7 +60,7 @@ uses nyx.logic.collections, nyx.logic.json.editing, nyx.logic.http, nyx.http.typ
   nyx.logic.relations, nyx.logic.joins, nyx.logic.regex,
   nyx.regex.types, nyx.regex.replacement,
   nyx.logic.files, nyx.files.save, nyx.logic.files.open, nyx.files.open,
-  nyx.logic.programs;
+  nyx.logic.programs, nyx.logic.resources, nyx.resources;
 
 type
   { Owned immutable discovery snapshot of an operation's schema and defaults;
@@ -256,7 +256,8 @@ begin
     .WithOperation(NewNyxRegexReplace(NyxRegex('(?<word>\w+)'),
       NyxRegexReplacement.Literal('[').Capture(NyxRegexGroup('word')).Literal(']')))
     .WithOperation(NewNyxRegexExtract(NyxRegex('(?<word>\w+)'),
-      NyxRegexCapture(NyxRegexGroup('word'))));
+      NyxRegexCapture(NyxRegexGroup('word'))))
+    .WithOperation(NewNyxJSONResource(NyxJSONResourceOptions(NyxResourceRef('data'))));
 end;
 
 function NewNyxLogicCatalog(const APrograms: INyxProgramDeclarations): INyxLogicCatalog;
