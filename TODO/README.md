@@ -46,6 +46,17 @@ the mandatory two-batch reassessment and return to the existing connected Tool
 Canvas browser-input outcome. Original parent/parity/quality gates stay open;
 this adds no task or percentage credit.
 
+The connected Tool Canvas return now executes the complete JSON Workshop in
+desktop and compact browsers. Ordinary Studio graph edits, drafts, paired history
+and Save/Open pass on both adapters; browser saves agree exactly and their own
+compiled browser application runs the same useful chain. The existing MCP source
+also runs separately. Both sources pass native84/browser78 per width, with four
+clean saved-application heaps. WORK owns receipts and corrected test/bundle
+failures. Original operation/resource/
+host breadth, observing, input, parity, quality and performance gates remain. Stop
+same-save/source variants at this integrated result and follow the existing useful
+resource/host/logic outcomes. No full criterion/task or percentage credit follows.
+
 [Changed state presentation](DONE/NS-2_state-projection-sync_01.md) is accepted
 on2026-10-31. Complete admission, copied typed changes and conservative target
 fallback retain ordinary bindings while avoiding unrelated setters. Actual

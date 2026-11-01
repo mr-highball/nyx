@@ -1403,6 +1403,8 @@ end;
 
 {$ifdef PAS2JS}
 procedure Drive;
+var
+  LFailure: JSValue;
 begin
   try
     document.body.setAttribute('data-json-workshop-stage', IntToStr(GStage));
@@ -1437,8 +1439,17 @@ begin
     end;
     else
     begin
+      { Platform exceptions are not Pascal Exception descendants. Preserve the
+        caught value here: swallowing it and asking for a console entry loses
+        the only stack when the browser correctly considers it handled. }
+      LFailure := JSExceptValue;
       document.body.setAttribute('data-json-workshop-error',
-        'Unexpected platform exception; inspect the retained browser console');
+        'Unexpected platform exception: ' + String(LFailure));
+
+      if isObject(LFailure) and isString(TJSObject(LFailure)['stack']) then
+      begin
+        document.body.setAttribute('data-json-workshop-stack', String(TJSObject(LFailure)['stack']));
+      end;
     end;
   end;
 end;

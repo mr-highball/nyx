@@ -9,7 +9,84 @@ foundation. That final assignment is handed off with all helper jobs joined;
 Lil' Scooty is idle. Root continues alone until the user explicitly changes this
 preference. Do not refill the helper queue or start another helper.
 
-## Current work — Return to connected Tool Canvas browser input — 2026-10-31
+## Current work — Tool Canvas resources and useful data transformations — 2026-11-01
+
+Previous goal turn: PROGRESS. Root remains SOLO. The connected Workshop browser
+and exact saved-application return below is complete as a bounded deliverable.
+No full original criterion/task or north-star percentage closes. Three batches
+since the preceding workbench criterion closure close no complete original
+criterion. The mandatory reassessment already changed direction from DataToolbar
+into this Tool Canvas return. Stop same-save/source/fixture and metadata variants.
+
+Next product delivery follows existing logic-components01 criteria3/4/7 and their
+flow/resource/host prerequisites: inspect the current operation coverage ledger,
+resource contracts and live graph ports, then address a concrete missing hosted/
+embedded resource input through typed data transformations into useful bound
+controls/Table. Preserve explicit host authority, cache choices, exact data,
+cancellation, atomic publication, independent Apps and revision/retirement.
+Reuse the existing public Tool Canvas, semantic tools and actual input consumers.
+A passing standalone codec, source or descriptor fixture cannot replace this
+integrated result. Keep every original host, port/graph, parity, quality and
+performance acceptance condition. Do not create another ordinary project in the
+full nine-project QA registry. Do not return to the deferred resolver.
+
+All actual readers, including runner28917, are terminal and joined. All owned
+browser tabs and native Apps are closed; there is no source freeze. The fixed
+QA/LAN owners, nine project identities/revisions/selections/history and local
+configuration remain unchanged. New scratch, runners, artifacts and owned child
+TEMP/TMP remain on E:. Preserve unrelated AGENTS/WORK operator changes and the
+untracked1280/390 directories. The broad goal remains active.
+
+## Qualified return — Connected JSON Workshop browser authoring — 2026-11-01
+
+Packet json-workshop-browser-return-01 replaces compiled-only evidence with the
+complete ordinary browser journey at exact1280x900/390x900 allocations. Original
+Open/Format/Save, live Pascal, URL/status, invalid UTF-8/JSON, transport failure,
+newer edits, peer independence and retirement assertions remain. Base browser77
+and native83 pass per width. Native frees all24719934/24358657 allocated blocks.
+
+The original Studio consumer advanced before observing shared source, then
+prematurely released long-lived facets through pas2js out-field finalizers. The
+maintained consumer waits for both transports/source publication, queries facets
+into owning locals before retaining fields, and preserves actual platform errors
+and their stacks. Generated final Tick has no field finalizers. Original generic
+failure, exact stacks and failed generated cohorts remain retained. The build
+also stages its required Pascal source worker. These are test/bundle repairs;
+no new operation kind, public contract or shared-library repair is claimed.
+
+Ordinary Studio graph editing, drafts, Apply, paired history and Save/Open pass
+native135/137 and browser105/105. Native frees98820949/94279132 allocated blocks.
+The actual browser Export/Import packet is retained as inert text, independently
+of later application state. Both widths save identical65893-byte projects,
+SHA256D4E79990 prefix. The existing named MCP Workshop is exported read-only at
+revision3,65905 bytes, SHA256AA8B1E15 prefix; bounded semantic graph/URL-port reads
+and a final nine-project metadata comparison confirm no accepted mutation.
+
+Both exact sources independently compile and execute native84/browser78 per
+width. All four saved-application heaps are clean: MCP24708151/24346946 and
+Studio24708290/24347054 allocated blocks are completely freed. Those source files
+come from the actual retained project packets, not a reconstructed fixture.
+Seven maintained sources retain exact hashes, matching staged assets retain
+separate receipts, and both tasks' original Acceptance Criteria/Blockers tails
+remain unchanged. All owned compile warnings are zero; installed Classes browser
+warnings remain seven per build. Native lifetime-retention notes are preserved.
+
+Native builds report307179/581.6s,3141/448.8s,2685/137.4s and2685/25.4s. Every
+compiler stays inside600s; original120/300s runtime guards stay unchanged. These
+checked/heap-traced workloads and different cache states establish no comparative
+speedup, production budget or near-real-time quality. Both final ordinary Studio
+consoles are empty. Five other aggregate iframe consoles retain the previously
+independently reproduced MutationObserver observation error; no completely clean
+aggregate-console or full browser-quality claim is made.
+
+Editor/network/file exchanges are controlled. The consumer drives actual Nyx
+input paths, not physical/trusted keyboard, a picker/download, authenticated
+observing delivery or full accessibility. Earlier real-host receipts retain
+their separate scope. Full operation/resource/host breadth, HTTP-to-query/Table,
+port/graph authoring, other native systems, physical/assistive, parity, quality,
+performance and preserving Studio deployment remain under their original owners.
+This bounded return is ready for commit/push; follow the next product outcome.
+## Previous checkpoint — Return to connected Tool Canvas browser input — 2026-10-31
 
 Outcome: PROGRESS frome6a89bfb. Root remains SOLO. The original DataToolbar
 browser authoring and same-save application return is delivered below. A shared

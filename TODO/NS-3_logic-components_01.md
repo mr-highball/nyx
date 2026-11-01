@@ -2,6 +2,21 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The 2026-11-01 browser return executes the complete JSON Workshop input journey
+at desktop and compact widths, including live Pascal, file/URL refusals, exact
+numbers, independent applications and retirement. Ordinary Studio graph editing,
+drafts, paired history and controlled-file Save/Open now pass on both adapters.
+Both browser allocations save identical projects, and that exact constructor
+executes as a separate browser application. The existing MCP-authored constructor
+also executes in both browser allocations. WORK owns native heap receipts,
+source/artifact identities and native84/browser78 saved-application checks per
+width for both exact sources, with four more clean native heaps.
+The consumer's observing barrier/interface ownership and its missing source-worker
+bundle are repaired; no new operation kind or shared-library repair is claimed.
+Full operation/host breadth, HTTP-to-query/Table, observing, physical/assistive,
+parity, resource budgets and original prerequisites remain. This accepts no whole
+original criterion/task or additional completion credit.
+
 JSON Workshop now adds connected URL input through the existing HTTP operation,
 strict UTF-8 and the same authored preparation/JSON chain. An optional typed port
 derives a validated per-invocation target without replacing saved request options

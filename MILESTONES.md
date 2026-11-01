@@ -41,6 +41,15 @@ Full parent/parity/quality gates remain. After two batches without complete
 criterion closure, the reassessed next outcome returns to connected Tool Canvas
 browser input through its existing flow/resource/HTTP owners. No credit increases.
 
+The connected Tool Canvas return now executes JSON Workshop browser input at both
+allocations, including URL/status, strict decoding, live Pascal, failed/stale work
+and retirement. Ordinary graph editing/history/Save/Open passes on both adapters;
+matching browser saves independently compile and execute, as does the existing
+MCP-authored source. Both exact sources pass native84/browser78 per width, with
+four clean saved-application heaps. Test/bundle repairs add no operation kind or
+full criterion credit. Resource/host breadth, HTTP-to-query/Table, observing,
+physical/assistive, parity and performance acceptance remain open.
+
 Scoped [changed state presentation](TODO/DONE/NS-2_state-projection-sync_01.md)
 is accepted on2026-10-31. Complete admission and conservative target fallback
 remain, while supported status changes avoid unrelated setters. Both-target

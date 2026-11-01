@@ -4,6 +4,20 @@
 
 **Description:**
 
+The 2026-11-01 JSON Workshop browser return now executes the complete connected
+Open/Format/Save, live-Pascal and URL/status journey at desktop and compact widths.
+Ordinary Studio edits both useful graphs, preserves drafts and paired history,
+then exports/imports an identical saved packet at both allocations. That saved
+constructor and the existing MCP-authored source independently execute on the
+browser. Fresh native base and ordinary Studio journeys have clean heaps; WORK
+retains the exact receipts and native84/browser78 saved-application checks per
+width for both sources, with four additional clean native heaps.
+The corrected test waits for observation and retains interface facets explicitly;
+the maintained bundle includes its Pascal source worker. Controlled exchanges and
+file/network outcomes do not establish physical effects, authenticated observing,
+accessibility or production performance. Original resource/script/diagram/port,
+creator breadth, parity and quality requirements remain; no full criterion closes.
+
 Actual2026-10-27 browser execution now qualifies the same Studio-built Workshop's
 HTTP-only/HTTP+files responses and explicit absent-host refusal at both widths.
 Real browser file selection/UTF-8 reading also feeds its formatter at both widths.

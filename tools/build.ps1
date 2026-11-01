@@ -8141,6 +8141,19 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       $nyxWorkshopBrowserFlags = @('-Mdelphi','-Tbrowser','-Jirtl.js',
         '-Fusrc','-Fisrc','-Futests','-Fustudio','-Fuexamples/tool-canvas')
       $output = $nyxWorkshopBrowser
+      if ($JSONWorkshopStudio) {
+        # Ordinary graph editing publishes a paired source change through the
+        # Pascal worker. Stage it beside the Studio consumer so browser tests
+        # exercise the same source/history path as the native journey.
+        $nyxWorkshopResult = RunOwned $nyxPas2js @('-Mdelphi','-Tmodule','-Jirtl.js',
+          '-Fusrc','-Fustudio','-Fisrc',('-FE'+$nyxWorkshopBrowser),
+          'studio/nyx_source_worker.lpr') 'compile-nyx_source_worker' 600 $false
+        $nyxWorkshopResult | ConvertTo-Json -Depth 8 | Set-Content (
+          Join-Path $output 'compile-nyx_source_worker-result.json') -Encoding utf8
+        if ($nyxWorkshopResult.exit -ne 0 -or $nyxWorkshopResult.timedOut) {
+          throw 'JSON Workshop browser Studio source worker failed compilation'
+        }
+      }
       foreach ($nyxWorkshopConsumer in @(
         @('example','examples/tool-canvas/json_workshop.lpr','json_workshop'),
         @('controls','tests/nyx_json_workshop_controls.lpr','nyx_json_workshop_controls'))) {

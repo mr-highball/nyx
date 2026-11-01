@@ -451,8 +451,13 @@ function TJourney.Tick: Boolean;
 var
   LView: INyxCanvasWorkspaceView;
   LStore: TNyxProjectPair;
+  LTarget: TToolPresentation;
+  LEditing: INyxCanvasFlowEditing;
+  LLogic: INyxToolCanvasLogicAuthoring;
   {$ifdef PAS2JS}
   LExchangeIndex: Integer;
+  LRequestPending: Boolean;
+  LArtifact: TJSHTMLElement;
   {$endif}
   {$ifndef PAS2JS}
   LProjectStore: TNyxProjectStore;
@@ -460,6 +465,10 @@ var
   {$endif}
 begin
   Result := FDone;
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-json-workshop-studio-stage', IntToStr(FStage));
+  document.body.setAttribute('data-json-workshop-studio-checks', IntToStr(FChecks));
+  {$endif}
 
   if FDone then
   begin
@@ -479,6 +488,14 @@ begin
       FStudio.Exchanges[LExchangeIndex].FireTick;
     end;
   end;
+  { A delivered clock tick may queue the shared-project observation. Do not
+    drive the visible editor until every pending reply is delivered and its
+    exact source/design pair has reached the normal Studio publication path. }
+  LRequestPending := False;
+  for LExchangeIndex := 0 to High(FStudio.Exchanges) do
+  begin
+    LRequestPending := LRequestPending or FStudio.Exchanges[LExchangeIndex].RequestPending;
+  end;
   {$endif}
 
   if Clock - FStarted > 240000 then
@@ -490,6 +507,13 @@ begin
   begin
     Exit;
   end;
+  {$ifdef PAS2JS}
+
+  if LRequestPending or not FStudio.SharedSourceSynchronized then
+  begin
+    Exit;
+  end;
+  {$endif}
 
   if (FTools <> nil) and (FTools.RefreshExecution <> nil) then
   begin
@@ -517,13 +541,21 @@ begin
     1: ClickShell('action-preview');
     2:
       begin
+        Check(FStudio.CanvasView.Root.Find(JSONWorkshopCanvas.ID) <> nil,
+          'ordinary Studio mounts the observed Workshop before accessing its canvas');
         LView := FStudio.CanvasView.CanvasView(
           FStudio.CanvasView.Root.Find(JSONWorkshopCanvas.ID).Part(NyxPart('workspace')).ID);
         FTools := FStudio.CanvasView.ToolCanvasView(JSONWorkshopCanvas.ID);
-        Check(Supports(FTools, TToolPresentation, FTarget), 'ordinary Studio exposes its actual tool view');
-        Check(Supports(LView, INyxCanvasFlowEditing, FEditing), 'ordinary canvas has managed graph editing');
-        Check(Supports(FTools.Inspector, INyxToolCanvasLogicAuthoring, FLogic),
+        { Query into owning locals before retaining facets across ticks. pas2js
+          otherwise finalizes out-parameter fields on every later Tick, leaving
+          dangling fields and prematurely disposing the actual Tool Canvas. }
+        Check(Supports(FTools, TToolPresentation, LTarget), 'ordinary Studio exposes its actual tool view');
+        Check(Supports(LView, INyxCanvasFlowEditing, LEditing), 'ordinary canvas has managed graph editing');
+        Check(Supports(FTools.Inspector, INyxToolCanvasLogicAuthoring, LLogic),
           'ordinary canvas has its shared Logic workbench');
+        FTarget := LTarget;
+        FEditing := LEditing;
+        FLogic := LLogic;
         ClickTool('tab-logic');
       end;
     3:
@@ -648,6 +680,16 @@ begin
         LStore := FStudio.ProjectSnapshot;
         Check(Pos('NewNyxJSONFormat(njlIndented, 4)', LStore.Source) > 0,
           'the saved crafted Pascal carries the meaningful four-space configuration');
+        {$ifdef PAS2JS}
+        { Retain the exact ordinary Export/Import packet as inert text, so an
+          independent compiler can consume the actual saved constructor. This
+          is the packet already checked at both file-delivery boundaries. }
+        LArtifact := TJSHTMLElement(document.createElement('script'));
+        LArtifact.id := 'workshop-saved-project';
+        LArtifact.setAttribute('type', 'application/json');
+        LArtifact.textContent := FSaved;
+        document.body.appendChild(LArtifact);
+        {$endif}
         FDone := True;
         Result := True;
       end;

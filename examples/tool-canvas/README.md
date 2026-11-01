@@ -85,10 +85,18 @@ It opens the Save and Format graphs, changes their indentation from two to four
 spaces through the Logic form, and checks that unfinished input survives a tab
 change. Apply changes the running graphs; **Save graphs** publishes their design
 and Pascal together. Undo/Redo and ordinary project Save/Open preserve that pair.
+The browser build includes the Pascal source worker required for that publication.
 The command then compiles the saved constructor and runs the complete control
 journey against its four-space configuration. Native file and HTTP outcomes remain
 injected; the browser assertion page substitutes file/network bytes and editor
 transport. Browser execution is a separate check.
+
+The maintained browser consumer now also runs this ordinary Studio journey,
+waiting for delivered shared-source observations before driving the editor. It
+retains the actual exported/imported project as inert `workshop-saved-project`
+text for independent compilation; it does not substitute a pre-save fixture.
+WORK records executed desktop/compact evidence and the distinct native, browser,
+controlled-host and physical-input limits.
 
 Configure `LCL_FPC`, `LAZARUS`, `PAS2JS`, `PAS2JS_RUNTIME`, `EVIDENCE_ROOT` and
 `TEMP_ROOT` in the private toolchain configuration. Alternatively pass a fresh
