@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Resource Workshop's ordinary Studio return now executes typed resource options,
+unfinished Unicode draft refusal/restoration, staged/live/saved distinctions,
+paired history and actual Save/Open on native/browser at both allocations. Exact
+saved source reconstructs and runs the connected Table workflow independently.
+Shared library repairs retain the staged step's accepted configuration and update
+initial attachment feedback without rebuilding the inspector. WORK.md owns the
+resource-studio01 results and retained failures. This accepts criterion4 of the
+canvas-collections prerequisite, not a whole criterion/task of this broader Logic
+collection. Next return to real resource/HTTP hosts and HTTP-to-query/Table, plus
+observing delivery, instance/remount, input/quality/budgets and remaining breadth.
+
 Resource Workshop now adds declared JSON input through the existing loader/cache
 and a typed kind25. Its useful embedded Table chain exposes and repairs the
 browser/LCL application-store binding gap. WORK.md owns core19, authoring14,

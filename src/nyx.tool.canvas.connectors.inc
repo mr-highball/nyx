@@ -300,6 +300,10 @@ begin
     LSource.Owner := Self;
     FNavigationScope := LNavigation.ObserveNavigation(LSource);
   end;
+  { Native initial layout may already be mounted before observation attaches.
+    Browser mounting may settle later. Admit one ordinary queued observation
+    for both cases; future presentation notifications use that same queue. }
+  QueueConnectors(False);
 end;
 
 procedure TToolView.DisconnectConnectors;
@@ -415,6 +419,7 @@ var
   LController: INyxToolControlWires;
   LNodes: INyxToolPipelineNodes;
   LIndex: Integer;
+  LAttachment: INyxToolCanvasAttachmentPresentation;
 
   { Restore only an explicitly remembered connector after its face is rebuilt.
     Source controls keep their own renderer and focus; no host control is retained
@@ -604,6 +609,22 @@ begin
     Exit;
   end;
   LLease := Self;
+
+  if not FUpdating and (FRenderedBlueprint <> nil) and
+    (FRenderedBlueprint.Node = FInspector.Root.Node) and
+    Supports(FInspector, INyxToolCanvasAttachmentPresentation, LAttachment) and
+    LAttachment.SynchronizeAttachment(FRenderer.Root) then
+  begin
+    { Presentation observation occurs after the item's mounts publish. Mirror
+      those two live fields on a later UI turn; rebuilding the inspector here
+      would retire focused inputs and unrelated unfinished Logic/program forms. }
+
+    if FQueuedUpdate = ntcuNone then
+    begin
+      FQueuedUpdate := ntcuSynchronize;
+    end;
+    QueueRefresh;
+  end;
 
   if not Supports(FInspector, INyxToolCanvasControlConnectors, LMode) or
     not LMode.ControlConnectorsVisible then

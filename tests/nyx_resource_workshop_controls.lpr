@@ -28,11 +28,15 @@ uses
   nyx.state, nyx.collections, nyx.resource.sources, nyx.resource.cache,
   nyx.resources, nyx.resources.loader, nyx.application.resources,
   nyx.resource.workshop, nyx.scheduler, nyx.codec, nyx.canvas.types,
-  nyx.canvas.workspace, nyx.flow.routing
+  nyx.canvas.workspace, nyx.flow.routing, nyx.tool.canvas
+  {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}, nyx.test.json.workshop.studio,
+    nyx.studio.projects{$endif}
   {$ifdef NYX_COMPILED_RESOURCE_WORKSHOP}, nyx.generated.view{$endif}
-  {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.canvas.browser
+  {$ifdef PAS2JS}, JS, Web, nyx.application.browser, nyx.canvas.browser,
+    nyx.tool.canvas.browser
   {$else}, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
-    IntfGraphics, FPWritePNG, nyx.application.lcl, nyx.canvas.lcl{$endif};
+    IntfGraphics, FPWritePNG, nyx.application.lcl, nyx.canvas.lcl,
+    nyx.tool.canvas.lcl{$endif};
 
 type
   {$ifdef PAS2JS}
@@ -40,11 +44,15 @@ type
   TReviewApplication = TNyxBrowserApplication;
   { Retained workspace facet borrows item renderers until application teardown. }
   TReviewCanvas = INyxBrowserCanvasWorkspaceView;
+  { Borrow the independently owned inspector renderer without creating a face. }
+  TReviewTools = INyxBrowserToolCanvasView;
   {$else}
   { Owns one ordinary application; borrowed embedded controls retire with it. }
   TReviewApplication = TNyxLCLApplication;
   { Retained workspace facet borrows item renderers until application teardown. }
   TReviewCanvas = INyxLCLCanvasWorkspaceView;
+  { Borrow the independently owned inspector renderer without creating a face. }
+  TReviewTools = INyxLCLToolCanvasView;
   {$endif}
 
   { Controlled response remains revocable through the ordinary request base.
@@ -68,6 +76,10 @@ type
   end;
 
 var
+  {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+  GStudioJourney: INyxToolWorkshopStudioJourney;
+  {$endif}
+  GInitialized: Boolean;
   GDocument: TNyxDocument;
   GApplications: array[0..1] of TReviewApplication;
   GViews: array of TReviewCanvas;
@@ -207,6 +219,9 @@ procedure Step;
 var
   LRuntime: INyxCanvasRuntimeView;
   LRoute: Integer;
+  LTools: INyxToolCanvasView;
+  LTarget: TReviewTools;
+  LRootID: TNyxText;
 begin
 
   if Clock - GStarted > 45000 then
@@ -221,6 +236,13 @@ begin
         begin
           Exit;
         end;
+        LTools := GApplications[0].View.ToolCanvasView(ResourceWorkshopCanvas.ID);
+        Check(Supports(LTools, TReviewTools, LTarget), 'actual application exposes its managed Tool inspector');
+        LRootID := LTools.Inspector.Root.ID;
+        Check(LTarget.Renderer.Root.Find(LRootID + '-graphs').Prop(NyxAttributeName(atEnabled)) = 'true',
+          'initial mounted attachment enables the actual graph switch without manual Refresh');
+        Check(Pos('2 routes', LTarget.Renderer.Root.Find(LRootID + '-status')
+          .Prop(NyxAttributeName(atText))) = 1, 'initial inspector describes the mounted route binding');
         Check(Supports(GViews[0], INyxCanvasRuntimeView, LRuntime),
           'canvas exposes its optional runtime inspection capability');
         GRoutes := LRuntime.BehaviorFor(ResourceWorkshopItem).Routes;
@@ -405,10 +427,17 @@ var
   LUntil: Double;
   {$endif}
 begin
+  {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+  GStudioJourney := nil;
+  {$endif}
   GRoutes := nil;
   for LIndex := 0 to 1 do
   begin
-    GViews[LIndex] := nil;
+
+    if LIndex < Length(GViews) then
+    begin
+      GViews[LIndex] := nil;
+    end;
     {$ifndef PAS2JS}
     LScheduler := nil;
 
@@ -444,17 +473,101 @@ begin
   FreeAndNil(GDocument);
 end;
 
+procedure InitializeApplications;
+var
+  LIndex: Integer;
+  {$ifdef PAS2JS}
+  LHost: TJSHTMLElement;
+  {$endif}
+  {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+  LPair: TNyxProjectPair;
+  {$ifndef PAS2JS}
+  LBytes: TNyxBytes;
+  LFile: TFileStream;
+  {$endif}
+  {$endif}
+begin
+  {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+  LPair := GStudioJourney.Pair;
+  Inc(GChecks, GStudioJourney.Checks);
+  GDocument := TNyxCodec.Decode(LPair.Design);
+  {$ifndef PAS2JS}
+  ForceDirectories(ParamStr(1));
+  LBytes := NyxEncodeUTF8(LPair.Source);
+  LFile := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(1)) +
+    'nyx.generated.view.pas', fmCreate);
+  try
+
+    if Length(LBytes) > 0 then
+    begin
+      LFile.WriteBuffer(LBytes[0], Length(LBytes));
+    end;
+  finally
+    LFile.Free;
+  end;
+  {$endif}
+  GStudioJourney := nil;
+  {$else}
+  {$ifdef NYX_COMPILED_RESOURCE_WORKSHOP}
+  GDocument := BuildNyxDocument;
+  {$else}
+  GDocument := BuildResourceWorkshopDocument;
+  {$endif}
+  {$endif}
+  SetLength(GViews, 2);
+  GSaved := TNyxCodec.Encode(GDocument);
+  GTransport := TTransport.Create;
+  GTransportLease := GTransport;
+  GResolver := NewNyxResourceResolver(GTransportLease);
+  for LIndex := 0 to 1 do
+  begin
+    GApplications[LIndex] := TReviewApplication.Create;
+    GApplications[LIndex].ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand), GResolver);
+    {$ifdef PAS2JS}
+    LHost := TJSHTMLElement(document.createElement('main'));
+    document.body.appendChild(LHost);
+    GApplications[LIndex].Run(GDocument, LHost);
+    {$else}
+    GApplications[LIndex].Mount(GDocument);
+    GApplications[LIndex].Window.ClientWidth := StrToIntDef(ParamStr(2), 1280);
+    GApplications[LIndex].Window.ClientHeight := 900;
+    GApplications[LIndex].Window.Show;
+    {$endif}
+    GViews[LIndex] := GApplications[LIndex].View.CanvasView(
+      GApplications[LIndex].View.Root.Find(ResourceWorkshopCanvas.ID)
+        .Part(NyxPart('workspace')).ID) as TReviewCanvas;
+  end;
+  GStarted := Clock;
+  GInitialized := True;
+end;
+
 {$ifdef PAS2JS}
 procedure Drive;
 begin
   try
-    Step;
+    {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+
+    if not GInitialized and GStudioJourney.Tick then
+    begin
+      InitializeApplications;
+    end;
+    {$endif}
+
+    if GInitialized then
+    begin
+      Step;
+    end;
 
     if GDone then
     begin
       Retire;
       document.body.setAttribute('data-resource-workshop', 'passed');
+      {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+      document.body.appendChild(document.createTextNode(
+        'PASS ' + IntToStr(GChecks) + ' connected resource Workshop checks'));
+      {$else}
       document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' connected resource Workshop checks';
+      {$endif}
       Exit;
     end;
     window.setTimeout(@Drive, 5);
@@ -477,48 +590,36 @@ begin
 end;
 {$endif}
 
-var
-  LIndex: Integer;
-  {$ifdef PAS2JS}LHost: TJSHTMLElement;{$endif}
 begin
   {$ifndef PAS2JS}Application.Initialize;{$endif}
   try
-    SetLength(GViews, 2);
-    {$ifdef NYX_COMPILED_RESOURCE_WORKSHOP}
-    GDocument := BuildNyxDocument;
+    {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+    GStudioJourney := NewResourceWorkshopStudioJourney(
+      {$ifdef PAS2JS}''{$else}ParamStr(1){$endif},
+      {$ifdef PAS2JS}window.innerWidth{$else}StrToIntDef(ParamStr(2), 1280){$endif});
     {$else}
-    GDocument := BuildResourceWorkshopDocument;
+    InitializeApplications;
     {$endif}
-    GSaved := TNyxCodec.Encode(GDocument);
-    GTransport := TTransport.Create;
-    GTransportLease := GTransport;
-    GResolver := NewNyxResourceResolver(GTransportLease);
-    for LIndex := 0 to 1 do
-    begin
-      GApplications[LIndex] := TReviewApplication.Create;
-      GApplications[LIndex].ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand), GResolver);
-      {$ifdef PAS2JS}
-      LHost := TJSHTMLElement(document.createElement('main'));
-      document.body.appendChild(LHost);
-      GApplications[LIndex].Run(GDocument, LHost);
-      {$else}
-      GApplications[LIndex].Mount(GDocument);
-      GApplications[LIndex].Window.ClientWidth := StrToIntDef(ParamStr(2), 1280);
-      GApplications[LIndex].Window.ClientHeight := 900;
-      GApplications[LIndex].Window.Show;
-      {$endif}
-      GViews[LIndex] := GApplications[LIndex].View.CanvasView(
-        GApplications[LIndex].View.Root.Find(ResourceWorkshopCanvas.ID)
-          .Part(NyxPart('workspace')).ID) as TReviewCanvas;
-
-    end;
-    GStarted := Clock;
     {$ifdef PAS2JS}Drive;{$else}
     while not GDone do
     begin
       Application.ProcessMessages;
       CheckSynchronize;
-      Step;
+      {$ifdef NYX_RESOURCE_WORKSHOP_STUDIO}
+
+      if not GInitialized and GStudioJourney.Tick then
+      begin
+        InitializeApplications;
+        { Let the actual native UI queue settle the newly mounted application's
+          attachment observation before inspecting its painted Tool controls. }
+        Continue;
+      end;
+      {$endif}
+
+      if GInitialized then
+      begin
+        Step;
+      end;
       Sleep(5);
     end;
     Retire;

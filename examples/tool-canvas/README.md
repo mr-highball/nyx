@@ -18,11 +18,15 @@ transport authority and requires no handwritten result callback.
 The maintained Pascal consumers `nyx_resource_logic_tests`,
 `nyx_resource_logic_authoring_tests` and `nyx_resource_workshop_controls` separate
 scope/cache/lifetime checks, typed form/source/semantic history and actual
-embedded controls. The last consumer can compile against its exact emitted
-constructor with `NYX_COMPILED_RESOURCE_WORKSHOP`. Controlled byte hosts do not
-prove a real HTTP origin. WORK.md owns current results and remaining ordinary
-Studio, observing delivery, instance/remount, physical/assistive and performance
-acceptance. The desktop/narrow input assertions do not establish full aesthetics.
+embedded controls. Define `NYX_RESOURCE_WORKSHOP_STUDIO` for the last consumer to
+begin in ordinary Studio: load the resource step, retain unfinished Unicode input
+across tabs, reject invalid options, set its deadline, Apply, Save graphs, Undo/
+Redo and Save/Open the project. The resulting exact source is separately compiled
+with `NYX_COMPILED_RESOURCE_WORKSHOP`. Its native/browser Table journey uses the
+same actual controls. Controlled byte hosts do not prove a real HTTP origin.
+WORK.md owns current results and remaining observing delivery, instance/remount,
+physical/assistive and performance acceptance. The desktop/narrow input assertions
+do not establish full aesthetics.
 
 ## JSON Workshop
 

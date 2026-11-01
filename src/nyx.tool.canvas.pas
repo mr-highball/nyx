@@ -79,6 +79,15 @@ type
       const AEvent: TNyxEventInfo): TNyxToolCanvasUpdate;
   end;
 
+  { Optional UI-only synchronization after a canvas presentation settles. Only
+    the selected item's attachment status and graph switch are mirrored into
+    the exact current form and its blueprint. No selection, draft, caret or
+    graph changes; a retired inspector refuses and retains no supplied root. }
+  INyxToolCanvasAttachmentPresentation = interface(IInterface)
+    ['{15CDBE0F-33B2-46C6-993D-8C6048DB3A19}']
+    function SynchronizeAttachment(ARoot: TNyxNode): Boolean;
+  end;
+
   { Optional managed control/event-to-script route authoring. It composes the
     same public form used by Studio and applies only runtime item overrides.
     Hiding/reopening the same selection retains unfinished fields. A stale
@@ -302,7 +311,8 @@ type
   TInspector = class(TInterfacedObject, INyxToolCanvasInspector, INyxToolCanvasConnections,
     INyxToolCanvasInput, INyxToolCanvasRouteAuthoring, INyxToolCanvasControlConnectors,
     INyxToolCanvasRoutePersistence, INyxToolCanvasLogicAuthoring, INyxToolCanvasProgramAuthoring,
-    INyxToolCanvasGraphConnections, INyxToolCanvasGraphPlacement)
+    INyxToolCanvasGraphConnections, INyxToolCanvasGraphPlacement,
+    INyxToolCanvasAttachmentPresentation)
   private
     FID: TNyxText;
     FSource: TNyxDocument;
@@ -387,6 +397,7 @@ type
     procedure Rebuild;
     function PartID(const APart: TNyxText): TNyxText;
     function CurrentBehavior: INyxViewBehavior;
+    procedure AttachmentStatus(out AConnected, AGraphs: Boolean; out AStatus: TNyxText);
     procedure BuildEventRoutes(const AParent: INyxCard);
     procedure BuildLogic(const AParent: INyxCard);
     procedure EnsureLogicContext;
@@ -406,6 +417,7 @@ type
     constructor Create(const AID: TNyxText; ADocument: TNyxDocument;
       const AView: INyxCanvasWorkspaceView);
     destructor Destroy; override;
+    function SynchronizeAttachment(ARoot: TNyxNode): Boolean;
     procedure Disconnect;
     function GetDocument: TNyxDocument;
     function GetRoot: INyxCard;
@@ -777,6 +789,74 @@ begin
   end;
 end;
 
+procedure TInspector.AttachmentStatus(out AConnected, AGraphs: Boolean;
+  out AStatus: TNyxText);
+var
+  LBehavior: INyxViewBehavior;
+  LIndex: Integer;
+  LActive: Integer;
+  LReport: TNyxDataValue;
+begin
+  LBehavior := CurrentBehavior;
+  AConnected := LBehavior <> nil;
+  AGraphs := AConnected and LBehavior.GraphsEnabled;
+  AStatus := 'No runtime attachment: this item is off screen or is a design preview.';
+
+  if AConnected then
+  begin
+    LActive := 0;
+    AStatus := '';
+    for LIndex := 0 to LBehavior.Routes.Count - 1 do
+    begin
+      LReport := LBehavior.Routes.Report(LIndex);
+      Inc(LActive, LReport.Field('active').AsInteger);
+
+      if LReport.Field('failure').AsText <> '' then
+      begin
+        AStatus := Caption(LReport.Field('failure').AsText, 256);
+      end;
+    end;
+    AStatus := IntToStr(LBehavior.Routes.Count) + ' routes / ' + IntToStr(LActive) +
+      ' active. ' + AStatus;
+  end;
+end;
+
+function TInspector.SynchronizeAttachment(ARoot: TNyxNode): Boolean;
+var
+  LGraphs: TNyxNode;
+  LStatus: TNyxNode;
+  LConnected: Boolean;
+  LEnabled: Boolean;
+  LText: TNyxText;
+begin
+  RequireConnected;
+  Result := False;
+
+  if (FTab <> titPorts) or (ARoot = nil) or (ARoot.ID <> FID) or (FRoot = nil) then
+  begin
+    Exit;
+  end;
+  LGraphs := ARoot.Find(PartID('graphs'));
+  LStatus := ARoot.Find(PartID('status'));
+
+  if (LGraphs = nil) or (LStatus = nil) then
+  begin
+    Exit;
+  end;
+  AttachmentStatus(LConnected, LEnabled, LText);
+  Result := ((LGraphs.Prop(NyxAttributeName(atEnabled)) = 'true') <> LConnected) or
+    ((LGraphs.Prop(NyxAttributeName(atValue)) = 'true') <> LEnabled) or
+    (LStatus.Prop(NyxAttributeName(atText)) <> LText);
+
+  if Result then
+  begin
+    LGraphs.Configure.Enabled(LConnected).Value(LEnabled).Done;
+    LStatus.Configure.Text(LText).Done;
+    FRoot.Node.Find(PartID('graphs')).Configure.Enabled(LConnected).Value(LEnabled).Done;
+    FRoot.Node.Find(PartID('status')).Configure.Text(LText).Done;
+  end;
+end;
+
 procedure TInspector.Rebuild;
 var
   LNew: INyxCard;
@@ -794,7 +874,6 @@ var
   LContext: TNyxDocument;
   LAuthoredRoot: TNyxNode;
   LNode: TNyxNode;
-  LBehavior: INyxViewBehavior;
   LIndex: Integer;
   LCount: Integer;
   LTotal: Integer;
@@ -803,8 +882,8 @@ var
   LItemChoice: TNyxText;
   LControlChoice: TNyxText;
   LStatus: TNyxText;
-  LReport: TNyxDataValue;
   LConnected: Boolean;
+  LGraphsEnabled: Boolean;
   LContentKey: TNyxText;
 
   procedure Collect(ANode: TNyxNode);
@@ -975,10 +1054,9 @@ begin
       LControls := NewNyxSelect(PartID('control')).WithText('Control');
       LControls.Configure.Items(LList).Value(LControlChoice).Done;
       LNew.Add(LControls);
-      LBehavior := CurrentBehavior;
-      LConnected := LBehavior <> nil;
+      AttachmentStatus(LConnected, LGraphsEnabled, LStatus);
       LSwitch := NewNyxSwitch(PartID('graphs')).WithText('Run event graphs');
-      LSwitch.Configure.Enabled(LConnected).Value(LConnected and LBehavior.GraphsEnabled).Done;
+      LSwitch.Configure.Enabled(LConnected).Value(LGraphsEnabled).Done;
       LNew.Add(LSwitch);
       LSwitch := NewNyxSwitch(PartID('ports')).WithText('Show ports');
       LSwitch.Configure.Value(FShowPorts).Done;
@@ -987,25 +1065,6 @@ begin
       LActions.Add(NewNyxButton(PartID('refresh')).WithText('Refresh'));
       LActions.Add(NewNyxButton(PartID('cancel')).WithText('Cancel active work'));
       LNew.Add(LActions);
-      LStatus := 'No runtime attachment: this item is off screen or is a design preview.';
-
-      if LConnected then
-      begin
-        LCount := 0;
-        LStatus := '';
-        for LIndex := 0 to LBehavior.Routes.Count - 1 do
-        begin
-          LReport := LBehavior.Routes.Report(LIndex);
-          Inc(LCount, LReport.Field('active').AsInteger);
-
-          if LReport.Field('failure').AsText <> '' then
-          begin
-            LStatus := Caption(LReport.Field('failure').AsText, 256);
-          end;
-        end;
-        LStatus := IntToStr(LBehavior.Routes.Count) + ' routes / ' + IntToStr(LCount) +
-          ' active. ' + LStatus;
-      end;
       LNew.Add(NewNyxLabel(PartID('status')).WithText(LStatus));
       LRows := NewNyxColumn(PartID('port-list'));
       LRows.Configure.Visible(FShowPorts).Done;

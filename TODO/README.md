@@ -3,11 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-[Canvas collections01](NS-2_canvas-collections_01.md) owns the newly reproduced
-browser/LCL gap where embedded Tables render private defaults instead of their
-graph's application stores. It is a required prerequisite of the current
-resource-to-Table Tool Canvas delivery. WORK.md retains failures and qualification;
-no acceptance credit is assigned from the new operation or source checks alone.
+[Canvas collections01](NS-2_canvas-collections_01.md) now accepts original
+criterion4: ordinary Resource Workshop Studio authoring, paired history, actual
+Save/Open and independent execution of that exact saved Pascal on both targets
+at desktop/compact widths. Its application/private collection repair and earlier
+scope evidence remain. Full instance/remount/resource qualification stays open;
+no whole task or percentage closes. WORK.md owns resource-studio01 and the return
+to real hosted input, HTTP-to-query/Table and observing delivery under the existing
+[Logic collection](NS-3_logic-components_01.md) owner.
 
 [Column events01](DONE/NS-1_column-events_01.md) is accepted on2026-10-31.
 The same MCP-authored application passes native85 per width, including actual

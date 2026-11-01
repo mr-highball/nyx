@@ -295,9 +295,20 @@ host. Compiled application configuration retains existing hosted/cache behavior.
 Saving a graph grants no executable authority. The public
 [Resource Workshop](../examples/tool-canvas/nyx.resource.workshop.pas) connects
 this operation to an embedded Table through selection, filtering and exact
-decimal sorting, without a handwritten result handler. WORK.md distinguishes
-controlled input, source/semantic checks, runtime execution and remaining Studio/
-real-host/quality acceptance.
+decimal sorting, without a handwritten result handler. Its ordinary Studio
+journey now retains exact unfinished resource fields, guards invalid options,
+publishes one paired history change and saves/reopens the complete project on
+both targets. The identical saved Pascal also runs independently on browser/LCL.
+WORK.md distinguishes controlled input from real HTTP, observing delivery and
+remaining instance/remount/input/quality/performance acceptance.
+
+After staging a configuration, the shared Logic form keeps that exact accepted
+step loaded. Tab navigation and Apply preserve its current-baseline fields;
+unfinished fields retain independent refusal/discard rules. The optional
+`INyxToolCanvasAttachmentPresentation` synchronizes only attachment feedback and
+the graph switch after actual mounting. Both adapters queue an initial check,
+including native views that finish mounting before observation attaches. This
+does not rebuild the form or change graph execution, selection or saved history.
 
 Embedded collection views use a split scope resolver: application scope reaches
 the running application's stores; instance scope stays private to the fragment.

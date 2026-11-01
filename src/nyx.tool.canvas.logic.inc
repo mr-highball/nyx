@@ -601,6 +601,11 @@ begin
     LEditor.Node.Find(LEditor.ID + '-disconnect').Configure.Text('Stage disconnection').Done;
     LEditor.Node.Find(LEditor.ID + '-remove-step').Configure.Text('Stage step removal').Done;
     LEditor.Node.Find(LEditor.ID + '-remove-graph').Configure.Text('Stage graph removal').Done;
+    { A successfully staged configuration may intentionally keep its exact
+      accepted step loaded. Retain that current-baseline pristine presentation
+      before restoring independent unfinished fields; factory defaults would
+      misclassify the accepted fields as an unapplied proposal on the next tab. }
+    FLogicPristine.Restore(LEditor.ID, LEditor.Node, nlrmCurrentPresentation);
     LPristine.Capture(LEditor.ID, LEditor.Node);
     { The factory's default discovery presentation is already valid. Restore
       changed filters, but do not rebuild its whole toolbox for default fields. }
@@ -636,6 +641,7 @@ var
   LDiscard: TNyxNode;
   LFeedback: TNyxNode;
   LMirror: TNyxNode;
+  LSelectedStep: TNyxFlowStepRef;
 
   function Confirmed: Boolean;
   begin
@@ -714,6 +720,13 @@ begin
       { Local graph admission checks types, cycles and exact step identities.
         Whole application routes are checked only at ApplyLogic, allowing the
         user to add a step before connecting its required input. }
+      LSelectedStep := Default(TNyxFlowStepRef);
+
+      if LCapture.Change.Kind = nfcReplaceStep then
+      begin
+        LSelectedStep := NyxFlowStep(ARoot.Find(PartID('logic-step'))
+          .Prop(NyxAttributeName(atValue)));
+      end;
       StageLogicChanges([LCapture.Change]);
       FLogicFlow := LCapture.Reference;
 
@@ -722,6 +735,18 @@ begin
         FLogicFlow := Default(TNyxFlowRef);
       end;
       Rebuild;
+
+      if LSelectedStep.Defined then
+      begin
+        { The accepted replacement belongs to the new proposal baseline. Load
+          that exact step into the new form instead of returning to unrelated
+          factory defaults. Rebase both snapshots only after admission; invalid
+          and unrelated unfinished fields retain their existing refusal path. }
+        FLogicEditor.Node.Find(PartID('logic-step')).Configure.Value(LSelectedStep.Name).Done;
+        HandleNyxLogicEditor(FLogicEditor.Node.Find(PartID('logic-load')), FLogicEditor.Node);
+        FLogicDraft.Capture(PartID('logic'), FLogicEditor.Node);
+        FLogicPristine := FLogicDraft;
+      end;
       Exit(ntcuRebuild);
     end;
     { Includes ordinary field edits that need no special routing. Preserve the

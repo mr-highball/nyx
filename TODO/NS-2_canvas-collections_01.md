@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Original criterion4 is accepted on2026-11-01. Resource Workshop executes ordinary
+native/browser Studio configuration, exact unfinished Unicode input/refusal,
+paired Undo/Redo and actual project Save/Open at1280/390. All saved constructors
+are identical and independently compile/execute the embedded Table journey on
+both targets. The preceding resource-logic01 scope checks and documented legacy
+default behavior remain applicable. WORK.md owns source identities, failures and
+the resource-studio01 evidence. Criteria1–3 and complete instance/remount/resource
+qualification remain open; the task is not DONE and no percentage is assigned.
+
 **Description:**
 
 Resource Workshop reproduces a shared browser/LCL defect: an embedded Table

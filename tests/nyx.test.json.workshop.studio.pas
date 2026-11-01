@@ -31,7 +31,7 @@ type
   { One finite ordinary Studio input journey. Tick yields while source/physical
     publication is pending. Pair is available only after actual Save/Open.
     Final release retires Studio before its native host or browser exchange. }
-  INyxJSONWorkshopStudioJourney = interface(IInterface)
+  INyxToolWorkshopStudioJourney = interface(IInterface)
     ['{8C9402D8-26E4-47ED-9CA6-FAEAE2DC4A38}']
     function Tick: Boolean;
     function GetPair: TNyxProjectPair;
@@ -40,14 +40,23 @@ type
     property Checks: Integer read GetChecks;
   end;
 
+  { Compatibility name for the original JSON consumer of the shared journey. }
+  INyxJSONWorkshopStudioJourney = INyxToolWorkshopStudioJourney;
+
 function NewJSONWorkshopStudioJourney(const ADirectory: TNyxText;
   AWidth: Integer): INyxJSONWorkshopStudioJourney;
+
+{ Uses the same ordinary Studio input and persistence path for resource options;
+  the result is the actual saved pair, with no transport or network authority. }
+function NewResourceWorkshopStudioJourney(const ADirectory: TNyxText;
+  AWidth: Integer): INyxToolWorkshopStudioJourney;
 
 implementation
 
 uses
   SysUtils, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
-  nyx.files, nyx.studio.files, nyx.json.workshop, nyx.tool.canvas,
+  nyx.files, nyx.studio.files, nyx.json.workshop, nyx.resource.workshop,
+  nyx.tool.canvas,
   nyx.canvas.workspace, nyx.canvas.adoption, nyx.flow.declarations,
   nyx.flow.editing, nyx.studio.menu, nyx.behavior, nyx.scheduler,
   {$ifdef PAS2JS}
@@ -57,6 +66,9 @@ uses
   Classes, Forms, Controls, StdCtrls, nyx.studio.lcl, nyx.studio.projectstore,
   nyx.tool.canvas.lcl;
   {$endif}
+
+const
+  CResourceDraft: TNyxText = 'unfinished 🌙';
 
 type
   { File bytes alone are substituted in the browser. Native Studio uses its
@@ -101,7 +113,7 @@ type
   {$endif}
   { Owns exactly one Studio plus file/exchange fixtures. All graph/draft/history
     changes are actual form/button input, not direct graph or session mutation. }
-  TJourney = class(TInterfacedObject, INyxJSONWorkshopStudioJourney)
+  TJourney = class(TInterfacedObject, INyxToolWorkshopStudioJourney)
   private
     FStudio: TWorkshopStudio;
     FDirectory: TNyxText;
@@ -118,6 +130,9 @@ type
     FChecks: Integer;
     FStarted: Double;
     FDone: Boolean;
+    FResource: Boolean;
+    FCanvas: TNyxControlRef;
+    FProjectName: TNyxText;
     {$ifdef PAS2JS}
     FCore: TNyxAgentSession;
     {$else}
@@ -134,8 +149,12 @@ type
     procedure ChangeTool(const ASuffix, AValue: TNyxText);
     procedure ClickProjectMenu(AOpenBranch: Boolean);
     procedure ReleaseTools;
+    procedure RunResourceStage;
+    procedure RunJSONStage;
+    function ResourceConfiguration: TNyxDataValue;
   public
-    constructor Create(const ADirectory: TNyxText; AWidth: Integer);
+    constructor Create(const ADirectory: TNyxText; AWidth: Integer;
+      AResource: Boolean = False);
     destructor Destroy; override;
     function Tick: Boolean;
     function GetPair: TNyxProjectPair;
@@ -211,18 +230,35 @@ begin
 end;
 {$endif}
 
-constructor TJourney.Create(const ADirectory: TNyxText; AWidth: Integer);
+constructor TJourney.Create(const ADirectory: TNyxText; AWidth: Integer;
+  AResource: Boolean);
 var
   LDocument: TNyxDocument;
   LSeed: TNyxProjectPair;
+  LUnit: TNyxText;
 begin
   inherited Create;
   FDirectory := IncludeTrailingPathDelimiter(ADirectory);
   FStarted := Clock;
-  LDocument := BuildJSONWorkshopDocument;
+  FResource := AResource;
+
+  if FResource then
+  begin
+    LDocument := BuildResourceWorkshopDocument;
+    FCanvas := ResourceWorkshopCanvas;
+    FProjectName := 'resource-workshop';
+    LUnit := 'nyx.generated.view';
+  end
+  else
+  begin
+    LDocument := BuildJSONWorkshopDocument;
+    FCanvas := JSONWorkshopCanvas;
+    FProjectName := 'json-workshop';
+    LUnit := 'nyx.generated.json.workshop';
+  end;
   try
     LSeed := NyxProjectPair(TNyxCodec.Encode(LDocument),
-      TNyxCodegen.Generate(LDocument, 'nyx.generated.json.workshop'));
+      TNyxCodegen.Generate(LDocument, LUnit));
   finally
     LDocument.Free;
   end;
@@ -302,6 +338,141 @@ begin
     end;
   end;
   raise Exception.Create('The useful graph has no saved formatter');
+end;
+
+function TJourney.ResourceConfiguration: TNyxDataValue;
+var
+  LDefinition: INyxFlowDefinition;
+  LIndex: Integer;
+begin
+  LDefinition := FEditing.RuntimeFlows.Definition(ResourceWorkshopFlow);
+  for LIndex := 0 to LDefinition.StepCount - 1 do
+  begin
+
+    if LDefinition.Step(LIndex).Name = 'resource' then
+    begin
+      Exit(LDefinition.Configuration(LIndex));
+    end;
+  end;
+  raise Exception.Create('The useful graph has no resource input');
+end;
+
+procedure TJourney.RunJSONStage;
+begin
+  case FStage of
+    3:
+      begin
+        ChangeTool('logic-graph', JSONWorkshopSaveFlow.Name);
+        ClickTool('logic-open');
+      end;
+    4:
+      begin
+        ChangeTool('logic-step', 'Format JSON');
+        ClickTool('logic-load');
+      end;
+    5:
+      begin
+        Check(ToolValue('logic-indent') = '2', 'form loads the actual saved formatter configuration');
+        ChangeTool('logic-indent', '4');
+        ClickTool('tab-ports');
+      end;
+    6: ClickTool('tab-logic');
+    7:
+      begin
+        Check((ToolValue('logic-indent') = '4') and (EncodedPair = FBase),
+          'leaving/reopening the tab retains the unfinished field without changing source or design');
+        ClickTool('logic-set');
+      end;
+    8:
+      begin
+        Check(FLogic.HasPendingLogic and (EncodedPair = FBase),
+          'real form configuration stages a graph proposal independently from project publication');
+        ClickTool('logic-apply');
+      end;
+    9:
+      begin
+        Check(FormatterIndent(JSONWorkshopSaveFlow) = 4, 'actual Apply updates the running Save graph');
+        ChangeTool('logic-graph', 'Format JSON');
+        ClickTool('logic-open');
+      end;
+    10:
+      begin
+        ChangeTool('logic-step', 'Format JSON');
+        ClickTool('logic-load');
+      end;
+    11:
+      begin
+        ChangeTool('logic-indent', '4');
+        ClickTool('logic-set');
+      end;
+    12: ClickTool('logic-apply');
+    13:
+      begin
+        Check((FormatterIndent(NyxFlowRef('Format JSON')) = 4) and (EncodedPair = FBase),
+          'both useful runtime graphs change without silently rewriting the authored project');
+        ClickTool('save-connections');
+      end;
+  end;
+end;
+
+procedure TJourney.RunResourceStage;
+begin
+  case FStage of
+    3:
+      begin
+        ChangeTool('logic-graph', ResourceWorkshopFlow.Name);
+        ClickTool('logic-open');
+      end;
+    4:
+      begin
+        ChangeTool('logic-step', 'resource');
+        ClickTool('logic-load');
+      end;
+    5:
+      begin
+        Check((ToolValue('logic-resource-name') = 'sample-team') and
+          (ToolValue('logic-resource-deadline') = '15000'),
+          'ordinary typed form reads the actual declared resource operation');
+        ChangeTool('logic-resource-deadline', CResourceDraft);
+        ClickTool('tab-ports');
+      end;
+    6: ClickTool('tab-logic');
+    7:
+      begin
+        Check((ToolValue('logic-resource-deadline') = CResourceDraft) and
+          (EncodedPair = FBase), 'tab navigation retains exact unfinished resource input and the accepted pair');
+        ClickTool('logic-set');
+      end;
+    8:
+      begin
+        Check(not FLogic.HasPendingLogic and (EncodedPair = FBase) and
+          (ToolValue('logic-resource-deadline') = CResourceDraft),
+          'invalid resource input remains editable without publishing a partial proposal');
+        ChangeTool('logic-resource-deadline', '2500');
+        ClickTool('logic-set');
+      end;
+    9:
+      begin
+        Check(FLogic.HasPendingLogic and (EncodedPair = FBase),
+          'valid resource options stage independently from source and design');
+        ClickTool('logic-apply');
+      end;
+    10:
+      begin
+        Check((ResourceConfiguration.Field('resource').AsText = 'sample-team') and
+          (ResourceConfiguration.Field('deadline').AsInteger = 2500) and
+          (EncodedPair = FBase), 'actual Apply changes guarded runtime options without rewriting the project');
+        ClickTool('tab-ports');
+      end;
+    11: ClickTool('tab-logic');
+    12:
+      begin
+        Check((ToolValue('logic-resource-name') = 'sample-team') and
+          (ToolValue('logic-resource-deadline') = '2500'),
+          'accepted resource fields survive leaving and reopening the workbench');
+      end;
+    13: ClickTool('save-connections');
+  end;
 end;
 
 procedure TJourney.ClickShell(const AID: TNyxText);
@@ -541,11 +712,11 @@ begin
     1: ClickShell('action-preview');
     2:
       begin
-        Check(FStudio.CanvasView.Root.Find(JSONWorkshopCanvas.ID) <> nil,
+        Check(FStudio.CanvasView.Root.Find(FCanvas.ID) <> nil,
           'ordinary Studio mounts the observed Workshop before accessing its canvas');
         LView := FStudio.CanvasView.CanvasView(
-          FStudio.CanvasView.Root.Find(JSONWorkshopCanvas.ID).Part(NyxPart('workspace')).ID);
-        FTools := FStudio.CanvasView.ToolCanvasView(JSONWorkshopCanvas.ID);
+          FStudio.CanvasView.Root.Find(FCanvas.ID).Part(NyxPart('workspace')).ID);
+        FTools := FStudio.CanvasView.ToolCanvasView(FCanvas.ID);
         { Query into owning locals before retaining facets across ticks. pas2js
           otherwise finalizes out-parameter fields on every later Tick, leaving
           dangling fields and prematurely disposing the actual Tool Canvas. }
@@ -558,57 +729,17 @@ begin
         FLogic := LLogic;
         ClickTool('tab-logic');
       end;
-    3:
+    3..13:
       begin
-        ChangeTool('logic-graph', JSONWorkshopSaveFlow.Name);
-        ClickTool('logic-open');
-      end;
-    4:
-      begin
-        ChangeTool('logic-step', 'Format JSON');
-        ClickTool('logic-load');
-      end;
-    5:
-      begin
-        Check(ToolValue('logic-indent') = '2', 'form loads the actual saved formatter configuration');
-        ChangeTool('logic-indent', '4');
-        ClickTool('tab-ports');
-      end;
-    6: ClickTool('tab-logic');
-    7:
-      begin
-        Check((ToolValue('logic-indent') = '4') and (EncodedPair = FBase),
-          'leaving/reopening the tab retains the unfinished field without changing source or design');
-        ClickTool('logic-set');
-      end;
-    8:
-      begin
-        Check(FLogic.HasPendingLogic and (EncodedPair = FBase),
-          'real form configuration stages a graph proposal independently from project publication');
-        ClickTool('logic-apply');
-      end;
-    9:
-      begin
-        Check(FormatterIndent(JSONWorkshopSaveFlow) = 4, 'actual Apply updates the running Save graph');
-        ChangeTool('logic-graph', 'Format JSON');
-        ClickTool('logic-open');
-      end;
-    10:
-      begin
-        ChangeTool('logic-step', 'Format JSON');
-        ClickTool('logic-load');
-      end;
-    11:
-      begin
-        ChangeTool('logic-indent', '4');
-        ClickTool('logic-set');
-      end;
-    12: ClickTool('logic-apply');
-    13:
-      begin
-        Check((FormatterIndent(NyxFlowRef('Format JSON')) = 4) and (EncodedPair = FBase),
-          'both useful runtime graphs change without silently rewriting the authored project');
-        ClickTool('save-connections');
+
+        if FResource then
+        begin
+          RunResourceStage;
+        end
+        else
+        begin
+          RunJSONStage;
+        end;
       end;
     14:
       begin
@@ -644,7 +775,7 @@ begin
         {$ifdef PAS2JS}
         ClickShell('action-project-export');
         {$else}
-        ChangeShell('project-file-name', 'json-workshop');
+        ChangeShell('project-file-name', FProjectName);
         ClickShell('action-project-save');
         {$endif}
       end;
@@ -657,7 +788,7 @@ begin
         {$else}
         LProjectStore := TNyxProjectStore.Create(FDirectory);
         try
-          Check(LProjectStore.ReadProject('json-workshop', LRevision) = FSaved,
+          Check(LProjectStore.ReadProject(FProjectName, LRevision) = FSaved,
             'ordinary Save writes the actual isolated project bytes');
         finally
           LProjectStore.Free;
@@ -678,8 +809,18 @@ begin
       begin
         Check(EncodedPair = FSaved, 'ordinary Open restores exact graphs, controls, placement and Pascal');
         LStore := FStudio.ProjectSnapshot;
-        Check(Pos('NewNyxJSONFormat(njlIndented, 4)', LStore.Source) > 0,
-          'the saved crafted Pascal carries the meaningful four-space configuration');
+
+        if FResource then
+        begin
+          Check((Pos('NyxJSONResourceOptions(NyxResourceRef(''sample-team''))',
+            LStore.Source) > 0) and (Pos('.WholeRequest(2500)', LStore.Source) > 0),
+            'saved crafted Pascal retains specialized resource options');
+        end
+        else
+        begin
+          Check(Pos('NewNyxJSONFormat(njlIndented, 4)', LStore.Source) > 0,
+            'the saved crafted Pascal carries the meaningful four-space configuration');
+        end;
         {$ifdef PAS2JS}
         { Retain the exact ordinary Export/Import packet as inert text, so an
           independent compiler can consume the actual saved constructor. This
@@ -716,6 +857,12 @@ function NewJSONWorkshopStudioJourney(const ADirectory: TNyxText;
   AWidth: Integer): INyxJSONWorkshopStudioJourney;
 begin
   Result := TJourney.Create(ADirectory, AWidth);
+end;
+
+function NewResourceWorkshopStudioJourney(const ADirectory: TNyxText;
+  AWidth: Integer): INyxToolWorkshopStudioJourney;
+begin
+  Result := TJourney.Create(ADirectory, AWidth, True);
 end;
 
 end.

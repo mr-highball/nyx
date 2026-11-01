@@ -3,6 +3,14 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+The Resource Workshop Studio return accepts canvas-collections01's original
+criterion4: ordinary typed editing, unfinished input, paired history, Save/Open
+and the exact saved application's native/browser embedded Table journey at both
+allocations. Shared configuration/attachment repairs improve ordinary Tool Canvas
+use. WORK owns resource-studio01 and its qualified limits. This advances M2/M4;
+full collection-instance/remount, real HTTP, observing, quality and performance
+requirements remain. No whole task or north-star percentage closes.
+
 The declared-resource Tool Canvas checkpoint adds a typed JSON operation and
 the public Resource Workshop. Actual embedded Table controls and the exact
 emitted application pass native/browser44 at desktop/compact allocations.
